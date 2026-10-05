@@ -145,6 +145,17 @@ def _resolve_schema(schema: dict[str, Any], spec: dict[str, Any] | None) -> dict
     return schema
 
 
+def _string_enum_literal(schema: dict[str, Any]) -> str | None:
+    """`Literal[...]` for a string enum, so the tool schema lists the allowed
+    values and FastMCP rejects anything else before the API is called (e.g.
+    `platform="linkedin"` on a Google-only operation). None when the schema
+    has no enum or it holds non-string values."""
+    values = [v for v in schema.get("enum") or [] if v is not None]
+    if not values or not all(isinstance(v, str) for v in values):
+        return None
+    return f"Literal[{', '.join(repr(v) for v in values)}]"
+
+
 def get_python_type(
     schema: dict[str, Any],
     required: bool = True,
@@ -199,14 +210,15 @@ def get_python_type(
     # expected to always provide a value. The `| None` widening only
     # applies when we're emitting a `= None` default.
     if schema_type == "string":
+        base = _string_enum_literal(schema) or "str"
         if default is not None:
-            type_str = "str"
+            type_str = base
             default_str = f'"{default}"'
         elif required:
-            type_str = "str"
+            type_str = base
             default_str = ""  # placeholder; not rendered for required
         else:
-            type_str = "str | None"
+            type_str = f"{base} | None"
             default_str = "None"
     elif schema_type == "integer":
         if default is not None:
@@ -247,7 +259,7 @@ def get_python_type(
         items_schema = _resolve_schema(schema.get("items", {}) or {}, spec)
         items_type = items_schema.get("type")
         if items_type == "string":
-            inner = "str"
+            inner = _string_enum_literal(items_schema) or "str"
         elif items_type == "integer":
             inner = "int"
         elif items_type == "number":
@@ -399,6 +411,47 @@ def extract_parameters(
     return params
 
 
+MAX_TOOL_DESCRIPTION_CHARS = 1000
+
+
+def _truncate_description(text: str) -> str:
+    """Cap the operation description so tool listings and search results stay
+    small; cuts at the last whitespace before the limit."""
+    text = text.strip()
+    if len(text) <= MAX_TOOL_DESCRIPTION_CHARS:
+        return text
+    cut = text[:MAX_TOOL_DESCRIPTION_CHARS].rsplit(None, 1)[0]
+    return f"{cut} ..."
+
+
+def _escape_docstring_text(text: str) -> str:
+    """Spec text lands inside a generated triple-quoted docstring: escape
+    backslashes and double quotes so it can neither close the string nor be
+    read as escape sequences."""
+    return text.replace("\\", "\\\\").replace('"', '\\"')
+
+
+def build_tool_description_lines(
+    summary: str,
+    description: str,
+    platforms: list[str],
+) -> list[str]:
+    """Summary, then the operation description and its `x-platforms`.
+
+    The MCP tool description is all an agent sees when picking a tool, so the
+    spec's operation description (e.g. "Google only; every other platform
+    returns 501") and supported platforms must reach it, not just the summary.
+    """
+    lines = [summary.rstrip()]
+    if description.strip():
+        lines.append("")
+        lines.extend(_escape_docstring_text(_truncate_description(description)).split("\n"))
+    if platforms:
+        lines.append("")
+        lines.append(f"Platforms: {', '.join(platforms)}")
+    return lines
+
+
 def generate_tool_handler(
     tool_name: str,
     resource: str,
@@ -407,6 +460,8 @@ def generate_tool_handler(
     params: list[dict[str, Any]],
     read_only: bool,
     title: str,
+    description: str = "",
+    platforms: list[str] | None = None,
 ) -> str:
     """Generate a complete tool handler function."""
     lines = []
@@ -425,7 +480,7 @@ def generate_tool_handler(
     sig = ", ".join(sig_params)
 
     # Docstring - strip trailing whitespace from all lines
-    doc_lines = [summary.rstrip()]
+    doc_lines = build_tool_description_lines(summary, description, platforms or [])
     if params:
         doc_lines.append("")
         doc_lines.append("Args:")
@@ -532,6 +587,8 @@ def main() -> int:
                 "resource": resource,
                 "sdk_method": sdk_method,
                 "summary": summary,
+                "description": operation.get("description", ""),
+                "platforms": operation.get("x-platforms", []),
                 # HTTP method drives the tool annotation: GET is read-only,
                 # everything else (POST/PUT/PATCH/DELETE) is treated as a
                 # destructive write. Required by Anthropic's Connectors
@@ -554,7 +611,7 @@ def main() -> int:
         "",
         "from __future__ import annotations",
         "",
-        "from typing import Any",
+        "from typing import Any, Literal",
         "",
         "from mcp.types import ToolAnnotations",
         "",
@@ -645,6 +702,8 @@ def main() -> int:
                 op["params"],
                 op["read_only"],
                 op["title"],
+                op["description"],
+                op["platforms"],
             )
             # Indent for being inside register function
             handler_lines = handler.split("\n")

@@ -6,7 +6,7 @@ DO NOT EDIT - Run `python scripts/generate_mcp_tools.py` to regenerate.
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Literal
 
 from mcp.types import ToolAnnotations
 
@@ -87,7 +87,12 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def account_groups_list_account_groups() -> str:
-        """List groups"""
+        """List groups
+
+        Returns all account groups visible to the authenticated user. Groups can
+        contain accounts from multiple profiles. For API keys scoped to specific
+        profiles, only groups whose accounts all live in allowed profiles are
+        returned."""
         client = _get_client()
         try:
             response = client.account_groups.list_account_groups()
@@ -107,6 +112,10 @@ def register_generated_tools(mcp, _get_client):
         name: str, account_ids: list[str] | None, profile_id: str | None = None
     ) -> str:
         """Create group
+
+            Creates a new account group with a name and a list of account IDs.
+            Accounts can belong to different profiles; the caller must have access to
+            every account's profile. Group names must be unique per user.
 
             Args:
                 name: (required)
@@ -135,6 +144,8 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Update group
 
+        Updates the name or account list of an existing group. You can rename the group, change its accounts, or both.
+
         Args:
             group_id: (required)
             name
@@ -159,6 +170,8 @@ def register_generated_tools(mcp, _get_client):
     def account_groups_delete_account_group(group_id: str) -> str:
         """Delete group
 
+        Permanently deletes an account group. The accounts themselves are not affected.
+
         Args:
             group_id: (required)"""
         client = _get_client()
@@ -181,6 +194,8 @@ def register_generated_tools(mcp, _get_client):
     def account_settings_get_messenger_menu(account_id: str) -> str:
         """Get FB persistent menu
 
+        Get the persistent menu configuration for a Facebook Messenger account.
+
         Args:
             account_id: (required)"""
         client = _get_client()
@@ -202,6 +217,8 @@ def register_generated_tools(mcp, _get_client):
         account_id: str, persistent_menu: list[dict[str, Any]] | None
     ) -> str:
         """Set FB persistent menu
+
+        Set the persistent menu for a Facebook Messenger account. Max 3 top-level items, max 5 nested items. Meta only shows a persistent menu on a page that has a Get Started button, so set one first with PUT /v1/accounts/{accountId}/messenger-get-started. A postback button whose payload is `zernio:workflow:<workflowId>` starts that workflow when tapped; the workflow must be active on this account and profile.
 
         Args:
             account_id: (required)
@@ -226,6 +243,8 @@ def register_generated_tools(mcp, _get_client):
     def account_settings_delete_messenger_menu(account_id: str) -> str:
         """Delete FB persistent menu
 
+        Removes the persistent menu from Facebook Messenger conversations for this account.
+
         Args:
             account_id: (required)"""
         client = _get_client()
@@ -247,6 +266,8 @@ def register_generated_tools(mcp, _get_client):
     )
     def account_settings_get_messenger_get_started(account_id: str) -> str:
         """Get FB Get Started button
+
+        Get the Get Started button payload for a Facebook Messenger account. `data` is null when the page has none.
 
         Args:
             account_id: (required)"""
@@ -272,6 +293,8 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Set FB Get Started button
 
+        Set the Get Started button shown on a Facebook page's Messenger welcome screen. Meta requires it before a persistent menu can be set. Tapping it sends a postback with `payload`, which arrives as a `message.received` webhook carrying it in `metadata.postbackPayload`. Use `zernio:workflow:<workflowId>` to start a workflow on the tap; the workflow must be active on this account and profile.
+
         Args:
             account_id: (required)
             payload: Postback payload sent when a person taps Get Started, e.g. `GET_STARTED` or `zernio:workflow:<workflowId>`. (required)"""
@@ -295,6 +318,8 @@ def register_generated_tools(mcp, _get_client):
     def account_settings_delete_messenger_get_started(account_id: str) -> str:
         """Delete FB Get Started button
 
+        Remove the Get Started button. Meta refuses while a persistent menu is set, so delete the menu first.
+
         Args:
             account_id: (required)"""
         client = _get_client()
@@ -316,6 +341,8 @@ def register_generated_tools(mcp, _get_client):
     )
     def account_settings_get_instagram_ice_breakers(account_id: str) -> str:
         """Get IG ice breakers
+
+        Get the ice breaker configuration for an Instagram account.
 
         Args:
             account_id: (required)"""
@@ -341,6 +368,8 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Set IG ice breakers
 
+        Set ice breakers for an Instagram account. Max 4 ice breakers, question max 80 chars.
+
         Args:
             account_id: (required)
             ice_breakers: (required)"""
@@ -364,6 +393,8 @@ def register_generated_tools(mcp, _get_client):
     def account_settings_delete_instagram_ice_breakers(account_id: str) -> str:
         """Delete IG ice breakers
 
+        Removes the ice breaker questions from an Instagram account's Messenger experience.
+
         Args:
             account_id: (required)"""
         client = _get_client()
@@ -385,6 +416,8 @@ def register_generated_tools(mcp, _get_client):
     )
     def account_settings_get_telegram_commands(account_id: str) -> str:
         """Get TG bot commands
+
+        Get the bot commands configuration for a Telegram account.
 
         Args:
             account_id: (required)"""
@@ -410,6 +443,8 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Set TG bot commands
 
+        Set bot commands for a Telegram account.
+
         Args:
             account_id: (required)
             commands: (required)"""
@@ -432,6 +467,8 @@ def register_generated_tools(mcp, _get_client):
     )
     def account_settings_delete_telegram_commands(account_id: str) -> str:
         """Delete TG bot commands
+
+        Clears all bot commands configured for a Telegram bot account.
 
         Args:
             account_id: (required)"""
@@ -457,11 +494,12 @@ def register_generated_tools(mcp, _get_client):
     def accounts_list_accounts(
         profile_id: str | None = None,
         platform: str | None = None,
-        status: str | None = None,
+        status: Literal["connected", "disconnected"] | None = None,
         search: str | None = None,
-        category: str | None = None,
-        sort: str | None = None,
-        order: str = "asc",
+        category: Literal["social", "ads", "communication", "blogs"] | None = None,
+        sort: Literal["account", "platform", "profile", "status", "connected"]
+        | None = None,
+        order: Literal["asc", "desc"] = "asc",
         include_over_limit: bool = False,
         page: int | None = None,
         limit: int | None = None,
@@ -469,6 +507,10 @@ def register_generated_tools(mcp, _get_client):
         per_profile: int | None = None,
     ) -> str:
         """List accounts
+
+        Returns connected accounts. Only includes accounts within the plan limit by default. Follower data requires analytics add-on.
+        Supports optional server-side pagination via page/limit params. When omitted, returns all accounts (backward-compatible).
+        page and limit must be supplied together; out-of-range page/limit values are rejected with 400 rather than silently clamped.
 
         Args:
             profile_id: Filter accounts by profile ID. Must be a valid ObjectId.
@@ -516,9 +558,12 @@ def register_generated_tools(mcp, _get_client):
         profile_id: str | None = None,
         from_date: str | None = None,
         to_date: str | None = None,
-        granularity: str = "daily",
+        granularity: Literal["daily", "weekly", "monthly"] = "daily",
     ) -> str:
         """Get follower stats
+
+        Returns follower count history and growth metrics for connected accounts.
+        Requires analytics add-on subscription. Follower counts are refreshed once per day.
 
         Args:
             account_ids: Comma-separated list of account IDs (optional, defaults to all user's accounts)
@@ -555,6 +600,15 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Update account
 
+            Updates a connected account's display name or username override.
+
+            For X accounts on usage-based billing, also accepts an `xCapabilities`
+            object to toggle background API operations that incur X API pass-through costs.
+            Both fields are opt-in (default `false`). When off, no analytics syncs or DM
+            polling are performed for that account, and no API call is metered for those
+            operations. Publishing and deleting posts are always available regardless of
+            these toggles. Setting `xCapabilities` on a non-X account returns 400.
+
             Args:
                 account_id: (required)
                 username
@@ -586,6 +640,13 @@ def register_generated_tools(mcp, _get_client):
     def accounts_move_account_to_profile(account_id: str, profile_id: str) -> str:
         """Move account to another profile
 
+        Moves a connected account to a different profile owned by the same
+        user. The target profile must belong to the same user as the account.
+
+        For API keys restricted to specific profiles, BOTH the source account's
+        current profile AND the target profile must be in the key's allowed set.
+        Calls with a target profile outside the key's scope return 403.
+
         Args:
             account_id: (required)
             profile_id: Target profile ID (must be a valid ObjectId and owned by the same user as the account). (required)"""
@@ -609,6 +670,8 @@ def register_generated_tools(mcp, _get_client):
     def accounts_delete_account(account_id: str) -> str:
         """Disconnect account
 
+        Disconnects and removes a connected account. Repeating the call for an account already disconnected returns 404, the account stays in its 1h grace window and the disconnect is not re-run.
+
         Args:
             account_id: (required)"""
         client = _get_client()
@@ -628,10 +691,39 @@ def register_generated_tools(mcp, _get_client):
     )
     def accounts_get_all_accounts_health(
         profile_id: str | None = None,
-        platform: str | None = None,
-        status: str | None = None,
+        platform: Literal[
+            "facebook",
+            "instagram",
+            "linkedin",
+            "twitter",
+            "tiktok",
+            "youtube",
+            "threads",
+            "pinterest",
+            "reddit",
+            "bluesky",
+            "googlebusiness",
+            "telegram",
+            "snapchat",
+            "discord",
+            "slack",
+            "whatsapp",
+            "shopify",
+            "wordpress",
+            "linkedinads",
+            "metaads",
+            "pinterestads",
+            "tiktokads",
+            "xads",
+            "googleads",
+            "openaiads",
+        ]
+        | None = None,
+        status: Literal["healthy", "warning", "error"] | None = None,
     ) -> str:
         """Check accounts health
+
+        Returns health status of all connected accounts including token validity, permissions, and issues needing attention.
 
         Args:
             profile_id: Filter by profile ID
@@ -657,6 +749,17 @@ def register_generated_tools(mcp, _get_client):
     def accounts_get_account_health(account_id: str) -> str:
         """Check account health
 
+        Returns detailed health info for a specific account including token status, permissions, and recommendations.
+
+        For WhatsApp accounts the response also includes `platformConnection`, a live probe of the
+        Meta link behind the channel (the same read as `GET /v1/whatsapp/number-info`). The OAuth
+        token can be perfectly valid while Meta refuses to serve the phone-number object (for
+        example after a phone-side coexistence disconnect), so `tokenStatus` alone is not a
+        liveness signal for WhatsApp. When the Meta link is dead, `platformConnection.status` is
+        `disconnected` and the overall `status` is `error`. When Meta reports that the number's
+        inbound message webhook does not reach Zernio, `platformConnection.inboundWebhookSubscribed`
+        is `false`, an entry is added to `issues`, and the overall `status` is at least `warning`.
+
         Args:
             account_id: The account ID to check (required)"""
         client = _get_client()
@@ -676,6 +779,25 @@ def register_generated_tools(mcp, _get_client):
     )
     def accounts_get_account_posts(account_id: str) -> str:
         """List posts published on the platform
+
+        Returns the 25 most recent posts that exist on the platform for a connected account, read
+        live from the platform API. This covers everything on the account, including posts that
+        were never created through Zernio.
+
+        Use it to obtain the platform's own post id, which the analytics endpoints take as input.
+        On YouTube the returned `id` is the video ID that `GET /v1/analytics/youtube/daily-views`,
+        `/video-retention` and `/demographics` expect as `videoId`, so this endpoint is what backs
+        a video picker in your own UI.
+
+        Not every field applies to every platform: `reactionCount` is Facebook and LinkedIn,
+        `shareCount` is platform dependent, `cid` is the Bluesky content id needed to reply, and
+        `subreddit` is Reddit only. Absent fields are omitted from the response.
+
+        The account's token is refreshed before the call when it has expired. When the refresh
+        cannot recover it, the response is a 401 with code `TOKEN_EXPIRED` and the account has to
+        be reconnected.
+
+        Platforms: facebook, instagram, twitter, bluesky, threads, youtube, linkedin, reddit, tiktok, pinterest
 
         Args:
             account_id: (required)"""
@@ -698,6 +820,28 @@ def register_generated_tools(mcp, _get_client):
         account_id: str, user_id: str, refresh: bool | None = None
     ) -> str:
         """Check whether an Instagram user follows the account
+
+        Resolves the follow relationship between an Instagram user and the connected
+        account, plus their public profile counters.
+
+        `userId` is the Instagram-scoped id (IGSID) Meta gives you on a webhook:
+        `sender.id` on `message.received`, `comment.author.id` on `comment.received`.
+
+        **Meta only answers for people who have MESSAGED the account.** Commenting grants
+        no consent, so a commenter who has never DMed you is unresolvable - that is a
+        platform rule, not a limitation of this endpoint. When it cannot be resolved the
+        response is still `200` with `isFollower: null` and an `unavailableReason`, because
+        \"unknown\" is a normal state to branch on:
+
+          * `consent_required` - the user has never messaged this account.
+          * `dm_access_disabled` - the account owner turned off Instagram Direct API access.
+          * `not_messageable` - the id is not a messaging-scoped id.
+          * `error` - a transient Graph API failure.
+
+        To gate a comment automation on this, use the automation's `audience` rules instead
+        of calling ...
+
+        Platforms: instagram
 
         Args:
             account_id: Instagram account ID (required)
@@ -725,6 +869,8 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """List trending commercial music
 
+        Returns the 100 currently trending tracks of TikTok's Commercial Music Library for a TikTok account connected through the TikTok for Business app. Use a track id as tiktokSettings.musicSoundInfo.musicSoundId when creating a post. The list is not paged; countryCode selects the country chart.
+
         Args:
             account_id: The TikTok account ID (required)
             country_code: Two-letter ISO 3166-1 country code of the chart to read (for example ES). Defaults to TikTok's global chart."""
@@ -748,6 +894,8 @@ def register_generated_tools(mcp, _get_client):
     def accounts_search_tik_tok_locations(account_id: str, query: str) -> str:
         """Search TikTok location tags
 
+        Searches the location tags a TikTok account connected through the TikTok for Business app can attach to a video post. Send a result's id and name as tiktokSettings.locationId and locationName when creating a post. TikTok answers the 20 closest matches and fills the list with fuzzy matches when nothing matches, so an unrelated result does not mean the place is missing.
+
         Args:
             account_id: The TikTok account ID (required)
             query: Place name to search, for example a city, a venue or an address (required)"""
@@ -769,9 +917,11 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def accounts_get_tik_tok_creator_info(
-        account_id: str, media_type: str = "video"
+        account_id: str, media_type: Literal["video", "photo"] = "video"
     ) -> str:
         """Get TikTok creator info
+
+        Returns TikTok creator details, available privacy levels, posting limits, and commercial content options for a specific TikTok account. Only works with TikTok accounts.
 
         Args:
             account_id: The TikTok account ID (required)
@@ -800,6 +950,8 @@ def register_generated_tools(mcp, _get_client):
         page_token: str | None = None,
     ) -> str:
         """Get reviews
+
+        Returns reviews for a Google Business Profile account including ratings, comments, and owner replies. Use nextPageToken for pagination.
 
         Args:
             account_id: The Zernio account ID (from /v1/accounts) (required)
@@ -831,6 +983,8 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Get food menus
 
+        Returns food menus for a Google Business Profile location including sections, items, pricing, and dietary info. Only for locations with food menu support.
+
         Args:
             account_id: The Zernio account ID (from /v1/accounts) (required)
             location_id: Override which location to query. If omitted, uses the account's selected location. Use GET /gmb-locations to list valid IDs."""
@@ -858,6 +1012,8 @@ def register_generated_tools(mcp, _get_client):
         update_mask: str | None = None,
     ) -> str:
         """Update food menus
+
+        Updates food menus for a Google Business Profile location. Send the full menus array. Use updateMask for partial updates.
 
         Args:
             account_id: The Zernio account ID (from /v1/accounts) (required)
@@ -888,6 +1044,8 @@ def register_generated_tools(mcp, _get_client):
         account_id: str, location_id: str | None = None, read_mask: str | None = None
     ) -> str:
         """Get location details
+
+            Returns detailed Google Business Profile location info (hours, description, phone, website, categories, services). Use readMask to request specific fields.
 
             Args:
                 account_id: The Zernio account ID (from /v1/accounts) (required)
@@ -934,6 +1092,10 @@ def register_generated_tools(mcp, _get_client):
         ad_words_location_extensions: dict[str, Any] | None = None,
     ) -> str:
         """Update location details
+
+        Updates Google Business Profile location details. The updateMask field is required and specifies which fields to update.
+        This endpoint proxies Google's Business Information API locations.patch, so any valid updateMask field is supported.
+        Common fields: regularHours, specialHours, profile.description, websiteUri, phoneNumbers, categories, serviceItems.
 
         Args:
             account_id: The Zernio account ID (from /v1/accounts) (required)
@@ -998,6 +1160,9 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """List media
 
+        Lists media items (photos) for a Google Business Profile location.
+        Returns photo URLs, descriptions, categories, and metadata.
+
         Args:
             account_id: (required)
             location_id: Override which location to query. If omitted, uses the account's selected location. Use GET /gmb-locations to list valid IDs.
@@ -1027,11 +1192,31 @@ def register_generated_tools(mcp, _get_client):
         account_id: str,
         source_url: str,
         location_id: str | None = None,
-        media_format: str = "PHOTO",
+        media_format: Literal["PHOTO", "VIDEO"] = "PHOTO",
         description: str | None = None,
-        category: str | None = None,
+        category: Literal[
+            "CATEGORY_UNSPECIFIED",
+            "COVER",
+            "PROFILE",
+            "LOGO",
+            "EXTERIOR",
+            "INTERIOR",
+            "PRODUCT",
+            "FOOD_AND_DRINK",
+            "MENU",
+            "COMMON_AREA",
+            "ROOMS",
+            "TEAMS",
+            "AT_WORK",
+            "ADDITIONAL",
+        ]
+        | None = None,
     ) -> str:
         """Upload photo
+
+        Creates a media item (photo) for a location from a publicly accessible URL.
+
+        Categories determine where the photo appears: CATEGORY_UNSPECIFIED, COVER, PROFILE, LOGO, EXTERIOR, INTERIOR, PRODUCT, FOOD_AND_DRINK, MENU, COMMON_AREA, ROOMS, TEAMS, AT_WORK, ADDITIONAL.
 
         Args:
             account_id: (required)
@@ -1067,6 +1252,8 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Delete photo
 
+        Deletes a photo or media item from a Google Business Profile location.
+
         Args:
             account_id: (required)
             location_id: Override which location to target. If omitted, uses the account's selected location. Use GET /gmb-locations to list valid IDs.
@@ -1098,6 +1285,21 @@ def register_generated_tools(mcp, _get_client):
         page_token: str | None = None,
     ) -> str:
         """Get attribute metadata
+
+        Returns metadata about which Google Business Profile attributes are available for
+        a location or business category. Use this endpoint to discover valid attribute names,
+        value types, and allowed enum values before reading or writing via gmb-attributes.
+
+        Two mutually exclusive query modes:
+
+        **Location mode**: pass `locationId` (or rely on the account's stored `selectedLocationId`).
+        Google returns attributes valid for that specific location.
+
+        **Category mode**: pass `categoryName` (must start with `categories/`) and `regionCode`.
+        Google returns attributes valid for that category across the given region.
+        `languageCode` is optional in category mode.
+
+        Both modes support `pageSize` and `pageToken` for pagination.
 
         Args:
             account_id: (required)
@@ -1135,6 +1337,8 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Get attributes
 
+        Returns Google Business Profile location attributes (amenities, services, accessibility, payment types). Available attributes vary by business category.
+
         Args:
             account_id: (required)
             location_id: Override which location to query. If omitted, uses the account's selected location. Use GET /gmb-locations to list valid IDs."""
@@ -1162,6 +1366,10 @@ def register_generated_tools(mcp, _get_client):
         location_id: str | None = None,
     ) -> str:
         """Update attributes
+
+        Updates location attributes (amenities, services, etc.).
+
+        The attributeMask specifies which attributes to update (comma-separated).
 
         Args:
             account_id: (required)
@@ -1196,6 +1404,10 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """List action links
 
+        Lists place action links for a Google Business Profile location.
+
+        Place actions are the booking, ordering, and reservation buttons that appear on your listing.
+
         Args:
             account_id: (required)
             location_id: Override which location to query. If omitted, uses the account's selected location. Use GET /gmb-locations to list valid IDs.
@@ -1224,10 +1436,22 @@ def register_generated_tools(mcp, _get_client):
     def accounts_create_google_business_place_action(
         account_id: str,
         uri: str,
-        place_action_type: str,
+        place_action_type: Literal[
+            "APPOINTMENT",
+            "ONLINE_APPOINTMENT",
+            "DINING_RESERVATION",
+            "FOOD_ORDERING",
+            "FOOD_DELIVERY",
+            "FOOD_TAKEOUT",
+            "SHOP_ONLINE",
+        ],
         location_id: str | None = None,
     ) -> str:
         """Create action link
+
+        Creates a place action link for a location.
+
+        Available action types: APPOINTMENT, ONLINE_APPOINTMENT, DINING_RESERVATION, FOOD_ORDERING, FOOD_DELIVERY, FOOD_TAKEOUT, SHOP_ONLINE.
 
         Args:
             account_id: (required)
@@ -1259,6 +1483,8 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Delete action link
 
+        Deletes a place action link (e.g. booking or ordering URL) from a Google Business Profile location.
+
         Args:
             account_id: (required)
             location_id: Override which location to target. If omitted, uses the account's selected location. Use GET /gmb-locations to list valid IDs.
@@ -1285,9 +1511,21 @@ def register_generated_tools(mcp, _get_client):
         name: str,
         location_id: str | None = None,
         uri: str | None = None,
-        place_action_type: str | None = None,
+        place_action_type: Literal[
+            "APPOINTMENT",
+            "ONLINE_APPOINTMENT",
+            "DINING_RESERVATION",
+            "FOOD_ORDERING",
+            "FOOD_DELIVERY",
+            "FOOD_TAKEOUT",
+            "SHOP_ONLINE",
+        ]
+        | None = None,
     ) -> str:
         """Update action link
+
+        Updates a place action link (change URL or action type).
+        Only the fields included in the request body will be updated.
 
         Args:
             account_id: (required)
@@ -1321,9 +1559,22 @@ def register_generated_tools(mcp, _get_client):
         location_names: list[str] | None,
         page_size: int = 50,
         page_token: str | None = None,
-        order_by: str = "updateTime desc",
+        order_by: Literal[
+            "updateTime desc", "rating", "rating desc"
+        ] = "updateTime desc",
     ) -> str:
         """Batch get reviews
+
+        Fetches reviews across multiple locations in a single request.
+        More efficient than calling GET /gmb-reviews per location for multi-location businesses.
+        Returns a flat locationReviews array (not grouped by location): each item carries
+        the location resource name it belongs to (`name`) plus the review object (`review`),
+        whose identity is `review.reviewId`.
+        Reviews are requested from Google ordered by `orderBy` (default `updateTime desc`,
+        newest first), so callers polling for recent reviews can stop paginating once they
+        cross their date window.
+        Note: this endpoint does not return aggregate metrics (averageRating / totalReviewCount).
+        For those, use the single-location GET /gmb-reviews endpoint.
 
         Args:
             account_id: (required)
@@ -1357,6 +1608,10 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Get a review
 
+        Returns one Google Business Profile review, in the same shape as the entries of GET /v1/accounts/{accountId}/gmb-reviews.
+        The review is read from the account's selected location unless locationId overrides it, and Google returns 404 for a review id that belongs to another location.
+        Read the review before replying if a human may have answered it already: replies are overwritten in place and Google keeps no history.
+
         Args:
             account_id: The Zernio account ID (from /v1/accounts) (required)
             review_id: The review ID portion (e.g. "AIe9_BGx1234567890"), not the full resource name (required)
@@ -1382,6 +1637,12 @@ def register_generated_tools(mcp, _get_client):
         account_id: str, review_id: str, comment: str
     ) -> str:
         """Reply to a review
+
+        Posts (or updates) the business owner reply to a Google Business Profile review.
+        The reply is associated with the account's currently selected location (set via /v1/accounts/{accountId}/gmb-locations).
+        Calling this endpoint a second time on the same review overwrites the previous reply (PUT semantics on Google's side).
+        Google keeps no history, so an automated retry silently replaces a reply someone edited by hand in the Google Business Profile UI.
+        Read the review before retrying if a human may have answered it.
 
         Args:
             account_id: The Zernio account ID (from /v1/accounts) (required)
@@ -1409,6 +1670,8 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Delete a review reply
 
+        Removes the business owner reply from a Google Business Profile review. The review itself remains.
+
         Args:
             account_id: The Zernio account ID (from /v1/accounts) (required)
             review_id: The review ID portion (e.g. "AIe9_BGx1234567890"), not the full resource name (required)"""
@@ -1432,6 +1695,13 @@ def register_generated_tools(mcp, _get_client):
     def accounts_list_business_partners(account_id: str) -> str:
         """List partner businesses of the Page
 
+        The business portfolios (Meta Business Managers) that may act on the Facebook Page
+        behind this account, plus the Page's owning portfolio and linked Instagram
+        professional account. Works on Facebook accounts and on Instagram accounts connected
+        through Facebook Login.
+
+        Platforms: facebook, instagram
+
         Args:
             account_id: Zernio SocialAccount id of the Facebook or Instagram account. (required)"""
         client = _get_client()
@@ -1450,9 +1720,63 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def accounts_grant_business_partner(
-        account_id: str, business_id: str, permitted_tasks: list[str] | None = None
+        account_id: str,
+        business_id: str,
+        permitted_tasks: list[
+            Literal[
+                "MANAGE",
+                "CREATE_CONTENT",
+                "MODERATE",
+                "MESSAGING",
+                "ADVERTISE",
+                "ANALYZE",
+                "MODERATE_COMMUNITY",
+                "MANAGE_JOBS",
+                "PAGES_MESSAGING",
+                "PAGES_MESSAGING_SUBSCRIPTIONS",
+                "READ_PAGE_MAILBOXES",
+                "VIEW_MONETIZATION_INSIGHTS",
+                "MANAGE_LEADS",
+                "CASHIER_ROLE",
+                "GLOBAL_STRUCTURE_MANAGEMENT",
+                "PROFILE_PLUS_FULL_CONTROL",
+                "PROFILE_PLUS_MANAGE",
+                "PROFILE_PLUS_FACEBOOK_ACCESS",
+                "PROFILE_PLUS_CREATE_CONTENT",
+                "PROFILE_PLUS_MODERATE",
+                "PROFILE_PLUS_MODERATE_DELEGATE_COMMUNITY",
+                "PROFILE_PLUS_MESSAGING",
+                "PROFILE_PLUS_ADVERTISE",
+                "PROFILE_PLUS_ANALYZE",
+                "PROFILE_PLUS_REVENUE",
+                "PROFILE_PLUS_MANAGE_LEADS",
+                "PROFILE_PLUS_CREATIVE_MANAGEMENT",
+                "PROFILE_PLUS_CREATOR_MANAGEMENT",
+                "PROFILE_PLUS_GLOBAL_STRUCTURE_MANAGEMENT",
+            ]
+        ]
+        | None = None,
     ) -> str:
         """Share the Page with a partner business
+
+        Grants a partner business portfolio tasks on the Facebook Page behind this account.
+        With `ADVERTISE`, the partner can run ads for the Page from ad accounts in its own
+        portfolio, which is how an integrator advertises for an end user without touching
+        the end user's ad accounts.
+
+        Meta only lets a user token share a Page that a business portfolio owns. A Page
+        outside any portfolio must first be claimed into one at business.facebook.com; this
+        endpoint answers `422` until that is done. Meta refuses a second grant to a portfolio
+        that already has access instead of replacing its tasks, so that case answers `200`
+        with `alreadyShared: true` and the tasks the partner currently holds. To change a
+        partner's tasks, revoke and grant again.
+
+        After the grant, the partner assigns its own people to the Page with
+        `POST /v1/ads/page-users`; Meta does not assign partner admins automatically.
+        The Instagram professional account linked to the Page is returned in `page` so the
+        partner can reference it; Meta ...
+
+        Platforms: facebook, instagram
 
         Args:
             account_id: Zernio SocialAccount id of the Facebook or Instagram account. (required)
@@ -1480,6 +1804,10 @@ def register_generated_tools(mcp, _get_client):
     def accounts_revoke_business_partner(account_id: str, business_id: str) -> str:
         """Revoke a partner business from the Page
 
+        Removes every task the partner business portfolio held on the Page.
+
+        Platforms: facebook, instagram
+
         Args:
             account_id: Zernio SocialAccount id of the Facebook or Instagram account. (required)
             business_id: Meta business portfolio id of the partner (numeric string). (required)"""
@@ -1505,6 +1833,23 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Resolve LinkedIn mention
 
+        Converts a LinkedIn profile or company URL to a URN for @mentions in posts.
+
+        How to use LinkedIn @mentions (2-step workflow):
+
+        1. Call this endpoint with the LinkedIn profile/company URL to get the mention URN and format.
+        2. Embed the returned mentionFormat (e.g. @[Vincent Jong](urn:li:person:xxx)) directly in your post's content field.
+
+        Example:
+        - Resolve: GET /v1/accounts/{id}/linkedin-mentions?url=linkedin.com/in/vincentjong&displayName=Vincent Jong
+        - Returns: mentionFormat: \"@[Vincent Jong](urn:li:person:xxx)\"
+        - Use in post content: \"Great talk with @[Vincent Jong](urn:li:person:xxx) today!\"
+
+        Important: The mentions array field in POST /v1/posts is stored for reference only and does NOT trigger @mentions on LinkedIn. You must embed the mention format directly in the content text.
+
+        Requirements:
+        - Person mentions require the LinkedIn account to be admin of at least one organization: both endpoints that resolve a profile URL to a member URN take an organization you administer. ...
+
         Args:
             account_id: The LinkedIn account ID (required)
             url: LinkedIn profile URL, company URL, or vanity name. (required)
@@ -1529,6 +1874,8 @@ def register_generated_tools(mcp, _get_client):
     def accounts_get_slack_settings(account_id: str) -> str:
         """Get Slack account settings
 
+        Returns the connected Slack channel details and the default message identity (name and avatar shown as the author on every post, with Slack's APP badge). The identity applies to messages only; the app's own Slack profile is global and cannot be changed per workspace.
+
         Args:
             account_id: (required)"""
         client = _get_client()
@@ -1552,6 +1899,8 @@ def register_generated_tools(mcp, _get_client):
         default_icon_url: str | None = None,
     ) -> str:
         """Update Slack account settings
+
+        Set or clear the default message identity for this channel. Empty string clears a field; per-post platformSpecificData.username/iconUrl still override these defaults.
 
         Args:
             account_id: (required)
@@ -1579,6 +1928,8 @@ def register_generated_tools(mcp, _get_client):
     def accounts_get_bluesky_settings(account_id: str) -> str:
         """Get Bluesky account settings
 
+        Returns the account's default post languages (defaultLangs), applied at publish time whenever a post's platformSpecificData.langs is absent. Null when no default is set.
+
         Args:
             account_id: (required)"""
         client = _get_client()
@@ -1598,6 +1949,8 @@ def register_generated_tools(mcp, _get_client):
     )
     def accounts_update_bluesky_settings(account_id: str, default_langs: str) -> str:
         """Update Bluesky account settings
+
+        Set or clear the account's default post languages. 1-3 BCP-47 codes (e.g. \"pt\", \"en-US\"), the same validation as per-post langs; explicit null clears the default. Per-post platformSpecificData.langs always overrides this default. Applies to posts published after the change; already-published posts cannot be retagged (Bluesky has no post edit).
 
         Args:
             account_id: (required)
@@ -1623,13 +1976,31 @@ def register_generated_tools(mcp, _get_client):
     )
     def ad_accounts_get_ad_comments(
         ad_id: str,
-        placement: str | None = None,
+        placement: Literal["facebook", "instagram"] | None = None,
         limit: int = 25,
         since: str | None = None,
         until: str | None = None,
         cursor: str | None = None,
     ) -> str:
         """List comments on an ad
+
+        Returns comments on an ad's underlying creative post. Useful for moderating or analyzing
+        engagement on dark posts (ad creatives that never went live organically), which the
+        regular GET /v1/inbox/comments/{postId} endpoint cannot serve because dark posts are
+        not in Zernio's post database.
+
+        An ad that runs on both Facebook feed and Instagram feed has two separate underlying
+        posts with separate comment threads (the creative's effective_object_story_id and
+        effective_instagram_media_id). Use the `placement` query param to pick one; with no
+        param the Instagram side is returned when it exists, otherwise Facebook. The
+        identifiers are read from the ad record (persisted during sync) with a Marketing-API
+        fallback for ads that predate the field.
+
+        For Instagram-placed comments, the Instagram account that runs the ad must be connected
+        to Zernio, because those comments are read through that account's token. If no connected
+        Instagram account on the profile can read the ad's media, the call returns ...
+
+        Platforms: meta, tiktok
 
         Args:
             ad_id: Internal Zernio ad ID or indexed platform ad/post ID. (required)
@@ -1669,6 +2040,22 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Reply to an ad comment
 
+        Reply to a first-level TikTok ad comment. Requires a TT_USER or CUSTOMIZED_USER identity with comment-management permission. Replies to replies are rejected. The response commentId identifies the new reply. This operation is not idempotent; do not blindly retry an uncertain response.
+
+        Unknown identity and video item fields are resolved only when needed for this
+        action, then persisted for reuse. Comment-specific fields take precedence.
+        If TikTok no longer returns the ad needed to resolve identity, 404 ad_not_found
+        directs you to check deletion or archival in TikTok Ads Manager. Listing can
+        still succeed. Unsupported or unavailable identity returns 403 feature_not_available.
+        Denied access to ad details returns 403 insufficient_permissions with reconnect
+        guidance and the upstream platformError.
+
+        Requires Ads access. The ad is resolved within the caller's accessible profiles.
+        Before moderation, Zernio verifies that the comment belongs to this ad using
+        TikTok's ad-group comment listing. ...
+
+        Platforms: tiktok
+
         Args:
             ad_id: Internal Zernio ad ID or indexed platform ad ID. (required)
             comment_id: TikTok comment ID from the ad comment listing. (required)
@@ -1700,6 +2087,18 @@ def register_generated_tools(mcp, _get_client):
         until: str | None = None,
     ) -> str:
         """Hide or unhide an ad comment
+
+        Hide or restore a TikTok ad comment. Send hidden=true to hide it or hidden=false to make it public again. Identity and video item ID are not required; no identity lookup is performed.
+
+        Requires Ads access. The ad is resolved within the caller's accessible profiles.
+        Before moderation, Zernio verifies that the comment belongs to this ad using
+        TikTok's ad-group comment listing. The default search window is the last 30 days.
+        Use since/until for older comments, with at most 30 days between the dates.
+        Lookups scan at most 2,000 ad-group comments; narrow the date window if exceeded.
+        Meta returns 501 feature_not_available with guidance to use the existing inbox
+        comment endpoints and the account/post IDs from GET /v1/ads/{adId}/comments.
+
+        Platforms: tiktok
 
         Args:
             ad_id: Internal Zernio ad ID or indexed platform ad ID. (required)
@@ -1733,6 +2132,24 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Delete an ad comment
 
+        Delete your own TikTok ad comment or reply. TikTok must return can_delete=true for the comment. Other users' comments can be hidden instead.
+
+        Unknown identity and video item fields are resolved only when needed for this
+        action, then persisted for reuse. Comment-specific fields take precedence.
+        If TikTok no longer returns the ad needed to resolve identity, 404 ad_not_found
+        directs you to check deletion or archival in TikTok Ads Manager. Listing can
+        still succeed. Unsupported or unavailable identity returns 403 feature_not_available.
+        Denied access to ad details returns 403 insufficient_permissions with reconnect
+        guidance and the upstream platformError.
+
+        Requires Ads access. The ad is resolved within the caller's accessible profiles.
+        Before moderation, Zernio verifies that the comment belongs to this ad using
+        TikTok's ad-group comment listing. The default search window is the last 30 days.
+        Use since/until for older comments, with at most 30 days between the dates.
+        Lookups scan at most ...
+
+        Platforms: tiktok
+
         Args:
             ad_id: Internal Zernio ad ID or indexed platform ad ID. (required)
             comment_id: TikTok comment ID from the ad comment listing. (required)
@@ -1757,6 +2174,14 @@ def register_generated_tools(mcp, _get_client):
     )
     def ad_accounts_list_ads_business_centers(account_id: str) -> str:
         """List TikTok Business Centers
+
+        Returns the TikTok Business Centers (BCs) the connected `tiktokads` account can read.
+        Each BC reports its advertiser count so callers can build agency-style pickers
+        without re-walking `/v1/ads/accounts` per BC.
+
+        TikTok-only. Solo advertisers (non-agency tokens) return an empty array.
+
+        Platforms: tiktok
 
         Args:
             account_id: ID of the `tiktokads` (or parent `tiktok` posting) SocialAccount (required)"""
@@ -1787,6 +2212,14 @@ def register_generated_tools(mcp, _get_client):
         after: str | None = None,
     ) -> str:
         """Ad account change / audit log
+
+        Account-level audit log from Meta's `/act_X/activities`: who changed what and when
+        (creates, edits, status flips, budget changes...) with Meta's translated event names and
+        the structured before/after in `extra_data`. Rows are returned verbatim. Meta has no
+        server-side per-object filter on this edge, so `objectId` filters the returned page
+        client-side (combine with paging to walk history for one campaign/ad set/ad).
+
+        Platforms: meta
 
         Args:
             account_id: Zernio SocialAccount id (posting or ads variant) used to resolve the Meta token. (required)
@@ -1828,6 +2261,12 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """A/B tests and lift studies
 
+        Lists the ad account's A/B tests and lift studies (Meta's `/act_X/ad_studies`), rows
+        returned verbatim. The default projection covers id, name, type, timing and cells with
+        split percentages; `fields` is a raw-passthrough override.
+
+        Platforms: meta
+
         Args:
             account_id: Zernio SocialAccount id (posting or ads variant) used to resolve the Meta token. (required)
             ad_account_id: Meta ad account id (act_<n>). (required)
@@ -1860,6 +2299,10 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """List Instagram ad identities
 
+        Discovers identities through connected_instagram_accounts, Page linkage and Page-backed identities, with a best-effort business fallback. Business permission errors do not fail discovery. The resolved object uses the same profile-scoped resolver as ad creation; null means no identity was resolved. Format-specific observed-actor fallbacks at creative creation are not predicted.
+
+        Platforms: meta
+
         Args:
             account_id: Zernio Meta Ads or Facebook SocialAccount ID. (required)
             ad_account_id: Meta ad account ID including the act_ prefix. (required)"""
@@ -1888,6 +2331,10 @@ def register_generated_tools(mcp, _get_client):
         after: str | None = None,
     ) -> str:
         """List Instagram posts to boost
+
+        Lists the media of the Instagram account this Meta connection can reach, so an existing Instagram post can be boosted without connecting the Instagram account separately. Each `posts[].id` is the existing-post id to send as `platformPostId` when creating the ad; Meta turns it into `source_instagram_media_id` on the creative. Identity resolution reuses the same resolver as `/v1/ads/instagram-accounts`. `igUserId` is always checked against the identities the connection can reach and is never trusted as sent. When no identity is reachable the endpoint fails instead of returning an empty list, and the two causes stay apart: `403 reconnect_required` means the connection predates Instagram access (Meta then omits `instagram_business_account` from the Page read rather than erroring, so it looks identical to having no data) and the account must be reconnected granting Instagram access, while `422 instagram_business_account_unresolved` means the Page genuinely has no Instagram professional ...
+
+        Platforms: meta
 
         Args:
             account_id: Zernio Meta Ads, Facebook or Instagram SocialAccount ID. (required)
@@ -1921,6 +2368,10 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """List advertisable apps
 
+        Lists applications available to a Meta ad account, their supported platforms and unmodified object store URLs. A listed app still needs a configured mobile platform and store URL to run install promotion.
+
+        Platforms: meta
+
         Args:
             account_id: Zernio Meta Ads or Facebook SocialAccount ID. (required)
             ad_account_id: Meta ad account ID including the act_ prefix. (required)"""
@@ -1945,6 +2396,10 @@ def register_generated_tools(mcp, _get_client):
         account_id: str, ad_account_id: str, application_id: str
     ) -> str:
         """Get iOS 14 campaign limits
+
+        Reads Meta iOS 14 campaign limits for an application on an ad account. applicationId is sent as Meta app_id. This read does not establish that the application is configured for iOS promotion.
+
+        Platforms: meta
 
         Args:
             account_id: Zernio Meta Ads or Facebook SocialAccount ID. (required)
@@ -1974,6 +2429,13 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Businesses list
 
+        Business Manager portfolios the connected Meta user belongs to (Meta's `/me/businesses`),
+        rows returned verbatim (id, name, verification_status, created_time). Token-scoped, so no
+        `adAccountId` is needed. For TikTok Business Centers use
+        `GET /v1/ads/business-centers`.
+
+        Platforms: meta
+
         Args:
             account_id: Zernio SocialAccount id (posting or ads variant) used to resolve the Meta token. (required)
             limit: Rows per page
@@ -1997,6 +2459,12 @@ def register_generated_tools(mcp, _get_client):
     )
     def ad_accounts_list_meta_business_users(account_id: str, business_id: str) -> str:
         """Business users
+
+        People and system users of a Meta business portfolio, with the business-scoped ids that
+        `POST /v1/ads/accounts/users` and `POST /v1/ads/page-users` take. The connected Meta
+        user must be an admin of the portfolio.
+
+        Platforms: meta
 
         Args:
             account_id: Zernio SocialAccount id (posting or ads variant) used to resolve the Meta token. (required)
@@ -2022,6 +2490,11 @@ def register_generated_tools(mcp, _get_client):
         account_id: str, page_id: str, business_id: str
     ) -> str:
         """Page users of a business
+
+        People of a business portfolio assigned to a Facebook Page the portfolio owns or was
+        granted as a partner (`POST /v1/accounts/{accountId}/business-partners` on the owner side).
+
+        Platforms: meta
 
         Args:
             account_id: Zernio SocialAccount id (posting or ads variant) used to resolve the Meta token. (required)
@@ -2049,9 +2522,27 @@ def register_generated_tools(mcp, _get_client):
         page_id: str,
         business_id: str,
         user_id: str,
-        tasks: list[str] | None,
+        tasks: list[
+            Literal[
+                "MANAGE",
+                "CREATE_CONTENT",
+                "MODERATE",
+                "MESSAGING",
+                "ADVERTISE",
+                "ANALYZE",
+            ]
+        ]
+        | None,
     ) -> str:
         """Assign a user to a Page
+
+        Gives a person of the portfolio tasks on a Page the portfolio owns or was granted as a
+        partner. Meta does not assign partner admins automatically, so after an owner shares a
+        Page the partner calls this for the people whose tokens will advertise for it.
+        `ADVERTISE` is what ad creation needs. Assigning an already assigned user replaces
+        their task set.
+
+        Platforms: meta
 
         Args:
             account_id: Zernio SocialAccount id used to resolve the Meta token. (required)
@@ -2085,6 +2576,8 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Remove a user from a Page
 
+        Platforms: meta
+
         Args:
             account_id: Zernio SocialAccount id used to resolve the Meta token. (required)
             page_id: Facebook Page id. (required)
@@ -2114,6 +2607,17 @@ def register_generated_tools(mcp, _get_client):
         after: str | None = None,
     ) -> str:
         """List ad labels
+
+        Lists the organizational labels on an ad account.
+
+        - **Meta**: pass `adAccountId=act_<n>`. Rows are Meta's `/act_X/adlabels` returned verbatim
+          (id, name, created/updated time), paginated with `limit` / `after`.
+        - **Google Ads**: pass the numeric customer id as `adAccountId` (optional when the
+          connection has a single customer). Returns every non-removed label as a `GoogleAdLabel`
+          in one page (`paging.after` is always null). Reads are cached for 10 minutes; when the
+          shared Google quota is exhausted the last successful result is served with `stale: true`.
+
+        Platforms: meta, google
 
         Args:
             account_id: Zernio SocialAccount id. For Meta, the posting or ads variant used to resolve the token. (required)
@@ -2151,6 +2655,12 @@ def register_generated_tools(mcp, _get_client):
         description: str | None = None,
     ) -> str:
         """Create a Google Ads label
+
+        Creates a label on a Google Ads customer. Attach it to campaigns, ad groups, ads and
+        keywords with `POST /v1/ads/labels/{labelId}/assignments`. Label names are unique per
+        customer; a duplicate is a 400.
+
+        Platforms: google
 
         Args:
             account_id: Zernio SocialAccount id (Google Ads) (required)
@@ -2192,6 +2702,10 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Update a Google Ads label
 
+        Changes the name, color or description of a label. Only the fields sent are written.
+
+        Platforms: google
+
         Args:
             label_id: Google label id (required)
             account_id: Zernio SocialAccount id (Google Ads) (required)
@@ -2231,6 +2745,10 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Remove a Google Ads label
 
+        Removes the label. Google drops it from every campaign, ad group, ad and keyword it was attached to.
+
+        Platforms: google
+
         Args:
             label_id: Google label id (required)
             account_id: Zernio SocialAccount id (Google Ads) (required)
@@ -2267,6 +2785,15 @@ def register_generated_tools(mcp, _get_client):
         keyword_ids: list[str] | None = None,
     ) -> str:
         """Attach a Google Ads label
+
+        Attaches the label to campaigns, ad groups, ads and keywords (Google CampaignLabel,
+        AdGroupLabel, AdGroupAdLabel and AdGroupCriterionLabel) in one mutate. Idempotent: a
+        target that already carries the label is counted in `unchanged` instead of failing the
+        call. All ids are Google's own: ads and keywords use the composite id Google puts in
+        their resource names, `{adGroupId}~{adId}` and `{adGroupId}~{criterionId}` (the keyword
+        form is the tail of `resourceName` on `GET /v1/ads/keywords`).
+
+        Platforms: google
 
         Args:
             label_id: Google label id (required)
@@ -2313,6 +2840,10 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Detach a Google Ads label
 
+        Removes the label from the given targets. Idempotent; a target without the label is counted in `unchanged`.
+
+        Platforms: google
+
         Args:
             label_id: Google label id (required)
             account_id: Zernio SocialAccount id (Google Ads) (required)
@@ -2355,6 +2886,13 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """List high-demand periods
 
+        Scheduled budget increases (Meta's budget-scheduling API). The Graph edge lives on the
+        campaign and ad-set nodes only, so exactly one of `campaignId` / `adSetId` (platform
+        ids) is required. Rows returned verbatim (budget_value, budget_value_type, time window,
+        recurrence).
+
+        Platforms: meta
+
         Args:
             account_id: Zernio SocialAccount id (posting or ads variant) used to resolve the Meta token. (required)
             campaign_id: Platform campaign id. Exactly one of campaignId / adSetId.
@@ -2385,15 +2923,27 @@ def register_generated_tools(mcp, _get_client):
     def ad_accounts_create_high_demand_period(
         account_id: str,
         budget_value: float,
-        budget_value_type: str,
+        budget_value_type: Literal["ABSOLUTE", "MULTIPLIER"],
         time_start: int,
         time_end: int,
         campaign_id: str | None = None,
         ad_set_id: str | None = None,
-        recurrence_type: str | None = None,
+        recurrence_type: Literal["ONE_TIME", "WEEKLY", "MONTHLY"] | None = None,
         currency: str | None = None,
     ) -> str:
         """Schedule a budget increase
+
+        Pre-schedule a temporary budget increase (Black Friday, a launch, a sale) instead of
+        editing the budget by hand on the day. Same target rule as the GET: exactly one of
+        `campaignId` / `adSetId`.
+
+        Two Meta constraints worth knowing before you call it. `timeStart` / `timeEnd` must
+        fall on a 15-minute boundary, and a campaign cannot mix `ABSOLUTE` and `MULTIPLIER`
+        across its schedules; the second type is rejected with \"Can't mix your budget scaling
+        selection\". Window rules (must sit inside the campaign's run dates, minimum lead time,
+        no overlap) are Meta's and its message is forwarded verbatim.
+
+        Platforms: meta
 
         Args:
             account_id: Zernio SocialAccount id used to resolve the Meta token. (required)
@@ -2435,6 +2985,26 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """List value rule sets
 
+        Lists the ad account's value rule sets (Meta's `/act_X/value_rule_set`). A value rule
+        set adjusts the auction bid up or down for audience segments you value differently;
+        attach one to an ad set with `valueRuleSetId` on `POST /v1/ads/create` or
+        `PUT /v1/ads/ad-sets/{adSetId}`.
+
+        Rows are returned in the same camelCase shape the `PUT` body takes, ids included, so a
+        set round-trips 1:1: **the update is a full replace, not a patch**, so you GET, mutate
+        and send the whole thing back.
+
+        Limits: 6 rule sets per ad account, 10 rules per set, 4 criteria per rule.
+
+        **Rule order is semantic.** Rules are evaluated in array order and only the FIRST
+        matching rule adjusts the bid for an overlapping audience. The order you send is the
+        order that is stored and returned.
+
+        Eligibility: value rule sets apply only to ad sets on the `LOWEST_COST_WITHOUT_CAP`
+        (auto-bid) or `COST_CAP` bid strategies. Meta rejects the rest server-side.
+
+        Platforms: meta
+
         Args:
             account_id: Zernio SocialAccount id (posting or ads variant) used to resolve the Meta token. (required)
             ad_account_id: Meta ad account id (act_<n>). (required)
@@ -2468,6 +3038,27 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Create a value rule set
 
+        Creates a value rule set on the ad account (Meta's `POST /act_X/value_rule_set`).
+        Attach the returned id to an ad set with `valueRuleSetId` on `POST /v1/ads/create` or
+        `PUT /v1/ads/ad-sets/{adSetId}`.
+
+        **Rule order is semantic**: rules are evaluated in array order and only the first
+        matching rule adjusts the bid for an overlapping audience.
+
+        `adjustValue` is an unsigned magnitude in percent; the direction lives in `adjustSign`.
+        `INCREASE` accepts 1-1000, `DECREASE` accepts 1-90. There is no signed field and 0 is
+        out of range.
+
+        `criteriaValueTypes` is positionally paired with `criteriaValues` (same length, same
+        order). Every type is the literal `\"NONE\"` except on `LOCATION`, which uses
+        `LOCATION_COUNTRY` / `LOCATION_REGION` / `LOCATION_CITY` / `LOCATION_COMSCORE_MARKET`
+        and may mix them within one criterion. Location values are Targeting-Search keys: a
+        two-letter country code for `LOCATION_COUNTRY`, a numeric key for the rest.
+
+        `LOCATION_DMA` was replaced by `LOCATION_COMSCORE_MARKET` ...
+
+        Platforms: meta
+
         Args:
             account_id: Zernio SocialAccount id (posting or ads variant); its platform decides where the campaign is created. (required)
             ad_account_id: Platform ad account id (Meta act_<n>, Google customer id, LinkedIn account id, ...). (required)
@@ -2496,6 +3087,16 @@ def register_generated_tools(mcp, _get_client):
     def ad_accounts_get_value_rule_set(value_rule_set_id: str, account_id: str) -> str:
         """Read a value rule set
 
+        Reads one value rule set including every nested rule id and criterion id. This is step
+        one of any edit: `PUT` is a full replace, so you need the ids before you can keep the
+        objects you are not changing.
+
+        Meta's own read returns `GENDER` values lowercase (`\"male\"`) while writes require
+        `\"MALE\"`. Values are passed through untouched, so never case-compare a stored rule
+        against a fetched one.
+
+        Platforms: meta
+
         Args:
             value_rule_set_id: Platform value rule set id. (required)
             account_id: Zernio SocialAccount id (posting or ads variant) used to resolve the Meta token. (required)"""
@@ -2523,6 +3124,25 @@ def register_generated_tools(mcp, _get_client):
         rules: list[dict[str, Any]] | None,
     ) -> str:
         """Replace a value rule set
+
+        **THIS IS A FULL REPLACE, NOT A PATCH.** Meta's update is declarative: the body you
+        send becomes the rule set.
+
+        - `GET /v1/ads/value-rule-sets/{valueRuleSetId}` FIRST.
+        - Keep a rule or criterion by echoing its `id`.
+        - Create one by including the object WITHOUT an `id`.
+        - Delete one by OMITTING it from the array. There is no warning and no undo.
+
+        `name` and `rules` are both required for exactly this reason: a partial body would
+        silently destroy every rule left out.
+
+        **Rule order is semantic**: the array order you send is the evaluation order, and only
+        the first matching rule adjusts the bid for an overlapping audience.
+
+        Existing rule sets created elsewhere may contain `LOCATION_DMA` criteria. Those went
+        inert on 2026-06-22 and are rejected here; migrate them to `LOCATION_COMSCORE_MARKET`.
+
+        Platforms: meta
 
         Args:
             value_rule_set_id: Platform value rule set id. (required)
@@ -2554,6 +3174,13 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Delete a value rule set
 
+        Deletes the rule set (Meta's `POST /{value-rule-set-id}/delete_rule_set`, a custom
+        action edge rather than an HTTP DELETE on its side). Ad sets pointing at it are not
+        modified here; detach them first with `valueRulesApplied: false` on
+        `PUT /v1/ads/ad-sets/{adSetId}`.
+
+        Platforms: meta
+
         Args:
             value_rule_set_id: Platform value rule set id. (required)
             account_id: Zernio SocialAccount id (posting or ads variant) used to resolve the Meta token. (required)"""
@@ -2578,9 +3205,23 @@ def register_generated_tools(mcp, _get_client):
         account_id: str,
         ad_account_id: str | None = None,
         customer_id: str | None = None,
-        platform: str | None = None,
+        platform: Literal[
+            "facebook",
+            "instagram",
+            "tiktok",
+            "linkedin",
+            "pinterest",
+            "google",
+            "twitter",
+            "openai",
+        ]
+        | None = None,
     ) -> str:
         """List negative keyword lists
+
+        Google Ads shared negative keyword lists (shared_set type NEGATIVE_KEYWORDS). Reads are cached for 10 minutes; quota exhaustion may return the last successful result for up to 7 days with stale=true. Customer selection is limited to this connection and its account scope.
+
+        Platforms: google
 
         Args:
             account_id: (required)
@@ -2612,10 +3253,24 @@ def register_generated_tools(mcp, _get_client):
         name: str,
         ad_account_id: str | None = None,
         customer_id: str | None = None,
-        platform: str | None = None,
+        platform: Literal[
+            "facebook",
+            "instagram",
+            "tiktok",
+            "linkedin",
+            "pinterest",
+            "google",
+            "twitter",
+            "openai",
+        ]
+        | None = None,
         keywords: list[Any] | None = None,
     ) -> str:
         """Create a negative keyword list
+
+        Creates one Google Ads shared negative keyword list with optional initial keywords in a single atomic mutation. Daily quota is reserved for every mutate item, so large batches may return 429 before any change. This operation is not idempotent. The list is not attached to any campaign.
+
+        Platforms: google
 
         Args:
             account_id: Zernio SocialAccount id. (required)
@@ -2651,9 +3306,23 @@ def register_generated_tools(mcp, _get_client):
         account_id: str,
         ad_account_id: str | None = None,
         customer_id: str | None = None,
-        platform: str | None = None,
+        platform: Literal[
+            "facebook",
+            "instagram",
+            "tiktok",
+            "linkedin",
+            "pinterest",
+            "google",
+            "twitter",
+            "openai",
+        ]
+        | None = None,
     ) -> str:
         """Get a negative keyword list
+
+        Google Ads shared negative keyword lists (shared_set type NEGATIVE_KEYWORDS). Reads are cached for 10 minutes; quota exhaustion may return the last successful result for up to 7 days with stale=true. Customer selection is limited to this connection and its account scope. Includes the keywords and their criterion ids.
+
+        Platforms: google
 
         Args:
             list_id: (required)
@@ -2688,9 +3357,23 @@ def register_generated_tools(mcp, _get_client):
         name: str,
         ad_account_id: str | None = None,
         customer_id: str | None = None,
-        platform: str | None = None,
+        platform: Literal[
+            "facebook",
+            "instagram",
+            "tiktok",
+            "linkedin",
+            "pinterest",
+            "google",
+            "twitter",
+            "openai",
+        ]
+        | None = None,
     ) -> str:
         """Rename a negative keyword list
+
+        Renames a shared negative keyword list. Keywords and campaign associations are unchanged. Use the keywords endpoint to edit the desired keyword set.
+
+        Platforms: google
 
         Args:
             list_id: (required)
@@ -2726,9 +3409,23 @@ def register_generated_tools(mcp, _get_client):
         account_id: str,
         ad_account_id: str | None = None,
         customer_id: str | None = None,
-        platform: str | None = None,
+        platform: Literal[
+            "facebook",
+            "instagram",
+            "tiktok",
+            "linkedin",
+            "pinterest",
+            "google",
+            "twitter",
+            "openai",
+        ]
+        | None = None,
     ) -> str:
         """Delete a negative keyword list
+
+        Removes the Google shared negative keyword list. Detach it from all campaigns first; an in-use list is rejected. Only NEGATIVE_KEYWORDS shared sets are supported.
+
+        Platforms: google
 
         Args:
             list_id: (required)
@@ -2763,9 +3460,23 @@ def register_generated_tools(mcp, _get_client):
         keywords: list[Any] | None,
         ad_account_id: str | None = None,
         customer_id: str | None = None,
-        platform: str | None = None,
+        platform: Literal[
+            "facebook",
+            "instagram",
+            "tiktok",
+            "linkedin",
+            "pinterest",
+            "google",
+            "twitter",
+            "openai",
+        ]
+        | None = None,
     ) -> str:
         """Replace negative list keywords
+
+        Replaces the full desired keyword set. Existing keywords are diffed by normalized text and match type; creates and removals are applied atomically in one mutation. Unchanged criteria retain their ids. Send an empty keywords array to clear the list. Changes affect every campaign using this list. Each create or removal consumes one daily operation; the entire batch must fit the remaining quota.
+
+        Platforms: google
 
         Args:
             list_id: (required)
@@ -2803,6 +3514,10 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """List account callouts
 
+        Lists directly attached Google assets. Fresh reads are cached for 10 minutes; exhausted quota may return the last successful read with stale=true. Inherited assets are not included. Preserves Google RMF C.75 account-level callouts.
+
+        Platforms: google
+
         Args:
             account_id: (required)
             ad_account_id
@@ -2833,6 +3548,10 @@ def register_generated_tools(mcp, _get_client):
         customer_id: str | None = None,
     ) -> str:
         """Add account callouts
+
+        Creates assets and customer_asset links for this Google customer. Links apply at account level.
+
+        Platforms: google
 
         Args:
             account_id: Zernio Google Ads connection id. (required)
@@ -2867,6 +3586,10 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Update account callouts
 
+        Edits existing Google assets in place. Send updates with assetResourceName and the fields to change. An asset is shared: changes affect every attachment using it. Omitted fields stay unchanged. The operation consumes the Google operations budget and invalidates affected cached lists.
+
+        Platforms: google
+
         Args:
             account_id: Zernio Google Ads connection id. (required)
             ad_account_id: Platform ad account ID (Google customer ID, digits only). Required when the connection has multiple customers.
@@ -2900,6 +3623,10 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Remove account callout
 
+        Removes the customer_asset attachment only. The underlying shared asset and its campaign or ad-group attachments remain.
+
+        Platforms: google
+
         Args:
             account_id: Zernio Google Ads connection id. (required)
             ad_account_id: Platform ad account ID (Google customer ID, digits only). Required when the connection has multiple customers.
@@ -2932,6 +3659,10 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """List account sitelinks
 
+        Lists directly attached Google assets. Fresh reads are cached for 10 minutes; exhausted quota may return the last successful read with stale=true. Inherited assets are not included.
+
+        Platforms: google
+
         Args:
             account_id: (required)
             ad_account_id
@@ -2962,6 +3693,10 @@ def register_generated_tools(mcp, _get_client):
         customer_id: str | None = None,
     ) -> str:
         """Add account sitelinks
+
+        Creates assets and customer_asset links for this Google customer. Links apply at account level.
+
+        Platforms: google
 
         Args:
             account_id: Zernio Google Ads connection id. (required)
@@ -2996,6 +3731,10 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Update account sitelinks
 
+        Edits existing Google assets in place. Send updates with assetResourceName and the fields to change. An asset is shared: changes affect every attachment using it. Omitted fields stay unchanged. The operation consumes the Google operations budget and invalidates affected cached lists.
+
+        Platforms: google
+
         Args:
             account_id: Zernio Google Ads connection id. (required)
             ad_account_id: Platform ad account ID (Google customer ID, digits only). Required when the connection has multiple customers.
@@ -3029,6 +3768,10 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Remove account sitelink
 
+        Removes the customer_asset attachment only. The underlying shared asset and its campaign or ad-group attachments remain.
+
+        Platforms: google
+
         Args:
             account_id: Zernio Google Ads connection id. (required)
             ad_account_id: Platform ad account ID (Google customer ID, digits only). Required when the connection has multiple customers.
@@ -3061,6 +3804,10 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """List account snippets
 
+        Lists directly attached Google assets. Fresh reads are cached for 10 minutes; exhausted quota may return the last successful read with stale=true. Inherited assets are not included.
+
+        Platforms: google
+
         Args:
             account_id: (required)
             ad_account_id
@@ -3091,6 +3838,10 @@ def register_generated_tools(mcp, _get_client):
         customer_id: str | None = None,
     ) -> str:
         """Add account snippets
+
+        Creates assets and customer_asset links for this Google customer. Links apply at account level.
+
+        Platforms: google
 
         Args:
             account_id: Zernio Google Ads connection id. (required)
@@ -3125,6 +3876,10 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Update account snippets
 
+        Edits existing Google assets in place. Send updates with assetResourceName and the fields to change. An asset is shared: changes affect every attachment using it. Omitted fields stay unchanged. The operation consumes the Google operations budget and invalidates affected cached lists.
+
+        Platforms: google
+
         Args:
             account_id: Zernio Google Ads connection id. (required)
             ad_account_id: Platform ad account ID (Google customer ID, digits only). Required when the connection has multiple customers.
@@ -3158,6 +3913,10 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Remove account snippet
 
+        Removes the customer_asset attachment only. The underlying shared asset and its campaign or ad-group attachments remain.
+
+        Platforms: google
+
         Args:
             account_id: Zernio Google Ads connection id. (required)
             ad_account_id: Platform ad account ID (Google customer ID, digits only). Required when the connection has multiple customers.
@@ -3190,6 +3949,10 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Get manager account hierarchy
 
+        Live manager (MCC) and client tree for a Google Ads connection. Starts from every customer the Google user behind the connection can access directly and walks each tree to any depth with `customer_client`, then reads each manager's own client links so every client carries its direct parent, the `managerLinkId` and the link status. Invitations a manager sent that the client has not accepted yet appear as clients with `linkStatus: PENDING` (Google returns no name or currency for them). Refused, canceled and ended links are history and are omitted. `managerLinks` on a root lists the managers linked to that account, including invitations it can still accept with PATCH /v1/ads/accounts/manager-links. A directly accessible account that is also nested in another tree appears only once, inside that tree. `directCustomers` lists every account the Google user accesses directly (the ones this connection can accept or decline invitations for) with their pending invitations, including accounts ...
+
+        Platforms: google
+
         Args:
             account_id: Google ads SocialAccount id. (required)
             ad_account_id: Only return the tree rooted at this customer id (digits only). It must be an account the Google user accesses directly. Omit to list every tree.
@@ -3221,6 +3984,10 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Invite a client account to a manager
 
+        Sends a manager-to-client link invitation from `managerCustomerId` to `clientCustomerId` (Google's CustomerClientLinkService). The manager must be one the connection's Google user reaches, directly or under another manager (see GET /v1/ads/accounts/hierarchy); the client can be any Google Ads account. The link stays `PENDING` until someone with access to the client accepts it in Google Ads or through PATCH on this path. Not idempotent: Google refuses a second invitation while one is pending. Send `validateOnly: true` to have Google check the request without sending anything.
+
+        Platforms: google
+
         Args:
             account_id: Google ads SocialAccount id. (required)
             manager_customer_id: Manager customer id, digits only. (required)
@@ -3251,10 +4018,14 @@ def register_generated_tools(mcp, _get_client):
         manager_customer_id: str,
         client_customer_id: str,
         manager_link_id: str,
-        action: str,
+        action: Literal["accept", "decline", "cancel", "unlink"],
         validate_only: bool = False,
     ) -> str:
         """Accept, decline, cancel or end a manager link
+
+        Changes one manager-client link, identified by `managerCustomerId`, `clientCustomerId` and `managerLinkId` (all from GET /v1/ads/accounts/hierarchy). `accept` and `decline` answer a pending invitation as the client (CustomerManagerLinkService), so the connection's Google user needs direct access to the client account; access through a manager is not enough, because the link does not exist yet. `cancel` withdraws a pending invitation and `unlink` ends an active link, both as the manager (CustomerClientLinkService). Send `validateOnly: true` to have Google check the change without applying it.
+
+        Platforms: google
 
         Args:
             account_id: Google ads SocialAccount id. (required)
@@ -3290,6 +4061,11 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Ad account users
 
+        People of a business portfolio assigned to a Meta ad account, with their tasks.
+        Ids are business-scoped user ids (see `GET /v1/ads/businesses/users`).
+
+        Platforms: meta
+
         Args:
             account_id: Zernio SocialAccount id (posting or ads variant) used to resolve the Meta token. (required)
             ad_account_id: Meta ad account id (act_<n>). (required)
@@ -3314,9 +4090,18 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def ad_accounts_assign_ad_account_user(
-        account_id: str, ad_account_id: str, user_id: str, tasks: list[str] | None
+        account_id: str,
+        ad_account_id: str,
+        user_id: str,
+        tasks: list[Literal["MANAGE", "ADVERTISE", "ANALYZE", "DRAFT"]] | None,
     ) -> str:
         """Assign a user to an ad account
+
+        Gives a person of the portfolio tasks on the ad account. `MANAGE` is admin, `ADVERTISE`
+        creates and edits ads, `ANALYZE` reads reports, `DRAFT` edits drafts only. Assigning an
+        already assigned user replaces their task set.
+
+        Platforms: meta
 
         Args:
             account_id: Zernio SocialAccount id used to resolve the Meta token. (required)
@@ -3348,6 +4133,8 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Remove a user from an ad account
 
+        Platforms: meta
+
         Args:
             account_id: Zernio SocialAccount id used to resolve the Meta token. (required)
             ad_account_id: Meta ad account id (act_<n>). (required)
@@ -3371,6 +4158,12 @@ def register_generated_tools(mcp, _get_client):
     )
     def ad_accounts_get_ad_account_finance(account_id: str, ad_account_id: str) -> str:
         """Ad account finances
+
+        Finances of one Meta ad account: prepaid `balance`, lifetime `amountSpent`, account
+        `spendCap` (null = no cap) and the `fundingSource`. Money values are converted from
+        Meta's minor units to whole units of `currency`.
+
+        Platforms: meta
 
         Args:
             account_id: Zernio SocialAccount id (posting or ads variant) used to resolve the Meta token. (required)
@@ -3410,6 +4203,24 @@ def register_generated_tools(mcp, _get_client):
         ad_account_created_from_bm_flag: bool | None = None,
     ) -> str:
         """Create Meta ad account
+
+        Creates a durable Meta ad account in the end user's own business portfolio using
+        their connected Meta Ads token. Requires an active metaads accountId, Ads access,
+        business_management permission and business admin access. Discover portfolios with
+        GET /v1/ads/businesses. System-user tokens may return an empty businesses list;
+        supply the known business ID in that case.
+
+        The self-serve account starts without a payment method. The user must add a payment
+        method in Ads Manager before ads can deliver. Zernio cannot add payment methods.
+        Meta may require business verification and limits how many accounts a business can
+        create. Closing an account does not guarantee more capacity. An ad account cannot
+        truly be deleted, even after closing it and removing it from a business.
+
+        timezoneId is Meta's numeric ID, not an IANA timezone name. Select it from
+        https://developers.facebook.com/docs/marketing-api/reference/ad-account/timezone-ids/.
+        For example, 1 is America/Los_Angeles. Meta validates ...
+
+        Platforms: meta
 
         Args:
             account_id: Zernio metaads SocialAccount ID. (required)
@@ -3463,6 +4274,23 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """List ad accounts
 
+        Returns the platform ad accounts available for the given account (e.g. Meta ad
+        accounts, TikTok advertiser IDs, Google Ads customer IDs).
+        Meta business-login accounts use their own system-user token. Fresh Meta discovery
+        includes businessId and businessName from the owning Business Manager when available;
+        cached entries gain these fields after the next discovery refresh.
+
+        For TikTok agencies: enumerates every advertiser under every Business Center the token
+        can read (paginated server-side), then chunks the lookup against TikTok's
+        `/advertiser/info/` endpoint (which has a per-call cap of ≤100 IDs). Solo advertisers
+        without a BC fall back to the OAuth-time `advertiser_ids` list. Cached for 1h on the
+        SocialAccount; lazy-refreshed on first call after expiry.
+
+        For Google Ads: responds `429` when Google's API quota is temporarily exhausted
+        (instead of an empty list). Retry after a delay.
+
+        Platforms: meta, google, tiktok, linkedin, pinterest, x
+
         Args:
             account_id: Account ID (required)
             ad_account_id: Filter response to a single platform ad account ID (e.g. `act_123` for Meta, advertiser_id for TikTok). Returns at most one item.
@@ -3494,6 +4322,25 @@ def register_generated_tools(mcp, _get_client):
         default_dsa_payor: str | None = None,
     ) -> str:
         """Update ad account settings
+
+        Updates a Meta ad account in place: its name, its account-level spend cap, and its
+        default DSA beneficiary and payor. Pass any combination of fields.
+
+        **Spend cap.** `spendCap` is the total the account may spend before Meta pauses every
+        campaign in it, in whole units of the account currency. `spendCap: null` removes the
+        cap and `resetAmountSpent: true` restarts the amount counted against it from zero.
+        When `name`, `spendCap` or `resetAmountSpent` is passed, the response carries
+        `settings`, the account's finances re-read after the write (same shape as
+        `GET /v1/ads/accounts/finance`), so the effective cap can be confirmed in one call.
+
+        **DSA defaults.** Sets the default DSA beneficiary and payor on the ad account (EU DSA, Article 26).
+        Set them once and every EU-targeted call to `/v1/ads/create`, `/v1/ads/boost` and
+        `/v1/ads/ctwa` on that ad account can omit `dsaBeneficiary`/`dsaPayor`: Meta applies
+        the defaults automatically.
+
+        The values are written to the ad account on Meta, the same ...
+
+        Platforms: meta
 
         Args:
             account_id: Account ID (metaads, or a facebook/instagram posting account) (required)
@@ -3529,6 +4376,12 @@ def register_generated_tools(mcp, _get_client):
     def ad_accounts_get_dsa_defaults(account_id: str, ad_account_id: str) -> str:
         """Get ad account DSA defaults
 
+        Returns the default DSA beneficiary and payor currently set on a Meta ad account,
+        whether they were set via `PATCH /v1/ads/accounts` or in Meta Ads Manager. Fields
+        are omitted when no default is configured. Meta accounts only.
+
+        Platforms: meta
+
         Args:
             account_id: Account ID (metaads, or a facebook/instagram posting account) (required)
             ad_account_id: Meta ad account ID (act_...) (required)"""
@@ -3552,6 +4405,17 @@ def register_generated_tools(mcp, _get_client):
     def ad_accounts_get_dsa_recommendations(account_id: str, ad_account_id: str) -> str:
         """Get DSA recommendations
 
+        Returns Meta's suggested beneficiary/payor names for an ad account, derived by Meta
+        from the account's recent activity. Useful for prefilling `dsaBeneficiary`/`dsaPayor`
+        inputs, or the defaults sent to `PATCH /v1/ads/accounts`, in your own UI.
+
+        Meta returns a single flat list. Entries are not labeled as beneficiary or payor,
+        and since these are legal disclosures Zernio never applies them automatically: let
+        your user pick the right entity. The list may be empty for accounts with little
+        activity. Meta accounts only.
+
+        Platforms: meta
+
         Args:
             account_id: Account ID (metaads, or a facebook/instagram posting account) (required)
             ad_account_id: Meta ad account ID (act_...) (required)"""
@@ -3574,6 +4438,10 @@ def register_generated_tools(mcp, _get_client):
     )
     def ad_accounts_list_custom_conversions(account_id: str, ad_account_id: str) -> str:
         """List custom conversions
+
+        The ad account's Meta custom conversions, including archived ones (`isArchived`).
+
+        Platforms: meta
 
         Args:
             account_id: Meta ads SocialAccount id. (required)
@@ -3604,6 +4472,21 @@ def register_generated_tools(mcp, _get_client):
         rule: dict[str, Any] | None,
     ) -> str:
         """Create custom conversion
+
+        Provision the Meta custom conversion an ads flow optimises toward, and hand back the
+        `customConversionId` for `promotedObject.customConversionId` on POST /v1/ads/create.
+        Removes the manual \"create it in Ads Manager first\" step.
+
+        **Reuse is ours, not Meta's.** Meta's create is not idempotent, so a retried request
+        would otherwise mint a duplicate carrying none of the original's optimisation history.
+        A non-archived conversion with the same `name` on the same `pixelId` is returned
+        instead of created, with `reused: true` and a 200 rather than a 201.
+
+        `rule` is forwarded verbatim in Meta's own grammar (e.g.
+        `{\"url\": {\"i_contains\": \"thank-you\"}}`); Meta validates it and rejects a malformed one
+        with \"A conversion rule is required at creation time\".
+
+        Platforms: meta
 
         Args:
             account_id: Meta ads SocialAccount id. (required)
@@ -3642,6 +4525,10 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """List TikTok ad pixels
 
+        Lists pixels and their supported optimization events for a connected TikTok Ads account. The advertiser defaults to the first advertiser on the connection. Reconnect if Pixel Management permission has not been granted.
+
+        Platforms: tiktok
+
         Args:
             account_id: Zernio SocialAccount ID. (required)
             ad_account_id: Platform ad account ID (TikTok advertiser id, digits only). Defaults to the first advertiser on the connection.
@@ -3672,10 +4559,36 @@ def register_generated_tools(mcp, _get_client):
     def ad_audiences_list_ad_audiences(
         account_id: str,
         ad_account_id: str,
-        platform: str | None = None,
-        type: str | None = None,
+        platform: Literal[
+            "facebook",
+            "instagram",
+            "googleads",
+            "tiktok",
+            "tiktokads",
+            "pinterest",
+            "linkedin",
+            "linkedinads",
+            "twitter",
+            "xads",
+        ]
+        | None = None,
+        type: Literal[
+            "customer_list",
+            "company_list",
+            "engagement",
+            "meta_engagement",
+            "website",
+            "website_retargeting",
+            "lookalike",
+            "saved_targeting",
+        ]
+        | None = None,
     ) -> str:
         """List custom audiences
+
+        Returns custom audiences for the given ad account. Supports Meta, Google, TikTok, Pinterest, LinkedIn, and X.
+
+        Platforms: meta, google, tiktok, linkedin, pinterest, x
 
         Args:
             account_id: Account ID (required)
@@ -3705,6 +4618,22 @@ def register_generated_tools(mcp, _get_client):
     def ad_audiences_create_ad_audience(body: dict[str, Any]) -> str:
         """Create custom audience
 
+        Create a custom audience. `customer_list` is supported on Meta, Google, X, LinkedIn, TikTok, and Pinterest.
+        `website` (pixel/tag visitors) and `lookalike` are supported on Meta, TikTok, Pinterest and Google.
+        `meta_engagement` is Meta-only, `tiktok_engagement` TikTok-only, `pinterest_engagement` Pinterest-only;
+        `company_list`, `engagement` and `website_retargeting` are LinkedIn-only. A type sent to a platform
+        that does not support it is a 422 `FEATURE_NOT_AVAILABLE`.
+
+        Per-platform rules for `website`:
+
+        - Meta: `pixelId` required, `retentionDays` 1-180, optional `urlContains` or raw `rule`. `event` is not accepted.
+        - TikTok: `pixelId` required, `retentionDays` one of 7, 14, 30, 60, 90, 180. `event` is a TikTok pixel event
+          (default `PAGE BROWSE`; also `CLICK BUTTON`, `PIXEL SUBMIT FORM`, `CONTACT`, `DOWNLOAD`,
+          `PIXEL ADD PAYMENT INFO`, `COMPLETE PAYMENT`, `INITIATE CHECKOUT`, `COMPLETE REGISTRATION`,
+          `PRODUCT DETAIL PAGE BROWSE`, `PIXEL SEARCH`, `PIXEL ADD TO CART`, `PLACE AN ...
+
+        Platforms: meta, google, tiktok, linkedin, pinterest, x
+
         Args:
             body: Full request body as documented in the API reference. (required)"""
         client = _get_client()
@@ -3724,6 +4653,10 @@ def register_generated_tools(mcp, _get_client):
     )
     def ad_audiences_get_ad_audience(audience_id: str) -> str:
         """Get audience details
+
+        Returns the local audience record and fresh data from Meta (if available).
+
+        Platforms: meta, google, tiktok, linkedin, pinterest, x
 
         Args:
             audience_id: The Zernio audience id (the id field of GET /v1/ads/audiences), not the platform segment id. (required)"""
@@ -3750,6 +4683,16 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Update an audience
 
+        Update an audience. `saved_targeting` audiences accept `name`, `description`, and `spec`
+        (full replacement, no merge, Zernio-only, no platform call). Platform audiences
+        (uploaded/website/lookalike) accept `name` and `description` only, updated on the
+        platform first and then mirrored locally; their rules are immutable, so `spec` returns
+        400 for them. Platform audience updates are Meta-only for now (other platforms return
+        501). Ads already created from a saved_targeting audience are unaffected, they snapshot
+        the targeting at creation.
+
+        Platforms: meta, google, tiktok, linkedin, pinterest, x
+
         Args:
             audience_id: (required)
             name
@@ -3775,6 +4718,17 @@ def register_generated_tools(mcp, _get_client):
     def ad_audiences_delete_ad_audience(audience_id: str) -> str:
         """Delete custom audience
 
+        Removes the audience on its ad platform, then deletes the Zernio record. Meta, Google, TikTok,
+        LinkedIn list and engagement segments, and X are deleted; Pinterest audiences and LinkedIn
+        `website_retargeting` segments are archived, which is how those platforms remove them.
+        `saved_targeting` audiences exist only on Zernio, so only the local record is removed.
+
+        If the platform refuses, the error is returned and the Zernio record is kept, so a retry is
+        safe. An audience the platform no longer has counts as removed. Google Ads does not allow
+        removing lookalike lists through its API, so those return 422 `FEATURE_NOT_AVAILABLE`.
+
+        Platforms: meta, google, tiktok, linkedin, pinterest, x
+
         Args:
             audience_id: (required)"""
         client = _get_client()
@@ -3796,6 +4750,15 @@ def register_generated_tools(mcp, _get_client):
         audience_id: str, users: list[dict[str, Any]] | None
     ) -> str:
         """Add users to audience
+
+        Upload user data to a customer_list audience. Data is SHA256-hashed server-side before sending to the platform.
+        Email is used on every platform; phone is used on Meta only (other platforms ignore it). On TikTok and Pinterest,
+        the first upload also provisions the audience (deferred create). LinkedIn uploads are full-replace. Max 10,000 users per request.
+
+        customer_list only. A LinkedIn `company_list` audience takes company rows, not people: send those to
+        `POST /v1/ads/audiences/{audienceId}/companies`. This endpoint 422s for every other audience type.
+
+        Platforms: meta, google, tiktok, linkedin, pinterest, x
 
         Args:
             audience_id: The Zernio audience id (the id field of GET /v1/ads/audiences), not the platform segment id. (required)
@@ -3822,6 +4785,28 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Replace audience companies
 
+        Upload the company rows of a LinkedIn `company_list` audience (account-based marketing).
+        LinkedIn-only, every other platform returns 422.
+
+        A LinkedIn audience segment holds exactly one uploaded list, so the list you send here
+        REPLACES the segment's list instead of being appended to it: always send the full set of
+        companies. LinkedIn returns only the identifier of the uploaded file, never its rows, so the
+        merge cannot be done for you, keep the source list on your side.
+
+        How the matching behaves:
+
+        - Rows are plain text (not hashed), matched against LinkedIn's own company graph.
+        - Matching is asynchronous: LinkedIn takes up to 48h for a new audience and up to 24h for a
+          later update, and the audience stays `processing` meanwhile.
+        - LinkedIn does not document how quickly companies dropped from the list stop being targeted,
+          so treat removals as eventual rather than immediate.
+        - LinkedIn recommends at least 1,000 companies for a usable match rate, and caps a list at
+          300,000.
+
+        The ...
+
+        Platforms: linkedin
+
         Args:
             audience_id: The Zernio audience id (the id field of GET /v1/ads/audiences), not the platform segment id. (required)
             companies: The complete company list. Each row needs at least one of name, domain, website or linkedinPageUrl. (required)"""
@@ -3847,9 +4832,28 @@ def register_generated_tools(mcp, _get_client):
     def ad_campaigns_list_ads(
         page: int = 1,
         limit: int = 50,
-        source: str = "all",
-        status: str | None = None,
-        platform: str | None = None,
+        source: Literal["zernio", "all"] = "all",
+        status: Literal[
+            "active",
+            "paused",
+            "pending_review",
+            "rejected",
+            "completed",
+            "cancelled",
+            "error",
+        ]
+        | None = None,
+        platform: Literal[
+            "facebook",
+            "instagram",
+            "tiktok",
+            "linkedin",
+            "pinterest",
+            "google",
+            "twitter",
+            "openai",
+        ]
+        | None = None,
         account_id: str | None = None,
         ad_account_id: str | None = None,
         page_id: str | None = None,
@@ -3863,6 +4867,18 @@ def register_generated_tools(mcp, _get_client):
         to_date: str | None = None,
     ) -> str:
         """List ads
+
+        Returns a paginated list of ads with metrics computed over an optional date range.
+        Use source=all to include externally-synced ads from platform ad managers.
+        If no date range is provided, defaults to the last 90 days. Date range is capped at 730 days max.
+
+        To find the Zernio ad behind a comment you see in Meta Business Manager, filter by
+        platformAdId (the Meta ad ID), effectiveObjectStoryId (Facebook), or
+        effectiveInstagramMediaId (Instagram). Those are the post/media the ad's engagement
+        lives on, and are also returned on each ad's `creative` object. Then call
+        GET /v1/ads/{adId}/comments with the returned ad id.
+
+        Platforms: meta, google, tiktok, linkedin, pinterest, x
 
         Args:
             page: Page number
@@ -3922,6 +4938,10 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """List Google Ads recommendations
 
+        Google's optimization recommendations for one ad account: type, estimated impact (base vs potential metrics, cost in account currency units), the campaign, ad group or budget they target, and the type-specific payload Google returns (`details`, in Google's own shape with micros). Filter by campaignId and types. Cached for 10 minutes and cleared by apply or dismiss; served stale when Google quota is exhausted.
+
+        Platforms: google
+
         Args:
             account_id: Google ads SocialAccount id. (required)
             ad_account_id: Google customer id, digits only. Defaults to the connection's only customer.
@@ -3956,6 +4976,10 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Apply Google Ads recommendations
 
+        Apply up to 100 recommendations. This changes the account (budgets, bidding, keywords, assets) and is not reversible or idempotent; Google offers no validate-only mode for it. Items run in partial-failure mode, so one stale recommendation does not block the rest. `parameters` is optional and takes exactly one key named for the recommendation type, in Google's ApplyRecommendationOperation shape (for example `campaignBudget: { newBudgetAmountMicros }` or `keyword: { matchType, cpcBidMicros }`); omit it to apply Google's suggested values.
+
+        Platforms: google
+
         Args:
             account_id: Google ads SocialAccount id. (required)
             ad_account_id: Google customer id, digits only. Required when the connection has several customers.
@@ -3985,6 +5009,10 @@ def register_generated_tools(mcp, _get_client):
         ad_account_id: str | None = None,
     ) -> str:
         """Dismiss Google Ads recommendations
+
+        Dismiss up to 100 recommendations so Google stops suggesting them. Items run in partial-failure mode.
+
+        Platforms: google
 
         Args:
             account_id: Google ads SocialAccount id. (required)
@@ -4018,6 +5046,10 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """List portfolio bid strategies
 
+        Bidding strategy report: type, status, campaign count, clicks, cost, cost per conversion, impressions, average CPC and conversions over the date range (default last 30 days). Reads Google's `bidding_strategy` resource, cached for the quota window. Draws on the shared Google Ads operations budget. The response carries `cachedAt` and `stale`, set when a quota-exhausted call falls back to the last-good copy instead of a live read.
+
+        Platforms: google
+
         Args:
             account_id: Google ads SocialAccount id. (required)
             ad_account_id: Platform ad account ID (Google customer ID, digits only). Defaults to the account's connected customer.
@@ -4048,13 +5080,22 @@ def register_generated_tools(mcp, _get_client):
     def ad_campaigns_create_bid_strategy(
         account_id: str,
         name: str,
-        type: str,
+        type: Literal[
+            "TARGET_CPA",
+            "TARGET_ROAS",
+            "MAXIMIZE_CONVERSIONS",
+            "MAXIMIZE_CONVERSION_VALUE",
+        ],
         ad_account_id: str | None = None,
         customer_id: str | None = None,
         target_cpa: float | None = None,
         target_roas: float | None = None,
     ) -> str:
         """Create portfolio bid strategy
+
+        Creates a standalone bid strategy shared across campaigns. Attach it to a campaign with `portfolioBidStrategyId` on POST /v1/ads/create, PUT /v1/ads/campaigns/{campaignId}, or PUT /v1/ads/ad-sets/{adSetId}. Attaching a strategy aligned to a shared budget fails there with a 400 (Google's `BIDDING_STRATEGY_AND_BUDGET_MUST_BE_ALIGNED`); this is not retryable.
+
+        Platforms: google
 
         Args:
             account_id: Google ads SocialAccount id. (required)
@@ -4093,11 +5134,21 @@ def register_generated_tools(mcp, _get_client):
         ad_account_id: str | None = None,
         customer_id: str | None = None,
         name: str | None = None,
-        type: str | None = None,
+        type: Literal[
+            "TARGET_CPA",
+            "TARGET_ROAS",
+            "MAXIMIZE_CONVERSIONS",
+            "MAXIMIZE_CONVERSION_VALUE",
+        ]
+        | None = None,
         target_cpa: float | None = None,
         target_roas: float | None = None,
     ) -> str:
         """Update portfolio bid strategy
+
+        Renames or retargets a portfolio bid strategy. The strategy's status is output only on Google's side, so it cannot be changed here; remove a strategy in Google Ads. `type` is only needed alongside `targetCpa`/`targetRoas` to disambiguate the field Google writes to (TARGET_CPA and MAXIMIZE_CONVERSIONS both take a target CPA; TARGET_ROAS and MAXIMIZE_CONVERSION_VALUE both take a target ROAS); the strategy's family is otherwise immutable once created.
+
+        Platforms: google
 
         Args:
             strategy_id: Numeric Google Ads bid strategy id. (required)
@@ -4140,12 +5191,24 @@ def register_generated_tools(mcp, _get_client):
         profile_id: str | None = None,
         campaign_id: str | None = None,
         ad_set_id: str | None = None,
-        status: str | None = None,
-        match_type: str | None = None,
+        status: Literal["active", "paused"] | None = None,
+        match_type: Literal["exact", "phrase", "broad", "unknown"] | None = None,
         negative: bool | None = None,
         search: str | None = None,
     ) -> str:
         """List Search keywords
+
+        Returns the Google Search keyword criteria (positive and negative) synced from
+        connected Google Ads accounts, one row per ad-group keyword. Refreshed about
+        once a day per Google Ads customer (the keyword sweep rides the ads discovery
+        pass on a slower slot), so keywords added on Google can take up to a day to
+        appear. A customer synced for the first time is populated on the next discovery
+        pass rather than waiting for its daily slot, and connecting an account or
+        triggering a manual sync refreshes it immediately.
+        Campaign-level negative keywords are not included; only ad-group-level
+        criteria are.
+
+        Platforms: google
 
         Args:
             page: Page number
@@ -4194,6 +5257,14 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Add Search ad-group keywords
 
+        Adds one or more keyword criteria to an existing Google Search ad group,
+        without touching the keywords already there (unlike the whole-set diff on
+        `PUT /v1/ads/{adId}`, `keywords`/`negativeKeywords` in `platformSpecificData`,
+        which replaces the set). Set `negative: true` to add ad-group-level negatives
+        instead of positive keywords.
+
+        Platforms: google
+
         Args:
             account_id: Account ID (Google Ads) (required)
             ad_set_id: Google ad group ID to add the keywords to (required)
@@ -4219,8 +5290,15 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=True,
         )
     )
-    def ad_campaigns_update_ad_keyword(keyword_id: str, status: str) -> str:
+    def ad_campaigns_update_ad_keyword(
+        keyword_id: str, status: Literal["active", "paused"]
+    ) -> str:
         """Pause or enable a Search keyword
+
+        Changes `ad_group_criterion.status` for one keyword criterion (M.140).
+        Negative keywords have no status on Google and cannot be paused or enabled.
+
+        Platforms: google
 
         Args:
             keyword_id: Zernio keyword ID (`id`), or Google's native `{adSetId}~{platformCriterionId}` (the tail of `resourceName`, e.g. 1234567890~987654321). A bare criterion id is rejected because it is only unique within its ad group. (required)
@@ -4245,6 +5323,10 @@ def register_generated_tools(mcp, _get_client):
     def ad_campaigns_remove_ad_keyword(keyword_id: str) -> str:
         """Remove a Search keyword
 
+        Removes one keyword criterion (positive or negative) from its ad group (M.140).
+
+        Platforms: google
+
         Args:
             keyword_id: Zernio keyword ID (`id`), or Google's native `{adSetId}~{platformCriterionId}` (the tail of `resourceName`, e.g. 1234567890~987654321). A bare criterion id is rejected because it is only unique within its ad group. (required)"""
         client = _get_client()
@@ -4266,9 +5348,28 @@ def register_generated_tools(mcp, _get_client):
         include_empty: bool | None = None,
         page: int = 1,
         limit: int = 20,
-        source: str = "all",
-        platform: str | None = None,
-        status: str | None = None,
+        source: Literal["zernio", "all"] = "all",
+        platform: Literal[
+            "facebook",
+            "instagram",
+            "tiktok",
+            "linkedin",
+            "pinterest",
+            "google",
+            "twitter",
+            "openai",
+        ]
+        | None = None,
+        status: Literal[
+            "active",
+            "paused",
+            "pending_review",
+            "rejected",
+            "completed",
+            "cancelled",
+            "error",
+        ]
+        | None = None,
         ad_account_id: str | None = None,
         page_id: str | None = None,
         account_id: str | None = None,
@@ -4279,6 +5380,21 @@ def register_generated_tools(mcp, _get_client):
         min_spend: float | None = None,
     ) -> str:
         """List campaigns
+
+        Returns campaigns as virtual aggregations over ad documents grouped by platform campaign ID.
+        Metrics (spend, impressions, clicks, etc.) are summed across all ads in each campaign.
+        Campaign status is derived from child ad statuses (active > pending_review > paused > error > completed > cancelled > rejected).
+        Google campaign budgets include amountMicros, explicitlyShared, resourceName and
+        deliveryMethod after the next successful sync. This endpoint does not fetch Google live.
+
+        **Status freshness.** `status`, `configuredStatus`, `platformStatus`, `platformAdSetStatus`
+        and `platformCampaignStatus` are the values Zernio last stored. Background sync refreshes
+        them, typically within 15 to 60 minutes (Google up to about 3 hours), and ended or
+        long-paused objects may be refreshed less often. Zernio's own status writes re-read the
+        switches they change. A change made in the platform's own ads manager therefore shows up
+        here only after the next sync. Controllers that act on a switch should pass ...
+
+        Platforms: meta, google, tiktok, linkedin, pinterest, x
 
         Args:
             include_empty: Meta only. Campaign reads aggregate over ad documents, so a campaign with ZERO ads is normally invisible here, the state the two-step create (campaign, then ads via `existingCampaignId`) leaves behind whenever Meta rejects the ad step. Set true to list those too, with `adCount: 0` and zeroed metrics. Requires `accountId` and `adAccountId`, since an empty campaign has no ad row to resolve a token or ad account from.
@@ -4329,22 +5445,69 @@ def register_generated_tools(mcp, _get_client):
         account_id: str,
         ad_account_id: str,
         name: str,
-        goal: str,
+        goal: Literal[
+            "engagement",
+            "traffic",
+            "awareness",
+            "video_views",
+            "lead_generation",
+            "lead_conversion",
+            "job_applicants",
+            "conversions",
+            "app_promotion",
+            "catalog_sales",
+            "page_likes",
+            "page_visits",
+        ],
         is_skadnetwork_attribution: bool | None = None,
         promoted_object: dict[str, Any] | None = None,
-        buying_type: str | None = None,
+        buying_type: Literal["AUCTION", "RESERVED"] | None = None,
         validate_only: bool | None = None,
-        special_ad_categories: list[str] | None = None,
+        special_ad_categories: list[
+            Literal[
+                "HOUSING",
+                "EMPLOYMENT",
+                "CREDIT",
+                "ISSUES_ELECTIONS_POLITICS",
+                "FINANCIAL_PRODUCTS_SERVICES",
+                "ONLINE_GAMBLING_AND_GAMING",
+            ]
+        ]
+        | None = None,
         budget_amount: float | None = None,
-        budget_type: str | None = None,
-        status: str = "PAUSED",
-        location_targeting_type: str | None = None,
-        bid_strategy: str | None = None,
+        budget_type: Literal["daily", "lifetime"] | None = None,
+        status: Literal["ACTIVE", "PAUSED"] = "PAUSED",
+        location_targeting_type: Literal["presence", "presence_or_interest"]
+        | None = None,
+        bid_strategy: Literal[
+            "LOWEST_COST_WITHOUT_CAP",
+            "LOWEST_COST_WITH_BID_CAP",
+            "COST_CAP",
+            "LOWEST_COST_WITH_MIN_ROAS",
+        ]
+        | None = None,
         bid_amount: float | None = None,
         roas_average_floor: float | None = None,
         portfolio_bid_strategy_id: str | None = None,
     ) -> str:
         """Create a standalone campaign
+
+        Creates a campaign WITHOUT its first ad set / ad, on the platform of the given
+        `accountId`. Ad sets join it later via `existingCampaignId` on the create endpoints.
+        Platform notes: on Meta a budget here is campaign-level (CBO) by definition; omit it
+        for ABO (each ad set carries its own budget), and `specialAdCategories` is Meta-only
+        (400 elsewhere); `bidStrategy` is Meta and Google (400 elsewhere), and Google also
+        accepts `portfolioBidStrategyId` instead. Google, X and OpenAI require a budget
+        (422 without one; OpenAI accepts daily or lifetime, Google only
+        `budgetType: daily`). On OpenAI `goal` sets the campaign objective, and
+        `conversions` needs an active standard conversion event on the account. LinkedIn creates the
+        campaign GROUP (our campaign level) and rejects a budget, which lives on the
+        campaign (ad set) level there; it comes back `status: DRAFT`. Created `PAUSED`
+        (TikTok `DISABLE`) unless `status: ACTIVE` where the platform supports it.
+
+        **Idempotency:** send an ...
+
+        Platforms: meta, google, linkedin, tiktok, x, pinterest, openai
 
         Args:
             account_id: Zernio SocialAccount id (posting or ads variant); its platform decides where the campaign is created. (required)
@@ -4398,9 +5561,36 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def ad_campaigns_update_ad_campaign_status(
-        campaign_id: str, status: str, platform: str
+        campaign_id: str,
+        status: Literal["active", "paused"],
+        platform: Literal[
+            "facebook",
+            "instagram",
+            "tiktok",
+            "linkedin",
+            "pinterest",
+            "google",
+            "twitter",
+            "openai",
+        ],
     ) -> str:
         """Pause or resume a campaign
+
+        Writes the campaign's own on/off switch and nothing else, on every platform (Meta, TikTok,
+        Google, LinkedIn campaign group, Pinterest, X, ChatGPT (OpenAI)). Its ad sets and ads keep
+        their own switches: pausing stops their delivery through the campaign, and resuming lets
+        each of them deliver again only if its own switch is on. An ad set or ad you paused
+        individually stays paused; resume it with PUT /v1/ads/ad-sets/{adSetId}/status or
+        PUT /v1/ads/{adId}/status. See the Status model in the Ad Campaigns tag.
+
+        **Live read, then write.** The campaign's switch is read from the platform first. When that
+        live read shows it already in the requested state nothing is written (`updated: 0`,
+        `skipped: 1`, with the reason). Otherwise the switch is written (`updated: 1`), read back and
+        stored, and the delivery status of the ads under it (up to 20) is re-read and stored, so an
+        immediate GET returns what the platform now reports. A stored switch never skips a write, and
+        when the platform cannot be ...
+
+        Platforms: meta, google, tiktok, linkedin, pinterest, x, openai
 
         Args:
             campaign_id: Platform campaign ID (required)
@@ -4425,13 +5615,29 @@ def register_generated_tools(mcp, _get_client):
     )
     def ad_campaigns_get_campaign_ad_schedule(
         campaign_id: str,
-        platform: str | None = None,
+        platform: Literal["google"] | None = None,
         include_performance: bool | None = None,
         window_days: int = 30,
         from_date: str | None = None,
         to_date: str | None = None,
     ) -> str:
         """Read a campaign's ad schedule (dayparting)
+
+        The windows a Google campaign serves in, with the bid modifier on each, plus the
+        criterion ids Google minted for them.
+
+        An EMPTY `schedule` is meaningful and is not a failed lookup: Google has no
+        \"all day\" criterion, so a campaign with no ad schedule serves around the clock.
+        `servesAroundTheClock` states that explicitly.
+
+        Set `includePerformance=true` to also get delivery split by day of week and by hour,
+        which is the evidence for deciding what the schedule should be. It is one extra
+        Google call segmented by both dimensions at once, so the two views always agree.
+
+        Google Ads only. The response carries `cachedAt` and `stale`, set when a
+        quota-exhausted call falls back to the last-good copy instead of a live read.
+
+        Platforms: google
 
         Args:
             campaign_id: Numeric Google platform campaign id. (required)
@@ -4467,6 +5673,27 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Replace a campaign's ad schedule (dayparting)
 
+        Replaces the campaign's whole ad schedule with the windows you send. This is a
+        REPLACE, not a merge: windows you leave out stop serving.
+
+        Send `schedule: []` to clear dayparting, which returns the campaign to serving around
+        the clock.
+
+        Google rules enforced here, so you get a named field instead of a criterion error:
+        at most 6 windows per day, a window must end after it starts, windows on the same day
+        may not overlap, `endHour` 24 is midnight and cannot carry minutes, and minutes are
+        quarter-hours only (0, 15, 30, 45). `bidModifier` is 0.1-10.0; Google's 0 means
+        \"off\" for devices only, so a window is switched off by leaving it out.
+
+        Windows are half-open (Google is exclusive of the end minute), so 09:00-12:00 and
+        12:00-17:00 on the same day are adjacent and both valid.
+
+        Google cannot edit an ad schedule in place (every AdScheduleInfo field is prohibited on
+        update), so this removes the live criteria and creates the new ones in a single atomic
+        mutate. The response is read back from ...
+
+        Platforms: google
+
         Args:
             campaign_id: Numeric Google platform campaign id. (required)
             schedule: The complete set of windows. Required, so clearing the schedule is always deliberate rather than an omission. (required)"""
@@ -4490,11 +5717,27 @@ def register_generated_tools(mcp, _get_client):
     def ad_campaigns_get_campaign_bidding(
         campaign_id: str,
         account_id: str,
-        platform: str,
+        platform: Literal["google"],
         ad_account_id: str | None = None,
         customer_id: str | None = None,
     ) -> str:
         """Read a campaign's current bidding
+
+        Read of the campaign's bidding strategy on Google, cached for the quota window, for
+        pre-filling the bid strategy block before a PUT to /v1/ads/campaigns/{campaignId}.
+        Google Ads only; `platform` is required and rejected when it is anything else, since
+        a `campaignId` is not globally unique. The response carries `cachedAt` and `stale`,
+        set when a quota-exhausted call falls back to the last-good copy instead of a live
+        read.
+
+        Maps Google's bidding strategy onto the same triplet PUT accepts: `LOWEST_COST_WITHOUT_CAP`
+        (Maximize Conversions, no target), `COST_CAP` + `bidAmount` (Target CPA), `LOWEST_COST_WITH_MIN_ROAS`
+        + `roasAverageFloor` (Target ROAS), `LOWEST_COST_WITH_BID_CAP` + `bidAmount` (Maximize Clicks with
+        a CPC ceiling). A campaign on a portfolio strategy returns `portfolio` (id + name) and
+        `bidSpec.portfolioBidStrategyId` instead of the triplet. Anything else (Manual CPC, Target
+        Impression Share, ...) returns `bidSpec: null`; show `biddingStrategyType` as-is.
+
+        Platforms: google
 
         Args:
             campaign_id: Numeric Google platform campaign id. (required)
@@ -4528,6 +5771,15 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Get live campaign details
 
+        Reads one campaign live from Meta, returned verbatim, so a caller that knows a
+        campaign id no longer has to page `GET /v1/ads/campaigns` to find it. The default
+        projection covers name, status, objective, buying type, bid strategy, budgets,
+        spend cap, schedule and `issues_info`. `fields` is a raw-passthrough override;
+        unknown fields return Meta's 400 verbatim. A campaign the resolved connection
+        cannot see comes back as Meta's own 400, not a 404.
+
+        Platforms: meta
+
         Args:
             campaign_id: Meta campaign id (platformCampaignId). (required)
             account_id: Zernio SocialAccount id (posting or ads variant) used to resolve the Meta token. (required)
@@ -4551,9 +5803,15 @@ def register_generated_tools(mcp, _get_client):
     )
     def ad_campaigns_update_ad_campaign(
         campaign_id: str,
-        platform: str,
+        platform: Literal["facebook", "instagram", "google"],
         account_id: str | None = None,
-        bid_strategy: str | None = None,
+        bid_strategy: Literal[
+            "LOWEST_COST_WITHOUT_CAP",
+            "LOWEST_COST_WITH_BID_CAP",
+            "COST_CAP",
+            "LOWEST_COST_WITH_MIN_ROAS",
+        ]
+        | None = None,
         bid_amount: float | None = None,
         roas_average_floor: float | None = None,
         portfolio_bid_strategy_id: str | None = None,
@@ -4563,6 +5821,29 @@ def register_generated_tools(mcp, _get_client):
         platform_specific_data: dict[str, Any] | None = None,
     ) -> str:
         """Update a campaign
+
+        Campaign-level edits. Send at least one of `budget`, `bidStrategy`,
+        `portfolioBidStrategyId`, `name` or `platformSpecificData`. An unsupported
+        field is always an error, never a silent drop.
+
+        | Body field | Meta | Google | Others |
+        |---|---|---|---|
+        | `bidStrategy` | Yes | Yes | 501 |
+        | `bidAmount`, `roasAverageFloor` | 400 (ad-set level) | Yes | 400 |
+        | `portfolioBidStrategyId` | 400 | Yes | 400 |
+        | `budget` (CBO; ABO returns 409) | Yes | Daily only | OpenAI: daily or lifetime; others 501 |
+        | `name` | Yes | 501 | 501 |
+        | `platformSpecificData.spendCap` | Yes | 400 | 400 |
+        | `accountId` (empty campaigns) | Yes | - | - |
+
+        Meta budget edits check the live campaign budget, so an older local ABO stamp
+        cannot block a CBO campaign. A successful edit repairs local ad budget fields.
+        A live ABO campaign still returns 409 with the ad-set budget endpoint.
+
+        On Google: `LOWEST_COST_WITHOUT_CAP` = Maximize Conversions, `COST_CAP` +
+        `bidAmount` = Target CPA, `LOWEST_COST_WITH_MIN_ROAS` + ...
+
+        Platforms: meta, google, tiktok, linkedin, pinterest, x, openai
 
         Args:
             campaign_id: Platform campaign ID (required)
@@ -4604,9 +5885,25 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def ad_campaigns_delete_ad_campaign(
-        campaign_id: str, platform: str, account_id: str | None = None
+        campaign_id: str,
+        platform: Literal["facebook", "instagram", "google"],
+        account_id: str | None = None,
     ) -> str:
         """Delete a campaign
+
+        Deletes the whole campaign on the platform, cascading to its ad sets
+        and ads. Locally, all Ad documents for this campaign are marked
+        `status: cancelled`.
+
+        **Empty campaigns.** A campaign with zero ads has no local Ad documents
+        to resolve, so it is invisible to `/v1/ads/tree` and this endpoint would
+        404. That state is produced by the two-step create flow (campaign, then
+        ads via `existingCampaignId`) whenever Meta rejects the ad step. To
+        delete such a shell, send `accountId` in the body: we skip the local
+        lookup entirely and forward the delete to Meta. `accountId` is ignored
+        when the campaign does have ads.
+
+        Platforms: meta, google, tiktok, linkedin, pinterest, x, openai
 
         Args:
             campaign_id: Platform campaign ID (required)
@@ -4630,9 +5927,32 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def ad_campaigns_list_campaign_negative_keywords(
-        campaign_id: str, platform: str | None = None
+        campaign_id: str,
+        platform: Literal[
+            "facebook",
+            "instagram",
+            "tiktok",
+            "linkedin",
+            "pinterest",
+            "google",
+            "twitter",
+            "openai",
+        ]
+        | None = None,
     ) -> str:
         """List campaign-level negative keywords
+
+        Returns the campaign-level negative keywords (`campaign_criterion.negative`),
+        distinct from the ad-group-level negatives under `GET /v1/ads/keywords`. Cached
+        for the quota window (not synced to Postgres), and gated by the shared Google
+        Ads operations budget like every other on-demand Google surface. The response
+        carries `cachedAt` and `stale`, set when a quota-exhausted call falls back to
+        the last-good copy instead of a live read.
+
+        The platform is always discovered from the campaign itself; a non-Google
+        campaign returns 501 rather than 404, whether or not `platform` was passed.
+
+        Platforms: google
 
         Args:
             campaign_id: Platform campaign ID (required)
@@ -4655,9 +5975,31 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def ad_campaigns_replace_campaign_negative_keywords(
-        campaign_id: str, keywords: list[Any] | None, platform: str | None = None
+        campaign_id: str,
+        keywords: list[Any] | None,
+        platform: Literal[
+            "facebook",
+            "instagram",
+            "tiktok",
+            "linkedin",
+            "pinterest",
+            "google",
+            "twitter",
+            "openai",
+        ]
+        | None = None,
     ) -> str:
         """Replace campaign-level negative keywords
+
+        Replaces the FULL set of campaign-level negative keywords (C.270): the desired
+        list is diffed against what Google already has, and the difference is applied
+        as one `create`/`remove` mutate. Send an empty array to clear every campaign
+        negative.
+
+        The platform is always discovered from the campaign itself; a non-Google
+        campaign returns 501 rather than 404, whether or not `platform` was sent.
+
+        Platforms: google
 
         Args:
             campaign_id: Platform campaign ID (required)
@@ -4681,9 +6023,18 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def ad_campaigns_bulk_update_ad_campaign_status(
-        status: str, campaigns: list[dict[str, Any]] | None
+        status: Literal["active", "paused"], campaigns: list[dict[str, Any]] | None
     ) -> str:
         """Pause or resume many campaigns
+
+        Process up to 50 campaigns in one call. Each campaign is updated
+        concurrently and the response contains a per-campaign result so a
+        single bad row does not fail the whole batch. Each campaign is read,
+        written and re-read exactly as PUT /v1/ads/campaigns/{campaignId}/status
+        describes: only the campaign's own switch is written, never its ad sets'
+        or ads'. `updated` / `skipped` count campaigns.
+
+        Platforms: meta, google, tiktok, linkedin, pinterest, x
 
         Args:
             status: (required)
@@ -4707,17 +6058,39 @@ def register_generated_tools(mcp, _get_client):
     )
     def ad_campaigns_duplicate_ad_campaign(
         campaign_id: str,
-        platform: str,
+        platform: Literal["facebook", "instagram", "tiktok", "linkedin"],
         deep_copy: bool = True,
-        status_option: str = "PAUSED",
+        status_option: Literal["ACTIVE", "PAUSED", "INHERITED_FROM_SOURCE"] = "PAUSED",
         start_time: str | None = None,
         end_time: str | None = None,
-        rename_strategy: str | None = None,
+        rename_strategy: Literal["DEEP_RENAME", "ONLY_TOP_LEVEL_RENAME", "NO_RENAME"]
+        | None = None,
         rename_prefix: str | None = None,
         rename_suffix: str | None = None,
         sync_after: bool = True,
     ) -> str:
         """Duplicate a campaign
+
+        Duplicates a campaign, including its ad sets, ads, creatives, and
+        targeting by default (`deepCopy: true`). The copy is created paused
+        so callers can review before launching.
+
+        Per-platform implementation:
+        - **Meta** uses the native `POST /{campaign-id}/copies` endpoint.
+        - **TikTok** has no native copy primitive; Zernio walks the source
+          graph (`/v2/campaign/get/`, `/v2/adgroup/get/`, `/v2/ad/get/`) and
+          recreates each entity via the corresponding `/create/` endpoints,
+          carrying over budget / targeting / bid_type / bid_price /
+          deep_bid_type / creative fields. Spark Ad linkage (`tiktok_item_id`)
+          is preserved.
+        - **LinkedIn** has no native copy primitive; Zernio walks the source
+          CampaignGroup → Campaigns → Creatives and recreates each entity,
+          carrying over `type` / `costType` / `unitCost` /
+          `optimizationTargetType` / `creativeSelection` / `objectiveType` /
+          `format` / `dailyBudget` / `totalBudget` / `targetingCriteria` /
+          `runSchedule` and every Creative's `content` object ...
+
+        Platforms: meta, tiktok, linkedin
 
         Args:
             campaign_id: Source platform campaign ID (required)
@@ -4757,9 +6130,23 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def ad_campaigns_get_campaign_targeting(
-        campaign_id: str, platform: str | None = None
+        campaign_id: str, platform: Literal["google"] | None = None
     ) -> str:
         """Read a Google campaign's device, location, and language targeting
+
+        Google Ads compliance requires geo, language, budget, and bidding targeting
+        set at creation to stay editable afterwards; this reads the campaign state
+        so an integrator can build an editor around it. Cached for the quota window
+        (10 minutes fresh, up to 7 days last-good), not always a live read. Google
+        only; every other platform returns 501.
+
+        `devices` lists the device criteria the campaign carries, which depends on
+        its channel: Search campaigns have MOBILE, DESKTOP and TABLET, Display
+        campaigns also have CONNECTED_TV. `bidModifier` is Google's bid adjustment
+        for that device, `null` when it has none, and `0` when the device is
+        switched off; `included` is false for exactly that case.
+
+        Platforms: google
 
         Args:
             campaign_id: Google platform campaign ID (required)
@@ -4782,9 +6169,29 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def ad_campaigns_update_campaign_targeting(
-        campaign_id: str, platform: str, targeting: dict[str, Any] | None
+        campaign_id: str, platform: Literal["google"], targeting: dict[str, Any] | None
     ) -> str:
         """Edit a Google campaign's device, location, or language targeting
+
+        Google Ads compliance row M.10: geo and language targeting set at
+        creation must stay editable afterwards. Send at least one of `devices`,
+        `locations`, `languages`, `locationTargetingType`; each provided field REPLACES that field's
+        existing criteria on the campaign (a full set, not a delta). Fields left
+        out of the body are untouched. Google only; every other platform returns
+        501.
+
+        `devices` is the full set of device bid modifiers: a supported device you
+        leave out is switched off with a bid modifier of 0, since Google cannot
+        remove a device criterion. A device the campaign's channel does not carry,
+        and a set that switches every device off, both return 422.
+
+        `locations` accepts the same shapes as campaign creation: a bare array of
+        ISO country codes, or an object with `countries`/`regions`/`cities`/`zips`/`metros`
+        key lists (`key` from GET /v1/ads/targeting/search?dimension=geo). Negative
+        (excluded) locations are left untouched by this endpoint. An empty location list
+        returns 400 instead ...
+
+        Platforms: google
 
         Args:
             campaign_id: Google platform campaign ID (required)
@@ -4811,9 +6218,37 @@ def register_generated_tools(mcp, _get_client):
         account_id: str | None = None,
         campaign_id: str | None = None,
         ad_set_id: str | None = None,
-        platform: str | None = None,
+        platform: Literal[
+            "facebook",
+            "instagram",
+            "tiktok",
+            "linkedin",
+            "pinterest",
+            "google",
+            "twitter",
+            "openai",
+        ]
+        | None = None,
     ) -> str:
         """List ad sets
+
+        Ad sets (Google ad groups) synced for the connection, optionally
+        filtered by platform and campaignId. Reads the `ad_sets` table
+        directly, independent of the `ads` rollup GET /v1/ads/tree uses, so a
+        newly created standalone ad group with no ad yet (POST /v1/ads/ad-sets,
+        Google only) is visible here even though it is invisible in the tree
+        until an ad joins it via `adSetId` on POST /v1/ads/create. Returns at most 500
+        rows, newest first.
+
+        **Status freshness.** `status`, `configuredStatus`, `platformStatus`, `platformAdSetStatus`
+        and `platformCampaignStatus` are the values Zernio last stored. Background sync refreshes
+        them, typically within 15 to 60 minutes (Google up to about 3 hours), and ended or
+        long-paused objects may be refreshed less often. Zernio's own status writes re-read the
+        switches they change. A change made in the platform's own ads manager therefore shows up
+        here only after the next sync. Controllers that act on a switch should pass `live=true`,
+        which reads the switches ...
+
+        Platforms: meta, google, tiktok, linkedin, pinterest, x
 
         Args:
             account_id: Account ID
@@ -4842,14 +6277,36 @@ def register_generated_tools(mcp, _get_client):
     )
     def ad_campaigns_create_ad_set(
         account_id: str,
-        platform: str,
+        platform: Literal[
+            "facebook",
+            "instagram",
+            "tiktok",
+            "linkedin",
+            "pinterest",
+            "google",
+            "twitter",
+            "openai",
+        ],
         campaign_id: str,
         name: str,
-        status: str = "PAUSED",
+        status: Literal["ACTIVE", "PAUSED"] = "PAUSED",
         ad_account_id: str | None = None,
         customer_id: str | None = None,
     ) -> str:
         """Create a standalone ad group
+
+        Google Ads compliance row C.190: creates an ad group WITHOUT an ad,
+        under an existing campaign. Ads join it later via `adSetId`
+        on POST /v1/ads/create. Google only; every other platform returns 501.
+
+        Created `PAUSED` unless `status: ACTIVE`. The new ad group has no ad
+        yet, so it will not appear in GET /v1/ads/tree (built purely from `ads`
+        rows) until one is added; use GET /v1/ads/ad-sets to see it in the
+        meantime.
+
+        **Idempotency:** send an `Idempotency-Key` header to make retries safe.
+
+        Platforms: google
 
         Args:
             account_id: Zernio SocialAccount id owning the Google Ads connection. (required)
@@ -4884,18 +6341,33 @@ def register_generated_tools(mcp, _get_client):
     )
     def ad_campaigns_duplicate_ad_set(
         ad_set_id: str,
-        platform: str,
+        platform: Literal["facebook", "instagram"],
         campaign_id: str | None = None,
         deep_copy: bool = True,
-        status_option: str = "PAUSED",
+        status_option: Literal["ACTIVE", "PAUSED", "INHERITED_FROM_SOURCE"] = "PAUSED",
         start_time: str | None = None,
         end_time: str | None = None,
-        rename_strategy: str | None = None,
+        rename_strategy: Literal["DEEP_RENAME", "ONLY_TOP_LEVEL_RENAME", "NO_RENAME"]
+        | None = None,
         rename_prefix: str | None = None,
         rename_suffix: str | None = None,
         sync_after: bool = True,
     ) -> str:
         """Duplicate an ad set
+
+        Duplicates an ad set. The copy is created paused so callers can review before launching.
+        `campaignId` retargets the copy into another campaign; omitted = the source's own campaign.
+
+        Meta: ads and creatives are included by default (`deepCopy: true`) via Meta's native
+        `POST /{adset-id}/copies`; the new hierarchy materializes asynchronously and sync discovery
+        is triggered automatically (`syncAfter: false` to skip).
+
+        TikTok: the ad group is read and recreated under the campaign with its targeting, bidding,
+        budget and schedule (start reset to now); `deepCopy: true` recreates its ads too (default
+        false). `startTime`, `endTime` and `renameStrategy` are ignored and `statusOption` must be
+        PAUSED or absent. The copy appears on the next discovery sync.
+
+        Platforms: meta, tiktok
 
         Args:
             ad_set_id: Source platform ad set ID (required)
@@ -4939,14 +6411,28 @@ def register_generated_tools(mcp, _get_client):
     def ad_campaigns_duplicate_ad(
         ad_id: str,
         ad_set_id: str | None = None,
-        status_option: str = "PAUSED",
-        rename_strategy: str | None = None,
+        status_option: Literal["ACTIVE", "PAUSED", "INHERITED_FROM_SOURCE"] = "PAUSED",
+        rename_strategy: Literal["DEEP_RENAME", "ONLY_TOP_LEVEL_RENAME", "NO_RENAME"]
+        | None = None,
         rename_prefix: str | None = None,
         rename_suffix: str | None = None,
         sync_after: bool = True,
         reuse_source_creative: bool = False,
     ) -> str:
         """Duplicate an ad
+
+        Duplicates a single ad via Meta's native `POST /{ad-id}/copies`. The copy is created
+        paused. `adSetId` retargets the copy into another ad set; omitted = the source's own ad
+        set. Accepts the Zernio ad id or the platform ad id. Sync discovery is triggered
+        automatically (`syncAfter: false` to skip). Creative settings returned by Meta,
+        including explicit promotion metadata and creativeFeatures, are preserved when the
+        native copy requires a creative rebuild. Metadata Meta does not return cannot be recovered.
+        When Meta refuses the native copy with its capability error (code 3), which happens for
+        some creatives built by other tools, the ad is rebuilt instead: a new creative from the
+        source's returned spec and a new ad in the target ad set, carrying the source name,
+        status option, rename options and tracking specs.
+
+        Platforms: meta
 
         Args:
             ad_id: Zernio ad ID or platform ad ID (required)
@@ -4986,6 +6472,14 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Get live ad-set details
 
+        Reads the ad set live from Meta, returned verbatim. The default projection includes
+        `learning_stage_info` (learning-phase status: LEARNING / SUCCESS / FAIL / WAIVING; Meta
+        omits its `status` key on paused ad sets), delivery settings, budgets, schedule and
+        targeting. `fields` is a raw-passthrough override; unknown fields return Meta's 400
+        verbatim.
+
+        Platforms: meta
+
         Args:
             ad_set_id: Meta ad set id (platformAdSetId). (required)
             account_id: Zernio SocialAccount id (posting or ads variant) used to resolve the Meta token. (required)
@@ -5009,11 +6503,26 @@ def register_generated_tools(mcp, _get_client):
     )
     def ad_campaigns_update_ad_set(
         ad_set_id: str,
-        platform: str,
+        platform: Literal[
+            "facebook",
+            "instagram",
+            "tiktok",
+            "linkedin",
+            "pinterest",
+            "google",
+            "twitter",
+            "openai",
+        ],
         budget: dict[str, Any] | None = None,
-        status: str | None = None,
+        status: Literal["active", "paused"] | None = None,
         name: str | None = None,
-        bid_strategy: str | None = None,
+        bid_strategy: Literal[
+            "LOWEST_COST_WITHOUT_CAP",
+            "LOWEST_COST_WITH_BID_CAP",
+            "COST_CAP",
+            "LOWEST_COST_WITH_MIN_ROAS",
+        ]
+        | None = None,
         smart_targeting: dict[str, Any] | None = None,
         bid_amount: float | None = None,
         roas_average_floor: float | None = None,
@@ -5022,6 +6531,25 @@ def register_generated_tools(mcp, _get_client):
         platform_specific_data: dict[str, Any] | None = None,
     ) -> str:
         """Update an ad set
+
+            Ad-set-level writes. Use this for ABO budget updates, ad-set-scoped
+            pause/resume, bid-strategy edits, Meta value-rule-set attach/detach, and
+            Meta-only post-launch delivery settings via `platformSpecificData`. At
+            least one updatable field is required.
+
+            Value rule sets (Meta only, see `/v1/ads/value-rule-sets`):
+            - ATTACH or REPLACE: send `valueRuleSetId`. Attachment is driven by the id's
+              presence, so `valueRulesApplied: true` is optional. Sending a different id
+              replaces the previous association; there is no separate replace call.
+            - DETACH: send `valueRulesApplied: false` and OMIT `valueRuleSetId`.
+            - Sending `valueRulesApplied: false` TOGETHER with `valueRuleSetId` returns 400
+              `mutually_exclusive_fields`. This is deliberate: Meta attaches the rule set
+              whenever `value_rule_set_id` is present, even with `value_rules_applied` false,
+              so echoing stored state while asking to detach would silently keep the bid
+              adjustments live.
+            - Eligibility: only ad sets on ...
+
+            Platforms: meta, google, tiktok, linkedin, pinterest, x, openai
 
             Args:
                 ad_set_id: Platform ad set ID (required)
@@ -5094,6 +6622,17 @@ def register_generated_tools(mcp, _get_client):
     def ad_campaigns_delete_ad_set(ad_set_id: str) -> str:
         """Delete an ad set
 
+        Deletes the ad set on the platform, cascading to its ads only (never the
+        campaign). Locally, every Ad document under the ad set is marked
+        `status: cancelled`.
+
+        Delete is soft on platforms that have no hard delete: LinkedIn moves the
+        campaign to `PENDING_DELETION`, Pinterest archives the ad group, and X
+        soft-flags the line item. Google removes the ad group. All remain readable
+        for reporting.
+
+        Platforms: meta, google, tiktok, linkedin, pinterest, x
+
         Args:
             ad_set_id: Platform ad set ID (required)"""
         client = _get_client()
@@ -5112,9 +6651,41 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def ad_campaigns_update_ad_set_status(
-        ad_set_id: str, status: str, platform: str
+        ad_set_id: str,
+        status: Literal["active", "paused"],
+        platform: Literal[
+            "facebook",
+            "instagram",
+            "tiktok",
+            "linkedin",
+            "pinterest",
+            "google",
+            "twitter",
+            "openai",
+        ],
     ) -> str:
         """Pause or resume a single ad set
+
+        Ad-set-scoped pause/resume (doesn't touch sibling ad sets). Thin wrapper
+        over PUT /v1/ads/ad-sets/{adSetId} for callers that only want the
+        status toggle and prefer a symmetric URL to
+        /v1/ads/campaigns/{campaignId}/status.
+
+        Writes the ad set's own on/off switch and nothing else, on every platform
+        (Meta `configured_status`, TikTok ad group `operation_status`, Google ad
+        group status, LinkedIn campaign, Pinterest ad group, X line item, ChatGPT
+        (OpenAI) ad group). Its ads keep their own switches: an ad you paused
+        individually stays paused when the ad set resumes. The campaign above is
+        not touched either, so an ad set resumed under a paused campaign reads
+        `status: paused` until the campaign is resumed too. See the Status model
+        in the Ad Campaigns tag.
+
+        **Live read, then write.** The ad set's switch is read from the platform
+        first. When that live read shows it already in the requested state
+        nothing is written (`updated: 0`, `skipped: 1`, with the reason).
+        Otherwise the switch is written ...
+
+        Platforms: meta, google, tiktok, linkedin, pinterest, x, openai
 
         Args:
             ad_set_id: Platform ad set ID (required)
@@ -5140,9 +6711,28 @@ def register_generated_tools(mcp, _get_client):
     def ad_campaigns_get_ad_tree(
         page: int = 1,
         limit: int = 20,
-        source: str = "all",
-        platform: str | None = None,
-        status: str | None = None,
+        source: Literal["zernio", "all"] = "all",
+        platform: Literal[
+            "facebook",
+            "instagram",
+            "tiktok",
+            "linkedin",
+            "pinterest",
+            "google",
+            "twitter",
+            "openai",
+        ]
+        | None = None,
+        status: Literal[
+            "active",
+            "paused",
+            "pending_review",
+            "rejected",
+            "completed",
+            "cancelled",
+            "error",
+        ]
+        | None = None,
         ad_account_id: str | None = None,
         page_id: str | None = None,
         account_id: str | None = None,
@@ -5154,11 +6744,28 @@ def register_generated_tools(mcp, _get_client):
         to_date: str | None = None,
         has_delivery: bool | None = None,
         min_spend: float | None = None,
-        sort: str = "newest",
+        sort: Literal["newest", "oldest", "spend_desc", "spend_asc"] = "newest",
         time_increment: int | None = None,
-        daily_level: str = "campaign",
+        daily_level: Literal["campaign", "adset", "ad"] = "campaign",
     ) -> str:
         """Get campaign tree
+
+        Returns a nested Campaign > Ad Set > Ad hierarchy with rolled-up metrics at each level.
+        Uses a two-stage aggregation: ads are grouped into ad sets, then ad sets into campaigns.
+        Metrics are computed over an optional date range, then rolled up from ad level to ad set
+        and campaign levels. Pagination is at the campaign level. Ads without a campaign or ad set
+        ID are grouped into synthetic \"Ungrouped\" buckets.
+        If no date range is provided, defaults to the last 90 days. Date range is capped at 730 days max.
+
+        Pass `timeIncrement=1` to also get a daily breakdown: each node gains a `daily[]` array of
+        per-day metrics (same fields as the aggregated `metrics`) in the same call. Use `dailyLevel`
+        (`campaign` default, or `adset` / `ad`) to choose which levels carry the series. This replaces
+        calling the tree once per day for per-campaign daily trends.
+
+        **Deleted objects stay in the tree.** Deleting an ad or a campaign is a soft delete: the Ad
+        documents move to `status: cancelled` and are kept ...
+
+        Platforms: meta, google, tiktok, linkedin, pinterest, x
 
         Args:
             page: Page number
@@ -5220,9 +6827,37 @@ def register_generated_tools(mcp, _get_client):
         ad_account_id: str | None = None,
         from_date: str | None = None,
         to_date: str | None = None,
-        platform: str | None = None,
+        platform: Literal[
+            "facebook",
+            "instagram",
+            "tiktok",
+            "linkedin",
+            "pinterest",
+            "google",
+            "twitter",
+            "openai",
+        ]
+        | None = None,
     ) -> str:
         """Get daily account metrics
+
+        Returns daily aggregate metrics across all ads in a SocialAccount as a single
+        time series, one row per calendar day in the requested range. Use this for
+        dashboards that draw a daily-spend or daily-conversions chart, instead of
+        calling `/v1/ads/tree` once per day.
+
+        `accountId` is required. The lookup is sibling-expanded so passing the `metaads`
+        ID also includes ads under the linked `facebook` / `instagram` posting account
+        (and vice-versa), the same convention as `/v1/ads/tree` and `/v1/ads`.
+
+        Date range defaults to the last 90 days. Capped at 730 days. Ranges older
+        than the ingested history return a `202` immediately with the covered part
+        and `backfillPending: true` while the rest is backfilled in the background;
+        repeat the request shortly until it returns 200 with full data.
+
+        With adAccountId set to a Google customer id this is the customer-level performance report (clicks, cost, impressions, conversions, all conversions per day).
+
+        Platforms: meta, google, tiktok, linkedin, pinterest, x
 
         Args:
             account_id: Account ID. Sibling-expanded to its linked posting↔ads pair. (required)
@@ -5254,6 +6889,23 @@ def register_generated_tools(mcp, _get_client):
     def ad_campaigns_get_ad(ad_id: str) -> str:
         """Get ad details
 
+           Returns an ad with its creative, targeting, status, and performance metrics.
+           Google Search ads include current creative.headlines, creative.descriptions and creative.finalUrls,
+           preserving pinnedField. Top-level cachedAt and stale report cache freshness. Google mutations invalidate this read.
+           RSA enrichment requires a stored advertisingChannelType of SEARCH. Ads with an unknown or other channel
+           return their stored details without a Google read. If RSA enrichment fails, the stored ad is returned
+           with HTTP 200 and without cache metadata.
+
+           The `{adId}` path segment accepts any identifier dialect Zernio indexes for the ad:
+           - the Zernio internal `_id` (24-char hex)
+           - Meta's numeric `platformAdId` (the value shipped in `comment.received` webhooks as `comment.ad.id`)
+           - the creative's `effective_object_story_id` (`{pageId}_{postId}` shape, Facebook side)
+           - the creative's `effective_instagram_media_id` (Instagram side)
+
+           Any of the four resolve to the same ad. Caller doesn't need a translation ...
+
+           Platforms: meta, google, tiktok, linkedin, pinterest, x
+
            Args:
                ad_id: Zernio `_id` (hex), Meta `platformAdId` (numeric), or one of the creative's effective story/media IDs. See description for details.
         (required)"""
@@ -5279,13 +6931,32 @@ def register_generated_tools(mcp, _get_client):
         final_urls: list[str] | None = None,
         asset_group: dict[str, Any] | None = None,
         demand_gen: dict[str, Any] | None = None,
-        status: str | None = None,
+        status: Literal["active", "paused"] | None = None,
         budget: dict[str, Any] | None = None,
         targeting: dict[str, Any] | None = None,
         creative: dict[str, Any] | None = None,
         name: str | None = None,
     ) -> str:
         """Update ad
+
+            Patch one or more fields on an ad. Status, budget, targeting, and creative changes
+            are propagated to the platform.
+
+            Per-platform support:
+            - **Meta** (Facebook + Instagram): all fields supported.
+            - **TikTok**: status, budget, `name` (renames the ad), targeting (via `/v2/adgroup/update/`), and creative
+              (via `/v2/ad/update/` patch-style: `headline` is ignored, `body` becomes `ad_text`).
+            - **Google**: status, budget, KEYWORD edits via `targeting.keywords` /
+              `targeting.negativeKeywords`, DEVICE bid adjustments via `targeting.devices`,
+              LOCATION edits via `targeting.locations` (or the equivalent top-level
+              `targeting.countries` / `regions` / `cities` / `zips` / `metros`), and LANGUAGE
+              edits via `targeting.languages`.
+              Each list you send becomes the FULL new set of its kind (criteria not in the
+              list are removed, except devices, which Google cannot remove and which are
+              switched off with a bid modifier of 0 instead); a kind left out is untouched.
+              Any other `targeting` field ...
+
+            Platforms: meta, google, tiktok, linkedin, pinterest, x
 
             Args:
                 ad_id: (required)
@@ -5365,6 +7036,10 @@ def register_generated_tools(mcp, _get_client):
     def ad_campaigns_delete_ad(ad_id: str) -> str:
         """Cancel an ad
 
+        Cancels the ad on the platform and marks it as cancelled in the database. The ad is preserved for history. OpenAI Ads has no delete API; the ad is archived instead (a terminal state, the closest equivalent).
+
+        Platforms: meta, google, tiktok, linkedin, pinterest, x
+
         Args:
             ad_id: (required)"""
         client = _get_client()
@@ -5382,8 +7057,31 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=True,
         )
     )
-    def ad_campaigns_update_ad_status(ad_id: str, status: str) -> str:
+    def ad_campaigns_update_ad_status(
+        ad_id: str, status: Literal["active", "paused"]
+    ) -> str:
         """Pause or resume a single ad
+
+        Ad-scoped pause/resume: flips ONLY this ad's own switch (Meta
+        `configured_status`, TikTok `operation_status`, Google ad group ad
+        status, LinkedIn creative, Pinterest ad), never its parent ad set or
+        campaign, so sibling ads keep running. X is the exception: its smallest
+        switch is the line item. Thin wrapper over the `status` field of
+        PUT /v1/ads/{adId}, for callers that want a URL symmetric to
+        /v1/ads/campaigns/{campaignId}/status and /v1/ads/ad-sets/{adSetId}/status.
+
+        The ad's own switch is independent of its delivery status. An ad paused
+        only because its campaign or ad set is off (`status: paused`,
+        `configuredStatus: ACTIVE`) can still be switched off here, and
+        switching an ad on under a paused campaign leaves it `paused` until the
+        campaign is resumed. After the write the switch is read back from the
+        platform and returned as `configuredStatus`, together with the
+        resulting delivery `status`.
+
+        `{adId}` accepts the same identifier dialects as GET/PUT /v1/ads/{adId}
+        (Zernio hex `_id`, ...
+
+        Platforms: meta, google, tiktok, linkedin, pinterest, x
 
         Args:
             ad_id: Zernio `_id` (hex), Meta `platformAdId` (numeric), or one of the creative's effective story/media IDs. (required)
@@ -5410,6 +7108,10 @@ def register_generated_tools(mcp, _get_client):
         customer_id: str | None = None,
     ) -> str:
         """List campaign assets
+
+        Lists directly attached Google assets. Fresh reads are cached for 10 minutes; exhausted quota may return the last successful read with stale=true. Inherited assets are not included.
+
+        Platforms: google
 
         Args:
             campaign_id: Numeric Google platform id. (required)
@@ -5446,6 +7148,10 @@ def register_generated_tools(mcp, _get_client):
         structured_snippets: list[dict[str, Any]] | None = None,
     ) -> str:
         """Attach campaign assets
+
+        Creates and attaches sitelinks, callouts and structured snippets in one Google mutation.
+
+        Platforms: google
 
         Args:
             campaign_id: Numeric Google platform id. (required)
@@ -5487,6 +7193,10 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Update campaign assets
 
+        Edits existing Google assets in place. Send updates with assetResourceName and the fields to change. An asset is shared: changes affect every attachment using it. Omitted fields stay unchanged. The operation consumes the Google operations budget and invalidates affected cached lists.
+
+        Platforms: google
+
         Args:
             campaign_id: Numeric Google platform id. (required)
             account_id: Zernio Google Ads connection id. (required)
@@ -5523,6 +7233,10 @@ def register_generated_tools(mcp, _get_client):
         customer_id: str | None = None,
     ) -> str:
         """Remove campaign assets
+
+        Removes the specified attachments only. Google assets cannot be deleted. Other attachments remain. assetResourceNames is retained for compatibility.
+
+        Platforms: google
 
         Args:
             campaign_id: Numeric Google platform id. (required)
@@ -5561,6 +7275,10 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """List ad-group assets
 
+        Lists directly attached Google assets. Fresh reads are cached for 10 minutes; exhausted quota may return the last successful read with stale=true. Inherited assets are not included.
+
+        Platforms: google
+
         Args:
             ad_set_id: Numeric Google platform id. (required)
             account_id: (required)
@@ -5596,6 +7314,10 @@ def register_generated_tools(mcp, _get_client):
         structured_snippets: list[dict[str, Any]] | None = None,
     ) -> str:
         """Attach ad-group assets
+
+        Creates and attaches sitelinks, callouts and structured snippets in one Google mutation.
+
+        Platforms: google
 
         Args:
             ad_set_id: Numeric Google platform id. (required)
@@ -5637,6 +7359,10 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Update ad-group assets
 
+        Edits existing Google assets in place. Send updates with assetResourceName and the fields to change. An asset is shared: changes affect every attachment using it. Omitted fields stay unchanged. The operation consumes the Google operations budget and invalidates affected cached lists.
+
+        Platforms: google
+
         Args:
             ad_set_id: Numeric Google platform id. (required)
             account_id: Zernio Google Ads connection id. (required)
@@ -5674,6 +7400,10 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Remove ad-group assets
 
+        Removes the specified attachments only. Google assets cannot be deleted. Other attachments remain. assetResourceNames is retained for compatibility.
+
+        Platforms: google
+
         Args:
             ad_set_id: Numeric Google platform id. (required)
             account_id: Zernio Google Ads connection id. (required)
@@ -5706,6 +7436,17 @@ def register_generated_tools(mcp, _get_client):
     def ad_campaigns_get_ad_review(ad_id: str) -> str:
         """Read the platform's review verdict for an ad
 
+        Reads the ad's review verdict from the platform now: whether it was approved, where it may
+        not deliver, and every rejection reason with TikTok's suggestion and the piece of content it
+        refers to. Read-only, so it works on a paused ad without re-enabling it.
+
+        TikTok only (`/ad/review_info/`); every other platform returns 501. Use it alongside the ad's
+        `platformStatus`: TikTok reports `AD_STATUS_AUDIT` while the ad is in review and
+        `AD_STATUS_AD_PRE_ONLINE` once it passed and is about to deliver (both map to
+        `status: pending_review`); `AD_STATUS_AUDIT_DENY` maps to `rejected`.
+
+        Platforms: tiktok
+
         Args:
             ad_id: Zernio ad id (24-char hex) or the platform ad id. (required)"""
         client = _get_client()
@@ -5724,9 +7465,24 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def ad_campaigns_list_campaign_negative_keyword_lists(
-        campaign_id: str, platform: str | None = None
+        campaign_id: str,
+        platform: Literal[
+            "facebook",
+            "instagram",
+            "tiktok",
+            "linkedin",
+            "pinterest",
+            "google",
+            "twitter",
+            "openai",
+        ]
+        | None = None,
     ) -> str:
         """List campaign negative lists
+
+        Returns shared negative keyword lists attached to the campaign, separate from campaign-level negative keywords. Google Ads shared negative keyword lists (shared_set type NEGATIVE_KEYWORDS). Reads are cached for 10 minutes; quota exhaustion may return the last successful result for up to 7 days with stale=true. Customer selection is limited to this connection and its account scope.
+
+        Platforms: google
 
         Args:
             campaign_id: (required)
@@ -5749,9 +7505,25 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def ad_campaigns_replace_campaign_negative_keyword_lists(
-        campaign_id: str, list_ids: list[str] | None, platform: str | None = None
+        campaign_id: str,
+        list_ids: list[str] | None,
+        platform: Literal[
+            "facebook",
+            "instagram",
+            "tiktok",
+            "linkedin",
+            "pinterest",
+            "google",
+            "twitter",
+            "openai",
+        ]
+        | None = None,
     ) -> str:
         """Replace campaign negative lists
+
+        Sets the full desired set of shared negative keyword list associations on this campaign. Send listIds=[] to detach all negative keyword lists. Only campaign_shared_set links are changed; the lists and their keywords are preserved. Every list must belong to the campaign customer and have type NEGATIVE_KEYWORDS.
+
+        Platforms: google
 
         Args:
             campaign_id: (required)
@@ -5778,7 +7550,15 @@ def register_generated_tools(mcp, _get_client):
         account_id: str,
         ad_account_id: str,
         name: str,
-        goal: str,
+        goal: Literal[
+            "engagement",
+            "traffic",
+            "awareness",
+            "video_views",
+            "lead_generation",
+            "conversions",
+            "app_promotion",
+        ],
         creative_features: dict[str, Any] | None = None,
         post_id: str | None = None,
         platform_post_id: str | None = None,
@@ -5787,26 +7567,52 @@ def register_generated_tools(mcp, _get_client):
         ad_set_id: str | None = None,
         existing_campaign_id: str | None = None,
         identity_id: str | None = None,
-        identity_type: str | None = None,
+        identity_type: Literal["TT_USER", "CUSTOMIZED_USER", "BC_AUTH_TT"]
+        | None = None,
         budget_amount: float | None = None,
-        budget_type: str | None = None,
+        budget_type: Literal["daily", "lifetime"] | None = None,
         budget: dict[str, Any] | None = None,
         instagram_account_id: str | None = None,
-        destination_type: str | None = None,
+        destination_type: Literal[
+            "INSTAGRAM_PROFILE",
+            "WEBSITE",
+            "ON_AD",
+            "MESSENGER",
+            "WHATSAPP",
+            "INSTAGRAM_DIRECT",
+        ]
+        | None = None,
         whatsapp_phone_number: str | None = None,
         currency: str | None = None,
         start_date: str | None = None,
         end_date: str | None = None,
         schedule: dict[str, Any] | None = None,
         targeting: dict[str, Any] | None = None,
-        location_targeting_type: str | None = None,
+        location_targeting_type: Literal["presence", "presence_or_interest"]
+        | None = None,
         raw_targeting: dict[str, Any] | None = None,
-        bid_strategy: str | None = None,
+        bid_strategy: Literal[
+            "LOWEST_COST_WITHOUT_CAP",
+            "LOWEST_COST_WITH_BID_CAP",
+            "COST_CAP",
+            "LOWEST_COST_WITH_MIN_ROAS",
+        ]
+        | None = None,
         bid_amount: float | None = None,
         roas_average_floor: float | None = None,
         platform_specific_data: dict[str, Any] | None = None,
         tracking: dict[str, Any] | None = None,
-        special_ad_categories: list[str] | None = None,
+        special_ad_categories: list[
+            Literal[
+                "HOUSING",
+                "EMPLOYMENT",
+                "CREDIT",
+                "FINANCIAL_PRODUCTS_SERVICES",
+                "ISSUES_ELECTIONS_POLITICS",
+                "ONLINE_GAMBLING_AND_GAMING",
+            ]
+        ]
+        | None = None,
         special_ad_category_country: list[str] | None = None,
         regional_regulated_categories: list[str] | None = None,
         regional_regulation_identities: dict[str, Any] | None = None,
@@ -5820,14 +7626,38 @@ def register_generated_tools(mcp, _get_client):
         dsa_beneficiary: str | None = None,
         dsa_payor: str | None = None,
         lead_gen_form_id: str | None = None,
-        status: str | None = None,
-        budget_level: str | None = None,
+        status: Literal["ACTIVE", "PAUSED"] | None = None,
+        budget_level: Literal["adset", "campaign"] | None = None,
         attribution_spec: list[dict[str, Any]] | None = None,
         bodies: list[str] | None = None,
         smart_targeting: dict[str, Any] | None = None,
         optimization_goal: str | None = None,
     ) -> str:
         """Boost post as ad
+
+            Creates a paid ad from an existing published post, keeping the post's
+            engagement. By default it provisions the whole hierarchy (campaign, ad
+            set, ad).
+
+            **Attach shape (Meta).** Send `adSetId` to put the ad under an EXISTING
+            ad set instead, so that ad set keeps its learning phase. It then owns
+            `budget`, `schedule` and `targeting`, and sending any of those alongside
+            `adSetId` is a 400 rather than a silent drop. `budget` is required only
+            without `adSetId`.
+
+            `instagramAccountId`, `destinationType`, `whatsappPhoneNumber` and `adSetId`
+            are Meta-only and return 400 on other platforms.
+
+            `accountId` may be a Facebook, Instagram or Meta ads (business login)
+            connection. A business-login connection has no posting account, so pass
+            the post as `platformPostId` (Facebook `pageId_postId` or an Instagram
+            media id); a Zernio `postId` is a 400 there.
+
+            **Messaging boosts (Meta).** Use `goal: engagement` with
+            `callToAction: WHATSAPP_MESSAGE`, `MESSAGE_PAGE`, or `INSTAGRAM_MESSAGE`.
+            The CTA implies ...
+
+            Platforms: meta, google, tiktok, linkedin, pinterest, x
 
             Args:
                 creative_features
@@ -6060,6 +7890,10 @@ def register_generated_tools(mcp, _get_client):
     def ad_campaigns_list_google_asset_groups(campaign_id: str) -> str:
         """List Performance Max asset groups
 
+        Read Performance Max asset groups and their linked text, image and YouTube assets. campaignId is the platform campaign id returned by creation or the campaign list. The campaign must be visible to the caller. Uses a 10-minute cache, with the last successful response served as stale when Google quota is exhausted. Removed groups and asset links are excluded. Campaign-level brand assets on campaigns with brand guidelines enabled are not included.
+
+        Platforms: google
+
         Args:
             campaign_id: Google Ads campaign id. (required)"""
         client = _get_client()
@@ -6086,12 +7920,16 @@ def register_generated_tools(mcp, _get_client):
         final_mobile_urls: list[str] | None = None,
         path1: str | None = None,
         path2: str | None = None,
-        status: str = "PAUSED",
+        status: Literal["ENABLED", "PAUSED"] = "PAUSED",
         assets: list[dict[str, Any]] | None = None,
         listing_group_filter: dict[str, Any] | None = None,
         validate_only: bool = False,
     ) -> str:
         """Create a Performance Max asset group
+
+        Add an asset group to an existing Performance Max campaign. The group, any new assets, their links and an optional listing-group tree are created in one atomic request, so Google checks the asset minimums (for non-retail campaigns) against the whole set. Created PAUSED unless status is ENABLED. validateOnly: true runs Google's validation without creating anything.
+
+        Platforms: google
 
         Args:
             campaign_id: Google Ads campaign id. (required)
@@ -6135,6 +7973,10 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Get a Performance Max asset group
 
+        One asset group with its linked assets, ad strength, primary status and listing-group tree. Uses a 10-minute cache, served stale when Google quota is exhausted; any write below clears it.
+
+        Platforms: google
+
         Args:
             campaign_id: Google Ads campaign id. (required)
             asset_group_id: Google asset group id. (required)"""
@@ -6159,7 +8001,7 @@ def register_generated_tools(mcp, _get_client):
         campaign_id: str,
         asset_group_id: str,
         name: str | None = None,
-        status: str | None = None,
+        status: Literal["ENABLED", "PAUSED"] | None = None,
         final_urls: list[str] | None = None,
         final_mobile_urls: list[str] | None = None,
         path1: str | None = None,
@@ -6167,6 +8009,10 @@ def register_generated_tools(mcp, _get_client):
         validate_only: bool = False,
     ) -> str:
         """Update a Performance Max asset group
+
+        Change the name, status (ENABLED or PAUSED), final URLs or display paths. Only the fields sent are written; null on path1 or path2 clears it. Change assets with the /assets endpoint and product targeting with /listing-group-filters. validateOnly: true validates without writing.
+
+        Platforms: google
 
         Args:
             campaign_id: Google Ads campaign id. (required)
@@ -6208,6 +8054,10 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Remove a Performance Max asset group
 
+        Removes the asset group on Google (status REMOVED, not reversible). Pass validateOnly=true to validate without removing.
+
+        Platforms: google
+
         Args:
             campaign_id: (required)
             asset_group_id: (required)
@@ -6239,6 +8089,10 @@ def register_generated_tools(mcp, _get_client):
         validate_only: bool = False,
     ) -> str:
         """Link or unlink asset group assets
+
+        Link existing assets or new content to the asset group, and unlink assets, in one atomic request. Links are applied before unlinks, so swapping the last asset of a role does not trip Google's per-role minimum. Unlinking removes the link only; the asset stays in the account library. validateOnly: true validates without writing.
+
+        Platforms: google
 
         Args:
             campaign_id: Google Ads campaign id. (required)
@@ -6275,6 +8129,10 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Replace an asset group's listing-group tree
 
+        Replace the product (listing-group) tree of a Performance Max retail asset group. The current tree is removed and the new one created in one atomic request. Read the current tree with GET on the asset group. Requires a campaign linked to Merchant Center; other campaigns return 400 LISTING_SOURCE_NOT_ALLOWED from Google. validateOnly: true validates without writing.
+
+        Platforms: google
+
         Args:
             campaign_id: Google Ads campaign id. (required)
             asset_group_id: Google asset group id. (required)
@@ -6308,22 +8166,36 @@ def register_generated_tools(mcp, _get_client):
         ad_set_name: str | None = None,
         ad_name: str | None = None,
         tracking: dict[str, Any] | None = None,
-        goal: str | None = None,
+        goal: Literal[
+            "engagement",
+            "traffic",
+            "awareness",
+            "video_views",
+            "lead_generation",
+            "lead_conversion",
+            "conversions",
+            "app_promotion",
+            "catalog_sales",
+            "page_likes",
+            "page_visits",
+            "job_applicants",
+        ]
+        | None = None,
         smart_targeting: dict[str, Any] | None = None,
         optimization_goal: str | None = None,
         billing_event: str | None = None,
-        buying_type: str = "AUCTION",
+        buying_type: Literal["AUCTION", "RESERVED"] = "AUCTION",
         rf_prediction_id: str | None = None,
         promotion: str | None = None,
         creative_features: dict[str, Any] | None = None,
-        multi_advertiser: str | None = None,
-        ai_disclosure: str | None = None,
+        multi_advertiser: Literal["OPT_IN", "OPT_OUT"] | None = None,
+        ai_disclosure: Literal["OPT_IN", "OPT_OUT"] | None = None,
         validate_only: bool | None = None,
         budget_amount: float | None = None,
-        budget_type: str | None = None,
-        status: str | None = None,
-        campaign_status: str | None = None,
-        budget_level: str = "adset",
+        budget_type: Literal["daily", "lifetime"] | None = None,
+        status: Literal["ACTIVE", "PAUSED"] | None = None,
+        campaign_status: Literal["ACTIVE", "PAUSED"] | None = None,
+        budget_level: Literal["adset", "campaign"] = "adset",
         currency: str | None = None,
         headline: str | None = None,
         long_headline: str | None = None,
@@ -6332,7 +8204,43 @@ def register_generated_tools(mcp, _get_client):
         bodies: list[str] | None = None,
         headlines: list[str] | None = None,
         descriptions: list[str] | None = None,
-        call_to_action: str | None = None,
+        call_to_action: Literal[
+            "LEARN_MORE",
+            "SHOP_NOW",
+            "SIGN_UP",
+            "BOOK_TRAVEL",
+            "CONTACT_US",
+            "DOWNLOAD",
+            "GET_OFFER",
+            "GET_QUOTE",
+            "SUBSCRIBE",
+            "WATCH_MORE",
+            "ADD_TO_CART",
+            "APPLY_NOW",
+            "BOOK_NOW",
+            "BUY_TICKETS",
+            "DONATE",
+            "DONATE_NOW",
+            "GET_DIRECTIONS",
+            "GET_SHOWTIMES",
+            "LISTEN_NOW",
+            "ORDER_NOW",
+            "PLAY_GAME",
+            "REQUEST_TIME",
+            "SEE_MENU",
+            "START_ORDER",
+            "INSTALL_MOBILE_APP",
+            "USE_APP",
+            "REGISTER",
+            "JOIN",
+            "ATTEND",
+            "REQUEST_DEMO",
+            "VIEW_QUOTE",
+            "APPLY",
+            "SEE_MORE",
+            "BUY_NOW",
+        ]
+        | None = None,
         link_url: str | None = None,
         lead_gen_form_id: str | None = None,
         image_url: str | None = None,
@@ -6348,7 +8256,31 @@ def register_generated_tools(mcp, _get_client):
         organization_id: str | None = None,
         targeting: dict[str, Any] | None = None,
         countries: list[str] | None = None,
-        country_groups: list[str] | None = None,
+        country_groups: list[
+            Literal[
+                "africa",
+                "asia",
+                "europe",
+                "north_america",
+                "south_america",
+                "oceania",
+                "central_america",
+                "caribbean",
+                "eea",
+                "euro_area",
+                "nafta",
+                "mercosur",
+                "afta",
+                "apec",
+                "gcc",
+                "cisfta",
+                "emerging_markets",
+                "itunes_app_store",
+                "android_free_store",
+                "android_paid_store",
+            ]
+        ]
+        | None = None,
         cities: list[Any] | None = None,
         regions: list[Any] | None = None,
         age_min: int | None = None,
@@ -6361,12 +8293,22 @@ def register_generated_tools(mcp, _get_client):
         work_positions: list[dict[str, Any]] | None = None,
         work_employers: list[dict[str, Any]] | None = None,
         work_industries: list[dict[str, Any]] | None = None,
-        income_tier: str | None = None,
+        income_tier: Literal["top_5", "top_10", "top_10_25", "top_25_50"] | None = None,
         languages: list[str] | None = None,
         placements: dict[str, Any] | None = None,
         saved_targeting_id: str | None = None,
         raw_targeting: dict[str, Any] | None = None,
-        special_ad_categories: list[str] | None = None,
+        special_ad_categories: list[
+            Literal[
+                "HOUSING",
+                "EMPLOYMENT",
+                "CREDIT",
+                "FINANCIAL_PRODUCTS_SERVICES",
+                "ISSUES_ELECTIONS_POLITICS",
+                "ONLINE_GAMBLING_AND_GAMING",
+            ]
+        ]
+        | None = None,
         special_ad_category_country: list[str] | None = None,
         regional_regulated_categories: list[str] | None = None,
         regional_regulation_identities: dict[str, Any] | None = None,
@@ -6380,8 +8322,9 @@ def register_generated_tools(mcp, _get_client):
         translations: list[dict[str, Any]] | None = None,
         placement_assets: dict[str, Any] | None = None,
         audience_id: str | None = None,
-        campaign_type: str = "display",
-        location_targeting_type: str | None = None,
+        campaign_type: Literal["display", "search", "pmax", "demand_gen"] = "display",
+        location_targeting_type: Literal["presence", "presence_or_interest"]
+        | None = None,
         asset_group: dict[str, Any] | None = None,
         demand_gen: dict[str, Any] | None = None,
         keywords: list[Any] | None = None,
@@ -6394,8 +8337,14 @@ def register_generated_tools(mcp, _get_client):
         structured_snippets: list[dict[str, Any]] | None = None,
         advantage_audience: int | None = None,
         attribution_spec: list[dict[str, Any]] | None = None,
-        gender: str = "all",
-        bid_strategy: str | None = None,
+        gender: Literal["all", "male", "female"] = "all",
+        bid_strategy: Literal[
+            "LOWEST_COST_WITHOUT_CAP",
+            "LOWEST_COST_WITH_BID_CAP",
+            "COST_CAP",
+            "LOWEST_COST_WITH_MIN_ROAS",
+        ]
+        | None = None,
         bid_amount: float | None = None,
         roas_average_floor: float | None = None,
         portfolio_bid_strategy_id: str | None = None,
@@ -6406,15 +8355,32 @@ def register_generated_tools(mcp, _get_client):
         dsa_payor: str | None = None,
         brand_identity: dict[str, Any] | None = None,
         identity_id: str | None = None,
-        identity_type: str | None = None,
+        identity_type: Literal["TT_USER", "CUSTOMIZED_USER", "BC_AUTH_TT"]
+        | None = None,
         smart_plus: bool | None = None,
         user_os: list[str] | None = None,
         user_device: list[str] | None = None,
         is_skadnetwork_attribution: bool | None = None,
-        campaign_attribution: str | None = None,
+        campaign_attribution: Literal["AEM", "SKADNETWORK"] | None = None,
         promoted_object: dict[str, Any] | None = None,
     ) -> str:
         """Create standalone ad
+
+            Create a paid ad with custom creative across Meta, Google Ads, Pinterest, TikTok, X, LinkedIn, and OpenAI Ads (ChatGPT Ads).
+
+            Google Performance Max: set `campaignType: \"pmax\"` and supply `assetGroup` with
+            text, images by role, business name and finalUrl. Creates a daily budget, PAUSED
+            campaign and asset group atomically. `validateOnly: true` validates the complete
+            request with Google without creating or persisting resources. Read assets with
+            `GET /v1/ads/campaigns/{campaignId}/asset-groups`. The logo is required; video is
+            optional via `assetGroup.youtubeVideoId`. Brand guidelines are disabled at creation.
+            All supplied asset links are validated together against Google's minimum asset requirements.
+            PMax rejects ACTIVE creation, portfolio bidding, bid caps, legacy creative fields
+            and attach shapes. Geo and language targeting are supported; omitted geo targets
+            all locations. PMax does not require top-level goal, headline, body or linkUrl.
+            Supported bidding: omitted or ...
+
+            Platforms: meta, google, tiktok, linkedin, pinterest, x, openai
 
             Args:
                 account_id: (required)
@@ -7054,6 +9020,13 @@ def register_generated_tools(mcp, _get_client):
     def ad_campaigns_get_campaign_conversion_goals(campaign_id: str) -> str:
         """Get campaign conversion goals
 
+        A Google campaign's conversion goals (CampaignConversionGoal, `biddable` per category
+        and origin) and its goal config (ConversionGoalCampaignConfig): `goalConfigLevel`
+        CUSTOMER means the campaign follows the account-default goals, CAMPAIGN means it uses
+        its own goals or `customConversionGoalId`.
+
+        Platforms: google
+
         Args:
             campaign_id: Google campaign id (required)"""
         client = _get_client()
@@ -7076,10 +9049,18 @@ def register_generated_tools(mcp, _get_client):
     def ad_campaigns_update_campaign_conversion_goals(
         campaign_id: str,
         goals: list[dict[str, Any]] | None = None,
-        goal_config_level: str | None = None,
+        goal_config_level: Literal["CUSTOMER", "CAMPAIGN"] | None = None,
         custom_conversion_goal_id: str | None = None,
     ) -> str:
         """Update campaign conversion goals
+
+        Sets `biddable` on campaign goals, switches `goalConfigLevel`, and/or points the
+        campaign at a custom conversion goal, in one mutate. `customConversionGoalId: null`
+        clears it; Google refuses that (400) while the campaign stays at CAMPAIGN level with
+        no biddable goals, so send `goalConfigLevel: CUSTOMER` with it to fall back to the
+        account goals. Returns the re-read campaign goals.
+
+        Platforms: google
 
         Args:
             campaign_id: Google campaign id (required)
@@ -7117,6 +9098,13 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Render pre-create ad previews
 
+        Renders how a creative would look per placement BEFORE any ad exists, via Meta's
+        `/generatepreviews`. Provide exactly one creative source: `existingCreativeId` or `creativeSpec`.
+        Each preview is an HTML `<iframe>` snippet embeddable directly. Unknown `formats` values
+        return Meta's 400 verbatim.
+
+        Platforms: meta
+
         Args:
             account_id: Zernio SocialAccount id used to resolve the Meta token. (required)
             ad_account_id: Platform ad account id (Meta act_<n>, Google customer id, LinkedIn account id, ...). (required)
@@ -7147,6 +9135,11 @@ def register_generated_tools(mcp, _get_client):
     def ad_creatives_get_ad_previews(ad_id: str, formats: str | None = None) -> str:
         """Render previews of an existing ad
 
+        Renders an EXISTING ad per placement via Meta's `/{ad_id}/previews`. Each preview is an HTML
+        `<iframe>` snippet embeddable directly. Unknown `formats` values return Meta's 400 verbatim.
+
+        Platforms: meta
+
         Args:
             ad_id: Zernio ad id (24-char hex). (required)
             formats: Comma-separated Meta ad_format values (max 10), one preview per format. Defaults to DESKTOP_FEED_STANDARD."""
@@ -7167,6 +9160,19 @@ def register_generated_tools(mcp, _get_client):
     )
     def ad_creatives_get_ad_media(ad_id: str) -> str:
         """Direct video and image URLs for an ad
+
+        Returns the direct signed URLs for every video and image asset used by an ad's live
+        creative, normalised across shapes: single image/video, carousel,
+        Reels/Story (`object_story_spec.video_data`) and dynamic
+        creative (`asset_feed_spec`). Video items include Meta's poster thumbnail and the
+        video's Meta id when available.
+
+        Reads Meta live rather than the stored creative blob because Meta's signed fbcdn
+        URLs carry an `oe=<hex>` expiration (image_url ~24 h, video source ~12 d). Treat
+        URLs as short-lived: re-fetch this endpoint before serving or downloading assets
+        instead of caching URLs beyond that window.
+
+        Platforms: meta
 
         Args:
             ad_id: Zernio ad id (24-char hex) or platform ad id. (required)"""
@@ -7189,6 +9195,10 @@ def register_generated_tools(mcp, _get_client):
         account_id: str, ad_account_id: str
     ) -> str:
         """List TikTok ad identities
+
+        The identities an ad on this TikTok advertiser may run as (the profile shown on the ad): the advertiser's own TikTok accounts (TT_USER), Business Center authorized accounts (BC_AUTH_TT) and custom brand identities (CUSTOMIZED_USER). Pass the chosen `identityId` on POST /v1/ads/create or POST /v1/ads/boost. Spark-post identities (AUTH_CODE) are not listed; a Spark code creates its own.
+
+        Platforms: tiktok
 
         Args:
             account_id: A tiktok or tiktokads account ID (required)
@@ -7218,6 +9228,14 @@ def register_generated_tools(mcp, _get_client):
         after: str | None = None,
     ) -> str:
         """Creative library
+
+        Lists the ad account's creative library (Meta's `/act_X/adcreatives`), rows returned
+        verbatim. The default projection covers id, name, status, object type, thumbnail,
+        object_story_spec / asset_feed_spec and url_tags; `fields` is a raw-passthrough
+        override. Any creative id here is reusable on the create endpoints via
+        `existingCreativeId`.
+
+        Platforms: meta
 
         Args:
             account_id: Zernio SocialAccount id (posting or ads variant) used to resolve the Meta token. (required)
@@ -7260,10 +9278,19 @@ def register_generated_tools(mcp, _get_client):
         url_tags: str | None = None,
         promotion: str | None = None,
         creative_features: dict[str, Any] | None = None,
-        multi_advertiser: str | None = None,
-        ai_disclosure: str | None = None,
+        multi_advertiser: Literal["OPT_IN", "OPT_OUT"] | None = None,
+        ai_disclosure: Literal["OPT_IN", "OPT_OUT"] | None = None,
     ) -> str:
         """Create a standalone creative
+
+        Creates a creative in the library WITHOUT an ad, reusable on the create endpoints via
+        `existingCreativeId`. Provide exactly one of `imageUrl` (uploaded server-side),
+        `imageHash` (from POST /v1/ads/images or the library list), or `carouselCards` (2-10
+        hand-built cards). The Page (and linked Instagram account, when present) is resolved
+        from `accountId` as the story actor. `creativeFeatures` configures Advantage+
+        enhancements. `promotion` is not supported and any object is rejected with 400.
+
+        Platforms: meta
 
         Args:
             account_id: Zernio SocialAccount id (posting or ads variant) used to resolve the Meta token and Page. (required)
@@ -7317,6 +9344,11 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Creative details
 
+        One creative's details, verbatim from Meta. `fields` is a raw-passthrough override of
+        the default projection.
+
+        Platforms: meta
+
         Args:
             creative_id: Platform creative id (required)
             account_id: Zernio SocialAccount id (posting or ads variant) used to resolve the Meta token. (required)
@@ -7343,6 +9375,12 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Rename a creative
 
+        Renames a creative. Creatives are immutable on Meta beyond `name`. For content changes
+        create a new creative (POST /v1/ads/creatives) and swap it onto the ad
+        (PUT /v1/ads/{adId} with `creative`).
+
+        Platforms: meta
+
         Args:
             creative_id: Platform creative id (required)
             account_id: Zernio SocialAccount id (posting or ads variant); its platform decides where the campaign is created. (required)
@@ -7366,6 +9404,11 @@ def register_generated_tools(mcp, _get_client):
     )
     def ad_creatives_delete_ad_creative(creative_id: str, account_id: str) -> str:
         """Delete a creative
+
+        Deletes a creative from the library. Meta only allows deleting creatives not referenced
+        by any ad; otherwise its 400 surfaces verbatim.
+
+        Platforms: meta
 
         Args:
             creative_id: Platform creative id (required)
@@ -7394,6 +9437,13 @@ def register_generated_tools(mcp, _get_client):
         filename: str | None = None,
     ) -> str:
         """Upload an ad image from base64
+
+        Uploads raw image bytes to the Meta ad account's image library, for callers whose
+        creatives aren't hosted at a public URL. Returns the image `hash` (Meta's identifier for
+        the asset) and the Meta-hosted `url`, which can be used directly as `imageUrl` on the
+        create endpoints. Max 30 MB decoded.
+
+        Platforms: meta
 
         Args:
             account_id: Zernio SocialAccount id (posting or ads variant); its platform decides where the campaign is created. (required)
@@ -7428,6 +9478,13 @@ def register_generated_tools(mcp, _get_client):
         after: str | None = None,
     ) -> str:
         """Ad image library
+
+        Lists the ad account's image library (Meta's `/act_X/adimages`), rows returned verbatim.
+        The default projection covers hash, url, name, dimensions and status; `fields` is a
+        raw-passthrough override. Any `hash` here is reusable wherever Meta accepts
+        `image_hash` (e.g. `imageHash` on POST /v1/ads/creatives).
+
+        Platforms: meta
 
         Args:
             account_id: Zernio SocialAccount id (posting or ads variant) used to resolve the Meta token. (required)
@@ -7465,6 +9522,21 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Upload an ad video
 
+        Standalone ad-video upload (parallel to POST /v1/ads/images), so a video creative can
+        be rendered via POST /v1/ads/preview or attached via `video.id` on POST /v1/ads/create
+        before an ad exists.
+
+        Accepts either an https `videoUrl` we download server-side (SSRF-guarded) or raw
+        `videoBase64` bytes; exactly one is required. `videoBase64` is capped by Vercel's body
+        limit, around 4.5 MB payload in practice, so larger videos must come via `videoUrl`.
+
+        Returns the Meta `video.id` (reusable wherever `video.id` is accepted) plus Meta's
+        auto-generated poster URL when available. The endpoint waits until Meta reports the
+        video ready (chunked upload + transcode can take minutes; the handler runs up to
+        800 s).
+
+        Platforms: meta
+
         Args:
             account_id: Zernio SocialAccount id (posting or ads variant); its platform decides where the campaign is created. (required)
             ad_account_id: Platform ad account id (Meta act_<n>, Google customer id, LinkedIn account id, ...). (required)
@@ -7501,6 +9573,24 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Ad video library
 
+        Lists the ad account's video library (Meta's `/act_X/advideos`), rows returned verbatim.
+        The default projection covers id, title, status, poster frames, length and `source` (the
+        playable MP4); `fields` is a raw-passthrough override. Any `id` here is reusable as
+        `video.id` on the create endpoints, so N ads that differ only in copy share one upload.
+
+        `source` lets you PLAY a video before picking it, which a poster frame alone can't settle
+        when several videos share a first frame. It is a signed CDN URL that EXPIRES, so treat it
+        as good for preview at selection time only. Never persist it; re-list to get a fresh one.
+
+        This is the only way to reach a video uploaded OUTSIDE Zernio (Ads Manager, another
+        tool); videos we uploaded also come back as `creative.videoId` on GET /v1/ads.
+
+        Meta transcodes asynchronously, so a row is only usable once `status.video_status`
+        reads `ready`. Upload a new video via POST /v1/ads/videos, or inline via `video.url`
+        on POST /v1/ads/create.
+
+        Platforms: meta
+
         Args:
             account_id: Zernio SocialAccount id (posting or ads variant) used to resolve the Meta token. (required)
             ad_account_id: Meta ad account id (act_<n>). (required)
@@ -7533,6 +9623,15 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Delete an ad video
 
+        Removes a video from the ad account's video library. Meta's canonical
+        `DELETE /{video_id}` fails with code 10 / subcode 1363055 for videos uploaded via
+        `/act_X/advideos` even with `ads_management`; this endpoint uses the working
+        account-scoped shape `DELETE /act_X/advideos?video_id=<id>` and returns Meta's
+        `{success: true}` verbatim. Deleting a video that lives in a different ad account,
+        or that Meta has already removed, returns Meta's error verbatim as a 4xx.
+
+        Platforms: meta
+
         Args:
             video_id: Meta ad video id (numeric). (required)
             account_id: Zernio SocialAccount id (posting or ads variant) used to resolve the Meta token. (required)
@@ -7561,6 +9660,10 @@ def register_generated_tools(mcp, _get_client):
         only_allowlisted: bool | None = None,
     ) -> str:
         """List partnership ad content
+
+        Private beta. Lists creator Instagram posts available to the advertiser for Partnership Ads. Supply creatorUsername or postUrl. Requires instagram_branded_content_ads_brand permission and an advertiser Instagram Business Account.
+
+        Platforms: meta
 
         Args:
             account_id: Zernio SocialAccount ID. (required)
@@ -7592,6 +9695,10 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """List partnership permissions
 
+        Private beta. Lists granted or pending creator permissions for the advertiser Instagram Business Account. Requires instagram_branded_content_ads_brand permission.
+
+        Platforms: meta
+
         Args:
             account_id: Zernio SocialAccount ID. (required)
             creator_username: Filter by creator username."""
@@ -7616,6 +9723,10 @@ def register_generated_tools(mcp, _get_client):
         account_id: str, creator_username: str, revoke: bool | None = None
     ) -> str:
         """Set partnership permission
+
+        Private beta. Requests permission from a creator or revokes it when revoke is true. Requests require the creator to approve in Instagram. Requires instagram_branded_content_ads_brand permission.
+
+        Platforms: meta
 
         Args:
             account_id: (required)
@@ -7652,6 +9763,16 @@ def register_generated_tools(mcp, _get_client):
         page_token: str | None = None,
     ) -> str:
         """Google Ads search terms report
+
+        The actual search queries that triggered your ads, with matched-keyword
+        status and spend metrics, the raw material for wasted-spend analysis and
+        negative-keyword lists. Reads Google's `search_term_view`, cached for
+        the quota window; defaults to the last 30 days. Rows are ordered by
+        cost, descending. Draws on the shared Google Ads operations budget.
+        The response carries `cachedAt` and `stale`, set when a quota-exhausted
+        call falls back to the last-good copy instead of a live read.
+
+        Platforms: google
 
         Args:
             account_id: Google ads SocialAccount id. (required)
@@ -7694,12 +9815,21 @@ def register_generated_tools(mcp, _get_client):
         customer_id: str | None = None,
         from_date: str | None = None,
         to_date: str | None = None,
-        lead_type: str | None = None,
+        lead_type: Literal["PHONE_CALL", "MESSAGE", "BOOKING"] | None = None,
         lead_status: str | None = None,
         charged_only: bool | None = None,
         page_token: str | None = None,
     ) -> str:
         """Google Local Services Ads leads
+
+        Leads generated by Local Services Ads (phone calls, messages, bookings),
+        read live from Google's `local_services_lead` resource, newest first.
+        No persistence: Google is the source of truth and lead/credit statuses
+        keep changing server-side. Google never returns healthcare-category
+        leads, and `WIPED_OUT` leads arrive with contact erased (`contact` is
+        null). Draws on the shared Google Ads operations budget.
+
+        Platforms: google
 
         Args:
             account_id: Google ads SocialAccount id. (required)
@@ -7745,6 +9875,14 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """List lead conversations
 
+        Conversation entries of one Local Services lead: phone calls (duration,
+        recording URL) and messages (text, attachment URLs), oldest first. Read
+        live from `local_services_lead_conversation`, always scoped to a single
+        lead. Call-recording URLs require read access on the Google Ads account.
+        Draws on the shared Google Ads operations budget.
+
+        Platforms: google
+
         Args:
             lead_id: Numeric lead id from /v1/ads/local-services/leads. (required)
             account_id: Google ads SocialAccount id. (required)
@@ -7780,6 +9918,21 @@ def register_generated_tools(mcp, _get_client):
         breakdowns: str | None = None,
     ) -> str:
         """Get campaign analytics
+
+            Returns performance analytics for a whole campaign in one call: summary metrics, a daily
+            timeline over the requested date range (summed across the campaign's ads), and optional
+            demographic breakdowns. Breakdowns are fetched live from Meta at the campaign level (one call
+            per dimension, no per-ad fan-out), so an agency dashboard gets campaign-level age/gender/etc.
+            without summing thousands of per-ad reads. `campaignId` is the platform campaign id; pass
+            `platform` when a campaign id could be ambiguous across platforms. If no date range is provided,
+            defaults to the last 90 days. Date range is capped at 730 days max.
+            Google adds searchImpressionShare, searchBudgetLostImpressionShare,
+            searchRankLostImpressionShare, searchTopImpressionShare and searchAbsoluteTopImpressionShare
+            under analytics.summary for the requested inclusive range. These ratios are queried
+            together without daily segmentation and cached for 10 minutes. Unavailable values are
+            null. analytics.impressionShareCache reports ...
+
+            Platforms: meta, google, tiktok, linkedin, pinterest, x
 
             Args:
                 campaign_id: Platform campaign id (platformCampaignId). (required)
@@ -7824,12 +9977,21 @@ def register_generated_tools(mcp, _get_client):
         seed_url: str | None = None,
         countries: list[str] | None = None,
         language_constant_id: str = "1000",
-        network: str = "GOOGLE_SEARCH",
+        network: Literal[
+            "GOOGLE_SEARCH", "GOOGLE_SEARCH_AND_PARTNERS"
+        ] = "GOOGLE_SEARCH",
         include_adult_keywords: bool | None = None,
         page_size: int | None = None,
         page_token: str | None = None,
     ) -> str:
         """Generate keyword ideas
+
+        Google Ads only. Runs Keyword Planner's generateKeywordIdeas from seed keywords, a seed URL,
+        or both, returning idea rows verbatim (avgMonthlySearches, competition, competitionIndex,
+        top-of-page bid micros, monthlySearchVolumes). Counters are int64s encoded as strings; bid
+        values are micros of the account currency. Omitting `countries` targets worldwide.
+
+        Platforms: google
 
         Args:
             account_id: Zernio googleads SocialAccount id. (required)
@@ -7877,11 +10039,20 @@ def register_generated_tools(mcp, _get_client):
         customer_id: str | None = None,
         countries: list[str] | None = None,
         language_constant_id: str = "1000",
-        network: str = "GOOGLE_SEARCH",
+        network: Literal[
+            "GOOGLE_SEARCH", "GOOGLE_SEARCH_AND_PARTNERS"
+        ] = "GOOGLE_SEARCH",
         include_adult_keywords: bool | None = None,
         include_average_cpc: bool | None = None,
     ) -> str:
         """Get historical keyword metrics
+
+        Google Ads only. Runs Keyword Planner's generateKeywordHistoricalMetrics for up to 1,000
+        exact keywords: historical search volume, competition and top-of-page bid ranges, plus
+        averageCpcMicros when includeAverageCpc is set. Rows come back verbatim; counters are int64s
+        encoded as strings, bid/CPC values are micros of the account currency.
+
+        Platforms: google
 
         Args:
             account_id: Zernio googleads SocialAccount id. (required)
@@ -7923,15 +10094,18 @@ def register_generated_tools(mcp, _get_client):
         object_id: str | None = None,
         query: str | None = None,
         ad_account_id: str | None = None,
-        report_type: str = "BASIC",
-        data_level: str | None = None,
+        report_type: Literal["BASIC", "AUDIENCE"] = "BASIC",
+        data_level: Literal[
+            "AUCTION_ADVERTISER", "AUCTION_CAMPAIGN", "AUCTION_ADGROUP", "AUCTION_AD"
+        ]
+        | None = None,
         dimensions: str | None = None,
         metrics: str | None = None,
         page: int = 1,
         page_size: int = 100,
         customer_id: str | None = None,
         page_token: str | None = None,
-        level: str | None = None,
+        level: Literal["ad", "adset", "campaign", "account"] | None = None,
         fields: str | None = None,
         breakdowns: str | None = None,
         action_breakdowns: str | None = None,
@@ -7947,6 +10121,22 @@ def register_generated_tools(mcp, _get_client):
         after: str | None = None,
     ) -> str:
         """Flexible live insights query
+
+        Live, flexible insights query. The account's platform picks the contract:
+
+        **Meta (facebook/instagram)**: forwards caller-chosen `fields`, `breakdowns` and `filtering`
+        to any Meta insights node and returns Meta's rows verbatim. `objectId` (required) selects the
+        node; `level` sets row granularity. Semantic validation is Meta's: an unknown field or invalid
+        breakdown combination returns a 400 carrying Meta's message. For long ranges or agency-scale
+        accounts prefer the async variant (POST /v1/ads/insights/reports).
+
+        **Google Ads (googleads)**: raw GAQL passthrough. Send any read-only GAQL SELECT via `query`
+        (campaign/keyword/search-term/geo/demographic/asset/shopping resources, `change_event`, any
+        `segments.*`) and rows come back verbatim (camelCase, counters as strings). Results are paged
+        at a fixed 10,000 rows; follow `paging.nextPageToken` with `pageToken`. `adAccountId` (alias `customerId`) is only
+        needed when the connection has several Google Ads accounts. Semantic validation is ...
+
+        Platforms: meta, google, tiktok
 
         Args:
             account_id: Zernio SocialAccount id (posting or ads variant); its platform selects the Meta, Google or TikTok contract. (required)
@@ -8020,7 +10210,7 @@ def register_generated_tools(mcp, _get_client):
     def ad_insights_create_ad_insights_report(
         account_id: str,
         object_id: str,
-        level: str | None = None,
+        level: Literal["ad", "adset", "campaign", "account"] | None = None,
         fields: str | None = None,
         breakdowns: str | None = None,
         action_breakdowns: str | None = None,
@@ -8034,6 +10224,13 @@ def register_generated_tools(mcp, _get_client):
         time_increment: str | None = None,
     ) -> str:
         """Submit async insights report
+
+        Submits an asynchronous Meta insights report. Same query surface as GET /v1/ads/insights, but
+        in the JSON body; Meta processes the report server-side, which is the right choice for long
+        ranges or large accounts where the sync query is slow or rate-limited. Returns a `reportRunId`
+        to poll via GET /v1/ads/insights/reports/{reportRunId}.
+
+        Platforms: meta
 
         Args:
             account_id: Zernio SocialAccount id (posting or ads variant). (required)
@@ -8085,6 +10282,12 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Poll an async insights report run
 
+        Status and results for a report run created via POST /v1/ads/insights/reports. While the job
+        runs, returns `status` and `percentCompletion`. Once `status` is \"Job Completed\" the response
+        also carries a `data` page, cursor-paginated via `limit` / `after`.
+
+        Platforms: meta
+
         Args:
             report_run_id: (required)
             account_id: Zernio SocialAccount id used to resolve the Meta token (must be the same connection that created the run). (required)
@@ -8117,6 +10320,12 @@ def register_generated_tools(mcp, _get_client):
         breakdowns: str | None = None,
     ) -> str:
         """Get ad analytics
+
+            Returns detailed performance analytics for an ad. Includes summary metrics, a daily timeline
+            over the requested date range, and optional demographic breakdowns (Meta and TikTok only).
+            If no date range is provided, defaults to the last 90 days. Date range is capped at 730 days max.
+
+            Platforms: meta, google, tiktok, linkedin, pinterest, x
 
             Args:
                 ad_id: (required)
@@ -8154,13 +10363,17 @@ def register_generated_tools(mcp, _get_client):
         ad_account_id: str,
         start_date: str,
         end_date: str,
-        level: str = "ad",
+        level: Literal["ad", "adGroup"] = "ad",
         smart_plus_ad_ids: str | None = None,
         ad_group_ids: str | None = None,
         page: int = 1,
         page_size: int = 100,
     ) -> str:
         """Per-creative performance inside TikTok Smart+ ads
+
+        Breaks a Smart+ ad (or ad group) down by creative material, one row per Spark post, video or image, from TikTok's Smart+ material report. For a Spark post `tiktokItemId` is the TikTok post id. Conversion metrics are TikTok web (pixel) events. TikTok allows two dimensions per report, so rows are keyed by the Smart+ ad (`level=ad`) or by the ad group (`level=adGroup`), not both. Metrics TikTok returns empty come back as null.
+
+        Platforms: tiktok
 
         Args:
             account_id: A tiktok or tiktokads account ID (required)
@@ -8200,25 +10413,50 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def ad_library_search_ad_library(
-        platform: str | None = None,
+        platform: Literal["meta", "linkedin"] | None = None,
         account_id: str | None = None,
         q: str | None = None,
         page_ids: str | None = None,
         advertiser: str | None = None,
         countries: str | None = None,
-        ad_type: str = "ALL",
-        status: str = "ACTIVE",
+        ad_type: Literal[
+            "ALL",
+            "POLITICAL_AND_ISSUE_ADS",
+            "HOUSING_ADS",
+            "EMPLOYMENT_ADS",
+            "FINANCIAL_PRODUCTS_AND_SERVICES_ADS",
+        ] = "ALL",
+        status: Literal["ACTIVE", "INACTIVE", "ALL"] = "ACTIVE",
         platforms: str | None = None,
-        media_type: str | None = None,
+        media_type: Literal["ALL", "IMAGE", "MEME", "VIDEO", "NONE"] | None = None,
         languages: str | None = None,
         since: str | None = None,
         until: str | None = None,
-        search_type: str = "KEYWORD_UNORDERED",
+        search_type: Literal[
+            "KEYWORD_UNORDERED", "KEYWORD_EXACT_PHRASE"
+        ] = "KEYWORD_UNORDERED",
         fields: str | None = None,
         limit: int = 25,
         after: str | None = None,
     ) -> str:
         """Search the public Ad Library
+
+        Competitor and market research over the public ad archives. Meta's Ad Library
+        (`GET /ads_archive`) is searched with Zernio's own developer access, so `platform=meta` needs
+        no connected account at all. LinkedIn's Ad Library (`GET /rest/adLibrary`) runs on a connected
+        `linkedin` / `linkedinads` account, passed as `accountId`. Passing a Meta account as `accountId`
+        also selects Meta. Rows are returned in the platform's raw shape under `data`; `paging.after`
+        is an opaque cursor on both (`null` when exhausted).
+
+        **Meta coverage.** Political and social-issue ads are searchable worldwide. Every other ad is
+        in the archive only if it was delivered to the EU or UK within the last year, so a US-only
+        commercial advertiser is invisible. Spend, impressions and demographics are political-only
+        fields and are left out of the default projection; request them via `fields`. All customers
+        share Zernio's Meta quota, so a `429` means back off for a minute.
+
+        **LinkedIn coverage.** Ads served after June 1 ...
+
+        Platforms: meta, linkedin
 
         Args:
             platform: Which archive to search. `meta` needs no accountId. Required unless accountId is given.
@@ -8276,6 +10514,13 @@ def register_generated_tools(mcp, _get_client):
     def ad_targeting_search_ad_interests(q: str, account_id: str) -> str:
         """Search targeting interests
 
+        Deprecated alias for `GET /v1/ads/targeting/search?dimension=interest`. Kept for
+        backward compatibility, it returns the legacy `{ interests: [...] }` shape rather
+        than the normalized `{ results: [...] }`. New integrations should use
+        `GET /v1/ads/targeting/search` with `dimension=interest`.
+
+        Platforms: meta
+
         Args:
             q: Search query (required)
             account_id: Account ID (required)"""
@@ -8299,13 +10544,57 @@ def register_generated_tools(mcp, _get_client):
     def ad_targeting_search_ad_targeting(
         account_id: str,
         q: str,
-        dimension: str = "interest",
-        geo_type: str = "city",
+        dimension: Literal[
+            "geo",
+            "interest",
+            "behavior",
+            "income",
+            "language",
+            "workPosition",
+            "workEmployer",
+            "workIndustry",
+            "industry",
+            "jobFunction",
+            "seniority",
+            "companySize",
+        ] = "interest",
+        geo_type: Literal[
+            "all",
+            "country",
+            "country_group",
+            "region",
+            "city",
+            "subcity",
+            "neighborhood",
+            "place",
+            "zip",
+            "metro_area",
+            "geo_market",
+        ] = "city",
         country_code: str | None = None,
         ad_account_id: str | None = None,
         limit: int = 25,
     ) -> str:
         """Search targeting options
+
+        Resolve a human-readable query into the platform's opaque targeting ids used in
+        the `TargetingSpec` (`countries`/`regions`/`cities`/`zips`/`metros` geo keys, and
+        `interests`/`behaviors` entity ids) on `POST /v1/ads/create`,
+        `POST /v1/ads/targeting/reach-estimate`, and `saved_targeting` audiences.
+
+        The `dimension` param selects what is searched:
+
+        - `geo`: locations, further scoped by `geoType`
+        - `interest`
+        - `behavior`: Meta, TikTok and LinkedIn, matched by name; ids feed `TargetingSpec.behaviors`.
+          Meta: its fixed behaviors catalog (e.g. `Small business owners`, `Frequent Travelers`).
+          TikTok: video and creator interaction categories (e.g. `Software & Apps`), with ids like
+          `video:1913101` or `creator:24001` and `path` starting with `Video interactions` or
+          `Creator interactions`. LinkedIn: member behaviors (e.g. `Frequent Travelers`,
+          `Job Seekers`, `Recently Promoted`), ids like `urn:li:memberBehavior:9`. Google has no
+          separate behavior catalog: its in-market and affinity ...
+
+        Platforms: meta, google, tiktok, linkedin, pinterest
 
         Args:
             account_id: Account ID (a connected account on the target ad platform). (required)
@@ -8346,6 +10635,17 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Estimate audience reach
 
+            Returns a normalized pre-flight audience-size estimate for a targeting spec,
+            before any campaign is created. Backed by each platform's native reach API
+            (Meta `delivery_estimate`, LinkedIn `audienceCounts`, X `audience_summary`,
+            Pinterest `audience_sizing`).
+
+            Platforms without a usable pre-flight reach API (Google Search/Display, TikTok)
+            return `available: false` with no bounds, so clients can hide or grey out the
+            estimate rather than treat the absence as an error.
+
+            Platforms: meta, linkedin, pinterest, x
+
             Args:
                 account_id: Zernio account ID on the target ad platform (the estimate runs against its platform). (required)
                 ad_account_id: Required. The platform ad-account ID the reach call runs against (Meta act_..., LinkedIn numeric sponsoredAccount ID, Pinterest ad-account ID, X account ID) - every backing reach API is scoped to one ad account. Get it from GET /v1/ads/accounts. (required)
@@ -8377,15 +10677,27 @@ def register_generated_tools(mcp, _get_client):
         account_id: str,
         ad_account_id: str,
         spec: dict[str, Any] | None,
-        campaign_type: str | None = None,
-        bid_type: str | None = None,
-        match_type: str | None = None,
+        campaign_type: Literal["TEXT_AD", "SPONSORED_UPDATES", "SPONSORED_INMAILS"]
+        | None = None,
+        bid_type: Literal["CPM", "CPC", "CPV"] | None = None,
+        match_type: Literal["EXACT", "AUDIENCE_EXPANDED"] | None = None,
         currency: str | None = None,
         objective_type: str | None = None,
         optimization_target_type: str | None = None,
         daily_budget: float | None = None,
     ) -> str:
         """Suggested bid and budget bounds
+
+        LinkedIn-only. Returns the suggested bid and bid limits for a targeting
+        spec, plus the daily-budget bounds LinkedIn will accept. Use it before
+        creating a campaign to pick a bid inside the allowed range and warn the
+        user if their daily budget is below the minimum. Wraps LinkedIn's
+        `adBudgetPricing` finder.
+
+        Non-LinkedIn accounts return `available: false` so clients can hide the
+        pricing UI without treating it as a failure.
+
+        Platforms: linkedin
 
         Args:
             account_id: Zernio account ID (LinkedIn). (required)
@@ -8430,7 +10742,8 @@ def register_generated_tools(mcp, _get_client):
         spec: dict[str, Any] | None,
         time_range_start: int,
         time_range_end: int,
-        campaign_type: str | None = None,
+        campaign_type: Literal["SPONSORED_UPDATES", "SPONSORED_INMAILS", "DYNAMIC"]
+        | None = None,
         objective_type: str | None = None,
         optimization_target: str | None = None,
         daily_budget: float | None = None,
@@ -8442,6 +10755,20 @@ def register_generated_tools(mcp, _get_client):
         connected_television_only: bool | None = None,
     ) -> str:
         """Forecast ad delivery
+
+        LinkedIn-only. Forecasted impressions, clicks, spend and ~20 other
+        metrics for a targeting spec over a time range. Wraps LinkedIn's
+        `adSupplyForecasts` finder.
+
+        Each returned series carries a `metricType` (IMPRESSION, CLICK, SPENDING,
+        MAX_POTENTIAL_BUDGET, COST_PER_MILLION_IMPRESSIONS, ...) and a
+        `granularity` (DAILY, SEVEN_DAY, THIRTY_DAY, CUSTOM). LinkedIn caps the
+        daily spending forecast at 1.2x the daily budget and returns 0 once the
+        total budget is exhausted.
+
+        Non-LinkedIn accounts return `available: false`.
+
+        Platforms: linkedin
 
         Args:
             account_id: (required)
@@ -8497,15 +10824,42 @@ def register_generated_tools(mcp, _get_client):
         platform: str | None = None,
         profile_id: str | None = None,
         account_id: str | None = None,
-        source: str = "all",
+        source: Literal["all", "late", "external"] = "all",
         from_date: str | None = None,
         to_date: str | None = None,
         limit: int = 50,
         page: int = 1,
-        sort_by: str = "date",
-        order: str = "desc",
+        sort_by: Literal[
+            "date",
+            "engagement",
+            "impressions",
+            "reach",
+            "likes",
+            "comments",
+            "shares",
+            "saves",
+            "clicks",
+            "views",
+            "follows",
+            "ig_reels_avg_watch_time",
+            "ig_reels_video_view_total_time",
+            "reposts",
+            "reels_skip_rate",
+            "completion_rate",
+            "profile_views",
+            "website_clicks",
+        ] = "date",
+        order: Literal["asc", "desc"] = "desc",
     ) -> str:
         """Get post analytics
+
+        Returns analytics for posts. With postId, returns a single post. Without it, returns a paginated list with overview stats.
+        Accepts both Zernio Post IDs and External Post IDs (auto-resolved). fromDate defaults to 90 days ago if omitted, max range 366 days.
+        Single post lookups may return 202 (sync pending) or 424 (all platforms failed). For follower stats, use /v1/accounts/follower-stats.
+
+        LinkedIn personal accounts: Analytics are only available for posts published through Zernio. LinkedIn's API only returns metrics for posts authored by the authenticated user. Organization/company page analytics work for all posts.
+
+        Facebook Page stories: stories on a connected Page, published through Zernio or natively, are collected while they are live and returned like any other post (platformPostUrl points to the story). Their lifetime metrics refresh about hourly, with a final reading shortly before the story expires at 24 hours; after that the values stay at that last reading. Mapping: ...
 
         Args:
             post_id: Returns analytics for a single post. Accepts both Zernio Post IDs and External Post IDs. Zernio IDs are auto-resolved to External Post analytics.
@@ -8554,6 +10908,21 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Analytics changed since a cursor
 
+            Cursor feed of the analytics snapshots that CHANGED, across every account you can
+            read, in one paginated stream. Built for integrations that would otherwise call
+            `GET /v1/analytics` once per connected account. Each page carries changes from
+            many accounts at once, so your call count scales with how much actually changed
+            rather than with how many accounts you have. Measured against a fleet of roughly
+            1,600 connected accounts: about 1,599 per-account analytics calls an hour became
+            about 205 delta calls an hour, a 7.8x reduction.
+
+            **Bootstrap once, then stay in sync.** Take the cursor FIRST: call this endpoint
+            with NO `cursor` and it answers with an empty `data` array plus the feed's current
+            position in `nextCursor`. Then load your baseline from `GET /v1/analytics`, the
+            historical endpoint, because this one is a rolling 7-day change log and cannot
+            replay history. Then resume from the cursor you took before the baseline. Taking
+            the cursor afterwards instead drops every change that lands ...
+
             Args:
                 cursor: Opaque cursor from a previous response's `nextCursor`. Omit it to start from
         now: the response is then an empty page carrying the feed's current position.
@@ -8585,9 +10954,23 @@ def register_generated_tools(mcp, _get_client):
         to_date: str | None = None,
         since: str | None = None,
         until: str | None = None,
-        metric_type: str = "total_value",
+        metric_type: Literal["time_series", "total_value"] = "total_value",
     ) -> str:
         """Get YouTube channel insights
+
+            Returns channel-scoped aggregate metrics from YouTube Analytics API v2. Saves you
+            from looping /v1/analytics/youtube/daily-views over every video when you only need
+            channel totals.
+
+            Response shape matches /v1/analytics/instagram/account-insights so the same client
+            handling works. Requires yt-analytics.readonly scope (412 with reauthorizeUrl if
+            missing). Data has a 2-3 day delay (endDate is clamped accordingly). Max 89 days,
+            defaults to last 30 days. Requires the Analytics add-on.
+
+            NOT exposed: impressions (Studio thumbnail impressions) and impressionsClickThroughRate.
+            YouTube Analytics API v2 does not expose these for any principal type, not channel
+            owners, not Partner Program channels, not content owners with CMS access. The only way
+            to get them is Studio CSV export. This is a Google-side limitation.
 
             Args:
                 account_id: The Zernio SocialAccount ID for the YouTube account. (required)
@@ -8642,9 +11025,29 @@ def register_generated_tools(mcp, _get_client):
         to_date: str | None = None,
         since: str | None = None,
         until: str | None = None,
-        metric_type: str = "total_value",
+        metric_type: Literal["time_series", "total_value"] = "total_value",
     ) -> str:
         """Get LinkedIn org analytics
+
+            Returns aggregate analytics for a LinkedIn organization page. Parallel to
+            /v1/accounts/{id}/linkedin-aggregate-analytics (which handles personal accounts only).
+            Backed by LinkedIn's organizationalEntityShareStatistics,
+            organizationalEntityFollowerStatistics, and organizationPageStatistics endpoints.
+
+            Response shape matches /v1/analytics/instagram/account-insights. Max 89 days,
+            defaults to last 30 days. Requires the Analytics add-on.
+
+            Scope requirements: r_organization_social, r_organization_followers, and
+            r_organization_admin must all be present on the account. Accounts connected before
+            these scopes were included in the OAuth flow will return 412 with a reauth hint.
+
+            Enforced by this endpoint:
+              - Page-view metrics accept only metricType=total_value (LinkedIn omits per-day
+                segmentation even when the API is called with DAY granularity, so a time-series
+                response would be meaningless).
+              - Date range capped at 89 days.
+
+            LinkedIn-side platform limits (not re-enforced here, but ...
 
             Args:
                 account_id: The Zernio SocialAccount ID for the LinkedIn organization account. (required)
@@ -8709,9 +11112,30 @@ def register_generated_tools(mcp, _get_client):
         to_date: str | None = None,
         since: str | None = None,
         until: str | None = None,
-        metric_type: str = "total_value",
+        metric_type: Literal["time_series", "total_value"] = "total_value",
     ) -> str:
         """Get TikTok account-level insights
+
+            Returns account-level TikTok insights from /v2/user/info/ (live) plus historical
+            time series joined from Zernio's daily snapshotter (AccountStats).
+
+            Response shape matches /v1/analytics/instagram/account-insights. Max 89 days,
+            defaults to last 30 days. Requires the Analytics add-on and the user.info.stats
+            scope on the account (412 if missing).
+
+            Scope intentionally narrow: this ACCOUNT-level endpoint exposes only the four
+            counter metrics below. These account-level figures are not on any public TikTok
+            API, for any account type:
+              - account-level impressions / reach
+              - follower inflow / outflow breakdown
+              - account-level watch time and audience demographics
+
+            TikTok's Research API doesn't expose them either, and is restricted to
+            non-commercial academic use per TikTok's eligibility policy.
+
+            PER-VIDEO is a different story on the Business lane. An account connected through
+            the TikTok for Business app reports profile views, website clicks, follows,
+            full-watched rate, watch time, impression ...
 
             Args:
                 account_id: The Zernio SocialAccount ID for the TikTok account. (required)
@@ -8766,6 +11190,11 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Get YouTube daily views
 
+            Returns daily view counts for a YouTube video including views, watch time, and subscriber changes.
+            Requires yt-analytics.readonly scope (re-authorization may be needed). YouTube finalizes analytics
+            with a ~3-day delay; by default only finalized days are returned, and an explicit endDate can reach
+            into the delay window (see the endDate parameter). Max 90 days, defaults to last 30 days.
+
             Args:
                 video_id: The YouTube video ID (e.g., "dQw4w9WgXcQ") (required)
                 account_id: The Zernio account ID for the YouTube account (required)
@@ -8809,6 +11238,19 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Get YouTube video retention curve
 
+            Returns the audience retention curve for a single YouTube video, plus the video's
+            duration for rendering the curve on a time axis. The curve has up to 100 points
+            (elapsedVideoTimeRatio 0.01-1.0) aggregated over the whole date range; YouTube does
+            not support per-day retention breakdowns.
+
+            audienceWatchRatio is the absolute share of viewers watching at that point in the
+            video and can exceed 1 (rewinds and looping, common on Shorts). relativeRetentionPerformance
+            compares against videos of similar length (0 = worst, 0.5 = median, 1 = best).
+            YouTube returns an empty curve for videos with very few views or before analytics
+            processing completes (2-3 day delay).
+
+            Requires yt-analytics.readonly scope (re-authorization may be needed).
+
             Args:
                 video_id: The YouTube video ID (e.g., "dQw4w9WgXcQ") (required)
                 account_id: The Zernio account ID for the YouTube account (required)
@@ -8848,9 +11290,21 @@ def register_generated_tools(mcp, _get_client):
         to_date: str | None = None,
         since: str | None = None,
         until: str | None = None,
-        metric_type: str = "total_value",
+        metric_type: Literal["time_series", "total_value"] = "total_value",
     ) -> str:
         """Get Facebook Page insights
+
+            Returns page-level Facebook insights (media views, views, post engagements, video metrics,
+            follower counts). Response shape matches /v1/analytics/instagram/account-insights so the
+            same client handling works across platforms.
+
+            Metric names track the current (post-November 2025) Meta Graph API. The legacy
+            page_impressions / page_fans / page_fan_adds / page_fan_removes metrics were deprecated
+            by Meta on November 15, 2025 and are NOT accepted by this endpoint. Use the replacements
+            below. Because Meta did not provide direct adds/removes replacements, Zernio synthesizes
+            followers_gained / followers_lost from the daily follower snapshotter.
+
+            Max 89 days, defaults to last 30 days. Requires the Analytics add-on.
 
             Args:
                 account_id: The Zernio SocialAccount ID for the connected Facebook Page. (required)
@@ -8928,6 +11382,22 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Get Facebook post monetization earnings
 
+            Returns lifetime monetization earnings for ONE Facebook post, read live from Meta on every
+            request. Requires the Analytics add-on.
+
+            Earnings are CUMULATIVE since the post was published, not earnings within a date range, so
+            this endpoint takes no since/until and the totals must not be summed across dates or across
+            posts. Page-level daily earnings live on /v1/analytics/facebook/page-insights.
+
+            A post on a Page that is not enrolled in monetization, or that earned nothing, returns
+            \"total\": 0 rather than an error: Meta does not distinguish the two. A metric Meta returned no
+            bucket for at all is reported in \"unavailableMetrics\" and omitted from \"metrics\", never as a 0.
+
+            Amounts are the platform's raw numbers in the stated \"unit\" and are never rescaled by Zernio.
+            Breakdown dimensions are not exposed and a \"breakdown\" param is rejected with 400. So are
+            \"since\", \"until\", \"period\", and \"metricType\": scoping this endpoint to a window is not
+            possible, and silently returning the lifetime total ...
+
             Args:
                 account_id: The Zernio SocialAccount ID for the connected Facebook Page. (required)
                 post_id: The platform post ID, exactly as returned in platformAnalytics[].platformPostId by
@@ -8965,10 +11435,15 @@ def register_generated_tools(mcp, _get_client):
         to_date: str | None = None,
         since: str | None = None,
         until: str | None = None,
-        metric_type: str = "total_value",
+        metric_type: Literal["time_series", "total_value"] = "total_value",
         breakdown: str | None = None,
     ) -> str:
         """Get Instagram insights
+
+            Returns account-level Instagram insights such as reach, views, accounts engaged, and total interactions.
+            These metrics reflect the entire account's performance across all content surfaces (feed, stories, explore, profile),
+            and are fundamentally different from post-level metrics. Data may be delayed up to 48 hours.
+            Max 90 days, defaults to last 30 days. Requires the Analytics add-on.
 
             Args:
                 account_id: The Zernio SocialAccount ID for the Instagram account (required)
@@ -9018,9 +11493,17 @@ def register_generated_tools(mcp, _get_client):
         to_date: str | None = None,
         since: str | None = None,
         until: str | None = None,
-        metric_type: str = "total_value",
+        metric_type: Literal["time_series", "total_value"] = "total_value",
     ) -> str:
         """Get Instagram follower history
+
+            Returns a daily running Instagram follower count time series, served from Zernio's
+            cross-platform daily snapshotter. Exists because Meta removed follower_count from
+            the /insights endpoint in Graph API v22+ and never exposed a historical daily series
+            via any public API.
+
+            Response envelope matches /v1/analytics/instagram/account-insights so the same client
+            handling works. Max 89 days, defaults to last 30 days. Requires the Analytics add-on.
 
             Args:
                 account_id: The Zernio SocialAccount ID for the Instagram account. (required)
@@ -9062,6 +11545,11 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Get Facebook Page demographics
 
+            Returns the follower breakdown of a connected Facebook Page by country and/or city, from Meta's latest daily snapshot.
+            Country keys are ISO 3166-1 alpha-2 codes; city keys are \"City, Region, Country\" strings as Meta returns them.
+            Meta removed age and gender demographics for Pages (page_fans_gender_age) on November 15 2025 with no replacement, so only country and city are available.
+            Meta reports small counts at a privacy floor, so the long tail can show identical low values. Requires the Analytics add-on.
+
             Args:
                 account_id: The Zernio SocialAccount ID for the Facebook account (required)
                 breakdown: Comma-separated list of demographic dimensions: country, city.
@@ -9085,11 +11573,17 @@ def register_generated_tools(mcp, _get_client):
     )
     def analytics_get_instagram_demographics(
         account_id: str,
-        metric: str = "follower_demographics",
+        metric: Literal[
+            "follower_demographics", "engaged_audience_demographics"
+        ] = "follower_demographics",
         breakdown: str | None = None,
-        timeframe: str = "this_month",
+        timeframe: Literal["this_week", "this_month"] = "this_month",
     ) -> str:
         """Get Instagram demographics
+
+            Returns audience demographic insights for an Instagram account, broken down by age, city, country, and/or gender.
+            Requires at least 100 followers. Returns top 45 entries per dimension.
+            Data may be delayed up to 48 hours. Requires the Analytics add-on.
 
             Args:
                 account_id: The Zernio SocialAccount ID for the Instagram account (required)
@@ -9127,6 +11621,13 @@ def register_generated_tools(mcp, _get_client):
         end_date: str | None = None,
     ) -> str:
         """Get YouTube demographics
+
+            Returns audience demographic insights for a YouTube channel, broken down by age, gender, and/or country.
+            Pass videoId to get the audience profile of a single video instead of the whole channel.
+            Age and gender values are viewer percentages (0-100). Country values are view counts.
+            Data is based on signed-in viewers only, with a 2-3 day delay. YouTube suppresses demographics
+            for videos with too few signed-in views, so low-traffic videos can return empty breakdowns.
+            Requires the Analytics add-on.
 
             Args:
                 account_id: The Zernio SocialAccount ID for the YouTube account (required)
@@ -9171,10 +11672,14 @@ def register_generated_tools(mcp, _get_client):
         account_id: str | None = None,
         from_date: str | None = None,
         to_date: str | None = None,
-        source: str = "all",
-        attribution: str = "publish",
+        source: Literal["all", "late", "external"] = "all",
+        attribution: Literal["publish", "received"] = "publish",
     ) -> str:
         """Get daily aggregated metrics
+
+            Returns daily aggregated analytics metrics and a per-platform breakdown.
+            Each day includes post count, platform distribution, and summed metrics (impressions, reach, likes, comments, shares, saves, clicks, views).
+            Defaults to the last 180 days. Requires the Analytics add-on.
 
             Args:
                 platform: Filter by platform (e.g. "instagram", "tiktok"). Omit for all platforms.
@@ -9214,11 +11719,16 @@ def register_generated_tools(mcp, _get_client):
         to_date: str,
         profile_id: str = "all",
         platform: str = "all",
-        compare: str | None = None,
+        compare: Literal["previous_period"] | None = None,
         top_posts: int = 5,
         recent_posts: int = 10,
     ) -> str:
         """Get an analytics dashboard
+
+        Everything an analytics dashboard needs in one call: window totals, follower growth, a per-day series, top posts, recent posts and, optionally, the same figures for the previous period.
+        Daily and total metrics use received attribution: each day holds the engagement that arrived that day, on any post, so `totals` is always the sum of `daily`.
+        `topPosts` and `recentPosts` list posts published in the window with their lifetime metrics. A post cross-posted to several platforms appears once per platform.
+        All dates are UTC days. Requires the Analytics add-on.
 
         Args:
             profile_id: Profile ID, or "all" for every profile you can access.
@@ -9255,9 +11765,13 @@ def register_generated_tools(mcp, _get_client):
         platform: str | None = None,
         profile_id: str | None = None,
         account_id: str | None = None,
-        source: str = "all",
+        source: Literal["all", "late", "external"] = "all",
     ) -> str:
         """Get best times to post
+
+        Returns the best times to post based on historical engagement data.
+        Groups all published posts by day of week and hour (UTC), calculating average engagement per slot.
+        Use this to auto-schedule posts at optimal times. Requires the Analytics add-on.
 
         Args:
             platform: Filter by platform (e.g. "instagram", "tiktok"). Omit for all platforms.
@@ -9288,9 +11802,14 @@ def register_generated_tools(mcp, _get_client):
         platform: str | None = None,
         profile_id: str | None = None,
         account_id: str | None = None,
-        source: str = "all",
+        source: Literal["all", "late", "external"] = "all",
     ) -> str:
         """Get content performance decay
+
+        Returns how engagement accumulates over time after a post is published.
+        Each bucket shows what percentage of the post's total engagement had been reached by that time window.
+        Useful for understanding content lifespan (e.g. \"posts reach 78% of total engagement within 24 hours\").
+        Requires the Analytics add-on.
 
         Args:
             platform: Filter by platform (e.g. "instagram", "tiktok"). Omit for all platforms.
@@ -9321,9 +11840,14 @@ def register_generated_tools(mcp, _get_client):
         platform: str | None = None,
         profile_id: str | None = None,
         account_id: str | None = None,
-        source: str = "all",
+        source: Literal["all", "late", "external"] = "all",
     ) -> str:
         """Get frequency vs engagement
+
+        Returns the correlation between posting frequency (posts per week) and engagement rate, broken down by platform.
+        Helps find the optimal posting cadence for each platform. Each row represents a specific (platform, posts_per_week) combination
+        with the average engagement rate observed across all weeks matching that frequency.
+        Requires the Analytics add-on.
 
         Args:
             platform: Filter by platform (e.g. "instagram", "tiktok"). Omit for all platforms.
@@ -9354,6 +11878,10 @@ def register_generated_tools(mcp, _get_client):
         post_id: str, from_date: str | None = None, to_date: str | None = None
     ) -> str:
         """Get post analytics timeline
+
+           Returns a daily timeline of analytics metrics for a specific post, showing how impressions, likes,
+           and other metrics evolved day-by-day since publishing. Each row represents one day of data per platform.
+           For multi-platform Zernio posts, returns separate rows for each platform. Requires the Analytics add-on.
 
            Args:
                post_id: The post to fetch timeline for. Accepts an ExternalPost ID, a platformPostId, or a Zernio Post ID.
@@ -9386,6 +11914,12 @@ def register_generated_tools(mcp, _get_client):
         end_date: str | None = None,
     ) -> str:
         """Get Google Business Profile performance metrics
+
+            Returns daily performance metrics for a Google Business Profile location.
+            Metrics include impressions (Maps/Search, desktop/mobile), website clicks,
+            call clicks, direction requests, conversations, bookings, and food orders.
+            Data may be delayed 2-3 days. Max 18 months of historical data.
+            Requires the Analytics add-on.
 
             Args:
                 account_id: The Zernio SocialAccount ID for the Google Business Profile account. (required)
@@ -9425,6 +11959,10 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Get Google Business Profile search keywords
 
+        Returns search keywords that triggered impressions for a Google Business Profile location.
+        Data is aggregated monthly. Keywords below a minimum impression threshold set by Google are excluded.
+        Max 18 months of historical data. Requires the Analytics add-on.
+
         Args:
             account_id: The Zernio SocialAccount ID for the Google Business Profile account. (required)
             start_month: Start month (YYYY-MM). Defaults to 3 months ago.
@@ -9451,6 +11989,18 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Sync an external post
 
+        Fetch an account's latest external posts (published directly on the platform, not through Zernio) on demand, so a newly published post is retrievable within seconds instead of waiting for the background sync (which refreshes each account at most every ~90 minutes).
+
+        Primary use case: verifying a submitted post. When a user publishes on the platform and immediately pastes the post URL into your app, call this with `accountId` plus `url` (or `postId`) to confirm the post exists and return its metadata.
+
+        Behavior:
+        - Account access and connection state are checked before any platform call, including requests inside the debounce window.
+        - Inactive accounts or accounts marked `needsReconnection` return `409` with code `ads_connection_required`. Stop scheduled retries for that account until it is reconnected, then read `GET /v1/accounts` for its current account ID.
+        - For connected accounts, we fetch the latest posts live from the platform, then match and return the submitted post.
+        - ...
+
+        Platforms: instagram, facebook, tiktok, youtube, twitter, threads, pinterest, reddit, bluesky, googlebusiness, linkedin
+
         Args:
             account_id: SocialAccount ID whose posts to sync. Must be connected to Zernio. (required)
             url: The post URL to locate. Optional. Provide `url` or `postId` to return a specific post; omit both to refresh and return the account's recent posts.
@@ -9474,7 +12024,7 @@ def register_generated_tools(mcp, _get_client):
     )
     def analytics_get_linked_in_aggregate_analytics(
         account_id: str,
-        aggregation: str = "TOTAL",
+        aggregation: Literal["TOTAL", "DAILY"] = "TOTAL",
         from_date: str | None = None,
         to_date: str | None = None,
         start_date: str | None = None,
@@ -9482,6 +12032,8 @@ def register_generated_tools(mcp, _get_client):
         metrics: str | None = None,
     ) -> str:
         """Get LinkedIn aggregate stats
+
+        Returns aggregate analytics across all posts for a LinkedIn personal account. Only includes posts published through Zernio (LinkedIn API limitation). Org accounts should use /v1/analytics instead. Requires r_member_postAnalytics scope. Saves (POST_SAVE) and sends (POST_SEND) are available for personal accounts; organization pages always return 0 for these two metrics because LinkedIn does not expose them on the organization analytics endpoint.
 
         Args:
             account_id: The ID of the LinkedIn personal account (required)
@@ -9517,6 +12069,8 @@ def register_generated_tools(mcp, _get_client):
     def analytics_get_linked_in_post_analytics(account_id: str, urn: str) -> str:
         """Get LinkedIn post stats
 
+        Returns analytics for a specific LinkedIn post by URN. Works for both personal and organization accounts. Saves and sends are only populated for personal accounts (LinkedIn does not expose these metrics on the organization analytics endpoint).
+
         Args:
             account_id: The ID of the LinkedIn account (required)
             urn: The LinkedIn post URN (required)"""
@@ -9541,6 +12095,11 @@ def register_generated_tools(mcp, _get_client):
         account_id: str, urn: str, limit: int = 25, cursor: int = 0
     ) -> str:
         """Get LinkedIn post reactions
+
+        Returns individual reactions for a specific LinkedIn post, including reactor profiles
+        (name, headline/job title, profile picture, profile URL, reaction type).
+        Only works for organization/company page accounts. LinkedIn restricts reaction
+        data for personal profiles (r_member_social_feed is a closed permission).
 
         Args:
             account_id: The ID of the LinkedIn organization account (required)
@@ -9567,6 +12126,13 @@ def register_generated_tools(mcp, _get_client):
     def analytics_get_facebook_post_reactions(account_id: str, post_id: str) -> str:
         """Get Facebook post reactions
 
+        Returns the reaction breakdown for a Facebook Page post: a count per reaction type
+        plus the overall total.
+
+        The whole breakdown is fetched in a single Graph call. The post analytics
+        endpoint reports only an aggregate reaction count (surfaced there as `likes`), so use
+        this endpoint when you need per-type counts.
+
         Args:
             account_id: The ID of the Facebook Page account (required)
             post_id: The Facebook post ID (required)"""
@@ -9590,7 +12156,9 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def api_keys_verify_credential() -> str:
-        """Verify credential"""
+        """Verify credential
+
+        Checks whether the bearer credential on this request is valid, without reading any data. Accepts an API key or an OAuth access token. Intended for clients that must validate a credential before use (for example an MCP server verifying an incoming token) so they do not have to call a data endpoint to do it."""
         client = _get_client()
         try:
             response = client.api_keys.verify_credential()
@@ -9607,7 +12175,9 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def api_keys_list_api_keys() -> str:
-        """List keys"""
+        """List keys
+
+        Returns API keys with a preview only, not the full key value. For a regular team member this is their own keys; for the team owner this is every team member's keys, each carrying a `createdBy` field."""
         client = _get_client()
         try:
             response = client.api_keys.list_api_keys()
@@ -9626,12 +12196,28 @@ def register_generated_tools(mcp, _get_client):
     def api_keys_create_api_key(
         name: str,
         expires_in: int | None = None,
-        scope: str = "full",
+        scope: Literal["full", "profiles"] = "full",
         profile_ids: list[str] | None = None,
-        permission: str = "read-write",
-        disabled_resource_groups: list[str] | None = None,
+        permission: Literal["read-write", "read"] = "read-write",
+        disabled_resource_groups: list[
+            Literal[
+                "publishing",
+                "engagement",
+                "messages",
+                "contacts",
+                "analytics",
+                "ads",
+                "telephony",
+                "accounts",
+                "billing",
+                "webhooks",
+            ]
+        ]
+        | None = None,
     ) -> str:
         """Create key
+
+        Creates a new API key with an optional expiry. The full key value is only returned once in the response.
 
         Args:
             name: (required)
@@ -9665,6 +12251,8 @@ def register_generated_tools(mcp, _get_client):
     def api_keys_delete_api_key(key_id: str) -> str:
         """Delete key
 
+        Permanently revokes and deletes an API key. The team owner can revoke any team member's key; a non-owner member can only revoke their own.
+
         Args:
             key_id: (required)"""
         client = _get_client()
@@ -9688,6 +12276,16 @@ def register_generated_tools(mcp, _get_client):
         account_id: str, limit: int = 20, cursor: str | None = None
     ) -> str:
         """List blogs
+
+        Lists blogs on the connected account. Shopify returns its store blogs
+        with cursor pagination. A WordPress account represents one site and
+        always returns exactly that one blog with `nextCursor: null`.
+
+        `limit` is 1-50 (default 20). Treat `nextCursor` as opaque; pass it
+        unchanged on the next request. Supported on Shopify (`shopify`) and
+        WordPress (`wordpress`).
+
+        Platforms: shopify, wordpress
 
         Args:
             account_id: Connected Shopify or WordPress account id. (required)
@@ -9715,6 +12313,14 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Create a blog
 
+        Creates a blog on the connected store. The platform generates the URL
+        `handle` from the title when omitted.
+
+        Supported on Shopify (platform `shopify`). A WordPress connection is
+        its existing site, so WordPress returns 405 for blog creation.
+
+        Platforms: shopify
+
         Args:
             account_id: Connected Shopify SocialAccount id. (required)
             title: (required)
@@ -9738,6 +12344,13 @@ def register_generated_tools(mcp, _get_client):
     )
     def blogs_get_blog(account_id: str, blog_id: str) -> str:
         """Get a blog
+
+        Fetches a single blog. Use the platform-native `blogId` returned by
+        `GET /v1/accounts/{accountId}/blogs`: a Shopify numeric blog id, the
+        WordPress.com numeric site id, or `1` for a self-hosted WordPress site.
+        The self-hosted id is scoped to its connected account.
+
+        Platforms: shopify, wordpress
 
         Args:
             account_id: Connected Shopify or WordPress account id. (required)
@@ -9765,6 +12378,14 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Update a blog
 
+        Partial-updates a blog. Send any subset of `title` and `handle`; at
+        least one field is required (an empty body returns 400).
+
+        Supported on Shopify (platform `shopify`). WordPress site settings are
+        not writable through this API, so WordPress returns 405.
+
+        Platforms: shopify
+
         Args:
             account_id: Connected Shopify SocialAccount id. (required)
             blog_id: Platform-native numeric blog id. Non-numeric values return 400. (required)
@@ -9790,6 +12411,14 @@ def register_generated_tools(mcp, _get_client):
     def blogs_delete_blog(account_id: str, blog_id: str) -> str:
         """Delete a blog
 
+        Deletes the blog AND every article in it. The delete happens on the
+        platform and is permanent; Zernio stores nothing to restore it from.
+
+        Supported on Shopify (platform `shopify`). Disconnect a WordPress
+        account instead of deleting its site; WordPress returns 405 here.
+
+        Platforms: shopify
+
         Args:
             account_id: Connected Shopify SocialAccount id. (required)
             blog_id: Platform-native numeric blog id. Non-numeric values return 400. (required)"""
@@ -9812,6 +12441,15 @@ def register_generated_tools(mcp, _get_client):
         account_id: str, blog_id: str, limit: int = 20, cursor: str | None = None
     ) -> str:
         """List blog articles
+
+        Lists the articles of a blog. Cursor-paginated: pass `limit` (1-50,
+        default 20) and the `cursor` from a previous response's `nextCursor`;
+        `nextCursor` is null when there are no more pages. Treat cursors as
+        opaque and pass them unchanged. Supported on Shopify (`shopify`) and
+        WordPress (`wordpress`). WordPress results include native `status` and
+        include `publishDate` only for scheduled (`future`) posts.
+
+        Platforms: shopify, wordpress
 
         Args:
             account_id: Connected Shopify or WordPress account id. (required)
@@ -9850,6 +12488,26 @@ def register_generated_tools(mcp, _get_client):
         publish_date: str | None = None,
     ) -> str:
         """Create a blog article
+
+        Creates an article on the blog. Publishing behavior:
+
+        - WordPress defaults to a draft when both publishing fields are omitted.
+        - `isPublished: false` keeps the article as a draft and takes priority
+          over a future `publishDate`.
+        - A future `publishDate` schedules publication natively on the
+          platform; the platform publishes it at that time with no Zernio
+          queue involved.
+        - `isPublished: true` publishes immediately when there is no future
+          `publishDate`.
+        - `seo.title` / `seo.description` map to Shopify's global `title_tag`
+          and `description_tag` metafields (the fields Shopify themes read for
+          the page title and meta description). WordPress rejects `seo`; SEO
+          plugin and custom-field writes are not supported.
+
+        Supported on Shopify (`shopify`) and WordPress (`wordpress`). WordPress
+        native scheduling depends on the site's scheduler/WP-Cron.
+
+        Platforms: shopify, wordpress
 
         Args:
             account_id: Connected Shopify or WordPress account id. (required)
@@ -9895,6 +12553,15 @@ def register_generated_tools(mcp, _get_client):
     def blogs_get_blog_article(account_id: str, blog_id: str, article_id: str) -> str:
         """Get a blog article
 
+        Fetches a single article. An article addressed through a blog it does
+        not belong to is a 404 (code blog_article_not_found).
+
+        Supported on Shopify (`shopify`) and WordPress (`wordpress`). WordPress
+        returns its native `status`; `publishedAt` is present only for a
+        published post and `publishDate` only for a scheduled post.
+
+        Platforms: shopify, wordpress
+
         Args:
             account_id: Connected Shopify or WordPress account id. (required)
             blog_id: Platform-native numeric blog/site id returned by the list operation. (required)
@@ -9932,6 +12599,21 @@ def register_generated_tools(mcp, _get_client):
         publish_date: str | None = None,
     ) -> str:
         """Update a blog article
+
+        Partial-updates an article. Send any subset of the create fields
+        (`title`, `bodyHtml`, `handle`, `tags`, `author`, `excerpt`, `image`,
+        `seo`, `isPublished`, `publishDate`); at least one field is required
+        (an empty body returns 400). `isPublished` and `publishDate` behave as
+        on create: `isPublished: false` unpublishes back to a draft and a
+        future `publishDate` schedules publication natively on the platform.
+        Omitting both fields preserves the current WordPress status. Omitting
+        `image` preserves the current featured image; removal is not supported.
+        WordPress rejects `seo` and does not support SEO-plugin/custom-field,
+        category, or custom-post-type writes.
+
+        Supported on Shopify (`shopify`) and WordPress (`wordpress`).
+
+        Platforms: shopify, wordpress
 
         Args:
             account_id: Connected Shopify or WordPress account id. (required)
@@ -9981,6 +12663,15 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Delete a blog article
 
+        Deletes the article. The delete happens on the platform and is
+        permanent; Zernio stores nothing to restore it from. On WordPress the
+        post is force-deleted, while uploaded attachments and tags remain in
+        the site's media library and taxonomy.
+
+        Supported on Shopify (`shopify`) and WordPress (`wordpress`).
+
+        Platforms: shopify, wordpress
+
         Args:
             account_id: Connected Shopify or WordPress account id. (required)
             blog_id: Platform-native numeric blog/site id returned by the list operation. (required)
@@ -10007,20 +12698,30 @@ def register_generated_tools(mcp, _get_client):
     def branded_calling_create_branded_calling_enterprise(
         legal_name: str,
         doing_business_as: str,
-        organization_type: str,
-        organization_legal_type: str,
+        organization_type: Literal["commercial", "government", "non_profit"],
+        organization_legal_type: Literal[
+            "corporation", "llc", "partnership", "nonprofit", "other"
+        ],
         country_code: str,
         jurisdiction_of_incorporation: str,
         website: str,
         fein: str,
         industry: str,
-        number_of_employees: str,
+        number_of_employees: Literal[
+            "1-10", "11-50", "51-200", "201-500", "501-2000", "2001-10000", "10001+"
+        ],
         organization_contact: dict[str, Any] | None,
         billing_contact: dict[str, Any] | None,
         physical_address: dict[str, Any] | None,
         billing_address: dict[str, Any] | None,
     ) -> str:
         """Register a business for Branded Calling
+
+        Stores the legal entity behind your caller identities. Nothing is filed with the
+        carrier until the business's first identity passes review. Only businesses
+        registered in the US or Canada qualify (a FEIN or Canadian equivalent is
+        required); any other country returns `422`. Send an `Idempotency-Key` so a
+        retry replays the original response instead of registering the business twice.
 
         Args:
             legal_name: Exactly as on the tax record. (required)
@@ -10107,6 +12808,8 @@ def register_generated_tools(mcp, _get_client):
     def branded_calling_delete_branded_calling_enterprise(id: str) -> str:
         """Delete a registered business
 
+        Refused while the business still has caller identities (delete those first).
+
         Args:
             id: (required)"""
         client = _get_client()
@@ -10129,6 +12832,17 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Create a caller identity share link
 
+        Creates a single-use link (valid 7 days) where the end business fills in
+        the caller identity itself, with no Zernio login: display name, logo, call
+        reasons, the authorizer and the three references. What it submits lands
+        under your team as `requested`, the same review as an API submission, and
+        `branded_calling.identity.status_updated` fires. Scope the link with
+        `identityId` (complete an identity that is `requested` or
+        `changes_requested`), with `enterpriseId` (a new identity for a registered
+        business), or with neither (the business registers itself and its first
+        identity). The person opening the link can forward a fresh one to someone
+        else, which retires theirs.
+
         Args:
             enterprise_id: A registered business the identity belongs to.
             identity_id: An identity in review to complete. Not with enterpriseId."""
@@ -10150,7 +12864,9 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def branded_calling_list_branded_calling_call_reasons() -> str:
-        """List pre-approved call reasons"""
+        """List pre-approved call reasons
+
+        The carrier catalogue of call reasons that pass vetting automatically. Any other wording is allowed on an identity but is vetted by hand."""
         client = _get_client()
         try:
             response = client.branded_calling.list_branded_calling_call_reasons()
@@ -10175,6 +12891,22 @@ def register_generated_tools(mcp, _get_client):
         logo_url: str | None = None,
     ) -> str:
         """Create a caller identity
+
+        A caller identity is what the callee sees: display name, logo and call reasons,
+        backed by a registered business and three references the carrier vetting team
+        phones. It starts in Zernio review (`requested`). Once approved, the carrier emails
+        the authorizer a 6-digit code; confirm it with the verify-email endpoint and the
+        identity goes into carrier vetting on its own. Track it with `GET` or the
+        `branded_calling.identity.status_updated` webhook.
+
+        Billing: $100 per identity per month while it is verified. The first month is
+        charged when the carrier verifies the identity, never when it is filed: nothing
+        is charged while it is in our review or carrier vetting, or if it is rejected.
+        An edit that sends a verified identity back to vetting pauses the fee until it
+        is verified again. Branded calls add $0.10 each, counted
+        on every outbound call from a verified branded number to a US destination
+        (whether or not the callee's carrier displayed the branding); the surcharge
+        shows as `brandedCallUSD` ...
 
         Args:
             enterprise_id: A business from POST /v1/branded-calling/enterprises. (required)
@@ -10232,6 +12964,15 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Dry-run a caller identity before creating it
 
+        Validates the exact body `POST /v1/branded-calling/identities` takes and runs
+        the same deterministic lints the review runs on it without creating anything,
+        with the same codes and fields the queued identity's findings carry. A `block`
+        finding is what the review would bounce (two references sharing a phone, a
+        reference inside the business, an invalid timezone); a `warn` finding slows
+        vetting (a display name that does not read as the business, a call reason
+        outside the carrier catalogue, a public-mailbox authorizer, a logo that does
+        not answer). `ok` is true when there is no `block`.
+
         Args:
             enterprise_id: (required)
             display_name: (required)
@@ -10264,6 +13005,8 @@ def register_generated_tools(mcp, _get_client):
     def branded_calling_get_branded_calling_identity(id: str) -> str:
         """Get a caller identity
 
+        Poll this for review and vetting progress, or subscribe to `branded_calling.identity.status_updated`.
+
         Args:
             id: (required)"""
         client = _get_client()
@@ -10292,6 +13035,11 @@ def register_generated_tools(mcp, _get_client):
         review_note: str | None = None,
     ) -> str:
         """Edit or resubmit a caller identity
+
+        Allowed while the identity is `requested`, `changes_requested` or `rejected`.
+        Answering a change request (send `reviewAnswers` keyed by point id, and any
+        edited fields) puts it back in review. On a carrier rejection the edits are
+        applied at the carrier and the identity is resubmitted straight away.
 
         Args:
             id: (required)
@@ -10329,6 +13077,8 @@ def register_generated_tools(mcp, _get_client):
     def branded_calling_delete_branded_calling_identity(id: str) -> str:
         """Delete a caller identity
 
+        Detaches its numbers and removes the identity at the carrier, which ends the monthly fee. Refused while an infringement claim is open.
+
         Args:
             id: (required)"""
         client = _get_client()
@@ -10348,6 +13098,8 @@ def register_generated_tools(mcp, _get_client):
     )
     def branded_calling_resend_branded_calling_authorizer_code(id: str) -> str:
         """Resend the authorizer's code
+
+        Emails the authorizer a fresh 6-digit code (the previous one stops working). Only while the identity is `pending_email_verification`.
 
         Args:
             id: (required)"""
@@ -10372,6 +13124,11 @@ def register_generated_tools(mcp, _get_client):
         id: str, code: str
     ) -> str:
         """Confirm the authorizer's code
+
+        The last customer step. On success the stored references are filed and the
+        identity is submitted to carrier vetting in the same call (`in_review`). If a
+        later step fails the identity stays `pending_email_verification` with the email
+        already verified; calling again resumes from that step.
 
         Args:
             id: (required)
@@ -10420,6 +13177,12 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Attach numbers to a verified identity
 
+        Files a Letter of Authorization signed by you (Zernio is named as the authorized
+        agent managing the numbers) and opens a vetting batch of up to 15 US numbers you
+        own. The batch is all-or-nothing: one ineligible number refuses the whole call.
+        Each number shows the identity once its own status reaches `verified`. A number
+        belongs to one identity at a time.
+
         Args:
             id: (required)
             phone_number_ids: Phone number record ids (from GET /v1/phone-numbers). Active US numbers only. (required)
@@ -10446,6 +13209,8 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Detach numbers from an identity
 
+        Deregisters the numbers at the carrier and frees them for another identity. Up to 100 per call.
+
         Args:
             id: (required)
             phone_numbers: E.164 numbers currently on this identity. (required)"""
@@ -10470,12 +13235,17 @@ def register_generated_tools(mcp, _get_client):
     )
     def broadcasts_list_broadcasts(
         profile_id: str | None = None,
-        status: str | None = None,
+        status: Literal[
+            "draft", "scheduled", "sending", "completed", "failed", "cancelled"
+        ]
+        | None = None,
         platform: str | None = None,
         limit: int = 50,
         skip: int = 0,
     ) -> str:
         """List broadcasts
+
+        Returns broadcasts with delivery stats. Filter by status, platform, or profile.
 
         Args:
             profile_id: Filter by profile. Omit to list across all profiles
@@ -10507,7 +13277,18 @@ def register_generated_tools(mcp, _get_client):
     def broadcasts_create_broadcast(
         profile_id: str,
         account_id: str,
-        platform: str,
+        platform: Literal[
+            "instagram",
+            "facebook",
+            "telegram",
+            "twitter",
+            "bluesky",
+            "reddit",
+            "whatsapp",
+            "sms",
+            "slack",
+            "imessage",
+        ],
         name: str,
         description: str | None = None,
         message: dict[str, Any] | None = None,
@@ -10515,6 +13296,8 @@ def register_generated_tools(mcp, _get_client):
         segment_filters: dict[str, Any] | None = None,
     ) -> str:
         """Create broadcast draft
+
+        Create a broadcast in draft status. Add recipients and then send or schedule it.
 
         Args:
             profile_id: (required)
@@ -10552,6 +13335,8 @@ def register_generated_tools(mcp, _get_client):
     def broadcasts_get_broadcast(broadcast_id: str) -> str:
         """Get broadcast details
 
+        Returns a broadcast with its full configuration and delivery stats.
+
         Args:
             broadcast_id: (required)"""
         client = _get_client()
@@ -10578,6 +13363,8 @@ def register_generated_tools(mcp, _get_client):
         segment_filters: dict[str, Any] | None = None,
     ) -> str:
         """Update broadcast
+
+        Update a broadcast's name, message, template, or segment filters. Only draft broadcasts can be updated.
 
         Args:
             broadcast_id: (required)
@@ -10611,6 +13398,8 @@ def register_generated_tools(mcp, _get_client):
     def broadcasts_delete_broadcast(broadcast_id: str) -> str:
         """Delete broadcast
 
+        Permanently delete a broadcast. Only drafts can be deleted.
+
         Args:
             broadcast_id: (required)"""
         client = _get_client()
@@ -10631,6 +13420,8 @@ def register_generated_tools(mcp, _get_client):
     def broadcasts_send_broadcast(broadcast_id: str) -> str:
         """Send broadcast now
 
+        Immediately start sending a draft broadcast to its recipients.
+
         Args:
             broadcast_id: (required)"""
         client = _get_client()
@@ -10650,6 +13441,8 @@ def register_generated_tools(mcp, _get_client):
     )
     def broadcasts_schedule_broadcast(broadcast_id: str, scheduled_at: str) -> str:
         """Schedule broadcast for later
+
+        Schedule a draft broadcast to be sent at a future date and time.
 
         Args:
             broadcast_id: (required)
@@ -10674,6 +13467,8 @@ def register_generated_tools(mcp, _get_client):
     def broadcasts_cancel_broadcast(broadcast_id: str) -> str:
         """Cancel broadcast
 
+        Cancel a scheduled or in-progress broadcast. Already-sent messages are not affected.
+
         Args:
             broadcast_id: (required)"""
         client = _get_client()
@@ -10692,9 +13487,14 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def broadcasts_list_broadcast_recipients(
-        broadcast_id: str, status: str | None = None, limit: int = 50, skip: int = 0
+        broadcast_id: str,
+        status: Literal["pending", "sent", "delivered", "read", "failed"] | None = None,
+        limit: int = 50,
+        skip: int = 0,
     ) -> str:
         """List broadcast recipients
+
+        Returns recipients for a broadcast with individual delivery status. Filter by status.
 
         Args:
             broadcast_id: (required)
@@ -10726,6 +13526,8 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Add recipients to a broadcast
 
+        Add recipients by contact IDs, raw phone numbers, or from the broadcast's segment filters.
+
         Args:
             broadcast_id: (required)
             contact_ids: Specific contact IDs to add. Zernio contact ids (24-character hex), as returned by the list-contacts endpoint. A platform identifier such as a WhatsApp wa_id is rejected with 400; use phones for raw numbers.
@@ -10754,7 +13556,13 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def business_agent_get_business_agent_status() -> str:
-        """Get agent setup status"""
+        """Get agent setup status
+
+        One read that says where the merchant is: whether the number is eligible, whether the
+        Meta Business Agent terms are accepted, whether an agent exists, whether it is on, and its
+        settings. `manualSteps` lists what Zernio can verify is still pending (accepting the terms
+        in WhatsApp Manager); `unverifiedSteps` lists what Meta exposes no state for (the payment
+        method in Billing Hub). Never fails for those pre-setup states; it reports them as flags."""
         client = _get_client()
         try:
             response = client.business_agent.get_business_agent_status()
@@ -10771,7 +13579,14 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def business_agent_onboard_business_agent() -> str:
-        """Create the agent"""
+        """Create the agent
+
+        Creates the Meta Business Agent on the number and schedules Meta's data preparation.
+        Requires the terms to be accepted; eligibility is checked first and an ineligible
+        number answers 403 `business_agent_not_eligible`. Not idempotent: call it once, then
+        configure knowledge and skills, then enable it through the settings. Configuration
+        calls made in the first minute can still answer `business_agent_not_found` while Meta
+        prepares the workspace."""
         client = _get_client()
         try:
             response = client.business_agent.onboard_business_agent()
@@ -10789,6 +13604,8 @@ def register_generated_tools(mcp, _get_client):
     )
     def business_agent_list_business_agent_settings(agent_id: str | None = None) -> str:
         """List agent settings
+
+        Settings of every agent configured on the number (normally one). Pass `agentId` to read one.
 
         Args:
             agent_id"""
@@ -10814,10 +13631,16 @@ def register_generated_tools(mcp, _get_client):
         rollout: dict[str, Any] | None = None,
         handoff: dict[str, Any] | None = None,
         followup: dict[str, Any] | None = None,
-        ai_audience: str | None = None,
+        ai_audience: Literal["EVERYONE", "ALLOWLISTED_ONLY"] | None = None,
         never_say_phrases: list[str] | None = None,
     ) -> str:
         """Update agent settings
+
+        Partial update: fields you omit keep their value. `rollout.enabled: true` turns the agent
+        on for new conversations; `false` stops it on every thread. Turning it on for `EVERYONE`
+        needs a payment method on the Business Agent billable account (Meta accepts the call but
+        delivers nothing without one); `ALLOWLISTED_ONLY` does not, which is how you test with a
+        few numbers before billing. `never_say_phrases` replaces the whole list.
 
         Args:
             agent_id
@@ -10849,7 +13672,9 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def business_agent_list_business_agent_allowlist() -> str:
-        """List allowlisted consumers"""
+        """List allowlisted consumers
+
+        Consumers the agent answers while `ai_audience` is ALLOWLISTED_ONLY."""
         client = _get_client()
         try:
             response = client.business_agent.list_business_agent_allowlist()
@@ -10869,6 +13694,8 @@ def register_generated_tools(mcp, _get_client):
         consumer_phone_number: str,
     ) -> str:
         """Allowlist a consumer
+
+        One E.164 number per call. Not idempotent.
 
         Args:
             consumer_phone_number: (required)"""
@@ -10912,7 +13739,9 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def business_agent_get_business_agent_business_information() -> str:
-        """Get business information"""
+        """Get business information
+
+        Payment methods, return policy, how to buy, shipping, description and contact details the agent answers from. Empty values until configured."""
         client = _get_client()
         try:
             response = client.business_agent.get_business_agent_business_information()
@@ -10937,6 +13766,8 @@ def register_generated_tools(mcp, _get_client):
         contact_info: str | None = None,
     ) -> str:
         """Replace business information
+
+        Full replacement: every field you send overwrites the stored value; fields you omit are cleared.
 
         Args:
             payment_method
@@ -11007,6 +13838,8 @@ def register_generated_tools(mcp, _get_client):
         question: str, answer: str, metadata: dict[str, Any] | None = None
     ) -> str:
         """Create a FAQ
+
+        One specific question per entry; beyond a few hundred entries retrieval quality drops. Not idempotent.
 
         Args:
             question: Phrase it the way a customer would ask it; one topic per entry. (required)
@@ -11122,6 +13955,8 @@ def register_generated_tools(mcp, _get_client):
         single_urls: list[str] | None = None,
     ) -> str:
         """Add a website to crawl
+
+        Meta crawls the site into the agent knowledge and recrawls it periodically; check `crawl_status` and `crawl_error` on read. Not idempotent.
 
         Args:
             url: (required)
@@ -11260,6 +14095,14 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Upload a knowledge file
 
+        Accepted types: pdf, doc, docx, png, jpg, jpeg, plus csv and xlsx when Meta enabled
+        extraction on the asset. Meta's limit is 100 MB. Two ways to send the file:
+        - JSON `{ url, fileName }`: Zernio downloads the file (public https URL, no redirects,
+          capped at 100 MB) and forwards it. Use this for anything above a few megabytes.
+        - multipart form-data with a `file` part (and an optional `fileName`): bounded by the
+          request body limit of about 4.5 MB; larger uploads must use the `url` form.
+        Not idempotent.
+
         Args:
             url: Publicly downloadable file URL. (required)
             file_name: Defaults to the last path segment of the URL."""
@@ -11341,6 +14184,8 @@ def register_generated_tools(mcp, _get_client):
         skill: str, title: str | None = None, description: str | None = None
     ) -> str:
         """Create a skill
+
+        Behavioral instructions in the brand voice. Reads back `pending_review` until Meta content review passes it. Not idempotent.
 
         Args:
             title: Lowercase letters, digits and hyphens, e.g. greeting-skill.
@@ -11440,6 +14285,8 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """List UI skills
 
+        Cursor paged; follow `paging.cursors.after` until `paging.next` is absent.
+
         Args:
             before
             after
@@ -11462,13 +14309,25 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def business_agent_create_business_agent_ui_skill(
-        component_type: str,
-        status: str,
+        component_type: Literal[
+            "carousel_quick_reply",
+            "carousel_url",
+            "cta_url",
+            "flow",
+            "image",
+            "interactive_list",
+            "interactive_reply_buttons",
+            "location",
+            "location_request",
+        ],
+        status: Literal["enabled", "disabled"],
         instruction: str,
         title: str | None = None,
         flow_id: int | None = None,
     ) -> str:
         """Create a UI skill
+
+        Tells the agent when to send a rich component (CTA URL button, image, carousel, list, reply buttons, location, Flow) and what to put in it. Not idempotent.
 
         Args:
             title
@@ -11521,8 +14380,18 @@ def register_generated_tools(mcp, _get_client):
     )
     def business_agent_update_business_agent_ui_skill(
         ui_skill_id: str,
-        component_type: str,
-        status: str,
+        component_type: Literal[
+            "carousel_quick_reply",
+            "carousel_url",
+            "cta_url",
+            "flow",
+            "image",
+            "interactive_list",
+            "interactive_reply_buttons",
+            "location",
+            "location_request",
+        ],
+        status: Literal["enabled", "disabled"],
         instruction: str,
         title: str | None = None,
         flow_id: int | None = None,
@@ -11581,7 +14450,9 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def business_agent_list_business_agent_connectors() -> str:
-        """List connectors"""
+        """List connectors
+
+        External APIs the agent may call. `connection_status` says whether Meta can currently reach each one."""
         client = _get_client()
         try:
             response = client.business_agent.list_business_agent_connectors()
@@ -11600,7 +14471,7 @@ def register_generated_tools(mcp, _get_client):
     def business_agent_create_business_agent_connector(
         name: str,
         base_url: str,
-        auth_type: str,
+        auth_type: Literal["OAUTH2_CLIENT_CREDENTIALS", "API_KEY", "NONE"],
         description: str | None = None,
         connector_protocol: str | None = None,
         auth_config: dict[str, Any] | None = None,
@@ -11608,6 +14479,8 @@ def register_generated_tools(mcp, _get_client):
         requires_certificate: bool | None = None,
     ) -> str:
         """Create a connector
+
+        Base URL plus how to authenticate (OAuth client credentials, API key or none). Names are unique per number. Not idempotent.
 
         Args:
             name: Unique per number. (required)
@@ -11662,7 +14535,7 @@ def register_generated_tools(mcp, _get_client):
     def business_agent_update_business_agent_connector(
         name: str,
         base_url: str,
-        auth_type: str,
+        auth_type: Literal["OAUTH2_CLIENT_CREDENTIALS", "API_KEY", "NONE"],
         description: str | None = None,
         connector_protocol: str | None = None,
         auth_config: dict[str, Any] | None = None,
@@ -11726,6 +14599,10 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Set connector credentials
 
+        Set or rotate the connector's credentials in place: `kind: api_key`, `kind: oauth`
+        (client credentials) or `kind: certificate` (mTLS client certificate). Meta has no call
+        that removes a credential layer; change the connector's `auth_type` or delete it instead.
+
         Args:
             body: Full request body as documented in the API reference. (required)"""
         client = _get_client()
@@ -11746,7 +14623,9 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def business_agent_refresh_business_agent_connector_tools() -> str:
-        """Refresh MCP connector tools"""
+        """Refresh MCP connector tools
+
+        Re-discovers the tools of an MCP connector. A failed discovery keeps the previous tool set and reports an ERROR sync status inside a 200."""
         client = _get_client()
         try:
             response = client.business_agent.refresh_business_agent_connector_tools()
@@ -11772,6 +14651,8 @@ def register_generated_tools(mcp, _get_client):
         top_n: int | None = None,
     ) -> str:
         """Get connector failure logs
+
+        Third-party failures over the last 7 days (window at most 7 days, default the last 24 hours). Each entry carries `failure_code_name` and `error_message`.
 
         Args:
             start_time: Unix seconds.
@@ -11830,6 +14711,8 @@ def register_generated_tools(mcp, _get_client):
         transformation_spec: dict[str, Any] | None = None,
     ) -> str:
         """Create a connector tool
+
+        One operation on the connector, with the request definition Meta uses to build the outbound call from the conversation. Type the body params explicitly. Not idempotent.
 
         Args:
             name: (required)
@@ -11936,6 +14819,8 @@ def register_generated_tools(mcp, _get_client):
     def business_agent_run_business_agent_connector_tool(input: str) -> str:
         """Run a connector tool once
 
+        Executes the tool against the merchant API and returns the raw upstream result, to check a connector before the agent relies on it.
+
         Args:
             input: JSON string with the tool arguments. (required)"""
         client = _get_client()
@@ -11956,7 +14841,9 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def business_agent_get_business_agent_budget() -> str:
-        """Get usage budgets"""
+        """Get usage budgets
+
+        Caps over rolling windows for the Business Manager that owns the number. An empty list means unlimited."""
         client = _get_client()
         try:
             response = client.business_agent.get_business_agent_budget()
@@ -11976,6 +14863,8 @@ def register_generated_tools(mcp, _get_client):
         budgets: list[dict[str, Any]] | None,
     ) -> str:
         """Replace usage budgets
+
+        The full desired set: budgets left out are removed, an empty list returns to unlimited. Pass `budget_id` to edit one in place. When a cap is hit the agent finishes its turn, stops answering and hands the thread to a human until the window rolls over.
 
         Args:
             budgets: (required)"""
@@ -12001,6 +14890,8 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Send a test message
 
+        Runs the message through the full agent pipeline in Meta sandbox with no WhatsApp user and no token billing. Pass back `conversationId` to continue a thread. Meta rate-limits it per number per hour.
+
         Args:
             message: (required)
             conversation_id"""
@@ -12025,6 +14916,8 @@ def register_generated_tools(mcp, _get_client):
         to: str, type: str, description: str, payload: str
     ) -> str:
         """Send a business event
+
+        Tell the agent something happened in your systems (order shipped, document verified) so it messages the consumer about it. The consumer must already have a conversation with the number. Answers 202 with the event id; poll it for the outcome.
 
         Args:
             to: Consumer E.164 phone number. (required)
@@ -12075,6 +14968,10 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Read evaluation data
 
+        Without query parameters, lists the evaluation scenarios (`eval_cases`). With `jobId`,
+        polls a run started with POST. With `summaryIds`, returns the aggregated insight reports.
+        With `evalIds`, returns per-conversation evaluation details. One of the three at a time.
+
         Args:
             job_id
             summary_ids: Comma-separated summary ids.
@@ -12101,6 +14998,8 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Start an evaluation run
 
+        Simulates the given scenarios against the agent and scores them. Answers 202 with a `job_id` to poll with GET.
+
         Args:
             eval_case_ids: (required)"""
         client = _get_client()
@@ -12123,15 +15022,29 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def calls_list_calls(
-        channel: str | None = None,
-        status: str | None = None,
-        direction: str | None = None,
+        channel: Literal["whatsapp", "pstn"] | None = None,
+        status: Literal["ringing", "answered", "ended", "failed"] | None = None,
+        direction: Literal["inbound", "outbound"] | None = None,
         number: str | None = None,
         search: str | None = None,
         before: str | None = None,
         limit: int = 50,
     ) -> str:
         """List all calls (unified history)
+
+        Unified call history across ALL of your numbers: both channels
+        (WhatsApp Business Calling + regular phone/PSTN), inbound and outbound,
+        newest first. Unlike `GET /v1/voice/calls` (PSTN-only) and
+        `GET /v1/whatsapp/calls` (one account at a time), this endpoint needs no
+        `accountId` and never requires fanning out one request per number.
+
+        Any row can be opened channel-agnostically via `GET /v1/calls/{id}` and
+        `GET /v1/calls/{id}/recording`; no branching on `channel` needed. When
+        the counterparty number matches a CRM contact, `contactId` and
+        `contactName` are set.
+
+        Cursor pagination: pass the returned `nextCursor` as `before` to fetch
+        the next page. `nextCursor` is null on the last page.
 
         Args:
             channel
@@ -12167,6 +15080,12 @@ def register_generated_tools(mcp, _get_client):
     def calls_get_call(id: str) -> str:
         """Get a call (any channel)
 
+        Channel-agnostic call detail: works for both WhatsApp and regular
+        phone (PSTN) calls, so any row from `GET /v1/calls` can be opened
+        without branching on `channel`. Returns the full call including
+        transcript segments, with `contactId`/`contactName` set when the
+        counterparty matches a CRM contact.
+
         Args:
             id: (required)"""
         client = _get_client()
@@ -12184,8 +15103,14 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=False,
         )
     )
-    def calls_get_call_recording(id: str, as_: str | None = None) -> str:
+    def calls_get_call_recording(id: str, as_: Literal["json"] | None = None) -> str:
         """Get a call recording
+
+        Channel-agnostic recording fetch: resolves a fresh, playable MP3 URL
+        for any call regardless of channel (provider-signed URLs expire ~10
+        minutes after signing, so this re-signs on demand). Default responds
+        `302 Found` redirecting to the fresh URL; pass `as=json` to receive
+        `{ url }` instead.
 
         Args:
             id: (required)
@@ -12208,12 +15133,17 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def changelog_list_changelog(
-        type: str | None = None,
+        type: Literal[
+            "new_feature", "breaking_change", "improvement", "deprecation", "minor"
+        ]
+        | None = None,
         platform: str | None = None,
         before: str | None = None,
         limit: int = 20,
     ) -> str:
         """List API changelog entries
+
+        The API changelog, newest first. No API key needed; one address may make 120 requests a minute. Each entry is what the `api.changelog.published` webhook delivered: the announcement in `message`, and in `changes` the deterministic diff of the OpenAPI spec (operations and schemas added, removed and modified) for automation to act on. Page with `before` set to the previous page's `nextCursor`.
 
         Args:
             type: Only entries of this type.
@@ -12244,6 +15174,8 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """List comment-to-DM automations
 
+        List all comment-to-DM automations for a profile. Returns automations with their stats.
+
         Args:
             profile_id: Filter by profile. Omit to list across all profiles"""
         client = _get_client()
@@ -12268,12 +15200,12 @@ def register_generated_tools(mcp, _get_client):
         account_id: str,
         name: str,
         dm_message: str,
-        trigger: str = "comment",
+        trigger: Literal["comment", "story_reply"] = "comment",
         platform_post_id: str | None = None,
         post_id: str | None = None,
         post_title: str | None = None,
         keywords: list[str] | None = None,
-        match_mode: str = "contains",
+        match_mode: Literal["exact", "contains", "word"] = "contains",
         exclude_keywords: list[str] | None = None,
         typo_tolerance: bool | None = None,
         buttons: list[dict[str, Any]] | None = None,
@@ -12290,6 +15222,23 @@ def register_generated_tools(mcp, _get_client):
         follow_gate: dict[str, Any] | None = None,
     ) -> str:
         """Create comment-to-DM automation
+
+        Create a keyword-triggered DM automation on an Instagram or Facebook account.
+        When someone comments a matching keyword (or, with `trigger: story_reply`, replies
+        to your Instagram story with one), they automatically receive a DM.
+
+        To continue into a specific workflow after the recipient taps a button, use
+        `{\"type\":\"postback\",\"title\":\"Send it\",\"payload\":\"zernio:workflow:<workflowId>\"}`.
+        The target must be active and belong to the same account and profile. This also
+        works for product-card buttons. The tap starts that workflow directly, without
+        matching its keyword or first-message condition. A different live workflow in
+        the conversation is exited; tapping the same live workflow does not restart it
+        or consume a pending reply. Stale or invalid targets do nothing. The initial
+        comment DM alone does not start the workflow: the recipient must tap.
+
+        Triggers (`trigger`):
+          * `comment` (default): fires on keyword comments on a post or reel.
+          * `story_reply`: fires when someone replies to your ...
 
         Args:
             profile_id: (required)
@@ -12359,6 +15308,8 @@ def register_generated_tools(mcp, _get_client):
     def comment_automations_get_comment_automation(automation_id: str) -> str:
         """Get automation details
 
+        Returns an automation with its configuration, stats, and recent trigger logs.
+
         Args:
             automation_id: (required)"""
         client = _get_client()
@@ -12381,9 +15332,9 @@ def register_generated_tools(mcp, _get_client):
     def comment_automations_update_comment_automation(
         automation_id: str,
         name: str | None = None,
-        trigger: str | None = None,
+        trigger: Literal["comment", "story_reply"] | None = None,
         keywords: list[str] | None = None,
-        match_mode: str | None = None,
+        match_mode: Literal["exact", "contains", "word"] | None = None,
         exclude_keywords: list[str] | None = None,
         typo_tolerance: bool | None = None,
         dm_message: str | None = None,
@@ -12402,6 +15353,10 @@ def register_generated_tools(mcp, _get_client):
         is_active: bool | None = None,
     ) -> str:
         """Update automation settings
+
+        Update an automation's keywords, DM message, inline buttons, comment reply, or active status.
+        Pass `buttons: []` to clear all buttons. When `buttons` is non-empty, `dmMessage` (the new
+        one if you're changing it, otherwise the stored one) must be 640 characters or less.
 
         Args:
             automation_id: (required)
@@ -12465,6 +15420,8 @@ def register_generated_tools(mcp, _get_client):
     def comment_automations_delete_comment_automation(automation_id: str) -> str:
         """Delete automation
 
+        Permanently delete an automation and all its trigger logs.
+
         Args:
             automation_id: (required)"""
         client = _get_client()
@@ -12485,9 +15442,14 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def comment_automations_list_comment_automation_logs(
-        automation_id: str, status: str | None = None, limit: int = 50, skip: int = 0
+        automation_id: str,
+        status: Literal["pending", "sent", "failed", "skipped", "gated"] | None = None,
+        limit: int = 50,
+        skip: int = 0,
     ) -> str:
         """List automation logs
+
+        Paginated list of every comment that triggered this automation, with send status and commenter info.
 
         Args:
             automation_id: (required)
@@ -12515,16 +15477,43 @@ def register_generated_tools(mcp, _get_client):
     )
     def comments_list_inbox_comments(
         profile_id: str | None = None,
-        platform: str | None = None,
+        platform: Literal[
+            "facebook",
+            "instagram",
+            "twitter",
+            "bluesky",
+            "threads",
+            "youtube",
+            "linkedin",
+            "reddit",
+            "tiktok",
+            "metaads",
+        ]
+        | None = None,
         min_comments: int | None = None,
         since: str | None = None,
-        sort_by: str = "date",
-        sort_order: str = "desc",
+        sort_by: Literal["date", "comments"] = "date",
+        sort_order: Literal["asc", "desc"] = "desc",
         limit: int = 50,
         cursor: str | None = None,
         account_id: str | None = None,
     ) -> str:
         """List commented posts
+
+        Returns posts with comment counts from all connected accounts. Aggregates data across multiple accounts.
+
+        Responses are cached for up to 10 minutes, so the feed may lag new comments by that
+        window. Do not poll this endpoint for real-time updates: subscribe to the
+        `comment.received` webhook, which fires for every new comment across your posts and
+        carries the post reference needed to keep this list current.
+
+        For users with the Ads add-on (accounts on usage-based billing always qualify), the user's Meta ads
+        (boosted/dark posts) are included too. There's one row per (ad, placement-with-comments):
+        an ad that runs on both Facebook feed and Instagram feed produces up to two rows (the
+        Page dark post and the IG media have separate comment threads), each flagged
+        `isAd: true` with `adId` and `placement` (`id` is `{adId}:{placement}`). Use
+        `?platform=metaads` to return *only* ad rows; passing `facebook`/`instagram` returns
+        *organic* posts only (no ads); omitting `platform` returns both. Fetch a ...
 
         Args:
             profile_id: Filter by profile ID
@@ -12571,6 +15560,24 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Get post comments
 
+        Fetch comments for a specific post. Requires accountId query parameter.
+
+        Pass `commentId` (Facebook, Instagram, Reddit, TikTok) to fetch replies to a specific
+        comment instead of the post's top-level comments. Facebook, Instagram and TikTok return
+        the comment's replies, paged by `limit`/`cursor`; Reddit returns the focused comment
+        thread instead. On Facebook and Instagram the requested comment itself comes back in the
+        top-level `comment` field.
+
+        On Facebook, passing a COMMENT id as `postId` (instead of using `commentId`) is also
+        supported for backwards compatibility and returns that comment's replies the same way.
+        Prefer `commentId` for new integrations; it also works on Instagram, which rejects a
+        comment id passed as `postId`. YouTube does not support either form, `postId` must be a
+        video id.
+
+        Responses are cached for up to 10 minutes, so a page may lag new comments by that
+        window. Do not poll this endpoint for real-time updates: subscribe to the
+        `comment.received` webhook, which ...
+
         Args:
             post_id: Zernio post ID or platform-specific post ID. Zernio IDs are auto-resolved. LinkedIn third-party posts accept full activity URN or numeric ID. On Facebook, a comment ID is also accepted here and returns that comment's replies, kept for backwards compatibility; prefer the `commentId` query parameter, which also works on Instagram. (required)
             account_id: (required)
@@ -12612,6 +15619,24 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Reply to comment
 
+        Post a reply to a post or specific comment. Requires accountId in request body.
+
+        **Idempotency:** send an `Idempotency-Key` header to make retries safe
+        (e.g. after a client-side timeout where delivery is unknown): same key +
+        same body replays the original response (with `Idempotent-Replayed: true`)
+        instead of posting the comment a second time; same key + different body
+        returns 422; a key still in flight returns 409. Keys are retained for 24
+        hours and are scoped to the credential and to this exact path, so reusing
+        a key against a different postId returns 422 rather than replaying the
+        other post's response.
+
+        Only successful (2xx) responses are stored for replay. If the request
+        throws or returns a non-2xx status the key is released, so the header
+        protects the \"request succeeded but the response was lost\" case. After an
+        ambiguous failure (a 5xx or a network timeout) list the post's comments
+        before retrying with the same key, and treat an empty result as
+        inconclusive rather than as proof ...
+
         Args:
             post_id: Zernio post ID or platform-specific post ID. LinkedIn third-party posts accept full activity URN or numeric ID. (required)
             account_id: (required)
@@ -12650,6 +15675,9 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Delete comment
 
+        Delete a comment on a post. Supported by Facebook, Instagram, Threads, LinkedIn, Reddit, Bluesky, X (Twitter), YouTube, and TikTok (accounts connected through the TikTok for Business app). Not supported on Google Business (reviews only).
+        Requires accountId and commentId query parameters.
+
         Args:
             post_id: Zernio post ID or platform-specific post ID. LinkedIn third-party posts accept full activity URN or numeric ID. (required)
             account_id: (required)
@@ -12672,9 +15700,19 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def comments_edit_inbox_comment(
-        post_id: str, comment_id: str, account_id: str, platform: str, content: str
+        post_id: str,
+        comment_id: str,
+        account_id: str,
+        platform: Literal["reddit"],
+        content: str,
     ) -> str:
         """Edit comment
+
+        Edit the body of a comment the connected account posted. Supported on Reddit only.
+
+        Reddit keeps the same comment id after an edit. Reddit exposes no API to edit a post
+        title, and a link post has no editable body. To edit a published post's body, use
+        `POST /v1/posts/{postId}/edit`.
 
         Args:
             post_id: (required)
@@ -12707,11 +15745,22 @@ def register_generated_tools(mcp, _get_client):
         post_id: str,
         comment_id: str,
         account_id: str,
-        platform: str,
-        moderation_status: str,
+        platform: Literal["youtube"],
+        moderation_status: Literal["published", "rejected", "heldForReview"],
         ban_author: bool | None = None,
     ) -> str:
         """Set comment moderation status
+
+        Set a comment's moderation status. Supported on YouTube only.
+
+        Use this to work a moderation queue: approve a held comment (`published`), reject it
+        (`rejected`), or send it back for review (`heldForReview`).
+
+        The request must be authorized by the owner of the channel or video the comment
+        belongs to. You cannot moderate comments on videos you do not own.
+
+        This is distinct from `POST /v1/inbox/comments/{postId}/{commentId}/hide`, which
+        covers Facebook, Instagram, Threads, and X and does not apply to YouTube.
 
         Args:
             post_id: (required)
@@ -12747,6 +15796,11 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Hide comment
 
+        Hide a comment on a post. Supported by Facebook, Instagram, Threads, X, and TikTok
+        (accounts connected through the TikTok for Business app).
+        Hidden comments are only visible to the commenter and page admin.
+        For X, the reply must belong to a conversation started by the authenticated user.
+
         Args:
             post_id: (required)
             comment_id: (required)
@@ -12772,6 +15826,9 @@ def register_generated_tools(mcp, _get_client):
         post_id: str, comment_id: str, account_id: str
     ) -> str:
         """Unhide comment
+
+        Unhide a previously hidden comment. Supported by Facebook, Instagram, Threads, X, and
+        TikTok (accounts connected through the TikTok for Business app).
 
         Args:
             post_id: (required)
@@ -12799,6 +15856,9 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Pin comment
 
+        Pin a top-level comment to the top of a post's comment section. TikTok accounts
+        connected through the TikTok for Business app only; every other platform returns 400.
+
         Args:
             post_id: (required)
             comment_id: (required)
@@ -12825,6 +15885,9 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Unpin comment
 
+        Unpin a previously pinned comment. TikTok accounts connected through the TikTok for
+        Business app only.
+
         Args:
             post_id: (required)
             comment_id: (required)
@@ -12850,10 +15913,30 @@ def register_generated_tools(mcp, _get_client):
         post_id: str,
         comment_id: str,
         account_id: str,
-        reaction_type: str | None = None,
+        reaction_type: Literal[
+            "LIKE", "PRAISE", "EMPATHY", "INTEREST", "APPRECIATION", "ENTERTAINMENT"
+        ]
+        | None = None,
         cid: str | None = None,
     ) -> str:
         """Like comment
+
+        Like or upvote a comment on a post. Supported platforms: Facebook, X,
+        Bluesky, Reddit, LinkedIn, and Instagram in limited release (see below). For
+        Bluesky, the cid (content identifier) is
+        required in the request body. For LinkedIn, pass the composite comment URN returned
+        by the comments endpoints as commentId; an optional reactionType picks the reaction
+        (defaults to LIKE), and accounts connected before the social-feed scopes were
+        requested get a 403 with code `linkedin_reconnect_required`.
+
+        Instagram is in LIMITED RELEASE and not generally available: the call needs
+        `instagram_manage_engagement`, which Meta has so far granted this app only under
+        Standard Access, so it works for app admins, developers and testers of our Meta app
+        and returns a 403 with code `PLATFORM_BETA_RESTRICTED` for every other account.
+        That restriction lifts when Meta App Review grants Advanced Access; the constraints
+        below apply once it does.
+
+        Instagram covers comments and replies on feed posts, reels and ...
 
         Args:
             post_id: (required)
@@ -12887,6 +15970,11 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Unlike comment
 
+        Remove a like from a comment. Supported platforms: Facebook, X, Bluesky,
+        Reddit, LinkedIn, and Instagram in limited release. For Bluesky, the likeUri query
+        parameter is required. Instagram has the same limited release, Facebook Login,
+        `instagram_manage_engagement` and burst-limit constraints as liking.
+
         Args:
             post_id: (required)
             comment_id: (required)
@@ -12915,10 +16003,31 @@ def register_generated_tools(mcp, _get_client):
     def comments_like_post(
         post_id: str,
         account_id: str,
-        reaction_type: str | None = None,
+        reaction_type: Literal[
+            "LIKE", "PRAISE", "EMPATHY", "INTEREST", "APPRECIATION", "ENTERTAINMENT"
+        ]
+        | None = None,
         cid: str | None = None,
     ) -> str:
         """Like post
+
+        Like (or react to) a post as a connected account. Supported platforms: LinkedIn,
+        X, Facebook, YouTube, Bluesky, and Instagram in limited release (see below).
+        Threads, TikTok and Pinterest
+        expose no like endpoint in their APIs and return 400. Reddit returns 400 too,
+        pointing at `POST /v1/accounts/{accountId}/reddit-vote`, which covers upvote,
+        downvote and clear on both posts and comments.
+
+        The account does not have to be the one that published the post, which is what
+        makes executive engagement possible: pass an exec's `accountId` and the brand
+        post's ID. `postId` accepts either a Zernio post ID or the platform's native post
+        ID. A Zernio post ID resolves to the entry for `accountId`, falling back to the
+        post's single entry on the same platform (two entries on that platform is a 400,
+        so pass the native ID).
+
+        LinkedIn requires the `w_member_social_feed` / `w_organization_social_feed`
+        scopes, which are not retroactive: accounts connected before those were requested
+        get a 403 with code ...
 
         Args:
             post_id: Zernio post ID or the platform's native post ID (required)
@@ -12950,6 +16059,13 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Unlike post
 
+        Remove this account's like from a post. Supported platforms: LinkedIn, X,
+        Facebook, YouTube, Bluesky, and Instagram in limited release. On YouTube this clears
+        the rating. Instagram has the same limited release, Facebook Login,
+        `instagram_manage_engagement` and burst-limit constraints as liking. For Bluesky,
+        `likeUri` (returned when the post was liked) is required. Reddit uses
+        `POST /v1/accounts/{accountId}/reddit-vote` with `direction: 0`.
+
         Args:
             post_id: Zernio post ID or the platform's native post ID (required)
             account_id: (required)
@@ -12980,6 +16096,18 @@ def register_generated_tools(mcp, _get_client):
         buttons: list[dict[str, Any]] | None = None,
     ) -> str:
         """Send private reply
+
+            Send a direct message to the author of a comment. Supported on Instagram and Facebook only.
+            One reply per comment, must be sent within 7 days. Optionally attach interactive elements:
+            `quickReplies` (chips above the keyboard, max 13) or `buttons` (1-3 inline postback/url
+            buttons rendered in the same bubble via Meta's button_template). Chips do not render in
+            the Instagram Message Requests folder. Since late August 2026 Instagram refuses buttons,
+            cards and attachments to commenters who do not follow the account (Meta code 2, subcode
+            1545133, returned here as a non-retryable 400 that says so), and the failed call still
+            consumes the comment's single private reply. To reach non-followers send plain text and
+            add buttons once they reply. `quickReplies` and `buttons` are mutually exclusive. When
+            the comment's single private reply is spent (by this call or an earlier one) the 400
+            carries `details.privateReplyConsumed: true`; never retry it.
 
             Args:
                 post_id: The media/post ID (Instagram media ID or Facebook post ID) (required)
@@ -13021,6 +16149,16 @@ def register_generated_tools(mcp, _get_client):
     def commerce_get_commerce_store(account_id: str) -> str:
         """Get a store
 
+        Returns the connected store with its currency, country and the
+        `capabilities` it supports, so an integration can tell up front which
+        Commerce operations the store serves. On Shopify, stock, sales
+        channels, discounts, navigation, metaobjects, markets, marketing and
+        image removal need permissions the store owner approves separately:
+        `missingCapabilities` lists what is not granted yet and
+        `grantPermissionsUrl` is the page where the owner approves it.
+
+        Platforms: shopify, woocommerce
+
         Args:
             account_id: Connected store SocialAccount id. (required)"""
         client = _get_client()
@@ -13042,11 +16180,29 @@ def register_generated_tools(mcp, _get_client):
         account_id: str,
         limit: int = 20,
         cursor: str | None = None,
-        status: str | None = None,
+        status: Literal[
+            "active",
+            "draft",
+            "pending_review",
+            "rejected",
+            "inactive",
+            "archived",
+            "deleted",
+        ]
+        | None = None,
         query: str | None = None,
         collection_id: str | None = None,
     ) -> str:
         """List products
+
+        Lists the store's products with their variants, options and images.
+        Cursor-paginated: pass `limit` (1-100, default 20) and the `cursor`
+        from a previous response's `nextCursor`, which is null on the last page.
+        Filter with `status` and/or `query` (the platform's product search
+        syntax, passed through verbatim). A status the platform has no
+        equivalent of returns an empty page.
+
+        Platforms: shopify, woocommerce
 
         Args:
             account_id: Connected store SocialAccount id. (required)
@@ -13087,11 +16243,19 @@ def register_generated_tools(mcp, _get_client):
         product_type: str | None = None,
         tags: list[str] | None = None,
         seo: dict[str, Any] | None = None,
-        status: str = "draft",
+        status: Literal["draft", "active"] = "draft",
         images: list[dict[str, Any]] | None = None,
         options: list[dict[str, Any]] | None = None,
     ) -> str:
         """Create a product
+
+        Creates a product with its options and variants. `status` defaults to
+        `draft`: no platform offers a sandbox for product writes, so nothing
+        goes on sale unless you ask for `active`. A product without `options`
+        has exactly one variant. Images are fetched by the platform from the
+        given URLs and may appear on the product a few seconds later.
+
+        Platforms: shopify, woocommerce
 
         Args:
             account_id: (required)
@@ -13135,9 +16299,17 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def commerce_change_commerce_product_state(
-        account_id: str, product_ids: list[str] | None, action: str
+        account_id: str,
+        product_ids: list[str] | None,
+        action: Literal["activate", "deactivate", "archive", "delete"],
     ) -> str:
         """Activate, deactivate, archive or delete products
+
+        Applies one action to up to 50 products and reports each product's
+        outcome, so one failure does not abort the rest. On Shopify,
+        `deactivate` sets the product to draft and `delete` is permanent.
+
+        Platforms: shopify, woocommerce
 
         Args:
             account_id: (required)
@@ -13162,6 +16334,10 @@ def register_generated_tools(mcp, _get_client):
     )
     def commerce_get_commerce_product(product_id: str, account_id: str) -> str:
         """Get a product
+
+        One product with all its variants, options and images. Needs products.read. 404 product_not_found when the id does not exist in the store.
+
+        Platforms: shopify, woocommerce
 
         Args:
             product_id: Platform-native product id. (required)
@@ -13195,6 +16371,13 @@ def register_generated_tools(mcp, _get_client):
         seo: dict[str, Any] | None = None,
     ) -> str:
         """Update a product
+
+        Partial-updates the product's own fields; at least one besides
+        `accountId` is required. `tags` replaces the full list. Change prices
+        with `POST /v1/commerce/products/{productId}/price` and status with
+        `POST /v1/commerce/products/state`.
+
+        Platforms: shopify, woocommerce
 
         Args:
             product_id: Platform-native product id. (required)
@@ -13236,6 +16419,12 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Update variant prices
 
+        Sets the price and/or compare-at price of the listed variants. Other
+        variants are untouched. Amounts are in the store currency; send
+        `compareAtPrice: null` to remove a strike-through price.
+
+        Platforms: shopify, woocommerce
+
         Args:
             product_id: Platform-native product id. (required)
             account_id: (required)
@@ -13265,6 +16454,11 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """List collections
 
+        Lists the store's product collections. Cursor-paginated like products.
+        List a collection's products with `GET /v1/commerce/products?collectionId=...`.
+
+        Platforms: shopify, woocommerce
+
         Args:
             account_id: Connected store SocialAccount id. (required)
             limit
@@ -13292,12 +16486,29 @@ def register_generated_tools(mcp, _get_client):
         title: str,
         description_html: str | None = None,
         handle: str | None = None,
-        sort_order: str | None = None,
+        sort_order: Literal[
+            "manual",
+            "best_selling",
+            "alpha_asc",
+            "alpha_desc",
+            "price_asc",
+            "price_desc",
+            "created",
+            "created_desc",
+            "most_relevant",
+        ]
+        | None = None,
         seo: dict[str, Any] | None = None,
         image: dict[str, Any] | None = None,
         product_ids: list[str] | None = None,
     ) -> str:
         """Create a collection
+
+        Creates a collection, optionally with hand-picked products. On Shopify
+        the collection starts unpublished from the online store; publish it
+        from the Shopify admin.
+
+        Platforms: shopify, woocommerce
 
         Args:
             account_id: (required)
@@ -13335,6 +16546,10 @@ def register_generated_tools(mcp, _get_client):
     def commerce_get_commerce_collection(collection_id: str, account_id: str) -> str:
         """Get a collection
 
+        One collection (a category on WooCommerce) with its image, sort order and product count. List its products with GET /v1/commerce/products?collectionId=. Needs collections.read.
+
+        Platforms: shopify, woocommerce
+
         Args:
             collection_id: Platform-native collection id. (required)
             account_id: Connected store SocialAccount id. (required)"""
@@ -13361,11 +16576,26 @@ def register_generated_tools(mcp, _get_client):
         title: str | None = None,
         description_html: str | None = None,
         handle: str | None = None,
-        sort_order: str | None = None,
+        sort_order: Literal[
+            "manual",
+            "best_selling",
+            "alpha_asc",
+            "alpha_desc",
+            "price_asc",
+            "price_desc",
+            "created",
+            "created_desc",
+            "most_relevant",
+        ]
+        | None = None,
         seo: dict[str, Any] | None = None,
         image: dict[str, Any] | None = None,
     ) -> str:
         """Update a collection
+
+        Partial update; at least one field besides accountId is required. Change membership with POST /v1/commerce/collections/{collectionId}/products.
+
+        Platforms: shopify, woocommerce
 
         Args:
             collection_id: Platform-native collection id. (required)
@@ -13403,6 +16633,10 @@ def register_generated_tools(mcp, _get_client):
     def commerce_delete_commerce_collection(collection_id: str, account_id: str) -> str:
         """Delete a collection
 
+        Deletes the collection. Its products are not affected.
+
+        Platforms: shopify, woocommerce
+
         Args:
             collection_id: Platform-native collection id. (required)
             account_id: Connected store SocialAccount id. (required)"""
@@ -13430,6 +16664,13 @@ def register_generated_tools(mcp, _get_client):
         remove: list[str] | None = None,
     ) -> str:
         """Add or remove products in a collection
+
+        Adds and/or removes hand-picked products. Products a collection
+        includes through its own rules are not affected. `pending` is true
+        when the platform finishes the change in the background; the product
+        count then catches up a few seconds later.
+
+        Platforms: shopify, woocommerce
 
         Args:
             collection_id: Platform-native collection id. (required)
@@ -13461,6 +16702,10 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Add variants
 
+        Adds variants to a product. Each variant names a value for every product option (create options first with POST .../options). A product's placeholder default variant is replaced when real ones arrive.
+
+        Platforms: shopify, woocommerce
+
         Args:
             product_id: Platform-native id. (required)
             account_id: (required)
@@ -13486,6 +16731,10 @@ def register_generated_tools(mcp, _get_client):
         product_id: str, account_id: str, variant_ids: str
     ) -> str:
         """Delete variants
+
+        Deletes the variants in `variantIds` (comma-separated, up to 100) and returns the updated product. A product keeps at least one variant, so deleting every variant is refused by the platform. Needs products.variants.
+
+        Platforms: shopify, woocommerce
 
         Args:
             product_id: Platform-native id. (required)
@@ -13515,6 +16764,10 @@ def register_generated_tools(mcp, _get_client):
         create_variants: bool = False,
     ) -> str:
         """Add options
+
+        Adds option axes (e.g. Size, Color) and their values. With createVariants true the platform creates a variant for every new combination; otherwise existing variants take the first value.
+
+        Platforms: shopify, woocommerce
 
         Args:
             product_id: Platform-native id. (required)
@@ -13546,6 +16799,10 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Delete options
 
+        Deletes options by name, with the variants that depended on them.
+
+        Platforms: shopify, woocommerce
+
         Args:
             product_id: Platform-native id. (required)
             account_id: Connected store SocialAccount id. (required)
@@ -13571,6 +16828,10 @@ def register_generated_tools(mcp, _get_client):
         product_id: str, account_id: str, images: list[dict[str, Any]] | None
     ) -> str:
         """Add images
+
+        Adds images from public URLs. The platform fetches them, so they can appear on the product a few seconds after the call returns.
+
+        Platforms: shopify, woocommerce
 
         Args:
             product_id: Platform-native id. (required)
@@ -13598,6 +16859,10 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Remove images
 
+        Removes images from the product by image id (the `id` on each image). The file stays in the store's media library. Needs the products.images_remove capability.
+
+        Platforms: shopify, woocommerce
+
         Args:
             product_id: Platform-native id. (required)
             account_id: Connected store SocialAccount id. (required)
@@ -13624,6 +16889,10 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Reorder images
 
+        Puts the product's images in the given order; the first becomes the featured image. `pending` is true while the platform finishes in the background.
+
+        Platforms: shopify, woocommerce
+
         Args:
             product_id: Platform-native id. (required)
             account_id: (required)
@@ -13649,10 +16918,14 @@ def register_generated_tools(mcp, _get_client):
         product_id: str,
         account_id: str,
         title: str,
-        status: str = "draft",
+        status: Literal["draft", "active"] = "draft",
         include_images: bool = True,
     ) -> str:
         """Duplicate a product
+
+        Copies a product with its options, variants and (by default) images. The copy starts as a draft.
+
+        Platforms: shopify, woocommerce
 
         Args:
             product_id: Platform-native id. (required)
@@ -13686,6 +16959,10 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """List product metafields
 
+        The product's custom fields (metafields on Shopify, public meta on WooCommerce) as namespace, key, type and value. Needs metafields.read.
+
+        Platforms: shopify, woocommerce
+
         Args:
             product_id: Platform-native id. (required)
             account_id: Connected store SocialAccount id. (required)"""
@@ -13710,6 +16987,10 @@ def register_generated_tools(mcp, _get_client):
         product_id: str, account_id: str, metafields: list[dict[str, Any]] | None
     ) -> str:
         """Set product metafields
+
+        Creates or updates custom fields by namespace and key.
+
+        Platforms: shopify, woocommerce
 
         Args:
             product_id: Platform-native id. (required)
@@ -13736,6 +17017,10 @@ def register_generated_tools(mcp, _get_client):
         product_id: str, account_id: str, keys: str
     ) -> str:
         """Delete product metafields
+
+        Deletes the product custom fields named in `keys` (comma-separated `namespace.key`, up to 25) and returns how many were deleted. Needs metafields.write.
+
+        Platforms: shopify, woocommerce
 
         Args:
             product_id: Platform-native id. (required)
@@ -13765,6 +17050,10 @@ def register_generated_tools(mcp, _get_client):
         unpublish: list[str] | None = None,
     ) -> str:
         """Publish or unpublish a product
+
+        Publishes to and/or unpublishes from sales channels (the online store, Shop, POS and others). List channels with GET /v1/commerce/channels.
+
+        Platforms: shopify
 
         Args:
             product_id: Platform-native id. (required)
@@ -13796,6 +17085,10 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """List collection metafields
 
+        The collection's metafields as namespace, key, type and value. Needs collections.metafields: WooCommerce keeps custom fields on products only and answers 400 platform_not_supported.
+
+        Platforms: shopify
+
         Args:
             collection_id: Platform-native id. (required)
             account_id: Connected store SocialAccount id. (required)"""
@@ -13820,6 +17113,10 @@ def register_generated_tools(mcp, _get_client):
         collection_id: str, account_id: str, metafields: list[dict[str, Any]] | None
     ) -> str:
         """Set collection metafields
+
+        Creates or updates custom fields by namespace and key. Needs collections.metafields: WooCommerce keeps custom fields on products only and answers 400 platform_not_supported.
+
+        Platforms: shopify
 
         Args:
             collection_id: Platform-native id. (required)
@@ -13849,6 +17146,10 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Delete collection metafields
 
+        Deletes the collection metafields named in `keys` (comma-separated `namespace.key`, up to 25). Needs collections.metafields: WooCommerce answers 400 platform_not_supported.
+
+        Platforms: shopify
+
         Args:
             collection_id: Platform-native id. (required)
             account_id: Connected store SocialAccount id. (required)
@@ -13877,6 +17178,10 @@ def register_generated_tools(mcp, _get_client):
         unpublish: list[str] | None = None,
     ) -> str:
         """Publish or unpublish a collection
+
+        Publishes to and/or unpublishes from sales channels (the online store, Shop, POS and others). List channels with GET /v1/commerce/channels.
+
+        Platforms: shopify
 
         Args:
             collection_id: Platform-native id. (required)
@@ -13911,6 +17216,10 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Add or remove tags in bulk
 
+        Adds and/or removes tags on up to 50 products and reports each product's outcome.
+
+        Platforms: shopify, woocommerce
+
         Args:
             account_id: (required)
             product_ids: (required)
@@ -13937,6 +17246,10 @@ def register_generated_tools(mcp, _get_client):
         collection_id: str, account_id: str, moves: list[dict[str, Any]] | None
     ) -> str:
         """Reorder products in a collection
+
+        Moves products to new 0-based positions. Only for collections sorted `manual`.
+
+        Platforms: shopify
 
         Args:
             collection_id: Platform-native id. (required)
@@ -13966,6 +17279,10 @@ def register_generated_tools(mcp, _get_client):
         query: str | None = None,
     ) -> str:
         """List pages
+
+        The store's content pages (Shopify online store pages, WordPress pages), cursor-paginated with `limit`, `cursor` and an optional `query`. Needs pages.read.
+
+        Platforms: shopify, woocommerce
 
         Args:
             account_id: Connected store SocialAccount id. (required)
@@ -13998,6 +17315,10 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Create a page
 
+        Creates a content page from `title`, optional `handle`, `bodyHtml` and `isPublished`, and returns it with status 201. Needs pages.write.
+
+        Platforms: shopify, woocommerce
+
         Args:
             account_id: (required)
             title: (required)
@@ -14028,6 +17349,10 @@ def register_generated_tools(mcp, _get_client):
     def commerce_get_commerce_page(page_id: str, account_id: str) -> str:
         """Get a page
 
+        One content page with its body. Needs pages.read.
+
+        Platforms: shopify, woocommerce
+
         Args:
             page_id: Platform-native id. (required)
             account_id: Connected store SocialAccount id. (required)"""
@@ -14057,6 +17382,10 @@ def register_generated_tools(mcp, _get_client):
         is_published: bool | None = None,
     ) -> str:
         """Update a page
+
+        Updates the fields you pass (`title`, `handle`, `bodyHtml`, `isPublished`) and returns the page. Needs pages.write.
+
+        Platforms: shopify, woocommerce
 
         Args:
             page_id: Platform-native id. (required)
@@ -14090,6 +17419,10 @@ def register_generated_tools(mcp, _get_client):
     def commerce_delete_commerce_page(page_id: str, account_id: str) -> str:
         """Delete a page
 
+        Deletes the page from the store. This cannot be undone. Needs pages.write.
+
+        Platforms: shopify, woocommerce
+
         Args:
             page_id: Platform-native id. (required)
             account_id: Connected store SocialAccount id. (required)"""
@@ -14113,6 +17446,10 @@ def register_generated_tools(mcp, _get_client):
     def commerce_list_commerce_locations(account_id: str) -> str:
         """List locations
 
+        The store's stock locations (warehouses, shops).
+
+        Platforms: shopify, woocommerce
+
         Args:
             account_id: Connected store SocialAccount id. (required)"""
         client = _get_client()
@@ -14132,6 +17469,10 @@ def register_generated_tools(mcp, _get_client):
     )
     def commerce_list_commerce_inventory(account_id: str, product_id: str) -> str:
         """Get a product's stock
+
+        Stock per variant and location: available, on hand, committed to orders and incoming.
+
+        Platforms: shopify, woocommerce
 
         Args:
             account_id: Connected store SocialAccount id. (required)
@@ -14157,9 +17498,13 @@ def register_generated_tools(mcp, _get_client):
         product_id: str,
         account_id: str,
         changes: list[dict[str, Any]] | None,
-        mode: str = "set",
+        mode: Literal["set", "adjust"] = "set",
     ) -> str:
         """Set or adjust stock
+
+        `set` makes `quantity` the new available count; `adjust` adds `quantity` (negative to subtract). The variant must be stocked at the location. Answers the product's stock after the change.
+
+        Platforms: shopify, woocommerce
 
         Args:
             product_id: Platform-native id. (required)
@@ -14186,6 +17531,10 @@ def register_generated_tools(mcp, _get_client):
     def commerce_list_commerce_channels(account_id: str) -> str:
         """List sales channels
 
+        Where products and collections can be published: the online store, Shop, POS and installed channel apps.
+
+        Platforms: shopify
+
         Args:
             account_id: Connected store SocialAccount id. (required)"""
         client = _get_client()
@@ -14210,6 +17559,10 @@ def register_generated_tools(mcp, _get_client):
         query: str | None = None,
     ) -> str:
         """List discounts
+
+        The store's discounts (Shopify code and automatic discounts, WooCommerce coupons), cursor-paginated with `limit`, `cursor` and an optional `query`. Each discount lists its first 10 codes; `codeCount` has the total. Needs discounts.read.
+
+        Platforms: shopify, woocommerce
 
         Args:
             account_id: Connected store SocialAccount id. (required)
@@ -14236,8 +17589,8 @@ def register_generated_tools(mcp, _get_client):
     def commerce_create_commerce_discount(
         account_id: str,
         title: str,
-        method: str,
-        type: str,
+        method: Literal["code", "automatic"],
+        type: Literal["percentage", "fixed_amount", "free_shipping"],
         code: str | None = None,
         percentage: float | None = None,
         amount: str | None = None,
@@ -14252,6 +17605,10 @@ def register_generated_tools(mcp, _get_client):
         collection_ids: list[str] | None = None,
     ) -> str:
         """Create a discount
+
+        Creates a code discount (buyers enter a code) or an automatic one (applied at checkout), as a percentage, a fixed amount or free shipping. It applies to every product unless productIds or collectionIds narrow it, and to every buyer.
+
+        Platforms: shopify, woocommerce
 
         Args:
             account_id: (required)
@@ -14305,6 +17662,10 @@ def register_generated_tools(mcp, _get_client):
     def commerce_get_commerce_discount(discount_id: str, account_id: str) -> str:
         """Get a discount
 
+        One discount with its value, targets, minimum, usage and schedule. Needs discounts.read.
+
+        Platforms: shopify, woocommerce
+
         Args:
             discount_id: Platform-native id. (required)
             account_id: Connected store SocialAccount id. (required)"""
@@ -14341,6 +17702,10 @@ def register_generated_tools(mcp, _get_client):
         ends_at: str | None = None,
     ) -> str:
         """Update a discount
+
+        Changes a percentage, fixed-amount or free-shipping discount. Buy-X-get-Y and app discounts are read-only here.
+
+        Platforms: shopify, woocommerce
 
         Args:
             discount_id: Platform-native id. (required)
@@ -14388,6 +17753,10 @@ def register_generated_tools(mcp, _get_client):
     def commerce_delete_commerce_discount(discount_id: str, account_id: str) -> str:
         """Delete a discount
 
+        Deletes the discount; its codes stop working at checkout. This cannot be undone. Needs discounts.write.
+
+        Platforms: shopify, woocommerce
+
         Args:
             discount_id: Platform-native id. (required)
             account_id: Connected store SocialAccount id. (required)"""
@@ -14412,6 +17781,10 @@ def register_generated_tools(mcp, _get_client):
         discount_id: str, account_id: str, active: bool
     ) -> str:
         """Activate or deactivate a discount
+
+        Deactivating ends the discount now; activating starts it now.
+
+        Platforms: shopify, woocommerce
 
         Args:
             discount_id: Platform-native id. (required)
@@ -14438,6 +17811,10 @@ def register_generated_tools(mcp, _get_client):
         discount_id: str, account_id: str, codes: list[str] | None
     ) -> str:
         """Add codes to a discount
+
+        Adds up to 250 more codes to a code discount, for example one per influencer. The platform adds them in the background. Needs discounts.codes, which WooCommerce stores do not have.
+
+        Platforms: shopify
 
         Args:
             discount_id: Platform-native id. (required)
@@ -14468,6 +17845,10 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """List URL redirects
 
+        The store's URL redirects (old path to new target), cursor-paginated with `limit`, `cursor` and an optional `query` on the path. Shopify only. Needs navigation.read.
+
+        Platforms: shopify
+
         Args:
             account_id: Connected store SocialAccount id. (required)
             limit
@@ -14494,6 +17875,10 @@ def register_generated_tools(mcp, _get_client):
         account_id: str, path: str, target: str
     ) -> str:
         """Create a URL redirect
+
+        Creates a redirect from `path` (starting with `/`) to `target` (a path or a full URL) and returns it with status 201. Shopify only. Needs navigation.write.
+
+        Platforms: shopify
 
         Args:
             account_id: (required)
@@ -14524,6 +17909,10 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Update a URL redirect
 
+        Changes the redirect's `path` and/or `target`. Shopify only. Needs navigation.write.
+
+        Platforms: shopify
+
         Args:
             redirect_id: Platform-native id. (required)
             account_id: (required)
@@ -14549,6 +17938,10 @@ def register_generated_tools(mcp, _get_client):
     def commerce_delete_commerce_redirect(redirect_id: str, account_id: str) -> str:
         """Delete a URL redirect
 
+        Deletes the redirect; the old path answers 404 again. Shopify only. Needs navigation.write.
+
+        Platforms: shopify
+
         Args:
             redirect_id: Platform-native id. (required)
             account_id: Connected store SocialAccount id. (required)"""
@@ -14572,6 +17965,10 @@ def register_generated_tools(mcp, _get_client):
     def commerce_list_commerce_menus(account_id: str) -> str:
         """List navigation menus
 
+        The store's navigation menus with their items. Shopify only. Needs navigation.read.
+
+        Platforms: shopify
+
         Args:
             account_id: Connected store SocialAccount id. (required)"""
         client = _get_client()
@@ -14593,6 +17990,10 @@ def register_generated_tools(mcp, _get_client):
         account_id: str, title: str, handle: str, items: list[dict[str, Any]] | None
     ) -> str:
         """Create a navigation menu
+
+        Creates a navigation menu from `title`, `handle` and up to 100 `items`, and returns it with status 201. Shopify only. Needs navigation.write.
+
+        Platforms: shopify
 
         Args:
             account_id: (required)
@@ -14618,6 +18019,10 @@ def register_generated_tools(mcp, _get_client):
     )
     def commerce_get_commerce_menu(menu_id: str, account_id: str) -> str:
         """Get a navigation menu
+
+        One navigation menu with its nested items. Shopify only. Needs navigation.read.
+
+        Platforms: shopify
 
         Args:
             menu_id: Platform-native id. (required)
@@ -14647,6 +18052,10 @@ def register_generated_tools(mcp, _get_client):
         handle: str | None = None,
     ) -> str:
         """Replace a navigation menu
+
+        Replaces the title and the whole item tree.
+
+        Platforms: shopify
 
         Args:
             menu_id: Platform-native id. (required)
@@ -14678,6 +18087,10 @@ def register_generated_tools(mcp, _get_client):
     def commerce_delete_commerce_menu(menu_id: str, account_id: str) -> str:
         """Delete a navigation menu
 
+        Deletes the navigation menu. Shopify only. Needs navigation.write.
+
+        Platforms: shopify
+
         Args:
             menu_id: Platform-native id. (required)
             account_id: Connected store SocialAccount id. (required)"""
@@ -14700,6 +18113,10 @@ def register_generated_tools(mcp, _get_client):
     )
     def commerce_list_commerce_metaobject_definitions(account_id: str) -> str:
         """List metaobject definitions
+
+        The custom content types defined on the store and their fields.
+
+        Platforms: shopify
 
         Args:
             account_id: Connected store SocialAccount id. (required)"""
@@ -14724,6 +18141,10 @@ def register_generated_tools(mcp, _get_client):
         account_id: str, type: str, limit: int = 20, cursor: str | None = None
     ) -> str:
         """List metaobjects of a type
+
+        The metaobjects of one `type` (a definition handle from GET /v1/commerce/metaobject-definitions), cursor-paginated with `limit` and `cursor`. Shopify only. Needs metaobjects.read.
+
+        Platforms: shopify
 
         Args:
             account_id: Connected store SocialAccount id. (required)
@@ -14755,6 +18176,10 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Create a metaobject
 
+        Creates a metaobject of `type` with its `fields` (key and string value, up to 100) and an optional `handle`, and returns it with status 201. Shopify only. Needs metaobjects.write.
+
+        Platforms: shopify
+
         Args:
             account_id: (required)
             type: (required)
@@ -14779,6 +18204,10 @@ def register_generated_tools(mcp, _get_client):
     )
     def commerce_get_commerce_metaobject(metaobject_id: str, account_id: str) -> str:
         """Get a metaobject
+
+        One metaobject with its fields. Shopify only. Needs metaobjects.read.
+
+        Platforms: shopify
 
         Args:
             metaobject_id: Platform-native id. (required)
@@ -14808,6 +18237,10 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Update a metaobject
 
+        Sets the given field values; fields left out keep theirs.
+
+        Platforms: shopify
+
         Args:
             metaobject_id: Platform-native id. (required)
             account_id: (required)
@@ -14836,6 +18269,10 @@ def register_generated_tools(mcp, _get_client):
     def commerce_delete_commerce_metaobject(metaobject_id: str, account_id: str) -> str:
         """Delete a metaobject
 
+        Deletes the metaobject. References to it from metafields stop resolving. Shopify only. Needs metaobjects.write.
+
+        Platforms: shopify
+
         Args:
             metaobject_id: Platform-native id. (required)
             account_id: Connected store SocialAccount id. (required)"""
@@ -14859,6 +18296,10 @@ def register_generated_tools(mcp, _get_client):
     def commerce_list_commerce_markets(account_id: str) -> str:
         """List markets
 
+        The regions the store sells to, each with its own currency and pricing.
+
+        Platforms: shopify
+
         Args:
             account_id: Connected store SocialAccount id. (required)"""
         client = _get_client()
@@ -14878,6 +18319,10 @@ def register_generated_tools(mcp, _get_client):
     )
     def commerce_list_commerce_price_lists(account_id: str) -> str:
         """List price lists
+
+        Price lists hold fixed prices per variant for a market.
+
+        Platforms: shopify
 
         Args:
             account_id: Connected store SocialAccount id. (required)"""
@@ -14900,6 +18345,10 @@ def register_generated_tools(mcp, _get_client):
         price_list_id: str, account_id: str, prices: list[dict[str, Any]] | None
     ) -> str:
         """Set fixed prices
+
+        Sets fixed prices for variants in the price list's currency, overriding the converted price in that market.
+
+        Platforms: shopify
 
         Args:
             price_list_id: Platform-native id. (required)
@@ -14926,6 +18375,10 @@ def register_generated_tools(mcp, _get_client):
         price_list_id: str, account_id: str, variant_ids: str
     ) -> str:
         """Remove fixed prices
+
+        The variants go back to the market's converted price.
+
+        Platforms: shopify
 
         Args:
             price_list_id: Platform-native id. (required)
@@ -14955,9 +18408,19 @@ def register_generated_tools(mcp, _get_client):
         remote_id: str,
         title: str,
         url: str,
-        tactic: str,
-        channel: str,
-        status: str,
+        tactic: Literal[
+            "ad",
+            "post",
+            "message",
+            "newsletter",
+            "link",
+            "affiliate",
+            "retargeting",
+            "loyalty",
+            "seo",
+        ],
+        channel: Literal["social", "search", "display", "email", "referral"],
+        status: Literal["active", "inactive", "paused", "scheduled"],
         preview_image_url: str | None = None,
         utm: dict[str, Any] | None = None,
         budget: dict[str, Any] | None = None,
@@ -14966,6 +18429,10 @@ def register_generated_tools(mcp, _get_client):
         ended_at: str | None = None,
     ) -> str:
         """Record a marketing activity
+
+        Creates or updates (by `remoteId`) an activity in the store's Marketing section, so the merchant sees a post, ad or message you ran for them, with its link and UTM parameters for attribution. Use your own id (for example the Zernio post or ad id) as `remoteId`.
+
+        Platforms: shopify
 
         Args:
             account_id: (required)
@@ -15015,6 +18482,10 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Delete a marketing activity
 
+        Deletes the marketing activity you created with PUT /v1/commerce/marketing-activities, identified by the `remoteId` you gave it. Shopify only. Needs marketing.write.
+
+        Platforms: shopify
+
         Args:
             remote_id: The remoteId given when recording it. (required)
             account_id: Connected store SocialAccount id. (required)"""
@@ -15048,6 +18519,10 @@ def register_generated_tools(mcp, _get_client):
         ad_spend: str | None = None,
     ) -> str:
         """Report daily engagement
+
+        Reports one day's numbers for an activity (UTC day), shown next to it in the store's Marketing section.
+
+        Platforms: shopify
 
         Args:
             remote_id: The remoteId given when recording it. (required)
@@ -15089,6 +18564,10 @@ def register_generated_tools(mcp, _get_client):
     def commerce_list_commerce_catalog_syncs(account_id: str) -> str:
         """List catalog syncs
 
+        The ad-platform catalogs this store is kept in sync with.
+
+        Platforms: shopify, woocommerce
+
         Args:
             account_id: Connected store SocialAccount id. (required)"""
         client = _get_client()
@@ -15112,6 +18591,23 @@ def register_generated_tools(mcp, _get_client):
         account_id: str, catalog_account_id: str, catalog_id: str
     ) -> str:
         """Sync a store into a Meta catalog
+
+        Keeps a Meta product catalog in sync with the store, for catalog ads
+        (`goal: catalog_sales`) and Shops. The first full run starts right
+        away in the background; `runStatus` and the item counts report its
+        outcome. Every active product variant that is published to the online
+        store and has an image becomes a catalog item, grouped by product
+        (`item_group_id`). After that, product changes on the store update
+        the catalog within minutes, and a daily full run removes items for
+        products or variants the store no longer has. Items are namespaced to
+        the store, so a catalog can take several stores and a run never
+        touches items it did not create.
+
+        `catalogAccountId` is a connected facebook, instagram or metaads
+        account whose Meta login can manage the catalog (the catalog_management
+        permission); find catalogs with `GET /v1/ads/catalogs`.
+
+        Platforms: shopify, woocommerce
 
         Args:
             account_id: The store SocialAccount id. (required)
@@ -15139,6 +18635,10 @@ def register_generated_tools(mcp, _get_client):
     def commerce_get_commerce_catalog_sync(sync_id: str) -> str:
         """Get a catalog sync
 
+        One catalog sync with the status and counts of its last run (`itemsSent`, `itemsSkipped`, `itemsDeleted`, `lastError`). Poll it after POST /v1/commerce/catalog-syncs/{syncId}/run to follow a run.
+
+        Platforms: shopify, woocommerce
+
         Args:
             sync_id: (required)"""
         client = _get_client()
@@ -15158,6 +18658,10 @@ def register_generated_tools(mcp, _get_client):
     )
     def commerce_delete_commerce_catalog_sync(sync_id: str) -> str:
         """Stop a catalog sync
+
+        Stops syncing. Items already in the catalog stay there.
+
+        Platforms: shopify, woocommerce
 
         Args:
             sync_id: (required)"""
@@ -15179,6 +18683,10 @@ def register_generated_tools(mcp, _get_client):
     def commerce_run_commerce_catalog_sync(sync_id: str) -> str:
         """Run a catalog sync now
 
+        Queues a full run. Poll GET /v1/commerce/catalog-syncs/{syncId} for the outcome.
+
+        Platforms: shopify, woocommerce
+
         Args:
             sync_id: (required)"""
         client = _get_client()
@@ -15199,20 +18707,49 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def connect_get_connect_url(
-        platform: str,
+        platform: Literal[
+            "facebook",
+            "instagram",
+            "linkedin",
+            "twitter",
+            "tiktok",
+            "youtube",
+            "threads",
+            "reddit",
+            "pinterest",
+            "bluesky",
+            "googlebusiness",
+            "telegram",
+            "snapchat",
+            "discord",
+            "slack",
+            "whatsapp",
+        ],
         profile_id: str,
         reconnect_account_id: str | None = None,
         redirect_url: str | None = None,
         scopes: str | None = None,
         headless: bool = False,
-        login_method: str = "instagram_login",
-        onboarding: str | None = None,
-        signup: str | None = None,
+        login_method: Literal["instagram_login", "facebook_login"] = "instagram_login",
+        onboarding: Literal["api", "business_app"] | None = None,
+        signup: Literal["hosted"] | None = None,
         brand_name: str | None = None,
         primary_color: str | None = None,
-        language: str | None = None,
+        language: Literal["en", "es", "pt-BR"] | None = None,
     ) -> str:
         """Get OAuth connect URL
+
+            Initiate an OAuth connection flow. Returns an authUrl to redirect the user to.
+            Standard flow: Zernio hosts the selection UI, then redirects to your redirect_url. Headless mode (headless=true): user is redirected to your redirect_url with OAuth data for custom UI. Use the platform-specific selection endpoints to complete.
+
+            A profile can hold several accounts of the same platform: connecting a different account adds
+            it as a new account, and reconnecting the SAME account keeps it and all of its history. Ads
+            connections stay one per profile. On a legacy plan limited to N profiles, a new account is
+            refused with 403 `platform_account_limit` once N accounts of its platform are connected.
+
+            TikTok: every connection now goes through the TikTok for Business app. An authorization that leaves
+            out a permission the connected account needs changes nothing at all and comes back as
+            `missing_tiktok_permissions`; connect again and accept every permission on TikTok's screen.
 
             Args:
                 platform: Social media platform to connect. `snapchat` is a closed beta with no public release date: it returns 403 `PLATFORM_BETA_RESTRICTED` until the account is approved. (required)
@@ -15422,9 +18959,25 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def connect_handle_o_auth_callback(
-        platform: str, code: str, state: str, profile_id: str
+        platform: Literal[
+            "instagram",
+            "twitter",
+            "threads",
+            "linkedin",
+            "youtube",
+            "tiktok",
+            "reddit",
+            "pinterest",
+        ],
+        code: str,
+        state: str,
+        profile_id: str,
     ) -> str:
         """Complete OAuth callback
+
+            Exchange the OAuth authorization code for tokens and connect the account to the specified profile.
+
+            Facebook, Google Business Profile, Snapchat and WhatsApp are not accepted here: their account identity is a destination chosen after OAuth, which this single-shot exchange cannot do. Connect them through the redirect flow from `GET /v1/connect/{platform}`, or, for WhatsApp Embedded Signup, through `POST /v1/connect/whatsapp/embedded-signup`.
 
             Args:
                 platform: Social platform to complete the connect for. Discord, Slack and Telegram are absent because they are
@@ -15451,10 +19004,18 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def connect_ads(
-        platform: str,
+        platform: Literal[
+            "facebook",
+            "instagram",
+            "linkedin",
+            "tiktok",
+            "twitter",
+            "pinterest",
+            "googleads",
+        ],
         profile_id: str,
-        login_mode: str = "classic",
-        permission_level: str = "full",
+        login_mode: Literal["classic", "business"] = "classic",
+        permission_level: Literal["full", "advertise"] = "full",
         page_id: str | None = None,
         account_id: str | None = None,
         redirect_url: str | None = None,
@@ -15464,6 +19025,22 @@ def register_generated_tools(mcp, _get_client):
         ad_account_ids: list[str] | None = None,
     ) -> str:
         """Connect ads for a platform
+
+            Unified ads connection endpoint. Creates a dedicated ads SocialAccount for the specified platform.
+
+            **Meta business login (opt-in).** Set `loginMode=business` for `facebook` or
+            `instagram` to use Facebook Login for Business and a Business Integration System User
+            token. No posting account is created or required. This mode always returns an authUrl;
+            it returns 503 when the server has no META_ADS_CONFIG_ID. Complete the dialog in a
+            browser. The callback creates or reconnects only the metaads account, preserving its
+            ID and history. Non-empty successful subscription results replace
+            subscribedAdAccountIds to remove stale grants; an empty result leaves routing unchanged. A reconnect is
+            accepted when the new grant shares at least one ad account with the existing connection (its
+            scopedAdAccountIds plus the previous grant, or the ad accounts its old token can read when neither
+            is stored), so re-running the dialog can add, drop or swap ad accounts. A grant with zero overlap
+            is refused before ...
+
+            Platforms: meta, linkedin, tiktok, twitter, pinterest, google
 
             Args:
                 login_mode: Meta ads authorization mode. Business login is opt-in for Facebook and Instagram; classic preserves the posting-account flow.
@@ -15573,6 +19150,10 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Complete Meta business login
 
+        Facebook Login for Business redirect target. Meta supplies the single-use authorization code and the authenticated state returned by connectAds. The state expires after 30 minutes and binds the user, profile, Page selection and ad-account scope. No bearer token is sent by the browser. Success reconnects only metaads and redirects to the original redirect_url. Invalid state returns 400; inaccessible profiles or missing ads access cannot connect. Dashboard logins with several Pages redirect to the Facebook Page picker with an encrypted selectionToken valid for ten minutes. Listing and selecting require the initiating user and current profile access. No plaintext platform token is returned to the browser.
+
+        Platforms: meta
+
         Args:
             state: Authenticated state from the initial connectAds response. (required)
             code: Single-use authorization code returned by Meta.
@@ -15598,6 +19179,20 @@ def register_generated_tools(mcp, _get_client):
         profile_id: str, shop: str, redirect_url: str | None = None
     ) -> str:
         """Get Shopify OAuth connect URL
+
+        Initiate the Shopify OAuth flow for a store. Shopify is a connect-only
+        platform: the connected account does not publish social posts, it powers
+        the Blogs API (`/v1/accounts/{accountId}/blogs`) and the Products API
+        (`/v1/accounts/{accountId}/products`). Returns an `authUrl`
+        to redirect the merchant to; after they approve the install, Shopify
+        redirects their browser to Zernio's callback, the account is created on
+        the profile (platform `shopify`), and the browser is redirected to
+        `redirect_url` (or the Zernio dashboard when omitted). Requested scopes
+        are `read_content`, `write_content`, `read_products` and
+        `write_products` (content and products only; no customer or order
+        data). Connecting the same profile to a store again refreshes the
+        stored token in place, and is how a store connected under the older
+        content-only grant picks up product access.
 
         Args:
             profile_id: Your Zernio profile ID (get from /v1/profiles). (required)
@@ -15625,6 +19220,17 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Connect a Shopify store with a custom-app Admin token
 
+        Token-paste alternative to the OAuth flow: connect a store using the
+        Admin API access token of a custom app the merchant created in their
+        own Shopify admin (Settings → Apps and sales channels → Develop apps,
+        with the `read_content`, `write_content`, `read_products` and
+        `write_products` scopes). Use this when the
+        one-click OAuth connect is unavailable or when your users prefer not
+        to install a third-party app on their store. The token is validated
+        against the store before anything is saved; custom-app tokens do not
+        expire. Connecting the same profile to a store again replaces the
+        stored token in place.
+
         Args:
             profile_id: Your Zernio profile ID (get from /v1/profiles). (required)
             shop: The myshopify.com store domain, e.g. `your-store.myshopify.com` (the bare `your-store` prefix is accepted too). (required)
@@ -15651,6 +19257,19 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Get WordPress.com OAuth connect URL
 
+        Initiates OAuth for a WordPress.com site or a Jetpack-connected site.
+        WordPress is a connect-only blog platform: the connected account powers
+        the Blogs API (`/v1/accounts/{accountId}/blogs`) and does not support
+        social posts, inbox, analytics, ads, or Shopify product operations.
+        Redirect the user to `authUrl`; after authorization, WordPress returns
+        the browser to Zernio's internal callback and Zernio redirects to
+        `redirect_url` (or the dashboard when omitted). Reconnecting the same
+        site and profile updates the stored connection in place. The consent
+        request omits `scope` to use WordPress.com's default single-site grant.
+        Granular scopes cannot access the `/wp/v2` article API. Zernio checks
+        that API before saving the connection and does not request explicit
+        `global` authorization across all sites.
+
         Args:
             profile_id: Your Zernio profile ID (get from /v1/profiles). (required)
             redirect_url: Custom redirect after connection. Must be an absolute http(s) URL or custom app scheme such as `myapp://callback`; relative and unsafe URLs return 400."""
@@ -15675,6 +19294,14 @@ def register_generated_tools(mcp, _get_client):
         profile_id: str, site_url: str, username: str, application_password: str
     ) -> str:
         """Connect self-hosted WordPress with an application password
+
+        Connects one self-hosted WordPress site using a WordPress username and
+        application password. `siteUrl` must use HTTPS and may include the path
+        where WordPress is installed. Zernio discovers the REST API, verifies
+        the credentials and required post/media/taxonomy capabilities, then
+        stores the password encrypted. Create an application password in the
+        WordPress user's profile; do not send the user's login password.
+        Reconnecting the same site and profile updates the connection in place.
 
         Args:
             profile_id: Your Zernio profile ID (get from /v1/profiles). (required)
@@ -15706,6 +19333,25 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Set TikTok brand identity
 
+        Set or update the Brand Identity (display name + avatar) for a
+        `tiktokads` SocialAccount. TikTok requires every ad to carry an
+        `identity_id + identity_type` pair. The Brand Identity is the
+        CUSTOMIZED_USER alternative to attributing ads to a real @username
+        (TT_USER). This route uploads the supplied image to TikTok, creates
+        the identity via `/v2/identity/create/`, and caches the resulting
+        `identity_id` on the account so subsequent `POST /v1/ads/create`
+        calls can opt into it via `identityType: 'CUSTOMIZED_USER'`.
+
+        Configurable on every `tiktokads` account, including linked-mode ones
+        (those with a posting account on the same profile). Configuration is
+        idempotent and harmless when posting is also connected: the default
+        ad-create path still prefers TT_USER, and CUSTOMIZED_USER is only used
+        per-ad when the caller explicitly opts in.
+
+        TikTok identities are immutable post-creation. Re-saving creates a new
+        identity on TikTok and swaps the cached id; the old identity stays
+        orphaned on TikTok's ...
+
         Args:
             account_id: SocialAccount ID of the `tiktokads` account. (required)
             display_name: Brand name shown above the ad on TikTok. (required)
@@ -15734,6 +19380,10 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """List Facebook pages
 
+        Returns Facebook Pages after OAuth. Classic connections require profileId and tempToken from the OAuth redirect. Use X-Connect-Token for headless connections. The dashboard business-login picker instead sends only selectionToken, an encrypted grant valid for ten minutes. This requires the initiating user and current profile access and returns only Page IDs and names. X-Connect-Token cannot authorize business selection.
+
+        Platforms: facebook, meta
+
         Args:
             profile_id: Profile ID from your classic connection flow. Required with tempToken.
             temp_token: Temporary Facebook access token from the classic OAuth callback. Required with profileId.
@@ -15760,6 +19410,10 @@ def register_generated_tools(mcp, _get_client):
     def connect_select_facebook_page(body: dict[str, Any]) -> str:
         """Select Facebook page
 
+        Complete a classic Facebook Page connection with profileId, pageId, tempToken and userProfile. Use X-Connect-Token for headless connections. The dashboard business-login picker instead sends only selectionToken and pageId to complete a Meta Ads connection. The server verifies the initiating user, profile access, current grants and connection eligibility. The profile, platform token, ad-account scope and return URL come only from the encrypted grant. Business selection requires a session or bearer authentication for the initiating user; X-Connect-Token is not accepted. It returns redirect_url with connected=metaads on success or an eligibility error redirect.
+
+        Platforms: facebook, meta
+
         Args:
             body: Full request body as documented in the API reference. (required)"""
         client = _get_client()
@@ -15779,6 +19433,12 @@ def register_generated_tools(mcp, _get_client):
     )
     def connect_list_instagram_pages(profile_id: str, temp_token: str) -> str:
         """List Pages with a linked Instagram account
+
+        Completes the `loginMethod=facebook_login` Instagram flow, i.e. \"Instagram API with Facebook Login\".
+
+        After the user authorizes on Facebook, extract `tempToken` from the redirect params (headless mode adds `step=select_account`) and pass it here to list the Facebook Pages they manage. Only Pages that have a linked Instagram professional account are returned, so an empty array means the user has no eligible Page. Use the X-Connect-Token header if connecting via API key.
+
+        Not used by the default `instagram_login` flow, which creates the account without a selection step.
 
         Args:
             profile_id: Profile ID from your connection flow (required)
@@ -15808,6 +19468,10 @@ def register_generated_tools(mcp, _get_client):
         redirect_url: str | None = None,
     ) -> str:
         """Select the Page whose Instagram account to connect
+
+        Saves the selected Page as an Instagram account connected via Facebook Login. The Page access token becomes the account's access token, so every Instagram call for it runs against the Facebook Graph host.
+
+        A different Instagram account is added next to any already connected on the profile; picking one already connected refreshes it.
 
         Args:
             profile_id: Profile ID from your connection flow (required)
@@ -15844,6 +19508,8 @@ def register_generated_tools(mcp, _get_client):
         filter: str | None = None,
     ) -> str:
         """List Google Business Profile locations
+
+        For headless flows. Returns the list of Google Business Profile locations the user can manage. Use pendingDataToken (from the OAuth callback redirect) to list locations without consuming the token, so it remains available for select-location. Use X-Connect-Token header if connecting via API key.
 
         Args:
             profile_id: Profile ID from your connection flow. Required for auth validation when provided.
@@ -15882,6 +19548,8 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Select Google Business Profile location
 
+        Complete the headless Google Business Profile flow by saving the user's selected location. The pendingDataToken is returned in your redirect URL after OAuth completes (step=select_location). Tokens and profile data are stored server-side, so only the pendingDataToken is needed here. Use X-Connect-Token header if connecting via API key.
+
         Args:
             profile_id: Profile ID from your connection flow (required)
             location_id: The Google Business Profile location ID selected by the user. Send this or locations, not both.
@@ -15914,6 +19582,12 @@ def register_generated_tools(mcp, _get_client):
     def connect_get_pending_o_auth_data(token: str) -> str:
         """Get pending OAuth data
 
+        Fetch pending OAuth data for headless mode using the pendingDataToken from the redirect URL.
+
+        **Scope**: This endpoint is used for LinkedIn organizations, Google Business Profile locations, Slack channels, Snapchat profiles, and Pinterest boards, where the selection list is too large to fit in URL params. The redirect carries a `pendingDataToken` instead of the full payload; the response includes the corresponding selection array (e.g. `boards` for Pinterest). WhatsApp, Facebook and other platforms pass selection state directly via URL query params on the redirect (`profileId`, `tempToken`, `step`), no pending record is created, so this endpoint will return 404 for those flows. Use the platform-specific selection endpoint instead (e.g. `/v1/connect/whatsapp/select-phone-number`).
+
+        Reading the token does not consume it, so this fetch is repeatable until the token expires 1 hour after issuance. Completing the platform selection deletes the pending record, so the token stops working ...
+
         Args:
             token: The pending data token from the OAuth redirect URL (pendingDataToken parameter) (required)"""
         client = _get_client()
@@ -15933,6 +19607,8 @@ def register_generated_tools(mcp, _get_client):
     )
     def connect_list_linked_in_organizations(temp_token: str, org_ids: str) -> str:
         """List LinkedIn orgs
+
+        Fetch full LinkedIn organization details (logos, vanity names, websites) for custom UI. No authentication required, only the tempToken from OAuth.
 
         Args:
             temp_token: The temporary LinkedIn access token from the OAuth redirect (required)
@@ -15958,12 +19634,14 @@ def register_generated_tools(mcp, _get_client):
         profile_id: str,
         temp_token: str,
         user_profile: dict[str, Any] | None,
-        account_type: str | None = None,
+        account_type: Literal["personal", "organization"] | None = None,
         selections: list[dict[str, Any]] | None = None,
         selected_organization: dict[str, Any] | None = None,
         redirect_url: str | None = None,
     ) -> str:
         """Select LinkedIn org
+
+        Complete the LinkedIn connection flow. Set accountType to \"personal\" or \"organization\" to connect as a company page. Use X-Connect-Token if connecting via API key.
 
         Args:
             profile_id: (required)
@@ -16001,6 +19679,8 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """List Pinterest boards
 
+        For headless flows. Returns Pinterest boards the user can post to. Use X-Connect-Token from the redirect URL.
+
         Args:
             profile_id: Your Zernio profile ID (required)
             temp_token: Temporary Pinterest access token from the OAuth callback redirect (required)"""
@@ -16032,6 +19712,8 @@ def register_generated_tools(mcp, _get_client):
         redirect_url: str | None = None,
     ) -> str:
         """Select Pinterest board
+
+        Complete the Pinterest connection flow. After OAuth, use this endpoint to save the selected board and complete the account connection. Use the X-Connect-Token header if you initiated the connection via API key.
 
         Args:
             profile_id: Your Zernio profile ID (required)
@@ -16069,6 +19751,8 @@ def register_generated_tools(mcp, _get_client):
     def connect_list_snapchat_profiles(profile_id: str, temp_token: str) -> str:
         """List Snapchat profiles
 
+        For headless flows. Returns Snapchat Public Profiles the user can post to. Use X-Connect-Token from the redirect URL.
+
         Args:
             profile_id: Your Zernio profile ID (required)
             temp_token: Temporary Snapchat access token from the OAuth callback redirect (required)"""
@@ -16099,6 +19783,8 @@ def register_generated_tools(mcp, _get_client):
         redirect_url: str | None = None,
     ) -> str:
         """Select Snapchat profile
+
+        Complete the Snapchat connection flow by saving the selected Public Profile. Snapchat requires a Public Profile to publish content. Use X-Connect-Token if connecting via API key.
 
         Args:
             profile_id: Your Zernio profile ID (required)
@@ -16140,6 +19826,9 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Connect Bluesky account
 
+        Connect a Bluesky account using identifier (handle or email) and an app password.
+        To get your userId for the state parameter, call GET /v1/users which includes a currentUserId field.
+
         Args:
             identifier: Your Bluesky handle (e.g. user.bsky.social) or email address (required)
             app_password: App password generated from Bluesky Settings > App Passwords (required)
@@ -16175,6 +19864,14 @@ def register_generated_tools(mcp, _get_client):
         redirect_uri: str | None = None,
     ) -> str:
         """Connect an OpenAI Ads account
+
+        Connect an OpenAI Ads account using an API key from ChatGPT Ads Manager.
+
+        The key grants full campaign write access on OpenAI's side (OpenAI does
+        not offer a read-only key scope). Zernio uses it to read ads and
+        performance, and to create and manage campaigns you set up through
+        Zernio (create, status, budget, and cancel). Campaigns created
+        directly in ChatGPT Ads Manager can still be managed there.
 
         Args:
             api_key: API key from ChatGPT Ads Manager (Settings). Grants full read/write access on OpenAI's side; Zernio only ever reads with it. (required)
@@ -16212,6 +19909,24 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Connect WhatsApp via credentials
 
+        Connect a WhatsApp Business Account by providing Meta credentials directly.
+        This is the headless alternative to the Embedded Signup browser flow.
+
+        To get the required credentials:
+        1. Go to Meta Business Suite (business.facebook.com)
+        2. Create or select a WhatsApp Business Account
+        3. In Business Settings > System Users, create a System User
+        4. Assign it the whatsapp_business_management and whatsapp_business_messaging permissions
+        5. Generate a permanent access token
+        6. Get the WABA ID from WhatsApp Manager > Account Tools > Phone Numbers
+        7. Get the Phone Number ID from the same page (click on the number)
+
+        Warning: connecting subscribes your own Meta app to this WABA with an override
+        callback that redirects its webhook delivery to Zernio. This WABA's events stop
+        reaching any callback URL you had configured before, immediately and with no
+        overlap window. Do not unsubscribe your app from the WABA afterward: that also
+        cuts off Zernio's delivery, and recovery requires calling this endpoint ...
+
         Args:
             profile_id: Your Zernio profile ID (required)
             access_token: Permanent System User access token from Meta Business Suite (required)
@@ -16242,6 +19957,14 @@ def register_generated_tools(mcp, _get_client):
     def connect_list_whats_app_phone_numbers(profile_id: str, temp_token: str) -> str:
         """List numbers for selection
 
+        Fetch the WhatsApp phone numbers available across the user's WhatsApp Business Accounts (WABAs) after a headless OAuth flow.
+
+        WhatsApp OAuth grants access at the WABA level. When a connected WABA has 2 or more phone numbers, you must call this endpoint to list them and then `POST /v1/connect/whatsapp/select-phone-number` to bind one to the Zernio profile. Single-phone WABAs auto-complete during the OAuth callback and never reach this endpoint.
+
+        Use the `profileId` and `tempToken` returned in the headless redirect (`step=select_phone_number`).
+
+        Alternative: if you already know `wabaId` and `phoneNumberId` (e.g. from Meta Business Suite), use `connectWhatsAppCredentials` instead, which skips this two-step flow.
+
         Args:
             profile_id: The Zernio profile ID from the headless redirect (required)
             temp_token: The temporary access token from the headless redirect (required)"""
@@ -16271,6 +19994,8 @@ def register_generated_tools(mcp, _get_client):
         redirect_url: str | None = None,
     ) -> str:
         """Complete number selection
+
+        Bind a specific WhatsApp phone number to the Zernio profile after the user picks one from `listWhatsAppPhoneNumbers`. Exchanges the short-lived OAuth token for a long-lived token, subscribes the WABA to webhooks, and creates the SocialAccount.
 
         Args:
             profile_id: The Zernio profile ID (required)
@@ -16313,6 +20038,13 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Connect WhatsApp from Embedded Signup
 
+        Exchange the authorization code Meta's Embedded Signup popup returned. This is the call the Zernio-hosted
+        signup page makes after the popup closes (`GET /v1/connect/whatsapp?signup=hosted`), sending the `wabaId`
+        and `phoneNumberId` Meta reported so exactly the chosen number is connected; when both are omitted the
+        first number the token can see is used. The code never passes through a `redirect_uri`, so
+        `POST /v1/connect/{platform}` cannot accept it. Authenticates with an API key, or with the connect token
+        the hosted flow issues (`X-Connect-Token` header).
+
         Args:
             code: Authorization code from the WA_EMBEDDED_SIGNUP postMessage (required)
             profile_id: (required)
@@ -16347,7 +20079,12 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def connect_get_whats_app_sdk_config() -> str:
-        """Get Embedded Signup SDK config"""
+        """Get Embedded Signup SDK config
+
+        The Meta app id and Embedded Signup configuration id the Zernio-hosted signup page uses to open Meta's
+        popup. Integrators do not need this endpoint: start the hosted flow with
+        `GET /v1/connect/whatsapp?signup=hosted` and send the user to the returned `authUrl`. Authenticates with
+        an API key or with the connect token the hosted flow issues (`X-Connect-Token` header)."""
         client = _get_client()
         try:
             response = client.connect.get_whats_app_sdk_config()
@@ -16371,6 +20108,8 @@ def register_generated_tools(mcp, _get_client):
         redirect_url: str | None = None,
     ) -> str:
         """Connect a Discord channel
+
+        Finalize a Discord connect by binding channels to a profile. Served by a dedicated route, so it is not reachable through POST /v1/connect/{platform}. One connected account per channel: send channelIds to connect several channels of the server at once, or repeat the call with a different channelId.
 
         Args:
             guild_id: Discord server (guild) the channel belongs to (required)
@@ -16407,6 +20146,22 @@ def register_generated_tools(mcp, _get_client):
         scopes: str | None = None,
     ) -> str:
         """List Slack channels for the channel picker
+
+        Serves the channel picker of the Slack connect flow. Slack's OAuth installs the bot into a
+        workspace, not a channel, so after the redirect the caller lists the workspace's channels
+        here and finalizes one with `POST /v1/connect/slack`. Served by a dedicated route that
+        shadows `GET /v1/connect/{platform}` for `slack`.
+
+        Send exactly one of `pendingDataToken` (first connect: the nonce from the OAuth redirect,
+        bound to the same `profileId`) or `accountId` (add another channel to a workspace already
+        connected: the existing Slack account's workspace token is reused, no re-OAuth). With
+        neither, the endpoint behaves like `GET /v1/connect/{platform}` and returns `authUrl` and
+        `state` to start the OAuth flow.
+
+        Channels are read live from Slack (`conversations.list`, public and private, archived
+        excluded, up to 2,000). `isMember` says whether the Zernio bot is already in the channel:
+        a public channel is joined automatically on finalize, a private one must be invited
+        (`/invite @Zernio`) first.
 
         Args:
             profile_id: Zernio profile the channel account will belong to. Must match the profile the OAuth flow was started on when `pendingDataToken` is used. (required)
@@ -16445,6 +20200,8 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Connect a Slack channel
 
+        Finalize a Slack connect by creating the per-channel account. Served by a dedicated route, so it is not reachable through POST /v1/connect/{platform}. Send pendingDataToken for a first connect (the nonce from the OAuth redirect) or accountId to add another channel to a workspace already connected.
+
         Args:
             profile_id: (required)
             channel_id: Slack channel id, C... or G.... Send this or channelIds, not both.
@@ -16477,6 +20234,8 @@ def register_generated_tools(mcp, _get_client):
     def connect_get_telegram_connect_status(profile_id: str) -> str:
         """Generate Telegram code
 
+        Generate an access code (valid 15 minutes) for connecting a Telegram channel or group. Add the bot as admin, then send the code + @yourchannel to the bot. Poll PATCH /v1/connect/telegram to check status.
+
         Args:
             profile_id: The profile ID to connect the Telegram account to (required)"""
         client = _get_client()
@@ -16496,6 +20255,8 @@ def register_generated_tools(mcp, _get_client):
     )
     def connect_initiate_telegram_connect(chat_id: str, profile_id: str) -> str:
         """Connect Telegram directly
+
+        Connect a Telegram channel/group directly using the chat ID. Alternative to the access code flow. The bot must already be an admin in the channel/group.
 
         Args:
             chat_id: The Telegram chat ID. Numeric ID (e.g. "-1001234567890") or username with @ prefix (e.g. "@mychannel"). (required)
@@ -16520,6 +20281,9 @@ def register_generated_tools(mcp, _get_client):
     def connect_complete_telegram_connect(code: str) -> str:
         """Check Telegram status
 
+        Poll this endpoint to check if a Telegram access code has been used to connect a channel/group. Recommended polling interval: 3 seconds.
+        Status values: pending (waiting for user), connected (channel/group linked), expired (generate a new code).
+
         Args:
             code: The access code to check status for (required)"""
         client = _get_client()
@@ -16539,6 +20303,10 @@ def register_generated_tools(mcp, _get_client):
     )
     def connect_get_page_webhook_subscription(account_id: str) -> str:
         """Read a Facebook Page's webhook subscription
+
+        Returns the webhook fields Zernio's app is subscribed to on the connected Page, read live from Meta.
+        Use it to confirm `leadgen` is present: a Page missing it keeps delivering every other event while
+        lead ads stop arriving, with nothing to indicate it.
 
         Args:
             account_id: (required)"""
@@ -16562,6 +20330,11 @@ def register_generated_tools(mcp, _get_client):
     def connect_resync_page_webhook_subscription(account_id: str) -> str:
         """Re-subscribe a Facebook Page to Zernio's webhooks
 
+        Re-sends the full field set to Meta and returns the subscription read back afterwards.
+        Meta only honours the field set sent at subscribe time, so a Page connected before a field
+        existed stays without it until this runs. The response reflects what Meta actually granted,
+        not what was requested.
+
         Args:
             account_id: (required)"""
         client = _get_client()
@@ -16583,6 +20356,8 @@ def register_generated_tools(mcp, _get_client):
     )
     def connect_get_facebook_pages(account_id: str, refresh: bool | None = None) -> str:
         """List Facebook pages
+
+        Returns all Facebook Pages the connected account has access to, including the currently selected Page and the Instagram professional account linked to each Page. Works on `facebook` accounts and on `metaads` accounts (classic and Facebook Login for Business connections). On a business-login `metaads` connection `selectedPageId` is the default Page ads run as, and every listed Page can be passed as `pageId` on POST /v1/ads/create. A classic `metaads` connection has no default Page, so `selectedPageId` is null there.
 
         Args:
             account_id: (required)
@@ -16607,6 +20382,8 @@ def register_generated_tools(mcp, _get_client):
     def connect_update_facebook_page(account_id: str, selected_page_id: str) -> str:
         """Update Facebook page
 
+        Switch which Facebook Page is active for a connected account. On a `facebook` account this changes the Page posts publish to. On a Facebook Login for Business `metaads` connection it changes the default Page ads run as (and the Page whose leads are ingested). A classic `metaads` connection has no default Page and answers 400; pass `pageId` per ad on POST /v1/ads/create instead. The Page must be in the list returned by GET (use refresh=true to pick up newly granted Pages).
+
         Args:
             account_id: (required)
             selected_page_id: (required)"""
@@ -16630,6 +20407,8 @@ def register_generated_tools(mcp, _get_client):
     def connect_get_linked_in_organizations(account_id: str) -> str:
         """List LinkedIn orgs
 
+        Returns LinkedIn organizations (company pages) the connected account has admin access to.
+
         Args:
             account_id: (required)"""
         client = _get_client()
@@ -16649,10 +20428,12 @@ def register_generated_tools(mcp, _get_client):
     )
     def connect_update_linked_in_organization(
         account_id: str,
-        account_type: str,
+        account_type: Literal["personal", "organization"],
         selected_organization: dict[str, Any] | None = None,
     ) -> str:
         """Switch LinkedIn account type
+
+        Switch a LinkedIn account between personal profile and organization (company page) posting.
 
         Args:
             account_id: (required)
@@ -16680,6 +20461,8 @@ def register_generated_tools(mcp, _get_client):
     def connect_get_pinterest_boards(account_id: str) -> str:
         """List Pinterest boards
 
+        Returns the boards available for a connected Pinterest account. Use this to get a board ID when creating a Pinterest post.
+
         Args:
             account_id: (required)"""
         client = _get_client()
@@ -16701,6 +20484,8 @@ def register_generated_tools(mcp, _get_client):
         account_id: str, default_board_id: str, default_board_name: str | None = None
     ) -> str:
         """Set default Pinterest board
+
+        Sets the default board used when publishing pins for this account.
 
         Args:
             account_id: (required)
@@ -16729,9 +20514,11 @@ def register_generated_tools(mcp, _get_client):
         account_id: str,
         name: str,
         description: str | None = None,
-        privacy: str = "PUBLIC",
+        privacy: Literal["PUBLIC", "PROTECTED", "SECRET"] = "PUBLIC",
     ) -> str:
         """Create Pinterest board
+
+        Creates a new board on the connected Pinterest account. The returned board ID can be used immediately as `platformSpecificData.boardId` when creating a Pinterest post.
 
         Args:
             account_id: (required)
@@ -16762,10 +20549,20 @@ def register_generated_tools(mcp, _get_client):
         account_id: str,
         video_id: str,
         language: str | None = None,
-        format: str = "json",
+        format: Literal["json", "srt"] = "json",
         refresh: bool = False,
     ) -> str:
         """Get a YouTube video transcript
+
+        Returns the caption track YouTube already holds for one of the connected channel's own videos, as plain text plus timed cues. Use it instead of downloading and transcribing the video yourself.
+
+        Auto-generated (ASR) tracks are included: YouTube serves them to the channel owner, which is what the connected account is. Uploaded tracks win over auto-generated ones when both exist for a language.
+
+        Caching: we store the transcript on first read and serve it from there afterwards, so you do not need to cache it yourself. A cached read costs no YouTube quota and does not call YouTube at all. `source` tells you which happened (`youtube` on the first read, `cache` after). Pass `refresh=true` only when the captions actually changed on YouTube, since that re-downloads.
+
+        Notes:
+        - Only videos owned by this connected channel. Anything else returns 404.
+        - `contentDetails.caption` in YouTube's own API reads `false` on videos that DO have a serving auto-generated track, so it is not a usable ...
 
         Args:
             account_id: The connected YouTube account. (required)
@@ -16797,6 +20594,8 @@ def register_generated_tools(mcp, _get_client):
     def connect_get_youtube_playlists(account_id: str) -> str:
         """List YouTube playlists
 
+        Returns the playlists available for a connected YouTube account. Use this to get a playlist ID when creating a YouTube post with the playlistId field.
+
         Args:
             account_id: (required)"""
         client = _get_client()
@@ -16818,9 +20617,11 @@ def register_generated_tools(mcp, _get_client):
         account_id: str,
         title: str,
         description: str | None = None,
-        privacy: str = "private",
+        privacy: Literal["private", "public", "unlisted"] = "private",
     ) -> str:
         """Create YouTube playlist
+
+        Creates an empty playlist on the connected YouTube channel. Requires a title; privacy defaults to private. Returns the same playlist shape as the list endpoint. Pass the returned playlist.id as platformSpecificData.playlistId when publishing a video. Does not change the account's default playlist. Requires the youtube or youtube.force-ssl OAuth scope. Costs 50 YouTube quota units. This operation is not idempotent and is not automatically retried: repeating a request can create another playlist, including after a timeout. List playlists before retrying an ambiguous failure. Official series settings are not exposed by YouTube's public API and must be enabled manually in YouTube's desktop playlist settings.
 
         Args:
             account_id: (required)
@@ -16854,6 +20655,8 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Set default YouTube playlist
 
+        Sets the default playlist used when publishing videos for this account. When a post does not specify a playlistId, the default playlist is not automatically used (it is stored for client-side convenience).
+
         Args:
             account_id: (required)
             default_playlist_id: (required)
@@ -16885,6 +20688,8 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """List Google Business Profile locations
 
+        Returns Google Business Profile locations the connected account can access, plus the currently selected location. The list is bounded (see hasMore); for accounts that own many locations, use the search or filter query params to find a specific one instead of loading them all, or raise limit to enumerate an account with more than 100 locations.
+
         Args:
             account_id: (required)
             search: Free-text search on the business name, applied server-side by Google. Use for accounts with many locations.
@@ -16911,6 +20716,8 @@ def register_generated_tools(mcp, _get_client):
         account_id: str, selected_location_id: str, google_account_id: str | None = None
     ) -> str:
         """Update Google Business Profile location
+
+        Switch which Google Business Profile location is active for a connected account.
 
         Args:
             account_id: (required)
@@ -16943,6 +20750,8 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Assign Google Business Profile location to another profile
 
+        Connect a Google Business Profile location onto a DIFFERENT profile by reusing the OAuth grant from an already-connected Google Business Profile account, with no browser and no re-authorization. Built for agencies whose single Google account has manager access to many client locations and who run one profile per client: connect one location the normal way (browser OAuth), then bulk-assign the rest onto each client's profile via this endpoint. The path `accountId` is a SOURCE connected Google Business Profile account (the token holder); the body `profileId` is the TARGET profile, which may already hold other locations; assigning a location it already holds refreshes that account.
+
         Args:
             account_id: A source connected Google Business Profile account whose OAuth grant is reused. (required)
             profile_id: Target profile to connect the location onto. (required)
@@ -16971,6 +20780,8 @@ def register_generated_tools(mcp, _get_client):
     def connect_get_reddit_subreddits(account_id: str) -> str:
         """List Reddit subreddits
 
+        Returns the subreddits the connected Reddit account can post to. Use this to get a subreddit name when creating a Reddit post.
+
         Args:
             account_id: (required)"""
         client = _get_client()
@@ -16992,6 +20803,8 @@ def register_generated_tools(mcp, _get_client):
         account_id: str, default_subreddit: str
     ) -> str:
         """Set default subreddit
+
+        Sets the default subreddit used when publishing posts for this Reddit account.
 
         Args:
             account_id: (required)
@@ -17015,6 +20828,12 @@ def register_generated_tools(mcp, _get_client):
     )
     def connect_get_subreddit_rules(account_id: str, subreddit: str) -> str:
         """Get subreddit rules
+
+        Returns a subreddit's posting rules plus Reddit's site-wide rules, so you can check
+        them before submitting and avoid a removal.
+
+        Use this alongside `POST /v1/tools/validate/subreddit`, which only confirms that a
+        subreddit exists and reports its basic posting settings.
 
         Args:
             account_id: The ID of the Reddit account (required)
@@ -17041,6 +20860,14 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Vote on a Reddit post or comment
 
+           Cast, change, or clear the connected account's vote on a Reddit post or comment.
+
+           **Reddit requires that votes be cast by humans.** Reddit's API terms permit a client
+           to proxy a human's action one-for-one, and prohibit a bot from deciding how to vote
+           or from amplifying a human's vote. Call this endpoint only in direct response to an
+           explicit action by the account owner. Automated or agent-decided voting is
+           vote manipulation and puts API access at risk.
+
            Args:
                account_id: The ID of the Reddit account casting the vote (required)
                thing_id: Reddit fullname of the target. Prefix "t3_" for a post and "t1_" for a comment. A bare id with no prefix is treated as a post ("t3_").
@@ -17065,6 +20892,8 @@ def register_generated_tools(mcp, _get_client):
     )
     def connect_get_reddit_flairs(account_id: str, subreddit: str) -> str:
         """List subreddit flairs
+
+        Returns available post flairs for a subreddit. Some subreddits require a flair when posting.
 
         Args:
             account_id: (required)
@@ -17094,6 +20923,15 @@ def register_generated_tools(mcp, _get_client):
         text: str | None = None,
     ) -> str:
         """Set Reddit post flair
+
+        Applies a flair to a post the connected account already published. Use the GET on this
+        path to list the available `flairTemplateId` values for the subreddit.
+
+        Flair can also be set at submit time by passing `flairId` in `platformSpecificData`
+        when creating the post. This endpoint is for changing it afterwards.
+
+        The subreddit must allow users to select their own post flair. Setting flair on
+        another user's post requires moderator permissions, which Zernio does not request.
 
         Args:
             account_id: The ID of the Reddit account that owns the post (required)
@@ -17125,7 +20963,15 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def connected_apps_list_connected_apps() -> str:
-        """List connected apps"""
+        """List connected apps
+
+        Returns the OAuth clients (AI assistants and MCP connectors) the authenticated
+        user has authorized and that still hold a live token.
+
+        Requires a session or a full-access API key. A profile-scoped API key, a
+        restricted (zrk_) API key, or an OAuth access token is rejected with 403: an
+        app must not be able to enumerate its sibling authorizations, and connected-app
+        management is admin-plane."""
         client = _get_client()
         try:
             response = client.connected_apps.list_connected_apps()
@@ -17143,6 +20989,16 @@ def register_generated_tools(mcp, _get_client):
     )
     def connected_apps_revoke_connected_app(client_id: str) -> str:
         """Revoke connected app
+
+        Ends an app's access: invalidates the client's pending authorization codes and
+        revokes every live token it holds for the authenticated user. Takes effect on
+        the app's next request.
+
+        Idempotent while the authorization is still on record: revoking an app that
+        was already revoked returns 200 with `revokedTokens: 0`.
+
+        Requires a session or a full-access API key. A profile-scoped API key, a
+        restricted (zrk_) API key, or an OAuth access token is rejected with 403.
 
         Args:
             client_id: OAuth client id, as returned by GET /v1/me/connected-apps. (required)"""
@@ -17169,12 +21025,25 @@ def register_generated_tools(mcp, _get_client):
         search: str | None = None,
         tag: str | None = None,
         tags: str | None = None,
-        platform: str | None = None,
-        is_subscribed: str | None = None,
+        platform: Literal[
+            "instagram",
+            "facebook",
+            "telegram",
+            "twitter",
+            "bluesky",
+            "reddit",
+            "whatsapp",
+            "slack",
+            "sms",
+        ]
+        | None = None,
+        is_subscribed: Literal["true", "false"] | None = None,
         limit: int = 50,
         skip: int = 0,
     ) -> str:
         """List contacts
+
+        List and search contacts for a profile. Supports filtering by tags, platform, subscription status, and text search on name, email and company.
 
         Args:
             profile_id: Filter by profile. Omit to list across all profiles. Matches the profile recorded on the contact itself, which is set when the contact is created and is independent of the profile its account currently belongs to. Filter by accountId to list a contact through its channel instead.
@@ -17220,11 +21089,24 @@ def register_generated_tools(mcp, _get_client):
         is_subscribed: bool = True,
         notes: str | None = None,
         account_id: str | None = None,
-        platform: str | None = None,
+        platform: Literal[
+            "instagram",
+            "facebook",
+            "telegram",
+            "twitter",
+            "bluesky",
+            "reddit",
+            "whatsapp",
+            "slack",
+            "sms",
+        ]
+        | None = None,
         platform_identifier: str | None = None,
         display_identifier: str | None = None,
     ) -> str:
         """Create contact
+
+        Create a new contact. Optionally create a platform channel in the same request by providing accountId, platform, and platformIdentifier.
 
         Args:
             profile_id: (required)
@@ -17268,6 +21150,8 @@ def register_generated_tools(mcp, _get_client):
     def contacts_get_contact(contact_id: str) -> str:
         """Get contact
 
+        Returns a contact with all associated messaging channels.
+
         Args:
             contact_id: (required)"""
         client = _get_client()
@@ -17297,6 +21181,8 @@ def register_generated_tools(mcp, _get_client):
         notes: str | None = None,
     ) -> str:
         """Update contact
+
+        Update one or more fields on a contact. Only provided fields are changed.
 
         Args:
             contact_id: (required)
@@ -17336,6 +21222,8 @@ def register_generated_tools(mcp, _get_client):
     def contacts_delete_contact(contact_id: str) -> str:
         """Delete contact
 
+        Permanently deletes a contact and all associated channels.
+
         Args:
             contact_id: (required)"""
         client = _get_client()
@@ -17355,6 +21243,8 @@ def register_generated_tools(mcp, _get_client):
     )
     def contacts_get_contact_channels(contact_id: str) -> str:
         """List channels for a contact
+
+        Returns all messaging channels linked to a contact (e.g. Instagram DM, Telegram, WhatsApp).
 
         Args:
             contact_id: (required)"""
@@ -17380,6 +21270,8 @@ def register_generated_tools(mcp, _get_client):
         platform: str | None = None,
     ) -> str:
         """Bulk create contacts
+
+        Import up to 1000 contacts at a time. Skips duplicates, merging any new tags onto the existing contact. accountId is required whenever contacts carry a platformIdentifier (or a row-level accountId); platform is always derived from the resolved account, never used to decide whether channels are created, and a mismatched platform 404s as account not found. When accountId is set, each contact must carry a platformIdentifier; a row missing it is rejected individually (reported in errors[], HTTP 200), not a 400 for the whole import. On phone platforms (whatsapp, sms) the platformIdentifier is normalized to digits and a value that is not phone-shaped is rejected per contact and reported in errors[], not imported.
 
         Args:
             profile_id: (required)
@@ -17413,6 +21305,17 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Get Event Match Quality
 
+        Reads Meta Event Match Quality (EMQ) and pixel↔CAPI event coverage for a
+        pixel/dataset, live from Meta's Dataset Quality API. Web events only (a
+        Meta limitation). Other platforms return 405, except Pinterest. Requires the Ads add-on.
+
+        Pinterest (`pinterestads`): `destinationId` is the numeric ad account id. Rows come from
+        Pinterest's Event Quality Score for Conversions API web events over the last 14 days,
+        one per event name, with each identifier's coverage in `matchKeys` and
+        `eventCoveragePercentage` set to the tag/API `event_id` overlap. No `compositeScore`.
+
+        Platforms: meta, pinterest
+
         Args:
             account_id: SocialAccount _id (a metaads or pinterestads account). (required)
             destination_id: Meta pixel/dataset ID, or the numeric Pinterest ad account id. (required)"""
@@ -17441,6 +21344,28 @@ def register_generated_tools(mcp, _get_client):
         consent: dict[str, Any] | None = None,
     ) -> str:
         """Send conversion events
+
+            Relay one or more conversion events to the target ad platform's native Conversions API.
+            Platform is inferred from the provided `accountId`. Requires the Ads add-on.
+
+            Supported platforms:
+
+            - Meta (`metaads`) via Graph API
+            - Google Ads (`googleads`) via Data Manager API `ingestEvents`
+            - LinkedIn (`linkedinads`) via `/rest/conversionEvents`
+            - TikTok (`tiktokads`) via the Offline Events API `/offline/batch/` (OFFLINE conversions only)
+            - OpenAI Ads (`openaiads`) via its Conversions API (a separate host, `bzr.openai.com`)
+            - Pinterest (`pinterestads`) via `POST /v5/ad_accounts/{id}/events`
+
+            `destinationId` semantics differ per platform:
+
+            - Meta: pixel (dataset) ID, e.g. `123456789012345`
+            - Google: conversion action resource name, e.g. `customers/1234567890/conversionActions/987654321`
+            - LinkedIn: conversion rule ID or URN, e.g. `104012` or `urn:lla:llaPartnerConversion:104012`
+            - TikTok: Offline Event Set ID, e.g. `7057103914977558530`
+            - OpenAI Ads: pixel wire id (numeric `pixel_id`, ...
+
+            Platforms: meta, google, tiktok, linkedin, pinterest
 
             Args:
                 account_id: SocialAccount ID (metaads, googleads, linkedinads, tiktokads, openaiads, or pinterestads). (required)
@@ -17485,6 +21410,27 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Adjust uploaded conversions
 
+        Adjust conversions that were previously uploaded via `POST /v1/ads/conversions`:
+        retract them, restate their value, or enhance them with first-party data. Requires
+        the Ads add-on.
+
+        **Google Ads only.** Google handles adjustments through the classic Google Ads API
+        (`ConversionAdjustmentUploadService`); the Data Manager `ingestEvents` path used for
+        sending conversions is ingest-only. Meta and LinkedIn have no equivalent, so this
+        endpoint returns `405` for those platforms.
+
+        Adjustment types:
+
+        - `RETRACTION`: remove the conversion entirely (refund, chargeback, cancelled order, churn).
+        - `RESTATEMENT`: change the conversion's value (upgrade / downgrade / partial refund). Send the corrected **total** value in `restatementValue` (not a delta).
+        - `ENHANCEMENT`: attach first-party identifiers (hashed email / phone) to an existing conversion (enhanced conversions applied after the fact).
+
+        Identifying the original conversion (per adjustment):
+
+        - `orderId`: the transaction ID you sent as ...
+
+        Platforms: meta
+
         Args:
             account_id: SocialAccount ID. Must be a `googleads` account. (required)
             destination_id: Conversion action resource name, e.g. `customers/1234567890/conversionActions/987654321`. (required)
@@ -17516,6 +21462,22 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """List conversion actions
 
+        Lists Google Ads conversion actions on the resolved customer, all types by
+        default. Each action's `tagSnippets` (global site tag + event snippet) is
+        included when Google has them for that action's type, e.g. `WEBPAGE`.
+        Google-only; other platforms return `501`. Requires the Ads add-on.
+
+        `adAccountId` (alias `customerId`) is optional: when omitted, it is resolved from the connection's
+        accessible Google Ads customers, and the call fails with `400` when more than
+        one is accessible (pass `adAccountId` to disambiguate).
+
+        The list itself is cached for the quota window (1 hour fresh, up to 7 days
+        last-good; the cache key does not vary on `type`). The response carries
+        `cachedAt` and `stale`, set when a quota-exhausted call falls back to the
+        last-good copy instead of a live read.
+
+        Platforms: google
+
         Args:
             account_id: SocialAccount _id (must be a googleads account). (required)
             ad_account_id: Platform ad account ID (Google customer ID, digits only). Resolved automatically when the connection has exactly one accessible customer.
@@ -17544,13 +21506,21 @@ def register_generated_tools(mcp, _get_client):
     def conversions_create_conversion_action(
         account_id: str,
         name: str,
-        type: str,
+        type: Literal["WEBPAGE"],
         ad_account_id: str | None = None,
         customer_id: str | None = None,
         default_value: float | None = None,
         always_use_default_value: bool | None = None,
     ) -> str:
         """Create website conversion action
+
+        Creates a `WEBPAGE` conversion action (category `DEFAULT`) and returns it with
+        its tag snippets, read back after creation since Google never returns them on
+        the create response itself. Invalidates the cached list `GET` on this resource
+        would otherwise keep serving. Google-only; other platforms return `501`.
+        Requires the Ads add-on.
+
+        Platforms: google
 
         Args:
             account_id: SocialAccount ID. Must be a `googleads` account. (required)
@@ -17590,6 +21560,15 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """List account conversion goals
 
+        Google Ads account-default conversion goals (CustomerConversionGoal), one per
+        category and origin, with `biddable` (whether the goal is used for bidding and
+        reported in the Conversions column) and the conversion actions that belong to it,
+        each flagged `primaryForGoal` (primary) or not (secondary). Reads are cached for
+        10 minutes; when the shared Google quota is exhausted the last successful result is
+        served with `stale: true`.
+
+        Platforms: google
+
         Args:
             account_id: Zernio SocialAccount id (Google Ads) (required)
             ad_account_id: Google customer id. Required when the connection has multiple customers.
@@ -17620,6 +21599,12 @@ def register_generated_tools(mcp, _get_client):
         customer_id: str | None = None,
     ) -> str:
         """Update account conversion goals
+
+        Sets `biddable` on one or more account-default goals, addressed by category and
+        origin, in one mutate. Campaigns that use account-level goals
+        (`goalConfigLevel: CUSTOMER`) follow the change. Returns the re-read goal list.
+
+        Platforms: google
 
         Args:
             account_id: Zernio SocialAccount id (Google Ads) (required)
@@ -17655,6 +21640,12 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Set a conversion action primary or secondary
 
+        Sets `primary_for_goal` on a Google Ads conversion action. A primary action counts
+        toward its goal's bidding and the Conversions column; a secondary one is
+        observation-only (All conversions).
+
+        Platforms: google
+
         Args:
             action_id: Google conversion action id (required)
             account_id: Zernio SocialAccount id (Google Ads) (required)
@@ -17689,6 +21680,10 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """List custom conversion goals
 
+        Google Ads custom conversion goals (a named set of conversion actions a campaign can bid on). Removed goals are excluded. Cached like the other Google reads.
+
+        Platforms: google
+
         Args:
             account_id: Zernio SocialAccount id (Google Ads) (required)
             ad_account_id: Google customer id. Required when the connection has multiple customers.
@@ -17720,6 +21715,10 @@ def register_generated_tools(mcp, _get_client):
         customer_id: str | None = None,
     ) -> str:
         """Create a custom conversion goal
+
+        Creates a custom conversion goal from conversion action ids. Point a campaign at it with `PATCH /v1/ads/campaigns/{campaignId}/conversion-goals`.
+
+        Platforms: google
 
         Args:
             account_id: Zernio SocialAccount id (Google Ads) (required)
@@ -17758,6 +21757,10 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Update a custom conversion goal
 
+        Renames the goal and/or replaces its conversion actions. Returns the re-read goal.
+
+        Platforms: google
+
         Args:
             goal_id: Google custom conversion goal id (required)
             account_id: Zernio SocialAccount id (Google Ads) (required)
@@ -17795,6 +21798,10 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Remove a custom conversion goal
 
+        Removes the goal. Google refuses (400) while any campaign still uses it: switch those campaigns to another goal first.
+
+        Platforms: google
+
         Args:
             goal_id: Google custom conversion goal id (required)
             account_id: Zernio SocialAccount id (Google Ads) (required)
@@ -17823,6 +21830,23 @@ def register_generated_tools(mcp, _get_client):
     def conversions_list_conversion_destinations(account_id: str) -> str:
         """List conversion destinations
 
+        Returns the list of pixels (Meta), conversion actions (Google),
+        conversion rules (LinkedIn), pixels (OpenAI Ads) or ad accounts
+        (Pinterest) accessible to the connected ads account. Use the returned `id` as `destinationId` when
+        posting to `POST /v1/ads/conversions`.
+
+        For Google and LinkedIn, each destination's `type` reflects the
+        conversion type (PURCHASE, LEAD, SIGN_UP, etc.), and the event type is
+        locked to the destination. For Meta and OpenAI Ads, `type` is absent:
+        pixels accept any event name per request.
+
+        For LinkedIn, destinations are returned across every sponsored ad
+        account the connected token can access; the `adAccountId` field on
+        each destination identifies the parent ad account and is required for
+        subsequent CRUD calls (update, delete, associations, metrics).
+
+        Platforms: meta, google, tiktok, linkedin, pinterest
+
         Args:
             account_id: SocialAccount ID (metaads, googleads, linkedinads, tiktokads, openaiads, or pinterestads). (required)"""
         client = _get_client()
@@ -17847,16 +21871,41 @@ def register_generated_tools(mcp, _get_client):
         ad_account_id: str,
         name: str,
         type: str,
-        attribution_type: str | None = None,
+        attribution_type: Literal["LAST_TOUCH_BY_CAMPAIGN", "LAST_TOUCH_BY_CONVERSION"]
+        | None = None,
         post_click_attribution_window_size: int | None = None,
         view_through_attribution_window_size: int | None = None,
-        value_type: str | None = None,
+        value_type: Literal["DYNAMIC", "FIXED", "NO_VALUE"] | None = None,
         value: dict[str, Any] | None = None,
-        auto_association_type: str = "ALL_CAMPAIGNS",
-        counting_type: str | None = None,
+        auto_association_type: Literal[
+            "ALL_CAMPAIGNS", "OBJECTIVE_BASED", "NONE"
+        ] = "ALL_CAMPAIGNS",
+        counting_type: Literal["MANY_PER_CLICK", "ONE_PER_CLICK"] | None = None,
         primary_for_goal: bool | None = None,
     ) -> str:
         """Create a conversion destination
+
+            Create a new conversion destination on the platform. Supported for
+            LinkedIn (conversion rule) and Google Ads (conversion action). Meta
+            and OpenAI Ads pixels are created via their own tracking-tags flow
+            instead (`POST /v1/accounts/{accountId}/tracking-tags`); this endpoint
+            returns 405 for both.
+
+            **LinkedIn:** creation is NOT idempotent. A retry creates a second
+            destination. Deduplicate before retrying.
+
+            **Google Ads:** calling with a name that already exists reuses the
+            existing conversion action transparently (the response is identical to
+            a fresh create). Calling with the same name but a different category
+            returns a typed `IDEMPOTENCY_CONFLICT` (409) rather than silently
+            returning the mismatched action.
+
+            **LinkedIn:** the rule is created with `conversionMethod=CONVERSIONS_API`
+            and (by default) auto-associated with all of the ad account's campaigns
+            via `autoAssociationType=ALL_CAMPAIGNS`. Pass `autoAssociationType: NONE`
+            to opt out and manage associations explicitly via the ...
+
+            Platforms: meta, google, tiktok, linkedin
 
             Args:
                 account_id: SocialAccount ID (linkedinads or googleads). (required)
@@ -17938,6 +21987,12 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Get a conversion destination
 
+        LinkedIn-only today. Returns the full destination record for one
+        conversion rule. The `adAccountId` query parameter is required because
+        LinkedIn rules are scoped to a sponsored ad account.
+
+        Platforms: meta, google, tiktok, linkedin
+
         Args:
             account_id: (required)
             destination_id: (required)
@@ -17967,13 +22022,22 @@ def register_generated_tools(mcp, _get_client):
         ad_account_id: str,
         name: str | None = None,
         enabled: bool | None = None,
-        attribution_type: str | None = None,
+        attribution_type: Literal["LAST_TOUCH_BY_CAMPAIGN", "LAST_TOUCH_BY_CONVERSION"]
+        | None = None,
         post_click_attribution_window_size: int | None = None,
         view_through_attribution_window_size: int | None = None,
-        value_type: str | None = None,
+        value_type: Literal["DYNAMIC", "FIXED", "NO_VALUE"] | None = None,
         value: dict[str, Any] | None = None,
     ) -> str:
         """Update a conversion destination
+
+            Partial-update a conversion rule. LinkedIn-only today. Whitelisted
+            fields: `name`, `enabled`, attribution windows, `valueType`, `value`,
+            `attributionType`. The rule's `type` and parent ad account are
+            intentionally not exposed for update. Recreate the rule if those
+            need to change.
+
+            Platforms: meta, google, tiktok, linkedin
 
             Args:
                 account_id: (required)
@@ -18020,6 +22084,17 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Delete a conversion destination
 
+        LinkedIn-only today. LinkedIn does not expose hard-delete on conversion
+        rules; what their UI calls \"delete\" is the same `enabled: false` flip
+        we apply here. The rule remains fetchable via GET with
+        `status: 'inactive'`; the unified discovery endpoint hides it by
+        default.
+
+        `adAccountId` may be passed as a query parameter (recommended) or as
+        a JSON body field for clients that can send DELETE bodies.
+
+        Platforms: meta, google, tiktok, linkedin
+
         Args:
             account_id: (required)
             destination_id: (required)
@@ -18047,6 +22122,13 @@ def register_generated_tools(mcp, _get_client):
         account_id: str, destination_id: str, ad_account_id: str
     ) -> str:
         """List associated campaigns
+
+        LinkedIn-only today. Returns the campaigns currently associated with
+        this conversion rule. Auto-association on rule creation
+        runs once at create time; campaigns created after the rule still need
+        explicit association.
+
+        Platforms: meta, google, tiktok, linkedin
 
         Args:
             account_id: (required)
@@ -18079,6 +22161,12 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Associate campaigns
 
+        Associate one or more campaigns with this conversion rule. Returns a
+        per-campaign success/failure result so callers can retry only the
+        rows that failed (e.g. wrong campaign type for the rule's objective).
+
+        Platforms: meta, google, tiktok, linkedin
+
         Args:
             account_id: (required)
             destination_id: (required)
@@ -18108,6 +22196,16 @@ def register_generated_tools(mcp, _get_client):
         account_id: str, destination_id: str, ad_account_id: str, campaign_ids: str
     ) -> str:
         """Remove associated campaigns
+
+        Remove one or more campaign associations from this conversion rule.
+        Pass `adAccountId` and `campaignIds` as query parameters
+        (`campaignIds` is comma-separated). The route also accepts a JSON
+        body with the same fields for clients that prefer DELETE-with-body,
+        but the documented surface is query-only because some SDK code
+        generators (e.g. Python) collapse query + body parameters with the
+        same name into a single kwarg.
+
+        Platforms: meta, google, tiktok, linkedin
 
         Args:
             account_id: (required)
@@ -18140,9 +22238,25 @@ def register_generated_tools(mcp, _get_client):
         ad_account_id: str,
         start_date: str,
         end_date: str | None = None,
-        granularity: str = "DAILY",
+        granularity: Literal["ALL", "DAILY", "MONTHLY", "YEARLY"] = "DAILY",
     ) -> str:
         """Get attribution metrics
+
+        LinkedIn-only today. Returns conversion-attribution metrics
+        (`externalWebsiteConversions`, `externalWebsitePostClickConversions`,
+        `externalWebsitePostViewConversions`, `conversionValueInLocalCurrency`,
+        `qualifiedLeads`, `costInLocalCurrency`) bucketed by date.
+
+        Date-range constraints (passed through from LinkedIn):
+        - `granularity=DAILY` is retained for ~6 months only
+        - `granularity=ALL` with a range > 6 months auto-rounds to month boundaries
+        - `granularity=MONTHLY`/`YEARLY` retains 24 months
+
+        Throttle: LinkedIn caps adAnalytics at 45M metric values per 5-minute
+        window across the calling token. Single-rule queries are well within
+        that limit; surfaces as 429 if hit.
+
+        Platforms: meta, google, tiktok, linkedin
 
         Args:
             account_id: (required)
@@ -18180,6 +22294,8 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Set custom field value
 
+        Set or overwrite a custom field value on a contact. The value type must match the field definition.
+
         Args:
             contact_id: (required)
             slug: (required)
@@ -18204,6 +22320,8 @@ def register_generated_tools(mcp, _get_client):
     def custom_fields_clear_contact_field_value(contact_id: str, slug: str) -> str:
         """Clear custom field value
 
+        Remove a custom field value from a contact. The field definition is not affected.
+
         Args:
             contact_id: (required)
             slug: (required)"""
@@ -18227,6 +22345,8 @@ def register_generated_tools(mcp, _get_client):
     def custom_fields_list_custom_fields(profile_id: str | None = None) -> str:
         """List custom field definitions
 
+        Returns all custom field definitions. Optionally filter by profile.
+
         Args:
             profile_id: Filter by profile. Omit to list across all profiles"""
         client = _get_client()
@@ -18247,11 +22367,13 @@ def register_generated_tools(mcp, _get_client):
     def custom_fields_create_custom_field(
         profile_id: str,
         name: str,
-        type: str,
+        type: Literal["text", "number", "date", "boolean", "select"],
         slug: str | None = None,
         options: list[str] | None = None,
     ) -> str:
         """Create custom field
+
+        Create a new custom field definition. Supported types are text, number, date, boolean, and select.
 
         Args:
             profile_id: (required)
@@ -18281,6 +22403,8 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Update custom field
 
+        Update a custom field definition. The field type cannot be changed after creation.
+
         Args:
             field_id: (required)
             name
@@ -18305,6 +22429,8 @@ def register_generated_tools(mcp, _get_client):
     def custom_fields_delete_custom_field(field_id: str) -> str:
         """Delete custom field
 
+        Delete a custom field definition and remove its values from all contacts.
+
         Args:
             field_id: (required)"""
         client = _get_client()
@@ -18326,6 +22452,8 @@ def register_generated_tools(mcp, _get_client):
     )
     def discord_get_discord_settings(account_id: str) -> str:
         """Get Discord account settings
+
+        Returns the current Discord account settings including webhook identity (display name and avatar), connected channel, and guild information.
 
         Args:
             account_id: (required)"""
@@ -18351,6 +22479,12 @@ def register_generated_tools(mcp, _get_client):
         channel_id: str | None = None,
     ) -> str:
         """Update Discord settings
+
+        Update Discord account settings. Supports two operations (can be combined):
+
+        1. **Webhook identity** - Set the default display name and avatar that appear as the message author on every post. These are account-level defaults; individual posts can override them via platformSpecificData.webhookUsername / webhookAvatarUrl.
+
+        2. **Switch channel** - Move the connection to a different channel in the same guild. A new webhook is automatically created in the target channel.
 
         Args:
             account_id: (required)
@@ -18380,6 +22514,8 @@ def register_generated_tools(mcp, _get_client):
     def discord_get_discord_channels(account_id: str) -> str:
         """List Discord guild channels
 
+        Returns the text, announcement, and forum channels in the connected Discord guild. Use this to discover available channels when switching the connected channel via PATCH /v1/accounts/{accountId}/discord-settings.
+
         Args:
             account_id: (required)"""
         client = _get_client()
@@ -18406,6 +22542,23 @@ def register_generated_tools(mcp, _get_client):
         tts: bool | None = None,
     ) -> str:
         """Send a Discord Direct Message
+
+        Send a 1:1 Direct Message from the bot to a Discord user (by snowflake ID).
+        Supports the same payload shape as channel posts: content, embeds, media
+        attachments, and TTS.
+
+        Constraints (Discord platform limits):
+          - The bot can only DM users it shares at least one guild with.
+          - If the recipient has DMs disabled for non-friends, Discord returns 403
+            (surfaces as a 502 platform error).
+          - `content` capped at 2,000 chars.
+          - At least one of `content`, `embeds`, or `attachments` is required.
+          - The recipient must be identified by Discord snowflake ID (not username).
+
+        This is a dedicated endpoint rather than a `POST /v1/posts` variant because
+        DMs are 1:1 operational messages (onboarding, billing reminders, support
+        pings) with a different lifecycle than scheduled channel posts. DMs are
+        not persisted to `Post` / `ExternalPost` and are always sent immediately.
 
         Args:
             account_id: SocialAccount _id of the connected Discord account the bot speaks as. Caller must own the account (directly or via team membership). (required)
@@ -18439,6 +22592,16 @@ def register_generated_tools(mcp, _get_client):
     def discord_list_discord_guild_roles(guild_id: str, account_id: str) -> str:
         """List Discord guild roles
 
+        Returns all roles in a Discord guild. Useful for building role-mention
+        pickers, role-permission UIs, or finding the role ID before calling
+        the role-assign endpoint.
+
+        Roles are returned unordered. Sort client-side by `position` if you
+        need Discord's UI ordering.
+
+        Caller must pass `accountId` of a Discord SocialAccount bound to this
+        guild (route verifies team access + guild match).
+
         Args:
             guild_id: Discord guild snowflake ID (required)
             account_id: SocialAccount _id of the Discord account bound to this guild (required)"""
@@ -18469,6 +22632,16 @@ def register_generated_tools(mcp, _get_client):
         permissions: str | None = None,
     ) -> str:
         """Create a Discord guild role
+
+        Creates a new role in the guild.
+
+        Requires the bot to hold the Manage Roles permission. Guilds that added the Zernio bot
+        before role management shipped must re-invite it, because Discord applies the
+        permission set at invite time.
+
+        Discord's role hierarchy applies: the bot cannot create a role positioned at or above
+        its own highest role, and cannot grant permissions it does not itself hold. Either
+        attempt returns a 403 carrying Discord's own error.
 
         Args:
             guild_id: Discord guild snowflake ID (required)
@@ -18513,6 +22686,12 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Edit a Discord guild role
 
+        Updates a role's name, color, hoist, mentionable flag, or permission bitfield.
+        At least one field must be supplied. Omitted fields are left unchanged.
+
+        Requires the bot to hold Manage Roles, and the target role must sit below the bot's
+        highest role. See the create-role operation for the re-invite requirement.
+
         Args:
             guild_id: Discord guild snowflake ID (required)
             role_id: Discord role snowflake ID (required)
@@ -18551,6 +22730,12 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Delete a Discord guild role
 
+        Permanently deletes a role from the guild and removes it from every member.
+        This cannot be undone.
+
+        Requires the bot to hold Manage Roles, and the target role must sit below the bot's
+        highest role.
+
         Args:
             guild_id: Discord guild snowflake ID (required)
             role_id: Discord role snowflake ID (required)
@@ -18576,6 +22761,14 @@ def register_generated_tools(mcp, _get_client):
         guild_id: str, account_id: str, limit: int = 100, after: str | None = None
     ) -> str:
         """List Discord guild members
+
+        Cursor-paginated list of guild members. Returns Discord's raw member
+        objects so callers can build community-ops automation (e.g. \"add role
+        to all members joined in the last 7 days\") on the actual platform shape.
+
+        Pagination: pass `after` = the last `user.id` from the previous page.
+        Omit on the first call. Response includes a `nextCursor` and `hasMore`
+        flag so callers don't need to know Discord's pagination shape.
 
         Args:
             guild_id: (required)
@@ -18604,6 +22797,12 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Search Discord guild members
 
+        Search guild members whose username or nickname **starts with** the
+        query (Discord matches prefixes only, not substrings).
+
+        Cheaper than paginating the full member listing when you already know
+        who you are looking for.
+
         Args:
             guild_id: (required)
             account_id: (required)
@@ -18631,6 +22830,11 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Get a Discord guild member
 
+        Fetch a single guild member by Discord user id.
+
+        Cheaper than paginating the full member listing when you already know
+        who you are looking for.
+
         Args:
             guild_id: (required)
             user_id: Discord user snowflake. (required)
@@ -18656,6 +22860,16 @@ def register_generated_tools(mcp, _get_client):
         guild_id: str, user_id: str, role_id: str, account_id: str
     ) -> str:
         """Assign a role to a guild member
+
+        Assign one role to one member. Idempotent on Discord's side: re-running
+        on a member who already has the role is a 204 no-op.
+
+        Path shape mirrors Discord's own API (`PUT /guilds/{guild}/members/{user}/roles/{role}`)
+        for zero-translation mental mapping.
+
+        Bot needs MANAGE_ROLES permission in the guild AND its highest role
+        must be above the target role (Discord hierarchy rule). The
+        `@everyone` role (where roleId == guildId) cannot be assigned.
 
         Args:
             guild_id: (required)
@@ -18687,6 +22901,11 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Remove a role from a guild member
 
+        Remove one role from one member. Idempotent: removing a role the
+        member doesn't have returns 204 no-op.
+
+        Same permission + hierarchy constraints as the PUT counterpart.
+
         Args:
             guild_id: (required)
             user_id: (required)
@@ -18717,6 +22936,15 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Delete a Discord channel message
 
+        Deletes a message from a channel, for moderation and cleanup. This cannot be undone.
+
+        Deleting a message the bot did not send requires the bot to hold the Manage Messages
+        permission, which the Zernio bot requests at install time. Deleting the bot's own
+        message needs no extra permission.
+
+        Ownership is verified by resolving the channel's guild and confirming the caller owns
+        a Discord account bound to it.
+
         Args:
             channel_id: Discord channel snowflake ID (required)
             message_id: Discord message snowflake ID (required)
@@ -18742,6 +22970,13 @@ def register_generated_tools(mcp, _get_client):
         channel_id: str, message_id: str, account_id: str
     ) -> str:
         """Crosspost Discord message
+
+        Publishes a message from an announcement channel so it propagates to every server
+        following that channel.
+
+        The source channel must be an announcement channel. Calling this on a regular text
+        channel returns a 400 before Discord is contacted, because Discord's own error for
+        this case is opaque.
 
         Args:
             channel_id: Discord announcement channel snowflake ID (required)
@@ -18773,6 +23008,12 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Create a Discord public thread
 
+        Creates a public thread in a channel. Pass `messageId` to start the thread from an
+        existing message, or omit it to create a standalone thread.
+
+        Threads created here are always public. Requires the bot to hold Create Public
+        Threads, which the Zernio bot requests at install time.
+
         Args:
             channel_id: Discord channel snowflake ID (required)
             account_id: SocialAccount _id of the Discord account bound to this channel's guild (required)
@@ -18803,6 +23044,13 @@ def register_generated_tools(mcp, _get_client):
     def discord_list_discord_pinned_messages(channel_id: str, account_id: str) -> str:
         """List pinned messages
 
+        Returns the channel's pinned messages, sorted most-recently-pinned
+        first. Discord caps a channel at 50 pinned messages and returns the
+        full list unpaginated.
+
+        Bot needs READ_MESSAGE_HISTORY in the channel (granted by default
+        BOT_PERMISSIONS).
+
         Args:
             channel_id: Discord channel snowflake. (required)
             account_id: SocialAccount _id of any Discord account in the same guild. (required)"""
@@ -18827,6 +23075,16 @@ def register_generated_tools(mcp, _get_client):
         channel_id: str, message_id: str, account_id: str
     ) -> str:
         """Pin a Discord message
+
+        Pin a specific message in a channel. Path shape mirrors Discord's own
+        API (`PUT /channels/{cid}/pins/{mid}`).
+
+        Idempotent: re-pinning an already-pinned message is a 204 no-op.
+
+        Constraints:
+          - Bot needs MANAGE_MESSAGES in the channel.
+          - 50-pin cap per channel: hitting it returns 400 (Discord-side).
+            Caller should unpin one first.
 
         Args:
             channel_id: (required)
@@ -18854,6 +23112,9 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Unpin a Discord message
 
+        Unpin a message. Same MANAGE_MESSAGES permission requirement as pin.
+        Idempotent: unpinning a non-pinned message is a 204 no-op.
+
         Args:
             channel_id: (required)
             message_id: (required)
@@ -18879,6 +23140,13 @@ def register_generated_tools(mcp, _get_client):
         guild_id: str, account_id: str, with_user_count: bool | None = None
     ) -> str:
         """List Discord scheduled events
+
+        Return all scheduled events in the guild. Events are distinct from
+        messages: they appear in the server's Events panel and Discord
+        auto-notifies interested members ahead of start time.
+
+        Pass `withUserCount=true` to include `user_count` (number of members
+        who RSVP'd) on each event. Useful for surfacing engagement.
 
         Args:
             guild_id: (required)
@@ -18913,6 +23181,19 @@ def register_generated_tools(mcp, _get_client):
         image_data_uri: str | None = None,
     ) -> str:
         """Create a Discord scheduled event
+
+        Create a guild scheduled event. Three event types, selected via the
+        discriminator on `entity.type`:
+
+          - `external`: off-platform (Zoom, in-person, livestream). Requires
+            both `location` and `endsAt`. Most common type for scheduler
+            integrations.
+          - `voice`: hosted in a Discord voice channel. Requires `channelId`.
+          - `stage`: hosted in a Discord stage channel. Requires `channelId`.
+
+        Bot needs MANAGE_EVENTS in the guild. Existing installs (pre-events
+        PR) need a re-invite OR a server admin manually granting the
+        permission. See route header for details.
 
         Args:
             guild_id: (required)
@@ -18980,10 +23261,17 @@ def register_generated_tools(mcp, _get_client):
         starts_at: str | None = None,
         ends_at: str | None = None,
         location: str | None = None,
-        status: str | None = None,
+        status: Literal["scheduled", "active", "completed", "cancelled"] | None = None,
         image_data_uri: str | None = None,
     ) -> str:
         """Update a Discord scheduled event
+
+        Patch any subset of fields. Passing `status: 'cancelled'` is how you
+        cancel an event. Discord doesn't have a dedicated cancel endpoint,
+        it's a status transition.
+
+        Most status transitions Discord enforces (you can't go SCHEDULED →
+        COMPLETED directly). The common consumer case is SCHEDULED → CANCELED.
 
         Args:
             guild_id: (required)
@@ -19027,6 +23315,9 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Delete a Discord scheduled event
 
+        Hard-delete an event. Use PATCH with `status: 'cancelled'` instead
+        if you want the event preserved in the guild's history.
+
         Args:
             guild_id: (required)
             event_id: (required)
@@ -19051,7 +23342,7 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def feedback_submit_feedback(
-        type: str,
+        type: Literal["bug", "missing_feature", "docs", "other"],
         summary: str,
         details: str | None = None,
         endpoint: str | None = None,
@@ -19061,6 +23352,18 @@ def register_generated_tools(mcp, _get_client):
         agent: dict[str, Any] | None = None,
     ) -> str:
         """Submit feedback
+
+        Report a bug, a missing feature or a documentation gap. Every submission
+        is read by the Zernio team. Designed for AI agents: when a call fails in
+        a way that looks like our bug, or the API lacks something you need, send
+        one structured report here.
+
+        Include `endpoint` and `requestId` (the `x-request-id` response header of
+        the failing call) when you have them; they let us find the exact request.
+
+        Submitting the same `summary` again within 24 hours is idempotent: it
+        returns the original `id` with `duplicate: true` and a `200`. Each API
+        user can file at most 20 submissions per 24 hours.
 
         Args:
             type: What kind of feedback this is. (required)
@@ -19102,6 +23405,9 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Get services
 
+        Gets the services offered by a Google Business Profile location.
+        Returns an array of service items (structured or free-form with optional price).
+
         Args:
             account_id: (required)
             location_id: Override which location to query. If omitted, uses the account's selected location."""
@@ -19128,6 +23434,10 @@ def register_generated_tools(mcp, _get_client):
         location_id: str | None = None,
     ) -> str:
         """Replace services
+
+        Replaces the entire service list for a location.
+        Google's API requires full replacement; individual item updates are not supported.
+        Each service can be structured (using a predefined serviceTypeId) or free-form (custom label).
 
         Args:
             account_id: (required)
@@ -19159,6 +23469,8 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Get verification state
 
+        Returns the location's Voice of Merchant state plus its verification history. `voiceOfMerchantState.hasVoiceOfMerchant` tells you whether the listing is verified and published; when it is false, `verify` reports whether a verification is already pending. Each entry in `verifications` has a `state` of PENDING, COMPLETED, or FAILED.
+
         Args:
             account_id: The Zernio account ID (from /v1/accounts) (required)
             location_id: Override which location to query. If omitted, uses the account's selected location. Use GET /gmb-locations to list valid IDs."""
@@ -19181,7 +23493,9 @@ def register_generated_tools(mcp, _get_client):
     )
     def gmb_verifications_start_google_business_verification(
         account_id: str,
-        method: str,
+        method: Literal[
+            "ADDRESS", "EMAIL", "PHONE_CALL", "SMS", "AUTO", "VETTED_PARTNER"
+        ],
         location_id: str | None = None,
         language_code: str | None = None,
         phone_number: str | None = None,
@@ -19190,6 +23504,8 @@ def register_generated_tools(mcp, _get_client):
         context: dict[str, Any] | None = None,
     ) -> str:
         """Start a verification
+
+        Starts a verification for the location. This is a mutating action: depending on `method`, Google mails a postcard, places a call, or sends an SMS/email to the business. Submit the resulting code with POST /gmb-verifications/{verificationId}/complete. Use POST /gmb-verifications/options first to discover which methods are eligible.
 
         Args:
             account_id: The Zernio account ID (from /v1/accounts) (required)
@@ -19232,6 +23548,8 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Fetch verification options
 
+        Reports the verification methods Google currently offers for the location. Non-mutating (nothing is sent to the business). `languageCode` is required; service-area (\"CUSTOMER_LOCATION_ONLY\") businesses also require `context.address`, otherwise Google returns 400.
+
         Args:
             account_id: The Zernio account ID (from /v1/accounts) (required)
             location_id: Override which location to query. If omitted, uses the account's selected location.
@@ -19264,6 +23582,8 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Complete a verification
 
+        Completes a PENDING verification by submitting the PIN/code Google sent the business (postcard code, SMS PIN, etc.). On success the verification moves to COMPLETED.
+
         Args:
             account_id: The Zernio account ID (from /v1/accounts) (required)
             verification_id: The last segment of a verification `name` from GET /gmb-verifications. (required)
@@ -19292,7 +23612,9 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def imessage_list_imessage_senders() -> str:
-        """List iMessage senders"""
+        """List iMessage senders
+
+        Lists the iMessage senders registered across your accessible profiles."""
         client = _get_client()
         try:
             response = client.imessage.list_imessage_senders()
@@ -19312,9 +23634,19 @@ def register_generated_tools(mcp, _get_client):
         profile_id: str,
         sender: str,
         display_name: str | None = None,
-        provider: str | None = None,
+        provider: Literal["loopmessage"] | None = None,
     ) -> str:
         """Register an iMessage sender
+
+        Registers a provider-provisioned iMessage sender (a phone number or an
+        email handle) that YOU already own on a profile, creating an
+        `imessage` account that sends and receives through the inbox
+        conversation endpoints. To have Zernio order a new sender for you, use
+        POST /v1/imessage/senders/order instead. Registration attaches the
+        monthly sender fee (billed while active) and requires a payment method
+        (402 without one). Re-registering the SAME handle refreshes its account;
+        a different handle is added as another sender, and a profile can hold
+        several.
 
         Args:
             profile_id: Profile to attach the sender to (required)
@@ -19344,6 +23676,8 @@ def register_generated_tools(mcp, _get_client):
     def imessage_list_imessage_sender_orders(include_canceled: bool = False) -> str:
         """List iMessage sender orders
 
+        Every sender lifecycle doc your team owns (ordered or registered), across statuses. Canceled senders are omitted unless `includeCanceled=true`.
+
         Args:
             include_canceled"""
         client = _get_client()
@@ -19365,8 +23699,8 @@ def register_generated_tools(mcp, _get_client):
     )
     def imessage_order_imessage_sender(
         profile_id: str,
-        kind: str,
-        region: str | None = None,
+        kind: Literal["phone", "email"],
+        region: Literal["US", "GB"] | None = None,
         available_number_id: str | None = None,
         zip_code: str | None = None,
         email_name: str | None = None,
@@ -19376,6 +23710,20 @@ def register_generated_tools(mcp, _get_client):
         contact: dict[str, Any] | None = None,
     ) -> str:
         """Order a new iMessage sender
+
+        Orders a NEW dedicated iMessage sender from the delivery provider
+        (compare with POST /v1/imessage/senders, which registers a sender you
+        already own). Activation is asynchronous (minutes to a few hours):
+        the response is 202 with the lifecycle object; poll
+        GET /v1/imessage/senders/{senderId} or subscribe to the
+        account.connected webhook. Billing starts at activation (monthly per
+        sender, no proration); when the account spend threshold is below the
+        sender price, the first month is charged before the number is bought. Requires usage-based billing and a valid
+        payment method. Pass purchaseIntentId to make retries idempotent —
+        the provider-side order is never retried automatically. Ordered phone
+        senders include SMS/RCS fallback with call forwarding and the ability
+        to message contacts who have not written first (sending intervals
+        still apply).
 
         Args:
             profile_id: (required)
@@ -19417,6 +23765,8 @@ def register_generated_tools(mcp, _get_client):
     def imessage_get_imessage_sender(sender_id: str) -> str:
         """Get iMessage sender status
 
+        Lifecycle status of an ordered or registered sender (poll while an order activates), plus the provider's live platform health for it.
+
         Args:
             sender_id: (required)"""
         client = _get_client()
@@ -19440,6 +23790,8 @@ def register_generated_tools(mcp, _get_client):
         contact: dict[str, Any] | None = None,
     ) -> str:
         """Update an iMessage sender
+
+        Display name (inbox and API responses) and the contact card (vCard) recipients see when they save the sender. The contact card is what a contactCard send shares.
 
         Args:
             sender_id: (required)
@@ -19465,6 +23817,12 @@ def register_generated_tools(mcp, _get_client):
     def imessage_cancel_imessage_sender(sender_id: str) -> str:
         """Cancel an iMessage sender
 
+        Cancels the sender at the provider and deactivates its messaging
+        account. Billing stops with the current month (no proration or
+        refunds, matching phone numbers). A sender still being set up
+        (status ordering or activating) cannot be canceled; contact support
+        to change the order.
+
         Args:
             sender_id: (required)"""
         client = _get_client()
@@ -19484,12 +23842,14 @@ def register_generated_tools(mcp, _get_client):
     )
     def imessage_list_imessage_audience(
         account_id: str | None = None,
-        status: str | None = None,
+        status: Literal["subscribed", "unsubscribed"] | None = None,
         search: str | None = None,
         limit: int = 50,
         skip: int = 0,
     ) -> str:
         """List iMessage audience
+
+        Contacts who have messaged your iMessage senders (1:1 threads), with subscription state and, for threads opened through a tracked opt-in link, the parameters that brought them in. Newest activity first.
 
         Args:
             account_id: Limit to one sender account
@@ -19519,7 +23879,9 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def imessage_list_imessage_sandbox_contacts() -> str:
-        """List iMessage sandbox contacts"""
+        """List iMessage sandbox contacts
+
+        The shared sandbox line and your sandbox contacts. The sandbox lets you test iMessage without ordering a sender: add your own phone or Apple ID email, send its join code to the sandbox line from that phone, and your messages reach your inbox and webhooks. Replies are allowed for 24 hours after each message from the contact. Group chats and starting conversations are not supported."""
         client = _get_client()
         try:
             response = client.imessage.list_imessage_sandbox_contacts()
@@ -19537,6 +23899,8 @@ def register_generated_tools(mcp, _get_client):
     )
     def imessage_add_imessage_sandbox_contact(handle: str) -> str:
         """Add an iMessage sandbox contact
+
+        Adds your own phone (E.164) or Apple ID email. The contact starts as pending; it becomes active when its joinText arrives at the sandbox line from that handle (joinLink opens Messages with it prefilled). Adding a handle that is already on your list returns it unchanged.
 
         Args:
             handle: Phone in international format (+15551234567) or an Apple ID email (required)"""
@@ -19557,6 +23921,8 @@ def register_generated_tools(mcp, _get_client):
     )
     def imessage_remove_imessage_sandbox_contact(contact_id: str) -> str:
         """Remove an iMessage sandbox contact
+
+        Removes the contact and its sandbox conversation. Messages from that handle to the sandbox line are no longer delivered to you.
 
         Args:
             contact_id: (required)"""
@@ -19581,6 +23947,8 @@ def register_generated_tools(mcp, _get_client):
         account_id: str, conversation_id: str, subscribed: bool
     ) -> str:
         """Subscribe or opt out an iMessage contact
+
+        Opted-out contacts are refused at send time (409 recipient_opted_out) until re-subscribed. Their inbound messages still arrive. Scoped to your account: it does not change the contact's state with other businesses.
 
         Args:
             account_id: (required)
@@ -19613,6 +23981,21 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Create a tracked iMessage opt-in link
 
+        Generates a per-campaign link that opens Messages on this sender with
+        `body` prefilled. A thread the contact opens skips the pacing and the
+        first-message content rule that apply when the sender writes first,
+        and it is the only way in for senders without the add-on for new
+        contacts (their sends to anyone else fail with
+        `recipient_must_message_first`).
+
+        Each link carries a unique code in place of the `[opt-in-code]`
+        placeholder; when the contact sends it, the resulting `message.received`
+        webhook (and the stored inbox message's `metadata`) has
+        `optIn: true` and your `parameters` under `optInParameters`, so you can
+        attribute the conversation to the campaign or lead that produced it.
+
+        For an untracked link, use the sender's `optInLink` instead.
+
         Args:
             sender_id: (required)
             body: Prefilled message text. Must contain the literal `[opt-in-code]` placeholder, e.g. "Hi! My code is [opt-in-code]". (required)
@@ -19638,8 +24021,18 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=False,
         )
     )
-    def imessage_list_imessage_available_numbers(region: str | None = None) -> str:
+    def imessage_list_imessage_available_numbers(
+        region: Literal["US", "GB"] | None = None,
+    ) -> str:
         """List instantly available iMessage numbers
+
+        Phone numbers the provider has already registered and can assign on the
+        spot. Order one by passing its `id` as `availableNumberId` to
+        POST /v1/imessage/senders/order: the sender activates immediately
+        instead of after the usual provisioning wait. Reserve it first with
+        POST /v1/imessage/senders/available-numbers/{numberId}/reserve while the
+        buyer decides. The list is a snapshot; a number can be taken between
+        listing and ordering.
 
         Args:
             region"""
@@ -19660,6 +24053,8 @@ def register_generated_tools(mcp, _get_client):
     )
     def imessage_reserve_imessage_available_number(number_id: str) -> str:
         """Reserve an available iMessage number
+
+        Holds the number for 3 minutes so nobody else can order it while the buyer decides. Place the order (POST /v1/imessage/senders/order with availableNumberId) before the hold expires. No request body.
 
         Args:
             number_id: (required)"""
@@ -19685,9 +24080,18 @@ def register_generated_tools(mcp, _get_client):
         contacts: list[str] | None,
         text: str,
         name: str | None = None,
-        channel: str = "imessage",
+        channel: Literal["imessage", "sms", "rcs", "whatsapp"] = "imessage",
     ) -> str:
         """Start an iMessage group chat
+
+        Creates a group chat from one of your senders and sends its first
+        message. The provider processes it asynchronously: the response carries
+        the request id, and the thread appears in the inbox (with its group
+        conversation id) on the first webhook. Starting a group counts as
+        messaging new contacts, so the sender needs the provider's
+        init-conversations add-on and the same sending intervals apply; without
+        it the request fails with 409 `recipient_must_message_first`. WhatsApp
+        groups need a `name`.
 
         Args:
             account_id: The iMessage account (sender) that opens the group (required)
@@ -19719,6 +24123,8 @@ def register_generated_tools(mcp, _get_client):
     def imessage_get_imessage_group(conversation_id: str, account_id: str) -> str:
         """Get an iMessage group
 
+        The group's name, participants and channel as the provider currently sees them. The conversation must be a group thread of the given account.
+
         Args:
             conversation_id: The inbox conversation id (or the provider group id) (required)
             account_id: (required)"""
@@ -19746,6 +24152,8 @@ def register_generated_tools(mcp, _get_client):
         photo_url: str | None = None,
     ) -> str:
         """Rename an iMessage group or change its photo
+
+        One change per call: either `name` or `photoUrl` (an empty `photoUrl` removes the photo). Applied asynchronously by the provider; a rename is mirrored on the inbox conversation right away.
 
         Args:
             conversation_id: (required)
@@ -19777,6 +24185,8 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Add a participant to an iMessage group
 
+        Applied asynchronously by the provider; the participant list on the next group webhook reflects it.
+
         Args:
             conversation_id: (required)
             account_id: (required)
@@ -19802,6 +24212,8 @@ def register_generated_tools(mcp, _get_client):
         conversation_id: str, account_id: str, contact: str
     ) -> str:
         """Remove a participant from an iMessage group
+
+        Applied asynchronously by the provider.
 
         Args:
             conversation_id: (required)
@@ -19835,6 +24247,11 @@ def register_generated_tools(mcp, _get_client):
         source: str | None = None,
     ) -> str:
         """Get inbox messaging volume
+
+        Daily inbox messaging volume + breakdowns. Folds the raw messaging
+        events into three projections so the client can render the volume
+        chart, KPI strip, and per-platform stacked bar from a single call.
+        Max date range is 365 days.
 
         Args:
             from_date: Inclusive lower bound (YYYY-MM-DD). Required. (required)
@@ -19872,9 +24289,16 @@ def register_generated_tools(mcp, _get_client):
         platform: str | None = None,
         account_id: str | None = None,
         source: str | None = None,
-        action: str | None = None,
+        action: Literal["message.received", "message.sent", "message.read", "all"]
+        | None = None,
     ) -> str:
         """Get day × hour heatmap
+
+        Day-of-week × hour-of-day breakdown of inbox messages. Buckets are
+        sparse: only cells with at least one event are returned; clients
+        zero-fill the rest to render the full 7×24 grid. The `dow` field
+        follows ClickHouse's `toDayOfWeek` convention (1 = Monday … 7 =
+        Sunday). Max date range is 365 days.
 
         Args:
             from_date: (required)
@@ -19916,6 +24340,12 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Get inbox source breakdown
 
+        Breakdown of inbox messages by their lineage source (the
+        `metadata.source` field set at ingest time: human / workflow /
+        sequence / broadcast / comment_automation / api / contact /
+        platform). Each source row also carries a per-platform sub-split.
+        Max date range is 365 days.
+
         Args:
             from_date: (required)
             to_date
@@ -19951,6 +24381,18 @@ def register_generated_tools(mcp, _get_client):
         account_id: str | None = None,
     ) -> str:
         """Get inbox response-time stats
+
+        Time-to-first-response stats. Pairs each received message with the
+        next sent message in the same conversation and reports the delta
+        as both summary statistics and a fixed-bucket histogram suited
+        for the analytics page's TTR chart.
+
+        `sampleSize` reflects only conversations that received AND got a
+        reply in the window. Received-but-never-answered conversations
+        are excluded. Compare against /v1/analytics/inbox/volume's
+        `summary.received` to compute reply rate.
+
+        Max date range is 365 days.
 
         Args:
             from_date: (required)
@@ -19988,6 +24430,12 @@ def register_generated_tools(mcp, _get_client):
         limit: int = 10,
     ) -> str:
         """Get top accounts by inbox volume
+
+        Leaderboard of accounts by inbox message volume. Decorates
+        each row with display labels from the live SocialAccount record
+        (so the UI shows username + displayName, not only an ID). Accounts
+        that no longer map to a SocialAccount surface as \"(disconnected)\"
+        so the row stays visible. Max date range is 365 days.
 
         Args:
             from_date: (required)
@@ -20027,10 +24475,29 @@ def register_generated_tools(mcp, _get_client):
         source: str | None = None,
         limit: int = 50,
         page: int = 1,
-        sort_by: str = "lastMessageAt",
-        order: str = "desc",
+        sort_by: Literal[
+            "lastMessageAt",
+            "firstMessageAt",
+            "totalMessages",
+            "received",
+            "sent",
+            "read",
+            "failed",
+        ] = "lastMessageAt",
+        order: Literal["asc", "desc"] = "desc",
     ) -> str:
         """List conversation analytics
+
+        Per-conversation listing with per-row totals + first/last message
+        timestamps. The inbox analog of GET /v1/analytics (posts listing):
+        same filter shape, same pagination, same sort/order semantics.
+        Use as the entry point for the per-conversation analytics drawer
+        at /v1/analytics/inbox/conversations/{conversationId}.
+
+        Rows are enriched with the conversation's participant info
+        (`participantName`, `participantUsername`, `participantPicture`)
+        and last-message preview by joining the Conversation document
+        scoped to the caller's team. Max date range is 365 days.
 
         Args:
             from_date: (required)
@@ -20074,6 +24541,18 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Get conversation analytics
 
+        Per-conversation inbox analytics. The inbox analog of
+        /v1/analytics/post-timeline: one conversation, daily totals,
+        source mix.
+
+        The {conversationId} path param accepts EITHER the Zernio
+        conversation id OR its `platformConversationId` (the same
+        identity used by metadata.conversationId at ingest time).
+        Ownership is verified against the caller's team before the
+        Tinybird query fires.
+
+        Max date range is 365 days.
+
         Args:
             conversation_id: Zernio conversation id or platformConversationId. (required)
             from_date: (required)
@@ -20100,6 +24579,16 @@ def register_generated_tools(mcp, _get_client):
     def instagram_list_instagram_stories(account_id: str) -> str:
         """List active Instagram stories
 
+        Returns the IG Business/Creator account's currently-active stories.
+        Meta keeps stories live for 24h; expired stories are not returned.
+
+        Limitations propagated from Meta (these are NOT bugs):
+        - 24h window only
+        - Live videos excluded
+        - Reshared stories not returned
+        - `mediaUrl` may be null if Meta flagged the story for copyright
+        - `caption`, `likeCount`, `commentsCount` do not apply to story media
+
         Args:
             account_id: The Instagram account ID (required)"""
         client = _get_client()
@@ -20119,6 +24608,14 @@ def register_generated_tools(mcp, _get_client):
     )
     def instagram_get_instagram_publishing_limit(account_id: str) -> str:
         """Get Instagram publishing limit
+
+        Returns the account's remaining content-publishing quota for Instagram's rolling
+        24-hour window, so you can pace publishing and warn before the cap is reached.
+
+        `quotaUsage` counts containers published since the start of the window.
+        Always compare against the returned `quotaTotal` rather than hardcoding a number:
+        Meta's prose documentation and the live API disagree on the value, and the live
+        value is authoritative.
 
         Args:
             account_id: The ID of the Instagram account (required)"""
@@ -20140,9 +24637,25 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def instagram_search_instagram_audio(
-        account_id: str, audio_type: str, q: str | None = None
+        account_id: str,
+        audio_type: Literal["music", "original_sound"],
+        q: str | None = None,
     ) -> str:
         """Search Instagram audio
+
+        Search Instagram's audio catalog (licensed music or original sounds),
+        or list what is currently trending by omitting `q`. Returns up to ~30
+        assets; Meta exposes no pagination on this edge.
+
+        Pass the returned `audioId` as
+        `platformSpecificData.audioConfiguration.audioId` when creating a Reel
+        to publish it with that track.
+
+        Requires an Instagram account connected via **Facebook Login**. Meta
+        hosts this catalog on graph.facebook.com only, so accounts connected
+        with classic Instagram Login receive a 400
+        (`instagram_audio_requires_facebook_login`) and must be reconnected
+        choosing the Facebook option.
 
         Args:
             account_id: The ID of the Instagram account (required)
@@ -20167,6 +24680,13 @@ def register_generated_tools(mcp, _get_client):
     )
     def instagram_get_instagram_audio(account_id: str, audio_id: str) -> str:
         """Get Instagram audio metadata
+
+        Fetch one audio asset's metadata by ID. Use it to re-validate a stored
+        `audioId` before a scheduled Reel publishes, or to refresh the preview
+        `downloadUrl` (Meta expires preview URLs after roughly 1.5 days).
+
+        Same connection requirement as the search endpoint: Facebook-Login
+        Instagram accounts only.
 
         Args:
             account_id: The ID of the Instagram account (required)
@@ -20193,6 +24713,20 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Look up a public Instagram Business account
 
+        Returns the public profile and most recent media of any Instagram
+        Business or Creator account, looked up by username through one of your
+        connected Instagram accounts. Useful for competitor and market research.
+        Personal accounts and private accounts cannot be looked up.
+
+        Requires an Instagram account connected via **Facebook Login**. Meta
+        serves business discovery on graph.facebook.com only, so accounts
+        connected with classic Instagram Login receive a 400
+        (`instagram_business_discovery_requires_facebook_login`) and must be
+        reconnected choosing the Facebook option. Any one such account can look
+        up any public Business or Creator handle.
+
+        `likeCount` is null when the owner hides like counts.
+
         Args:
             account_id: The ID of a connected Instagram account (Facebook Login). (required)
             username: Instagram handle to look up, with or without the leading @. Case-insensitive. (required)
@@ -20217,6 +24751,23 @@ def register_generated_tools(mcp, _get_client):
     def instagram_get_instagram_story_insights(account_id: str, story_id: str) -> str:
         """Get Instagram story insights
 
+        Returns metrics for a single story. The `source` field discriminates
+        between three states:
+
+        - `live`: fetched from Meta in real time (story is still active)
+        - `cached`: fetched from a persisted `story_insights` webhook payload
+          (story has expired but we received its final-state metrics from Meta)
+        - `unavailable`: story has expired and we never received its webhook
+          payload (for example, the account connected after the story expired)
+
+        Meta can report an expired story as an empty successful result rather
+        than an error, so an expired story resolves to `cached` or `unavailable`
+        even though the upstream request itself succeeded.
+
+        Field semantics follow Meta's API. Counts below 5 may be returned as 0
+        due to Meta's privacy floor on small audiences. The `navigation` field
+        is the sum of `tapsForward + tapsBack + exits + swipesForward`.
+
         Args:
             account_id: The Instagram account ID (required)
             story_id: The Instagram media ID of the story. (required)"""
@@ -20240,12 +24791,18 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def invites_create_invite_token(
-        scope: str,
+        scope: Literal["all", "profiles"],
         profile_ids: list[str] | None = None,
-        role: str = "member",
+        role: Literal["admin", "member", "billing_admin", "viewer"] = "member",
         read_only: bool | None = None,
     ) -> str:
         """Create invite token
+
+        Generate a secure invite link to grant team members access to your profiles.
+        Invites expire after 7 days and are single-use.
+
+        Returns 403 when a requested profile is not found or not owned, or when
+        called with a restricted (zrk_) API key: invite management is admin-plane.
 
         Args:
             scope: 'all' grants access to all profiles, 'profiles' restricts to specific profiles (required)
@@ -20280,6 +24837,10 @@ def register_generated_tools(mcp, _get_client):
         cursor: str | None = None,
     ) -> str:
         """List submitted leads
+
+        Returns submitted Lead Gen leads for your team, newest-first, with keyset pagination on `cursor`. For Meta (default) leads are served from the persisted cache, ingested in real time from the `leadgen` webhook. When `accountId` is a LinkedIn ads account, leads are fetched live from LinkedIn's `leadFormResponses` (LinkedIn has no webhook and enforces 90-day retention, so nothing is persisted) and `adAccountId` is required. Reading LinkedIn responses needs the `r_marketing_leadgen_automation` permission; accounts connected before it was added must reconnect. Requires the Ads add-on.
+
+        Platforms: meta, linkedin
 
         Args:
             form_id: Filter to a single lead form.
@@ -20317,6 +24878,10 @@ def register_generated_tools(mcp, _get_client):
         cursor: str | None = None,
     ) -> str:
         """List lead forms
+
+        Lists the Lead Gen forms owned by the account. Meta: forms on the connected Facebook Page. Pass either the `metaads` ads connection (the Page is taken from the Facebook account linked to it) or the Facebook account itself. LinkedIn: forms owned by the ad account's Company Page. Pass `adAccountId` (LinkedIn forms are org-owned). Requires the Ads add-on.
+
+        Platforms: meta, linkedin
 
         Args:
             account_id: Connected Meta ads, Facebook or LinkedIn ads account ID. A Meta ads connection resolves its Page through the Facebook account linked to the same profile. (required)
@@ -20360,6 +24925,10 @@ def register_generated_tools(mcp, _get_client):
         platform_specific_data: dict[str, Any] | None = None,
     ) -> str:
         """Create a lead form
+
+        Creates a Lead Gen form. The form content goes inside `platformSpecificData` for both platforms (the shape is selected by the accountId's platform). Meta: created on the connected Facebook Page (POST /{page-id}/leadgen_forms), where `accountId` may be the `metaads` ads connection (its Page comes from the Facebook account linked to the same profile) or the Facebook account itself; the old top-level Meta fields (questions, thankYou*, contextCard, …) are DEPRECATED but still accepted while platformSpecificData is absent; mixing both shapes is a 400. LinkedIn: created on the ad account's Company Page. NOT idempotent: a retry creates a second form. Meta prefilled question types (EMAIL, PHONE, FULL_NAME, …) must omit label/key; CUSTOM questions require both. LinkedIn exposes only free-text and multiple-choice questions via API (prefilled-from-profile fields are Campaign Manager UI-only). Requires the Ads add-on.
+
+        Platforms: meta, linkedin
 
         Args:
             account_id: (required)
@@ -20411,6 +24980,10 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Get a lead form
 
+        Returns the full form, including the thank-you page, so a form can be diffed against what was created. Meta forms are scoped to the Page the accountId manages: a form on any other Page is a 404, never a read.
+
+        Platforms: meta, linkedin
+
         Args:
             form_id: Numeric form id (Meta leadgen_form id or LinkedIn leadForm id). (required)
             account_id: Connected Meta ads, facebook or linkedin ads account id (selects the platform). A Meta ads connection resolves its Page through the Facebook account linked to the same profile. (required)
@@ -20434,6 +25007,10 @@ def register_generated_tools(mcp, _get_client):
     )
     def lead_gen_archive_lead_form(form_id: str, account_id: str) -> str:
         """Archive a lead form
+
+        Neither platform hard-deletes a form; this archives it (Meta status=ARCHIVED; LinkedIn state=ARCHIVED via PARTIAL_UPDATE). Meta forms must belong to the Page the accountId manages.
+
+        Platforms: meta, linkedin
 
         Args:
             form_id: Numeric form id (Meta leadgen_form id or LinkedIn leadForm id). (required)
@@ -20463,6 +25040,10 @@ def register_generated_tools(mcp, _get_client):
         since: int | None = None,
     ) -> str:
         """List leads for a single form
+
+        Returns leads for one form. Serves persisted leads (ingested via the leadgen webhook) when available, falling back to a live Graph read. Accepts a Facebook account or a metaads business-login account with leads_retrieval access to the form; the latter uses its system-user token without a posting parent.
+
+        Platforms: meta
 
         Args:
             form_id: (required)
@@ -20496,6 +25077,10 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Create a test lead
 
+        Submits a test lead against the form (POST /{form-id}/test_leads) to exercise retrieval without waiting for real ad impressions. Meta allows one test lead per form at a time.
+
+        Platforms: meta
+
         Args:
             form_id: (required)
             account_id: (required)
@@ -20522,6 +25107,10 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Delete a test lead
 
+        Removes a test lead created for the form (DELETE /{leadgen_id}), so a new one can be submitted: Meta keeps one test lead per form and refuses a second until the first is gone. The same test lead appears in Meta's Lead Ads Testing Tool. Meta only deletes test leads; a real lead is refused.
+
+        Platforms: meta
+
         Args:
             form_id: (required)
             account_id: The facebook or metaads account whose Page owns the form. (required)
@@ -20546,9 +25135,34 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def logs_list_logs(
-        type: str = "publishing",
-        status: str | None = None,
-        platform: str | None = None,
+        type: Literal[
+            "all",
+            "publishing",
+            "connections",
+            "webhooks",
+            "messaging",
+            "workflow_event",
+            "api_request",
+        ] = "publishing",
+        status: Literal["success", "failed", "pending", "skipped", "all"] | None = None,
+        platform: Literal[
+            "tiktok",
+            "instagram",
+            "whatsapp",
+            "facebook",
+            "youtube",
+            "linkedin",
+            "twitter",
+            "threads",
+            "pinterest",
+            "reddit",
+            "bluesky",
+            "googlebusiness",
+            "telegram",
+            "snapchat",
+            "all",
+        ]
+        | None = None,
         action: str | None = None,
         search: str | None = None,
         days: int = 90,
@@ -20564,6 +25178,11 @@ def register_generated_tools(mcp, _get_client):
         include_read_receipts: bool = False,
     ) -> str:
         """List activity logs
+
+            Unified logs endpoint. Returns logs for publishing, connections, webhooks, and messaging.
+            Filter by type, platform, status, and time range. Logs are retained for 90 days.
+            Legacy query aliases remain accepted: `account_id` for `accountId`, `request_id` for `requestId`,
+            `status_code` for `statusCode`, `api_key_id` for `apiKeyId`, and `include_read_receipts` for `includeReadReceipts`.
 
             Args:
                 type: Log category to query. Use `all` for the unified view across every category,
@@ -20618,9 +25237,34 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def media_get_media_presigned_url(
-        filename: str, content_type: str, size: int | None = None
+        filename: str,
+        content_type: Literal[
+            "image/jpeg",
+            "image/jpg",
+            "image/png",
+            "image/webp",
+            "image/gif",
+            "video/mp4",
+            "video/mpeg",
+            "video/quicktime",
+            "video/avi",
+            "video/x-msvideo",
+            "video/webm",
+            "video/x-m4v",
+            "application/pdf",
+            "audio/mpeg",
+            "audio/mp4",
+            "audio/aac",
+            "audio/ogg",
+            "audio/wav",
+            "audio/webm",
+            "audio/x-m4a",
+        ],
+        size: int | None = None,
     ) -> str:
         """Get upload URL
+
+        Get a presigned URL to upload files directly to cloud storage (up to 5GB). Returns an uploadUrl and publicUrl. PUT your file to the uploadUrl, then use the publicUrl in your posts.
 
         Args:
             filename: Name of the file to upload (required)
@@ -20648,11 +25292,16 @@ def register_generated_tools(mcp, _get_client):
     def mentions_list_inbox_mentions(
         account_id: str | None = None,
         profile_id: str | None = None,
-        sort_order: str = "desc",
+        sort_order: Literal["asc", "desc"] = "desc",
         limit: int = 25,
         cursor: str | None = None,
     ) -> str:
         """List mentions
+
+        Returns mentions of your connected organization accounts, delivered via platform webhooks.
+        Currently supports LinkedIn organization mentions.
+
+        Requires Inbox addon.
 
         Args:
             account_id: Filter by account ID
@@ -20686,6 +25335,22 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Reply to a mention
 
+        Reply to a mention of the connected account. Supported on Instagram only.
+
+        Two shapes, selected by whether `commentId` is present:
+
+        - **Comment mention** (someone @mentioned the account inside a comment): pass both
+          `mediaId` and `commentId`. Instagram posts a reply under that comment.
+        - **Caption mention** (someone @mentioned the account in their media caption, so no
+          comment exists): pass `mediaId` only. Instagram posts a comment on their media.
+
+        Story mentions are not supported by Instagram's API.
+
+        `GET /v1/inbox/mentions` currently returns LinkedIn mentions only and does
+        not surface Instagram mentions. Source `mediaId` and `commentId` from Instagram's
+        `comments` webhook, which is where mention notifications are delivered for accounts
+        connected through Instagram Login.
+
         Args:
             account_id: The Instagram account ID (required)
             media_id: The ID of the media the account was mentioned in (required)
@@ -20715,14 +25380,34 @@ def register_generated_tools(mcp, _get_client):
     )
     def messages_list_inbox_conversations(
         profile_id: str | None = None,
-        platform: str | None = None,
-        status: str | None = None,
-        sort_order: str = "desc",
+        platform: Literal[
+            "facebook",
+            "instagram",
+            "twitter",
+            "bluesky",
+            "reddit",
+            "telegram",
+            "whatsapp",
+            "imessage",
+        ]
+        | None = None,
+        status: Literal["active", "archived"] | None = None,
+        sort_order: Literal["asc", "desc"] = "desc",
         limit: int = 50,
         cursor: str | None = None,
         account_id: str | None = None,
     ) -> str:
         """List conversations
+
+        Fetch conversations (DMs) from all connected messaging accounts in a single API call. Supports filtering by profile and platform. Results are aggregated and deduplicated.
+
+        Supported platforms: Facebook, Instagram, X, Bluesky, Reddit, Telegram.
+
+        **X limitation.** X has replaced traditional DMs with encrypted \"X Chat\" for many accounts. Messages sent or received through encrypted X Chat are not accessible via X's API (the /2/dm_events endpoint only returns legacy unencrypted DMs). This means some X conversations may show only outgoing messages or appear empty. This is an X platform limitation that affects all third-party applications. See X's docs on encrypted messaging for more details.
+
+        **Instagram and Facebook pre-connect history.** When one of these accounts is connected, Zernio replays the DM history the account already holds on Meta, so conversations that began before the account was connected appear here. Up to 500 conversations per account are replayed.
+
+        - The replay runs in ...
 
         Args:
             profile_id: Filter by profile ID
@@ -20762,7 +25447,7 @@ def register_generated_tools(mcp, _get_client):
         message: str | None = None,
         skip_dm_check: bool = False,
         template_name: str | None = None,
-        category: str | None = None,
+        category: Literal["utility"] | None = None,
         link_preview: bool = True,
         template_language: str | None = None,
         template_params: list[str] | None = None,
@@ -20772,6 +25457,12 @@ def register_generated_tools(mcp, _get_client):
         header_location: dict[str, Any] | None = None,
     ) -> str:
         """Create conversation
+
+        Start a direct message conversation with a user. If a conversation with that recipient already exists, the message is added to the existing thread.
+
+        Supported platforms: X, Bluesky, Reddit, WhatsApp, SMS, Slack, and iMessage. Other platforms return PLATFORM_NOT_SUPPORTED.
+
+        **iMessage.** Pass the recipient as participantId: a phone number in international format (+15551234567) or an iMessage email. Senders ordered through Zernio can message contacts who never wrote to them. The first message to such a contact must be plain text from an identifiable person or business opening a conversation; a cold introduction, including a sales one, is fine (\"Hi Mark, this is John from Pratt Media. I help local roofers get more leads. Would you be open to a quick chat?\"). It may not contain links, email addresses, phone numbers, prices or attachments (the provider's own rule for opening messages). One that does returns 400 with code `invalid_content`, a message saying what was flagged, and nothing is ...
 
         Args:
             account_id: The account ID to send from (required)
@@ -20820,14 +25511,33 @@ def register_generated_tools(mcp, _get_client):
     )
     def messages_search_inbox_conversations(
         query: str,
-        direction: str | None = None,
+        direction: Literal["incoming", "outgoing"] | None = None,
         profile_id: str | None = None,
-        platform: str | None = None,
+        platform: Literal[
+            "facebook",
+            "instagram",
+            "telegram",
+            "whatsapp",
+            "sms",
+            "rcs",
+            "slack",
+            "imessage",
+        ]
+        | None = None,
         account_id: str | None = None,
         limit: int = 20,
         cursor: str | None = None,
     ) -> str:
         """Search conversations
+
+        Search your conversations two ways at once, and get back the matching conversations, most-recent match first:
+
+        - Message text: matches words inside message bodies. Case-insensitive and accent-insensitive, exact tokens only (no substrings, no stemming). Each hit carries up to 3 most-recent matching messages. With direction=outgoing you can collect examples of how you write to customers, for example to teach an AI agent your tone of voice.
+        - Contact identity: matches the participant's name, username, or phone number as a case-insensitive substring. These hits have matchCount 0 and an empty matches array.
+
+        A conversation that matches both ways is returned once, carrying its message matches.
+
+        Only platforms whose messages are stored by Zernio are searchable: WhatsApp, SMS, Telegram, Facebook, Instagram, X and Reddit. Bluesky conversations are fetched live from the platform and cannot be searched; those accounts are listed in meta.accountsSkipped.
 
         Args:
             query: Text to search for, in message content and in the contact's name, username, or phone number (required)
@@ -20863,6 +25573,8 @@ def register_generated_tools(mcp, _get_client):
     def messages_get_inbox_conversation(conversation_id: str, account_id: str) -> str:
         """Get conversation
 
+        Retrieve details and metadata for a specific conversation. Requires accountId query parameter.
+
         Args:
             conversation_id: Opaque conversation identifier, accepted verbatim from the list endpoint or from the conversationId on inbox webhooks. Format not to be assumed. (required)
             account_id: The account ID (required)"""
@@ -20884,9 +25596,11 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def messages_update_inbox_conversation(
-        conversation_id: str, account_id: str, status: str
+        conversation_id: str, account_id: str, status: Literal["active", "archived"]
     ) -> str:
         """Update conversation status
+
+        Archive or activate a conversation. Requires accountId in request body.
 
         Args:
             conversation_id: Opaque conversation identifier, accepted verbatim from the list endpoint or from the conversationId on inbox webhooks. Format not to be assumed. (required)
@@ -20914,9 +25628,29 @@ def register_generated_tools(mcp, _get_client):
         account_id: str,
         limit: int = 100,
         cursor: str | None = None,
-        sort_order: str = "asc",
+        sort_order: Literal["asc", "desc"] = "asc",
     ) -> str:
         """List messages
+
+            Fetch messages for a specific conversation, with cursor-based pagination
+            and ordering control.
+
+            Pagination: pass `pagination.nextCursor` from a prior response back as
+            the `cursor` query param to fetch the next page. The cursor is opaque;
+            do not parse or construct it client-side.
+
+            Sort order: defaults to `asc` (oldest first, chat style). For the
+            \"show me the latest messages\" pattern, pass `?sortOrder=desc&limit=N`.
+            X, Instagram, Telegram, WhatsApp and Reddit honor the requested
+            order from the local message store. For Facebook and Bluesky, the
+            upstream APIs only return newest-first and have no order parameter, so
+            sort order is best-effort and only reverses items within a single page
+            (pages still walk newest→oldest). The response field `sortOrderApplied`
+            tells you what was actually applied.
+
+            Reddit threads are paginated client-side because Reddit's API has no
+            per-thread cursor. Very long threads may be upstream-truncated by
+            Reddit's inbox/sent windows (~100 most-recent items each); this ...
 
             Args:
                 conversation_id: Opaque conversation identifier, accepted verbatim from the list endpoint or from the conversationId on inbox webhooks. Format not to be assumed. (required)
@@ -20954,27 +25688,67 @@ def register_generated_tools(mcp, _get_client):
         account_id: str,
         message: str | None = None,
         attachment_url: str | None = None,
-        category: str | None = None,
+        category: Literal["utility"] | None = None,
         link_preview: bool = True,
-        attachment_type: str | None = None,
+        attachment_type: Literal["image", "video", "audio", "file"] | None = None,
         attachment_name: str | None = None,
         voice_note: bool | None = None,
         subject: str | None = None,
-        effect: str | None = None,
+        effect: Literal[
+            "slam",
+            "loud",
+            "gentle",
+            "invisibleInk",
+            "echo",
+            "spotlight",
+            "balloons",
+            "confetti",
+            "love",
+            "lasers",
+            "fireworks",
+            "shootingStar",
+            "celebration",
+        ]
+        | None = None,
         contact_card: bool | None = None,
-        channel: str | None = None,
+        channel: Literal["imessage", "sms", "rcs", "whatsapp"] | None = None,
         quick_replies: list[dict[str, Any]] | None = None,
         buttons: list[dict[str, Any]] | None = None,
         template: dict[str, Any] | None = None,
         interactive: dict[str, Any] | None = None,
         reply_markup: dict[str, Any] | None = None,
-        messaging_type: str | None = None,
-        message_tag: str | None = None,
+        messaging_type: Literal["RESPONSE", "UPDATE", "MESSAGE_TAG"] | None = None,
+        message_tag: Literal[
+            "CONFIRMED_EVENT_UPDATE",
+            "POST_PURCHASE_UPDATE",
+            "ACCOUNT_UPDATE",
+            "HUMAN_AGENT",
+        ]
+        | None = None,
         reply_to: str | None = None,
         location: dict[str, Any] | None = None,
         contacts: list[dict[str, Any]] | None = None,
     ) -> str:
         """Send message
+
+            Send a message in a conversation. Supports text, attachments, quick replies,
+            buttons, templates, and message tags. Attachment and interactive message
+            support varies by platform.
+
+            WhatsApp per-recipient rate limit: WhatsApp caps how many messages you may
+            send to the same recipient in a short window and rejects the excess with
+            error code `131056` (\"Too many messages sent to this recipient\"). Pace
+            sends to a single recipient at roughly 10 per minute; bursts above that
+            return a `400` with code `131056`. Sends to other recipients are
+            unaffected, so parallelise across recipients rather than flooding one.
+
+            iMessage pacing: messages to contacts who have not written to the
+            sender in the last 24 hours must be at least 2 minutes apart per
+            sender; a send inside that window returns `429` with code
+            `new_contact_limit` and the time to retry. Replies to contacts who
+            wrote within the last day are not paced. A thread opened with
+            `POST /v1/inbox/conversations` takes at most two follow-ups before
+            the ...
 
             Args:
                 conversation_id: Opaque conversation identifier, accepted verbatim from the list endpoint or from the conversationId on inbox webhooks. Format not to be assumed. (required)
@@ -21160,6 +25934,11 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Edit message
 
+        Edit a previously sent message. Platform support:
+        - Telegram: text and/or reply markup, any time
+        - 'iMessage: text only, within 15 minutes of sending (Apple''s limit; 409 `edit_window_expired` after that). Group messages included. The stored message keeps its edit history.'
+        - All others: returns 400
+
         Args:
             conversation_id: The conversation ID (required)
             message_id: The platform message ID to edit (iMessage also accepts the Zernio message id) (required)
@@ -21192,6 +25971,14 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Delete message
 
+        Delete a message from a conversation. Platform support varies:
+        - Telegram: Full delete (bot's own messages anytime, others if admin)
+        - X: Full delete (own DM events only)
+        - Bluesky: Delete for self only (recipient still sees it)
+        - Reddit: Delete from sender's view only
+        - 'iMessage: Unsend (the bubble disappears for the recipient) within 2 minutes of sending (Apple''s limit; 409 `unsend_window_expired` after that). Own outbound messages only.'
+        - Facebook, Instagram, WhatsApp: Not supported (returns 400)
+
         Args:
             conversation_id: The conversation ID (required)
             message_id: The platform message ID to delete (required)
@@ -21218,6 +26005,16 @@ def register_generated_tools(mcp, _get_client):
     def messages_send_typing_indicator(conversation_id: str, account_id: str) -> str:
         """Send typing indicator
 
+        Show a typing indicator in a conversation. Platform support:
+        - Facebook Messenger: Shows \"Page is typing...\" for 20 seconds
+        - Instagram: Shows \"typing...\" to the recipient (works for both Instagram Login and Facebook Login accounts). The recipient must be signed in to Instagram to see it.
+        - Telegram: Shows \"Bot is typing...\" for 5 seconds
+        - WhatsApp: Shows \"typing...\" for up to 25 seconds. Requires a recent inbound message in the conversation (Meta references the inbound message id) and also marks that message as read as a side-effect.
+        - iMessage: Shows a typing bubble for ~15 seconds (1:1 conversations only; requires a recent two-way exchange)
+        - All others: Returns 200 but no-op (platform doesn't support it)
+
+        Typing indicators are best-effort. The endpoint always returns 200 even if the platform call fails; `success` reports whether a typing indicator was actually sent to the platform (`false` on unsupported platforms or when the platform call failed).
+
         Args:
             conversation_id: The conversation ID (required)
             account_id: Account ID (required)"""
@@ -21241,11 +26038,18 @@ def register_generated_tools(mcp, _get_client):
     def messages_set_conversation_thread_control(
         conversation_id: str,
         account_id: str,
-        action: str,
-        target: str | None = None,
+        action: Literal["release", "take", "pass"],
+        target: Literal["ai_agent"] | None = None,
         metadata: str | None = None,
     ) -> str:
         """Hand a conversation to or from Meta Business Agent
+
+        WhatsApp only, on numbers with Meta Business Agent enabled. Wraps Meta's thread control:
+        - `release`: hand the conversation back to the agent so it resumes answering. You must currently hold control (sending any message takes it implicitly).
+        - `take`: take control before sending anything, so the agent stops replying while an operator reads the thread. Meta accepts this only from the business configured as the number's escalation partner; other apps take control by sending a message.
+        - `pass`: transfer control to the number's configured escalation partner, or to the agent with `target: ai_agent`. Meta's Cloud API currently rejects it (\"Pass action is not supported\", verified 2026-09-08); use `release` to hand a thread back to the agent.
+
+        The conversation's `threadControl` follows the result; a `conversation.control_changed` webhook fires when Meta later reports the change.
 
         Args:
             conversation_id: The conversation ID (required)
@@ -21277,6 +26081,19 @@ def register_generated_tools(mcp, _get_client):
     def messages_mark_conversation_read(conversation_id: str, account_id: str) -> str:
         """Mark a conversation as read
 
+        Marks all unread incoming messages in the conversation as read.
+
+        For WhatsApp, this also sends read receipts (blue ticks) to the contact,
+        EXCEPT on coexistence accounts (where the WhatsApp Business app on the
+        customer's phone owns read state and we never override it).
+
+        For iMessage, this also marks the conversation read with the contact
+        (1:1 conversations only). Best-effort.
+
+        This is the explicit, human-driven counterpart to `GET .../messages`,
+        which is side-effect-free and does NOT mark anything read. Call this when
+        a user actually views the conversation.
+
         Args:
             conversation_id: The conversation ID (required)
             account_id: Account ID (required)"""
@@ -21301,6 +26118,14 @@ def register_generated_tools(mcp, _get_client):
         conversation_id: str, message_id: str, account_id: str, emoji: str
     ) -> str:
         """Add reaction
+
+        Add an emoji reaction to a message. Platform support:
+        - Telegram: Supports a subset of Unicode emoji reactions
+        - WhatsApp: Supports any standard emoji (one reaction per message per sender)
+        - Instagram and Facebook Messenger: Any standard emoji, subject to Meta's 24h messaging window
+        - Slack: The emoji must have a Slack name (e.g. `:thumbsup:`); unnamed characters return 400
+        - 'iMessage: The six Apple tapbacks (❤️ 👍 👎 😂 ‼️ ❓) render natively; any other emoji is sent as a custom emoji tapback (iOS 18+ recipients)'
+        - All others: Returns 400 (not supported)
 
         Args:
             conversation_id: The conversation ID (required)
@@ -21332,6 +26157,14 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Remove reaction
 
+        Remove a reaction from a message. Platform support:
+        - Telegram: Send empty reaction array to clear
+        - WhatsApp: Send empty emoji to remove
+        - Instagram and Facebook Messenger: Sends Meta's `unreact` action; the emoji does not need to be repeated
+        - Slack: Removes the reaction we previously sent on that message
+        - 'iMessage: Retracts your existing tapback or emoji reaction on the message (400 when you have none)'
+        - All others: Returns 400 (not supported)
+
         Args:
             conversation_id: The conversation ID (required)
             message_id: The platform message ID (as returned by GET /messages) or the Zernio message ID (as returned by the reaction webhook) (required)
@@ -21356,7 +26189,16 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def messages_upload_media_direct() -> str:
-        """Upload media file"""
+        """Upload media file
+
+        Upload a media file using API key authentication and get back a publicly accessible URL.
+        The URL can be used as attachmentUrl when sending inbox messages.
+
+        Files are stored in temporary storage and auto-delete after 7 days.
+        Maximum file size is 25MB.
+
+        Unlike /v1/media/upload (which uses upload tokens for end-user flows),
+        this endpoint takes your API key in the Authorization header, for programmatic use."""
         client = _get_client()
         try:
             response = client.messages.upload_media_direct()
@@ -21377,9 +26219,29 @@ def register_generated_tools(mcp, _get_client):
         message_id: str,
         index: int,
         account_id: str,
-        format: str = "redirect",
+        format: Literal["redirect", "json"] = "redirect",
     ) -> str:
         """Resolve message attachment
+
+        Resolve one attachment on a message to a media url that works right now.
+
+        Instagram and Facebook sign DM media urls per request and expire them, so
+        the `url` on a message is a snapshot: it works when you read the message
+        and stops working later. This endpoint checks the stored url and, when it
+        has gone stale, re-mints the message's media from Meta and persists it
+        before answering. The message id never expires, so this URL is the one to
+        store. It is returned ready-made on each attachment as `refreshUrl` when
+        you read a message over REST.
+
+        **Webhook payloads do not carry `refreshUrl`**, so a webhook-driven
+        integration builds this URL itself. Every piece is in the event:
+        `message.conversationId`, `message.platformMessageId`, the attachment's
+        zero-based position, and `account.accountId`. **`accountId` is a
+        required query parameter**; omitting it returns `400`
+        `missing_required_field`, which is the same requirement
+        `GET /v1/whatsapp/media/{mediaId}` has.
+
+        By default it responds `302` to ...
 
         Args:
             conversation_id: The conversation ID (Zernio id or platform conversation id) (required)
@@ -21432,9 +26294,9 @@ def register_generated_tools(mcp, _get_client):
         creatives: list[dict[str, Any]] | None = None,
         ad_set_id: str | None = None,
         existing_campaign_id: str | None = None,
-        budget_level: str | None = None,
+        budget_level: Literal["adset", "campaign"] | None = None,
         budget_amount: float | None = None,
-        budget_type: str | None = None,
+        budget_type: Literal["daily", "lifetime"] | None = None,
         currency: str | None = None,
         start_date: str | None = None,
         end_date: str | None = None,
@@ -21443,14 +26305,38 @@ def register_generated_tools(mcp, _get_client):
         regions: list[dict[str, Any]] | None = None,
         zips: list[dict[str, Any]] | None = None,
         metros: list[dict[str, Any]] | None = None,
-        country_groups: list[str] | None = None,
+        country_groups: list[
+            Literal[
+                "africa",
+                "asia",
+                "europe",
+                "north_america",
+                "south_america",
+                "oceania",
+                "central_america",
+                "caribbean",
+                "eea",
+                "euro_area",
+                "nafta",
+                "mercosur",
+                "afta",
+                "apec",
+                "gcc",
+                "cisfta",
+                "emerging_markets",
+                "itunes_app_store",
+                "android_free_store",
+                "android_paid_store",
+            ]
+        ]
+        | None = None,
         custom_locations: list[dict[str, Any]] | None = None,
         age_min: int | None = None,
         age_max: int | None = None,
         interests: list[dict[str, Any]] | None = None,
         audience_id: str | None = None,
         placements: dict[str, Any] | None = None,
-        gender: str | None = None,
+        gender: Literal["all", "male", "female"] | None = None,
         languages: list[str] | None = None,
         places: list[dict[str, Any]] | None = None,
         neighborhoods: list[dict[str, Any]] | None = None,
@@ -21459,7 +26345,7 @@ def register_generated_tools(mcp, _get_client):
         work_positions: list[dict[str, Any]] | None = None,
         work_employers: list[dict[str, Any]] | None = None,
         work_industries: list[dict[str, Any]] | None = None,
-        income_tier: str | None = None,
+        income_tier: Literal["top_5", "top_10", "top_10_25", "top_25_50"] | None = None,
         user_os: list[str] | None = None,
         user_device: list[str] | None = None,
         audience_include: list[str] | None = None,
@@ -21467,25 +26353,59 @@ def register_generated_tools(mcp, _get_client):
         saved_targeting_id: str | None = None,
         targeting: dict[str, Any] | None = None,
         raw_targeting: dict[str, Any] | None = None,
-        special_ad_categories: list[str] | None = None,
+        special_ad_categories: list[
+            Literal[
+                "HOUSING",
+                "EMPLOYMENT",
+                "CREDIT",
+                "ISSUES_ELECTIONS_POLITICS",
+                "FINANCIAL_PRODUCTS_SERVICES",
+                "ONLINE_GAMBLING_AND_GAMING",
+            ]
+        ]
+        | None = None,
         special_ad_category_country: list[str] | None = None,
         advantage_audience: int | None = None,
-        objective: str | None = None,
-        status: str | None = None,
-        campaign_status: str | None = None,
-        bid_strategy: str | None = None,
+        objective: Literal["OUTCOME_ENGAGEMENT", "OUTCOME_SALES", "OUTCOME_LEADS"]
+        | None = None,
+        status: Literal["ACTIVE", "PAUSED"] | None = None,
+        campaign_status: Literal["ACTIVE", "PAUSED"] | None = None,
+        bid_strategy: Literal[
+            "LOWEST_COST_WITHOUT_CAP",
+            "LOWEST_COST_WITH_BID_CAP",
+            "COST_CAP",
+            "LOWEST_COST_WITH_MIN_ROAS",
+        ]
+        | None = None,
         bid_amount: float | None = None,
         roas_average_floor: float | None = None,
         dsa_beneficiary: str | None = None,
         dsa_payor: str | None = None,
         regional_regulated_categories: list[str] | None = None,
         regional_regulation_identities: dict[str, Any] | None = None,
-        destination: str | None = None,
-        destinations: list[str] | None = None,
+        destination: Literal["whatsapp", "messenger", "instagram_direct"] | None = None,
+        destinations: list[Literal["whatsapp", "messenger", "instagram_direct"]]
+        | None = None,
         placement_assets: dict[str, Any] | None = None,
         validate_only: bool | None = None,
     ) -> str:
         """Create messaging ad
+
+            Creates a click-to-message ad; `destination` selects where the tapped ad opens a
+            conversation: WhatsApp, the Page's Messenger inbox or the linked Instagram account's Direct inbox.
+            `destinations` puts two or three of them on one ad set and lets Meta pick the app per viewer.
+            The ad set is created with the matching destination_type and
+            CONVERSATIONS optimization; the campaign objective defaults to OUTCOME_ENGAGEMENT.
+            Supports single-creative and multi-creative shapes. Supersedes POST /v1/ads/ctwa
+            (deprecated, equivalent to `destination: whatsapp`).
+            Existing posts and reels are supported through `platformPostId` (alias
+            `existingPostId`) or `objectStoryId`, either per creative or at the top level. Omit fresh
+            media and copy for that creative. Optional `whatsappPhoneNumber` selects
+            a number already paired with the Page (WhatsApp destination only).
+            `accountId` is a Facebook, Instagram or Meta ads (business login) connection;
+            `pageId` picks the Page when that connection was granted several. ...
+
+            Platforms: meta
 
             Args:
                 creative_features: Meta enhancement settings for single or attached ads, and defaults for creatives[]. An item replaces the entire map, including with an empty object.
@@ -21813,9 +26733,9 @@ def register_generated_tools(mcp, _get_client):
         creatives: list[dict[str, Any]] | None = None,
         ad_set_id: str | None = None,
         existing_campaign_id: str | None = None,
-        budget_level: str | None = None,
+        budget_level: Literal["adset", "campaign"] | None = None,
         budget_amount: float | None = None,
-        budget_type: str | None = None,
+        budget_type: Literal["daily", "lifetime"] | None = None,
         currency: str | None = None,
         start_date: str | None = None,
         end_date: str | None = None,
@@ -21824,14 +26744,38 @@ def register_generated_tools(mcp, _get_client):
         regions: list[dict[str, Any]] | None = None,
         zips: list[dict[str, Any]] | None = None,
         metros: list[dict[str, Any]] | None = None,
-        country_groups: list[str] | None = None,
+        country_groups: list[
+            Literal[
+                "africa",
+                "asia",
+                "europe",
+                "north_america",
+                "south_america",
+                "oceania",
+                "central_america",
+                "caribbean",
+                "eea",
+                "euro_area",
+                "nafta",
+                "mercosur",
+                "afta",
+                "apec",
+                "gcc",
+                "cisfta",
+                "emerging_markets",
+                "itunes_app_store",
+                "android_free_store",
+                "android_paid_store",
+            ]
+        ]
+        | None = None,
         custom_locations: list[dict[str, Any]] | None = None,
         age_min: int | None = None,
         age_max: int | None = None,
         interests: list[dict[str, Any]] | None = None,
         audience_id: str | None = None,
         placements: dict[str, Any] | None = None,
-        gender: str | None = None,
+        gender: Literal["all", "male", "female"] | None = None,
         languages: list[str] | None = None,
         places: list[dict[str, Any]] | None = None,
         neighborhoods: list[dict[str, Any]] | None = None,
@@ -21840,7 +26784,7 @@ def register_generated_tools(mcp, _get_client):
         work_positions: list[dict[str, Any]] | None = None,
         work_employers: list[dict[str, Any]] | None = None,
         work_industries: list[dict[str, Any]] | None = None,
-        income_tier: str | None = None,
+        income_tier: Literal["top_5", "top_10", "top_10_25", "top_25_50"] | None = None,
         user_os: list[str] | None = None,
         user_device: list[str] | None = None,
         audience_include: list[str] | None = None,
@@ -21848,13 +26792,30 @@ def register_generated_tools(mcp, _get_client):
         saved_targeting_id: str | None = None,
         targeting: dict[str, Any] | None = None,
         raw_targeting: dict[str, Any] | None = None,
-        special_ad_categories: list[str] | None = None,
+        special_ad_categories: list[
+            Literal[
+                "HOUSING",
+                "EMPLOYMENT",
+                "CREDIT",
+                "ISSUES_ELECTIONS_POLITICS",
+                "FINANCIAL_PRODUCTS_SERVICES",
+                "ONLINE_GAMBLING_AND_GAMING",
+            ]
+        ]
+        | None = None,
         special_ad_category_country: list[str] | None = None,
         advantage_audience: int | None = None,
-        objective: str | None = None,
-        status: str | None = None,
-        campaign_status: str | None = None,
-        bid_strategy: str | None = None,
+        objective: Literal["OUTCOME_ENGAGEMENT", "OUTCOME_SALES", "OUTCOME_LEADS"]
+        | None = None,
+        status: Literal["ACTIVE", "PAUSED"] | None = None,
+        campaign_status: Literal["ACTIVE", "PAUSED"] | None = None,
+        bid_strategy: Literal[
+            "LOWEST_COST_WITHOUT_CAP",
+            "LOWEST_COST_WITH_BID_CAP",
+            "COST_CAP",
+            "LOWEST_COST_WITH_MIN_ROAS",
+        ]
+        | None = None,
         bid_amount: float | None = None,
         roas_average_floor: float | None = None,
         dsa_beneficiary: str | None = None,
@@ -21863,6 +26824,15 @@ def register_generated_tools(mcp, _get_client):
         regional_regulation_identities: dict[str, Any] | None = None,
     ) -> str:
         """Create Click-to-Call ad
+
+            Same shape and flow as POST /v1/ads/ctwa, but the CTA is CALL_NOW dialing `phoneNumber`
+            via a tel: link. The ad set is destination_type PHONE_CALL optimizing QUALITY_CALL
+            and the campaign objective defaults to OUTCOME_LEADS.
+            Supports the same single-creative and multi-creative shapes as CTWA.
+
+            **Idempotency:** this endpoint is not idempotent at the platform level (a blind retry creates a second campaign/ad set/ad). Send an `Idempotency-Key` header to make retries safe: the first request with a given key creates the ad and we store the response; a retry with the same key replays that exact response (with `Idempotent-Replayed: true`) instead of creating duplicates. Reusing a key with a different body returns 422; a key whose first request is still in flight returns 409 (retry after a short backoff). Keys are scoped to your credential and expire after 24h.
+
+            Platforms: meta
 
             Args:
                 creative_features: Meta enhancement settings for single or attached ads, and defaults for creatives[]. An item replaces the entire map, including with an empty object.
@@ -22174,9 +27144,9 @@ def register_generated_tools(mcp, _get_client):
         creatives: list[dict[str, Any]] | None = None,
         ad_set_id: str | None = None,
         existing_campaign_id: str | None = None,
-        budget_level: str | None = None,
+        budget_level: Literal["adset", "campaign"] | None = None,
         budget_amount: float | None = None,
-        budget_type: str | None = None,
+        budget_type: Literal["daily", "lifetime"] | None = None,
         currency: str | None = None,
         start_date: str | None = None,
         end_date: str | None = None,
@@ -22185,14 +27155,38 @@ def register_generated_tools(mcp, _get_client):
         regions: list[dict[str, Any]] | None = None,
         zips: list[dict[str, Any]] | None = None,
         metros: list[dict[str, Any]] | None = None,
-        country_groups: list[str] | None = None,
+        country_groups: list[
+            Literal[
+                "africa",
+                "asia",
+                "europe",
+                "north_america",
+                "south_america",
+                "oceania",
+                "central_america",
+                "caribbean",
+                "eea",
+                "euro_area",
+                "nafta",
+                "mercosur",
+                "afta",
+                "apec",
+                "gcc",
+                "cisfta",
+                "emerging_markets",
+                "itunes_app_store",
+                "android_free_store",
+                "android_paid_store",
+            ]
+        ]
+        | None = None,
         custom_locations: list[dict[str, Any]] | None = None,
         age_min: int | None = None,
         age_max: int | None = None,
         interests: list[dict[str, Any]] | None = None,
         audience_id: str | None = None,
         placements: dict[str, Any] | None = None,
-        gender: str | None = None,
+        gender: Literal["all", "male", "female"] | None = None,
         languages: list[str] | None = None,
         places: list[dict[str, Any]] | None = None,
         neighborhoods: list[dict[str, Any]] | None = None,
@@ -22201,7 +27195,7 @@ def register_generated_tools(mcp, _get_client):
         work_positions: list[dict[str, Any]] | None = None,
         work_employers: list[dict[str, Any]] | None = None,
         work_industries: list[dict[str, Any]] | None = None,
-        income_tier: str | None = None,
+        income_tier: Literal["top_5", "top_10", "top_10_25", "top_25_50"] | None = None,
         user_os: list[str] | None = None,
         user_device: list[str] | None = None,
         audience_include: list[str] | None = None,
@@ -22209,13 +27203,30 @@ def register_generated_tools(mcp, _get_client):
         saved_targeting_id: str | None = None,
         targeting: dict[str, Any] | None = None,
         raw_targeting: dict[str, Any] | None = None,
-        special_ad_categories: list[str] | None = None,
+        special_ad_categories: list[
+            Literal[
+                "HOUSING",
+                "EMPLOYMENT",
+                "CREDIT",
+                "ISSUES_ELECTIONS_POLITICS",
+                "FINANCIAL_PRODUCTS_SERVICES",
+                "ONLINE_GAMBLING_AND_GAMING",
+            ]
+        ]
+        | None = None,
         special_ad_category_country: list[str] | None = None,
         advantage_audience: int | None = None,
-        objective: str | None = None,
-        status: str | None = None,
-        campaign_status: str | None = None,
-        bid_strategy: str | None = None,
+        objective: Literal["OUTCOME_ENGAGEMENT", "OUTCOME_SALES", "OUTCOME_LEADS"]
+        | None = None,
+        status: Literal["ACTIVE", "PAUSED"] | None = None,
+        campaign_status: Literal["ACTIVE", "PAUSED"] | None = None,
+        bid_strategy: Literal[
+            "LOWEST_COST_WITHOUT_CAP",
+            "LOWEST_COST_WITH_BID_CAP",
+            "COST_CAP",
+            "LOWEST_COST_WITH_MIN_ROAS",
+        ]
+        | None = None,
         bid_amount: float | None = None,
         roas_average_floor: float | None = None,
         dsa_beneficiary: str | None = None,
@@ -22224,6 +27235,18 @@ def register_generated_tools(mcp, _get_client):
         regional_regulation_identities: dict[str, Any] | None = None,
     ) -> str:
         """Create CTWA ad (deprecated)
+
+            Deprecated: use POST /v1/ads/messaging with `destination: whatsapp`. This endpoint stays available for back-compat; no removal planned.
+
+            Creates one or more Click-to-WhatsApp (CTWA) ads on Meta under a single campaign and ad set. When tapped, each ad opens a WhatsApp conversation with the business attached to the supplied Facebook Page. The full hierarchy (campaign, ad set, creative(s), ad(s)) is created and activated in one call. The CTA is locked to WHATSAPP_MESSAGE and the destination is hard-coded to api.whatsapp.com/send; Meta resolves the actual WhatsApp number from the Page-to-WA pairing configured in Page settings or Business Manager.
+
+            Supports two mutually-exclusive shapes:
+
+            - **Single-creative**: supply top-level `headline`, `body`, and one of `imageUrl` / `video`, or a `platformPostId` / `objectStoryId` reference. Creates 1 campaign + 1 ad set + 1 ad.
+
+            - **Multi-creative**: supply a `creatives[]` array with N entries (each carrying fresh media and copy or an existing post ...
+
+            Platforms: meta
 
             Args:
                 creative_features: Meta enhancement settings for single or attached ads, and defaults for creatives[]. An item replaces the entire map, including with an empty object.
@@ -22512,9 +27535,26 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def phone_numbers_list_phone_numbers(
-        status: str | None = None, profile_id: str | None = None
+        status: Literal[
+            "provisioning",
+            "verifying",
+            "pending_payment",
+            "pending_regulatory",
+            "regulatory_declined",
+            "active",
+            "suspended",
+            "releasing",
+            "released",
+        ]
+        | None = None,
+        profile_id: str | None = None,
     ) -> str:
         """List phone numbers
+
+            List all phone numbers purchased by the authenticated user.
+            By default, released numbers are excluded. Connected (bring-your-own)
+            WhatsApp numbers are returned in the separate `connected` array; they
+            are not billed and have no provisioning lifecycle.
 
             Args:
                 status: Filter by status (by default excludes released numbers). NOTE:
@@ -22547,6 +27587,14 @@ def register_generated_tools(mcp, _get_client):
     def phone_numbers_get_phone_number(id: str) -> str:
         """Get phone number
 
+        Retrieve the current status of a purchased phone number. Poll this to
+        track Meta pre-verification (US sync path) and, for regulated (Tier 3/4)
+        numbers, the async lifecycle: pending_regulatory → active (or
+        regulatory_declined). When a regulated number has an Onfido ID step,
+        `onfidoVerificationUrl` appears here once the order is placed. Forward
+        it to the end user. (Or subscribe to the whatsapp.number.* webhooks
+        instead of polling.)
+
         Args:
             id: Phone number record ID (required)"""
         client = _get_client()
@@ -22566,6 +27614,12 @@ def register_generated_tools(mcp, _get_client):
     )
     def phone_numbers_release_phone_number(id: str) -> str:
         """Release phone number
+
+        Release a purchased phone number. This will:
+        1. Disconnect any linked WhatsApp account
+        2. Decrement the Stripe subscription quantity (or cancel if last number)
+        3. Release the number from Telnyx
+        4. Mark the number as released
 
         Args:
             id: Phone number record ID (required)"""
@@ -22587,7 +27641,7 @@ def register_generated_tools(mcp, _get_client):
     def phone_numbers_purchase_phone_number(
         profile_id: str,
         country: str = "US",
-        number_type: str | None = None,
+        number_type: Literal["local", "mobile", "national", "toll_free"] | None = None,
         area_code: str | None = None,
         claim_id: str | None = None,
         phone_number: str | None = None,
@@ -22598,6 +27652,20 @@ def register_generated_tools(mcp, _get_client):
         allow_multiple: bool = False,
     ) -> str:
         """Purchase phone number
+
+           Payment-first: the system provisions a number and auto-assigns it, unless you pass
+           `phoneNumber` to buy one exact number from `GET /v1/phone-numbers/available`. With
+           usage-based billing active and a payment method on file, the
+           number provisions inline and bills per month on your usage-based invoice (there is
+           no checkout redirect). No payment method on file returns `402 PAYMENT_REQUIRED`;
+           a regulated country returns `202` with `status: \"kyc_required\"` and a `kycUrl`.
+
+           The monthly price is the one `GET /v1/phone-numbers/countries` quotes for that
+           country and `numberType` at the time of purchase, and it is stamped on the number:
+           later rate-card changes never move a number you already own.
+
+           Requires usage-based billing (the Usage plan). The maximum number of phone numbers
+           is determined by the user's plan.
 
            Args:
                profile_id: Profile for the number, which may already hold other numbers. Without it the number goes to the default profile. The response's `profileId` carries the assignment.
@@ -22642,6 +27710,12 @@ def register_generated_tools(mcp, _get_client):
     def phone_numbers_get_phone_number_claim(claim_id: str) -> str:
         """Resolve a number claim
 
+        Resolves a `claimId` from a keyless search or purchase into the
+        selection it carries (country, number type, area and exact number)
+        priced at today's rate. The dashboard calls it when a person lands
+        from a `claimUrl`. The number is not held, so buying it can still fail
+        with 409 PHONE_NUMBER_UNAVAILABLE.
+
         Args:
             claim_id: (required)"""
         client = _get_client()
@@ -22660,7 +27734,14 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def phone_numbers_list_phone_number_countries() -> str:
-        """List offerable number countries"""
+        """List offerable number countries
+
+        The phone number countries available to purchase, each with its flat
+        monthly price (cents), regulatory tier, whether it needs end-user KYC
+        (Tier 3/4), and per-feature availability (PSTN calls, WhatsApp, SMS,
+        and WhatsApp Business Calling outbound). Drives the country picker.
+        Tier-4 countries appear only when enabled. No API key needed: the
+        catalog is public so you can browse it before you have an account."""
         client = _get_client()
         try:
             response = client.phone_numbers.list_phone_number_countries()
@@ -22678,7 +27759,7 @@ def register_generated_tools(mcp, _get_client):
     )
     def phone_numbers_search_available_phone_numbers(
         country: str = "US",
-        number_type: str | None = None,
+        number_type: Literal["local", "mobile", "national", "toll_free"] | None = None,
         area_code: str | None = None,
         type: str | None = None,
         prefix: str | None = None,
@@ -22689,6 +27770,22 @@ def register_generated_tools(mcp, _get_client):
         masked: bool | None = None,
     ) -> str:
         """Search available numbers
+
+        Search the provider's inventory for numbers available to purchase in a
+        country (default US). Optional filters narrow the results. The country
+        must be offerable (see GET /v1/phone-numbers/countries). Voice
+        capability is always required; pass `sms=true` to only see numbers that
+        can also text (SMS support is per-number, not per-country). Numbers a
+        purchase would refuse are left out, and any result's `phoneNumber` can
+        be bought exactly by passing it to POST /v1/phone-numbers/purchase.
+
+        Works without an API key. Keyless calls get up to 12 results with the
+        middle digits masked (`maskedNumber`), each with a `claimId` and a
+        `claimUrl`: a signup link that lands a person on the dashboard's
+        confirm step with that number picked, so an agent can search for a
+        user and hand them one link. Keyless calls are rate limited per IP and
+        results are cached for a few minutes. With an API key you get full
+        numbers and no claim fields.
 
         Args:
             country: ISO code, or `auto` on the keyless shape to search the caller's own country (from their IP) near their city, falling back to US.
@@ -22728,9 +27825,25 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def phone_numbers_check_phone_number_availability(
-        country: str, number_type: str | None = None, sms: bool | None = None
+        country: str,
+        number_type: Literal["local", "mobile", "national", "toll_free"] | None = None,
+        sms: bool | None = None,
     ) -> str:
         """Check country availability
+
+        Pre-purchase check, so you can warn BEFORE a customer invests in KYC
+        (regulated review is async, 1-3 days). Tells you whether we have
+        deliverable inventory, and what address the customer needs:
+          - `addressConstraint: geo`  → the registered address MUST be in one of
+            the returned `areas` (the only place we have stock). A different-area
+            address passes pre-approval but the number can never be assigned.
+          - `addressConstraint: country` → any in-country address works.
+          - `addressConstraint: none` → field-only / instant country, no address.
+        Call this before starting the KYC form for regulated countries.
+
+        Without an API key it answers from cache only and returns just
+        `country`, `numberType` and `areaOptions`, for building an area
+        picker before signup.
 
         Args:
             country: ISO-2 country code. (required)
@@ -22754,9 +27867,14 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def phone_numbers_get_phone_number_kyc_form(
-        country: str, number_type: str | None = None
+        country: str,
+        number_type: Literal["local", "mobile", "national", "toll_free"] | None = None,
     ) -> str:
         """Get KYC form spec
+
+        For a Tier 3/4 country, the fields the end customer must provide (Telnyx
+        regulatory requirements) before a number can be ordered: text, date,
+        address, or file (document) per requirement.
 
         Args:
             country: (required)
@@ -22795,6 +27913,24 @@ def register_generated_tools(mcp, _get_client):
         address: dict[str, Any] | None = None,
     ) -> str:
         """Submit KYC
+
+        Submit the end customer's KYC (textual values, uploaded documents,
+        address) for a Tier 3/4 country. Documents are streamed straight to the
+        number provider and are not stored by Zernio. Builds + submits a
+        regulatory requirement group and claims a pending_regulatory slot; the
+        number is ordered + activated once the provider approves (asynchronous).
+        A customer may hold several same-country numbers in review at once; a
+        double-submit of the SAME attempt is deduped via `submissionId`.
+
+        For an ID-card document requirement, carriers commonly require BOTH sides:
+        combine the front and back into a single file before uploading (the
+        dashboard does this automatically). A one-sided ID is a common decline
+        reason; fix it via POST /v1/phone-numbers/{id}/remediate.
+
+        Before submitting, call GET /v1/phone-numbers/availability to
+        check the country has deliverable inventory and, for geographic-match
+        countries, which area the address must be in. Otherwise the submission
+        can pass review yet never be ...
 
         Args:
             profile_id: (required)
@@ -22844,6 +27980,13 @@ def register_generated_tools(mcp, _get_client):
     def phone_numbers_view_phone_number_kyc_document(document_id: str) -> str:
         """View a KYC document on file
 
+        Stream a document backing a reusable verification (the `documentId`
+        values from GET /v1/phone-numbers/kyc `reusable.options[].details[]`), so
+        the account holder can see what's on file before reusing it. Returned
+        inline as `application/pdf` (uploads are normalized to PDF). Auth-scoped:
+        a document is viewable only when its id is referenced by one of the
+        caller's own numbers. Otherwise `404`.
+
         Args:
             document_id: The Telnyx document id (from `reusable.options[].details[].documentId`). (required)"""
         client = _get_client()
@@ -22864,7 +28007,14 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def phone_numbers_upload_phone_number_kyc_document() -> str:
-        """Upload a KYC document"""
+        """Upload a KYC document
+
+        Upload ONE document and get back its provider document id, to reference
+        from POST /v1/phone-numbers/kyc via `documents[].documentId`.
+        Send the RAW file bytes as the request body (not base64); put the filename
+        in the `X-Filename` header. Uploading documents one-per-request keeps each
+        request under the ~4.5MB body limit. The document streams straight to the
+        number provider and is not stored by Zernio."""
         client = _get_client()
         try:
             response = client.phone_numbers.upload_phone_number_kyc_document()
@@ -22889,6 +28039,16 @@ def register_generated_tools(mcp, _get_client):
         administrative_area: str | None = None,
     ) -> str:
         """Pre-validate KYC address
+
+        Optional early check for the address step of a Tier 4 (end-user identity)
+        registration: validates a postal address for deliverability BEFORE the full
+        KYC submit, so it can be corrected before any documents are uploaded. The
+        full submit (POST /v1/phone-numbers/kyc) re-validates the address,
+        so this call is purely a fast feedback path and skipping it is safe. Only
+        the postal address is sent (no documents, no gov-ID fields). A region
+        (`administrative_area`) is required by the validator; when it is omitted the
+        pre-check is skipped and `{ ok: true, skipped: true }` is returned (the
+        final submit still validates).
 
         Args:
             country: ISO 3166-1 alpha-2 country code. (required)
@@ -22923,11 +28083,29 @@ def register_generated_tools(mcp, _get_client):
         profile_id: str,
         country: str,
         area_code: str | None = None,
-        language: str | None = None,
+        language: Literal["en", "es", "pt-BR"] | None = None,
         branding: dict[str, Any] | None = None,
         redirect_url: str | None = None,
     ) -> str:
         """Create a hosted KYC link
+
+            Create a single-use, 7-day hosted KYC link that your end customer
+            completes WITHOUT a Zernio login. Useful when the person who holds the
+            ID and address is not your team. They fill the regulated verification on
+            a Zernio-hosted page; the number provisions under YOUR account once they
+            submit. Only regulated (KYC) countries are valid: a country that does not
+            require KYC returns 400.
+
+            Pass `numberType` (`local`, `mobile`, `national`, `toll_free`) to choose
+            which of the country's offered types the shared form collects KYC for and
+            eventually orders; omitted defaults to the country's default type (which
+            may be `national` and therefore have no inventory in a geographic area
+            code). Pass `areaCode` (NDC digits) to constrain the eventual order to a
+            specific area; it is validated against the chosen `numberType`.
+
+            White-label the page with `branding` (your company name, logo, brand
+            color). Supply `redirect_url` to send the end customer back to your own
+            site after a successful submit (completion ...
 
             Args:
                 profile_id: (required)
@@ -22968,10 +28146,29 @@ def register_generated_tools(mcp, _get_client):
         invoice_document_id: str,
         foc_datetime_requested: str | None = None,
         customer_reference: str | None = None,
-        port_type: str = "full",
+        port_type: Literal["full", "partial"] = "full",
         requirements: list[dict[str, Any]] | None = None,
     ) -> str:
         """Port numbers in
+
+            Submit a port-in for one or more existing numbers from another carrier.
+            Creates the carrier order(s), attaches the end-user (current account)
+            info plus the LOA and invoice documents, and submits to the losing
+            carrier. The transfer PIN is forwarded to the carrier and never stored.
+            Ported numbers arrive voice-ready (and SMS-ready where the order
+            supports messaging).
+
+            Run the portability check (POST /v1/phone-numbers/port-in/check) and
+            upload the two documents (POST /v1/phone-numbers/port-in/documents)
+            first. Uploaded documents must be attached to an order within 30
+            minutes or the carrier deletes them, so upload right before this call.
+            The carrier may split the numbers into several orders (by country,
+            number type, losing carrier); `orders` carries per-order results, and a
+            partial failure still returns 201 with the failed orders' `error` set
+            (they stay as cancellable drafts).
+
+            Non-US/CA numbers additionally need the country-specific values from
+            GET /v1/phone-numbers/port-in/requirements, ...
 
             Args:
                 phone_numbers: E.164 numbers to port in. (required)
@@ -23011,7 +28208,10 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def phone_numbers_list_phone_number_port_ins() -> str:
-        """List port-in orders"""
+        """List port-in orders
+
+        Your porting orders, newest first (max 50). Poll this for port progress:
+        pending, confirmed FOC date, exception reason, or ported."""
         client = _get_client()
         try:
             response = client.phone_numbers.list_phone_number_port_ins()
@@ -23031,6 +28231,22 @@ def register_generated_tools(mcp, _get_client):
         phone_numbers: list[str] | None, claim_links: bool | None = None
     ) -> str:
         """Check portability
+
+        Pre-flight portability check: whether each number can be ported in,
+        whether it qualifies for FastPort, and its current carrier and line
+        type where the carrier lookup knows them, BEFORE the user commits to a
+        port order (LOA, invoice, service address). Read-only; creates no
+        order and bills nothing.
+
+        Works without an API key for one number per request. Keyless calls
+        are what the checker at https://zernio.com/port-your-number makes:
+        they must come from that page (a browser bot check rejects scripted
+        callers with 401), are limited per IP (3 a minute, 10 a day) and by a
+        shared daily budget (429 once spent), because each check runs a paid
+        carrier lookup. Each portable keyless result carries a `claimId` and
+        a `claimUrl`: a signup link that opens the dashboard's port form with
+        the number filled in. Send an API key to check up to 50 numbers
+        without those limits.
 
         Args:
             phone_numbers: E.164 numbers to check, e.g. +13035550000. At most one without an API key. (required)
@@ -23055,6 +28271,11 @@ def register_generated_tools(mcp, _get_client):
     def phone_numbers_get_phone_number_port_claim(claim_id: str) -> str:
         """Resolve a port claim
 
+        Resolves a `claimId` from a keyless portability check into the number
+        it carries. The dashboard calls it when a person lands from a port
+        `claimUrl`, to open the port form with that number filled in. It does
+        not start a port.
+
         Args:
             claim_id: (required)"""
         client = _get_client()
@@ -23075,7 +28296,15 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def phone_numbers_upload_phone_number_port_in_document() -> str:
-        """Upload a porting document"""
+        """Upload a porting document
+
+        Upload ONE porting document and get back its `documentId`. For the
+        signed LOA / carrier invoice the id goes to `loaDocumentId` /
+        `invoiceDocumentId`; for a country-specific document requirement
+        (international ports) it becomes that requirement's `fieldValue`.
+        Requirement documents are normalized to PDF automatically (regulators
+        reject raw images). PDF, JPEG, or PNG, 10MB max. Uploads must be
+        attached to an order within 30 minutes or the carrier deletes them."""
         client = _get_client()
         try:
             response = client.phone_numbers.upload_phone_number_port_in_document()
@@ -23092,9 +28321,17 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def phone_numbers_get_phone_number_port_in_requirements(
-        country: str, number_type: str = "local"
+        country: str,
+        number_type: Literal["local", "mobile", "national", "toll_free"] = "local",
     ) -> str:
         """Country porting requirements
+
+        The country-specific information a port-in needs BEYOND the LOA,
+        invoice, and account/address details, such as an ID copy, proof of
+        address, a tax id, or a porting code. Call it after the portability
+        check (which returns each number's `countryCode` and
+        `phoneNumberType`), render the fields, and pass the collected values as
+        the create request's `requirements`. US/CA return an empty list.
 
         Args:
             country: ISO country of the numbers being ported (a supported port-in country). (required)
@@ -23119,6 +28356,12 @@ def register_generated_tools(mcp, _get_client):
     def phone_numbers_get_phone_number_port_in_order_requirements(id: str) -> str:
         """A port-in order's pending requirements
 
+        The live requirements on an EXISTING porting order: which are filled,
+        which are still pending, and which bounced on review
+        (`requirement-info-exception`). Use it to fix and resubmit a rejected
+        international port. Same field shape as the country-level requirements
+        endpoint, plus per-requirement status.
+
         Args:
             id: Porting order ID (from the port-in list). (required)"""
         client = _get_client()
@@ -23140,6 +28383,12 @@ def register_generated_tools(mcp, _get_client):
     )
     def phone_numbers_cancel_phone_number_port_in(id: str) -> str:
         """Cancel a port-in
+
+        Cancel an in-flight port (wrong number, staying with the old carrier).
+        Only orders that haven't ported can be cancelled; a completed port is a
+        normal number release instead. The carrier may report `cancel-pending`
+        briefly while the losing carrier acknowledges; it settles to
+        `cancelled`.
 
         Args:
             id: Porting order ID (from the port-in list). (required)"""
@@ -23166,6 +28415,14 @@ def register_generated_tools(mcp, _get_client):
         address: dict[str, Any] | None = None,
     ) -> str:
         """Pre-review a KYC packet
+
+        Advisory dry-run of a regulated-KYC packet before submitting: reviews
+        the exact documents the regulator will see (referenced by the ids from
+        POST /v1/phone-numbers/kyc/upload-document) against the declared values
+        and address, and returns plain-language advisories for likely decline
+        reasons (wrong document type, mismatched address, one-sided ID scans).
+        Non-blocking: advisories are warnings, submitting anyway is always
+        allowed, and any review failure degrades to an empty list.
 
         Args:
             country: (required)
@@ -23197,6 +28454,12 @@ def register_generated_tools(mcp, _get_client):
     def phone_numbers_get_phone_number_remediation(id: str) -> str:
         """Get declined requirements
 
+        For a number in `regulatory_declined`, returns ONLY the requirements the
+        reviewer flagged declined, as a form spec (same shape as the KYC form GET).
+        The customer fixes only those, because Telnyx supports correcting a declined
+        requirement group and re-submitting it (no new number/group). Falls back
+        to the full spec if the provider exposes no per-requirement flags.
+
         Args:
             id: Phone number record ID. (required)"""
         client = _get_client()
@@ -23221,6 +28484,12 @@ def register_generated_tools(mcp, _get_client):
         address: dict[str, Any] | None = None,
     ) -> str:
         """Resubmit a declined number
+
+        Submit corrected values/documents for the declined requirement(s). We
+        PATCH them onto the SAME requirement group and re-submit it for approval;
+        the number goes `regulatory_declined` → `pending_regulatory`. No new
+        number and no new billing. Body shape matches the KYC submit (values /
+        documents / address). Send only the corrected fields.
 
         Args:
             id: (required)
@@ -23250,6 +28519,15 @@ def register_generated_tools(mcp, _get_client):
         attachments: list[dict[str, Any]] | None = None,
     ) -> str:
         """Reply to the regulatory reviewer
+
+        Post a free-text reply (with optional file attachments) to the reviewer
+        on a number awaiting remediation, for asks the structured form can't
+        express (e.g. \"is this personal or business?\"). Attachments are stored by
+        us and their links are added to the reviewer's comment thread (the
+        carrier's number order takes no loose files). A reply to a comment-style
+        ask moves the number back to \"in review\"; a reply on a formal decline is
+        supplementary and you must still resubmit the fix. Requires text or at
+        least one attachment.
 
         Args:
             id: (required)
@@ -23282,6 +28560,16 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Respond to the regulatory reviewer (message + corrections)
 
+        Send a single response to the reviewer on a number awaiting remediation:
+        a free-text message and/or corrected requirement documents, in one call.
+        If corrections are present they are PATCHed onto the requirement group and
+        re-submitted (the number goes back to \"in review\"); if a message or file
+        attachments are present they are posted to the reviewer's comment thread.
+        When both are present, your message is the thread comment and the resubmit
+        drives the state change. At least one of message, corrections, or
+        attachments is required. `documents` correct requirement slots; `attachments`
+        are loose files (their links are added to your message).
+
         Args:
             id: (required)
             message: Your message to the reviewer.
@@ -23312,9 +28600,28 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def phone_numbers_create_phone_number_stock_watch(
-        country: str, number_type: str | None = None, area_code: str | None = None
+        country: str,
+        number_type: Literal["local", "mobile", "national", "toll_free"] | None = None,
+        area_code: str | None = None,
     ) -> str:
         """Watch an out-of-stock country
+
+        Get notified the first time an out-of-stock country has deliverable
+        numbers again: an email to the account holder plus the
+        `phone_number.stock_available` webhook. Stock is re-checked every 6h.
+        One watch per country and number type; a repeat request returns the
+        existing watch (200). The watch is consumed when it fires, so re-create
+        it if you miss the stock. Up to 20 watches at once.
+
+        Countries and types marked `fulfilment: request` by
+        GET /v1/phone-numbers/countries can also be watched, but anything with
+        `preOrderable: true` does not need a watch: submit KYC and the carrier
+        sources the number to order.
+
+        Pass `areaCode` (with `numberType`) to watch one sold-out area, for
+        example an entry of `soldOutAreas` from
+        GET /v1/phone-numbers/availability. Area stock is checked live on the
+        same 6h cadence.
 
         Args:
             country: ISO 3166-1 alpha-2 code of a country listed by GET /v1/phone-numbers/countries. (required)
@@ -23375,9 +28682,24 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def phone_numbers_request_phone_number_whats_app_code(
-        id: str, method: str | None = None
+        id: str, method: Literal["SMS", "VOICE"] | None = None
     ) -> str:
         """Request the WhatsApp verification code for a number
+
+        Starts (or restarts) WhatsApp verification of a Zernio-hosted number:
+        adds it to Meta's pre-verified pool when needed and asks Meta to send
+        the verification code, which Zernio captures on the number itself.
+        Used to connect WhatsApp on a number bought for calls or SMS.
+        `/v1/whatsapp/phone-numbers/{id}/request-code` is a deprecated alias
+        with the same contract.
+
+        When Meta refuses the number for WhatsApp (Meta error 136021):
+        a number that is already live (`active` or `suspended`) is left
+        untouched and keeps working for calls and SMS, and the call answers
+        409 `number_not_whatsapp_eligible`; buy a new number with WhatsApp
+        enabled instead. A number that was never live (still verifying) is
+        replaced at no extra cost with a WhatsApp-eligible number on the same
+        record, answered as 200 with `replaced: true`.
 
         Args:
             id: Phone number record ID (from GET /v1/phone-numbers). (required)
@@ -23405,8 +28727,17 @@ def register_generated_tools(mcp, _get_client):
         page: int = 1,
         limit: int = 10,
         offset: int | None = None,
-        source: str = "zernio",
-        status: str | None = None,
+        source: Literal["zernio", "external"] = "zernio",
+        status: Literal[
+            "draft",
+            "scheduled",
+            "publishing",
+            "published",
+            "partial",
+            "failed",
+            "cancelled",
+        ]
+        | None = None,
         platform: str | None = None,
         profile_id: str | None = None,
         created_by: str | None = None,
@@ -23416,10 +28747,19 @@ def register_generated_tools(mcp, _get_client):
         date_to: str | None = None,
         include_hidden: bool = False,
         search: str | None = None,
-        sort_by: str = "scheduled-desc",
+        sort_by: Literal[
+            "scheduled-desc",
+            "scheduled-asc",
+            "created-desc",
+            "created-asc",
+            "status",
+            "platform",
+        ] = "scheduled-desc",
         account_id: str | None = None,
     ) -> str:
         """List posts
+
+        Returns a paginated list of posts. Published posts include platformPostUrl with the public URL on each platform. A query parameter that is not listed here returns 400 naming it and the accepted parameters, so a misspelled filter never silently returns the unfiltered list.
 
         Args:
             page: Page number
@@ -23493,6 +28833,29 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Create post
 
+            Create a post, and optionally publish it in the same request. A post published immediately (`publishNow: true`) comes back with `platformPostUrl` in the response.
+
+            `content` is optional in four cases:
+
+            - media is attached
+            - all platforms have `customContent`
+            - every platform entry is an X Article (`platformSpecificData.article`)
+            - every platform entry is a LinkedIn text-free reshare (`platformSpecificData.reshareUrl` with no text)
+
+            See each platform's schema for media constraints.
+
+            ## Scheduling
+
+            Pick one of:
+
+            - `scheduledFor`: publish at the scheduled time
+            - `publishNow: true`: publish synchronously, inside this request
+            - `queuedFromProfile`: publish in the profile's next queue slot
+
+            With none of them and `isDraft` unset, the post is saved as a draft. `platforms` is required unless the post is a draft.
+
+            Precedence: `isDraft: true` wins over `publishNow` and `scheduledFor` (the post is saved, never published), and `publishNow: true` wins over `scheduledFor`. A `scheduledFor` already ...
+
             Args:
                 title: Stored on the post for reference/display only. This field is NOT used as the video title when publishing. To set a YouTube video title, use platformSpecificData.title on the youtube platform target (falls back to the first line of content when omitted).
                 content: Post caption/text. Optional when media is attached, all platforms have customContent, every platform entry is an X Article (platformSpecificData.article), or every platform entry is a LinkedIn text-free reshare (platformSpecificData.reshareUrl with no text). Required for other text-only posts.
@@ -23553,6 +28916,8 @@ def register_generated_tools(mcp, _get_client):
     def posts_get_post(post_id: str) -> str:
         """Get post
 
+        Fetch a single post by ID. For published posts, this returns platformPostUrl for each platform.
+
         Args:
             post_id: (required)"""
         client = _get_client()
@@ -23580,7 +28945,7 @@ def register_generated_tools(mcp, _get_client):
         publish_now: bool = False,
         is_draft: bool | None = None,
         timezone: str | None = None,
-        visibility: str | None = None,
+        visibility: Literal["public", "private", "unlisted"] | None = None,
         tags: list[str] | None = None,
         hashtags: list[str] | None = None,
         mentions: list[str] | None = None,
@@ -23593,6 +28958,16 @@ def register_generated_tools(mcp, _get_client):
         recycling: dict[str, Any] | None = None,
     ) -> str:
         """Update post
+
+        Update an existing post. Draft, scheduled, failed, partial, and cancelled posts can be edited.
+        Published posts can only have their recycling config updated.
+
+        To promote a draft to scheduled, send `isDraft: false` together with `scheduledFor` (or `publishNow: true`,
+        or `queuedFromProfile`). If `isDraft` is omitted the post keeps its current draft status, so sending only
+        `scheduledFor` to a draft returns 200 but the post remains a draft.
+
+        Non-draft updates run the same per-platform validation as post creation (media requirements, platform-specific
+        field rules, etc.) against the resulting platforms, returning 400 on failure.
 
         Args:
             post_id: (required)
@@ -23654,6 +29029,10 @@ def register_generated_tools(mcp, _get_client):
     def posts_delete_post(post_id: str) -> str:
         """Delete post
 
+        Delete a post from Zernio. Any status except `published` can be deleted: `draft`, `scheduled`, `publishing`, `failed`, `partial` and `cancelled`. Published posts cannot be deleted; use the Unpublish endpoint instead. Upload quota is automatically refunded for draft and scheduled posts.
+
+        Deleting a `publishing` or `partial` post is how you stop entries that are still pending, for example entries held on a disconnected account. It removes the whole post record from Zernio, including the entries that were already published, but it does not remove anything already live on a platform (use Unpublish for that first if needed). An entry that a worker has already started sending when you delete may still go out, or may fail because media uploaded to Zernio and not used by another post is deleted with the post. Analytics for entries already published are removed too. Deleting also frees the content for re-creation, so the same caption and media are no longer reported as a duplicate.
+
         Args:
             post_id: (required)"""
         client = _get_client()
@@ -23674,6 +29053,18 @@ def register_generated_tools(mcp, _get_client):
     def posts_bulk_upload_posts(dry_run: bool = False) -> str:
         """Bulk upload from CSV
 
+        Create multiple posts by uploading a CSV file. Use dryRun=true to validate without creating posts.
+
+        CSV columns:
+        - Required: `platforms`, `profiles`, and a schedule (one of `schedule_time`, a `schedule_time_<platform>` override, `publish_now=true`, `use_queue=true`, or `is_draft=true`).
+        - Content: at least one of `post_content`, `title`, or `media_urls` is required.
+        - Aliases: a handful of columns accept the JSON field name from POST /v1/posts, since integrators infer the CSV shape from that endpoint's body. When both are present the real CSV column wins, unless it is blank for that row, in which case the alias value is used.
+          - `content` aliases `post_content`
+          - `timezone` aliases `tz`
+          - `scheduledFor` aliases `schedule_time`
+          - `mediaUrls` aliases `media_urls`
+        - Per-platform overrides use three dynamic column prefixes, one column per platform (e.g. `schedule_time_instagram`, `custom_content_tiktok`, `custom_media_youtube`): `schedule_time_<platform>`, ...
+
         Args:
             dry_run"""
         client = _get_client()
@@ -23692,9 +29083,25 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def posts_unpublish_post(
-        post_id: str, platform: str, account_id: str | None = None
+        post_id: str,
+        platform: Literal[
+            "threads",
+            "facebook",
+            "twitter",
+            "linkedin",
+            "youtube",
+            "pinterest",
+            "reddit",
+            "bluesky",
+            "googlebusiness",
+            "telegram",
+        ],
+        account_id: str | None = None,
     ) -> str:
         """Unpublish post
+
+        Deletes a published post from the specified platform. The post record in Zernio is kept but its status is updated to cancelled.
+        Not supported on Instagram, TikTok, or Snapchat. Threaded posts delete all items. YouTube deletion is permanent.
 
         Args:
             post_id: (required)
@@ -23718,9 +29125,47 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def posts_edit_post(
-        post_id: str, platform: str, content: str, account_id: str | None = None
+        post_id: str,
+        platform: Literal[
+            "twitter",
+            "discord",
+            "facebook",
+            "reddit",
+            "linkedin",
+            "telegram",
+            "pinterest",
+            "googlebusiness",
+            "youtube",
+            "slack",
+        ],
+        content: str,
+        account_id: str | None = None,
     ) -> str:
         """Edit published post
+
+        Edit the text of an already-published post. Supported on X, Discord,
+        Facebook, Reddit, LinkedIn, Telegram, Pinterest, Google Business Profile, YouTube,
+        and Slack. When a post was published to several accounts on the same platform,
+        pass `accountId` to pick which account's copy to edit (without it the request
+        returns 409). Each platform enforces its own rules:
+
+        **X**
+        - Connected X account must have an active X Premium subscription
+        - Must be within 1 hour of original publish time
+        - Maximum 5 edits per tweet (enforced by X)
+        - Threads cannot be edited, only single tweets
+        - X assigns a NEW post ID on edit, returned as `id`
+
+        **Discord**
+        - No time limit and no premium requirement
+        - The message ID is unchanged after the edit
+
+        **Facebook**
+        - Graph only permits editing a post that the same app created, so this works on
+          posts published through Zernio and is rejected for posts created in Meta
+          Business Suite / Composer or by another tool
+        - Media cannot be swapped, only the message text
+        - ...
 
         Args:
             post_id: (required)
@@ -23749,20 +29194,30 @@ def register_generated_tools(mcp, _get_client):
     )
     def posts_update_post_metadata(
         post_id: str,
-        platform: str,
+        platform: Literal["youtube"],
         video_id: str | None = None,
         account_id: str | None = None,
         title: str | None = None,
         description: str | None = None,
         tags: list[str] | None = None,
         category_id: str | None = None,
-        privacy_status: str | None = None,
+        privacy_status: Literal["public", "private", "unlisted"] | None = None,
         thumbnail_url: str | None = None,
         made_for_kids: bool | None = None,
         contains_synthetic_media: bool | None = None,
         playlist_id: str | None = None,
     ) -> str:
         """Update post metadata
+
+        Updates metadata of a published video on the specified platform without re-uploading.
+        Currently only supported for YouTube. At least one updatable field is required.
+
+        Two modes:
+
+        1. Post-based (video published through Zernio): pass the Zernio postId in the URL and platform in the body.
+        2. Direct video ID (video uploaded outside Zernio, e.g. directly to YouTube): use _ as the postId,
+           and pass videoId + accountId + platform in the body. The accountId is the Zernio account ID
+           for the connected YouTube channel.
 
         Args:
             post_id: Zernio post ID, or "_" when using direct video ID mode (required)
@@ -23817,6 +29272,10 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """List Meta product catalogs
 
+        Lists the Meta Commerce catalogs of a business portfolio (owned + agency-shared). The business comes from `businessId`, else the ad account's owner (`adAccountId`), else the WhatsApp Business Account's owner when `accountId` is a WhatsApp connection, else the only business the Meta login can see. Reads work with scopes customers already granted.
+
+        Platforms: meta
+
         Args:
             account_id: A facebook, instagram, metaads or whatsapp account ID (required)
             catalog_account_id: A facebook, instagram or metaads account whose Meta login carries catalog_management; its token is used instead of the account's own (needed for WhatsApp connections, whose token cannot manage catalogs).
@@ -23848,9 +29307,24 @@ def register_generated_tools(mcp, _get_client):
         catalog_account_id: str | None = None,
         ad_account_id: str | None = None,
         business_id: str | None = None,
-        vertical: str = "commerce",
+        vertical: Literal[
+            "commerce",
+            "vehicles",
+            "hotels",
+            "flights",
+            "destinations",
+            "home_listings",
+            "local_service_business",
+            "offline_commerce",
+            "ticketed_experiences",
+            "transactable_items",
+        ] = "commerce",
     ) -> str:
         """Create a Meta product catalog
+
+        Creates a Meta Commerce catalog in the business portfolio (resolved like GET). The same catalog serves Advantage+ catalog ads, Instagram/Facebook Shops and the WhatsApp Business catalog: link it to a WhatsApp number with POST /v1/whatsapp/catalogs. Needs catalog_management on the Meta login.
+
+        Platforms: meta
 
         Args:
             account_id: A facebook, instagram, metaads or whatsapp account ID (required)
@@ -23882,7 +29356,9 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def product_catalogs_get_ad_catalog() -> str:
-        """Get a product catalog"""
+        """Get a product catalog
+
+        Platforms: meta"""
         client = _get_client()
         try:
             response = client.product_catalogs.get_ad_catalog()
@@ -23899,7 +29375,11 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def product_catalogs_delete_ad_catalog() -> str:
-        """Delete a product catalog"""
+        """Delete a product catalog
+
+        Deletes the catalog and every product in it on Meta. Ads and WhatsApp numbers that use it lose their catalog.
+
+        Platforms: meta"""
         client = _get_client()
         try:
             response = client.product_catalogs.delete_ad_catalog()
@@ -23919,6 +29399,10 @@ def register_generated_tools(mcp, _get_client):
         limit: int = 25, after: str | None = None, retailer_id: str | None = None
     ) -> str:
         """List a catalog's products
+
+        Pages through the catalog's products. Filter by your own `retailerId` to look one up. `price` and `salePrice` come back formatted by Meta (for example \"€49.90\").
+
+        Platforms: meta
 
         Args:
             limit
@@ -23947,6 +29431,10 @@ def register_generated_tools(mcp, _get_client):
         catalog_account_id: str | None = None,
     ) -> str:
         """Add a product to a catalog
+
+        Adds one product. `retailerId` is your SKU and stays the handle for later lookups and batch updates. For many products at once use POST /v1/ads/catalogs/{catalogId}/products/batch. Needs catalog_management on the Meta login.
+
+        Platforms: meta
 
         Args:
             account_id: (required)
@@ -23978,6 +29466,10 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Create, update or delete products in bulk
 
+        Up to 5000 CREATE / UPDATE / DELETE requests keyed by `retailerId`, processed asynchronously by Meta. Returns handles; poll GET /v1/ads/catalogs/{catalogId}/batches/{handle} for the outcome and per-item errors. CREATE requests need name, url, imageUrl, price and currency.
+
+        Platforms: meta
+
         Args:
             account_id: (required)
             catalog_account_id
@@ -24004,6 +29496,8 @@ def register_generated_tools(mcp, _get_client):
     def product_catalogs_get_ad_catalog_batch(handle: str) -> str:
         """Get a bulk request's status
 
+        Platforms: meta
+
         Args:
             handle: Handle returned by the batch call (required)"""
         client = _get_client()
@@ -24022,7 +29516,9 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def product_catalogs_get_ad_catalog_product() -> str:
-        """Get a product"""
+        """Get a product
+
+        Platforms: meta"""
         client = _get_client()
         try:
             response = client.product_catalogs.get_ad_catalog_product()
@@ -24044,6 +29540,10 @@ def register_generated_tools(mcp, _get_client):
         catalog_account_id: str | None = None,
     ) -> str:
         """Update a product
+
+        Partial update: only the fields sent change. `retailerId` cannot change.
+
+        Platforms: meta
 
         Args:
             account_id: (required)
@@ -24069,7 +29569,9 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def product_catalogs_delete_ad_catalog_product() -> str:
-        """Delete a product"""
+        """Delete a product
+
+        Platforms: meta"""
         client = _get_client()
         try:
             response = client.product_catalogs.delete_ad_catalog_product()
@@ -24086,7 +29588,9 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def product_catalogs_list_ad_catalog_feeds() -> str:
-        """List a catalog's product feeds"""
+        """List a catalog's product feeds
+
+        Platforms: meta"""
         client = _get_client()
         try:
             response = client.product_catalogs.list_ad_catalog_feeds()
@@ -24109,6 +29613,10 @@ def register_generated_tools(mcp, _get_client):
         schedule: dict[str, Any] | None = None,
     ) -> str:
         """Create a product feed
+
+        A feed pulls a CSV/TSV/XML product file from a URL. With `schedule` Meta fetches it on a cadence; without it, trigger fetches with POST /v1/ads/catalogs/{catalogId}/feeds/{feedId}/uploads.
+
+        Platforms: meta
 
         Args:
             account_id: (required)
@@ -24138,6 +29646,8 @@ def register_generated_tools(mcp, _get_client):
     def product_catalogs_list_ad_catalog_feed_uploads(feed_id: str) -> str:
         """List a feed's uploads
 
+        Platforms: meta
+
         Args:
             feed_id: (required)"""
         client = _get_client()
@@ -24161,6 +29671,10 @@ def register_generated_tools(mcp, _get_client):
         feed_id: str, account_id: str, url: str, catalog_account_id: str | None = None
     ) -> str:
         """Fetch a feed file now
+
+        Asks Meta to fetch the product file at `url` into the feed. Processing is asynchronous: read the outcome with GET uploads.
+
+        Platforms: meta
 
         Args:
             feed_id: (required)
@@ -24188,7 +29702,11 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def product_catalogs_list_ad_catalog_product_sets() -> str:
-        """List a catalog's product sets"""
+        """List a catalog's product sets
+
+        Lists a Meta product catalog's product sets, the unit a catalog ad promotes. Pass the chosen set id, not the parent catalog id, as `promotedObject.productSetId` on POST /v1/ads/create with `goal: catalog_sales`.
+
+        Platforms: meta"""
         client = _get_client()
         try:
             response = client.product_catalogs.list_ad_catalog_product_sets()
@@ -24211,6 +29729,10 @@ def register_generated_tools(mcp, _get_client):
         catalog_account_id: str | None = None,
     ) -> str:
         """Create a product set
+
+        A product set is a filter over the catalog, e.g. `{\"retailer_id\": {\"is_any\": [\"sku-1\", \"sku-2\"]}}` or `{\"brand\": {\"i_contains\": \"acme\"}}` (Meta's product set filter syntax).
+
+        Platforms: meta
 
         Args:
             account_id: (required)
@@ -24246,6 +29768,8 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Update a product set
 
+        Platforms: meta
+
         Args:
             product_set_id: (required)
             account_id: (required)
@@ -24276,6 +29800,8 @@ def register_generated_tools(mcp, _get_client):
     def product_catalogs_delete_ad_catalog_product_set(product_set_id: str) -> str:
         """Delete a product set
 
+        Platforms: meta
+
         Args:
             product_set_id: (required)"""
         client = _get_client()
@@ -24301,10 +29827,24 @@ def register_generated_tools(mcp, _get_client):
         account_id: str,
         limit: int = 20,
         cursor: str | None = None,
-        status: str | None = None,
+        status: Literal["active", "draft", "archived"] | None = None,
         query: str | None = None,
     ) -> str:
         """List products
+
+        Lists the products on the connected store in the platform's default
+        order, each with its variants, options and images. Cursor-paginated:
+        pass `limit` (1-50, default 20) and the `cursor` from a previous
+        response's `nextCursor`; `nextCursor` is null when there are no more
+        pages. Filter with `status` and/or `query` (the platform's product
+        search syntax, e.g. `title:*shirt* vendor:Acme tag:summer`).
+
+        Supported on Shopify (platform `shopify`); accounts on other
+        platforms return 400. A store connected before product access was
+        added answers 403 insufficient_permissions until the merchant
+        reconnects it through `GET /v1/connect/shopify`.
+
+        Platforms: shopify
 
         Args:
             account_id: Connected Shopify SocialAccount id. (required)
@@ -24336,6 +29876,15 @@ def register_generated_tools(mcp, _get_client):
     def products_get_product(account_id: str, product_id: str) -> str:
         """Get a product
 
+        Fetches a single product with its variants, options and images.
+        `productId` is the platform's numeric product id from
+        `GET /v1/accounts/{accountId}/products`, not a Zernio id.
+
+        Supported on Shopify (platform `shopify`); accounts on other
+        platforms return 400.
+
+        Platforms: shopify
+
         Args:
             account_id: Connected Shopify SocialAccount id. (required)
             product_id: Platform-native numeric product id. Non-numeric values return 400. (required)"""
@@ -24365,11 +29914,26 @@ def register_generated_tools(mcp, _get_client):
         vendor: str | None = None,
         product_type: str | None = None,
         tags: list[str] | None = None,
-        status: str | None = None,
+        status: Literal["active", "draft", "archived"] | None = None,
         seo: dict[str, Any] | None = None,
         variants: list[dict[str, Any]] | None = None,
     ) -> str:
         """Update a product
+
+        Partial-updates a product. Send any subset of `title`,
+        `descriptionHtml`, `handle`, `vendor`, `productType`, `tags`, `status`,
+        `seo` and `variants`; at least one field is required (an empty body
+        returns 400). `tags` replaces the full tag list. `variants` updates
+        the price and compare-at price of the listed variant ids only; other
+        variants are untouched, and a variant id that does not belong to the
+        product is a 400. Responds with the product as it is after the update.
+
+        Supported on Shopify (platform `shopify`); accounts on other
+        platforms return 400. A store connected before product access was
+        added answers 403 insufficient_permissions until the merchant
+        reconnects it through `GET /v1/connect/shopify`.
+
+        Platforms: shopify
 
         Args:
             account_id: Connected Shopify SocialAccount id. (required)
@@ -24420,6 +29984,8 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """List profiles
 
+        Returns profiles sorted default-first, then by creation date. Filter with name (exact match) and paginate with limit/skip; without those params the full list is returned unchanged. Use includeOverLimit=true to include profiles that exceed the plan limit.
+
         Args:
             include_over_limit: When true, includes over-limit profiles (marked with isOverLimit: true).
             name: Exact-match filter on the profile name. Useful to recover a profile id after an ambiguous create (timeout followed by a 409 on retry).
@@ -24450,6 +30016,8 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Create profile
 
+        Creates a new profile with a name, optional description, and color. Names are unique per team: a duplicate returns a 409 whose details.existingProfileId carries the id of the existing profile. Send an Idempotency-Key header to make retries safe: a retried create with the same key and body replays the original 201 (same _id) instead of conflicting.
+
         Args:
             name: (required)
             description
@@ -24474,6 +30042,8 @@ def register_generated_tools(mcp, _get_client):
     )
     def profiles_get_profile(profile_id: str) -> str:
         """Get profile
+
+        Returns a single profile by ID, including its name, color, and default status.
 
         Args:
             profile_id: (required)"""
@@ -24501,6 +30071,8 @@ def register_generated_tools(mcp, _get_client):
         is_default: bool | None = None,
     ) -> str:
         """Update profile
+
+        Updates a profile's name, description, color, default timezone, or default status.
 
         Args:
             profile_id: (required)
@@ -24534,6 +30106,8 @@ def register_generated_tools(mcp, _get_client):
     def profiles_delete_profile(profile_id: str) -> str:
         """Delete profile
 
+        Permanently deletes a profile. Active connected accounts block deletion (returns 400) - disconnect them first. Any remaining disconnected accounts and provisioned WhatsApp numbers are moved to another of your profiles (a new one is created only if needed), never deleted.
+
         Args:
             profile_id: (required)"""
         client = _get_client()
@@ -24554,9 +30128,13 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def queue_list_queue_slots(
-        profile_id: str, queue_id: str | None = None, all: str | None = None
+        profile_id: str,
+        queue_id: str | None = None,
+        all: Literal["true", "false"] | None = None,
     ) -> str:
         """List schedules
+
+        Returns queue schedules for a profile. Use all=true for all queues, or queueId for a specific one. Defaults to the default queue.
 
         Args:
             profile_id: Profile ID to get queues for (required)
@@ -24587,6 +30165,9 @@ def register_generated_tools(mcp, _get_client):
         active: bool = True,
     ) -> str:
         """Create schedule
+
+        Create an additional queue for a profile. The first queue created becomes the default.
+        Subsequent queues are non-default unless explicitly set.
 
         Args:
             profile_id: Profile ID (required)
@@ -24627,6 +30208,8 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Update schedule
 
+        Create a new queue or update an existing one. Without queueId, creates/updates the default queue. With queueId, updates a specific queue. With setAsDefault=true, makes this queue the default for the profile.
+
         Args:
             profile_id: (required)
             queue_id: Queue ID to update (optional)
@@ -24663,6 +30246,10 @@ def register_generated_tools(mcp, _get_client):
     def queue_delete_queue_slot(profile_id: str, queue_id: str | None = None) -> str:
         """Delete schedule
 
+        Delete a queue from a profile. Pass queueId to delete a specific queue;
+        omit it to delete all queues for the profile.
+        If deleting the default queue, another queue will be promoted to default.
+
         Args:
             profile_id: (required)
             queue_id: Queue ID to delete. Omit to delete all queues for the profile"""
@@ -24688,6 +30275,8 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Preview upcoming slots
 
+        Returns the next N upcoming queue slot times for a profile as ISO datetime strings.
+
         Args:
             profile_id: (required)
             queue_id: Filter by specific queue ID. Omit to use the default queue.
@@ -24712,6 +30301,8 @@ def register_generated_tools(mcp, _get_client):
     def queue_get_next_queue_slot(profile_id: str, queue_id: str | None = None) -> str:
         """Get next available slot
 
+        Returns the next available queue slot for preview purposes. To create a queue post, use POST /v1/posts with queuedFromProfile instead of scheduledFor.
+
         Args:
             profile_id: (required)
             queue_id: Specific queue ID (optional, defaults to profile's default queue)"""
@@ -24735,7 +30326,9 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def rcs_list_rcs_brands() -> str:
-        """List RCS brands"""
+        """List RCS brands
+
+        The team's RCS brands (vetted companies), to reuse one for another agent with `brandId`."""
         client = _get_client()
         try:
             response = client.rcs.list_rcs_brands()
@@ -24774,13 +30367,19 @@ def register_generated_tools(mcp, _get_client):
     def rcs_create_rcs_agent(
         profile_id: str,
         display_name: str,
-        use_case: str,
+        use_case: Literal["MULTI_USE", "PROMOTIONAL", "TRANSACTIONAL", "OTP"],
         profile: dict[str, Any] | None,
         brand_id: str | None = None,
         brand: dict[str, Any] | None = None,
         sms_fallback_from: str | None = None,
     ) -> str:
         """Request an RCS agent
+
+        Requests a new agent for a profile, with a new company (`brand`) or an existing one
+        (`brandId`, skips vetting when it is already verified). The request lands in our review:
+        nothing is filed with the carriers or billed until we submit it. A profile can hold several agents.
+        Requires usage-based billing and a card on file. Send an `Idempotency-Key` header to make
+        retries safe.
 
         Args:
             profile_id: (required)
@@ -24836,12 +30435,17 @@ def register_generated_tools(mcp, _get_client):
     def rcs_update_rcs_agent(
         agent_id: str,
         display_name: str | None = None,
-        use_case: str | None = None,
+        use_case: Literal["MULTI_USE", "PROMOTIONAL", "TRANSACTIONAL", "OTP"]
+        | None = None,
         profile: dict[str, Any] | None = None,
         brand: dict[str, Any] | None = None,
         sms_fallback_from: str | None = None,
     ) -> str:
         """Update an RCS agent
+
+        Edits the filing while the agent is `requested` or `changes_requested`; answering a change
+        request puts it back in our review. The company can only change until it is filed.
+        `smsFallbackFrom` stays editable in any status (null removes it).
 
         Args:
             agent_id: (required)
@@ -24875,6 +30479,8 @@ def register_generated_tools(mcp, _get_client):
     def rcs_deactivate_rcs_agent(agent_id: str) -> str:
         """Deactivate an RCS agent
 
+        Stops sending, disconnects its inbox account and stops monthly billing. Fees already charged are not refunded.
+
         Args:
             agent_id: (required)"""
         client = _get_client()
@@ -24903,6 +30509,12 @@ def register_generated_tools(mcp, _get_client):
         additional_information: str | None = None,
     ) -> str:
         """Send the launch filing
+
+        Sends the launch details the carriers review (campaign, consent and a public test video).
+        US agents send them once they are in `testing`; we review them before they reach the
+        carriers. Agents in other markets send them while still in review (`requested`,
+        `changes_requested` or `brand_vetting`), because we file everything with the carriers at
+        once; this saves the details without changing the status.
 
         Args:
             agent_id: (required)
@@ -24960,6 +30572,10 @@ def register_generated_tools(mcp, _get_client):
     def rcs_add_rcs_test_device(agent_id: str, phone_number: str) -> str:
         """Invite an RCS test phone
 
+        Invites a phone to try the agent before launch. It must accept the invite in its
+        messaging app. Available once the agent exists with the carriers (after brand vetting).
+        T-Mobile and AT&T numbers cannot be test phones.
+
         Args:
             agent_id: (required)
             phone_number: E.164 (required)"""
@@ -25004,7 +30620,11 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def rcs_upload_rcs_asset() -> str:
-        """Upload an RCS logo or banner"""
+        """Upload an RCS logo or banner
+
+        Uploads an image and returns a public URL for `profile.logoUrl` or `profile.heroUrl`.
+        The image is cropped and compressed to the carriers' exact rules (logo 224x224 under
+        50 KB, banner 1440x448 under 200 KB)."""
         client = _get_client()
         try:
             response = client.rcs.upload_rcs_asset()
@@ -25029,6 +30649,15 @@ def register_generated_tools(mcp, _get_client):
         ttl_seconds: int | None = None,
     ) -> str:
         """Send an RCS message
+
+        Sends from one of your agents. Use `text` for a plain message or `content` for rich
+        content (card, carousel, media, suggestion chips). Before launch an agent only reaches
+        test phones that accepted the invite. With the agent's `smsFallbackFrom` set, phones
+        without RCS get `fallbackText` (default: the message's readable text) as SMS.
+
+        Replies and status arrive as webhooks with `platform: \"rcs\"`: `message.received`
+        (a tapped chip carries its postback in `metadata.postbackPayload`), `message.delivered`,
+        `message.read` and `message.failed`. Send an `Idempotency-Key` header to make retries safe.
 
         Args:
             agent_id: (required)
@@ -25061,6 +30690,8 @@ def register_generated_tools(mcp, _get_client):
     )
     def rcs_get_rcs_capabilities(agent_id: str, numbers: str) -> str:
         """Check RCS capability
+
+        Which recipients can receive RCS from the agent and which rich features their phones support. Up to 100 numbers.
 
         Args:
             agent_id: (required)
@@ -25096,6 +30727,20 @@ def register_generated_tools(mcp, _get_client):
         placements: dict[str, Any] | None = None,
     ) -> str:
         """Create reach-frequency prediction
+
+        Creates an R&F prediction. This is a QUOTE, nothing is bought and no ad entities are created.
+        Provide a date range plus exactly one of `budgetAmount` (Meta predicts reach) or `reach`
+        (Meta predicts the budget). The response carries the estimate and its allowed bounds
+        (min/max budget and reach). Predictions expire on their own; to buy, reserve one via
+        POST /v1/ads/rf-predictions/{predictionId}/reserve and pass the RESERVED id to
+        POST /v1/ads/create with `buyingType: \"RESERVED\"`.
+
+        Reservation campaigns reject automatic placements. Top-level `placements` wins; when it is
+        omitted, `targeting.placements` is used; when neither is set, placements default to
+        Facebook feed (+ Instagram stream when a linked IG professional account resolves).
+        Instagram placements require that IG account.
+
+        Platforms: meta
 
         Args:
             account_id: Zernio SocialAccount id (posting or ads variant). (required)
@@ -25137,6 +30782,8 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Get reach-frequency prediction
 
+        Platforms: meta
+
         Args:
             prediction_id: (required)
             account_id: (required)
@@ -25165,6 +30812,10 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Cancel reach-frequency booking
 
+        Releases a RESERVATION's locked price and inventory. Unreserved predictions expire on their own.
+
+        Platforms: meta
+
         Args:
             prediction_id: (required)
             account_id: (required)
@@ -25192,6 +30843,12 @@ def register_generated_tools(mcp, _get_client):
         prediction_id: str, account_id: str, ad_account_id: str
     ) -> str:
         """Reserve reach-frequency inventory
+
+        Locks the quoted price + inventory until the returned `expiresAt` and mints a NEW
+        prediction id. Pass that RESERVED id (not the original) as `rfPredictionId` on
+        POST /v1/ads/create. Release an unused reservation via DELETE.
+
+        Platforms: meta
 
         Args:
             prediction_id: (required)
@@ -25222,12 +30879,14 @@ def register_generated_tools(mcp, _get_client):
         account_id: str,
         q: str,
         subreddit: str | None = None,
-        restrict_sr: str | None = None,
-        sort: str = "new",
+        restrict_sr: Literal["0", "1"] | None = None,
+        sort: Literal["relevance", "hot", "top", "new", "comments"] = "new",
         limit: int = 25,
         after: str | None = None,
     ) -> str:
         """Search posts
+
+        Search Reddit posts using a connected account. Optionally scope to a specific subreddit.
 
         Args:
             account_id: (required)
@@ -25263,12 +30922,14 @@ def register_generated_tools(mcp, _get_client):
     def reddit_get_reddit_feed(
         account_id: str,
         subreddit: str | None = None,
-        sort: str = "hot",
+        sort: Literal["hot", "new", "top", "rising"] = "hot",
         limit: int = 25,
         after: str | None = None,
-        t: str | None = None,
+        t: Literal["hour", "day", "week", "month", "year", "all"] | None = None,
     ) -> str:
         """Get subreddit feed
+
+        Fetch posts from a subreddit feed. Supports sorting, time filtering, and cursor-based pagination.
 
         Args:
             account_id: (required)
@@ -25303,17 +30964,20 @@ def register_generated_tools(mcp, _get_client):
     )
     def reviews_list_inbox_reviews(
         profile_id: str | None = None,
-        platform: str | None = None,
+        platform: Literal["facebook", "googlebusiness"] | None = None,
         min_rating: int | None = None,
         max_rating: int | None = None,
         has_reply: bool | None = None,
-        sort_by: str = "date",
-        sort_order: str = "desc",
+        sort_by: Literal["date", "rating"] = "date",
+        sort_order: Literal["asc", "desc"] = "desc",
         limit: int = 25,
         cursor: str | None = None,
         account_id: str | None = None,
     ) -> str:
         """List reviews
+
+        Fetch reviews from all connected Facebook Pages and Google Business Profile accounts. Aggregates data with filtering and sorting options.
+        Supported platforms: Facebook, Google Business Profile.
 
         Args:
             profile_id
@@ -25357,6 +31021,24 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Reply to review
 
+        Post a reply to a review. Requires accountId in request body.
+
+        **Idempotency:** send an `Idempotency-Key` header to make retries safe
+        (e.g. after a client-side timeout where delivery is unknown): same key +
+        same body replays the original response (with `Idempotent-Replayed: true`)
+        instead of sending the reply to the platform again; same key + different
+        body returns 422; a key still in flight returns 409. Keys are retained for
+        24 hours and are scoped to the credential and to this exact path, so
+        reusing a key against a different reviewId returns 422 rather than
+        replaying the other review's response.
+
+        Only successful (2xx) responses are stored for replay. If the request
+        throws or returns a non-2xx status the key is released, so the header
+        protects the \"request succeeded but the response was lost\" case. After an
+        ambiguous failure (a 5xx or a network timeout) fetch the review before
+        retrying with the same key, and treat a missing reply as inconclusive
+        rather than as proof nothing was sent.
+
         Args:
             review_id: Review ID (URL-encoded for Google Business Profile) (required)
             account_id: (required)
@@ -25380,6 +31062,8 @@ def register_generated_tools(mcp, _get_client):
     )
     def reviews_delete_inbox_review_reply(review_id: str, account_id: str) -> str:
         """Delete review reply
+
+        Delete a reply to a review (Google Business Profile only). Requires accountId in request body.
 
         Args:
             review_id: (required)
@@ -25405,11 +31089,13 @@ def register_generated_tools(mcp, _get_client):
     )
     def sequences_list_sequences(
         profile_id: str | None = None,
-        status: str | None = None,
+        status: Literal["draft", "active", "paused"] | None = None,
         limit: int = 50,
         skip: int = 0,
     ) -> str:
         """List sequences
+
+        Returns sequences with enrollment stats. Filter by status, platform, or profile.
 
         Args:
             profile_id: Filter by profile. Omit to list across all profiles
@@ -25436,7 +31122,16 @@ def register_generated_tools(mcp, _get_client):
     def sequences_create_sequence(
         profile_id: str,
         account_id: str,
-        platform: str,
+        platform: Literal[
+            "instagram",
+            "facebook",
+            "telegram",
+            "twitter",
+            "bluesky",
+            "reddit",
+            "whatsapp",
+            "slack",
+        ],
         name: str,
         description: str | None = None,
         steps: list[dict[str, Any]] | None = None,
@@ -25444,6 +31139,8 @@ def register_generated_tools(mcp, _get_client):
         exit_on_unsubscribe: bool = True,
     ) -> str:
         """Create sequence
+
+        Create a multi-step messaging sequence. Each step has a delay and a message or WhatsApp template.
 
         Args:
             profile_id: (required)
@@ -25481,6 +31178,8 @@ def register_generated_tools(mcp, _get_client):
     def sequences_get_sequence(sequence_id: str) -> str:
         """Get sequence with steps
 
+        Returns a sequence with all its steps and enrollment stats.
+
         Args:
             sequence_id: (required)"""
         client = _get_client()
@@ -25507,6 +31206,8 @@ def register_generated_tools(mcp, _get_client):
         exit_on_unsubscribe: bool | None = None,
     ) -> str:
         """Update sequence
+
+        Update a sequence's name, steps, or exit conditions. Steps can only be modified while the sequence is draft or paused.
 
         Args:
             sequence_id: (required)
@@ -25540,6 +31241,8 @@ def register_generated_tools(mcp, _get_client):
     def sequences_delete_sequence(sequence_id: str) -> str:
         """Delete sequence
 
+        Permanently delete a sequence. Active enrollments are stopped.
+
         Args:
             sequence_id: (required)"""
         client = _get_client()
@@ -25560,6 +31263,8 @@ def register_generated_tools(mcp, _get_client):
     def sequences_activate_sequence(sequence_id: str) -> str:
         """Activate sequence
 
+        Start a draft or paused sequence. The sequence must have at least one step.
+
         Args:
             sequence_id: (required)"""
         client = _get_client()
@@ -25579,6 +31284,8 @@ def register_generated_tools(mcp, _get_client):
     )
     def sequences_pause_sequence(sequence_id: str) -> str:
         """Pause sequence
+
+        Pause an active sequence. Enrolled contacts stop receiving messages until the sequence is reactivated.
 
         Args:
             sequence_id: (required)"""
@@ -25603,6 +31310,8 @@ def register_generated_tools(mcp, _get_client):
         channel_ids: list[str] | None = None,
     ) -> str:
         """Enroll contacts in a sequence
+
+        Enroll one or more contacts into a sequence. Contacts already enrolled are skipped.
 
         Args:
             sequence_id: (required)
@@ -25630,6 +31339,8 @@ def register_generated_tools(mcp, _get_client):
     def sequences_unenroll_contact(sequence_id: str, contact_id: str) -> str:
         """Unenroll contact
 
+        Remove a contact from a sequence. No further messages will be sent to this contact.
+
         Args:
             sequence_id: (required)
             contact_id: (required)"""
@@ -25651,9 +31362,14 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def sequences_list_sequence_enrollments(
-        sequence_id: str, status: str | None = None, limit: int = 50, skip: int = 0
+        sequence_id: str,
+        status: Literal["active", "completed", "exited", "paused"] | None = None,
+        limit: int = 50,
+        skip: int = 0,
     ) -> str:
         """List enrollments for a sequence
+
+        Returns enrolled contacts with their progress, status, and next scheduled step.
 
         Args:
             sequence_id: (required)
@@ -25683,6 +31399,8 @@ def register_generated_tools(mcp, _get_client):
         account_id: str, query: str | None = None, limit: int = 50
     ) -> str:
         """List Slack workspace members
+
+        Members of the connected Slack workspace that can receive a direct message, for populating a recipient picker. Bots, deactivated members and Slackbot are excluded. Start a DM by passing a member id as `participantId` to POST /v1/inbox/conversations.
 
         Args:
             account_id: (required)
@@ -25716,6 +31434,27 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Send an SMS/MMS
 
+        Sends an SMS (or MMS when `mediaUrls` is set) from one of your
+        SMS-enabled numbers. At least one of `text` / `mediaUrls` is required.
+        Both numbers are normalized to E.164, so `from` matches regardless of
+        formatting and replies thread into the same inbox conversation.
+
+        US numbers must have an approved carrier registration
+        (`/v1/sms/registrations`) before messages deliver.
+
+        **Replies and delivery status arrive as webhooks**, not by polling:
+        an inbound reply fires `message.received` with `platform: \"sms\"`, the
+        first message of a new thread also fires `conversation.started`, and
+        this message's own outcome fires `message.delivered` or
+        `message.failed` (the latter carrying the carrier's error code).
+
+        **Opted-out recipients:** a send to a number that replied STOP is
+        refused with `409`, never silently dropped.
+
+        **Idempotency:** send an `Idempotency-Key` header to make retries safe:
+        same key + same body replays the original response instead of sending a
+        second message; same key + different ...
+
         Args:
             from_: One of your SMS-enabled numbers (E.164; formatting is normalized). (required)
             to: Recipient number (E.164). (required)
@@ -25742,6 +31481,12 @@ def register_generated_tools(mcp, _get_client):
     def sms_lookup_sms_number(number: str) -> str:
         """Look up carrier + line type
 
+        Carrier name and line type (mobile / landline / voip / toll-free) for a
+        number, plus `smsReachable` (landlines can't receive SMS). Use it to
+        validate recipients before sending. Each lookup is billed by the
+        carrier-data provider, so call it explicitly (e.g. pre-validating an
+        opt-in list), not on every send.
+
         Args:
             number: Number to look up (E.164; formatting is normalized). (required)"""
         client = _get_client()
@@ -25759,8 +31504,15 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=False,
         )
     )
-    def sms_list_sms_opt_outs(format: str = "json", limit: int = 500) -> str:
+    def sms_list_sms_opt_outs(
+        format: Literal["json", "csv"] = "json", limit: int = 500
+    ) -> str:
         """List SMS opt-outs
+
+        The recipients who opted out of SMS (replied STOP) across your numbers,
+        most recent first. Compliance surface: you must be able to see and
+        export your opt-out list. Read-only: a recipient is re-subscribed only
+        by replying START. Pass `format=csv` to download a CSV instead of JSON.
 
         Args:
             format
@@ -25782,6 +31534,19 @@ def register_generated_tools(mcp, _get_client):
     )
     def sms_create_sms_sender_id(sender_id: str) -> str:
         """Create an alphanumeric sender ID
+
+        Registers an alphanumeric sender ID (e.g. `ZERNIO`), a branded `from`
+        for one-way international SMS. No phone number purchase or carrier
+        registration is needed; once created, pass it as `from` on
+        `POST /v1/sms/messages`.
+
+        Constraints: 3-11 characters (letters, digits, spaces; at least one
+        letter). Sends cannot reach the US, Canada, or Puerto Rico, are
+        text-only, and recipients cannot reply. Sender IDs that impersonate
+        well-known brands or institutions are rejected. Names are not
+        exclusive: the same sender ID can be registered by any number of
+        teams. Creating the same sender ID again is a no-op
+        (re-activates it after a delete).
 
         Args:
             sender_id: The sender ID recipients will see (3-11 letters/digits/spaces, at least one letter, no leading/trailing space). (required)"""
@@ -25822,6 +31587,10 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Request a higher sender ID daily limit
 
+        Asks support to raise the team's daily sender-ID message cap.
+        There is no self-serve raise: the request (desired cap + use case) is
+        reviewed manually, usually within a business day.
+
         Args:
             requested_cap: Desired daily message cap. Must exceed the current cap. (required)
             reason: Use case and audience (what you send, to whom, opt-in status). (required)"""
@@ -25845,6 +31614,9 @@ def register_generated_tools(mcp, _get_client):
     def sms_delete_sms_sender_id(id: str) -> str:
         """Delete an alphanumeric sender ID
 
+        Deactivates the sender ID so it can no longer send. Re-creating the
+        same sender ID via `POST /v1/sms/sender-ids` re-activates it.
+
         Args:
             id: Sender ID resource id. (required)"""
         client = _get_client()
@@ -25863,7 +31635,7 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def sms_start_sms_registration(
-        registration_type: str,
+        registration_type: Literal["standard_10dlc", "sole_prop_10dlc", "toll_free"],
         phone_numbers: list[str] | None = None,
         brand: dict[str, Any] | None = None,
         campaign: dict[str, Any] | None = None,
@@ -25873,6 +31645,21 @@ def register_generated_tools(mcp, _get_client):
         toll_free: dict[str, Any] | None = None,
     ) -> str:
         """Start a carrier registration
+
+            Starts the US carrier registration that a number needs before SMS
+            delivers: 10DLC (standard company or sole-proprietor) or toll-free
+            verification. 10DLC needs `brand` + `campaign`; toll-free needs
+            `tollFree`. Approval is asynchronous; poll
+            `GET /v1/sms/registrations/{id}` (sole-prop registrations first need
+            the OTP step: a code is texted to the brand's mobile number, submit it
+            via `/verify-otp`).
+
+            Already have an approved registration? Add another number to it with
+            `POST /v1/phone-numbers/{id}/sms/reuse-registration` instead
+            of registering (and paying the carrier brand fee) again.
+
+            Rather have your client fill in the legal business details? Create a
+            share link with `POST /v1/sms/registrations/share`.
 
             Args:
                 registration_type: (required)
@@ -25937,13 +31724,20 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def sms_preflight_sms_registration(
-        registration_type: str,
+        registration_type: Literal["standard_10dlc", "sole_prop_10dlc"],
         brand: dict[str, Any] | None,
         campaign: dict[str, Any] | None,
         phone_numbers: list[str] | None = None,
         messaging_brand_name: str | None = None,
     ) -> str:
         """Pre-check a carrier registration
+
+        Dry-run of `POST /v1/sms/registrations` for 10DLC: validates and
+        composes the exact brand/campaign payloads a submission would store
+        (branding, disclosures, auto-replies), runs deterministic compliance
+        lints plus an AI reviewer over them, and returns the findings WITHOUT
+        creating anything. Use it to fix issues before submitting; `block`
+        severity findings indicate a near-certain carrier rejection.
 
         Args:
             registration_type: (required)
@@ -25975,6 +31769,14 @@ def register_generated_tools(mcp, _get_client):
     def sms_deactivate_sms_registration(id: str) -> str:
         """Deactivate a brand/campaign registration
 
+        Terminates the campaign with the carrier registry so the recurring
+        monthly campaign fee stops (carriers bill the first 3 months of a
+        campaign regardless). Numbers covered by it can no longer SEND texts
+        (receiving is unaffected) until they're registered under a new brand.
+        Irreversible: a deactivated campaign cannot be restored; texting again
+        later requires a new registration (new one-time and review fees).
+        Idempotent.
+
         Args:
             id: (required)"""
         client = _get_client()
@@ -25994,6 +31796,8 @@ def register_generated_tools(mcp, _get_client):
     )
     def sms_get_sms_registration(id: str) -> str:
         """Get a carrier registration
+
+        Poll this for approval progress after starting a registration.
 
         Args:
             id: (required)"""
@@ -26015,6 +31819,10 @@ def register_generated_tools(mcp, _get_client):
     def sms_verify_sms_registration_otp(id: str, otp_pin: str) -> str:
         """Submit the sole-prop OTP
 
+        Completes sole-proprietor 10DLC brand verification by submitting the
+        one-time PIN texted to the brand's mobile number. On success the
+        registration continues to campaign creation automatically.
+
         Args:
             id: (required)
             otp_pin: (required)"""
@@ -26035,6 +31843,11 @@ def register_generated_tools(mcp, _get_client):
     )
     def sms_resend_sms_registration_otp(id: str) -> str:
         """Re-send the sole-prop OTP
+
+        Re-sends the sole-proprietor verification PIN to the brand's mobile
+        number. Use it when the original code expired or never arrived. Only
+        valid while the registration is pending and awaiting its OTP; rate
+        limited to one send per minute.
 
         Args:
             id: (required)"""
@@ -26061,6 +31874,18 @@ def register_generated_tools(mcp, _get_client):
         sample2: str | None = None,
     ) -> str:
         """Appeal a rejected campaign
+
+        Appeals a rejected 10DLC campaign with the carrier registry. Only a
+        registration that reached campaign creation can be appealed; a
+        brand-level rejection should be fixed and re-verified instead. On
+        success the registration returns to `pending`.
+
+        Content rejections (e.g. an opt-in flow without a verifiable form link,
+        or unrealistic samples) should be FIXED in the same call: pass the
+        corrected `messageFlow` / `sample1` / `sample2` and the campaign is
+        updated before the appeal is filed, so the reviewer sees the new
+        content. The current content is on `GET /v1/sms/registrations/{id}`
+        (`campaignContent`).
 
         Args:
             id: (required)
@@ -26098,6 +31923,17 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Reply to a change request
 
+        Replies to a reviewer change request on a registration in
+        `changes_requested` state: a note, hosted document URLs (from
+        `POST /v1/sms/opt-in-proof`), or both, sent together. When the request
+        was written as points (`reviewRequest` on the registration), send one
+        entry in `answers` per point. The registration
+        returns to `requested` (back in review), and you do not need to resubmit the
+        whole registration. A `rejected` registration can also be answered when
+        we asked for changes to fix it (`reviewRequest` set); it stays `rejected`. To change the submitted brand/campaign fields
+        themselves, resubmit via `POST /v1/sms/registrations` with
+        `resubmitRequestId` instead.
+
         Args:
             id: (required)
             note: Answer for the reviewer. Required when no files are sent.
@@ -26122,7 +31958,14 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def sms_upload_sms_opt_in_proof_file() -> str:
-        """Upload opt-in form proof"""
+        """Upload opt-in form proof
+
+        Hosts a screenshot (or PDF) of your SMS opt-in form and returns its
+        public URL. Include that URL in the campaign's `messageFlow` (the
+        opt-in workflow text). The carrier registry has no attachment field,
+        so reviewers verify consent by opening links in that answer. Works
+        before a registration exists (use it when registering) and for
+        appeals. `/v1/sms/registrations/{id}/opt-in-proof` is an alias."""
         client = _get_client()
         try:
             response = client.sms.upload_sms_opt_in_proof_file()
@@ -26140,6 +31983,13 @@ def register_generated_tools(mcp, _get_client):
     )
     def sms_upload_sms_opt_in_proof(id: str) -> str:
         """Upload opt-in form proof for an appeal
+
+        Hosts a screenshot (or PDF) of your SMS opt-in form and returns its
+        public URL. Carrier reviewers reject campaigns whose consent can't be
+        verified and ask for a \"link/screenshot of the opt-in form\". The
+        registry has no attachment field, so include the returned URL inside
+        the `messageFlow` you submit with the appeal
+        (`POST /v1/sms/registrations/{id}/appeal`).
 
         Args:
             id: (required)"""
@@ -26161,6 +32011,11 @@ def register_generated_tools(mcp, _get_client):
     def sms_share_sms_registration(number_id: str) -> str:
         """Create a registration share link
 
+        Creates a single-use, expiring link (valid 7 days) that lets someone
+        else (whoever has the legal business details) fill in the carrier
+        registration form for one of your numbers, without a Zernio login. The
+        registration is created under your account once the form is submitted.
+
         Args:
             number_id: Your phone number's ID (from GET /v1/phone-numbers). (required)"""
         client = _get_client()
@@ -26180,6 +32035,24 @@ def register_generated_tools(mcp, _get_client):
     )
     def sms_enable_sms_on_number(id: str) -> str:
         """Enable SMS on a number
+
+        Turns on SMS for one of your numbers. The number's real carrier
+        capability is checked first: some number types can't do SMS at all
+        (`smsCapable: false`), and a number still provisioning at the carrier
+        returns `notReady: true` (try again once provisioning finishes).
+
+        US numbers additionally need a carrier registration before messages
+        deliver; the response tells you which path applies:
+        - `alreadyRegistered: true`: a prior registration still covers this
+          number; SMS was reactivated.
+        - `reusable` set: you have an approved registration this number can
+          join in one click via
+          `POST /v1/phone-numbers/{id}/sms/reuse-registration`
+          (no new brand/campaign, no extra carrier fee).
+        - `needsRegistration: true` and no `reusable`: start one via
+          `POST /v1/sms/registrations`.
+
+        Idempotent: re-running re-attempts any carrier-side setup that failed.
 
         Args:
             id: Phone number record ID (from GET /v1/phone-numbers). (required)"""
@@ -26201,6 +32074,10 @@ def register_generated_tools(mcp, _get_client):
     def sms_disable_sms_on_number(id: str) -> str:
         """Disable SMS on a number
 
+        Turns off SMS for the number (deactivates its SMS account). The carrier
+        registration is untouched, so re-enabling later reactivates it,
+        with no re-registration.
+
         Args:
             id: (required)"""
         client = _get_client()
@@ -26220,6 +32097,12 @@ def register_generated_tools(mcp, _get_client):
     )
     def sms_reuse_sms_registration_for_number(id: str) -> str:
         """Add number to SMS registration
+
+        Attaches this number to your existing approved 10DLC campaign instead
+        of running a fresh registration: the number inherits the campaign's
+        approval (no new brand or campaign, no extra carrier fee). Enable SMS
+        on the number first (`POST /v1/phone-numbers/{id}/sms`; its response
+        tells you whether a reusable registration exists).
 
         Args:
             id: (required)"""
@@ -26241,9 +32124,15 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def tools_download_tik_tok_video(
-        url: str, action: str = "download", format_id: str | None = None
+        url: str,
+        action: Literal["download", "formats"] = "download",
+        format_id: str | None = None,
     ) -> str:
         """Download a TikTok video
+
+        Get a download URL or list available formats for a TikTok video. Requires Tools API access and uses the Tools API rate limit. Provider gateway failures and provider-side access blocks return 503; an unavailable video returns 404.
+
+        Platforms: tiktok
 
         Args:
             url: TikTok video URL or numeric video ID. (required)
@@ -26270,6 +32159,19 @@ def register_generated_tools(mcp, _get_client):
     )
     def tracking_tags_get_ad_tracking_tags(ad_id: str) -> str:
         """Get ad tracking tags
+
+        Unified read of the platform's native click-URL tracking params.
+        - Meta (facebook/instagram): the creative's `url_tags` (and template_url_spec).
+        - Google (googleads): the campaign's `trackingUrlTemplate` + `finalUrlSuffix`.
+        - LinkedIn (linkedinads): the campaign's Dynamic UTM `dynamicValueParameters` + `customValueParameters`.
+        Returns 405 for platforms without a click-URL tracking surface (TikTok, X, Pinterest).
+
+        **Not pixels.** Despite the shared path segment, this endpoint has nothing to do with
+        measurement tags. For an ad account's pixels use
+        `GET /v1/accounts/{accountId}/tracking-tags?adAccountId=act_...` (Meta Pixels, with `kind`
+        and `ownerAdAccountId`) or `GET /v1/accounts/{accountId}/conversion-destinations`.
+
+        Platforms: meta
 
         Args:
             ad_id: Ad id (hex _id, platformAdId, or effective story/media id). (required)"""
@@ -26298,6 +32200,19 @@ def register_generated_tools(mcp, _get_client):
         custom_value_parameters: dict[str, Any] | None = None,
     ) -> str:
         """Set ad tracking tags
+
+        Unified update. Send only the fields for the ad's platform:
+        - Meta: `urlTags` (array of {key,value}). Meta creatives are immutable, so this rebuilds the
+          creative and repoints the ad. By DEFAULT we PRESERVE the existing creative verbatim
+          (re-post its object_story_spec + the new url_tags, reusing the image), so you send `urlTags`
+          ALONE, with no need to read back headline/body/CTA. `creative` (headline, body, callToAction,
+          linkUrl, imageUrl) is OPTIONAL and only needed to rebuild explicitly, or for SHARE / page-post
+          / dark / asset_feed creatives whose object_story_spec Meta strips (those return 422 asking for
+          `creative`).
+        - Google: `trackingUrlTemplate` and/or `finalUrlSuffix` (full template strings; account quota applies).
+        - LinkedIn: `dynamicValueParameters` and/or `customValueParameters` (campaign-level Dynamic UTM).
+
+        Platforms: meta
 
         Args:
             ad_id: (required)
@@ -26335,6 +32250,26 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """List tracking tags
 
+        Returns the tracking tags (Meta Pixels, or OpenAI Ads pixels) the
+        connected ads account can see. Pass `?adAccountId=act_...` (Meta only)
+        to scope the list to a single ad account; omit it to list every pixel
+        reachable by the token (the name is then suffixed with the ad account
+        it was discovered on, for disambiguation). The list view omits `code`.
+        Call `getTrackingTag` for the install snippet and full detail.
+
+        Meta (platform `metaads`) and OpenAI Ads (platform `openaiads`); other
+        platforms return 501. The `accountId` must be the ads SocialAccount
+        created by the Ads add-on connect flow (Meta) or the OpenAI Ads
+        connect flow, not a Facebook/Instagram posting account. Get your Meta
+        `act_...` ids from `GET /v1/ads/accounts`; `adAccountId` is ignored for
+        OpenAI Ads (one API key maps to exactly one ad account).
+
+        LinkedIn (`linkedinads`): lists the Insight Tag of each ad account (LinkedIn allows one
+        per ad account; a tag shared with several accounts appears once). `adAccountId` is the
+        numeric ...
+
+        Platforms: meta, tiktok, google, x, openai, linkedin, pinterest
+
         Args:
             account_id: Ads SocialAccount id (platform `metaads` or `openaiads`). (required)
             ad_account_id: Optional, Meta only. Scope to one ad account, e.g. `act_123456789`. Ignored for OpenAI Ads."""
@@ -26359,10 +32294,60 @@ def register_generated_tools(mcp, _get_client):
         account_id: str,
         ad_account_id: str,
         name: str,
-        default_event_type: str | None = None,
-        automatic_matching_fields: list[str] | None = None,
+        default_event_type: Literal[
+            "order_created",
+            "lead_created",
+            "items_added",
+            "contents_viewed",
+            "checkout_started",
+            "registration_completed",
+            "subscription_created",
+            "trial_started",
+            "appointment_scheduled",
+            "page_viewed",
+            "app_installed",
+            "app_opened",
+        ]
+        | None = None,
+        automatic_matching_fields: list[
+            Literal[
+                "em",
+                "ph",
+                "fn",
+                "ln",
+                "ge",
+                "db",
+                "ct",
+                "st",
+                "zp",
+                "country",
+                "external_id",
+            ]
+        ]
+        | None = None,
     ) -> str:
         """Create a tracking tag
+
+        Meta: creates a Meta Pixel on the given ad account (`POST /act_{id}/adspixels`,
+        where `name` is the only input). Returns the created tag including its
+        install `code`. The pixel is owned by the Business Manager that owns the
+        ad account; a pixel created on a personal (non-BM) ad account ends up
+        with `ownerBusinessId: null` and can't be shared with other ad accounts.
+
+        Creating a Meta pixel does NOT install it. Install the returned `code`
+        snippet on the site, or send events server-side via
+        `POST /v1/ads/conversions`. The check `installed` is derived from
+        `lastFiredTime`.
+
+        OpenAI Ads: creates an OpenAI pixel AND provisions a Conversions API
+        key for it in the same call (`adAccountId` is required by this
+        endpoint but ignored: one API key maps to exactly one ad account, so
+        there's nothing to select). Returns 422 (`FEATURE_NOT_AVAILABLE`) if
+        the ad account isn't enabled for pixel management; contact your OpenAI
+        partner representative to enable it. There is no delete API for
+        OpenAI pixels. If ...
+
+        Platforms: meta, tiktok, google, x, openai, linkedin, pinterest
 
         Args:
             account_id: Ads SocialAccount id (platform `metaads` or `openaiads`). (required)
@@ -26396,6 +32381,26 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Get a tracking tag
 
+        Returns the full tag record including the base-code `code` snippet,
+        `lastFiredTime`, `ownerBusinessId`, `isUnavailable`, etc. Meta only
+        (platform `metaads`); other platforms return 501.
+
+        OpenAI Ads (`openaiads`): `tagId` is the pixel's API id (`cds_...`) or
+        its `pixel_id`. OpenAI documents no single-pixel read, so the tag is
+        resolved from the pixel list; the response adds `code` (the official
+        `oaiq` base code plus `page_viewed`) and `events` (the conversion
+        event settings whose source is this pixel). `siteTagId` is the
+        `pixel_id` the site and the Conversions API send; `id` is what event
+        settings reference.
+
+        LinkedIn (`linkedinads`): `code` is LinkedIn's base code, `lastFiredTime` is the most
+        recent callback across the tag's domains (unix seconds, null when it never fired) and
+        `events` lists the ad account's conversion rules. `siteEvent` and `siteEventId` are set
+        only on rules a page can fire (event-specific Insight Tag rules: not Conversions API
+        rules, no URL match rules). ...
+
+        Platforms: meta, tiktok, google, x, openai, linkedin, pinterest
+
         Args:
             account_id: (required)
             tag_id: Tag id (`TrackingTag.id`). (required)
@@ -26423,13 +32428,56 @@ def register_generated_tools(mcp, _get_client):
         ad_account_id: str | None = None,
         name: str | None = None,
         enable_automatic_matching: bool | None = None,
-        automatic_matching_fields: list[str] | None = None,
-        first_party_cookie_status: str | None = None,
-        data_use_setting: str | None = None,
+        automatic_matching_fields: list[
+            Literal[
+                "em",
+                "ph",
+                "fn",
+                "ln",
+                "ge",
+                "db",
+                "ct",
+                "st",
+                "zp",
+                "country",
+                "external_id",
+            ]
+        ]
+        | None = None,
+        first_party_cookie_status: Literal[
+            "empty", "first_party_cookie_disabled", "first_party_cookie_enabled"
+        ]
+        | None = None,
+        data_use_setting: Literal[
+            "advertising_and_analytics", "analytics_only", "empty"
+        ]
+        | None = None,
         enable_first_party_cookies: bool | None = None,
         auto_tagging: bool | None = None,
     ) -> str:
         """Update a tracking tag
+
+            Partial-update a pixel. Whitelisted fields: `name` (rename),
+            `enableAutomaticMatching`, `automaticMatchingFields`,
+            `firstPartyCookieStatus`, `dataUseSetting`. At least one is required.
+            Returns the re-fetched canonical tag. Meta only (platform `metaads`);
+            other platforms return 501.
+
+            OpenAI Ads answers 501: its API has no pixel update or delete route
+            (`POST`/`PATCH`/`PUT`/`DELETE /v1/conversions/pixels/{id}` answer 405
+            \"Invalid method\"); rename a pixel in OpenAI Ads Manager.
+
+            Google Ads (`googleads`): the only writable tag setting is
+            `autoTagging` (the account's gclid auto-tagging, without which the
+            tag cannot attribute conversions to ad clicks). Google rejects every
+            write to `conversion_tracking_setting` for our developer token
+            (`SERVICE_ACCESS_DENIED`), so the tag id and cross-account ownership
+            stay managed in the Google Ads UI.
+
+            There is no DELETE: Meta has no API to delete a pixel. To stop using
+            one, unshare it from your ad accounts (`DELETE ...
+
+            Platforms: meta, tiktok, google, x, openai, linkedin, pinterest
 
             Args:
                 account_id: (required)
@@ -26476,6 +32524,17 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """List accounts it is shared with
 
+        Meta (`metaads`) and LinkedIn (`linkedinads`); other platforms return 501.
+
+        LinkedIn (`linkedinads`): the ad accounts this connection can see that hold access to the
+        Insight Tag; the role (`FULL` or `USE_ONLY`) is appended to `name`. LinkedIn exposes
+        permissions per ad account only, so accounts the connection cannot see are not listed.
+
+        TikTok (`tiktokads`): the advertisers linked to the pixel in its Business Center
+        (`/bc/pixel/link/get/`); a pixel outside Business Center answers 400.
+
+        Platforms: meta, linkedin, tiktok
+
         Args:
             account_id: (required)
             tag_id: Pixel id. (required)"""
@@ -26500,6 +32559,24 @@ def register_generated_tools(mcp, _get_client):
         account_id: str, tag_id: str, ad_account_id: str
     ) -> str:
         """Share with an ad account
+
+        Shares the pixel with another ad account so campaigns/audiences in that
+        account can use it. Requires that you administer both the pixel's owning
+        Business Manager and the target ad account; a pixel on a personal
+        (non-BM) ad account can't be shared (Meta will reject the call). Meta
+        and LinkedIn; other platforms return 501.
+
+        LinkedIn (`linkedinads`): grants `USE_ONLY` access from the ad account that created the
+        tag, so the target can use the tag and its conversions but cannot edit or reshare it.
+        `adAccountId` is the numeric LinkedIn ad account id. An ad account uses one Insight Tag at
+        a time, so a target that already has one answers 400.
+
+        TikTok: links the pixel to an advertiser through Business Center
+        (`/bc/pixel/link/update/`, `adAccountId` = numeric advertiser_id). Only a pixel that is an
+        asset of a Business Center this connection manages can be shared; otherwise the answer is
+        400 asking to transfer it to Business Center first.
+
+        Platforms: meta, linkedin, tiktok
 
         Args:
             account_id: (required)
@@ -26526,6 +32603,18 @@ def register_generated_tools(mcp, _get_client):
         account_id: str, tag_id: str, ad_account_id: str | None = None
     ) -> str:
         """Stop sharing with an account
+
+        `adAccountId` may be passed as a query parameter (recommended) or as a
+        JSON body field for clients that can send DELETE bodies. Meta and
+        LinkedIn; other platforms return 501.
+
+        LinkedIn (`linkedinads`): revokes the ad account's access. Zernio answers 400 instead of
+        revoking the last ad account that holds the tag: LinkedIn accepts that call and the tag
+        is orphaned (verified live).
+
+        TikTok: unlinks through Business Center (`/bc/pixel/link/update/` with `UNLINK`).
+
+        Platforms: meta, linkedin, tiktok
 
         Args:
             account_id: (required)
@@ -26557,6 +32646,25 @@ def register_generated_tools(mcp, _get_client):
         verify_homepage: bool = True,
     ) -> str:
         """Install on a Shopify store or WordPress site
+
+        Puts the Meta pixel on a connected Shopify store's storefront and checkout through
+        Zernio's Shopify web pixel (a Shopify app pixel, no theme edits). The store then sends
+        PageView, ViewContent, AddToCart, Search, InitiateCheckout, AddPaymentInfo and Purchase
+        (with value, currency, content_ids and contents) to the pixel, each with an event id.
+        Purchase uses `shopify_order_{orderId}` as its event id, so a Conversions API Purchase
+        you send for the same order with that `eventId` is deduplicated by Meta.
+
+        Idempotent: a store runs one Zernio web pixel holding one tag per platform, so calling
+        it again updates the install, installing a different tag of the same platform replaces
+        the previous one (reported in `replacedTagId`), and other platforms' tags are kept.
+        Events respect the store's customer privacy settings (marketing consent).
+
+        `accountId` is the Meta ads account that owns the pixel (`tagId`); `storeAccountId` is the
+        Shopify account.
+
+        OpenAI Ads on Shopify: each event is sent through ...
+
+        Platforms: meta, tiktok, google, x, openai, linkedin, pinterest, shopify, wordpress
 
         Args:
             account_id: (required)
@@ -26595,6 +32703,19 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Get store install status
 
+        Whether this tag is the one the Shopify store fires for its platform. `installedTagId`
+        names the tag of that platform the store currently fires, which can be a different tag,
+        and `tags` lists every Zernio tag on the store (all platforms).
+
+        WordPress: whether the Zernio widget for this pixel is live (in an active widget area,
+        script intact), plus a read-only `preflight` with the theme's widget areas and, when an
+        install would be blocked, the `reason` POST would return. The preflight reads
+        capabilities only, so `ready: true` is not a guarantee: `DISALLOW_UNFILTERED_HTML` or a
+        multisite admin who is not a Super Admin still strips the script, which POST detects.
+        `tags` lists every Zernio widget on the site (all platforms, with `active`).
+
+        Platforms: meta, tiktok, google, x, openai, linkedin, pinterest, shopify, wordpress
+
         Args:
             account_id: (required)
             tag_id: Tag id (`TrackingTag.id`). (required)
@@ -26628,6 +32749,16 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Remove from a Shopify store or WordPress site
 
+        Removes the tag from the store. Idempotent: nothing installed returns 200 with
+        `installed: false`. If the store fires a different tag of the same platform, nothing is
+        removed and the call answers 409 `invalid_resource_state`. Shopify: other platforms'
+        tags stay; the web pixel itself is deleted once no tag remains.
+
+        WordPress: deletes every widget Zernio created for this pixel and reports how many in
+        `removed` (0 when nothing was installed). Pixel code added by hand is left alone.
+
+        Platforms: meta, tiktok, google, x, openai, linkedin, pinterest, shopify, wordpress
+
         Args:
             account_id: (required)
             tag_id: Tag id (`TrackingTag.id`). (required)
@@ -26658,6 +32789,26 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """List conversion events
 
+        The tag's conversion events, on platforms where each conversion is its own object:
+        Google conversion actions, LinkedIn conversion rules, X web event tags, OpenAI event
+        settings, TikTok pixel events, Meta custom conversions, Pinterest advertiser defined
+        events.
+
+        OpenAI Ads: the account's conversion event settings whose source is this pixel.
+        `siteEventId` is the event name the site sends (a standard event such as
+        `order_created`, or the lowercase custom event name); `clickWindowDays` is the
+        click attribution window and `viewWindowDays` the view-through window (0 = off).
+
+        LinkedIn (`linkedinads`): the conversion rules of the ad account (`adAccountId`, default
+        the account that created the tag), including Conversions API and URL-match rules.
+        `siteEventId` (the rule id a page fires) is set only on event-specific Insight Tag rules;
+        `defaultValue`/`currency` come from the rule value, `clickWindowDays`/`viewWindowDays`
+        from its post-click and view-through windows.
+
+        Meta: the pixel's custom ...
+
+        Platforms: meta, google, tiktok, linkedin, x, openai, pinterest
+
         Args:
             account_id: (required)
             tag_id: Tag id (`TrackingTag.id`). (required)
@@ -26685,7 +32836,16 @@ def register_generated_tools(mcp, _get_client):
         name: str,
         ad_account_id: str | None = None,
         type: str | None = None,
-        site_event: str | None = None,
+        site_event: Literal[
+            "page_view",
+            "view_content",
+            "add_to_cart",
+            "search",
+            "initiate_checkout",
+            "add_payment_info",
+            "purchase",
+        ]
+        | None = None,
         enabled: bool | None = None,
         default_value: float | None = None,
         currency: str | None = None,
@@ -26694,6 +32854,23 @@ def register_generated_tools(mcp, _get_client):
         url_contains: str | None = None,
     ) -> str:
         """Create a conversion event
+
+        Creates a conversion event tied to the tag. Pass the platform's own event type in `type`
+        (e.g. Google `PURCHASE`, LinkedIn `ADD_TO_CART`, X `CHECKOUT_INITIATED`) or a neutral
+        `siteEvent` the platform maps to its closest type. Each platform stores a subset of the
+        optional fields; sending one it does not store answers 400 naming the supported fields.
+        NOT idempotent unless noted per platform: do not retry blindly.
+
+        OpenAI Ads: creates a conversion event setting on the pixel (`POST
+        /conversions/event_settings`, source = the pixel). Accepts `name`, `type` and
+        `siteEvent` only. `type` is a standard event (`order_created`, `lead_created`,
+        `items_added`, `contents_viewed`, `checkout_started`, `registration_completed`,
+        `subscription_created`, `trial_started`, `appointment_scheduled`, `page_viewed`,
+        `app_installed`, `app_opened`) or, for anything else, the custom event name itself
+        (1 to 64 letters, digits, underscores or dashes; stored lowercase). `siteEvent` maps
+        `search` and ...
+
+        Platforms: meta, google, tiktok, linkedin, x, openai, pinterest
 
         Args:
             account_id: (required)
@@ -26743,7 +32920,16 @@ def register_generated_tools(mcp, _get_client):
         ad_account_id: str | None = None,
         name: str | None = None,
         type: str | None = None,
-        site_event: str | None = None,
+        site_event: Literal[
+            "page_view",
+            "view_content",
+            "add_to_cart",
+            "search",
+            "initiate_checkout",
+            "add_payment_info",
+            "purchase",
+        ]
+        | None = None,
         enabled: bool | None = None,
         default_value: float | None = None,
         currency: str | None = None,
@@ -26752,6 +32938,28 @@ def register_generated_tools(mcp, _get_client):
         url_contains: str | None = None,
     ) -> str:
         """Update a conversion event
+
+        Partial update; at least one field. A field the platform does not store answers 400.
+
+        OpenAI Ads answers 501: OpenAI documents only list and create for event settings, and
+        `POST`/`PATCH`/`PUT /v1/conversions/event_settings/{id}` answer 404 \"Invalid URL\".
+        Create a new event instead.
+
+        LinkedIn (`linkedinads`): partial update of the conversion rule; same fields as create.
+        Pass `adAccountId` when the rule lives in another ad account than the one that created the
+        tag.
+
+        Meta: only `name` and `defaultValue` can change (Meta's custom conversion update takes
+        nothing else); `type`, `siteEvent` and `urlContains` answer 400, create a new event instead.
+
+        Google Ads (`googleads`): same fields as create, on the account's WEBPAGE actions (others
+        answer 404). `enabled: false` archives the action (same as DELETE) and `enabled: true`
+        restores an archived one.
+
+        Pinterest (platform `pinterestads`): remaps the event to another `type` or `siteEvent`.
+        Pinterest identifies the event by its name, so `name` ...
+
+        Platforms: meta, google, tiktok, linkedin, x, openai, pinterest
 
         Args:
             account_id: (required)
@@ -26801,6 +33009,25 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Delete a conversion event
 
+        Removes the conversion event. Platforms without a hard delete archive or disable it
+        instead; `state` in the response says which (`deleted`, `archived`, `disabled`).
+
+        OpenAI Ads answers 501: there is no delete or archive route for event settings
+        (`DELETE /v1/conversions/event_settings/{id}` and `POST .../{id}/archive` answer 404
+        \"Invalid URL\"). Archive the event in OpenAI Ads Manager.
+
+        LinkedIn (`linkedinads`): LinkedIn has no delete for conversion rules (not in the
+        conversion-tracking API, and `DELETE /rest/conversions/{id}` has no route), so the rule is
+        disabled (`enabled: false`) and `state` is `disabled`. Re-enable it with `enabled: true`.
+
+        Meta: `archived`. Meta's delete archives the custom conversion (it stays readable with
+        `status: archived`) and there is no hard delete; deleting an archived one is a no-op.
+
+        Google Ads (`googleads`): removes the conversion action (state `archived`). Google keeps
+        it with status REMOVED and its history; PATCH with `enabled: true` restores it. ...
+
+        Platforms: meta, google, tiktok, linkedin, x, openai, pinterest
+
         Args:
             account_id: (required)
             tag_id: (required)
@@ -26829,6 +33056,16 @@ def register_generated_tools(mcp, _get_client):
     def tracking_tags_list_tracking_tag_users(account_id: str, tag_id: str) -> str:
         """List tag users
 
+        People and system users of the owning business with access to the tag. Platforms without
+        tag user assignment answer 501.
+
+        Meta: the pixel's assigned users in its owning Business Manager. A pixel on a personal ad
+        account has no business and returns an empty list. Needs the `business_management`
+        permission on the connecting Meta user (an admin of the owning business); without it the
+        call answers 403 asking to reconnect.
+
+        Platforms: meta
+
         Args:
             account_id: (required)
             tag_id: Tag id (`TrackingTag.id`). (required)"""
@@ -26853,6 +33090,15 @@ def register_generated_tools(mcp, _get_client):
         account_id: str, tag_id: str, user_id: str, tasks: list[str] | None
     ) -> str:
         """Assign a user to a tag
+
+        Gives a user of the owning business access to the tag. Assigning an already assigned user
+        replaces their task set.
+
+        Meta: `tasks` are `AA_ANALYZE`, `ADVERTISE`, `ANALYZE`, `EDIT`, `UPLOAD`; `userId` is the
+        business-scoped id from `GET /v1/ads/businesses/users`. A pixel on a personal ad account
+        answers 400. Needs `business_management` like the list.
+
+        Platforms: meta
 
         Args:
             account_id: (required)
@@ -26881,6 +33127,12 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Remove a user from a tag
 
+        Removes a user's access to the tag, on platforms whose API allows it.
+
+        Meta answers 501: the Business SDK has no delete on the pixel's assigned users, `DELETE
+        /{pixel}/assigned_users` answers \"Unsupported delete request\" (code 100, subcode 33) and
+        re-assigning with no tasks is refused. Remove the user in Business Settings.
+
         Args:
             account_id: (required)
             tag_id: (required)
@@ -26905,6 +33157,15 @@ def register_generated_tools(mcp, _get_client):
     def tracking_tags_list_tracking_tag_partners(account_id: str, tag_id: str) -> str:
         """List partner businesses of a tag
 
+        Other businesses the tag is shared with. Read-only. Platforms without partner sharing
+        answer 501.
+
+        Meta: the pixel's shared agencies. Sharing a pixel with a new partner is not available:
+        `/{pixel}/agencies` answers \"(#3) Application does not have the capability to make this
+        API call\" for our app.
+
+        Platforms: meta
+
         Args:
             account_id: (required)
             tag_id: Tag id (`TrackingTag.id`). (required)"""
@@ -26927,6 +33188,13 @@ def register_generated_tools(mcp, _get_client):
     )
     def tracking_tags_get_tracking_tag_diagnostics(account_id: str, tag_id: str) -> str:
         """Get tag diagnostics
+
+        The platform's health checks for the tag. Platforms without tag diagnostics answer 501.
+
+        Meta: the pixel's checks from Events Manager (`da_checks`), e.g. whether events miss
+        parameters or their content ids do not match the pixel's catalogs.
+
+        Platforms: meta
 
         Args:
             account_id: (required)
@@ -26952,11 +33220,48 @@ def register_generated_tools(mcp, _get_client):
         account_id: str,
         tag_id: str,
         ad_account_id: str | None = None,
-        aggregation: str = "event",
+        aggregation: Literal[
+            "event",
+            "host",
+            "url",
+            "url_by_rule",
+            "pixel_fire",
+            "device_type",
+            "device_os",
+            "browser_type",
+            "had_pii",
+            "custom_data_field",
+            "match_keys",
+            "event_source",
+            "event_detection_method",
+            "event_processing_results",
+            "event_total_counts",
+            "event_value_count",
+        ] = "event",
         start_time: int | None = None,
         end_time: int | None = None,
     ) -> str:
         """Get aggregated event stats
+
+        Returns event counts / health for the tag, where the platform exposes
+        them. Meta: aggregated counts (`GET /{pixel_id}/stats`), rows passed
+        through as-is; their shape depends on the `aggregation` requested.
+        Platforms without a stats API answer 501.
+
+        OpenAI Ads: the recent-events stream (`GET /conversions/events`), the
+        latest (at most 50) events received in the last 15 minutes, one row per
+        event (`event_type`, `api_channel`, `event_timestamp_ms`, `received_at_ms`,
+        ...). Both sources appear: `api_channel` is `pixel_sdk` for the on-site
+        Pixel (including its `openai::sdk_init` load event) and `server_to_server`
+        for Conversions API events. It is
+        a fixed window: `startTime`/`endTime` answer 400. Use it to confirm an
+        install fires; attributed totals come from ads analytics. Accounts not
+        enabled for the stream answer 422 `feature_not_available`.
+
+        LinkedIn (`linkedinads`): health rows rather than counts, since LinkedIn exposes no per-
+        event fire counts: one row per site domain the tag has seen ...
+
+        Platforms: meta, tiktok, google, x, openai, linkedin, pinterest
 
         Args:
             account_id: (required)
@@ -26992,6 +33297,9 @@ def register_generated_tools(mcp, _get_client):
     def twitter_engagement_retweet_post(account_id: str, tweet_id: str) -> str:
         """Retweet a post
 
+        Retweet (repost) a tweet by ID.
+        Rate limit: 50 requests per 15-min window. Shares the 300/3hr creation limit with tweet creation.
+
         Args:
             account_id: The account ID (required)
             tweet_id: The ID of the tweet to retweet (required)"""
@@ -27014,6 +33322,8 @@ def register_generated_tools(mcp, _get_client):
     )
     def twitter_engagement_undo_retweet(account_id: str, tweet_id: str) -> str:
         """Undo retweet
+
+        Undo a retweet (un-repost a tweet).
 
         Args:
             account_id: (required)
@@ -27038,6 +33348,10 @@ def register_generated_tools(mcp, _get_client):
     def twitter_engagement_bookmark_post(account_id: str, tweet_id: str) -> str:
         """Bookmark a tweet
 
+        Bookmark a tweet by ID.
+        Requires the bookmark.write OAuth scope.
+        Rate limit: 50 requests per 15-min window.
+
         Args:
             account_id: The account ID (required)
             tweet_id: The ID of the tweet to bookmark (required)"""
@@ -27060,6 +33374,8 @@ def register_generated_tools(mcp, _get_client):
     )
     def twitter_engagement_remove_bookmark(account_id: str, tweet_id: str) -> str:
         """Remove bookmark
+
+        Remove a bookmark from a tweet.
 
         Args:
             account_id: (required)
@@ -27084,6 +33400,10 @@ def register_generated_tools(mcp, _get_client):
     def twitter_engagement_follow_user(account_id: str, target_user_id: str) -> str:
         """Follow a user
 
+        Follow a user on X.
+        Requires the follows.write OAuth scope.
+        For protected accounts, a follow request is sent instead (pending_follow will be true).
+
         Args:
             account_id: The account ID (required)
             target_user_id: The X ID of the user to follow (required)"""
@@ -27106,6 +33426,8 @@ def register_generated_tools(mcp, _get_client):
     )
     def twitter_engagement_unfollow_user(account_id: str, target_user_id: str) -> str:
         """Unfollow a user
+
+        Unfollow a user on X.
 
         Args:
             account_id: (required)
@@ -27136,9 +33458,18 @@ def register_generated_tools(mcp, _get_client):
         start_time: str | None = None,
         end_time: str | None = None,
         cursor: str | None = None,
-        sort_order: str = "recency",
+        sort_order: Literal["recency", "relevancy"] = "recency",
     ) -> str:
         """Search recent tweets
+
+        Search public tweets from the last 7 days matching an X search query, e.g. to discover tweets to reply to.
+        The query string is passed through to X unchanged and supports X's search operators
+        (`from:user`, `-is:retweet`, `is:reply`, `lang:en`, `\"exact phrase\"`, `conversation_id:123`, boolean `OR`, ...).
+        Standalone operators like `is:` / `has:` / `lang:` must be combined with a keyword or `from:` clause.
+
+        To reply to a found tweet, pass its `id` as the twitter platform entry's `platformSpecificData.replyToTweetId` when creating a post.
+
+        Rate limit: 300 requests per 15-min window per connected account.
 
         Args:
             account_id: The account ID (required)
@@ -27180,6 +33511,15 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Look up a tweet
 
+        Resolve a single tweet by ID or URL into its text, author and public metrics.
+
+        Use this to render a post you are referencing, e.g. the tweet quoted by a quote-style post.
+        Unlike `/v1/twitter/search` this is not limited to the last 7 days and works for any tweet
+        visible to the connected account.
+
+        Billed as an X posts read ($0.005). Repeat lookups of the same tweet within the same UTC day
+        are charged once.
+
         Args:
             account_id: The account ID whose X token is used for the lookup (required)
             tweet_id: Numeric tweet ID or a tweet URL (e.g. https://x.com/user/status/123...). The same name the other /v1/twitter operations use (retweet, bookmark). (required)
@@ -27204,7 +33544,17 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def usage_get_billing() -> str:
-        """Account billing snapshot (plan, cycle, balance, caps, status)"""
+        """Account billing snapshot (plan, cycle, balance, caps, status)
+
+        The billing \"wallet/statement\" view: current plan, billing cycle,
+        accrued balance + remaining credits this period, spend caps, and
+        payment / access status. This is the billing half of the legacy
+        `/v1/usage-stats` snapshot. The per-product consumption half is metering
+        and lives on `GET /v1/usage`.
+
+        Accounts on usage-based billing get a populated `balance`; legacy Stripe
+        accounts get `balance: null` plus a deprecated `legacy.limits` block and,
+        when payment-blocked, `status.openInvoiceUrl` / `status.declineReason`."""
         client = _get_client()
         try:
             response = client.usage.get_billing()
@@ -27221,7 +33571,18 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def usage_get_x_api_pricing() -> str:
-        """Get X API pricing table"""
+        """Get X API pricing table
+
+        Returns Zernio's canonical X API pricing table. Each X action has its
+        own billing product and its own rate, and Zernio passes X API costs through
+        at exact rates with zero markup.
+
+        The response is identical for every authenticated user (pricing is universal),
+        so it is safe to cache on the client for the duration of a billing period.
+
+        To compute your own per-operation spend, pair this endpoint with
+        `GET /v1/usage-stats`, which returns `usage.xApiCallsByOperation`
+        keyed by the same `operation` field you get here."""
         client = _get_client()
         try:
             response = client.usage.get_x_api_pricing()
@@ -27239,15 +33600,38 @@ def register_generated_tools(mcp, _get_client):
     )
     def usage_get_usage(
         reconcile: bool | None = None,
-        range: str = "cycle",
+        range: Literal[
+            "cycle", "prev-cycle", "7d", "14d", "30d", "3mo", "12mo", "custom"
+        ] = "cycle",
         from_: str | None = None,
         to: str | None = None,
-        granularity: str = "day",
-        group_by: str | None = None,
+        granularity: Literal["day", "month", "total"] = "day",
+        group_by: Literal["profile", "account"] | None = None,
         profile_id: str | None = None,
         account_id: str | None = None,
     ) -> str:
         """Usage snapshot (default) or billed-spend metering (with params)
+
+            Dual-mode endpoint, selected by query params, and fully backward
+            compatible:
+
+            **Without metering params (the default):** the plan / quota / usage
+            snapshot: plan name, billing period, limits, usage counts, access
+            state. Identical to `GET /v1/usage-stats`. Existing integrations keep
+            working unchanged.
+
+            **With `range`, `granularity`, `from`, or `to`:** usage METERING:
+            billed spend (USD) by product family (`accounts`, `numbers`,
+            `imessage`, `calls`, `sms`, `messages`, `verify`, `dlc`, `xApi`, `ads`,
+            `credits`, `other`) over the window, at
+            `day` / `month` / `total` granularity, from the usage-based invoice
+            breakdown (the CHARGE view, which always reconciles with what gets billed).
+            Also served at `GET /v1/usage/daily`. Usage-based accounts only:
+            legacy Stripe accounts get `{ \"supported\": false, \"days\": [] }`.
+
+            **Attribution (metering mode):** `groupBy=profile|account` adds an
+            `attribution` breakdown of the window's spend per profile or account,
+            assembled from your own records and pro-rated ...
 
             Args:
                 reconcile: Snapshot mode only. For Stripe subscription users, `true` forces a
@@ -27292,6 +33676,24 @@ def register_generated_tools(mcp, _get_client):
     def usage_get_usage_stats(reconcile: bool | None = None) -> str:
         """Get plan and usage snapshot (plan, limits, payment status)
 
+            The plan / quota / payment-status snapshot: current plan name, billing
+            period, plan limits, usage counts, and access state. Identical to a
+            bare `GET /v1/usage` call (this path is its deprecated alias). For
+            billed spend by product, call `GET /v1/usage` with `range` /
+            `granularity` params. The statement view (balance, credits, caps,
+            payment status) lives at `GET /v1/billing`.
+
+            The response shape depends on the account's `billingSystem`:
+              * Stripe users: per-period `usage.uploads` / `usage.profiles` counters.
+              * Usage-based billing users: `usage.connectedAccounts`,
+                `usage.xApiCallsByOperation` (per-operation X API call counts;
+                resolve keys via `GET /v1/billing/x-pricing`), plus a `spend`
+                block with `currentPeriodCents`, `xSpendCents`, and
+                `xSpendLimitCents`. The legacy `usage.xApiCalls` 3-tier
+                aggregate is still emitted for back-compat but excludes the
+                $0.200 URL tier and any future tiers, so new clients should
+                consume `xApiCallsByOperation` only.
+
             Args:
                 reconcile: For Stripe subscription users, `true` forces a subscription
         reconciliation pass even when cached plan data looks complete.
@@ -27316,11 +33718,24 @@ def register_generated_tools(mcp, _get_client):
     def usage_get_calls_usage(
         since: str | None = None,
         until: str | None = None,
-        channel: str | None = None,
+        channel: Literal["whatsapp", "pstn"] | None = None,
         number: str | None = None,
-        group_by: str | None = None,
+        group_by: Literal["day", "number", "channel"] | None = None,
     ) -> str:
         """Calling usage and cost
+
+        Aggregated calling usage across your numbers, both channels
+        (WhatsApp Business Calling + regular phone/PSTN): call counts,
+        answered counts, minutes, and cost. Use it for cost visibility or to
+        rebill your own customers per number.
+
+        Costs come from each call's billing snapshot, so this endpoint always
+        agrees with the invoice: `billableUSD` is what Zernio bills;
+        `metaUSD` is the WhatsApp per-minute charge Meta bills directly to
+        your WABA (display only, never billed by Zernio).
+
+        Optional `groupBy` returns a breakdown by UTC day, by your number, or
+        by channel. Defaults to the last 30 days.
 
         Args:
             since: Start of the window (inclusive). Default 30 days before `until`.
@@ -27353,9 +33768,17 @@ def register_generated_tools(mcp, _get_client):
         since: str | None = None,
         until: str | None = None,
         number: str | None = None,
-        group_by: str | None = None,
+        group_by: Literal["day", "number"] | None = None,
     ) -> str:
         """SMS usage (volumes)
+
+        Aggregated SMS/MMS volumes across your numbers: sent, received, and
+        total message counts, with an optional breakdown by UTC day or by
+        number. Defaults to the last 30 days.
+
+        Volumes only, deliberately: SMS cost is carrier-rated asynchronously
+        and billed to your invoice, so per-message cost is not available here.
+        Calling usage (GET /v1/usage/calls) does include billable cost.
 
         Args:
             since: Start of the window (inclusive). Default 30 days before `until`.
@@ -27382,7 +33805,9 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def users_list_users() -> str:
-        """List users"""
+        """List users
+
+        Returns all users in the team including roles and profile access. Also returns the currentUserId of the caller."""
         client = _get_client()
         try:
             response = client.users.list_users()
@@ -27400,6 +33825,8 @@ def register_generated_tools(mcp, _get_client):
     )
     def users_get_user(user_id: str) -> str:
         """Get user
+
+        Returns a single user's details by ID, including name, email, and role.
 
         Args:
             user_id: (required)"""
@@ -27422,6 +33849,16 @@ def register_generated_tools(mcp, _get_client):
     )
     def validate_post_length(text: str) -> str:
         """Validate character count
+
+        Check weighted character count per platform and whether the text is within each platform's limit.
+
+        X uses weighted counting (URLs = 23 chars via t.co, emojis = 2 chars). All other platforms use plain character length.
+
+        Returns counts and limits for all 15 supported platform variants.
+
+        X returns two rows and this endpoint cannot tell you which one applies to you: it takes only `text`, so it never resolves an account. `twitter` (280) is the free tier limit. `twitterPremium` (25000) applies only when the target X account has a paid X subscription, and publishing enforces 280 instead for any post carrying a poll (this endpoint has no poll input, so the `twitterPremium` row always shows 25000). A free account trusting the `twitterPremium` row can pass validation here and still fail at publish time, where the account's real limit is enforced.
+
+        To validate against the per-account limit, use `POST /v1/tools/validate/post` instead: it accepts an `accountId` per platform entry, resolves X ...
 
         Args:
             text: The post text to check (required)"""
@@ -27447,6 +33884,12 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Validate post content
 
+        Dry-run the full post validation pipeline without publishing. Catches issues like missing media for Instagram/TikTok/YouTube, hashtag limits, invalid thread formats, Facebook Reel requirements, and character limit violations.
+
+        Accepts the same body as POST /v1/posts. Does NOT validate accounts, process media, or track usage. Account lookups are limit-only: a twitter accountId is resolved, scoped to the caller, only to pick the 280 vs 25000 character limit. Missing, foreign, or invalid ids fall back to 280 and never error.
+
+        Returns errors for failures and warnings for near-limit content (>90% of character limit).
+
         Args:
             content: Post text content
             platforms: Target platforms (same format as POST /v1/posts) (required)
@@ -27471,6 +33914,12 @@ def register_generated_tools(mcp, _get_client):
     def validate_media(url: str) -> str:
         """Validate media URL
 
+        Check if a media URL is accessible and return metadata (content type, file size) plus per-platform size limit comparisons.
+
+        Performs a HEAD request (with GET fallback) to detect content type and size. Rejects private/localhost URLs for SSRF protection.
+
+        Platform limits are sourced from each platform's actual upload constraints.
+
         Args:
             url: Public media URL to validate (required)"""
         client = _get_client()
@@ -27490,6 +33939,10 @@ def register_generated_tools(mcp, _get_client):
     )
     def validate_subreddit(name: str, account_id: str | None = None) -> str:
         """Check subreddit existence
+
+        Check if a subreddit exists and return basic info (title, subscriber count, NSFW status, post types allowed).
+
+        When accountId is provided, uses authenticated Reddit OAuth API with automatic token refresh (recommended). Falls back to Reddit's public JSON API, which may be unreliable from server IPs. Returns exists: false for private, banned, or nonexistent subreddits.
 
         Args:
             name: Subreddit name (with or without "r/" prefix) (required)
@@ -27514,7 +33967,7 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def verify_create_verification(
-        channel: str,
+        channel: Literal["sms", "whatsapp"],
         to: str,
         from_: str | None = None,
         brand_name: str | None = None,
@@ -27522,6 +33975,27 @@ def register_generated_tools(mcp, _get_client):
         ttl_minutes: int = 10,
     ) -> str:
         """Send a verification code
+
+        Generate a one-time code, deliver it to the recipient, and store only
+        its hash. Check the user-typed code with
+        POST /v1/verify/verifications/{verificationId}/check.
+
+        Re-POSTing for the same (channel, to) while a verification is active
+        RESENDS a fresh code on the existing verification (200 with
+        `resend: true`) instead of creating a new one; resends are limited to
+        one per 60 seconds (429 with `retryAfterSeconds` inside the cooldown).
+        The stored brandName/codeLength/ttlMinutes win on a resend.
+
+        Codes deliver from a number on your account (`from` optional when
+        you own exactly one number on the channel), always with a fixed
+        template:
+
+        - `sms`: from an SMS-enabled number. Each accepted send bills one
+          verification fee plus the standard message rate.
+        - `whatsapp`: from a connected WhatsApp number, as a Meta
+          AUTHENTICATION template with a copy-code button. The first
+          WhatsApp verification on a WhatsApp Business Account creates the
+          `zernio_verify_code` template there and answers 422 ...
 
         Args:
             channel: (required)
@@ -27555,6 +34029,10 @@ def register_generated_tools(mcp, _get_client):
     def verify_get_verification(verification_id: str) -> str:
         """Get a verification
 
+        Current state of a verification. `status` is effective (a pending code
+        past its expiry reads as `expired`). Verification records are deleted
+        24 hours after creation, after which this returns 404.
+
         Args:
             verification_id: (required)"""
         client = _get_client()
@@ -27574,6 +34052,13 @@ def register_generated_tools(mcp, _get_client):
     )
     def verify_check_verification(verification_id: str, code: str) -> str:
         """Check a verification code
+
+        Verify the code the user typed. Wrong, expired, and exhausted codes
+        answer 200 with `valid: false` and the settled `status`. Only an
+        unknown id is a 404. A correct code consumes the verification
+        (single-use, `status: approved`) and fires the `verification.approved`
+        webhook; the 5th wrong attempt settles it as `max_attempts_reached`
+        and fires `verification.failed`.
 
         Args:
             verification_id: (required)
@@ -27604,11 +34089,25 @@ def register_generated_tools(mcp, _get_client):
         greeting: str | None = None,
         record_override: bool | None = None,
         transcribe_override: bool | None = None,
-        transcription_language: str | None = None,
+        transcription_language: Literal["auto", "en", "es"] | None = None,
         amd: bool | None = None,
         voicemail_drop_message: str | None = None,
     ) -> str:
         """Place an outbound phone call
+
+        Dials `to` FROM one of your voice-enabled numbers and, on answer,
+        bridges the callee to the number's stored forward destination, or to
+        the per-call `forwardTo` override. Destinations can be your own AI
+        voice agent (Vapi/Retell), a phone, or a SIP endpoint. An optional
+        `greeting` is spoken to the callee before the bridge.
+
+        The 200 response means the call is dialing; the lifecycle continues
+        asynchronously (track it via `GET /v1/voice/calls/{id}` or the `call.*`
+        webhooks). Outbound calls are capped per rolling hour (429 when hit).
+
+        **Idempotency:** send an `Idempotency-Key` header to make retries safe;
+        same key + same body replays the original response instead of dialing
+        (and billing) a second call.
 
         Args:
             to: Destination to dial, E.164 with leading +. (required)
@@ -27646,13 +34145,18 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def voice_list_voice_calls(
-        status: str | None = None,
-        direction: str | None = None,
+        status: Literal["ringing", "answered", "ended", "failed"] | None = None,
+        direction: Literal["inbound", "outbound"] | None = None,
         number: str | None = None,
         before: str | None = None,
         limit: int = 50,
     ) -> str:
         """List phone calls
+
+        Your PSTN voice calls (inbound + outbound), newest first. Cursor
+        pagination: pass the returned `nextCursor` as `before` for the next
+        page. For a history that also includes WhatsApp calls, use
+        `GET /v1/calls`.
 
         Args:
             status
@@ -27684,6 +34188,8 @@ def register_generated_tools(mcp, _get_client):
     def voice_get_voice_call(id: str) -> str:
         """Get a phone call
 
+        Full call detail, including the transcript segments when transcription was on.
+
         Args:
             id: (required)"""
         client = _get_client()
@@ -27704,6 +34210,16 @@ def register_generated_tools(mcp, _get_client):
     def voice_end_voice_call(id: str) -> str:
         """Hang up a live call
 
+        Hangs up a live call on demand, including an outbound call that is
+        still ringing and has not been answered yet (the callee stops ringing
+        immediately). Works for PSTN calls and for WhatsApp calls (the `callId`
+        returned by `POST /v1/whatsapp/calls`, or an inbound WhatsApp call id).
+        A WhatsApp call forwarded to a `wss://` destination also ends
+        automatically when that WebSocket closes. Idempotent: ending a call that already
+        ended (or never connected) returns success with the call's current
+        status. Final duration/cost are written asynchronously when the hangup
+        event lands, so the call doc may briefly still show its prior status.
+
         Args:
             id: (required)"""
         client = _get_client()
@@ -27721,8 +34237,15 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=False,
         )
     )
-    def voice_get_voice_call_recording(id: str, as_: str | None = None) -> str:
+    def voice_get_voice_call_recording(
+        id: str, as_: Literal["json"] | None = None
+    ) -> str:
         """Get a call recording
+
+        Resolves a fresh, playable MP3 URL for the call's recording
+        (provider-signed URLs expire ~10 minutes after signing, so this
+        endpoint re-signs on demand). Default responds `302 Found` redirecting
+        to the fresh URL; pass `as=json` to receive `{ url }` instead.
 
         Args:
             id: (required)
@@ -27744,6 +34267,11 @@ def register_generated_tools(mcp, _get_client):
     )
     def voice_transfer_voice_call(id: str, to: str) -> str:
         """Blind-transfer a live call
+
+        Moves the call's current leg to a new destination (a phone number or a
+        SIP endpoint). This is a BLIND transfer: control of the leg is handed
+        off and the call ends normally when the transferred leg hangs up. The
+        caller ID presented on the transfer leg is always your own number.
 
         Args:
             id: (required)
@@ -27771,6 +34299,16 @@ def register_generated_tools(mcp, _get_client):
         transcription: bool | None = None,
     ) -> str:
         """Estimate call cost
+
+        Pre-call cost estimate for a PSTN call: the carrier leg plus optional
+        recording and transcription add-ons. Same billing formula as the
+        post-call invoice, so the quote and the final charge can't disagree.
+        The per-minute figure is deliberately conservative (the real cost
+        comes from the settled carrier record after the call), so estimates
+        trend slightly over the actual invoice. Parity endpoint of
+        `GET /v1/whatsapp/calls/estimate`, minus the Meta line (PSTN calls
+        have no separate Meta bill, so `totalCostUSD` equals
+        `billableCostUSD`).
 
         Args:
             to: Destination number, E.164 (leading + optional). (required)
@@ -27800,7 +34338,15 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def voice_create_voice_web_session() -> str:
-        """Mint a browser softphone session"""
+        """Mint a browser softphone session
+
+        Step 1 of the two-step browser softphone handshake. Mints a WebRTC
+        session (token + credential) the browser registers with the
+        `@telnyx/webrtc` SDK. Once registered, call
+        `POST /v1/voice/calls/web/dial` with the returned `credentialId` to
+        place the call. The split avoids bridging to a browser that has not
+        finished registering. The token lives ~1 hour (it must outlive the
+        whole call, not only the handshake)."""
         client = _get_client()
         try:
             response = client.voice.create_voice_web_session()
@@ -27823,6 +34369,12 @@ def register_generated_tools(mcp, _get_client):
         record_override: bool | None = None,
     ) -> str:
         """Dial from the browser softphone
+
+        Step 2 of the browser softphone handshake: places an outbound call
+        whose answered leg is bridged to the browser registered with the
+        credential from `POST /v1/voice/calls/web`. The call runs through the
+        normal outbound lane, so it is logged as outbound (from = your number,
+        to = target) and recorded per the number's settings.
 
         Args:
             to: The number to call, E.164 with leading +. (required)
@@ -27854,19 +34406,30 @@ def register_generated_tools(mcp, _get_client):
         forward_to: str | None = None,
         recording_enabled: bool | None = None,
         transcription_enabled: bool | None = None,
-        transcription_language: str | None = None,
+        transcription_language: Literal["auto", "en", "es"] | None = None,
         voicemail_enabled: bool | None = None,
         voicemail_greeting: str | None = None,
         business_hours_enabled: bool | None = None,
         business_hours_timezone: str | None = None,
         business_hours: list[dict[str, Any]] | None = None,
         blocked_callers: list[str] | None = None,
-        forward_caller_id: str | None = None,
+        forward_caller_id: Literal["business", "caller"] | None = None,
         ivr_enabled: bool | None = None,
         ivr_prompt: str | None = None,
         ivr_options: list[dict[str, Any]] | None = None,
     ) -> str:
         """Enable phone calling on a number
+
+        Turns on regular phone (PSTN) calling for one of your numbers and
+        configures how inbound calls are handled. Inbound calls route to
+        `forwardTo`: your own AI voice agent (Vapi/Retell), a phone, or a SIP
+        endpoint. Optional extras: voicemail, business-hours windows, an IVR
+        menu, a caller blocklist, recording, and transcription. A number can
+        also be voice-enabled with no forward (outbound-only).
+
+        Idempotent, and doubles as the settings update: only fields present in
+        the body are written. Omitting `forwardTo` preserves the current
+        destination; sending an empty string clears it.
 
         Args:
             id: Phone number record ID (from GET /v1/phone-numbers). (required)
@@ -27918,6 +34481,9 @@ def register_generated_tools(mcp, _get_client):
     def voice_disable_voice_on_number(id: str) -> str:
         """Disable phone calling on a number
 
+        Turns off PSTN calling for the number. The stored forward destination
+        and settings are preserved, so re-enabling restores the prior config.
+
         Args:
             id: (required)"""
         client = _get_client()
@@ -27939,9 +34505,21 @@ def register_generated_tools(mcp, _get_client):
         label: str,
         sip_host: str,
         sip_port: int | None = None,
-        transport: str | None = None,
+        transport: Literal["tls", "tcp", "udp"] | None = None,
     ) -> str:
         """Create a SIP trunk
+
+        Creates a SIP trunk an external voice platform (Retell, ElevenLabs,
+        Vapi, or any SIP endpoint) can import your Zernio numbers into. The
+        trunk carries both directions: inbound calls on attached numbers are
+        delivered to `sipHost`, and the platform originates outbound calls
+        through `termination.uri` with the digest credentials.
+
+        The `digestPassword` is returned only by this call (and by
+        rotate-credentials); store it immediately. Attach any number of numbers
+        to a trunk. Several trunks may point at the same host. Each carries its
+        own credentials and spend cap, so separate destinations (e.g.
+        an agency's clients) stay isolated.
 
         Args:
             label: Display name for the trunk. (required)
@@ -28005,6 +34583,9 @@ def register_generated_tools(mcp, _get_client):
     def voice_delete_sip_trunk(id: str) -> str:
         """Delete a SIP trunk
 
+        Tears down the trunk and its carrier-side objects. Refused while any
+        number is still attached: detach them first.
+
         Args:
             id: (required)"""
         client = _get_client()
@@ -28025,6 +34606,9 @@ def register_generated_tools(mcp, _get_client):
     def voice_rotate_sip_trunk_credentials(id: str) -> str:
         """Rotate a SIP trunk's password
 
+        Mints a new digest password on the trunk. The old password stops
+        working immediately, so update the destination platform right away.
+
         Args:
             id: (required)"""
         client = _get_client()
@@ -28044,6 +34628,13 @@ def register_generated_tools(mcp, _get_client):
     )
     def voice_attach_number_to_sip_trunk(id: str, trunk_id: str) -> str:
         """Attach a number to a SIP trunk
+
+        Routes the number's calls to the trunk: the external platform receives
+        its inbound directly and can present it as outbound caller ID. While
+        attached, Zernio-side voice features are off for this number (call
+        forwarding, IVR, voicemail, recording, the softphone, and WhatsApp
+        calling), so the number must have Calls and WhatsApp calling disabled
+        before attaching. SMS and WhatsApp messaging are unaffected.
 
         Args:
             id: Phone number record ID (from GET /v1/phone-numbers). (required)
@@ -28066,6 +34657,9 @@ def register_generated_tools(mcp, _get_client):
     def voice_detach_number_from_sip_trunk(id: str) -> str:
         """Detach a number from its SIP trunk
 
+        Returns the number's calls to Zernio routing. Idempotent when the
+        number is not attached to any trunk.
+
         Args:
             id: (required)"""
         client = _get_client()
@@ -28086,7 +34680,9 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def webhooks_get_webhook_settings() -> str:
-        """List webhooks"""
+        """List webhooks
+
+        Retrieve all configured webhooks for the authenticated user. Supports up to 50 webhooks per user."""
         client = _get_client()
         try:
             response = client.webhooks.get_webhook_settings()
@@ -28105,15 +34701,117 @@ def register_generated_tools(mcp, _get_client):
     def webhooks_create_webhook_settings(
         name: str,
         url: str,
-        events: list[str] | None,
+        events: list[
+            Literal[
+                "post.scheduled",
+                "post.published",
+                "post.failed",
+                "post.partial",
+                "post.cancelled",
+                "post.recycled",
+                "post.platform.published",
+                "post.platform.failed",
+                "post.platform.deleted",
+                "post.tiktok.url_resolved",
+                "post.external.created",
+                "post.external.updated",
+                "post.external.deleted",
+                "account.connected",
+                "account.disconnected",
+                "account.ads.initial_sync_completed",
+                "account.ads.sync_failed",
+                "account.ads.sync_recovered",
+                "analytics.synced",
+                "message.received",
+                "conversation.started",
+                "conversation.control_changed",
+                "call.received",
+                "call.ended",
+                "call.failed",
+                "call.permission_request",
+                "message.sent",
+                "message.edited",
+                "message.deleted",
+                "message.delivered",
+                "message.read",
+                "message.played",
+                "message.failed",
+                "reaction.received",
+                "referral.received",
+                "comment.received",
+                "review.new",
+                "review.updated",
+                "lead.received",
+                "ad.status_changed",
+                "whatsapp.template.status_updated",
+                "whatsapp.template.category_updated",
+                "whatsapp.account.name_status_updated",
+                "whatsapp.account.quality_updated",
+                "whatsapp.account.status_updated",
+                "whatsapp.account.alert_received",
+                "whatsapp.contact.identity_changed",
+                "whatsapp.automatic_event",
+                "whatsapp.number.activated",
+                "whatsapp.number.declined",
+                "whatsapp.number.action_required",
+                "whatsapp.number.verification_required",
+                "whatsapp.number.suspended",
+                "whatsapp.number.reactivated",
+                "whatsapp.number.released",
+                "whatsapp.number.kyc_submitted",
+                "phone_number.stock_available",
+                "verification.approved",
+                "verification.failed",
+                "api.changelog.published",
+                "sms.registration.action_required",
+                "sms.registration.status_updated",
+                "branded_calling.identity.status_updated",
+                "branded_calling.identity.action_required",
+                "branded_calling.number.status_updated",
+                "rcs.agent.status_updated",
+                "commerce.product.created",
+                "commerce.product.updated",
+                "commerce.product.deleted",
+            ]
+        ]
+        | None,
         secret: str | None = None,
         is_active: bool = True,
         custom_headers: dict[str, Any] | None = None,
-        disabled_resource_groups: list[str] | None = None,
+        disabled_resource_groups: list[
+            Literal[
+                "publishing",
+                "engagement",
+                "messages",
+                "contacts",
+                "analytics",
+                "ads",
+                "telephony",
+                "accounts",
+                "billing",
+                "webhooks",
+            ]
+        ]
+        | None = None,
         profile_ids: list[str] | None = None,
         account_ids: list[str] | None = None,
     ) -> str:
         """Create webhook
+
+        Create a new webhook configuration. Maximum 50 webhooks per user.
+
+        `name`, `url` and `events` are required. `url` must be a valid URL and `events` must contain at least one event. Whitespace is trimmed from `url` before validation.
+
+        Webhooks are auto-disabled only once the endpoint has had no successful delivery for 3 days AND has either reached 20 consecutive terminal failures (each one an event that exhausted the full retry ladder) or been failing continuously for 3 days. The owner is emailed; re-enable it with `isActive: true`.
+
+        A restricted (zrk_) API key can only subscribe to events whose resource group
+        the key holds; an event outside the key's groups is rejected with 403, so a
+        restricted key can never create a subscription broader than itself.
+
+        `disabledResourceGroups` restricts the subscription itself, independently of
+        which key or session later reads it. Events in a disabled group are dropped
+        before delivery to this endpoint, on live delivery and on every replay path
+        (test ...
 
         Args:
             name: Webhook name (1-50 characters) (required)
@@ -28156,14 +34854,113 @@ def register_generated_tools(mcp, _get_client):
         name: str | None = None,
         url: str | None = None,
         secret: str | None = None,
-        events: list[str] | None = None,
+        events: list[
+            Literal[
+                "post.scheduled",
+                "post.published",
+                "post.failed",
+                "post.partial",
+                "post.cancelled",
+                "post.recycled",
+                "post.platform.published",
+                "post.platform.failed",
+                "post.platform.deleted",
+                "post.tiktok.url_resolved",
+                "post.external.created",
+                "post.external.updated",
+                "post.external.deleted",
+                "account.connected",
+                "account.disconnected",
+                "account.ads.initial_sync_completed",
+                "account.ads.sync_failed",
+                "account.ads.sync_recovered",
+                "analytics.synced",
+                "message.received",
+                "conversation.started",
+                "conversation.control_changed",
+                "call.received",
+                "call.ended",
+                "call.failed",
+                "call.permission_request",
+                "message.sent",
+                "message.edited",
+                "message.deleted",
+                "message.delivered",
+                "message.read",
+                "message.played",
+                "message.failed",
+                "reaction.received",
+                "referral.received",
+                "comment.received",
+                "review.new",
+                "review.updated",
+                "lead.received",
+                "ad.status_changed",
+                "whatsapp.template.status_updated",
+                "whatsapp.template.category_updated",
+                "whatsapp.account.name_status_updated",
+                "whatsapp.account.quality_updated",
+                "whatsapp.account.status_updated",
+                "whatsapp.account.alert_received",
+                "whatsapp.contact.identity_changed",
+                "whatsapp.automatic_event",
+                "whatsapp.number.activated",
+                "whatsapp.number.declined",
+                "whatsapp.number.action_required",
+                "whatsapp.number.verification_required",
+                "whatsapp.number.suspended",
+                "whatsapp.number.reactivated",
+                "whatsapp.number.released",
+                "whatsapp.number.kyc_submitted",
+                "phone_number.stock_available",
+                "verification.approved",
+                "verification.failed",
+                "api.changelog.published",
+                "sms.registration.action_required",
+                "sms.registration.status_updated",
+                "branded_calling.identity.status_updated",
+                "branded_calling.identity.action_required",
+                "branded_calling.number.status_updated",
+                "rcs.agent.status_updated",
+                "commerce.product.created",
+                "commerce.product.updated",
+                "commerce.product.deleted",
+            ]
+        ]
+        | None = None,
         is_active: bool | None = None,
         custom_headers: dict[str, Any] | None = None,
-        disabled_resource_groups: list[str] | None = None,
+        disabled_resource_groups: list[
+            Literal[
+                "publishing",
+                "engagement",
+                "messages",
+                "contacts",
+                "analytics",
+                "ads",
+                "telephony",
+                "accounts",
+                "billing",
+                "webhooks",
+            ]
+        ]
+        | None = None,
         profile_ids: list[str] | None = None,
         account_ids: list[str] | None = None,
     ) -> str:
         """Update webhook
+
+        Update an existing webhook configuration. All fields except `webhookId` are optional; only provided fields will be updated. `webhookId` is the same name the other /v1/webhooks operations use (logs, redeliver, test); the deprecated `_id` is still accepted in its place.
+
+        When provided, `name` must be 1-50 characters, `url` must be a valid URL, and `events` must contain at least one event. Whitespace is trimmed from `url` before validation.
+
+        Webhooks are auto-disabled only once the endpoint has had no successful delivery for 3 days AND has either reached 20 consecutive terminal failures (each one an event that exhausted the full retry ladder) or been failing continuously for 3 days. The owner is emailed; re-enable it with `isActive: true`.
+
+        A restricted (zrk_) API key can only set `events` to events whose resource
+        group the key holds; an event outside the key's groups is rejected with 403.
+        It also cannot widen an existing subscription past its own groups.
+
+        `disabledResourceGroups` ...
 
         Args:
             webhook_id: Webhook ID to update. Required unless the deprecated `_id` is sent instead.
@@ -28209,6 +35006,8 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Delete webhook
 
+        Permanently delete a webhook configuration.
+
         Args:
             webhook_id: Webhook ID to delete, the same name the other /v1/webhooks operations use (logs, redeliver, test). Required unless the deprecated `id` is sent instead.
             id: Alias of webhookId, kept for existing callers"""
@@ -28232,12 +35031,23 @@ def register_generated_tools(mcp, _get_client):
     def webhooks_get_webhook_logs(
         limit: int = 50,
         skip: int = 0,
-        status: str | None = None,
+        status: Literal["success", "failed"] | None = None,
         event: str | None = None,
         webhook_id: str | None = None,
         event_id: str | None = None,
     ) -> str:
         """List webhook delivery logs
+
+        Retrieve recorded webhook delivery attempts for the authenticated user, most recent first.
+        Logs are retained for 30 days. Supports filtering by status, event type, webhook ID, and event ID,
+        plus offset-based pagination.
+
+        For a restricted (zrk_) API key, rows for events outside the key's resource
+        groups are omitted (`pagination.total` may over-count), and an `event` filter
+        naming such an event is rejected with 403. Events blocked by a subscription's
+        own `disabledResourceGroups` are dropped before delivery, so they produce no
+        log rows for anyone; the exception is the five-minute tail after a denylist
+        change, where an already-queued event can still be delivered and logged.
 
         Args:
             limit: Maximum number of logs to return
@@ -28271,6 +35081,20 @@ def register_generated_tools(mcp, _get_client):
     def webhooks_redeliver_webhook_event(webhook_id: str, event_id: str) -> str:
         """Redeliver a webhook event
 
+        Replay a past delivery: the original payload is re-sent, byte for byte, to the
+        subscription's current URL. The original event ID is preserved so your endpoint can
+        dedupe, and the replay is recorded as a fresh attempt, so it shows up in
+        `GET /v1/webhooks/logs` next to the delivery it replays.
+
+        Both `webhookId` and `eventId` come from a row of `GET /v1/webhooks/logs`. Because
+        the stored payload is replayed as-is, a redelivery reflects the event as it was
+        emitted, not the current state of the resource.
+
+        Only deliveries inside the 30-day log retention window can be replayed; past that
+        the payload is gone and the request fails with a 422. Replays run the same
+        resource-group checks as live delivery, against both the key's groups and the
+        subscription's `disabledResourceGroups`.
+
         Args:
             webhook_id: ID of the webhook subscription that delivered the event (required)
             event_id: Stable event ID of the delivery to replay (required)"""
@@ -28293,6 +35117,15 @@ def register_generated_tools(mcp, _get_client):
     )
     def webhooks_test_webhook(webhook_id: str) -> str:
         """Send test webhook
+
+        Send a test webhook to verify your endpoint is configured correctly. The test payload includes event: \"webhook.test\" to distinguish it from real events.
+
+        `webhook.test` belongs to the `webhooks` resource group, so a key with that
+        group disabled is rejected with 403, as is a test fire on a subscription that
+        lists `webhooks` in its own `disabledResourceGroups` (a 403, not a reported
+        delivery failure). Replays of real events (redelivery, dead-letter requeue) run
+        the same checks as live delivery, against both the key's groups and the
+        subscription's.
 
         Args:
             webhook_id: ID of the webhook to test (required)"""
@@ -28318,6 +35151,12 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Register a connected WhatsApp number on the Cloud API
 
+        Re-runs Meta's Cloud API registration for a WhatsApp account that is already connected.
+        Use it when the number has its own two-step verification PIN: the connect flows register
+        with a default PIN, Meta rejects that with error 133005, and the number then fails every
+        send with the misleading '(#200) You do not have the necessary permission to send messages'
+        while the account still shows as connected. The PIN is used for this call only and is not stored.
+
         Args:
             account_id: The WhatsApp account ID (required)
             pin: The 6-digit two-step verification PIN set on the number. Omitting it applies Zernio's managed default registration PIN, the same one every Embedded Signup connect sets automatically."""
@@ -28339,9 +35178,18 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def whatsapp_request_whats_app_verification_code(
-        account_id: str, method: str = "SMS", language: str = "en_US"
+        account_id: str,
+        method: Literal["SMS", "VOICE"] = "SMS",
+        language: str = "en_US",
     ) -> str:
         """Request a Meta re-verification code for a BYO WhatsApp number
+
+        For a bring-your-own WhatsApp number (its own WABA, migrated off another BSP) that
+        Meta demoted to re-verification, this requests a new OTP from Meta. The code lands
+        on the customer's own handset, so verifying it is necessarily self-service; call
+        POST /v1/accounts/{accountId}/whatsapp/verify-code with the code once it arrives.
+        Rate-limited to one request per 10 minutes per account, and Meta enforces its own
+        cooldown on top of that.
 
         Args:
             account_id: The WhatsApp account ID (required)
@@ -28367,6 +35215,10 @@ def register_generated_tools(mcp, _get_client):
     def whatsapp_verify_whats_app_number(account_id: str, code: str) -> str:
         """Verify the Meta re-verification code for a BYO WhatsApp number
 
+        Submits the OTP Meta sent in response to POST /v1/accounts/{accountId}/whatsapp/request-code.
+        This only verifies the number with Meta; it does not register it on the Cloud API.
+        Call POST /v1/accounts/{accountId}/whatsapp/register afterward to complete activation.
+
         Args:
             account_id: The WhatsApp account ID (required)
             code: The 6-digit code Meta sent to the phone. Non-digit separators (e.g. "749-456") are stripped automatically. (required)"""
@@ -28389,6 +35241,24 @@ def register_generated_tools(mcp, _get_client):
     )
     def whatsapp_get_whats_app_media(media_id: str, account_id: str) -> str:
         """Download WhatsApp media
+
+        Streams the binary for a WhatsApp attachment. This is the endpoint the
+        `url` on a WhatsApp `attachments[]` entry points at, in both the
+        `message.received` webhook and the List messages response.
+
+        **This is an authenticated endpoint, not a public link.** Send
+        `Authorization: Bearer <your API key>` exactly as you would for any other
+        call. Passing the URL straight to a browser, an LLM vision API, or a
+        no-code \"download file\" step without the header returns `401`. This is
+        the most common integration mistake on this endpoint, and it differs from
+        Instagram, Facebook and Telegram, whose `attachments[].url` is a direct
+        CDN link that needs no header.
+
+        **Fetch on receipt, not lazily.** WhatsApp media lives in Meta's media
+        store, not ours, and it is removed after a limited retention window
+        (currently 7 days, and Meta has been dropping some inbound media sooner).
+        Once Meta drops it the media is unrecoverable and this endpoint answers
+        `400` permanently, so retrying will never succeed. Download ...
 
         Args:
             media_id: The media id from `attachments[].payload.id`. (required)
@@ -28414,9 +35284,22 @@ def register_generated_tools(mcp, _get_client):
         account_id: str,
         name: str | None = None,
         language: str | None = None,
-        status: str | None = None,
+        status: Literal[
+            "APPROVED",
+            "REJECTED",
+            "PENDING",
+            "PAUSED",
+            "DISABLED",
+            "IN_APPEAL",
+            "PENDING_DELETION",
+        ]
+        | None = None,
     ) -> str:
         """List templates
+
+        List message templates for the WhatsApp Business Account (WABA) associated with the given account.
+        Templates are fetched directly from the WhatsApp Cloud API. One entry per **name + language**:
+        a multi-language template appears once per language, each with its own Meta `id`.
 
         Args:
             account_id: WhatsApp account ID (required)
@@ -28443,9 +35326,10 @@ def register_generated_tools(mcp, _get_client):
     def whatsapp_create_whats_app_template(
         account_id: str,
         name: str,
-        category: str,
+        category: Literal["AUTHENTICATION", "MARKETING", "UTILITY"],
         language: str,
-        parameter_format: str | None = None,
+        parameter_format: Literal["POSITIONAL", "NAMED", "positional", "named"]
+        | None = None,
         components: list[dict[str, Any]] | None = None,
         library_template_name: str | None = None,
         library_template_body_inputs: dict[str, Any] | None = None,
@@ -28453,6 +35337,16 @@ def register_generated_tools(mcp, _get_client):
         message_send_ttl_seconds: int | None = None,
     ) -> str:
         """Create template
+
+            Create a new message template. Supports two modes:
+
+            Custom template: Provide components with your own content. Submitted to Meta for review (can take up to 24h).
+
+            Library template: Provide library_template_name instead of components to use a pre-built template
+            from Meta's template library. Library templates are pre-approved (no review wait). You can optionally
+            customize parameters and buttons via library_template_body_inputs and library_template_button_inputs.
+
+            Browse available library templates at: https://business.facebook.com/wa/manage/message-templates/
 
             Args:
                 account_id: WhatsApp account ID (required)
@@ -28501,6 +35395,15 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Get template
 
+        Retrieve one message template variant by name.
+
+        Meta stores one template per **name + language**, so a name identifies a family of variants,
+        each with its own Meta id. Pass `language` to address one variant. Without it, a name with a
+        single variant resolves to that variant; a name with several returns `409 ambiguous_template`
+        with `details.languages`. A bare language (`es`) matches a single regional variant (`es_ES`);
+        if the family has several regional variants for it, that is also a 409. A full code (`es_ES`)
+        must match exactly. Variants in `PENDING_DELETION` are not part of the family.
+
         Args:
             template_name: Template name (the family). (required)
             account_id: WhatsApp account ID (required)
@@ -28530,6 +35433,20 @@ def register_generated_tools(mcp, _get_client):
         message_send_ttl_seconds: int | None = None,
     ) -> str:
         """Update template
+
+        Update one variant's components and/or its message_send_ttl_seconds. Name, language and category cannot change after creation.
+
+        Meta stores one template per **name + language**, so a name identifies a family of variants,
+        each with its own Meta id. Pass `language` to address one variant. Without it, a name with a
+        single variant resolves to that variant; a name with several returns `409 ambiguous_template`
+        with `details.languages`. A bare language (`es`) matches a single regional variant (`es_ES`);
+        if the family has several regional variants for it, that is also a 409. A full code (`es_ES`)
+        must match exactly. Variants in `PENDING_DELETION` are not part of the family.
+
+        Meta only allows editing templates in `APPROVED`, `REJECTED` or `PAUSED` state; an approved
+        template can be edited once per 24 hours and up to 10 times per 30 days. A component update
+        sends the variant back to Meta for review, so the `status` returned here is normally `PENDING`;
+        a TTL-only update keeps an APPROVED ...
 
         Args:
             template_name: Template name (the family). (required)
@@ -28563,6 +35480,13 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Delete template
 
+        Permanently delete a message template.
+
+        **Without `language` this deletes every language variant of the name** (Meta's own
+        contract for deletion by name). Pass `language` to delete one variant only; the response
+        `scope` says which happened. Meta keeps a deleted approved template in `PENDING_DELETION`
+        for a while and the name cannot be reused for 30 days.
+
         Args:
             template_name: Template name (the family). (required)
             account_id: WhatsApp account ID (required)
@@ -28586,6 +35510,9 @@ def register_generated_tools(mcp, _get_client):
     )
     def whatsapp_get_whats_app_template_by_id(template_id: str, account_id: str) -> str:
         """Get template by id
+
+        Retrieve one template variant by its Meta id, the id every variant of a family has on its own
+        and the one the `whatsapp.template.status_updated` webhook carries.
 
         Args:
             template_id: Meta template id (numeric). (required)
@@ -28614,6 +35541,16 @@ def register_generated_tools(mcp, _get_client):
         message_send_ttl_seconds: int | None = None,
     ) -> str:
         """Update template by id
+
+        Update one variant's components and/or its message_send_ttl_seconds by its Meta id. Name, language and category cannot change.
+
+        Meta only allows editing templates in `APPROVED`, `REJECTED` or `PAUSED` state; an approved
+        template can be edited once per 24 hours and up to 10 times per 30 days. A component update
+        sends the variant back to Meta for review, so the `status` returned here is normally `PENDING`;
+        a TTL-only update keeps an APPROVED variant approved.
+        The final outcome arrives on the `whatsapp.template.status_updated` webhook (which carries the
+        variant's `templateId` and `language`). A variant already in `PENDING` cannot be edited again
+        until Meta finishes reviewing it.
 
         Args:
             template_id: Meta template id (numeric). (required)
@@ -28645,6 +35582,9 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Delete template by id
 
+        Delete one language variant by its Meta id. Other languages of the same name are untouched.
+        The name cannot be reused for 30 days once its last variant is deleted.
+
         Args:
             template_id: Meta template id (numeric). (required)
             account_id: WhatsApp account ID (required)"""
@@ -28668,6 +35608,8 @@ def register_generated_tools(mcp, _get_client):
     def whatsapp_list_whats_app_catalogs(account_id: str) -> str:
         """List the catalogs linked to a WhatsApp number
 
+        The Meta Commerce catalogs connected to the number's WhatsApp Business Account. Pass `catalogAccountId`: the WhatsApp connection's own (embedded signup) token answers an empty list even when a catalog is linked, only a Meta login with catalog_management sees the link. A linked catalog is what product, product_list and catalog_message interactive messages sell from (see POST /v1/inbox/conversations/{conversationId}/messages) and what customers browse in the WhatsApp app. Create and fill catalogs with the /v1/ads/catalogs endpoints.
+
         Args:
             account_id: WhatsApp account ID (required)"""
         client = _get_client()
@@ -28689,6 +35631,8 @@ def register_generated_tools(mcp, _get_client):
         account_id: str, catalog_id: str, catalog_account_id: str | None = None
     ) -> str:
         """Link a catalog to a WhatsApp number
+
+        Connects a Meta Commerce catalog (owned by the same business portfolio as the WhatsApp Business Account) to the number's WABA. The WhatsApp connection's own token cannot do this, so pass `catalogAccountId` naming a facebook, instagram or metaads account whose Meta login carries catalog_management.
 
         Args:
             account_id: WhatsApp account ID (required)
@@ -28738,6 +35682,8 @@ def register_generated_tools(mcp, _get_client):
     )
     def whatsapp_get_whats_app_commerce_settings(account_id: str) -> str:
         """Get a number's commerce settings
+
+        Whether the linked catalog is shown on the business profile (`isCatalogVisible`) and whether customers can build a cart (`isCartEnabled`).
 
         Args:
             account_id: WhatsApp account ID (required)"""
@@ -28794,6 +35740,8 @@ def register_generated_tools(mcp, _get_client):
     def whatsapp_get_whats_app_business_profile(account_id: str) -> str:
         """Get business profile
 
+        Retrieve the WhatsApp Business profile for the account (about, address, description, email, websites, etc.).
+
         Args:
             account_id: WhatsApp account ID (required)"""
         client = _get_client()
@@ -28824,6 +35772,9 @@ def register_generated_tools(mcp, _get_client):
         profile_picture_handle: str | None = None,
     ) -> str:
         """Update business profile
+
+        Update the WhatsApp Business profile. All fields are optional; only provided fields will be updated.
+        Constraints: about max 139 chars, description max 512 chars, max 2 websites.
 
         Args:
             account_id: WhatsApp account ID (required)
@@ -28861,6 +35812,15 @@ def register_generated_tools(mcp, _get_client):
     def whatsapp_upload_whats_app_profile_photo(account_id: str, url: str) -> str:
         """Upload profile picture
 
+        Upload a new profile picture for the WhatsApp Business Profile.
+        Uses Meta's resumable upload API under the hood: creates an upload session,
+        uploads the image bytes, then updates the business profile with the resulting handle.
+
+        Provide the image either as a binary upload (`multipart/form-data` with `file`)
+        or as a download URL (`application/json` with `url`). With a URL we fetch the
+        image server-side and upload the bytes for you. Meta's profile-photo API is
+        bytes-only, so there is no direct URL passthrough. JPEG/PNG, max 5MB either way.
+
         Args:
             account_id: WhatsApp account ID (required)
             url: Publicly reachable https URL of the image (JPEG or PNG, max 5MB, recommended 640x640). Fetched server-side; must resolve directly without redirects. (required)"""
@@ -28884,6 +35844,9 @@ def register_generated_tools(mcp, _get_client):
     def whatsapp_get_whats_app_display_name(account_id: str) -> str:
         """Get display name status
 
+        Fetch the current display name and its Meta review status for a WhatsApp Business account.
+        Display name changes require Meta approval and can take 1-3 business days.
+
         Args:
             account_id: WhatsApp account ID (required)"""
         client = _get_client()
@@ -28905,6 +35868,10 @@ def register_generated_tools(mcp, _get_client):
         account_id: str, display_name: str
     ) -> str:
         """Request display name change
+
+        Submit a display name change request for the WhatsApp Business account.
+        The new name must follow WhatsApp naming guidelines (3-512 characters, must represent your business).
+        Changes require Meta review and approval, which typically takes 1-3 business days.
 
         Args:
             account_id: WhatsApp account ID (required)
@@ -28929,6 +35896,9 @@ def register_generated_tools(mcp, _get_client):
     def whatsapp_get_whatsapp_business_username(account_id: str) -> str:
         """Get business username
 
+        Fetch the current WhatsApp Business username and its approval status.
+        Username status can be `approved` (active), `reserved` (pending activation), or `none` (no username set).
+
         Args:
             account_id: WhatsApp account ID (required)"""
         client = _get_client()
@@ -28949,9 +35919,22 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def whatsapp_set_whatsapp_business_username(
-        account_id: str, username: str, transfer_action: str = "none"
+        account_id: str,
+        username: str,
+        transfer_action: Literal["none", "force_transfer"] = "none",
     ) -> str:
         """Set business username
+
+           Claim or transfer a WhatsApp Business username for the account.
+
+           Username rules: 3-35 characters, letters/digits/period/underscore only, must contain at least one letter,
+           no leading or trailing periods, no consecutive periods, no `www` prefix, no domain TLD suffix (e.g. `.com`).
+
+           If the desired username is currently held by another account, pass `transferAction: \"force_transfer\"` to
+           request a transfer. On failure the API returns a standard error envelope with one of these codes:
+           `whatsapp_username_unavailable` (already taken and transfer not requested),
+           `whatsapp_username_ineligible` (account not eligible to claim a username), or
+           `whatsapp_username_transfer_required` (username is held elsewhere; retry with `force_transfer`).
 
            Args:
                account_id: WhatsApp account ID (required)
@@ -28980,6 +35963,9 @@ def register_generated_tools(mcp, _get_client):
     def whatsapp_delete_whatsapp_business_username(account_id: str) -> str:
         """Delete business username
 
+        Release the currently claimed WhatsApp Business username from the account.
+        After deletion the username becomes available for other accounts to claim.
+
         Args:
             account_id: WhatsApp account ID (required)"""
         client = _get_client()
@@ -29002,6 +35988,9 @@ def register_generated_tools(mcp, _get_client):
     def whatsapp_get_whatsapp_business_username_suggestions(account_id: str) -> str:
         """Get username suggestions
 
+        Retrieve a list of available WhatsApp Business username suggestions based on the account's
+        business profile name. Use these to help users discover valid, unclaimed usernames.
+
         Args:
             account_id: WhatsApp account ID (required)"""
         client = _get_client()
@@ -29023,6 +36012,12 @@ def register_generated_tools(mcp, _get_client):
     )
     def whatsapp_get_whats_app_block_status(account_id: str, user: str) -> str:
         """Check if a user is blocked
+
+        Definitive blocked-state lookup for a single contact. Meta exposes no
+        membership endpoint, so this reads Zernio's blocklist mirror (kept in
+        sync by the block/unblock endpoints; the first call per account
+        backfills the mirror from Meta's full list). Constant-time regardless
+        of blocklist size.
 
         Args:
             account_id: (required)
@@ -29049,6 +36044,10 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """List blocked users
 
+        List the WhatsApp users blocked on this number. Cursor-paginated; pass
+        `nextCursor` back as `after` to fetch the next page. The blocklist holds
+        up to 64,000 users.
+
         Args:
             account_id: WhatsApp account ID (required)
             limit: Page size.
@@ -29072,6 +36071,17 @@ def register_generated_tools(mcp, _get_client):
     )
     def whatsapp_block_whats_app_users(account_id: str, users: list[str] | None) -> str:
         """Block users
+
+        Block one or more WhatsApp users on this number. Blocked users cannot
+        message your number or see that you are online, and your sends to them
+        return an error.
+
+        Meta constraints, surfaced per-user in `failed` (the request itself still
+        succeeds for the rest of the batch):
+        - Only users who messaged your business within the last 24 hours can be
+          blocked (failures outside the window report \"Re-engagement required\").
+        - Up to 1,000 users per request; the blocklist caps at 64,000.
+        - Other WhatsApp Business accounts cannot be blocked.
 
         Args:
             account_id: WhatsApp account ID (required)
@@ -29098,6 +36108,10 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Unblock users
 
+        Unblock one or more previously blocked WhatsApp users on this number.
+        Up to 1,000 users per request; per-user failures are reported in
+        `failed` without failing the rest of the batch.
+
         Args:
             account_id: WhatsApp account ID (required)
             users: Phone numbers (E.164) or WhatsApp user IDs to unblock. (required)"""
@@ -29120,6 +36134,14 @@ def register_generated_tools(mcp, _get_client):
     )
     def whatsapp_list_whats_app_account_events(account_id: str, limit: int = 50) -> str:
         """List account notifications
+
+        Returns Meta-originated events recorded for a WhatsApp account, newest
+        first: template review outcomes (approved, rejected, paused, category
+        changes) and WABA status changes (restricted, disabled, reinstated,
+        disconnected). Events are captured from Meta webhooks as they happen;
+        the feed starts at the account's first recorded event and is not
+        backfilled. Complements the push events `whatsapp.template.status_updated`
+        and `account.disconnected` with a pollable history.
 
         Args:
             account_id: WhatsApp account ID (required)
@@ -29144,6 +36166,12 @@ def register_generated_tools(mcp, _get_client):
     def whatsapp_get_whats_app_dataset(account_id: str) -> str:
         """Get CTWA conversions dataset
 
+        Returns the Meta Click-to-WhatsApp conversions dataset currently linked
+        to the WhatsApp account, if one has been provisioned. Reads only from
+        the stored `metadata.metaCapiDatasetId`, never hits Meta, never
+        creates a dataset. Use this to detect whether `POST /v1/whatsapp/conversions`
+        is configured for an account.
+
         Args:
             account_id: WhatsApp account ID (required)"""
         client = _get_client()
@@ -29163,6 +36191,19 @@ def register_generated_tools(mcp, _get_client):
     )
     def whatsapp_create_whats_app_dataset(account_id: str) -> str:
         """Provision CTWA dataset
+
+        Creates (or fetches, if one already exists) the Meta dataset that
+        Click-to-WhatsApp ad events are reported against via the Conversions
+        API, and persists its ID on the account as `metadata.metaCapiDatasetId`.
+
+        The call is GET-first idempotent: a WABA can only own one CTWA
+        dataset, so a second call after a successful provision is a safe no-op
+        that returns the same ID with `created: false`.
+
+        Requires the connected WhatsApp account's token to carry the
+        `whatsapp_business_manage_events` permission. If the permission is
+        missing the endpoint returns 422 with a message asking the user to
+        reconnect the account.
 
         Args:
             account_id: WhatsApp account ID (required)"""
@@ -29185,6 +36226,11 @@ def register_generated_tools(mcp, _get_client):
         account_id: str, limit: int = 25, after: str | None = None
     ) -> str:
         """List active groups
+
+        List active WhatsApp group chats for a business phone number.
+        These are actual WhatsApp group conversations on the platform.
+
+        Not available on [Coexistence](/platforms/whatsapp/connection#whatsapp-business-app-coexistence) numbers. Requires a Cloud API-only number.
 
         Args:
             account_id: WhatsApp account ID (required)
@@ -29211,9 +36257,13 @@ def register_generated_tools(mcp, _get_client):
         account_id: str,
         subject: str,
         description: str | None = None,
-        join_approval_mode: str | None = None,
+        join_approval_mode: Literal["approval_required", "auto_approve"] | None = None,
     ) -> str:
         """Create group
+
+        Create a new WhatsApp group chat. Returns the group ID and optionally an invite link.
+
+        Not available on [Coexistence](/platforms/whatsapp/connection#whatsapp-business-app-coexistence) numbers. Requires a Cloud API-only number.
 
         Args:
             account_id: WhatsApp account ID (required)
@@ -29243,6 +36293,11 @@ def register_generated_tools(mcp, _get_client):
     def whatsapp_get_whats_app_group_chat(group_id: str, account_id: str) -> str:
         """Get group info
 
+        Retrieve metadata about a WhatsApp group including subject, description,
+        participants, and settings.
+
+        Not available on [Coexistence](/platforms/whatsapp/connection#whatsapp-business-app-coexistence) numbers. Requires a Cloud API-only number.
+
         Args:
             group_id: Group ID (required)
             account_id: WhatsApp account ID (required)"""
@@ -29268,9 +36323,13 @@ def register_generated_tools(mcp, _get_client):
         account_id: str,
         subject: str | None = None,
         description: str | None = None,
-        join_approval_mode: str | None = None,
+        join_approval_mode: Literal["approval_required", "auto_approve"] | None = None,
     ) -> str:
         """Update group settings
+
+        Update the subject, description, or join approval mode of a WhatsApp group.
+
+        Not available on [Coexistence](/platforms/whatsapp/connection#whatsapp-business-app-coexistence) numbers. Requires a Cloud API-only number.
 
         Args:
             group_id: Group ID (required)
@@ -29302,6 +36361,10 @@ def register_generated_tools(mcp, _get_client):
     def whatsapp_delete_whats_app_group_chat(group_id: str, account_id: str) -> str:
         """Delete group
 
+        Delete a WhatsApp group and remove all participants.
+
+        Not available on [Coexistence](/platforms/whatsapp/connection#whatsapp-business-app-coexistence) numbers. Requires a Cloud API-only number.
+
         Args:
             group_id: Group ID (required)
             account_id: WhatsApp account ID (required)"""
@@ -29326,6 +36389,10 @@ def register_generated_tools(mcp, _get_client):
         group_id: str, account_id: str, phone_numbers: list[str] | None
     ) -> str:
         """Add participants
+
+        Add participants to a WhatsApp group. Maximum 8 participants per request. A group holds at most 8 participants in total (a Meta limit), so later requests cannot grow a group past 8. Meta documents groups as invite-only, so people normally join through the group's invite link.
+
+        Not available on [Coexistence](/platforms/whatsapp/connection#whatsapp-business-app-coexistence) numbers. Requires a Cloud API-only number.
 
         Args:
             group_id: Group ID (required)
@@ -29353,6 +36420,10 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Remove participants
 
+        Remove participants from a WhatsApp group.
+
+        Not available on [Coexistence](/platforms/whatsapp/connection#whatsapp-business-app-coexistence) numbers. Requires a Cloud API-only number.
+
         Args:
             group_id: Group ID (required)
             account_id: WhatsApp account ID (required)
@@ -29379,6 +36450,10 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Create invite link
 
+        Create a new invite link for a WhatsApp group. The previous link is revoked.
+
+        Not available on [Coexistence](/platforms/whatsapp/connection#whatsapp-business-app-coexistence) numbers. Requires a Cloud API-only number.
+
         Args:
             group_id: Group ID (required)
             account_id: WhatsApp account ID (required)"""
@@ -29404,6 +36479,10 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """List join requests
 
+        List pending join requests for a WhatsApp group (only for groups with approval_required mode).
+
+        Not available on [Coexistence](/platforms/whatsapp/connection#whatsapp-business-app-coexistence) numbers. Requires a Cloud API-only number.
+
         Args:
             group_id: Group ID (required)
             account_id: WhatsApp account ID (required)"""
@@ -29428,6 +36507,10 @@ def register_generated_tools(mcp, _get_client):
         group_id: str, account_id: str, phone_numbers: list[str] | None
     ) -> str:
         """Approve join requests
+
+        Approve pending join requests for a WhatsApp group.
+
+        Not available on [Coexistence](/platforms/whatsapp/connection#whatsapp-business-app-coexistence) numbers. Requires a Cloud API-only number.
 
         Args:
             group_id: Group ID (required)
@@ -29455,6 +36538,10 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Reject join requests
 
+        Reject pending join requests for a WhatsApp group.
+
+        Not available on [Coexistence](/platforms/whatsapp/connection#whatsapp-business-app-coexistence) numbers. Requires a Cloud API-only number.
+
         Args:
             group_id: Group ID (required)
             account_id: WhatsApp account ID (required)
@@ -29479,6 +36566,18 @@ def register_generated_tools(mcp, _get_client):
     def whatsapp_list_whats_app_conversions(account_id: str, limit: int = 50) -> str:
         """List conversion events
 
+        Returns the most recent conversion events sent through
+        `POST /v1/whatsapp/conversions` for the given WhatsApp account.
+        Sourced from delivery logs (Axiom `late` dataset), so the visible
+        window is bounded by log retention (about 30 days). Useful for
+        rendering a \"recent activity\" panel on the conversions setup tab
+        without standing up a parallel persistence layer.
+
+        Per-event payload mirrors the structured log we write on every
+        successful send: `eventName`, `conversationId`, `eventsReceived`,
+        `eventsFailed`, `traceId`, `durationMs`, and the wall-clock
+        `timestamp`.
+
         Args:
             account_id: WhatsApp account ID (required)
             limit: Max events to return (1-200, default 50)."""
@@ -29501,7 +36600,9 @@ def register_generated_tools(mcp, _get_client):
     )
     def whatsapp_send_whats_app_conversion(
         account_id: str,
-        event_name: str,
+        event_name: Literal[
+            "LeadSubmitted", "Purchase", "AddToCart", "InitiateCheckout", "ViewContent"
+        ],
         event_id: str,
         event_time: float | None = None,
         conversation_id: str | None = None,
@@ -29514,6 +36615,25 @@ def register_generated_tools(mcp, _get_client):
         test_code: str | None = None,
     ) -> str:
         """Send WhatsApp conversion event
+
+            Forward a WhatsApp Business Messaging conversion event (`LeadSubmitted`,
+            `Purchase`, `AddToCart`, `InitiateCheckout`, `ViewContent`) to Meta's
+            Conversions API with `action_source = business_messaging` and
+            `messaging_channel = whatsapp`. The endpoint looks up the originating
+            CTWA click ID (`ctwa_clid`) captured on the first inbound message of
+            the conversation and replays it on every event so Meta can attribute
+            the conversion back to the Click-to-WhatsApp ad that drove the chat.
+
+            Configuration prerequisite on the WhatsApp account metadata:
+              - `metaCapiDatasetId`: the Meta dataset ID linked to the WABA.
+                Provision one with `POST /v1/whatsapp/dataset`.
+
+            The WABA ID (already set automatically at connect time) is forwarded as
+            `user_data.whatsapp_business_account_id`, which is the per-channel
+            attribution identifier Meta requires for WhatsApp events. No Facebook
+            Page ID is needed (that field is the Messenger-branch identifier).
+
+            Identify the conversation by either `conversationId` ...
 
             Args:
                 account_id: WhatsApp SocialAccount ID. (required)
@@ -29585,6 +36705,15 @@ def register_generated_tools(mcp, _get_client):
     def whatsapp_calling_get_whats_app_calling_config(account_id: str) -> str:
         """Get calling config for an account
 
+        Returns the local calling configuration snapshot for the connected
+        WhatsApp account: whether calling is enabled, the forward-to
+        destination URI, recording opt-in state, the phone number record id
+        (use as `{id}` on the read-write calling sub-resource at
+        /v1/phone-numbers/{id}/whatsapp/calling) and whether SIP digest
+        credentials are stored (the encrypted password itself is never
+        returned). Also carries account-level extras (billing eligibility,
+        current-period spend) that the number-keyed GET does not.
+
         Args:
             account_id: WhatsApp account ID (required)"""
         client = _get_client()
@@ -29613,9 +36742,17 @@ def register_generated_tools(mcp, _get_client):
         recording_enabled: bool = False,
         call_icon_countries: list[str] | None = None,
         max_call_duration_seconds: int | None = None,
-        forward_caller_id: str = "business",
+        forward_caller_id: Literal["business", "caller"] = "business",
     ) -> str:
         """Enable calling on a number
+
+        Deprecated alias of `/v1/phone-numbers/{id}/whatsapp/calling`; same contract. New
+        integrations should use that path.
+
+        Enable WhatsApp Business Calling on a connected number. Configures
+        Meta calling.status=ENABLED with our Telnyx SIP endpoint, fetches and
+        stores the Meta-issued SIP password (encrypted), and snapshots the
+        customer's forward-to destination.
 
         Args:
             id: WhatsApp phone number id (required)
@@ -29661,9 +36798,18 @@ def register_generated_tools(mcp, _get_client):
         recording_enabled: bool | None = None,
         call_icon_countries: str | None = None,
         max_call_duration_seconds: str | None = None,
-        forward_caller_id: str | None = None,
+        forward_caller_id: Literal["business", "caller"] | None = None,
     ) -> str:
         """Update calling config
+
+        Deprecated alias of `/v1/phone-numbers/{id}/whatsapp/calling`; same contract. New
+        integrations should use that path.
+
+        Update fields on an already-enabled number. Only fields present in
+        the body are written; `undefined` leaves the stored value alone,
+        explicit `null` clears a nullable field. No Meta side effect, this
+        only changes local routing state consumed by the Telnyx webhook
+        handler.
 
         Args:
             id: (required)
@@ -29705,6 +36851,13 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Disable calling on a number
 
+        Deprecated alias of `/v1/phone-numbers/{id}/whatsapp/calling`; same contract. New
+        integrations should use that path.
+
+        Disable calling. Sends calling.status=DISABLED to Meta (best-effort)
+        and flips the local `callingEnabled` flag off. forwardTo and SIP
+        creds are preserved so a re-enable does not lose the destination.
+
         Args:
             id: (required)
             account_id: (required)"""
@@ -29730,6 +36883,11 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Check call permission
 
+        Returns the permission state and the list of available actions for
+        a given consumer wa_id (e.g. `start_call`, `send_call_permission_request`).
+        Use this before placing a call to decide whether to prompt for
+        consent first.
+
         Args:
             account_id: (required)
             to: Consumer wa_id (E.164, leading + optional) (required)"""
@@ -29753,13 +36911,29 @@ def register_generated_tools(mcp, _get_client):
     def whatsapp_calling_initiate_whats_app_call(
         account_id: str,
         to: str,
-        action: str | None = None,
+        action: Literal["send_call_permission_request"] | None = None,
         body_text: str | None = None,
         forward_to: str | None = None,
         record_override: bool | None = None,
         biz_opaque_callback_data: str | None = None,
     ) -> str:
         """Initiate outbound call
+
+            Initiates an outbound Business-Initiated Call. The Telnyx-side SIP
+            leg is originated server-side (Option B: SIP-first). Telnyx INVITEs
+            Meta directly over TLS:5061 with the SIP digest credentials we
+            captured at calling-enablement time). No client-side SDP is
+            required; pass only `accountId` and `to`.
+
+            To send the consumer the call-consent prompt instead of placing a
+            call, pass `action: \"send_call_permission_request\"` (+ optional
+            `bodyText`). The consumer must tap Allow in WhatsApp before
+            `start_call` is permitted; Meta limits the prompt to 1 per consumer
+            per 24h (2 per 7 days) and requires an open 24h service window.
+
+            **Idempotency:** send an `Idempotency-Key` header to make retries
+            safe; same key + same body replays the original response instead of
+            dialing (and billing) a second call.
 
             Args:
                 account_id: (required)
@@ -29797,14 +36971,22 @@ def register_generated_tools(mcp, _get_client):
     )
     def whatsapp_calling_list_whats_app_calls(
         account_id: str,
-        status: str | None = None,
-        direction: str | None = None,
+        status: Literal["ringing", "answered", "ended", "failed"] | None = None,
+        direction: Literal["inbound", "outbound"] | None = None,
         since: str | None = None,
         until: str | None = None,
         before: str | None = None,
         limit: int | None = None,
     ) -> str:
         """List call history for an account
+
+        Compact history listing for a single connected account. Results are
+        scoped to the resolved SocialAccount; profile-scoped team members
+        cannot read calls on sibling accounts.
+
+        Cursor pagination: pass the returned `nextCursor` as `before` to fetch
+        the next page (same scheme as `GET /v1/calls`). `since`/`until` remain
+        as absolute range filters and combine with the cursor.
 
         Args:
             account_id: (required)
@@ -29861,9 +37043,16 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def whatsapp_calling_get_whats_app_call_recording(
-        id: str, account_id: str, as_: str | None = None
+        id: str, account_id: str, as_: Literal["json"] | None = None
     ) -> str:
         """Get a call recording
+
+        Resolves a fresh, playable MP3 URL for the call's recording.
+        Provider-signed recording URLs expire ~10 minutes after signing, so the
+        `recordingUrl` stored on the call is usually stale by the time it is
+        played; this endpoint re-signs on demand. Default responds `302 Found`
+        redirecting to the fresh URL (point an `<audio>` element or a link
+        straight at this endpoint); pass `as=json` to receive `{ url }` instead.
 
         Args:
             id: (required)
@@ -29894,6 +37083,10 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Estimate per-minute cost
 
+        Returns a zero-markup estimated cost for an outbound call to the
+        given destination, broken down by Meta + Telnyx + recording line
+        items. Costs are pass-through, no margin applied.
+
         Args:
             account_id: (required)
             to: (required)
@@ -29918,6 +37111,14 @@ def register_generated_tools(mcp, _get_client):
     )
     def whatsapp_calling_get_whats_app_calling(id: str) -> str:
         """Get calling config for a number
+
+        The WhatsApp Business Calling configuration of this number, keyed the
+        same way as the POST/PATCH/DELETE below (full read-write on one
+        sub-resource). Encrypted secrets are never returned; only a boolean
+        saying whether a SIP password is stored. The account-scoped read
+        (`GET /v1/whatsapp/calling?accountId=`) remains for callers that only
+        know the account id, and additionally carries account-level
+        extras (billing eligibility, current-period spend).
 
         Args:
             id: Phone number record ID (from GET /v1/phone-numbers). (required)"""
@@ -29945,9 +37146,14 @@ def register_generated_tools(mcp, _get_client):
         recording_enabled: bool = False,
         call_icon_countries: list[str] | None = None,
         max_call_duration_seconds: int | None = None,
-        forward_caller_id: str = "business",
+        forward_caller_id: Literal["business", "caller"] = "business",
     ) -> str:
         """Enable calling on a number
+
+        Enable WhatsApp Business Calling on a connected number. Configures
+        Meta calling.status=ENABLED with our Telnyx SIP endpoint, fetches and
+        stores the Meta-issued SIP password (encrypted), and snapshots the
+        customer's forward-to destination.
 
         Args:
             id: Phone number record ID (from GET /v1/phone-numbers). (required)
@@ -29993,9 +37199,15 @@ def register_generated_tools(mcp, _get_client):
         recording_enabled: bool | None = None,
         call_icon_countries: str | None = None,
         max_call_duration_seconds: str | None = None,
-        forward_caller_id: str | None = None,
+        forward_caller_id: Literal["business", "caller"] | None = None,
     ) -> str:
         """Update calling config
+
+        Update fields on an already-enabled number. Only fields present in
+        the body are written; `undefined` leaves the stored value alone,
+        explicit `null` clears a nullable field. No Meta side effect, this
+        only changes local routing state consumed by the Telnyx webhook
+        handler.
 
         Args:
             id: (required)
@@ -30035,6 +37247,10 @@ def register_generated_tools(mcp, _get_client):
     def whatsapp_calling_disable_whats_app_calling(id: str, account_id: str) -> str:
         """Disable calling on a number
 
+        Disable calling. Sends calling.status=DISABLED to Meta (best-effort)
+        and flips the local `callingEnabled` flag off. forwardTo and SIP
+        creds are preserved so a re-enable does not lose the destination.
+
         Args:
             id: (required)
             account_id: (required)"""
@@ -30056,9 +37272,16 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def whatsapp_calling_start_whats_app_caller_id_verification(
-        id: str, method: str = "sms"
+        id: str, method: Literal["sms", "call"] = "sms"
     ) -> str:
         """Start caller-ID verification for a customer-brought number
+
+        Customer-brought (BYO) WhatsApp numbers cannot present themselves as
+        caller ID on `tel:` call forwards until verified (carrier
+        anti-spoofing); until then forwarded calls show a Zernio number
+        (`callerIdMode: platform` on the calling config). This sends a
+        one-time code to the number by SMS or voice call. Re-POST to resend.
+        Zernio-purchased numbers never need this and get a 400.
 
         Args:
             id: Phone number record ID (from GET /v1/phone-numbers). (required)
@@ -30082,6 +37305,10 @@ def register_generated_tools(mcp, _get_client):
     )
     def whatsapp_calling_verify_whats_app_caller_id(id: str, code: str) -> str:
         """Confirm the caller-ID verification code
+
+        Submits the one-time code the number received. On success, `tel:`
+        call forwards present the business number itself as caller ID
+        (`callerIdMode: business`).
 
         Args:
             id: Phone number record ID (from GET /v1/phone-numbers). (required)
@@ -30108,6 +37335,8 @@ def register_generated_tools(mcp, _get_client):
     def whatsapp_flows_list_whats_app_flows(account_id: str) -> str:
         """List flows
 
+        List all WhatsApp Flows for the Business Account (WABA) associated with the given account.
+
         Args:
             account_id: WhatsApp account ID (required)"""
         client = _get_client()
@@ -30128,12 +37357,27 @@ def register_generated_tools(mcp, _get_client):
     def whatsapp_flows_create_whats_app_flow(
         account_id: str,
         name: str,
-        categories: list[str] | None,
+        categories: list[
+            Literal[
+                "SIGN_UP",
+                "SIGN_IN",
+                "APPOINTMENT_BOOKING",
+                "LEAD_GENERATION",
+                "CONTACT_US",
+                "CUSTOMER_SUPPORT",
+                "SURVEY",
+                "OTHER",
+            ]
+        ]
+        | None,
         clone_flow_id: str | None = None,
         as_version: bool | None = None,
         endpoint_uri: str | None = None,
     ) -> str:
         """Create flow
+
+        Create a new WhatsApp Flow in DRAFT status. Optionally clone an existing flow.
+        After creating, upload a Flow JSON definition, then publish to make it sendable.
 
         Args:
             account_id: WhatsApp account ID (required)
@@ -30169,6 +37413,8 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Get flow
 
+        Get details for a specific flow, including status, categories, validation errors, and preview URL.
+
         Args:
             flow_id: Flow ID (required)
             account_id: WhatsApp account ID (required)
@@ -30194,10 +37440,24 @@ def register_generated_tools(mcp, _get_client):
         flow_id: str,
         account_id: str,
         name: str | None = None,
-        categories: list[str] | None = None,
+        categories: list[
+            Literal[
+                "SIGN_UP",
+                "SIGN_IN",
+                "APPOINTMENT_BOOKING",
+                "LEAD_GENERATION",
+                "CONTACT_US",
+                "CUSTOMER_SUPPORT",
+                "SURVEY",
+                "OTHER",
+            ]
+        ]
+        | None = None,
         endpoint_uri: str | None = None,
     ) -> str:
         """Update flow
+
+        Update metadata (name, categories, endpointUri) of a DRAFT flow. Published flows are immutable.
 
         Args:
             flow_id: Flow ID (required)
@@ -30229,6 +37489,8 @@ def register_generated_tools(mcp, _get_client):
     def whatsapp_flows_delete_whats_app_flow(flow_id: str, account_id: str) -> str:
         """Delete flow
 
+        Delete a DRAFT flow. This is irreversible. Only flows in DRAFT status can be deleted.
+
         Args:
             flow_id: Flow ID (required)
             account_id: WhatsApp account ID (required)"""
@@ -30251,6 +37513,8 @@ def register_generated_tools(mcp, _get_client):
     )
     def whatsapp_flows_get_whats_app_flow_json(flow_id: str, account_id: str) -> str:
         """Get flow JSON asset
+
+        Get the flow JSON asset metadata, including a temporary download URL for the Flow JSON file.
 
         Args:
             flow_id: Flow ID (required)
@@ -30276,6 +37540,12 @@ def register_generated_tools(mcp, _get_client):
         flow_id: str, account_id: str, flow_json: str
     ) -> str:
         """Upload flow JSON
+
+        Upload or update the Flow JSON for a DRAFT flow. The Flow JSON defines all screens,
+        components (text inputs, dropdowns, date pickers, etc.), and navigation.
+
+        Meta validates the JSON on upload and returns any validation errors.
+        See: https://developers.facebook.com/docs/whatsapp/flows/reference/flowjson
 
         Args:
             flow_id: Flow ID (required)
@@ -30303,6 +37573,10 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Get flow preview URL
 
+        Get Meta's public web-preview URL for a flow (drafts included), embeddable as an
+        interactive iframe. The link is reused across calls (valid ~30 days); pass
+        invalidate=true to mint a fresh one (the previous link stops working).
+
         Args:
             flow_id: Flow ID (required)
             account_id: WhatsApp account ID (required)
@@ -30329,6 +37603,10 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """List flow versions
 
+        List the flow's version history (the clone lineage Zernio tracks, since Meta has no
+        native versioning), newest version first. Each entry is enriched with the version's
+        live name and status from Meta. A flow with no lineage returns only itself as version 1.
+
         Args:
             flow_id: Flow ID (required)
             account_id: WhatsApp account ID (required)"""
@@ -30351,6 +37629,10 @@ def register_generated_tools(mcp, _get_client):
     )
     def whatsapp_flows_publish_whats_app_flow(flow_id: str, account_id: str) -> str:
         """Publish flow
+
+        Publish a DRAFT flow. This is irreversible. Once published, the flow and its JSON
+        become immutable and the flow can be sent to users. To update a published flow,
+        create a new flow (optionally cloning this one via cloneFlowId).
 
         Args:
             flow_id: Flow ID (required)
@@ -30375,6 +37657,9 @@ def register_generated_tools(mcp, _get_client):
     def whatsapp_flows_deprecate_whats_app_flow(flow_id: str, account_id: str) -> str:
         """Deprecate flow
 
+        Deprecate a PUBLISHED flow. This is irreversible. Deprecated flows cannot be sent
+        or opened, but existing active sessions may continue until they complete.
+
         Args:
             flow_id: Flow ID (required)
             account_id: WhatsApp account ID (required)"""
@@ -30397,6 +37682,14 @@ def register_generated_tools(mcp, _get_client):
     )
     def whatsapp_flows_get_whats_app_flows_encryption_key(account_id: str) -> str:
         """Get Flows encryption key status
+
+        Read the RSA business public key registered on the phone number for WhatsApp Flows
+        endpoint encryption. Only one key is active per phone number at a time. Flows that
+        use flow_action: data_exchange (an endpoint-backed flow) stop working at runtime
+        until the endpoint serves the matching private key, and Meta rejects publish with
+        error code 139002 (\"Missing Flows Signed Public Key\") when no key is registered.
+        `registered` reflects whether a key is present, never `signatureStatus` alone:
+        Meta reports an unregistered key as MISMATCH rather than a null/absent value.
 
         Args:
             account_id: WhatsApp account ID (required)"""
@@ -30421,6 +37714,12 @@ def register_generated_tools(mcp, _get_client):
         account_id: str, business_public_key: str
     ) -> str:
         """Register a Flows encryption key
+
+        Register (or replace) the RSA business public key for WhatsApp Flows endpoint
+        encryption on the phone number. Uploading a new key replaces the previous one:
+        only one key is active per phone number. The corresponding private key must be
+        served by the flow's endpoint, or endpoint-backed flows (flow_action:
+        data_exchange) will fail at runtime even though the key is registered.
 
         Args:
             account_id: WhatsApp account ID (required)
@@ -30448,7 +37747,7 @@ def register_generated_tools(mcp, _get_client):
         flow_id: str,
         flow_cta: str,
         body: str,
-        flow_action: str = "navigate",
+        flow_action: Literal["navigate", "data_exchange"] = "navigate",
         flow_token: str | None = None,
         flow_action_payload: dict[str, Any] | None = None,
         header: dict[str, Any] | None = None,
@@ -30456,6 +37755,10 @@ def register_generated_tools(mcp, _get_client):
         draft: bool | None = None,
     ) -> str:
         """Send flow message
+
+        Send a published flow as an interactive message with a CTA button.
+        When the recipient taps the button, the flow opens natively in WhatsApp.
+        Flow responses are received via webhooks.
 
         Args:
             account_id: WhatsApp account ID (required)
@@ -30501,6 +37804,12 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """List flow responses
 
+        List the responses customers submitted when completing a flow (parsed from the
+        nfm_reply messages received via webhook), newest first. Scope to a single flow
+        with `flowId`, which matches responses whose flow_token carries the `<flowId>:`
+        prefix that Zernio stamps on auto-generated tokens at send time. Responses sent
+        with a custom integrator-supplied flow_token are not attributed to a flow.
+
         Args:
             account_id: WhatsApp account ID (required)
             flow_id: Scope to responses for this flow
@@ -30527,6 +37836,13 @@ def register_generated_tools(mcp, _get_client):
     def whatsapp_phone_numbers_get_whats_app_number_info(account_id: str) -> str:
         """Get number status
 
+        Live snapshot of a connected number straight from Meta: the phone-number node
+        (display number, display name + approval, quality rating, messaging-limit tier,
+        throughput, official-business badge, connection status, health_status) and its
+        owning WhatsApp Business Account (name, business verification, timezone,
+        health_status). Fetched live because Meta updates quality/tier/name/health over
+        time; the call also refreshes the cached values shown on the connection card.
+
         Args:
             account_id: WhatsApp account ID (required)"""
         client = _get_client()
@@ -30550,7 +37866,7 @@ def register_generated_tools(mcp, _get_client):
         account_id: str,
         start: str,
         end: str,
-        granularity: str,
+        granularity: Literal["HALF_HOUR", "DAILY", "MONTHLY"],
         dimensions: str | None = None,
         metric_types: str | None = None,
         pricing_types: str | None = None,
@@ -30558,6 +37874,13 @@ def register_generated_tools(mcp, _get_client):
         country_codes: str | None = None,
     ) -> str:
         """Get pricing analytics
+
+            Message volume and approximate cost for one connected WhatsApp number, read live
+            from Meta's `pricing_analytics` on the WhatsApp Business Account and scoped to
+            that account's phone number. Meta's figures are approximate and can lag; Meta
+            bills from its own invoice. Meta limits how far back and how fine the data goes
+            (for example HALF_HOUR only over short ranges) and answers out-of-range requests
+            with an error.
 
             Args:
                 account_id: WhatsApp account ID (required)
@@ -30599,9 +37922,29 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def whatsapp_phone_numbers_get_whats_app_phone_numbers(
-        status: str | None = None, profile_id: str | None = None
+        status: Literal[
+            "provisioning",
+            "verifying",
+            "pending_payment",
+            "pending_regulatory",
+            "regulatory_declined",
+            "active",
+            "suspended",
+            "releasing",
+            "released",
+        ]
+        | None = None,
+        profile_id: str | None = None,
     ) -> str:
         """List phone numbers
+
+            Deprecated alias of `/v1/phone-numbers`; same contract. New
+            integrations should use that path.
+
+            List all WhatsApp phone numbers purchased by the authenticated user.
+            By default, released numbers are excluded. Connected (bring-your-own)
+            numbers are returned in the separate `connected` array. They are not
+            billed and have no provisioning lifecycle.
 
             Args:
                 status: Filter by status (by default excludes released numbers). NOTE:
@@ -30640,6 +37983,23 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Purchase phone number
 
+        Deprecated alias of `/v1/phone-numbers/purchase`; same contract. New
+        integrations should use that path.
+
+        Payment-first: the system provisions a number and auto-assigns it, unless you pass
+        `phoneNumber` to buy one exact number from `GET /v1/phone-numbers/available`. With
+        usage-based billing active and a payment method on file, the
+        number provisions inline and bills per month on your usage-based invoice (there is
+        no checkout redirect). No payment method on file returns `402 PAYMENT_REQUIRED`;
+        a regulated country returns `202` with `status: \"kyc_required\"` and a `kycUrl`.
+
+        The monthly price is the one `GET /v1/phone-numbers/countries` quotes for that
+        country and `numberType` at the time of purchase, and it is stamped on the number:
+        later rate-card changes never move a number you already own.
+
+        Requires usage-based billing (the Usage plan). The maximum number of phone numbers
+        is determined by the user's plan.
+
         Args:
             profile_id: Profile to associate the number with (required)
             country: ISO 3166-1 alpha-2 country for the number (default US). International numbers require usage-based billing. Tier 3/4 countries return 202 { status: "kyc_required", kycUrl }. The customer must complete KYC at that URL before the number is ordered. See GET /v1/whatsapp/phone-numbers/countries.
@@ -30668,7 +38028,15 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def whatsapp_phone_numbers_list_whats_app_number_countries() -> str:
-        """List offerable number countries"""
+        """List offerable number countries
+
+        Deprecated alias of `/v1/phone-numbers/countries`; same contract. New
+        integrations should use that path.
+
+        The WhatsApp number countries available to purchase, each with its flat
+        monthly price (cents), regulatory tier, whether it needs end-user KYC
+        (Tier 3/4), and whether outbound calling is available (not BIC-blocked).
+        Drives the country picker. Tier-4 countries appear only when enabled."""
         client = _get_client()
         try:
             response = client.whatsapp_phone_numbers.list_whats_app_number_countries()
@@ -30686,7 +38054,7 @@ def register_generated_tools(mcp, _get_client):
     )
     def whatsapp_phone_numbers_search_available_whats_app_numbers(
         country: str = "US",
-        number_type: str | None = None,
+        number_type: Literal["local", "mobile", "national", "toll_free"] | None = None,
         area_code: str | None = None,
         type: str | None = None,
         prefix: str | None = None,
@@ -30695,6 +38063,13 @@ def register_generated_tools(mcp, _get_client):
         limit: int = 20,
     ) -> str:
         """Search available numbers
+
+        Deprecated alias of `/v1/phone-numbers/available`; same contract. New
+        integrations should use that path.
+
+        Search the provider's inventory for numbers available to purchase in a
+        country (default US). Optional filters narrow the results. The country
+        must be offerable (see GET /v1/whatsapp/phone-numbers/countries).
 
         Args:
             country
@@ -30730,9 +38105,24 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def whatsapp_phone_numbers_check_whats_app_number_availability(
-        country: str, number_type: str | None = None, sms: bool | None = None
+        country: str,
+        number_type: Literal["local", "mobile", "national", "toll_free"] | None = None,
+        sms: bool | None = None,
     ) -> str:
         """Check country availability
+
+        Deprecated alias of `/v1/phone-numbers/availability`; same contract. New
+        integrations should use that path.
+
+        Pre-purchase check, so you can warn BEFORE a customer invests in KYC
+        (regulated review is async, 1-3 days). Tells you whether we have
+        deliverable inventory, and what address the customer needs:
+          - `addressConstraint: geo`  → the registered address MUST be in one of
+            the returned `areas` (the only place we have stock). A different-area
+            address passes pre-approval but the number can never be assigned.
+          - `addressConstraint: country` → any in-country address works.
+          - `addressConstraint: none` → field-only / instant country, no address.
+        Call this before starting the KYC form for regulated countries.
 
         Args:
             country: ISO-2 country code. (required)
@@ -30761,6 +38151,13 @@ def register_generated_tools(mcp, _get_client):
         country: str, profile_id: str
     ) -> str:
         """Get KYC form spec
+
+        Deprecated alias of `/v1/phone-numbers/kyc`; same contract. New
+        integrations should use that path.
+
+        For a Tier 3/4 country, the fields the end customer must provide (Telnyx
+        regulatory requirements) before a number can be ordered: text, date,
+        address, or file (document) per requirement.
 
         Args:
             country: (required)
@@ -30799,6 +38196,25 @@ def register_generated_tools(mcp, _get_client):
         address: dict[str, Any] | None = None,
     ) -> str:
         """Submit KYC
+
+        Deprecated alias of `/v1/phone-numbers/kyc`; same contract. New
+        integrations should use that path.
+
+        Submit the end customer's KYC (textual values, uploaded documents,
+        address) for a Tier 3/4 country. Documents are streamed straight to the
+        number provider and are not stored by Zernio. Builds + submits a
+        regulatory requirement group and claims a pending_regulatory slot; the
+        number is ordered + activated once the provider approves (asynchronous).
+        A customer may hold several same-country numbers in review at once; a
+        double-submit of the SAME attempt is deduped via `submissionId`.
+
+        For an ID-card document requirement, carriers commonly require BOTH sides:
+        combine the front and back into a single file before uploading (the
+        dashboard does this automatically). A one-sided ID is a common decline
+        reason; fix it via POST /v1/whatsapp/phone-numbers/{id}/remediate.
+
+        Before submitting, call GET /v1/whatsapp/phone-numbers/availability to
+        check the country has deliverable inventory and, for ...
 
         Args:
             profile_id: (required)
@@ -30846,7 +38262,17 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def whatsapp_phone_numbers_upload_whats_app_number_kyc_document() -> str:
-        """Upload a KYC document"""
+        """Upload a KYC document
+
+        Deprecated alias of `/v1/phone-numbers/kyc/upload-document`; same contract. New
+        integrations should use that path.
+
+        Upload ONE document and get back its provider document id, to reference
+        from POST /v1/whatsapp/phone-numbers/kyc via `documents[].documentId`.
+        Send the RAW file bytes as the request body (not base64); put the filename
+        in the `X-Filename` header. Uploading documents one-per-request keeps each
+        request under the ~4.5MB body limit. The document streams straight to the
+        number provider and is not stored by Zernio."""
         client = _get_client()
         try:
             response = (
@@ -30873,6 +38299,19 @@ def register_generated_tools(mcp, _get_client):
         administrative_area: str | None = None,
     ) -> str:
         """Pre-validate KYC address
+
+        Deprecated alias of `/v1/phone-numbers/kyc/validate-address`; same contract. New
+        integrations should use that path.
+
+        Optional early check for the address step of a Tier 4 (end-user identity)
+        registration: validates a postal address for deliverability BEFORE the full
+        KYC submit, so it can be corrected before any documents are uploaded. The
+        full submit (POST /v1/whatsapp/phone-numbers/kyc) re-validates the address,
+        so this call is purely a fast feedback path and skipping it is safe. Only
+        the postal address is sent (no documents, no gov-ID fields). A region
+        (`administrative_area`) is required by the validator; when it is omitted the
+        pre-check is skipped and `{ ok: true, skipped: true }` is returned (the
+        final submit still validates).
 
         Args:
             country: ISO 3166-1 alpha-2 country code. (required)
@@ -30909,11 +38348,27 @@ def register_generated_tools(mcp, _get_client):
         profile_id: str,
         country: str,
         area_code: str | None = None,
-        language: str | None = None,
+        language: Literal["en", "es", "pt-BR"] | None = None,
         branding: dict[str, Any] | None = None,
         redirect_url: str | None = None,
     ) -> str:
         """Create a hosted KYC link
+
+            Deprecated alias of `/v1/phone-numbers/kyc/share`; same contract. New
+            integrations should use that path.
+
+            Create a single-use, 7-day hosted KYC link that your end customer
+            completes WITHOUT a Zernio login. Useful when the person who holds the
+            ID and address is not your team. They fill the regulated verification on
+            a Zernio-hosted page; the number provisions under YOUR account once they
+            submit. Only regulated (KYC) countries are valid: a country that does not
+            require KYC returns 400.
+
+            White-label the page with `branding` (your company name, logo, brand
+            color). Supply `redirect_url` to send the end customer back to your own
+            site after a successful submit (completion params are appended; see
+            below). Listen for the `whatsapp.number.kyc_submitted` webhook to react
+            when the form is completed.
 
             Args:
                 profile_id: (required)
@@ -30952,6 +38407,24 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Move a number to another profile
 
+        Move a provisioned number to a different profile.
+
+        A number is not a single record. Alongside the number itself there are
+        hidden telephony owner accounts (platform `phone`, plus `sms` when SMS is
+        enabled) and, once WhatsApp is connected, the `whatsapp` account. They all
+        carry a profileId and this endpoint moves them together.
+
+        Use this instead of `PATCH /v1/accounts/{accountId}`: that one moves the
+        account only and leaves the number itself pinned to its original
+        profile, which splits the number across two profiles. Connecting a
+        Zernio-provisioned number from any profile but its own is rejected with a
+        `409` (`WHATSAPP_NUMBER_PINNED_TO_PROFILE`). This endpoint is how you
+        re-home the number first, so it can then be connected from the new profile.
+
+        `id` is the number record id from `GET /v1/phone-numbers`, not an account id.
+
+        The destination profile may already hold other numbers.
+
         Args:
             id: WhatsAppPhoneNumber id. (required)
             profile_id: Destination profile id. Must belong to the same team. (required)"""
@@ -30974,6 +38447,15 @@ def register_generated_tools(mcp, _get_client):
     )
     def whatsapp_phone_numbers_get_whats_app_number_remediation(id: str) -> str:
         """Get declined requirements
+
+        Deprecated alias of `/v1/phone-numbers/{id}/remediate`; same contract. New
+        integrations should use that path.
+
+        For a number in `regulatory_declined`, returns ONLY the requirements the
+        reviewer flagged declined, as a form spec (same shape as the KYC form GET).
+        The customer fixes only those, because Telnyx supports correcting a declined
+        requirement group and re-submitting it (no new number/group). Falls back
+        to the full spec if the provider exposes no per-requirement flags.
 
         Args:
             id: WhatsAppPhoneNumber id. (required)"""
@@ -31002,6 +38484,15 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Resubmit a declined number
 
+        Deprecated alias of `/v1/phone-numbers/{id}/remediate`; same contract. New
+        integrations should use that path.
+
+        Submit corrected values/documents for the declined requirement(s). We
+        PATCH them onto the SAME requirement group and re-submit it for approval;
+        the number goes `regulatory_declined` → `pending_regulatory`. No new
+        number and no new billing. Body shape matches the KYC submit (values /
+        documents / address). Send only the corrected fields.
+
         Args:
             id: (required)
             values
@@ -31027,6 +38518,17 @@ def register_generated_tools(mcp, _get_client):
     def whatsapp_phone_numbers_get_whats_app_phone_number(phone_number_id: str) -> str:
         """Get phone number
 
+        Deprecated alias of `/v1/phone-numbers/{id}`; same contract. New
+        integrations should use that path.
+
+        Retrieve the current status of a purchased phone number. Poll this to
+        track Meta pre-verification (US sync path) and, for regulated (Tier 3/4)
+        numbers, the async lifecycle: pending_regulatory → active (or
+        regulatory_declined). When a regulated number has an Onfido ID step,
+        `onfidoVerificationUrl` appears here once the order is placed. Forward
+        it to the end user. (Or subscribe to the whatsapp.number.* webhooks
+        instead of polling.)
+
         Args:
             phone_number_id: Phone number record ID (required)"""
         client = _get_client()
@@ -31051,6 +38553,15 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Release phone number
 
+        Deprecated alias of `/v1/phone-numbers/{id}`; same contract. New
+        integrations should use that path.
+
+        Release a purchased phone number. This will:
+        1. Disconnect any linked WhatsApp account
+        2. Decrement the Stripe subscription quantity (or cancel if last number)
+        3. Release the number from Telnyx
+        4. Mark the number as released
+
         Args:
             phone_number_id: Phone number record ID (required)"""
         client = _get_client()
@@ -31073,7 +38584,12 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def whatsapp_sandbox_list_whats_app_sandbox_sessions() -> str:
-        """List your sandbox sessions"""
+        """List your sandbox sessions
+
+        Returns all of the authenticated user's non-expired sandbox sessions
+        (pending + active) plus the sandbox phone number. In practice there
+        is at most one session per user since the sandbox is one-phone-per-user;
+        the array shape is preserved for forward compatibility."""
         client = _get_client()
         try:
             response = client.whatsapp_sandbox.list_whats_app_sandbox_sessions()
@@ -31091,6 +38607,21 @@ def register_generated_tools(mcp, _get_client):
     )
     def whatsapp_sandbox_create_whats_app_sandbox_session(phone: str) -> str:
         """Start a sandbox activation
+
+        Creates (or refreshes) a pending sandbox session for the given phone and
+        immediately fires the verified sandbox template from the shared sandbox
+        number to that phone. The session activates when the phone owner replies
+        to that WhatsApp message: the reply itself is proof of ownership.
+
+        One phone per user: if the caller already has a non-expired session for
+        a DIFFERENT phone, the request is rejected with `invalid_field_value`
+        (the message names the existing phone so it can be revoked first).
+        Re-creating a session for the SAME phone is idempotent and refreshes
+        the verification template.
+
+        If Meta rejects the template send (not a WhatsApp number, paused WABA,
+        token issue), the pending row is rolled back and the Meta error message
+        is returned in `error` so the caller knows why.
 
         Args:
             phone: Recipient phone in international format. Digits, spaces, dashes and a leading `+` are all accepted; the server normalizes to E.164 digits-only. (required)"""
@@ -31113,6 +38644,14 @@ def register_generated_tools(mcp, _get_client):
     )
     def whatsapp_sandbox_delete_whats_app_sandbox_session(session_id: str) -> str:
         """Revoke a sandbox session
+
+        Hard-deletes the session. The user loses the ability to send to that
+        phone via the sandbox until they re-activate it. Existing conversations
+        and messages already exchanged with that phone are untouched.
+        Revocation only blocks FUTURE sends.
+
+        Sessions belonging to other users cannot be revoked; the response is
+        the same 400 as \"session not found\" so existence isn't leaked.
 
         Args:
             session_id: The session id returned by POST /v1/whatsapp/sandbox/sessions. (required)"""
@@ -31140,6 +38679,12 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Look up a library template
 
+        Look up a single pre-approved Template Library template by its exact name, to
+        introspect its structure before importing it. Most importantly it returns the
+        template's `buttons`: a library template with `URL` / `PHONE_NUMBER` buttons
+        must be created with a matching `library_template_button_inputs` array (see
+        Create Template), or Meta rejects it. Use this to discover which inputs to collect.
+
         Args:
             account_id: WhatsApp account ID (required)
             name: Exact library template name (required)
@@ -31165,11 +38710,13 @@ def register_generated_tools(mcp, _get_client):
     )
     def workflows_list_workflows(
         profile_id: str | None = None,
-        status: str | None = None,
+        status: Literal["draft", "active", "paused"] | None = None,
         limit: int = 50,
         skip: int = 0,
     ) -> str:
         """List workflows
+
+        Returns workflows with run stats. Filter by status or profile.
 
         Args:
             profile_id: Filter by profile. Omit to list across all profiles
@@ -31197,13 +38744,23 @@ def register_generated_tools(mcp, _get_client):
         profile_id: str,
         account_id: str,
         name: str,
-        platform: str = "whatsapp",
+        platform: Literal[
+            "whatsapp",
+            "instagram",
+            "facebook",
+            "telegram",
+            "twitter",
+            "bluesky",
+            "reddit",
+        ] = "whatsapp",
         description: str | None = None,
         nodes: list[dict[str, Any]] | None = None,
         edges: list[dict[str, Any]] | None = None,
         entry_node_id: str | None = None,
     ) -> str:
         """Create workflow
+
+        Create a branching conversation workflow (draft) from a node/edge graph. Created in `draft` status; activate it to start matching inbound messages. The graph is validated structurally; completeness (a trigger node + reachable entry) is required at activation.
 
         Args:
             profile_id: (required)
@@ -31241,6 +38798,8 @@ def register_generated_tools(mcp, _get_client):
     def workflows_get_workflow(workflow_id: str) -> str:
         """Get workflow with graph
 
+        Returns a workflow including its full node/edge graph and run stats.
+
         Args:
             workflow_id: (required)"""
         client = _get_client()
@@ -31268,6 +38827,8 @@ def register_generated_tools(mcp, _get_client):
         account_id: str | None = None,
     ) -> str:
         """Update workflow
+
+        Update name, description, the graph, or reassign to a different account. The graph can only be modified while the workflow is draft or paused. Account swaps re-validate the graph against the new platform (so e.g. moving from WhatsApp to Facebook surfaces a `start_call` node as an error instead of silently saving an unrunnable graph).
 
         Args:
             workflow_id: (required)
@@ -31303,6 +38864,8 @@ def register_generated_tools(mcp, _get_client):
     def workflows_delete_workflow(workflow_id: str) -> str:
         """Delete workflow
 
+        Permanently delete a workflow and all of its executions.
+
         Args:
             workflow_id: (required)"""
         client = _get_client()
@@ -31322,6 +38885,8 @@ def register_generated_tools(mcp, _get_client):
     )
     def workflows_activate_workflow(workflow_id: str) -> str:
         """Activate workflow
+
+        Validate the graph is runnable and set the workflow live. Once active, matching inbound messages start executions. Idempotent.
 
         Args:
             workflow_id: (required)"""
@@ -31343,6 +38908,8 @@ def register_generated_tools(mcp, _get_client):
     def workflows_pause_workflow(workflow_id: str) -> str:
         """Pause workflow
 
+        Stop matching new inbound messages. In-flight executions continue to completion. Idempotent.
+
         Args:
             workflow_id: (required)"""
         client = _get_client()
@@ -31361,9 +38928,15 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def workflows_list_workflow_executions(
-        workflow_id: str, status: str | None = None, limit: int = 25, skip: int = 0
+        workflow_id: str,
+        status: Literal["running", "waiting", "completed", "exited", "failed"]
+        | None = None,
+        limit: int = 25,
+        skip: int = 0,
     ) -> str:
         """List workflow runs
+
+        Returns recent executions (runs) with their status, current node, and accumulated variables.
 
         Args:
             workflow_id: (required)
@@ -31395,6 +38968,8 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Manually start a workflow run
 
+        Kick off a run without waiting for an inbound message (useful for testing). Target an existing conversation by `conversationId`, or (WhatsApp only) a phone number via `to` (a conversation is found or created). `text` seeds the run's `lastMessage` variable. The graph must be runnable.
+
         Args:
             workflow_id: (required)
             to: Recipient phone (WhatsApp only)
@@ -31425,6 +39000,8 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Get an execution's timeline
 
+        Returns the per-step run-log for a single workflow execution: trigger fired, each node visited, edge handles taken, errors, and durations. Backed by Tinybird (90-day retention). Used by the Runs UI drawer to render the timeline.
+
         Args:
             workflow_id: (required)
             execution_id: (required)"""
@@ -31448,6 +39025,8 @@ def register_generated_tools(mcp, _get_client):
     def workflows_duplicate_workflow(workflow_id: str) -> str:
         """Duplicate a workflow
 
+        Create an independent copy of a workflow's graph, name, description, and account binding. The copy is created in `draft` status with fresh execution counters and a new id. Execution history is NOT copied. Useful for branching off a known-good workflow before making experimental edits.
+
         Args:
             workflow_id: (required)"""
         client = _get_client()
@@ -31468,6 +39047,8 @@ def register_generated_tools(mcp, _get_client):
     def workflows_list_workflow_versions(workflow_id: str) -> str:
         """List a workflow's version history
 
+        Returns the snapshot history. A new version is recorded automatically before every PATCH to `nodes` / `edges` / `entryNodeId`, and explicitly when a previous version is restored. Lightweight list. Call `getWorkflowVersion` for the full snapshot graph.
+
         Args:
             workflow_id: (required)"""
         client = _get_client()
@@ -31487,6 +39068,8 @@ def register_generated_tools(mcp, _get_client):
     )
     def workflows_get_workflow_version(workflow_id: str, version: int) -> str:
         """Get a specific workflow version
+
+        Returns the full snapshot for a single historical version, including the graph.
 
         Args:
             workflow_id: (required)
@@ -31510,6 +39093,8 @@ def register_generated_tools(mcp, _get_client):
     )
     def workflows_restore_workflow_version(workflow_id: str, version: int) -> str:
         """Restore a workflow version
+
+        Replace the current graph with the named version's snapshot. Before the swap, the current graph is itself snapshotted as a new version, so a restore is reversible. The workflow must be in `draft` or `paused` status (same gate as a normal graph edit). The returned workflow carries `restoredFromVersion` so the UI can surface which version was rolled back to.
 
         Args:
             workflow_id: (required)
