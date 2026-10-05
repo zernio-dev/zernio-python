@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.214.1"
+  version: "1.215.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -29296,7 +29296,13 @@ paths:
       operationId: getFacebookPages
       tags: [Connect]
       summary: List Facebook pages
-      description: Returns all Facebook pages the connected account has access to, including the currently selected page.
+      description: >
+        Returns all Facebook Pages the connected account has access to, including the currently selected Page
+        and the Instagram professional account linked to each Page.
+        Works on `facebook` accounts and on `metaads` accounts (classic and Facebook Login for Business
+        connections). On a business-login `metaads` connection `selectedPageId` is the default Page ads run as,
+        and every listed Page can be passed as `pageId` on POST /v1/ads/create. A classic `metaads` connection
+        has no default Page, so `selectedPageId` is null there.
       parameters:
         - name: accountId
           in: path
@@ -29328,7 +29334,13 @@ paths:
                         username: { type: string }
                         category: { type: string }
                         fan_count: { type: integer }
-                  selectedPageId: { type: string }
+                        instagramAccount:
+                          type: [object, "null"]
+                          description: 'The Instagram professional account linked to the Page (Meta instagram_business_account), or null when none is linked or the list was served from a cache stored before this field existed (pass refresh=true to re-read it).'
+                          properties:
+                            id: { type: string, description: 'Instagram professional account id, usable as instagramAccountId on POST /v1/ads/create' }
+                            username: { type: [string, "null"] }
+                  selectedPageId: { type: [string, "null"] }
                   cached: { type: boolean, description: 'false when this response was just read from Meta (cold cache or a refresh that ran), true when served from the stored list (including a debounced refresh or an empty Meta answer)' }
               example:
                 pages:
@@ -29337,21 +29349,31 @@ paths:
                     username: "mybrand"
                     category: "Brand"
                     fan_count: 5000
+                    instagramAccount:
+                      id: "17841400000000000"
+                      username: "mybrand"
                   - id: "234567890123456"
                     name: "My Other Page"
                     username: "myotherpage"
                     category: "Business"
                     fan_count: 1200
+                    instagramAccount: null
                 selectedPageId: "123456789012345"
                 cached: true
+        '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '404': { description: Account not found }
+        '404': { description: 'Account not found, or not a facebook or metaads account' }
     put:
       x-resource-group: "accounts"
       operationId: updateFacebookPage
       tags: [Connect]
       summary: Update Facebook page
-      description: Switch which Facebook Page is active for a connected account.
+      description: >
+        Switch which Facebook Page is active for a connected account. On a `facebook` account this changes the
+        Page posts publish to. On a Facebook Login for Business `metaads` connection it changes the default Page
+        ads run as (and the Page whose leads are ingested). A classic `metaads` connection has no default Page and
+        answers 400; pass `pageId` per ad on POST /v1/ads/create instead. The Page must be in the list returned by
+        GET (use refresh=true to pick up newly granted Pages).
       parameters:
         - name: accountId
           in: path
@@ -29387,11 +29409,11 @@ paths:
                 selectedPage:
                   id: "123456789012345"
                   name: "My Brand Page"
-        '400': { description: Page not in available pages }
+        '400': { description: 'Page not in available pages, missing selectedPageId, or a classic metaads connection (no default Page)' }
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '404': { description: Account not found }
+        '404': { description: 'Account not found, or not a facebook or metaads account' }
         '409':
-          description: "Another account on this profile is already connected to that destination (profile_platform_conflict)."
+          description: "Another account on this profile is already connected to that destination (profile_platform_conflict), or the Page has no stored access token (reconnect_required)."
           content:
             application/json:
               schema: { $ref: '#/components/schemas/ErrorResponse' }
