@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.217.1"
+  version: "1.218.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -2944,12 +2944,12 @@ components:
             (every Google account is affected and there is nothing to change on your side),
             `ACCOUNT` means your own ad account. A Meta 429 carries neither field.
 
-            A Zernio Google Ads budget 429 carries `budgetScope` instead, and never
+            A Zernio Google Ads burst-limit 429 carries `budgetScope` instead, and never
             `quotaExhausted`: these are Zernio's own limits, applied before the call
-            reaches Google. `user` is your own burst or daily allowance, so the work is
-            yours to reschedule; `platform` is the fleet-wide daily budget shared with
-            every other customer, so only waiting for the reset clears it. The two
-            scopes are separate axes from `quotaScope`, not the same pool named twice.
+            reaches Google, and both clear within a minute. `account` is the limit of 15
+            requests per minute per connected Google Ads account; `user` is the ceiling of
+            120 requests per minute per Zernio user across all their Google Ads accounts.
+            Both are separate axes from `quotaScope`, not the same pool named twice.
 
             A failed Meta ad create (`POST /v1/ads/create`, `POST /v1/ads/boost`,
             `POST /v1/ads/ctwa`) carries `stage`, `adAccountId` and `createdObjects`: where
@@ -2994,8 +2994,8 @@ components:
               description: 'Google Ads 429 only, when Google names the scope. DEVELOPER is the shared developer-token budget; ACCOUNT is your ad account.'
             budgetScope:
               type: string
-              enum: [user]
-              description: "Zernio Google Ads burst-limit 429 only (never set alongside `quotaExhausted`). `user` is your own per-minute allowance on user-driven Google Ads calls; it clears within a minute."
+              enum: [account, user]
+              description: "Zernio Google Ads burst-limit 429 only (never set alongside `quotaExhausted`). `account` is the limit of 15 requests per minute per connected Google Ads account; `user` is the ceiling of 120 requests per minute per Zernio user across all their Google Ads accounts. Both clear within a minute."
     CommentAutomationAudience:
       type: object
       description: |
@@ -55481,7 +55481,7 @@ paths:
                       nextPageToken: { type: [string, "null"], description: "Cursor for the next page; null when exhausted." }
         '400': { description: "Invalid input, or Google rejected the request; the message carries Google's error" }
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '429': { description: "Per-user Google Ads burst limit (15 requests per minute) or a Google rate limit reached; the message says which and when to retry." }
+        '429': { description: "Zernio Google Ads burst limit (15 requests per minute per connected account, 120 per minute per user) or a Google rate limit reached; the message says which and when to retry." }
         '501': { description: Only supported on Google Ads }
 
   /v1/ads/keywords/historical-metrics:
@@ -55532,7 +55532,7 @@ paths:
                   aggregateMetricResults: { type: [object, "null"] }
         '400': { description: "Invalid input, or Google rejected the request; the message carries Google's error" }
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '429': { description: "Per-user Google Ads burst limit (15 requests per minute) or a Google rate limit reached; the message says which and when to retry." }
+        '429': { description: "Zernio Google Ads burst limit (15 requests per minute per connected account, 120 per minute per user) or a Google rate limit reached; the message says which and when to retry." }
         '501': { description: Only supported on Google Ads }
 
   /v1/ads/insights:
