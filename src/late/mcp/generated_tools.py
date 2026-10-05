@@ -19995,7 +19995,7 @@ def register_generated_tools(mcp, _get_client):
             profile_id
             platform
             source
-            limit: Cap on returned rows. Lower than the posting listing's 100 because each row triggers a SocialAccount Mongo lookup."""
+            limit: Cap on returned rows. Lower than the posting listing's 100 because each row triggers a social account lookup."""
         client = _get_client()
         try:
             response = client.inbox_analytics.get_inbox_top_accounts(
@@ -20075,7 +20075,7 @@ def register_generated_tools(mcp, _get_client):
         """Get conversation analytics
 
         Args:
-            conversation_id: Mongo _id or platformConversationId. (required)
+            conversation_id: Zernio conversation id or platformConversationId. (required)
             from_date: (required)
             to_date"""
         client = _get_client()
@@ -29618,7 +29618,7 @@ def register_generated_tools(mcp, _get_client):
         """Enable calling on a number
 
         Args:
-            id: WhatsAppPhoneNumber Mongo ID (required)
+            id: WhatsApp phone number id (required)
             account_id: (required)
             forward_to: tel:+E164 / sip:... / wss://... destination (required)
             sip_auth_username

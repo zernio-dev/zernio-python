@@ -19103,7 +19103,7 @@ paths:
         - name: limit
           in: query
           schema: { type: integer, minimum: 1, maximum: 50, default: 10 }
-          description: "Cap on returned rows. Lower than the posting listing's 100 because each row triggers a SocialAccount Mongo lookup."
+          description: "Cap on returned rows. Lower than the posting listing's 100 because each row triggers a social account lookup."
       responses:
         '200':
           description: Top accounts leaderboard
@@ -19214,7 +19214,7 @@ paths:
                       type: object
                       properties:
                         conversationId: { type: string, description: "The platformConversationId (the same identity used by metadata.conversationId)" }
-                        mongoId: { type: [string, "null"], description: "The Conversation document _id, when a matching doc exists" }
+                        mongoId: { type: [string, "null"], description: "The Zernio conversation id, when a matching conversation exists" }
                         accountId: { type: string }
                         platform: { type: string }
                         participantName: { type: [string, "null"] }
@@ -19264,11 +19264,11 @@ paths:
         /v1/analytics/post-timeline: one conversation, daily totals,
         source mix.
 
-        The {conversationId} path param accepts EITHER the Mongo `_id` of
-        the Conversation document OR its `platformConversationId` (the
-        same identity used by metadata.conversationId at ingest time).
-        Ownership is verified in MongoDB against the caller's team
-        before the Tinybird query fires.
+        The {conversationId} path param accepts EITHER the Zernio
+        conversation id OR its `platformConversationId` (the same
+        identity used by metadata.conversationId at ingest time).
+        Ownership is verified against the caller's team before the
+        Tinybird query fires.
 
         Max date range is 365 days.
       security: [{ bearerAuth: [] }]
@@ -19277,7 +19277,7 @@ paths:
           in: path
           required: true
           schema: { type: string }
-          description: Mongo _id or platformConversationId.
+          description: Zernio conversation id or platformConversationId.
         - name: fromDate
           in: query
           required: true
@@ -39261,7 +39261,7 @@ paths:
       security:
         - bearerAuth: []
       parameters:
-        - { name: id, in: path, required: true, schema: { type: string }, description: WhatsAppPhoneNumber Mongo ID }
+        - { name: id, in: path, required: true, schema: { type: string }, description: WhatsApp phone number id }
       requestBody:
         required: true
         content:
