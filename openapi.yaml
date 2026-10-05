@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.215.4"
+  version: "1.216.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -194,6 +194,7 @@ x-documentation:
     - `review.updated` - A Google Business Profile reviewer edited their review text or rating, or a reply was posted through `POST /v1/inbox/reviews/{reviewId}/reply`. A reply written directly in Google's own interface does NOT fire this event, because Google emits no notification for it.
     - `lead.received` - New lead submitted against a Meta Lead Gen (Instant) Form. `lead.fields` is the question-key → answer map; `lead.formId`/`lead.adId` give provenance.
     - `ad.status_changed` - Ad, ad set, or campaign changed status on the ad platform (Meta: `in_process_ad_objects` entry/exit and `with_issues_ad_objects` violations)
+    - `ad.video.processed` - Meta finished processing a video uploaded with `POST /v1/ads/videos` and `async: true`. `video.status` is `ready` (usable as `video.id`) or `error`
     - `whatsapp.template.status_updated` - WhatsApp Business template completed (re)review by Meta. `template.status` carries the new state (APPROVED, REJECTED, PENDING, PAUSED, DISABLED, IN_APPEAL, PENDING_DELETION); `template.reason` is Meta's free-form reason or "NONE".
     - `whatsapp.template.category_updated` - Meta reclassified a WhatsApp Business template's category (drives tariff and marketing opt-out applicability). `template.changeType` is `scheduled` (24h advance notice) or `applied`; `template.category` is always the category right now.
     - `whatsapp.account.name_status_updated` - Meta finished reviewing a WhatsApp display-name change. `name.status` carries the outcome (APPROVED, DECLINED, PENDING_REVIEW). Fires only on a review outcome; a name applied without review (`name_status: AVAILABLE_WITHOUT_REVIEW`) produces no event.
@@ -242,7 +243,7 @@ x-documentation:
     | `post.platform.*`, `post.tiktok.url_resolved` | `account.accountId` (the target this event is about; `post.platforms[].accountId` lists every target) |
     | `post.scheduled`, `post.published`, `post.failed`, `post.partial`, `post.cancelled`, `post.recycled` | `post.platforms[].accountId`, one per target; there is no top-level account |
     | `post.external.*` | `account.accountId` (also `post.accountId`) |
-    | `ad.status_changed`, `whatsapp.template.*`, `whatsapp.account.*`, `whatsapp.contact.identity_changed` | `account.accountId` |
+    | `ad.status_changed`, `ad.video.processed`, `whatsapp.template.*`, `whatsapp.account.*`, `whatsapp.contact.identity_changed` | `account.accountId` |
     | `whatsapp.automatic_event` | top-level `accountId` |
     | `whatsapp.number.*`, `sms.registration.*` | none; `number.id` / `registration.id` are the number and registration ids, `number.profileId` / `registration.profileId` the profile |
     | `verification.*`, `phone_number.stock_available`, `api.changelog.published`, `webhook.test` | none |
@@ -574,7 +575,7 @@ tags:
   - name: Webhooks
     description: |
       Configure webhooks for real-time notifications. Webhooks can be created from the dashboard (Settings → Webhooks) or via this API.
-      Events: post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.ads.initial_sync_completed, account.ads.sync_failed, account.ads.sync_recovered, analytics.synced, message.received, conversation.started, conversation.control_changed, call.received, call.ended, call.failed, call.permission_request, message.sent, message.edited, message.deleted, message.delivered, message.read, message.played, message.failed, reaction.received, referral.received, comment.received, review.new, review.updated, lead.received, ad.status_changed, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.account.quality_updated, whatsapp.account.status_updated, whatsapp.account.alert_received, whatsapp.contact.identity_changed, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, phone_number.stock_available, verification.approved, verification.failed, api.changelog.published, sms.registration.action_required, sms.registration.status_updated, branded_calling.identity.status_updated, branded_calling.identity.action_required, branded_calling.number.status_updated, rcs.agent.status_updated, commerce.product.created, commerce.product.updated, commerce.product.deleted, webhook.test.
+      Events: post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.ads.initial_sync_completed, account.ads.sync_failed, account.ads.sync_recovered, analytics.synced, message.received, conversation.started, conversation.control_changed, call.received, call.ended, call.failed, call.permission_request, message.sent, message.edited, message.deleted, message.delivered, message.read, message.played, message.failed, reaction.received, referral.received, comment.received, review.new, review.updated, lead.received, ad.status_changed, ad.video.processed, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.account.quality_updated, whatsapp.account.status_updated, whatsapp.account.alert_received, whatsapp.contact.identity_changed, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, phone_number.stock_available, verification.approved, verification.failed, api.changelog.published, sms.registration.action_required, sms.registration.status_updated, branded_calling.identity.status_updated, branded_calling.identity.action_required, branded_calling.number.status_updated, rcs.agent.status_updated, commerce.product.created, commerce.product.updated, commerce.product.deleted, webhook.test.
       Headers: every delivery carries X-Zernio-Event (event name) and X-Zernio-Event-Id (the payload `id`, a UUID minted once per event and identical across every subscribed endpoint, every automatic retry and every redelivery, so dedupe on it). Security: optional HMAC-SHA256 signature in X-Zernio-Signature header. Configure a secret key to enable verification. Custom headers supported. Legacy X-Late-Event, X-Late-Event-Id and X-Late-Signature duplicates are still sent and will be removed in a future major version.
 
       Resource groups. Every event belongs to one group: post.* to publishing, message.*, reaction.*, conversation.*, call.* and whatsapp.automatic_event to messages, comment.* and review.* to engagement, lead.* to contacts, ad.* to ads, account.*, whatsapp.template.* and whatsapp.account.* to accounts, analytics.* to analytics, whatsapp.number.*, verification.* and sms.registration.* to telephony, api.changelog.published and webhook.test to webhooks. Two independent controls use that mapping. (1) A restricted (zrk_) API key can only subscribe to, test-fire, redeliver, or read delivery logs for events in the groups it holds, so it can never create a subscription broader than itself. (2) Each subscription carries its own `disabledResourceGroups` denylist: events in a disabled group are dropped before delivery to that endpoint, on live delivery and on every replay path, no matter which key or session created the subscription. Changing that denylist applies to every event emitted after the change; events already queued when it landed can still be delivered for up to five minutes after they were enqueued, because the delivery worker trusts a five-minute enqueue-time snapshot before re-checking. Absent or empty on a subscription means it receives everything it subscribes to, which is the behavior of every subscription created before the field existed.
@@ -2072,7 +2073,7 @@ components:
           type: object
           properties:
             url: { type: string, format: uri, description: "Public URL of the video to upload. Provide either `url` or `id`." }
-            id: { type: string, description: "Reuse a video already uploaded to this ad account (list them with GET /v1/ads/videos) instead of re-uploading. Wins over `url`. Provide either `url` or `id`." }
+            id: { type: string, description: "Reuse a video already uploaded to this ad account (list them with GET /v1/ads/videos) instead of re-uploading. Wins over `url`. Provide either `url` or `id`. Meta: a video still processing is waited on for up to 30 s, then answered 409 `invalid_resource_state` (poll GET /v1/ads/videos/{videoId})." }
             thumbnailUrl:
               type: string
               format: uri
@@ -2163,7 +2164,7 @@ components:
                 type: object
                 properties:
                   url: { type: string, format: uri, description: "Public URL of the video to upload. Provide either `url` or `id`." }
-                  id: { type: string, description: "Reuse a video already uploaded to this ad account (list them with GET /v1/ads/videos) instead of re-uploading. Wins over `url`. Provide either `url` or `id`." }
+                  id: { type: string, description: "Reuse a video already uploaded to this ad account (list them with GET /v1/ads/videos) instead of re-uploading. Wins over `url`. Provide either `url` or `id`. Meta: a video still processing is waited on for up to 30 s, then answered 409 `invalid_resource_state` (poll GET /v1/ads/videos/{videoId})." }
                   thumbnailUrl:
                     type: string
                     format: uri
@@ -3913,7 +3914,7 @@ components:
           type: array
           items:
             type: string
-            enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.ads.initial_sync_completed, account.ads.sync_failed, account.ads.sync_recovered, analytics.synced, message.received, conversation.started, conversation.control_changed, call.received, call.ended, call.failed, call.permission_request, message.sent, message.edited, message.deleted, message.delivered, message.read, message.played, message.failed, reaction.received, referral.received, comment.received, review.new, review.updated, lead.received, ad.status_changed, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.account.quality_updated, whatsapp.account.status_updated, whatsapp.account.alert_received, whatsapp.contact.identity_changed, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, phone_number.stock_available, verification.approved, verification.failed, api.changelog.published, sms.registration.action_required, sms.registration.status_updated, branded_calling.identity.status_updated, branded_calling.identity.action_required, branded_calling.number.status_updated, rcs.agent.status_updated, commerce.product.created, commerce.product.updated, commerce.product.deleted]
+            enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.ads.initial_sync_completed, account.ads.sync_failed, account.ads.sync_recovered, analytics.synced, message.received, conversation.started, conversation.control_changed, call.received, call.ended, call.failed, call.permission_request, message.sent, message.edited, message.deleted, message.delivered, message.read, message.played, message.failed, reaction.received, referral.received, comment.received, review.new, review.updated, lead.received, ad.status_changed, ad.video.processed, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.account.quality_updated, whatsapp.account.status_updated, whatsapp.account.alert_received, whatsapp.contact.identity_changed, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, phone_number.stock_available, verification.approved, verification.failed, api.changelog.published, sms.registration.action_required, sms.registration.status_updated, branded_calling.identity.status_updated, branded_calling.identity.action_required, branded_calling.number.status_updated, rcs.agent.status_updated, commerce.product.created, commerce.product.updated, commerce.product.deleted]
           description: Events subscribed to
         isActive:
           type: boolean
@@ -6605,6 +6606,43 @@ components:
           type: string
           format: date-time
           description: 'UTC time at which Zernio generated this event (set once when the event payload is built, before delivery is queued). Retries and redeliveries keep the original value, so it reflects the event, not the delivery attempt.'
+    WebhookPayloadAdVideoProcessed:
+      type: object
+      description: |
+        Webhook payload for the `ad.video.processed` event. Fires once per
+        `POST /v1/ads/videos` call made with `async: true`, when Meta finishes
+        processing the video (Meta only).
+      required: [id, event, account, video, timestamp]
+      properties:
+        id:
+          type: string
+          description: 'Stable webhook event ID: the dedupe key, also sent as the X-Zernio-Event-Id header and identical on every retry and redelivery.'
+        event:
+          type: string
+          enum: [ad.video.processed]
+        account:
+          type: object
+          description: The connected ads account the video was uploaded with.
+          required: [accountId, profileId, platform, username]
+          properties:
+            accountId: { type: string, description: Internal Zernio account ID. }
+            profileId: { type: string, description: Internal Zernio profile ID this account belongs to. }
+            platform: { type: string, description: Ads connection platform. Currently always `metaads`., example: metaads }
+            username: { type: string }
+            displayName: { type: [string, "null"] }
+        video:
+          type: object
+          required: [id, platformAdAccountId, status, error, thumbnailUrl]
+          properties:
+            id: { type: string, description: "Meta video id, as returned by the 202 upload response." }
+            platformAdAccountId: { type: string, description: "Meta ad account id (act_<n>) the video was uploaded to." }
+            status: { type: string, enum: [ready, error], description: "`ready`: usable as `video.id` on the create endpoints. `error`: Meta could not process it; upload again." }
+            error: { type: [string, "null"], description: "Meta's processing error when status is `error`, otherwise null." }
+            thumbnailUrl: { type: [string, "null"], description: "Meta's auto-generated poster when status is `ready` and Meta produced one, otherwise null." }
+        timestamp:
+          type: string
+          format: date-time
+          description: UTC time at which Zernio generated this event.
     WebhookPayloadAdStatusChanged:
       type: object
       description: |
@@ -14833,6 +14871,48 @@ webhooks:
                   status:
                     raw: WITH_ISSUES
                   timestamp: "2026-05-08T04:22:35.821Z"
+      responses:
+        '200':
+          description: Webhook received successfully
+  ad.video.processed:
+    post:
+      operationId: onAdVideoProcessed
+      summary: Ad video processed event
+      description: |
+        Fired once per `POST /v1/ads/videos` call made with `async: true`, when Meta finishes
+        processing the uploaded video. `video.status` is `ready` (reference it as `video.id`
+        on the create endpoints) or `error` (Meta could not process it; `video.error` carries
+        the reason).
+
+        Zernio watches the video for up to about 13 minutes after the upload request. A video
+        still processing after that sends no event, so keep `GET /v1/ads/videos/{videoId}`
+        as the source of truth for long videos.
+      tags: [Webhook Events]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebhookPayloadAdVideoProcessed'
+            examples:
+              ready:
+                summary: Video ready
+                value:
+                  id: "01J7K3P4N5Q6R7S8T9V0W1X2Z1"
+                  event: ad.video.processed
+                  account:
+                    accountId: "65c8f7e2a1b3c4d5e6f7a8b9"
+                    profileId: "65c8f7e2a1b3c4d5e6f7a800"
+                    platform: metaads
+                    username: acme-ads
+                    displayName: Acme Ads
+                  video:
+                    id: "1096002439847708"
+                    platformAdAccountId: act_2129800524463520
+                    status: ready
+                    error: null
+                    thumbnailUrl: "https://scontent.xx.fbcdn.net/v/t15.5256-10/poster.jpg"
+                  timestamp: "2026-10-05T15:25:27.944Z"
       responses:
         '200':
           description: Webhook received successfully
@@ -33106,7 +33186,7 @@ paths:
                   minItems: 1
                   items:
                     type: string
-                    enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.ads.initial_sync_completed, account.ads.sync_failed, account.ads.sync_recovered, analytics.synced, message.received, conversation.started, conversation.control_changed, call.received, call.ended, call.failed, call.permission_request, message.sent, message.edited, message.deleted, message.delivered, message.read, message.played, message.failed, reaction.received, referral.received, comment.received, review.new, review.updated, lead.received, ad.status_changed, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.account.quality_updated, whatsapp.account.status_updated, whatsapp.account.alert_received, whatsapp.contact.identity_changed, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, phone_number.stock_available, verification.approved, verification.failed, api.changelog.published, sms.registration.action_required, sms.registration.status_updated, branded_calling.identity.status_updated, branded_calling.identity.action_required, branded_calling.number.status_updated, rcs.agent.status_updated, commerce.product.created, commerce.product.updated, commerce.product.deleted]
+                    enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.ads.initial_sync_completed, account.ads.sync_failed, account.ads.sync_recovered, analytics.synced, message.received, conversation.started, conversation.control_changed, call.received, call.ended, call.failed, call.permission_request, message.sent, message.edited, message.deleted, message.delivered, message.read, message.played, message.failed, reaction.received, referral.received, comment.received, review.new, review.updated, lead.received, ad.status_changed, ad.video.processed, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.account.quality_updated, whatsapp.account.status_updated, whatsapp.account.alert_received, whatsapp.contact.identity_changed, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, phone_number.stock_available, verification.approved, verification.failed, api.changelog.published, sms.registration.action_required, sms.registration.status_updated, branded_calling.identity.status_updated, branded_calling.identity.action_required, branded_calling.number.status_updated, rcs.agent.status_updated, commerce.product.created, commerce.product.updated, commerce.product.deleted]
                   description: Events to subscribe to (at least one required)
                 isActive:
                   type: boolean
@@ -33263,7 +33343,7 @@ paths:
                   minItems: 1
                   items:
                     type: string
-                    enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.ads.initial_sync_completed, account.ads.sync_failed, account.ads.sync_recovered, analytics.synced, message.received, conversation.started, conversation.control_changed, call.received, call.ended, call.failed, call.permission_request, message.sent, message.edited, message.deleted, message.delivered, message.read, message.played, message.failed, reaction.received, referral.received, comment.received, review.new, review.updated, lead.received, ad.status_changed, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.account.quality_updated, whatsapp.account.status_updated, whatsapp.account.alert_received, whatsapp.contact.identity_changed, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, phone_number.stock_available, verification.approved, verification.failed, api.changelog.published, sms.registration.action_required, sms.registration.status_updated, branded_calling.identity.status_updated, branded_calling.identity.action_required, branded_calling.number.status_updated, rcs.agent.status_updated, commerce.product.created, commerce.product.updated, commerce.product.deleted]
+                    enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.ads.initial_sync_completed, account.ads.sync_failed, account.ads.sync_recovered, analytics.synced, message.received, conversation.started, conversation.control_changed, call.received, call.ended, call.failed, call.permission_request, message.sent, message.edited, message.deleted, message.delivered, message.read, message.played, message.failed, reaction.received, referral.received, comment.received, review.new, review.updated, lead.received, ad.status_changed, ad.video.processed, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.account.quality_updated, whatsapp.account.status_updated, whatsapp.account.alert_received, whatsapp.contact.identity_changed, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, phone_number.stock_available, verification.approved, verification.failed, api.changelog.published, sms.registration.action_required, sms.registration.status_updated, branded_calling.identity.status_updated, branded_calling.identity.action_required, branded_calling.number.status_updated, rcs.agent.status_updated, commerce.product.created, commerce.product.updated, commerce.product.deleted]
                   description: Events to subscribe to. Must contain at least one event if provided.
                 isActive:
                   type: boolean
@@ -63016,9 +63096,16 @@ paths:
         limit, around 4.5 MB payload in practice, so larger videos must come via `videoUrl`.
 
         Returns the Meta `video.id` (reusable wherever `video.id` is accepted) plus Meta's
-        auto-generated poster URL when available. The endpoint waits until Meta reports the
-        video ready (chunked upload + transcode can take minutes; the handler runs up to
-        800 s).
+        auto-generated poster URL when available. By default the endpoint waits until Meta
+        reports the video ready (chunked upload + transcode can take minutes; the handler runs
+        up to 800 s) and answers 201.
+
+        **Async mode.** Send `async: true` to get a 202 as soon as Meta has accepted the bytes,
+        with `video.status: processing`. Then either poll `GET /v1/ads/videos/{videoId}` until
+        `status` is `ready`, or subscribe to the `ad.video.processed` webhook. A create call
+        that references the video while it is still processing waits up to 30 s, then answers
+        409 `invalid_resource_state` naming the status endpoint. With `videoUrl` the download
+        and byte transfer still happen inside the request; only Meta's transcode is skipped.
       security:
         - bearerAuth: []
       requestBody:
@@ -63034,6 +63121,7 @@ paths:
                 videoUrl: { type: string, description: "Public https URL of the video; downloaded server-side (SSRF-guarded) before chunked upload. Provide exactly one of videoUrl or videoBase64." }
                 videoBase64: { type: string, description: "Raw base64 video bytes, or a full data URL (the data:video/...;base64, prefix is stripped). Capped by Vercel's body limit (~4.5 MB payload). Provide exactly one of videoUrl or videoBase64." }
                 filename: { type: string, description: "Optional filename shown alongside the upload session. Applied only when uploading via videoBase64." }
+                async: { type: boolean, default: false, description: "true: answer 202 once Meta accepts the upload instead of waiting for processing. Poll GET /v1/ads/videos/{videoId} or subscribe to ad.video.processed." }
       responses:
         '409': { $ref: '#/components/responses/AccountConnectionRequired' }
         '404': { $ref: '#/components/responses/AccountUnavailable' }
@@ -63049,7 +63137,22 @@ paths:
                     type: object
                     properties:
                       id: { type: string, description: "Meta video id, reusable as video.id on POST /v1/ads/create and inside POST /v1/ads/preview creativeSpec." }
+                      status: { type: string, enum: [ready] }
                       thumbnailUrl: { type: [string, "null"], description: "Meta-hosted poster URL if available; null when Meta has not produced a poster yet." }
+        '202':
+          description: "async: true. Meta accepted the upload and is processing it"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  adAccountId: { type: string }
+                  video:
+                    type: object
+                    properties:
+                      id: { type: string, description: "Meta video id. Usable as video.id once GET /v1/ads/videos/{videoId} reports ready." }
+                      status: { type: string, enum: [processing] }
+                      thumbnailUrl: { type: [string, "null"], description: "Always null on 202; read it from GET /v1/ads/videos/{videoId} once ready." }
         '400': { description: "Invalid input, or Meta rejected the upload" }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '501': { description: Only supported on Meta (facebook/instagram) }
@@ -63108,6 +63211,51 @@ paths:
         '501': { description: Only supported on Meta (facebook/instagram) }
 
   /v1/ads/videos/{videoId}:
+    get:
+      x-resource-group: "ads"
+      operationId: getAdVideoStatus
+      tags: ["Ad Creatives"]
+      x-platforms: ["meta"]
+      summary: Get ad video processing status
+      description: |-
+        Reads a video's processing state live from Meta (`GET /{video-id}?fields=status`).
+        Poll this after `POST /v1/ads/videos` with `async: true` until `status` is `ready`;
+        the video is only usable as `video.id` on the create endpoints from then on.
+
+        `status` is normalised: `ready`, `error` (Meta's `error` or `expired`), and
+        `processing` for every other Meta state. `platformStatus` carries Meta's raw
+        `video_status` and `processingProgress` Meta's 0-100 percentage when it reports one.
+        Polling every 5 to 10 seconds is plenty.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: videoId, in: path, required: true, schema: { type: string }, description: "Meta ad video id (numeric)." }
+        - { name: accountId, in: query, required: true, schema: { type: string }, description: "Zernio SocialAccount id (posting or ads variant) used to resolve the Meta token." }
+        - { name: adAccountId, in: query, required: true, schema: { type: string }, description: "Meta ad account id (act_<n>) the video was uploaded to." }
+      responses:
+        '409': { $ref: '#/components/responses/AccountConnectionRequired' }
+        '404': { $ref: '#/components/responses/AccountUnavailable' }
+        '200':
+          description: Processing status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  adAccountId: { type: string }
+                  video:
+                    type: object
+                    required: [id, status, platformStatus, processingProgress, error, thumbnailUrl]
+                    properties:
+                      id: { type: string }
+                      status: { type: string, enum: [processing, ready, error] }
+                      platformStatus: { type: [string, "null"], description: "Meta's raw status.video_status, forwarded verbatim." }
+                      processingProgress: { type: [integer, "null"], minimum: 0, maximum: 100, description: "Meta's processing percentage when reported." }
+                      error: { type: [string, "null"], description: "Meta's processing error when status is error." }
+                      thumbnailUrl: { type: [string, "null"], description: "Meta's auto-generated poster once ready, when Meta produced one." }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '501': { description: Only supported on Meta (facebook/instagram) }
     delete:
       x-resource-group: "ads"
       operationId: deleteAdVideo

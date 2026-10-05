@@ -244,6 +244,7 @@ class AdCreativesResource:
         video_url: str | None = None,
         video_base64: str | None = None,
         filename: str | None = None,
+        async_: bool | None = False,
     ) -> dict[str, Any]:
         """Upload an ad video"""
         payload = self._build_payload(
@@ -252,6 +253,7 @@ class AdCreativesResource:
             video_url=video_url,
             video_base64=video_base64,
             filename=filename,
+            async_=async_,
         )
         return self._client._post("/v1/ads/videos", data=payload)
 
@@ -273,6 +275,16 @@ class AdCreativesResource:
             after=after,
         )
         return self._client._get("/v1/ads/videos", params=params)
+
+    def get_ad_video_status(
+        self, video_id: str, account_id: str, ad_account_id: str
+    ) -> dict[str, Any]:
+        """Get ad video processing status"""
+        params = self._build_params(
+            account_id=account_id,
+            ad_account_id=ad_account_id,
+        )
+        return self._client._get(f"/v1/ads/videos/{video_id}", params=params)
 
     def delete_ad_video(
         self, video_id: str, account_id: str, ad_account_id: str
@@ -501,6 +513,7 @@ class AdCreativesResource:
         video_url: str | None = None,
         video_base64: str | None = None,
         filename: str | None = None,
+        async_: bool | None = False,
     ) -> dict[str, Any]:
         """Upload an ad video (async)"""
         payload = self._build_payload(
@@ -509,6 +522,7 @@ class AdCreativesResource:
             video_url=video_url,
             video_base64=video_base64,
             filename=filename,
+            async_=async_,
         )
         return await self._client._apost("/v1/ads/videos", data=payload)
 
@@ -530,6 +544,16 @@ class AdCreativesResource:
             after=after,
         )
         return await self._client._aget("/v1/ads/videos", params=params)
+
+    async def aget_ad_video_status(
+        self, video_id: str, account_id: str, ad_account_id: str
+    ) -> dict[str, Any]:
+        """Get ad video processing status (async)"""
+        params = self._build_params(
+            account_id=account_id,
+            ad_account_id=ad_account_id,
+        )
+        return await self._client._aget(f"/v1/ads/videos/{video_id}", params=params)
 
     async def adelete_ad_video(
         self, video_id: str, account_id: str, ad_account_id: str

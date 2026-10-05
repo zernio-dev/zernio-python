@@ -9534,6 +9534,7 @@ def register_generated_tools(mcp, _get_client):
         video_url: str | None = None,
         video_base64: str | None = None,
         filename: str | None = None,
+        async_: bool = False,
     ) -> str:
         """Upload an ad video
 
@@ -9546,9 +9547,14 @@ def register_generated_tools(mcp, _get_client):
         limit, around 4.5 MB payload in practice, so larger videos must come via `videoUrl`.
 
         Returns the Meta `video.id` (reusable wherever `video.id` is accepted) plus Meta's
-        auto-generated poster URL when available. The endpoint waits until Meta reports the
-        video ready (chunked upload + transcode can take minutes; the handler runs up to
-        800 s).
+        auto-generated poster URL when available. By default the endpoint waits until Meta
+        reports the video ready (chunked upload + transcode can take minutes; the handler runs
+        up to 800 s) and answers 201.
+
+        **Async mode.** Send `async: true` to get a 202 as soon as Meta has accepted the bytes,
+        with `video.status: processing`. Then either poll `GET /v1/ads/videos/{videoId}` until
+        `status` is `ready`, or subscribe to the `ad.video.processed` webhook. A create call
+        that ...
 
         Platforms: meta
 
@@ -9557,7 +9563,8 @@ def register_generated_tools(mcp, _get_client):
             ad_account_id: Platform ad account id (Meta act_<n>, Google customer id, LinkedIn account id, ...). (required)
             video_url: Public https URL of the video; downloaded server-side (SSRF-guarded) before chunked upload. Provide exactly one of videoUrl or videoBase64.
             video_base64: Raw base64 video bytes, or a full data URL (the data:video/...;base64, prefix is stripped). Capped by Vercel's body limit (~4.5 MB payload). Provide exactly one of videoUrl or videoBase64.
-            filename: Optional filename shown alongside the upload session. Applied only when uploading via videoBase64."""
+            filename: Optional filename shown alongside the upload session. Applied only when uploading via videoBase64.
+            async_: true: answer 202 once Meta accepts the upload instead of waiting for processing. Poll GET /v1/ads/videos/{videoId} or subscribe to ad.video.processed."""
         client = _get_client()
         try:
             response = client.ad_creatives.upload_ad_video(
@@ -9566,6 +9573,7 @@ def register_generated_tools(mcp, _get_client):
                 video_url=video_url,
                 video_base64=video_base64,
                 filename=filename,
+                async_=async_,
             )
             return _format_response(response)
         except Exception as e:
@@ -9620,6 +9628,43 @@ def register_generated_tools(mcp, _get_client):
                 fields=fields,
                 limit=limit,
                 after=after,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get ad video processing status",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def ad_creatives_get_ad_video_status(
+        video_id: str, account_id: str, ad_account_id: str
+    ) -> str:
+        """Get ad video processing status
+
+        Reads a video's processing state live from Meta (`GET /{video-id}?fields=status`).
+        Poll this after `POST /v1/ads/videos` with `async: true` until `status` is `ready`;
+        the video is only usable as `video.id` on the create endpoints from then on.
+
+        `status` is normalised: `ready`, `error` (Meta's `error` or `expired`), and
+        `processing` for every other Meta state. `platformStatus` carries Meta's raw
+        `video_status` and `processingProgress` Meta's 0-100 percentage when it reports one.
+        Polling every 5 to 10 seconds is plenty.
+
+        Platforms: meta
+
+        Args:
+            video_id: Meta ad video id (numeric). (required)
+            account_id: Zernio SocialAccount id (posting or ads variant) used to resolve the Meta token. (required)
+            ad_account_id: Meta ad account id (act_<n>) the video was uploaded to. (required)"""
+        client = _get_client()
+        try:
+            response = client.ad_creatives.get_ad_video_status(
+                video_id=video_id, account_id=account_id, ad_account_id=ad_account_id
             )
             return _format_response(response)
         except Exception as e:
@@ -34804,6 +34849,7 @@ def register_generated_tools(mcp, _get_client):
                 "review.updated",
                 "lead.received",
                 "ad.status_changed",
+                "ad.video.processed",
                 "whatsapp.template.status_updated",
                 "whatsapp.template.category_updated",
                 "whatsapp.account.name_status_updated",
@@ -34957,6 +35003,7 @@ def register_generated_tools(mcp, _get_client):
                 "review.updated",
                 "lead.received",
                 "ad.status_changed",
+                "ad.video.processed",
                 "whatsapp.template.status_updated",
                 "whatsapp.template.category_updated",
                 "whatsapp.account.name_status_updated",
