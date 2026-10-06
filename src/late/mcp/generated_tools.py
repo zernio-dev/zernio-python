@@ -26417,6 +26417,7 @@ def register_generated_tools(mcp, _get_client):
         image_url: str | None = None,
         video: dict[str, Any] | None = None,
         welcome_message: dict[str, Any] | None = None,
+        carousel_cards: list[dict[str, Any]] | None = None,
         creatives: list[dict[str, Any]] | None = None,
         ad_set_id: str | None = None,
         existing_campaign_id: str | None = None,
@@ -26572,6 +26573,17 @@ def register_generated_tools(mcp, _get_client):
                 welcome_message: Custom chat welcome message (Meta's `page_welcome_message`,
         "Mensaje de bienvenida" / "Mensaje predefinido" in Ads Manager).
         Single-creative shape only; for `creatives[]` set it per entry.
+                carousel_cards: Messaging and CTWA only (a 400 on POST /v1/ads/call). A hand-built carousel
+        of 2-10 image cards, sent to Meta as `link_data.child_attachments`; every
+        card (and the carousel itself) carries the destination's messaging call to
+        action (WHATSAPP_MESSAGE, MESSAGE_PAGE or INSTAGRAM_MESSAGE), so a tap on any
+        card opens the conversation. Replaces `imageUrl` / `video` (sending either is
+        a 400). `body` is required as the primary text; `headline` is optional and
+        only names the creative (each card has its own `headline`); a top-level
+        `description` is a 400 (set it per card). `welcomeMessage`,
+        `whatsappPhoneNumber` and `destinations` apply as on a single-image ad. Also a
+        400 with `placementAssets`, `platformPostId`, `existingPostId` or
+        `objectStoryId`. Single-creative shape; for `creatives[]` set it per entry.
                 creatives: Multi-creative shape: N CTWA ads under one campaign + one
         ad set, sharing budget and targeting. Mutually exclusive
         with the top-level single-creative fields (`headline` /
@@ -26757,7 +26769,7 @@ def register_generated_tools(mcp, _get_client):
         refuses more than one call to action per placement rule with error 1885878), so
         that combination is a 400. Also a 400 with `creatives[]`, `platformPostId`,
         `existingPostId` or `objectStoryId`, and on POST /v1/ads/call.
-                validate_only: Dry-runs the ad on Meta with execution_options validate_only as ONE inline campaign + ad set + creative + ad (or creative + ad on the existing ad set with `adSetId`). Nothing is uploaded or created and nothing is stored; media is checked by URL. Supports one creative with `imageUrl`, image `placementAssets`, an existing `video.id`, or an existing post. Several creatives, a new `video.url` and video `placementAssets` need uploads first and return 400. Success returns 200 with per-node results; a Meta rejection returns the Meta error."""
+                validate_only: Dry-runs the ad on Meta with execution_options validate_only as ONE inline campaign + ad set + creative + ad (or creative + ad on the existing ad set with `adSetId`). Nothing is uploaded or created and nothing is stored; media is checked by URL. Supports one creative with `imageUrl`, image `placementAssets`, `carouselCards`, an existing `video.id`, or an existing post. Several creatives, a new `video.url` and video `placementAssets` need uploads first and return 400. Success returns 200 with per-node results; a Meta rejection returns the Meta error."""
         client = _get_client()
         try:
             response = client.messaging_ads.create_messaging_ad(
@@ -26779,6 +26791,7 @@ def register_generated_tools(mcp, _get_client):
                 image_url=image_url,
                 video=video,
                 welcome_message=welcome_message,
+                carousel_cards=carousel_cards,
                 creatives=creatives,
                 ad_set_id=ad_set_id,
                 existing_campaign_id=existing_campaign_id,
@@ -26870,6 +26883,7 @@ def register_generated_tools(mcp, _get_client):
         image_url: str | None = None,
         video: dict[str, Any] | None = None,
         welcome_message: dict[str, Any] | None = None,
+        carousel_cards: list[dict[str, Any]] | None = None,
         creatives: list[dict[str, Any]] | None = None,
         ad_set_id: str | None = None,
         existing_campaign_id: str | None = None,
@@ -27013,6 +27027,17 @@ def register_generated_tools(mcp, _get_client):
                 welcome_message: Custom chat welcome message (Meta's `page_welcome_message`,
         "Mensaje de bienvenida" / "Mensaje predefinido" in Ads Manager).
         Single-creative shape only; for `creatives[]` set it per entry.
+                carousel_cards: Messaging and CTWA only (a 400 on POST /v1/ads/call). A hand-built carousel
+        of 2-10 image cards, sent to Meta as `link_data.child_attachments`; every
+        card (and the carousel itself) carries the destination's messaging call to
+        action (WHATSAPP_MESSAGE, MESSAGE_PAGE or INSTAGRAM_MESSAGE), so a tap on any
+        card opens the conversation. Replaces `imageUrl` / `video` (sending either is
+        a 400). `body` is required as the primary text; `headline` is optional and
+        only names the creative (each card has its own `headline`); a top-level
+        `description` is a 400 (set it per card). `welcomeMessage`,
+        `whatsappPhoneNumber` and `destinations` apply as on a single-image ad. Also a
+        400 with `placementAssets`, `platformPostId`, `existingPostId` or
+        `objectStoryId`. Single-creative shape; for `creatives[]` set it per entry.
                 creatives: Multi-creative shape: N CTWA ads under one campaign + one
         ad set, sharing budget and targeting. Mutually exclusive
         with the top-level single-creative fields (`headline` /
@@ -27208,6 +27233,7 @@ def register_generated_tools(mcp, _get_client):
                 image_url=image_url,
                 video=video,
                 welcome_message=welcome_message,
+                carousel_cards=carousel_cards,
                 creatives=creatives,
                 ad_set_id=ad_set_id,
                 existing_campaign_id=existing_campaign_id,
@@ -27295,6 +27321,7 @@ def register_generated_tools(mcp, _get_client):
         image_url: str | None = None,
         video: dict[str, Any] | None = None,
         welcome_message: dict[str, Any] | None = None,
+        carousel_cards: list[dict[str, Any]] | None = None,
         creatives: list[dict[str, Any]] | None = None,
         ad_set_id: str | None = None,
         existing_campaign_id: str | None = None,
@@ -27441,6 +27468,17 @@ def register_generated_tools(mcp, _get_client):
                 welcome_message: Custom chat welcome message (Meta's `page_welcome_message`,
         "Mensaje de bienvenida" / "Mensaje predefinido" in Ads Manager).
         Single-creative shape only; for `creatives[]` set it per entry.
+                carousel_cards: Messaging and CTWA only (a 400 on POST /v1/ads/call). A hand-built carousel
+        of 2-10 image cards, sent to Meta as `link_data.child_attachments`; every
+        card (and the carousel itself) carries the destination's messaging call to
+        action (WHATSAPP_MESSAGE, MESSAGE_PAGE or INSTAGRAM_MESSAGE), so a tap on any
+        card opens the conversation. Replaces `imageUrl` / `video` (sending either is
+        a 400). `body` is required as the primary text; `headline` is optional and
+        only names the creative (each card has its own `headline`); a top-level
+        `description` is a 400 (set it per card). `welcomeMessage`,
+        `whatsappPhoneNumber` and `destinations` apply as on a single-image ad. Also a
+        400 with `placementAssets`, `platformPostId`, `existingPostId` or
+        `objectStoryId`. Single-creative shape; for `creatives[]` set it per entry.
                 creatives: Multi-creative shape: N CTWA ads under one campaign + one
         ad set, sharing budget and targeting. Mutually exclusive
         with the top-level single-creative fields (`headline` /
@@ -27634,6 +27672,7 @@ def register_generated_tools(mcp, _get_client):
                 image_url=image_url,
                 video=video,
                 welcome_message=welcome_message,
+                carousel_cards=carousel_cards,
                 creatives=creatives,
                 ad_set_id=ad_set_id,
                 existing_campaign_id=existing_campaign_id,
