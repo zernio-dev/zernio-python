@@ -25402,6 +25402,8 @@ def register_generated_tools(mcp, _get_client):
             "audio/wav",
             "audio/webm",
             "audio/x-m4a",
+            "application/x-subrip",
+            "text/vtt",
         ],
         size: int | None = None,
     ) -> str:
