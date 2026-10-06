@@ -10,8 +10,12 @@ from urllib.parse import urlparse
 
 import httpx
 from fastmcp.server.auth import AccessToken, RemoteAuthProvider, TokenVerifier
+from mcp.server.auth.routes import build_resource_metadata_url, cors_middleware
+from mcp.shared.auth import ProtectedResourceMetadata
 from starlette.authentication import AuthenticationError
 from starlette.requests import Request
+from starlette.responses import JSONResponse
+from starlette.routing import Route
 
 from late.mcp.constants import (
     DOCS_URL,
@@ -240,6 +244,52 @@ class ZernioTokenVerifier(TokenVerifier):
         return AccessToken(token=token, client_id="zernio", scopes=list(OAUTH_SCOPES))
 
 
+class VerbatimIssuerRemoteAuthProvider(RemoteAuthProvider):
+    """RemoteAuthProvider whose metadata names the authorization server verbatim.
+
+    The SDK model types `authorization_servers` as AnyHttpUrl, and pydantic
+    renders a bare origin with a trailing slash ("https://zernio.com/"). MCP
+    SDK 2.x clients (Hermes Agent 0.21+) compare that string byte for byte with
+    the `issuer` in zernio.com/.well-known/oauth-authorization-server
+    ("https://zernio.com", SEP-2468) and abort the whole OAuth flow on mismatch.
+    Upstream fixed the model in mcp 2.0 (url_preserve_empty_path), which
+    fastmcp 3.x cannot resolve to, so the document is rendered here instead.
+    """
+
+    def get_routes(self, mcp_path: str | None = None) -> list[Route]:
+        self.set_mcp_path(mcp_path)
+        resource_url = self._get_resource_url(mcp_path)
+        if not resource_url:
+            return []
+        metadata = ProtectedResourceMetadata(
+            resource=resource_url,
+            authorization_servers=self.authorization_servers,
+            scopes_supported=(
+                self._scopes_supported
+                if self._scopes_supported is not None
+                else self.token_verifier.scopes_supported
+            ),
+            resource_name=self.resource_name,
+            resource_documentation=self.resource_documentation,
+        )
+        payload = metadata.model_dump(mode="json", exclude_none=True)
+        payload["authorization_servers"] = [str(s) for s in self.authorization_servers]
+
+        async def handle(_request: Request) -> JSONResponse:
+            return JSONResponse(
+                payload, headers={"Cache-Control": "public, max-age=3600"}
+            )
+
+        path = urlparse(str(build_resource_metadata_url(resource_url))).path
+        return [
+            Route(
+                path,
+                endpoint=cors_middleware(handle, ["GET", "OPTIONS"]),
+                methods=["GET", "OPTIONS"],
+            )
+        ]
+
+
 def build_auth_provider(scopes: list[str] | None = None) -> RemoteAuthProvider:
     """Build the FastMCP resource-server auth provider.
 
@@ -253,7 +303,7 @@ def build_auth_provider(scopes: list[str] | None = None) -> RemoteAuthProvider:
     request every advertised scope, so a surface that only publishes posts
     must not advertise ads or messaging scopes on its consent screen.
     """
-    return RemoteAuthProvider(
+    return VerbatimIssuerRemoteAuthProvider(
         token_verifier=ZernioTokenVerifier(),
         authorization_servers=[OAUTH_AUTHORIZATION_SERVER],
         base_url=MCP_PUBLIC_URL,
