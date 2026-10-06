@@ -7101,7 +7101,9 @@ def register_generated_tools(mcp, _get_client):
     def ad_campaigns_delete_ad(ad_id: str) -> str:
         """Cancel an ad
 
-        Cancels the ad on the platform and marks it as cancelled in the database. The ad is preserved for history. OpenAI Ads has no delete API; the ad is archived instead (a terminal state, the closest equivalent).
+        Deletes the ad on the platform and marks it as cancelled in the database. The ad is preserved for history. OpenAI Ads has no delete API; the ad is archived instead (a terminal state, the closest equivalent).
+
+        Only the ad is deleted; a campaign or ad set is never deleted while it still holds another ad. On Meta, when the ad set and campaign were created by Zernio (by `POST /v1/ads/create` or `POST /v1/ads/boost`) and Meta lists no other ad in the ad set (archived ads count), the emptied ad set is deleted too, then the campaign once it holds no other ad set. Parents created outside Zernio, and the parents of an ad imported from the platform, are always kept. To delete a whole campaign on purpose use `DELETE /v1/ads/campaigns/{campaignId}`.
 
         Platforms: meta, google, tiktok, linkedin, pinterest, x
 
@@ -7692,6 +7694,9 @@ def register_generated_tools(mcp, _get_client):
         dsa_payor: str | None = None,
         lead_gen_form_id: str | None = None,
         status: Literal["ACTIVE", "PAUSED"] | None = None,
+        campaign_status: Literal["ACTIVE", "PAUSED"] | None = None,
+        ad_set_status: Literal["ACTIVE", "PAUSED"] | None = None,
+        ad_status: Literal["ACTIVE", "PAUSED"] | None = None,
         budget_level: Literal["adset", "campaign"] | None = None,
         attribution_spec: list[dict[str, Any]] | None = None,
         bodies: list[str] | None = None,
@@ -7862,7 +7867,16 @@ def register_generated_tools(mcp, _get_client):
         `dsaBeneficiary`: required for EU targeting unless the ad account has
         a default payor.
                 lead_gen_form_id: Lead Gen form ID to attach to the boosted ad's creative. REQUIRED when `goal` is `lead_generation`. On Meta this is the leadgen_forms ID (create one via POST /v1/ads/lead-forms). On LinkedIn this is the adForm ID (create one via POST /v1/ads/lead-forms with a LinkedIn account); the creative's `leadgenCallToAction.destination` is set to `urn:li:adForm:{id}`. Ignored for other goals.
-                status: Publish state of the created entities, on every platform. Omitted or ACTIVE publishes live (default); PAUSED pauses only the top-most object this boost creates and switches everything below it on: a new campaign is held paused with its ad set and ad on (one PUT /v1/ads/campaigns/{campaignId}/status with `active` brings it live); into an existing campaign (TikTok `existingCampaignId`) the new ad set is held paused; attached to an existing ad set (`adSetId`) the new ad itself is paused. On LinkedIn the held campaign group is PAUSED, its campaign and creative ACTIVE. X has no per-ad switch, so its lowest level is the line item.
+                status: Publish state of the created entities, on every platform. Omitted or ACTIVE publishes live (default); PAUSED pauses only the top-most object this boost creates and switches everything below it on: a new campaign is held paused with its ad set and ad on (one PUT /v1/ads/campaigns/{campaignId}/status with `active` brings it live); into an existing campaign (TikTok `existingCampaignId`) the new ad set is held paused; attached to an existing ad set (`adSetId`) the new ad itself is paused. On LinkedIn the held campaign group is PAUSED, its campaign and creative ACTIVE. X has no per-ad switch, so its lowest level is the line item. `campaignStatus`, `adSetStatus` and `adStatus` set one level each and always win for that level; `status: PAUSED` adds a hold of its own only when none of them is PAUSED. To create every object paused, send all three as PAUSED.
+                campaign_status: Every platform, same semantics as POST /v1/ads/create. Sets the switch of the new campaign alone (LinkedIn: the campaign group) and overrides `status` for it. `ACTIVE` with `status: PAUSED` switches the campaign on and holds the new ad set paused (its ad on). Omitted, it follows `status`. Rejected with a 400 alongside `adSetId` or `existingCampaignId`, where no campaign is created (change an existing one with PUT /v1/ads/campaigns/{campaignId}/status).
+                ad_set_status: Every platform, same semantics as POST /v1/ads/create. Sets the switch of the new ad set alone (Google, TikTok and Pinterest: the ad group; LinkedIn: the campaign, which stays DRAFT when held; X: the line item) and overrides `status` for it. Omitted, it follows `status`.
+
+        Precedence: a level status (`campaignStatus`, `adSetStatus`, `adStatus`) always wins for its level. `status: PAUSED` then holds the top-most new object that has no level status, and only when no level status is PAUSED; every other new object is switched on. So `campaignStatus: ACTIVE` + `adSetStatus: PAUSED` + `adStatus: PAUSED` keeps the campaign on with the new ad set and ad off, and all three PAUSED create the whole tree paused.
+
+        Rejected with a 400 alongside `adSetId` (that ad set already exists; change it with PUT /v1/ads/ad-sets/{adSetId}/status).
+                ad_status: Sets the switch of the new ad alone, also when attaching to an existing ad set with `adSetId` (Meta, TikTok Smart+), and overrides `status` for it. Same precedence as `adSetStatus`. Omitted, it follows `status`.
+
+        X returns a 400: a promoted post has no switch of its own, so hold the line item with `adSetStatus`.
                 budget_level: Meta only, same semantics as POST /v1/ads/create: campaign = Advantage campaign budget (CBO), the budget and bid strategy sit on the campaign and the ad set inherits them. Default adset. Not allowed with adSetId.
                 attribution_spec: Meta only. Ad-set attribution windows, same shape as POST /v1/ads/create. Applied on OUTCOME_SALES, OUTCOME_LEADS and OUTCOME_APP_PROMOTION campaigns (conversions, lead_conversion, lead_generation, app_promotion); other objectives keep Meta's default. Not allowed with adSetId.
                 bodies: Meta only. Extra primary-text options Meta rotates on the boosted post (asset_feed_spec.bodies with DEGREES_OF_FREEDOM); the post keeps its own text as one of the options. Works for Facebook posts and Instagram media. Under a conversions or traffic goal Meta also wants a website URL on the options, taken from `linkUrl` (send it with a `callToAction`); engagement boosts need none.
@@ -7934,6 +7948,9 @@ def register_generated_tools(mcp, _get_client):
                 dsa_payor=dsa_payor,
                 lead_gen_form_id=lead_gen_form_id,
                 status=status,
+                campaign_status=campaign_status,
+                ad_set_status=ad_set_status,
+                ad_status=ad_status,
                 budget_level=budget_level,
                 attribution_spec=attribution_spec,
                 bodies=bodies,
