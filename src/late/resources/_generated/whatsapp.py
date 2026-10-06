@@ -433,7 +433,12 @@ class WhatsappResource:
 
     def delete_whatsapp_business_username(self, account_id: str) -> dict[str, Any]:
         """Delete business username"""
-        return self._client._delete("/v1/whatsapp/business-profile/username")
+        payload = self._build_payload(
+            account_id=account_id,
+        )
+        return self._client._delete(
+            "/v1/whatsapp/business-profile/username", data=payload
+        )
 
     def get_whatsapp_business_username_suggestions(
         self, account_id: str
@@ -479,7 +484,11 @@ class WhatsappResource:
         self, account_id: str, users: list[str]
     ) -> dict[str, Any]:
         """Unblock users"""
-        return self._client._delete("/v1/whatsapp/block-users")
+        payload = self._build_payload(
+            account_id=account_id,
+            users=users,
+        )
+        return self._client._delete("/v1/whatsapp/block-users", data=payload)
 
     def list_whats_app_account_events(
         self, account_id: str, *, limit: int | None = 50
@@ -596,8 +605,13 @@ class WhatsappResource:
         params = self._build_params(
             account_id=account_id,
         )
+        payload = self._build_payload(
+            phone_numbers=phone_numbers,
+        )
         return self._client._delete(
-            f"/v1/whatsapp/wa-groups/{group_id}/participants", params=params
+            f"/v1/whatsapp/wa-groups/{group_id}/participants",
+            params=params,
+            data=payload,
         )
 
     def create_whats_app_group_invite_link(
@@ -645,8 +659,13 @@ class WhatsappResource:
         params = self._build_params(
             account_id=account_id,
         )
+        payload = self._build_payload(
+            phone_numbers=phone_numbers,
+        )
         return self._client._delete(
-            f"/v1/whatsapp/wa-groups/{group_id}/join-requests", params=params
+            f"/v1/whatsapp/wa-groups/{group_id}/join-requests",
+            params=params,
+            data=payload,
         )
 
     def list_whats_app_conversions(
@@ -1060,7 +1079,12 @@ class WhatsappResource:
         self, account_id: str
     ) -> dict[str, Any]:
         """Delete business username (async)"""
-        return await self._client._adelete("/v1/whatsapp/business-profile/username")
+        payload = self._build_payload(
+            account_id=account_id,
+        )
+        return await self._client._adelete(
+            "/v1/whatsapp/business-profile/username", data=payload
+        )
 
     async def aget_whatsapp_business_username_suggestions(
         self, account_id: str
@@ -1110,7 +1134,11 @@ class WhatsappResource:
         self, account_id: str, users: list[str]
     ) -> dict[str, Any]:
         """Unblock users (async)"""
-        return await self._client._adelete("/v1/whatsapp/block-users")
+        payload = self._build_payload(
+            account_id=account_id,
+            users=users,
+        )
+        return await self._client._adelete("/v1/whatsapp/block-users", data=payload)
 
     async def alist_whats_app_account_events(
         self, account_id: str, *, limit: int | None = 50
@@ -1231,8 +1259,13 @@ class WhatsappResource:
         params = self._build_params(
             account_id=account_id,
         )
+        payload = self._build_payload(
+            phone_numbers=phone_numbers,
+        )
         return await self._client._adelete(
-            f"/v1/whatsapp/wa-groups/{group_id}/participants", params=params
+            f"/v1/whatsapp/wa-groups/{group_id}/participants",
+            params=params,
+            data=payload,
         )
 
     async def acreate_whats_app_group_invite_link(
@@ -1280,8 +1313,13 @@ class WhatsappResource:
         params = self._build_params(
             account_id=account_id,
         )
+        payload = self._build_payload(
+            phone_numbers=phone_numbers,
+        )
         return await self._client._adelete(
-            f"/v1/whatsapp/wa-groups/{group_id}/join-requests", params=params
+            f"/v1/whatsapp/wa-groups/{group_id}/join-requests",
+            params=params,
+            data=payload,
         )
 
     async def alist_whats_app_conversions(

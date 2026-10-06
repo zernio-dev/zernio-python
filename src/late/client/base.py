@@ -355,10 +355,17 @@ class BaseClient:
         self,
         path: str,
         params: dict[str, Any] | None = None,
+        data: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
-        """Make a sync DELETE request."""
+        """Make a sync DELETE request.
+
+        ``data`` is sent as the JSON body: some DELETE endpoints take their
+        input there (e.g. the list of ids to remove), not in the query string.
+        """
         with self._sync_client() as client:
-            return self._request_with_retry(client, "DELETE", path, params=params)
+            return self._request_with_retry(
+                client, "DELETE", path, params=params, json=data
+            )
 
     # =========================================================================
     # Async Client
@@ -522,9 +529,10 @@ class BaseClient:
         self,
         path: str,
         params: dict[str, Any] | None = None,
+        data: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
-        """Make an async DELETE request."""
+        """Make an async DELETE request (``data`` is the JSON body, see ``_delete``)."""
         async with self._async_client() as client:
             return await self._arequest_with_retry(
-                client, "DELETE", path, params=params
+                client, "DELETE", path, params=params, json=data
             )

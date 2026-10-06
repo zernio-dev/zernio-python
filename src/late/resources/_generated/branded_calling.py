@@ -263,7 +263,12 @@ class BrandedCallingResource:
         self, id: str, phone_numbers: list[str]
     ) -> dict[str, Any]:
         """Detach numbers from an identity"""
-        return self._client._delete(f"/v1/branded-calling/identities/{id}/numbers")
+        payload = self._build_payload(
+            phone_numbers=phone_numbers,
+        )
+        return self._client._delete(
+            f"/v1/branded-calling/identities/{id}/numbers", data=payload
+        )
 
     async def acreate_branded_calling_enterprise(
         self,
@@ -459,6 +464,9 @@ class BrandedCallingResource:
         self, id: str, phone_numbers: list[str]
     ) -> dict[str, Any]:
         """Detach numbers from an identity (async)"""
+        payload = self._build_payload(
+            phone_numbers=phone_numbers,
+        )
         return await self._client._adelete(
-            f"/v1/branded-calling/identities/{id}/numbers"
+            f"/v1/branded-calling/identities/{id}/numbers", data=payload
         )

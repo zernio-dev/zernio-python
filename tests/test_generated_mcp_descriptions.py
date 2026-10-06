@@ -105,3 +105,58 @@ def test_non_string_enums_keep_their_plain_type(generator):
         generator._string_enum_literal({"type": "string", "enum": ["a", None]})
         == "Literal['a']"
     )
+
+
+BULK_OPERATION = {
+    "summary": "Pause or resume many campaigns",
+    "requestBody": {
+        "content": {
+            "application/json": {
+                "schema": {
+                    "type": "object",
+                    "required": ["campaigns"],
+                    "properties": {
+                        "campaigns": {
+                            "type": "array",
+                            "description": "Campaigns to update.",
+                            "items": {
+                                "type": "object",
+                                "required": ["platformCampaignId", "platform"],
+                                "properties": {
+                                    "platformCampaignId": {
+                                        "type": "string",
+                                        "description": "The campaign id on the ad platform.",
+                                    },
+                                    "platform": {"type": "string", "enum": ["google", "facebook"]},
+                                    "labels": {"type": "array", "items": {"type": "string"}},
+                                },
+                            },
+                        },
+                    },
+                }
+            }
+        }
+    },
+}
+
+
+def test_array_of_objects_params_name_their_item_fields(generator):
+    mcp = _register_probe(generator, BULK_OPERATION)
+    tool = asyncio.run(mcp.list_tools())[0]
+
+    assert tool.parameters["properties"]["campaigns"]["description"] == (
+        "Campaigns to update. Each item is an object with keys: "
+        "platformCampaignId (string, required) - The campaign id on the ad platform.; "
+        "platform (one of: google, facebook; required); "
+        "labels (list of string) (required)"
+    )
+
+
+def test_nested_field_summary_is_empty_for_scalars_and_scalar_lists(generator):
+    assert generator.describe_nested_fields({"type": "string"}, {}) == ""
+    assert generator.describe_nested_fields({"type": "array", "items": {"type": "string"}}, {}) == ""
+
+
+def test_object_params_name_their_fields(generator):
+    schema = {"type": "object", "properties": {"amount": {"type": "number"}}}
+    assert generator.describe_nested_fields(schema, {}) == "Object with keys: amount (number)"

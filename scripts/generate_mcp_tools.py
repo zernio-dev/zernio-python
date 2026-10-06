@@ -292,6 +292,78 @@ def get_python_type(
     return type_str, ""
 
 
+MAX_FIELD_DESCRIPTION_CHARS = 160
+
+
+def _object_key_names(schema: dict[str, Any], spec: dict[str, Any]) -> str:
+    if schema.get("type") != "object" and "allOf" not in schema:
+        return ""
+    flattened = flatten_request_body_schema(schema, spec)
+    return ", ".join(flattened["properties"]) if flattened else ""
+
+
+def _field_type_label(schema: dict[str, Any], spec: dict[str, Any]) -> str:
+    resolved = _resolve_schema(schema, spec) or {}
+    values = [v for v in resolved.get("enum") or [] if v is not None]
+    if values:
+        return f"one of: {', '.join(str(v) for v in values)}"
+    schema_type = resolved.get("type")
+    if schema_type == "array":
+        items = _resolve_schema(resolved.get("items") or {}, spec) or {}
+        keys = _object_key_names(items, spec)
+        return f"list of objects with keys {keys}" if keys else f"list of {items.get('type') or 'any'}"
+    if schema_type == "object":
+        keys = _object_key_names(resolved, spec)
+        return f"object with keys {keys}" if keys else "object"
+    if isinstance(schema_type, list):
+        return " or ".join(str(t) for t in schema_type)
+    return str(schema_type or "any")
+
+
+def _describe_field(name: str, schema: dict[str, Any], required: bool, spec: dict[str, Any]) -> str:
+    label = _field_type_label(schema, spec)
+    if required:
+        # An enum label already holds commas, so it takes a semicolon.
+        label += "; required" if label.startswith("one of") else ", required"
+    description = " ".join(str(schema.get("description") or "").split())
+    if len(description) > MAX_FIELD_DESCRIPTION_CHARS:
+        description = description[:MAX_FIELD_DESCRIPTION_CHARS].rsplit(None, 1)[0] + " ..."
+    return f"{name} ({label})" + (f" - {description}" if description else "")
+
+
+def describe_nested_fields(schema: dict[str, Any], spec: dict[str, Any]) -> str:
+    """The keys an object, or each object in an array, takes. The parameter is
+    typed as a bare dict, so this text is the only place an agent learns them.
+    Keys are the wire (camelCase) names: dict values are sent verbatim."""
+    resolved = _resolve_schema(schema, spec) or {}
+    if resolved.get("type") == "array":
+        target = _resolve_schema(resolved.get("items") or {}, spec) or {}
+        prefix = "Each item is an object with keys"
+    else:
+        target = resolved
+        prefix = "Object with keys"
+    if target.get("type") != "object" and "allOf" not in target:
+        return ""
+    flattened = flatten_request_body_schema(target, spec)
+    if not flattened or not flattened["properties"]:
+        return ""
+    required = set(flattened["required"])
+    fields = [
+        _describe_field(name, prop, name in required, spec)
+        for name, prop in flattened["properties"].items()
+        if isinstance(prop, dict)
+    ]
+    return f"{prefix}: {'; '.join(fields)}"
+
+
+def _with_nested_fields(description: str, schema: dict[str, Any], spec: dict[str, Any] | None) -> str:
+    nested = _escape_docstring_text(describe_nested_fields(schema, spec or {}))
+    if not nested:
+        return description
+    base = " ".join(description.split())
+    return f"{base} {nested}" if base else nested
+
+
 def extract_parameters(
     operation: dict[str, Any],
     spec: dict[str, Any] | None = None,
@@ -364,7 +436,7 @@ def extract_parameters(
             "type": type_str,
             "required": param.get("required", False),
             "default": default_str,
-            "description": param.get("description", ""),
+            "description": _with_nested_fields(param.get("description", ""), param.get("schema", {}), spec),
             "sdk_name": sdk_name,
         })
 
@@ -404,7 +476,7 @@ def extract_parameters(
                 "type": type_str,
                 "required": is_required,
                 "default": default_str,
-                "description": prop_schema.get("description", ""),
+                "description": _with_nested_fields(prop_schema.get("description", ""), prop_schema, spec),
                 "sdk_name": py_name,
             })
 

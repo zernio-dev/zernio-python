@@ -429,7 +429,18 @@ class AdAccountsResource:
         keyword_ids: list[str] | None = None,
     ) -> dict[str, Any]:
         """Detach a Google Ads label"""
-        return self._client._delete(f"/v1/ads/labels/{label_id}/assignments")
+        payload = self._build_payload(
+            account_id=account_id,
+            ad_account_id=ad_account_id,
+            customer_id=customer_id,
+            campaign_ids=campaign_ids,
+            ad_set_ids=ad_set_ids,
+            ad_ids=ad_ids,
+            keyword_ids=keyword_ids,
+        )
+        return self._client._delete(
+            f"/v1/ads/labels/{label_id}/assignments", data=payload
+        )
 
     def list_high_demand_periods(
         self,
@@ -725,7 +736,13 @@ class AdAccountsResource:
         customer_id: str | None = None,
     ) -> dict[str, Any]:
         """Remove account callout"""
-        return self._client._delete("/v1/ads/accounts/callouts")
+        payload = self._build_payload(
+            account_id=account_id,
+            ad_account_id=ad_account_id,
+            customer_id=customer_id,
+            asset_id=asset_id,
+        )
+        return self._client._delete("/v1/ads/accounts/callouts", data=payload)
 
     def list_account_sitelinks(
         self,
@@ -785,7 +802,13 @@ class AdAccountsResource:
         customer_id: str | None = None,
     ) -> dict[str, Any]:
         """Remove account sitelink"""
-        return self._client._delete("/v1/ads/accounts/sitelinks")
+        payload = self._build_payload(
+            account_id=account_id,
+            ad_account_id=ad_account_id,
+            customer_id=customer_id,
+            asset_id=asset_id,
+        )
+        return self._client._delete("/v1/ads/accounts/sitelinks", data=payload)
 
     def list_account_structured_snippets(
         self,
@@ -845,7 +868,15 @@ class AdAccountsResource:
         customer_id: str | None = None,
     ) -> dict[str, Any]:
         """Remove account snippet"""
-        return self._client._delete("/v1/ads/accounts/structured-snippets")
+        payload = self._build_payload(
+            account_id=account_id,
+            ad_account_id=ad_account_id,
+            customer_id=customer_id,
+            asset_id=asset_id,
+        )
+        return self._client._delete(
+            "/v1/ads/accounts/structured-snippets", data=payload
+        )
 
     def get_ad_account_hierarchy(
         self,
@@ -1469,7 +1500,18 @@ class AdAccountsResource:
         keyword_ids: list[str] | None = None,
     ) -> dict[str, Any]:
         """Detach a Google Ads label (async)"""
-        return await self._client._adelete(f"/v1/ads/labels/{label_id}/assignments")
+        payload = self._build_payload(
+            account_id=account_id,
+            ad_account_id=ad_account_id,
+            customer_id=customer_id,
+            campaign_ids=campaign_ids,
+            ad_set_ids=ad_set_ids,
+            ad_ids=ad_ids,
+            keyword_ids=keyword_ids,
+        )
+        return await self._client._adelete(
+            f"/v1/ads/labels/{label_id}/assignments", data=payload
+        )
 
     async def alist_high_demand_periods(
         self,
@@ -1765,7 +1807,13 @@ class AdAccountsResource:
         customer_id: str | None = None,
     ) -> dict[str, Any]:
         """Remove account callout (async)"""
-        return await self._client._adelete("/v1/ads/accounts/callouts")
+        payload = self._build_payload(
+            account_id=account_id,
+            ad_account_id=ad_account_id,
+            customer_id=customer_id,
+            asset_id=asset_id,
+        )
+        return await self._client._adelete("/v1/ads/accounts/callouts", data=payload)
 
     async def alist_account_sitelinks(
         self,
@@ -1825,7 +1873,13 @@ class AdAccountsResource:
         customer_id: str | None = None,
     ) -> dict[str, Any]:
         """Remove account sitelink (async)"""
-        return await self._client._adelete("/v1/ads/accounts/sitelinks")
+        payload = self._build_payload(
+            account_id=account_id,
+            ad_account_id=ad_account_id,
+            customer_id=customer_id,
+            asset_id=asset_id,
+        )
+        return await self._client._adelete("/v1/ads/accounts/sitelinks", data=payload)
 
     async def alist_account_structured_snippets(
         self,
@@ -1891,7 +1945,15 @@ class AdAccountsResource:
         customer_id: str | None = None,
     ) -> dict[str, Any]:
         """Remove account snippet (async)"""
-        return await self._client._adelete("/v1/ads/accounts/structured-snippets")
+        payload = self._build_payload(
+            account_id=account_id,
+            ad_account_id=ad_account_id,
+            customer_id=customer_id,
+            asset_id=asset_id,
+        )
+        return await self._client._adelete(
+            "/v1/ads/accounts/structured-snippets", data=payload
+        )
 
     async def aget_ad_account_hierarchy(
         self,
