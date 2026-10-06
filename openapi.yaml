@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.224.0"
+  version: "1.224.1"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -51890,7 +51890,7 @@ paths:
                         matchMode: { type: string, enum: [exact, contains, word], description: "How a keyword is compared with the comment. 'contains' (default) matches anywhere, even inside another word (keyword 'app' fires on 'happy'). 'word' matches the keyword only as a standalone word. 'exact' requires the whole comment to be exactly the keyword." }
                         excludeKeywords: { type: array, items: { type: string }, description: "Comments containing one of these never trigger the automation, even when a trigger keyword also matches. Compared using the same matchMode." }
                         typoTolerance: { type: boolean, description: "Only with matchMode=word: also fire on close misspellings of a keyword (one edit for 4-7 character keywords, two from 8 up). Keywords shorter than 4 characters are never fuzzy-matched." }
-                        dmMessage: { type: string }
+                        dmMessage: { type: string, description: "Instagram and Facebook only. On reply-only platforms (tiktok, threads, linkedin, youtube) every DM-leg field is omitted: dmMessage, dmMessageVariations, buttons, template, quickReplies, dmMedia, publicReplyPolicy, dedupeSameTextHours, actions, audience, followGate, dmDelaySeconds and alsoMatchInDms." }
                         buttons:
                           type: array
                           items: { $ref: '#/components/schemas/DmButton' }
@@ -52092,7 +52092,7 @@ paths:
                       matchMode: { type: string, enum: [exact, contains, word], description: "How a keyword is compared with the comment. 'contains' (default) matches anywhere, even inside another word (keyword 'app' fires on 'happy'). 'word' matches the keyword only as a standalone word. 'exact' requires the whole comment to be exactly the keyword." }
                       excludeKeywords: { type: array, items: { type: string }, description: "Comments containing one of these never trigger the automation, even when a trigger keyword also matches. Compared using the same matchMode." }
                       typoTolerance: { type: boolean, description: "Only with matchMode=word: also fire on close misspellings of a keyword (one edit for 4-7 character keywords, two from 8 up). Keywords shorter than 4 characters are never fuzzy-matched." }
-                      dmMessage: { type: string }
+                      dmMessage: { type: string, description: "Omitted on reply-only platforms (tiktok, threads, linkedin, youtube), together with every other DM-leg field." }
                       buttons:
                         type: array
                         items: { $ref: '#/components/schemas/DmButton' }
@@ -52162,7 +52162,7 @@ paths:
                       matchMode: { type: string, enum: [exact, contains, word], description: "How a keyword is compared with the comment. 'contains' (default) matches anywhere, even inside another word (keyword 'app' fires on 'happy'). 'word' matches the keyword only as a standalone word. 'exact' requires the whole comment to be exactly the keyword." }
                       excludeKeywords: { type: array, items: { type: string }, description: "Comments containing one of these never trigger the automation, even when a trigger keyword also matches. Compared using the same matchMode." }
                       typoTolerance: { type: boolean, description: "Only with matchMode=word: also fire on close misspellings of a keyword (one edit for 4-7 character keywords, two from 8 up). Keywords shorter than 4 characters are never fuzzy-matched." }
-                      dmMessage: { type: string }
+                      dmMessage: { type: string, description: "Omitted on reply-only platforms (tiktok, threads, linkedin, youtube), together with every other DM-leg field." }
                       buttons:
                         type: array
                         items: { $ref: '#/components/schemas/DmButton' }
@@ -52201,7 +52201,7 @@ paths:
       tags: [Comment Automations]
       summary: Update automation settings
       description: |
-        Update an automation's keywords, DM message, inline buttons, comment reply, or active status.
+        Update an automation's keywords, DM message, inline buttons, comment reply, post binding, or active status.
         Pass `buttons: []` to clear all buttons. When `buttons` is non-empty, `dmMessage` (the new
         one if you're changing it, otherwise the stored one) must be 640 characters or less.
         On a TikTok, Threads, LinkedIn or YouTube automation (public reply only) the DM fields
@@ -52223,6 +52223,9 @@ paths:
                 matchMode: { type: string, enum: [exact, contains, word], description: "How a keyword is compared with the comment. 'contains' (default) matches anywhere, even inside another word (keyword 'app' fires on 'happy'). 'word' matches the keyword only as a standalone word. 'exact' requires the whole comment to be exactly the keyword." }
                 excludeKeywords: { type: array, items: { type: string }, description: "Comments containing one of these never trigger the automation, even when a trigger keyword also matches. Compared using the same matchMode." }
                 typoTolerance: { type: boolean, description: "Only with matchMode=word: also fire on close misspellings of a keyword (one edit for 4-7 character keywords, two from 8 up). Keywords shorter than 4 characters are never fuzzy-matched." }
+                platformPostId: { type: [string, "null"], description: "Re-binds the automation to another post: the platform media/post ID (or story media id when trigger=story_reply). postId, platformPostId and postTitle move as a unit: sending any of them replaces all three, and an omitted one is cleared. Send all three as null (or empty) to make it account-wide (any post / any story). Omit all three to keep the current binding. 409 when another active automation already owns the new post." }
+                postId: { type: [string, "null"], pattern: "^[a-fA-F0-9]{24}$", description: "Zernio post ID (24 hexadecimal characters); platform IDs return 400. Use it INSTEAD of platformPostId to bind to a not-yet-published Zernio post: the automation stays pending and arms itself when that post publishes. Moves as a unit with platformPostId and postTitle (see platformPostId)." }
+                postTitle: { type: [string, "null"], description: "Post content snippet for display. Moves as a unit with platformPostId and postId (see platformPostId)." }
                 dmMessage: { type: string }
                 buttons:
                   type: array
@@ -52277,7 +52280,7 @@ paths:
                       matchMode: { type: string, enum: [exact, contains, word], description: "How a keyword is compared with the comment. 'contains' (default) matches anywhere, even inside another word (keyword 'app' fires on 'happy'). 'word' matches the keyword only as a standalone word. 'exact' requires the whole comment to be exactly the keyword." }
                       excludeKeywords: { type: array, items: { type: string }, description: "Comments containing one of these never trigger the automation, even when a trigger keyword also matches. Compared using the same matchMode." }
                       typoTolerance: { type: boolean, description: "Only with matchMode=word: also fire on close misspellings of a keyword (one edit for 4-7 character keywords, two from 8 up). Keywords shorter than 4 characters are never fuzzy-matched." }
-                      dmMessage: { type: string }
+                      dmMessage: { type: string, description: "Omitted on reply-only platforms (tiktok, threads, linkedin, youtube), together with every other DM-leg field." }
                       buttons:
                         type: array
                         items: { $ref: '#/components/schemas/DmButton' }
@@ -52302,6 +52305,7 @@ paths:
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
+        '409': { description: An active automation already exists for the post this request re-binds to }
     delete:
       x-resource-group: "messages"
       operationId: deleteCommentAutomation

@@ -15465,6 +15465,9 @@ def register_generated_tools(mcp, _get_client):
         match_mode: Literal["exact", "contains", "word"] | None = None,
         exclude_keywords: list[str] | None = None,
         typo_tolerance: bool | None = None,
+        platform_post_id: str | None = None,
+        post_id: str | None = None,
+        post_title: str | None = None,
         dm_message: str | None = None,
         buttons: list[dict[str, Any]] | None = None,
         template: str | None = None,
@@ -15488,7 +15491,7 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Update automation settings
 
-        Update an automation's keywords, DM message, inline buttons, comment reply, or active status.
+        Update an automation's keywords, DM message, inline buttons, comment reply, post binding, or active status.
         Pass `buttons: []` to clear all buttons. When `buttons` is non-empty, `dmMessage` (the new
         one if you're changing it, otherwise the stored one) must be 640 characters or less.
         On a TikTok, Threads, LinkedIn or YouTube automation (public reply only) the DM fields
@@ -15503,6 +15506,9 @@ def register_generated_tools(mcp, _get_client):
             match_mode: How a keyword is compared with the comment. 'contains' (default) matches anywhere, even inside another word (keyword 'app' fires on 'happy'). 'word' matches the keyword only as a standalone word. 'exact' requires the whole comment to be exactly the keyword.
             exclude_keywords: Comments containing one of these never trigger the automation, even when a trigger keyword also matches. Compared using the same matchMode.
             typo_tolerance: Only with matchMode=word: also fire on close misspellings of a keyword (one edit for 4-7 character keywords, two from 8 up). Keywords shorter than 4 characters are never fuzzy-matched.
+            platform_post_id: Re-binds the automation to another post: the platform media/post ID (or story media id when trigger=story_reply). postId, platformPostId and postTitle move as a unit: sending any of them replaces all three, and an omitted one is cleared. Send all three as null (or empty) to make it account-wide (any post / any story). Omit all three to keep the current binding. 409 when another active automation already owns the new post.
+            post_id: Zernio post ID (24 hexadecimal characters); platform IDs return 400. Use it INSTEAD of platformPostId to bind to a not-yet-published Zernio post: the automation stays pending and arms itself when that post publishes. Moves as a unit with platformPostId and postTitle (see platformPostId).
+            post_title: Post content snippet for display. Moves as a unit with platformPostId and postId (see platformPostId).
             dm_message
             buttons: Inline DM buttons (1-3). Pass [] to clear all buttons. Each item is an object with keys: type (one of: url, postback, phone; required); title (string, required) - Button label (20 chars max); url (string) - Target URL (required when type is url); payload (string) - Postback payload delivered via the messaging_postbacks webhook (required when type is postback); phone (string) - Phone number, e.g. +14155551234 (required when type is phone; Facebook only)
             template: Product card sent instead of the plain dmMessage bubble. Pass null to clear it and fall back to dmMessage. Mutually exclusive with buttons, including with the buttons already stored on the automation.
@@ -15533,6 +15539,9 @@ def register_generated_tools(mcp, _get_client):
                 match_mode=match_mode,
                 exclude_keywords=exclude_keywords,
                 typo_tolerance=typo_tolerance,
+                platform_post_id=platform_post_id,
+                post_id=post_id,
+                post_title=post_title,
                 dm_message=dm_message,
                 buttons=buttons,
                 template=template,
