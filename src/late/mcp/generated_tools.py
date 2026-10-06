@@ -18870,6 +18870,8 @@ def register_generated_tools(mcp, _get_client):
         ],
         profile_id: str,
         reconnect_account_id: str | None = None,
+        expected_platform_user_id: str | None = None,
+        expected_username: str | None = None,
         redirect_url: str | None = None,
         scopes: str | None = None,
         headless: bool = False,
@@ -18898,6 +18900,8 @@ def register_generated_tools(mcp, _get_client):
                 platform: Social media platform to connect. `snapchat` is a closed beta with no public release date: it returns 403 `PLATFORM_BETA_RESTRICTED` until the account is approved. (required)
                 profile_id: Your Zernio profile ID (get from /v1/profiles). For WhatsApp, a Zernio-provisioned number can only be connected on the profile it was provisioned to; connecting from any other profile is rejected with a 409. (required)
                 reconnect_account_id: Refresh this existing account (a Zernio account id of the same platform on this profile; otherwise 400). The OAuth callback and the selection endpoints (select-page, select-organization, select-board, select-location, Instagram and Snapchat selection) refuse, with `reconnect_account_mismatch`, a login that would write to a different account of the platform on this profile instead of this one. In headless mode the marker travels in the redirect_url we hand you, so pass that URL back unchanged to the selection endpoint. On X it counts toward the OAuth state limit described under redirect_url.
+                expected_platform_user_id: Only connect if the login lands on this platform account; any other account ends the flow with `error=account_mismatch` (a 409 `account_mismatch` on POST /v1/connect/instagram/select-account) and nothing is written. Compared with every id the platform reports for the authorized account: the `platformUserId` of a Zernio account on this platform, or on Instagram either the app-scoped id or the professional account id (`metadata.instagramScopedId`, the `17841...` id that Facebook Login accounts hold as platformUserId). TikTok open_ids are app-scoped, so an id from your own TikTok app never matches; use expectedUsername there. Honoured by the OAuth callback (every platform that connects without a selection step, Instagram Login included) and by the Instagram selection step; on the other selection endpoints you choose the destination yourself. In headless mode the marker travels in the redirect_url we hand you, so pass that URL back unchanged. On X it counts toward the OAuth state limit described under redirect_url.
+                expected_username: Only connect if the authorized account's handle is this one (case-insensitive, a leading @ is ignored); otherwise the flow ends with `error=account_mismatch`, `error_message` naming the handle that was authorized, and nothing is written. Same coverage and transport as expectedPlatformUserId; when both are sent both must match. Use this on a first connection, where you hold the handle the user typed but no Zernio id yet.
                 redirect_url: Your custom redirect URL after connection completes. MUST be an absolute http(s) URL or a custom app scheme for mobile deeplinks (e.g. myapp://callback); a relative path is rejected with 400 INVALID_REDIRECT_URL. X (twitter) caps the OAuth `state` at 500 characters and the redirect is carried inside it, so the URL-encoded `redirect_url` must be at most 258 characters for API callers (310 for dashboard sessions; in headless mode the appended `headless=true` counts toward it); a longer one is rejected with 400 INVALID_REDIRECT_URL. Result params are appended with the URL API, so an existing query string is preserved. Standard mode appends connected={platform}&profileId=X&accountId=Y&username=Z. Headless mode appends OAuth data params for platforms requiring selection (e.g. LinkedIn orgs, Facebook pages). If no selection is needed, the account is created directly and the redirect includes accountId.
 
         On failure, the browser is sent to the same redirect_url with `error` and `platform` appended.
@@ -18905,7 +18909,7 @@ def register_generated_tools(mcp, _get_client):
         `dashboard_url`, `missing_scopes`, `error_reason` and the `platform_error*` params are
         conditional and must be treated as optional. Your own query params are kept on every
         redirect, but ours overwrite a param of yours with the same name. On an error redirect the
-        internal `headless`, `adsConnect`, `adsScope` and `reconnectAccountId` markers we add during the flow are removed.
+        internal `headless`, `adsConnect`, `adsScope`, `reconnectAccountId`, `expectedPlatformUserId` and `expectedUsername` markers we add during the flow are removed.
 
         Correlation (every redirect from an OAuth callback, success and failure, and the
         `redirect_url` returned by the selection endpoints such as POST /v1/connect/facebook/select-page):
@@ -18958,7 +18962,7 @@ def register_generated_tools(mcp, _get_client):
           oauth_denied, invalid_callback, invalid_state, unsupported_platform, connection_failed,
           internal_error, token_exchange_failed, byok_config_error, personal_account_not_supported,
           missing_google_permissions, missing_tiktok_permissions, platform_requires_destination,
-          reconnect_account_mismatch, instagram_login_method_mismatch, invalid_request,
+          reconnect_account_mismatch, account_mismatch, instagram_login_method_mismatch, invalid_request,
           code_already_redeemed
 
         Access and limits:
@@ -19079,6 +19083,8 @@ def register_generated_tools(mcp, _get_client):
                 platform=platform,
                 profile_id=profile_id,
                 reconnect_account_id=reconnect_account_id,
+                expected_platform_user_id=expected_platform_user_id,
+                expected_username=expected_username,
                 redirect_url=redirect_url,
                 scopes=scopes,
                 headless=headless,
