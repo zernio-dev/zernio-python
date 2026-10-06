@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.219.0"
+  version: "1.220.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -2998,6 +2998,16 @@ components:
             them yourself or reuse them. `unconfirmedWrite` is set when Meta answered a
             create with a 5xx or dropped the connection and Zernio could not confirm
             whether the object exists: check that parent before creating it again.
+
+            When Meta refuses a write because the ad account's status is ineligible to manage
+            ads (Meta subcode 2490592 or 4841021, on the write itself or on a cleanup delete),
+            any Meta ads write (create, boost, CTWA, campaign / ad set / ad updates and status
+            changes) answers 422 `ad_account_unusable`. The message names the ad account when
+            known, links Meta's fix (https://www.facebook.com/business/help/422289316306981),
+            lists the objects left behind and ends with Meta's original error, which also stays
+            verbatim in `platformError`. Meta often reports the first failure under an
+            unrelated code (e.g. 1487194 on the creative), so branch on `code`, not on
+            `platformError`.
           properties:
             stage:
               type: string
@@ -61128,7 +61138,9 @@ paths:
             `ads_connection_required`; the message includes the actionable
             "TikTok Ads Manager → Assets → Identity" remediation step.
             Also returned as `idempotency_key_reused` when an Idempotency-Key
-            is reused with a different request body.
+            is reused with a different request body, and as `ad_account_unusable`
+            when Meta refuses writes on the ad account because its status is
+            ineligible to manage ads (see `ErrorResponse.details`).
 
   /v1/ads/campaigns/{campaignId}/asset-groups:
     get:
@@ -62741,7 +62753,10 @@ paths:
         '403':
           description: 'Ads access required. Legacy plans need the Ads add-on; included by default on usage-based plans. Also returned with code `ads_allowance_exceeded` when the team has no payment method on file and has reached the 500 free live ads: add a card to resume.'
         '422':
-          description: Platform ads connection required (TikTok Ads, X Ads) or missing linked account
+          description: |
+            Platform ads connection required (TikTok Ads, X Ads) or missing linked account.
+            Also returned with code `ad_account_unusable` when Meta refuses writes on the ad
+            account because its status is ineligible to manage ads (see `ErrorResponse.details`).
         '501':
           description: |
             The requested option is not supported on this platform: `validateOnly` outside Meta
@@ -67179,7 +67194,7 @@ paths:
         '404': { $ref: '#/components/responses/AccountUnavailable' }
 
         '422':
-          description: Page is not connected to a verified WhatsApp number.
+          description: 'Page is not connected to a verified WhatsApp number, or code `ad_account_unusable` when Meta refuses writes on the ad account (see `ErrorResponse.details`).'
         '502':
           description: |
             Meta rejected the request (e.g. WABA business verification
