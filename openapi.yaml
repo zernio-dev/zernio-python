@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.224.1"
+  version: "1.225.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -13212,7 +13212,7 @@ components:
           required: [text]
           properties:
             text: { type: string, minLength: 1, maxLength: 80 }
-            matchType: { type: string, enum: [exact, phrase, broad] }
+            matchType: { type: string, enum: [exact, phrase, broad], description: 'Defaults to broad. Accepted in any case (EXACT, Exact) and stored lowercase.' }
     ConversionEvent:
       type: object
       description: |
@@ -52939,7 +52939,7 @@ paths:
         - { name: campaignId, in: query, schema: { type: string }, description: Platform campaign ID }
         - { name: adSetId, in: query, schema: { type: string }, description: 'Platform ad group ID (Google ad group)' }
         - { name: status, in: query, schema: { type: string, enum: [active, paused] }, description: Keyword criterion status }
-        - { name: matchType, in: query, schema: { type: string, enum: [exact, phrase, broad, unknown] } }
+        - { name: matchType, in: query, schema: { type: string, enum: [exact, phrase, broad, unknown] }, description: 'Accepted in any case.' }
         - { name: negative, in: query, schema: { type: boolean }, description: 'true = negative keywords only, false = positive only. Omit for both.' }
         - { name: search, in: query, schema: { type: string, maxLength: 200 }, description: 'Case-insensitive substring match on the keyword text' }
       responses:
@@ -53887,8 +53887,13 @@ paths:
                     type: object
                     required: [platformCampaignId, platform]
                     properties:
-                      platformCampaignId: { type: string }
-                      platform: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai] }
+                      platformCampaignId: { type: string, description: "The campaign id on the ad platform (e.g. the numeric Google campaign id), not a Zernio id." }
+                      platform: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, googleads, tiktokads, linkedinads, pinterestads, xads, openaiads], description: "The ad platform, e.g. `google` for Google Ads. The ads connection slug (`googleads`, `tiktokads`, ...) is accepted as an alias. `metaads` is not: send `facebook` or `instagram`." }
+            example:
+              status: paused
+              campaigns:
+                - { platformCampaignId: '23456789012', platform: google }
+                - { platformCampaignId: '120210000000000000', platform: facebook }
       responses:
         '200':
           description: Per-campaign results
@@ -55859,7 +55864,7 @@ paths:
       - Ad Campaigns
       x-platforms:
       - google
-      description: "Removes the specified attachments only. Google assets cannot be deleted. Other attachments remain. assetResourceNames is retained for compatibility."
+      description: "Removes the specified attachments only. Google assets cannot be deleted. Other attachments remain. assetResourceNames is retained for compatibility. Fields go in the query string. A JSON body with the same fields is also accepted and, when sent, the query string is ignored."
       security:
       - bearerAuth: []
       parameters:
@@ -55870,47 +55875,11 @@ paths:
           type: string
           pattern: ^\d+$
         description: "Numeric Google platform id."
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-              - accountId
-              - assetResourceNames
-              - campaignAssetResourceNames
-              properties:
-                accountId:
-                  type: string
-                  pattern: ^[a-fA-F0-9]{24}$
-                  description: "Zernio Google Ads connection id."
-                adAccountId:
-                  type: string
-                  pattern: ^\d+$
-                  description: "Platform ad account ID (Google customer ID, digits only). Required when the connection has multiple customers."
-                customerId:
-                  type: string
-                  deprecated: true
-                  pattern: ^\d+$
-                  description: "Alias of adAccountId, kept for existing callers"
-                assetResourceNames:
-                  type: array
-                  items:
-                    type: string
-                  minItems: 1
-                campaignAssetResourceNames:
-                  type: array
-                  items:
-                    type: string
-                  minItems: 1
-            example:
-              accountId: 64b1f0c8a1b2c3d4e5f60718
-              adAccountId: '1234567890'
-              assetResourceNames:
-              - customers/1234567890/assets/123
-              campaignAssetResourceNames:
-              - customers/1234567890/campaignAssets/456~123~CALLOUT
+      - { name: accountId, in: query, required: true, schema: { type: string, pattern: '^[a-fA-F0-9]{24}$' }, description: 'Zernio Google Ads connection id.' }
+      - { name: adAccountId, in: query, schema: { type: string, pattern: '^\d+$' }, description: 'Platform ad account ID (Google customer ID, digits only). Required when the connection has multiple customers.' }
+      - { name: customerId, in: query, deprecated: true, schema: { type: string, pattern: '^\d+$' }, description: 'Alias of adAccountId, kept for existing callers' }
+      - { name: assetResourceNames, in: query, required: true, style: form, explode: true, schema: { type: array, minItems: 1, items: { type: string } }, description: 'Asset resource names, retained for compatibility. Repeat the parameter or pass a comma-separated list.' }
+      - { name: campaignAssetResourceNames, in: query, required: true, style: form, explode: true, schema: { type: array, minItems: 1, items: { type: string } }, description: 'campaign_asset resource names to remove, e.g. customers/1234567890/campaignAssets/456~123~CALLOUT. Repeat the parameter or pass a comma-separated list.' }
       responses:
         '409': { $ref: '#/components/responses/AccountConnectionRequired' }
         '200':
@@ -56254,7 +56223,7 @@ paths:
       - Ad Campaigns
       x-platforms:
       - google
-      description: "Removes the specified attachments only. Google assets cannot be deleted. Other attachments remain. assetResourceNames is retained for compatibility."
+      description: "Removes the specified attachments only. Google assets cannot be deleted. Other attachments remain. assetResourceNames is retained for compatibility. Fields go in the query string. A JSON body with the same fields is also accepted and, when sent, the query string is ignored."
       security:
       - bearerAuth: []
       parameters:
@@ -56265,47 +56234,11 @@ paths:
           type: string
           pattern: ^\d+$
         description: "Numeric Google platform id."
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-              - accountId
-              - assetResourceNames
-              - adGroupAssetResourceNames
-              properties:
-                accountId:
-                  type: string
-                  pattern: ^[a-fA-F0-9]{24}$
-                  description: "Zernio Google Ads connection id."
-                adAccountId:
-                  type: string
-                  pattern: ^\d+$
-                  description: "Platform ad account ID (Google customer ID, digits only). Required when the connection has multiple customers."
-                customerId:
-                  type: string
-                  deprecated: true
-                  pattern: ^\d+$
-                  description: "Alias of adAccountId, kept for existing callers"
-                assetResourceNames:
-                  type: array
-                  items:
-                    type: string
-                  minItems: 1
-                adGroupAssetResourceNames:
-                  type: array
-                  items:
-                    type: string
-                  minItems: 1
-            example:
-              accountId: 64b1f0c8a1b2c3d4e5f60718
-              customerId: '1234567890'
-              assetResourceNames:
-              - customers/1234567890/assets/123
-              adGroupAssetResourceNames:
-              - customers/1234567890/adGroupAssets/456~123~CALLOUT
+      - { name: accountId, in: query, required: true, schema: { type: string, pattern: '^[a-fA-F0-9]{24}$' }, description: 'Zernio Google Ads connection id.' }
+      - { name: adAccountId, in: query, schema: { type: string, pattern: '^\d+$' }, description: 'Platform ad account ID (Google customer ID, digits only). Required when the connection has multiple customers.' }
+      - { name: customerId, in: query, deprecated: true, schema: { type: string, pattern: '^\d+$' }, description: 'Alias of adAccountId, kept for existing callers' }
+      - { name: assetResourceNames, in: query, required: true, style: form, explode: true, schema: { type: array, minItems: 1, items: { type: string } }, description: 'Asset resource names, retained for compatibility. Repeat the parameter or pass a comma-separated list.' }
+      - { name: adGroupAssetResourceNames, in: query, required: true, style: form, explode: true, schema: { type: array, minItems: 1, items: { type: string } }, description: 'ad_group_asset resource names to remove, e.g. customers/1234567890/adGroupAssets/456~123~CALLOUT. Repeat the parameter or pass a comma-separated list.' }
       responses:
         '409': { $ref: '#/components/responses/AccountConnectionRequired' }
         '200':
@@ -57024,7 +56957,7 @@ paths:
       x-resource-group: "ads"
       operationId: getAdTrackingTags
       tags: ["Tracking Tags"]
-      x-platforms: ["meta"]
+      x-platforms: ["meta", "google", "linkedin"]
       summary: Get ad tracking tags
       description: |
         Unified read of the platform's native click-URL tracking params.
@@ -57064,7 +56997,7 @@ paths:
       x-resource-group: "ads"
       operationId: updateAdTrackingTags
       tags: ["Tracking Tags"]
-      x-platforms: ["meta"]
+      x-platforms: ["meta", "google", "linkedin"]
       summary: Set ad tracking tags
       description: |
         Unified update. Send only the fields for the ad's platform:
@@ -57076,6 +57009,8 @@ paths:
           / dark / asset_feed creatives whose object_story_spec Meta strips (those return 422 asking for
           `creative`).
         - Google: `trackingUrlTemplate` and/or `finalUrlSuffix` (full template strings; account quota applies).
+          Written at the CAMPAIGN level (the campaign's `tracking_url_template` / `final_url_suffix`), so
+          the change applies to every ad in the ad's campaign.
         - LinkedIn: `dynamicValueParameters` and/or `customValueParameters` (campaign-level Dynamic UTM).
       security:
         - bearerAuth: []
@@ -58483,16 +58418,18 @@ paths:
       tags: ["Ad Accounts"]
       x-platforms: ["google"]
       summary: Detach a Google Ads label
-      description: Removes the label from the given targets. Idempotent; a target without the label is counted in `unchanged`.
+      description: 'Removes the label from the given targets. Idempotent; a target without the label is counted in `unchanged`. Fields go in the query string. A JSON body with the same fields is also accepted and, when sent, the query string is ignored.'
       security:
         - bearerAuth: []
       parameters:
         - { name: labelId, in: path, required: true, schema: { type: string, pattern: '^\d+$' }, description: Google label id }
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema: { $ref: '#/components/schemas/GoogleAdLabelAssignments' }
+        - { name: accountId, in: query, required: true, schema: { type: string, pattern: '^[a-fA-F0-9]{24}$' }, description: 'Zernio Google Ads connection id.' }
+        - { name: adAccountId, in: query, schema: { type: string, pattern: '^\d+$' }, description: 'Platform ad account ID (Google customer ID, digits only). Required when the connection has multiple customers.' }
+        - { name: customerId, in: query, deprecated: true, schema: { type: string, pattern: '^\d+$' }, description: 'Alias of adAccountId, kept for existing callers' }
+        - { name: campaignIds, in: query, style: form, explode: true, schema: { type: array, minItems: 1, maxItems: 1000, items: { type: string, pattern: '^\d+$' } }, description: 'Google campaign ids. Repeat the parameter or pass a comma-separated list.' }
+        - { name: adSetIds, in: query, style: form, explode: true, schema: { type: array, minItems: 1, maxItems: 1000, items: { type: string, pattern: '^\d+$' } }, description: 'Google ad group ids. Repeat the parameter or pass a comma-separated list.' }
+        - { name: adIds, in: query, style: form, explode: true, schema: { type: array, minItems: 1, maxItems: 1000, items: { type: string, pattern: '^\d+~\d+$' } }, description: 'Google ad group ad ids, {adGroupId}~{adId}. Repeat the parameter or pass a comma-separated list.' }
+        - { name: keywordIds, in: query, style: form, explode: true, schema: { type: array, minItems: 1, maxItems: 1000, items: { type: string, pattern: '^\d+~\d+$' } }, description: 'Google keyword criterion ids, {adGroupId}~{criterionId}. Repeat the parameter or pass a comma-separated list.' }
       responses:
         '200':
           description: Label detached
@@ -60147,39 +60084,14 @@ paths:
       x-platforms:
       - google
       description: "Removes the customer_asset attachment only. The underlying shared asset and its campaign or ad-group\
-        \ attachments remain."
+        \ attachments remain. Fields go in the query string. A JSON body with the same fields is also accepted and, when sent, the query string is ignored."
       security:
       - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-              - accountId
-              - assetId
-              properties:
-                accountId:
-                  type: string
-                  pattern: ^[a-fA-F0-9]{24}$
-                  description: "Zernio Google Ads connection id."
-                adAccountId:
-                  type: string
-                  pattern: ^\d+$
-                  description: "Platform ad account ID (Google customer ID, digits only). Required when the connection has multiple customers."
-                customerId:
-                  type: string
-                  deprecated: true
-                  pattern: ^\d+$
-                  description: "Alias of adAccountId, kept for existing callers"
-                assetId:
-                  type: string
-                  pattern: ^\d+$
-            example:
-              accountId: 64b1f0c8a1b2c3d4e5f60718
-              adAccountId: '1234567890'
-              assetId: '123'
+      parameters:
+      - { name: accountId, in: query, required: true, schema: { type: string, pattern: '^[a-fA-F0-9]{24}$' }, description: 'Zernio Google Ads connection id.' }
+      - { name: adAccountId, in: query, schema: { type: string, pattern: '^\d+$' }, description: 'Platform ad account ID (Google customer ID, digits only). Required when the connection has multiple customers.' }
+      - { name: customerId, in: query, deprecated: true, schema: { type: string, pattern: '^\d+$' }, description: 'Alias of adAccountId, kept for existing callers' }
+      - { name: assetId, in: query, required: true, schema: { type: string, pattern: '^\d+$' }, description: 'Numeric Google Ads asset id.' }
       responses:
         '409': { $ref: '#/components/responses/AccountConnectionRequired' }
         '200':
@@ -60503,39 +60415,14 @@ paths:
       x-platforms:
       - google
       description: "Removes the customer_asset attachment only. The underlying shared asset and its campaign or ad-group\
-        \ attachments remain."
+        \ attachments remain. Fields go in the query string. A JSON body with the same fields is also accepted and, when sent, the query string is ignored."
       security:
       - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-              - accountId
-              - assetId
-              properties:
-                accountId:
-                  type: string
-                  pattern: ^[a-fA-F0-9]{24}$
-                  description: "Zernio Google Ads connection id."
-                adAccountId:
-                  type: string
-                  pattern: ^\d+$
-                  description: "Platform ad account ID (Google customer ID, digits only). Required when the connection has multiple customers."
-                customerId:
-                  type: string
-                  deprecated: true
-                  pattern: ^\d+$
-                  description: "Alias of adAccountId, kept for existing callers"
-                assetId:
-                  type: string
-                  pattern: ^\d+$
-            example:
-              accountId: 64b1f0c8a1b2c3d4e5f60718
-              adAccountId: '1234567890'
-              assetId: '123'
+      parameters:
+      - { name: accountId, in: query, required: true, schema: { type: string, pattern: '^[a-fA-F0-9]{24}$' }, description: 'Zernio Google Ads connection id.' }
+      - { name: adAccountId, in: query, schema: { type: string, pattern: '^\d+$' }, description: 'Platform ad account ID (Google customer ID, digits only). Required when the connection has multiple customers.' }
+      - { name: customerId, in: query, deprecated: true, schema: { type: string, pattern: '^\d+$' }, description: 'Alias of adAccountId, kept for existing callers' }
+      - { name: assetId, in: query, required: true, schema: { type: string, pattern: '^\d+$' }, description: 'Numeric Google Ads asset id.' }
       responses:
         '409': { $ref: '#/components/responses/AccountConnectionRequired' }
         '200':
@@ -60848,39 +60735,14 @@ paths:
       x-platforms:
       - google
       description: "Removes the customer_asset attachment only. The underlying shared asset and its campaign or ad-group\
-        \ attachments remain."
+        \ attachments remain. Fields go in the query string. A JSON body with the same fields is also accepted and, when sent, the query string is ignored."
       security:
       - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-              - accountId
-              - assetId
-              properties:
-                accountId:
-                  type: string
-                  pattern: ^[a-fA-F0-9]{24}$
-                  description: "Zernio Google Ads connection id."
-                adAccountId:
-                  type: string
-                  pattern: ^\d+$
-                  description: "Platform ad account ID (Google customer ID, digits only). Required when the connection has multiple customers."
-                customerId:
-                  type: string
-                  deprecated: true
-                  pattern: ^\d+$
-                  description: "Alias of adAccountId, kept for existing callers"
-                assetId:
-                  type: string
-                  pattern: ^\d+$
-            example:
-              accountId: 64b1f0c8a1b2c3d4e5f60718
-              adAccountId: '1234567890'
-              assetId: '123'
+      parameters:
+      - { name: accountId, in: query, required: true, schema: { type: string, pattern: '^[a-fA-F0-9]{24}$' }, description: 'Zernio Google Ads connection id.' }
+      - { name: adAccountId, in: query, schema: { type: string, pattern: '^\d+$' }, description: 'Platform ad account ID (Google customer ID, digits only). Required when the connection has multiple customers.' }
+      - { name: customerId, in: query, deprecated: true, schema: { type: string, pattern: '^\d+$' }, description: 'Alias of adAccountId, kept for existing callers' }
+      - { name: assetId, in: query, required: true, schema: { type: string, pattern: '^\d+$' }, description: 'Numeric Google Ads asset id.' }
       responses:
         '409': { $ref: '#/components/responses/AccountConnectionRequired' }
         '200':
@@ -62909,15 +62771,18 @@ paths:
                     budget and schedule are inherited (passing those fields
                     returns 400).
 
-                    On Google Ads the `adSetId` is the AD GROUP id. `goal` is
-                    still REQUIRED even though budget and targeting are
-                    inherited from the ad group. Send `campaignType: "search"`
-                    to attach into a Search ad group, including one created by
-                    `POST /v1/ads/ad-sets` (always SEARCH_STANDARD): without it
-                    the request is treated as Display and requires
-                    `images.landscape` + `images.square` + `businessName`, and
-                    the resulting display creative does not match a Search ad
-                    group.
+                    On Google Ads the `adSetId` is the AD GROUP id (numeric). `goal`
+                    is not required: the ad group keeps its campaign's bidding,
+                    budget and targeting. `campaignType` is read from the ad group's
+                    campaign (Search, Display or Demand Gen), so it can be omitted;
+                    a `campaignType` that contradicts the ad group returns 400, an
+                    ad group Google does not know in that customer returns 404, and
+                    any other campaign type returns 422. A Search ad needs
+                    `headline` + `body` + `linkUrl`; a Display ad also needs
+                    `images.landscape` + `images.square` + `businessName`. Google
+                    allows 3 responsive search ads per ad group: a fourth returns
+                    422 naming the limit (`RESPONSIVE_SEARCH_ADS_PER_AD_GROUP`) and
+                    the ad group.
                     `budgetAmount`/`budgetType` and bidding fields
                     (`bidStrategy`, `bidAmount`, `portfolioBidStrategyId`)
                     return 400 on this shape; the ad group already owns them.
@@ -63408,7 +63273,7 @@ paths:
                     `defaultVideoUrl` + `rules[].videoUrl` (optional `thumbnailUrl`/`defaultThumbnailUrl`
                     posters; Meta auto-generates when omitted). Exactly one catch-all default is required.
                 audienceId: { type: string, description: Custom audience ID for targeting }
-                campaignType: { type: string, enum: [display, search, pmax, demand_gen], default: display, description: "Google only. Performance Max requires assetGroup and Demand Gen requires demandGen; both are always created PAUSED." }
+                campaignType: { type: string, enum: [display, search, pmax, demand_gen], default: display, description: "Google only. Performance Max requires assetGroup and Demand Gen requires demandGen; both are always created PAUSED. With `adSetId` it defaults to the ad group's own campaign type instead of display." }
                 locationTargetingType:
                   allOf: [{ $ref: '#/components/schemas/GoogleLocationTargetingType' }]
                   description: "Google only (400 elsewhere). Set on the new campaign; a request that joins an existing campaign (`existingCampaignId` or `adSetId`) returns 400, change that campaign with PUT /v1/ads/campaigns/{campaignId}/targeting instead. `presence` reaches only people in or regularly in the targeted locations."
@@ -63424,8 +63289,10 @@ paths:
                   items:
                     oneOf:
                     - type: string
+                      minLength: 1
+                      maxLength: 30
                     - $ref: '#/components/schemas/GoogleRsaHeadline'
-                  description: "Google Search RSA only. Extra text assets as strings or objects with text and optional pinnedField. Existing string input remains supported. The effective create lists, including primary text and deduplication, must contain 3-15 headlines and 2-4 descriptions; excess entries return 400."
+                  description: "Google Search RSA only. Extra text assets as strings or objects with text and optional pinnedField. Existing string input remains supported. The effective create lists, including primary text and deduplication, must contain 3-15 headlines and 2-4 descriptions; excess entries return 400. Each headline is at most 30 characters (Google's limit): a longer one returns 400 naming the field and index (e.g. `additionalHeadlines[2]`), it is never truncated. On Search the same limit applies to `headline` and `longHeadline` (30) and to `body` (90)."
                   example:
                   - Schedule Your Posts
                   - text: Build With Zernio
@@ -63435,8 +63302,10 @@ paths:
                   items:
                     oneOf:
                     - type: string
+                      minLength: 1
+                      maxLength: 90
                     - $ref: '#/components/schemas/GoogleRsaDescription'
-                  description: "Google Search RSA only. Extra text assets as strings or objects with text and optional pinnedField. Existing string input remains supported. The effective create lists, including primary text and deduplication, must contain 3-15 headlines and 2-4 descriptions; excess entries return 400."
+                  description: "Google Search RSA only. Extra text assets as strings or objects with text and optional pinnedField. Existing string input remains supported. The effective create lists, including primary text and deduplication, must contain 3-15 headlines and 2-4 descriptions; excess entries return 400. Each description is at most 90 characters (Google's limit): a longer one returns 400 naming the field and index (e.g. `additionalDescriptions[2]`), it is never truncated. On Search the same limit applies to `headline` and `longHeadline` (30) and to `body` (90)."
                   example:
                   - Build social publishing into your application.
                   - text: Connect social accounts with one API.

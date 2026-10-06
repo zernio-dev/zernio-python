@@ -942,7 +942,7 @@ class AdCampaignsResource:
         customer_id: str | None = None,
     ) -> dict[str, Any]:
         """Remove campaign assets"""
-        payload = self._build_payload(
+        params = self._build_params(
             account_id=account_id,
             ad_account_id=ad_account_id,
             customer_id=customer_id,
@@ -950,7 +950,7 @@ class AdCampaignsResource:
             campaign_asset_resource_names=campaign_asset_resource_names,
         )
         return self._client._delete(
-            f"/v1/ads/campaigns/{campaign_id}/assets", data=payload
+            f"/v1/ads/campaigns/{campaign_id}/assets", params=params
         )
 
     def list_ad_group_assets(
@@ -1020,14 +1020,16 @@ class AdCampaignsResource:
         customer_id: str | None = None,
     ) -> dict[str, Any]:
         """Remove ad-group assets"""
-        payload = self._build_payload(
+        params = self._build_params(
             account_id=account_id,
             ad_account_id=ad_account_id,
             customer_id=customer_id,
             asset_resource_names=asset_resource_names,
             ad_group_asset_resource_names=ad_group_asset_resource_names,
         )
-        return self._client._delete(f"/v1/ads/ad-sets/{ad_set_id}/assets", data=payload)
+        return self._client._delete(
+            f"/v1/ads/ad-sets/{ad_set_id}/assets", params=params
+        )
 
     def get_ad_review(self, ad_id: str) -> dict[str, Any]:
         """Read the platform's review verdict for an ad"""
@@ -2449,7 +2451,7 @@ class AdCampaignsResource:
         customer_id: str | None = None,
     ) -> dict[str, Any]:
         """Remove campaign assets (async)"""
-        payload = self._build_payload(
+        params = self._build_params(
             account_id=account_id,
             ad_account_id=ad_account_id,
             customer_id=customer_id,
@@ -2457,7 +2459,7 @@ class AdCampaignsResource:
             campaign_asset_resource_names=campaign_asset_resource_names,
         )
         return await self._client._adelete(
-            f"/v1/ads/campaigns/{campaign_id}/assets", data=payload
+            f"/v1/ads/campaigns/{campaign_id}/assets", params=params
         )
 
     async def alist_ad_group_assets(
@@ -2533,7 +2535,7 @@ class AdCampaignsResource:
         customer_id: str | None = None,
     ) -> dict[str, Any]:
         """Remove ad-group assets (async)"""
-        payload = self._build_payload(
+        params = self._build_params(
             account_id=account_id,
             ad_account_id=ad_account_id,
             customer_id=customer_id,
@@ -2541,7 +2543,7 @@ class AdCampaignsResource:
             ad_group_asset_resource_names=ad_group_asset_resource_names,
         )
         return await self._client._adelete(
-            f"/v1/ads/ad-sets/{ad_set_id}/assets", data=payload
+            f"/v1/ads/ad-sets/{ad_set_id}/assets", params=params
         )
 
     async def aget_ad_review(self, ad_id: str) -> dict[str, Any]:

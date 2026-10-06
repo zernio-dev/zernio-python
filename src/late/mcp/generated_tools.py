@@ -2988,19 +2988,19 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Detach a Google Ads label
 
-        Removes the label from the given targets. Idempotent; a target without the label is counted in `unchanged`.
+        Removes the label from the given targets. Idempotent; a target without the label is counted in `unchanged`. Fields go in the query string. A JSON body with the same fields is also accepted and, when sent, the query string is ignored.
 
         Platforms: google
 
         Args:
             label_id: Google label id (required)
-            account_id: Zernio SocialAccount id (Google Ads) (required)
-            ad_account_id: Google customer id. Required when the connection has multiple customers.
-            customer_id: Alias of adAccountId
-            campaign_ids: Google campaign ids
-            ad_set_ids: Google ad group ids
-            ad_ids: Google ad group ad ids, {adGroupId}~{adId}
-            keyword_ids: Google keyword criterion ids, {adGroupId}~{criterionId}"""
+            account_id: Zernio Google Ads connection id. (required)
+            ad_account_id: Platform ad account ID (Google customer ID, digits only). Required when the connection has multiple customers.
+            customer_id: Alias of adAccountId, kept for existing callers
+            campaign_ids: Google campaign ids. Repeat the parameter or pass a comma-separated list.
+            ad_set_ids: Google ad group ids. Repeat the parameter or pass a comma-separated list.
+            ad_ids: Google ad group ad ids, {adGroupId}~{adId}. Repeat the parameter or pass a comma-separated list.
+            keyword_ids: Google keyword criterion ids, {adGroupId}~{criterionId}. Repeat the parameter or pass a comma-separated list."""
         client = _get_client()
         try:
             response = client.ad_accounts.detach_ad_label(
@@ -3771,7 +3771,7 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Remove account callout
 
-        Removes the customer_asset attachment only. The underlying shared asset and its campaign or ad-group attachments remain.
+        Removes the customer_asset attachment only. The underlying shared asset and its campaign or ad-group attachments remain. Fields go in the query string. A JSON body with the same fields is also accepted and, when sent, the query string is ignored.
 
         Platforms: google
 
@@ -3779,7 +3779,7 @@ def register_generated_tools(mcp, _get_client):
             account_id: Zernio Google Ads connection id. (required)
             ad_account_id: Platform ad account ID (Google customer ID, digits only). Required when the connection has multiple customers.
             customer_id: Alias of adAccountId, kept for existing callers
-            asset_id: (required)"""
+            asset_id: Numeric Google Ads asset id. (required)"""
         client = _get_client()
         try:
             response = client.ad_accounts.remove_account_callout(
@@ -3916,7 +3916,7 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Remove account sitelink
 
-        Removes the customer_asset attachment only. The underlying shared asset and its campaign or ad-group attachments remain.
+        Removes the customer_asset attachment only. The underlying shared asset and its campaign or ad-group attachments remain. Fields go in the query string. A JSON body with the same fields is also accepted and, when sent, the query string is ignored.
 
         Platforms: google
 
@@ -3924,7 +3924,7 @@ def register_generated_tools(mcp, _get_client):
             account_id: Zernio Google Ads connection id. (required)
             ad_account_id: Platform ad account ID (Google customer ID, digits only). Required when the connection has multiple customers.
             customer_id: Alias of adAccountId, kept for existing callers
-            asset_id: (required)"""
+            asset_id: Numeric Google Ads asset id. (required)"""
         client = _get_client()
         try:
             response = client.ad_accounts.remove_account_sitelink(
@@ -4061,7 +4061,7 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Remove account snippet
 
-        Removes the customer_asset attachment only. The underlying shared asset and its campaign or ad-group attachments remain.
+        Removes the customer_asset attachment only. The underlying shared asset and its campaign or ad-group attachments remain. Fields go in the query string. A JSON body with the same fields is also accepted and, when sent, the query string is ignored.
 
         Platforms: google
 
@@ -4069,7 +4069,7 @@ def register_generated_tools(mcp, _get_client):
             account_id: Zernio Google Ads connection id. (required)
             ad_account_id: Platform ad account ID (Google customer ID, digits only). Required when the connection has multiple customers.
             customer_id: Alias of adAccountId, kept for existing callers
-            asset_id: (required)"""
+            asset_id: Numeric Google Ads asset id. (required)"""
         client = _get_client()
         try:
             response = client.ad_accounts.remove_account_structured_snippet(
@@ -5426,7 +5426,7 @@ def register_generated_tools(mcp, _get_client):
             campaign_id: Platform campaign ID
             ad_set_id: Platform ad group ID (Google ad group)
             status: Keyword criterion status
-            match_type
+            match_type: Accepted in any case.
             negative: true = negative keywords only, false = positive only. Omit for both.
             search: Case-insensitive substring match on the keyword text"""
         client = _get_client()
@@ -6248,7 +6248,7 @@ def register_generated_tools(mcp, _get_client):
 
         Args:
             status: (required)
-            campaigns: Each item is an object with keys: platformCampaignId (string, required); platform (one of: facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai; required) (required)"""
+            campaigns: Each item is an object with keys: platformCampaignId (string, required) - The campaign id on the ad platform (e.g. the numeric Google campaign id), not a Zernio id.; platform (one of: facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, googleads, tiktokads, linkedinads, pinterestads, xads, openaiads; required) - The ad platform, e.g. `google` for Google Ads. The ads connection slug (`googleads`, `tiktokads`, ...) is accepted as an alias. `metaads` is not: send ... (required)"""
         client = _get_client()
         try:
             response = client.ad_campaigns.bulk_update_ad_campaign_status(
@@ -7406,7 +7406,7 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Remove campaign assets
 
-        Removes the specified attachments only. Google assets cannot be deleted. Other attachments remain. assetResourceNames is retained for compatibility.
+        Removes the specified attachments only. Google assets cannot be deleted. Other attachments remain. assetResourceNames is retained for compatibility. Fields go in the query string. A JSON body with the same fields is also accepted and, when sent, the query string is ignored.
 
         Platforms: google
 
@@ -7415,8 +7415,8 @@ def register_generated_tools(mcp, _get_client):
             account_id: Zernio Google Ads connection id. (required)
             ad_account_id: Platform ad account ID (Google customer ID, digits only). Required when the connection has multiple customers.
             customer_id: Alias of adAccountId, kept for existing callers
-            asset_resource_names: (required)
-            campaign_asset_resource_names: (required)"""
+            asset_resource_names: Asset resource names, retained for compatibility. Repeat the parameter or pass a comma-separated list. (required)
+            campaign_asset_resource_names: campaign_asset resource names to remove, e.g. customers/1234567890/campaignAssets/456~123~CALLOUT. Repeat the parameter or pass a comma-separated list. (required)"""
         client = _get_client()
         try:
             response = client.ad_campaigns.remove_campaign_assets(
@@ -7572,7 +7572,7 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Remove ad-group assets
 
-        Removes the specified attachments only. Google assets cannot be deleted. Other attachments remain. assetResourceNames is retained for compatibility.
+        Removes the specified attachments only. Google assets cannot be deleted. Other attachments remain. assetResourceNames is retained for compatibility. Fields go in the query string. A JSON body with the same fields is also accepted and, when sent, the query string is ignored.
 
         Platforms: google
 
@@ -7581,8 +7581,8 @@ def register_generated_tools(mcp, _get_client):
             account_id: Zernio Google Ads connection id. (required)
             ad_account_id: Platform ad account ID (Google customer ID, digits only). Required when the connection has multiple customers.
             customer_id: Alias of adAccountId, kept for existing callers
-            asset_resource_names: (required)
-            ad_group_asset_resource_names: (required)"""
+            asset_resource_names: Asset resource names, retained for compatibility. Repeat the parameter or pass a comma-separated list. (required)
+            ad_group_asset_resource_names: ad_group_asset resource names to remove, e.g. customers/1234567890/adGroupAssets/456~123~CALLOUT. Repeat the parameter or pass a comma-separated list. (required)"""
         client = _get_client()
         try:
             response = client.ad_campaigns.remove_ad_group_assets(
@@ -8662,15 +8662,18 @@ def register_generated_tools(mcp, _get_client):
         budget and schedule are inherited (passing those fields
         returns 400).
 
-        On Google Ads the `adSetId` is the AD GROUP id. `goal` is
-        still REQUIRED even though budget and targeting are
-        inherited from the ad group. Send `campaignType: "search"`
-        to attach into a Search ad group, including one created by
-        `POST /v1/ads/ad-sets` (always SEARCH_STANDARD): without it
-        the request is treated as Display and requires
-        `images.landscape` + `images.square` + `businessName`, and
-        the resulting display creative does not match a Search ad
-        group.
+        On Google Ads the `adSetId` is the AD GROUP id (numeric). `goal`
+        is not required: the ad group keeps its campaign's bidding,
+        budget and targeting. `campaignType` is read from the ad group's
+        campaign (Search, Display or Demand Gen), so it can be omitted;
+        a `campaignType` that contradicts the ad group returns 400, an
+        ad group Google does not know in that customer returns 404, and
+        any other campaign type returns 422. A Search ad needs
+        `headline` + `body` + `linkUrl`; a Display ad also needs
+        `images.landscape` + `images.square` + `businessName`. Google
+        allows 3 responsive search ads per ad group: a fourth returns
+        422 naming the limit (`RESPONSIVE_SEARCH_ADS_PER_AD_GROUP`) and
+        the ad group.
         `budgetAmount`/`budgetType` and bidding fields
         (`bidStrategy`, `bidAmount`, `portfolioBidStrategyId`)
         return 400 on this shape; the ad group already owns them.
@@ -8812,15 +8815,15 @@ def register_generated_tools(mcp, _get_client):
                 translations: Meta only. Multi-language ads (Dynamic Language Optimization): ONE ad carrying per-locale copy and, optionally, per-locale media: the "Languages" toggle in Ads Manager. Keeps social proof (likes/comments/shares) on a SINGLE post instead of splitting it across one ad per language. The ad's top-level copy is the DEFAULT shown to every locale you do NOT list, and it counts as one of the language variants. IMPORTANT, and the opposite of what you might expect: text does NOT inherit. Every entry must carry its own `headline`, `body` AND `description`, and all of them must be DISTINCT from each other and from the ad's top-level copy. Meta deduplicates identical strings inside the asset feed, so two locales sharing a string collapse into one asset and the create fails with a misleading "Too few ... texts provided in asset creation" (subcode 1885817) that names a field which is actually present. We validate this before calling Meta and return a 400 naming the offending locale and field. `description` is therefore effectively required on the ad whenever `translations` is present, even though it is optional otherwise. Do NOT list `defaultLocale` inside `translations`: Meta rejects the duplicate with "The language asset feed includes an unsupported targeting field" (subcode 1885985). Media DOES inherit and is uploaded once when shared, and `linkUrl` inherits too: each locale may name its own landing page and unlisted locales fall back to the ad's top-level `linkUrl`. Meta enforces Dynamic Creative image dimensions on language feeds, so an `imageUrl` that works on a normal ad may be rejected with "The following images have invalid dimensions for Dynamic Creative" (subcode 1885558). Video is not affected. Mutually exclusive with `dynamicCreative`, `placementAssets`, `carouselCards`, `existingCreativeId` and `creatives[]`. Meta allows one `asset_feed_spec` shape per creative. Each item is an object with keys: locale (string, required) - Language code, resolved to Meta's numeric locale id. Bare codes target the '(All)' umbrella (`es` = every Spanish variant); region-qualified codes target the ...; headline (string, required) - Headline for this language. REQUIRED, and must differ from every other locale and from the ad's top-level headline.; body (string, required) - Primary text for this language. REQUIRED, and must differ from every other locale and from the ad's top-level body.; description (string, required) - Link description for this language. REQUIRED, and must differ from every other locale and from the ad's top-level description.; linkUrl (string) - Destination URL for this language. Inherits the ad's top-level `linkUrl` when omitted, and requires it to be present (400 otherwise): the top-level URL is the ...; imageUrl (string) - Image for this language. Inherits the ad's `imageUrl` when omitted. The feed is all-image OR all-video.; videoUrl (string) - Video for this language. Inherits the ad's `video.url` when omitted. The feed is all-image OR all-video.; thumbnailUrl (string) - Poster frame for this language's video.
                 placement_assets: Meta only. Placement asset customization: pin a SPECIFIC asset (image OR video) to each placement group on a SINGLE ad (e.g. a 9:16 on Stories/Reels and a 4:5 on Feed). The same thing Meta Ads Manager produces with "different creative per placement", mapped to the creative's `asset_feed_spec` + `asset_customization_rules`. Deterministic pinning, NOT the auto-optimizing pool of `dynamicCreative` (mutually exclusive). Works on the legacy single shape AND the attach shape (`adSetId` + placementAssets adds one placement-customized ad to an existing ad set, the way to build N per-placement ads sharing one ad set: create the first normally, attach the rest). Cannot be combined with `creatives[]` or top-level `bodies`/`headlines`/`descriptions` arrays. Each rule can override `headline`, `body` and `description` with one string per field. Omitted fields and unmatched placements use the top-level copy; `linkUrl` and `callToAction` remain shared. Zernio emits labelled text with `optimization_type: PLACEMENT`. Multiple text options rotating within a placement are not supported by this input. Each rule's `placements` accepts the same fields as the top-level `placements` object; Meta enforces co-selection rules and returns an actionable error. Meta controls text rendering by placement and format. Validation accepts these fields but does not prove that every field appears in delivery. Preview the ad; put copy that must always be visible into the image or video itself. `validateOnly: true` supports all-image placementAssets without uploading or creating anything. Video placement validation remains unsupported because it requires uploads. A block is all-image OR all-video, never mixed (Meta's asset_feed_spec carries one ad format). Image mode: `defaultImageUrl` + `rules[].imageUrl`. Video mode: `defaultVideoUrl` + `rules[].videoUrl` (optional `thumbnailUrl`/`defaultThumbnailUrl` posters; Meta auto-generates when omitted). Exactly one catch-all default is required. Object with keys: defaultImageUrl (string) - Image mode. Catch-all image for any placement no rule matches. Required in image mode (Meta mandates a default rule).; defaultVideoUrl (string) - Video mode. Catch-all video for any placement no rule matches. Required in video mode.; defaultThumbnailUrl (string) - Video mode (optional). Poster image for the default video; Meta auto-generates one when omitted.; rules (list of objects with keys imageUrl, videoUrl, thumbnailUrl, headline, body, description, placements, required) - One entry per placement group you want to pin a specific asset to.
                 audience_id: Custom audience ID for targeting
-                campaign_type: Google only. Performance Max requires assetGroup and Demand Gen requires demandGen; both are always created PAUSED.
+                campaign_type: Google only. Performance Max requires assetGroup and Demand Gen requires demandGen; both are always created PAUSED. With `adSetId` it defaults to the ad group's own campaign type instead of display.
                 location_targeting_type: Google only (400 elsewhere). Set on the new campaign; a request that joins an existing campaign (`existingCampaignId` or `adSetId`) returns 400, change that campaign with PUT /v1/ads/campaigns/{campaignId}/targeting instead. `presence` reaches only people in or regularly in the targeted locations.
                 asset_group: Object with keys: name (string) - Defaults to the request name.; finalUrl (string, required) - Required destination URL.; headlines (list of string, required); longHeadline (string, required); descriptions (list of string, required) - At least one description must be 60 characters or fewer.; businessName (string, required); images (object with keys landscape, square, logo, required) - Public HTTP(S) image URLs. GIF, JPEG or PNG, at most 5120 KB per image. Google validates dimensions and aspect ratios.; youtubeVideoId (string) - Optional existing YouTube video id. Google can generate video when omitted. Video uploads and arbitrary video URLs are not supported.
                 demand_gen: Object with keys: adGroupName (string) - Defaults to the ad name.; finalUrl (string, required); businessName (string, required); headlines (list of string, required) - Distinct texts. A carousel ad takes exactly one.; longHeadlines (list of string) - Video ads only, and required there.; descriptions (list of string, required) - A carousel ad takes exactly one.; callToAction (string) - Image and carousel ads only. Call to action text such as 'Learn more'; Google picks one when omitted.; images (object with keys landscape, square, portrait, logo, required) - Public image URLs. An image ad needs landscape or square; video and carousel ads take only one logo (carousel images go on each card).; youtubeVideoIds (list of string) - Makes the ad a video responsive ad.; carouselCards (list of objects with keys headline, finalUrl, callToAction, images) - Makes the ad a carousel ad. Each card needs its own image (no two cards may share one); use the same image shape on every card. Card images are uploaded to ...; channels (list of string) - Channel controls on the ad group. Only the listed channels serve; omit to serve on all of them.; audience (object with keys userLists, userInterests, customAudiences, ageRanges, genders); audienceId (string) - Attach an existing Google Audience by numeric id instead of audience.
                 keywords: Google Search only. Keywords on the new ad group; entries are strings (BROAD) or { text, matchType }. Editable later via PUT /v1/ads/{adId} targeting.keywords.
                 negative_keywords: Google Search only; other platforms return 400. Ad-group-level negative keywords on the new ad group. Editable later via PUT /v1/ads/{adId} targeting.negativeKeywords.
                 campaign_negative_keywords: Google Search only; other platforms return 400. Campaign-level negative keywords (campaign_criterion.negative), created alongside the ad group. Editable later via PUT /v1/ads/campaigns/{campaignId}/negative-keywords.
-                additional_headlines: Google Search RSA only. Extra text assets as strings or objects with text and optional pinnedField. Existing string input remains supported. The effective create lists, including primary text and deduplication, must contain 3-15 headlines and 2-4 descriptions; excess entries return 400.
-                additional_descriptions: Google Search RSA only. Extra text assets as strings or objects with text and optional pinnedField. Existing string input remains supported. The effective create lists, including primary text and deduplication, must contain 3-15 headlines and 2-4 descriptions; excess entries return 400.
+                additional_headlines: Google Search RSA only. Extra text assets as strings or objects with text and optional pinnedField. Existing string input remains supported. The effective create lists, including primary text and deduplication, must contain 3-15 headlines and 2-4 descriptions; excess entries return 400. Each headline is at most 30 characters (Google's limit): a longer one returns 400 naming the field and index (e.g. `additionalHeadlines[2]`), it is never truncated. On Search the same limit applies to `headline` and `longHeadline` (30) and to `body` (90).
+                additional_descriptions: Google Search RSA only. Extra text assets as strings or objects with text and optional pinnedField. Existing string input remains supported. The effective create lists, including primary text and deduplication, must contain 3-15 headlines and 2-4 descriptions; excess entries return 400. Each description is at most 90 characters (Google's limit): a longer one returns 400 naming the field and index (e.g. `additionalDescriptions[2]`), it is never truncated. On Search the same limit applies to `headline` and `longHeadline` (30) and to `body` (90).
                 sitelinks: Google Search only. Sitelink assets to create and attach at the campaign level. Each entry becomes an Asset (with sitelink_asset + Asset.final_urls) plus a CampaignAsset link (field_type SITELINK). Approval is async: Google reviews assets after creation; poll asset.policy_summary later to read the verdict. Google requires at least two sitelinks to surface them on an ad; four or more is Google's own recommendation for maximum visibility. The response's creative.sitelinks[] echoes each input plus its Google resourceName. Each item is an object with keys: text (string, required) - The clickable link text shown under the ad. 25-char cap comes from Google.; linkUrl (string, required) - Final URL the sitelink navigates to.; description1 (string) - First description line under the link text (optional). 35-char cap.; description2 (string) - Second description line (optional; usually paired with description1).
                 callouts: Google Search only. Short callout texts (max 25 chars each) that appear as
         non-clickable annotations under the ad, e.g. "Free shipping", "24/7 support".
@@ -32247,7 +32250,7 @@ def register_generated_tools(mcp, _get_client):
         `GET /v1/accounts/{accountId}/tracking-tags?adAccountId=act_...` (Meta Pixels, with `kind`
         and `ownerAdAccountId`) or `GET /v1/accounts/{accountId}/conversion-destinations`.
 
-        Platforms: meta
+        Platforms: meta, google, linkedin
 
         Args:
             ad_id: Ad id (hex _id, platformAdId, or effective story/media id). (required)"""
@@ -32286,9 +32289,11 @@ def register_generated_tools(mcp, _get_client):
           / dark / asset_feed creatives whose object_story_spec Meta strips (those return 422 asking for
           `creative`).
         - Google: `trackingUrlTemplate` and/or `finalUrlSuffix` (full template strings; account quota applies).
+          Written at the CAMPAIGN level (the campaign's `tracking_url_template` / `final_url_suffix`), so
+          the change applies to every ad in the ad's campaign.
         - LinkedIn: `dynamicValueParameters` and/or `customValueParameters` (campaign-level Dynamic UTM).
 
-        Platforms: meta
+        Platforms: meta, google, linkedin
 
         Args:
             ad_id: (required)
