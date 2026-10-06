@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.220.2"
+  version: "1.220.3"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -37588,7 +37588,7 @@ paths:
         '403':
           description: Inbox addon required, or the account is missing the platform permission
         '409':
-          description: 'LinkedIn only: the account already holds a different reaction on this target (code invalid_resource_state); remove it before creating another.'
+          description: 'LinkedIn only: the account already holds a reaction on this target, either of a different type or one LinkedIn does not let this account read (code invalid_resource_state); remove it before creating another.'
     delete:
       x-resource-group: "engagement"
       operationId: unlikeInboxComment
@@ -37719,7 +37719,7 @@ paths:
         '404':
           description: Account or post not found
         '409':
-          description: 'LinkedIn only: the account already holds a different reaction on this target (code invalid_resource_state); remove it before creating another.'
+          description: 'LinkedIn only: the account already holds a reaction on this target, either of a different type or one LinkedIn does not let this account read (code invalid_resource_state); remove it before creating another.'
     delete:
       x-resource-group: "messages"
       operationId: unlikePost
