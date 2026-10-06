@@ -384,6 +384,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `connect.connect_slack_channel()` | Connect a Slack channel |
 | `connect.connect_whats_app_credentials()` | Connect WhatsApp via credentials |
 | `connect.connect_whats_app_embedded_signup()` | Connect WhatsApp from Embedded Signup |
+| `connect.connect_whop_ads_credentials()` | Connect a Whop account |
 | `connect.connect_word_press_with_application_password()` | Connect self-hosted WordPress with an application password |
 | `connect.handle_o_auth_callback()` | Complete OAuth callback |
 | `connect.initiate_telegram_connect()` | Connect Telegram directly |

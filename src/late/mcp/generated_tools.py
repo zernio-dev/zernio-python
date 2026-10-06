@@ -867,6 +867,7 @@ def register_generated_tools(mcp, _get_client):
             "xads",
             "googleads",
             "openaiads",
+            "whopads",
         ]
         | None = None,
         status: Literal["healthy", "warning", "error"] | None = None,
@@ -20261,6 +20262,48 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="Connect a Whop account",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def connect_whop_ads_credentials(
+        api_key: str,
+        profile_id: str,
+        state: str | None = None,
+        redirect_url: str | None = None,
+    ) -> str:
+        """Connect a Whop account
+
+        Connect a Whop account with an Account API key from the Whop dashboard (Developer >
+        API keys). The key only has to be able to read its own account: Zernio calls
+        `GET /accounts/me` once to learn the account id (`biz_...`) and name, then stores the key.
+
+        What the connection unlocks today is the Whop Pixel through the tracking-tags API: the
+        account id is the pixel, so `GET /v1/accounts/{accountId}/tracking-tags` lists it and
+        `POST .../tracking-tags/{biz_...}/install` puts it on a Shopify store or WordPress site.
+        Whop campaigns are not managed through Zernio. One Whop account per profile.
+
+        Args:
+            api_key: Account API key from the Whop dashboard. (required)
+            profile_id: Your Zernio profile ID (required)
+            state: Optional state passthrough for the connect flow.
+            redirect_url: Optional URL to redirect to after successful connection, echoed back as redirectUrl."""
+        client = _get_client()
+        try:
+            response = client.connect.connect_whop_ads_credentials(
+                api_key=api_key,
+                profile_id=profile_id,
+                state=state,
+                redirect_url=redirect_url,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="Connect WhatsApp via credentials",
             readOnlyHint=False,
             destructiveHint=True,
@@ -33160,7 +33203,7 @@ def register_generated_tools(mcp, _get_client):
 
         OpenAI Ads on Shopify: each event is sent through ...
 
-        Platforms: meta, tiktok, google, x, openai, linkedin, pinterest, shopify, wordpress
+        Platforms: meta, tiktok, google, x, openai, linkedin, pinterest, whop, shopify, wordpress
 
         Args:
             account_id: (required)

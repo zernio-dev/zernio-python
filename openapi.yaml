@@ -9659,7 +9659,7 @@ components:
         _id: { type: string }
         platform:
           type: string
-          enum: [tiktok, instagram, facebook, youtube, linkedin, twitter, threads, pinterest, reddit, bluesky, googlebusiness, telegram, snapchat, discord, slack, whatsapp, shopify, wordpress, linkedinads, metaads, pinterestads, tiktokads, xads, googleads, openaiads, sms, phone, rcs]
+          enum: [tiktok, instagram, facebook, youtube, linkedin, twitter, threads, pinterest, reddit, bluesky, googlebusiness, telegram, snapchat, discord, slack, whatsapp, shopify, wordpress, linkedinads, metaads, pinterestads, tiktokads, xads, googleads, openaiads, sms, phone, rcs, whopads]
         profileId:
           oneOf:
             - type: string
@@ -14313,7 +14313,7 @@ components:
           description: 'Platforms where each conversion is its own object: the tag''s conversion events, with the id a site sends for each.'
           items: { $ref: '#/components/schemas/TrackingTagEvent' }
         name: { type: string }
-        platform: { type: string, enum: [metaads, openaiads, tiktokads, googleads, xads, linkedinads, pinterestads] }
+        platform: { type: string, enum: [metaads, openaiads, tiktokads, googleads, xads, linkedinads, pinterestads, whopads] }
         kind:
           type: string
           enum: [pixel, tag, insight_tag]
@@ -23348,7 +23348,7 @@ paths:
           description: Filter by platform
           schema:
             type: string
-            enum: [facebook, instagram, linkedin, twitter, tiktok, youtube, threads, pinterest, reddit, bluesky, googlebusiness, telegram, snapchat, discord, slack, whatsapp, shopify, wordpress, linkedinads, metaads, pinterestads, tiktokads, xads, googleads, openaiads]
+            enum: [facebook, instagram, linkedin, twitter, tiktok, youtube, threads, pinterest, reddit, bluesky, googlebusiness, telegram, snapchat, discord, slack, whatsapp, shopify, wordpress, linkedinads, metaads, pinterestads, tiktokads, xads, googleads, openaiads, whopads]
         - name: status
           in: query
           description: Filter by health status
@@ -29071,6 +29071,70 @@ paths:
         '402': { $ref: '#/components/responses/PaymentRequired' }
         '403':
           description: Ads add-on required.
+
+  /v1/connect/whop-ads/credentials:
+    post:
+      x-resource-group: "accounts"
+      operationId: connectWhopAdsCredentials
+      tags: [Connect]
+      summary: Connect a Whop account
+      description: |
+        Connect a Whop account with an Account API key from the Whop dashboard (Developer >
+        API keys). The key only has to be able to read its own account: Zernio calls
+        `GET /accounts/me` once to learn the account id (`biz_...`) and name, then stores the key.
+
+        What the connection unlocks today is the Whop Pixel through the tracking-tags API: the
+        account id is the pixel, so `GET /v1/accounts/{accountId}/tracking-tags` lists it and
+        `POST .../tracking-tags/{biz_...}/install` puts it on a Shopify store or WordPress site.
+        Whop campaigns are not managed through Zernio. One Whop account per profile.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [apiKey, profileId]
+              properties:
+                apiKey:
+                  type: string
+                  description: Account API key from the Whop dashboard.
+                profileId:
+                  type: string
+                  description: Your Zernio profile ID
+                state:
+                  type: string
+                  description: Optional state passthrough for the connect flow.
+                redirect_url:
+                  type: string
+                  format: uri
+                  description: 'Optional URL to redirect to after successful connection, echoed back as redirectUrl.'
+            example:
+              apiKey: "whop_xxxxxxxxxxxxxxxxxxxx"
+              profileId: "6507a1b2c3d4e5f6a7b8c9d0"
+      responses:
+        '200':
+          description: Whop account connected
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  accountId: { type: string, description: 'The Zernio account id (platform `whopads`) to use as `{accountId}` on the tracking-tags routes.' }
+                  whopAccountId: { type: string, description: 'The Whop account id (`biz_...`), which is also the tracking tag id.' }
+                  accountName: { type: string }
+                  redirectUrl: { type: string }
+              example:
+                accountId: "6507a1b2c3d4e5f6a7b8c9d0"
+                whopAccountId: "biz_Ab3dEf9hJk2mN"
+                accountName: "Shine Time Auto Detailing"
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401':
+          description: "Unauthorized, or the API key could not read its Whop account (code invalid_credentials)."
+        '402': { $ref: '#/components/responses/PaymentRequired' }
+        '403':
+          description: Ads add-on required.
+        '409':
+          description: The profile already has a different Whop account connected (code PROFILE_PLATFORM_CONFLICT).
 
   /v1/connect/whatsapp/credentials:
     post:
@@ -69768,7 +69832,7 @@ paths:
               schema:
                 type: object
                 properties:
-                  platform: { type: string, enum: [metaads, openaiads, tiktokads, googleads, xads, linkedinads, pinterestads] }
+                  platform: { type: string, enum: [metaads, openaiads, tiktokads, googleads, xads, linkedinads, pinterestads, whopads] }
                   tags:
                     type: array
                     items: { $ref: '#/components/schemas/TrackingTag' }
@@ -69877,7 +69941,7 @@ paths:
               schema:
                 type: object
                 properties:
-                  platform: { type: string, enum: [metaads, openaiads, tiktokads, googleads, xads, linkedinads, pinterestads] }
+                  platform: { type: string, enum: [metaads, openaiads, tiktokads, googleads, xads, linkedinads, pinterestads, whopads] }
                   tag: { $ref: '#/components/schemas/TrackingTag' }
         '400': { description: 'Invalid body, invalid `adAccountId`, over the per-business pixel cap, or ad account not in a Business Manager.' }
         '401': { $ref: '#/components/responses/Unauthorized' }
@@ -69943,7 +70007,7 @@ paths:
               schema:
                 type: object
                 properties:
-                  platform: { type: string, enum: [metaads, tiktokads, googleads, xads, openaiads, linkedinads, pinterestads] }
+                  platform: { type: string, enum: [metaads, tiktokads, googleads, xads, openaiads, linkedinads, pinterestads, whopads] }
                   tag: { $ref: '#/components/schemas/TrackingTag' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { description: 'Ads access required (Ads add-on on legacy plans, included on usage-based plans), or the Meta token lacks ads permissions (reconnect required).' }
@@ -70052,7 +70116,7 @@ paths:
               schema:
                 type: object
                 properties:
-                  platform: { type: string, enum: [metaads, tiktokads, googleads, xads, openaiads, linkedinads, pinterestads] }
+                  platform: { type: string, enum: [metaads, tiktokads, googleads, xads, openaiads, linkedinads, pinterestads, whopads] }
                   tag: { $ref: '#/components/schemas/TrackingTag' }
         '400': { description: Invalid body (e.g. no fields supplied) or Meta validation failure. }
         '401': { $ref: '#/components/responses/Unauthorized' }
@@ -70197,7 +70261,7 @@ paths:
       x-resource-group: "ads"
       operationId: installTrackingTagOnStore
       tags: ["Tracking Tags"]
-      x-platforms: ["meta", "tiktok", "google", "x", "openai", "linkedin", "pinterest", "shopify", "wordpress"]
+      x-platforms: ["meta", "tiktok", "google", "x", "openai", "linkedin", "pinterest", "whop", "shopify", "wordpress"]
       summary: Install on a Shopify store or WordPress site
       description: |
         Puts the Meta pixel on a connected Shopify store's storefront and checkout through
@@ -70224,6 +70288,16 @@ paths:
         every event. The image tag cannot carry the `__obref` browser id (OpenAI rejects the
         parameter), and the search text is never sent. On WordPress the widget holds the
         official `oaiq` base code and a `page_viewed` call.
+
+        Whop (`whopads`, `tagId` = the Whop account id `biz_...`) on Shopify: events are posted
+        to Whop's conversions endpoint (`https://t.whop.tw/conversions`) the way Whop's own
+        Shopify pixel does: `page`, `view_content`, `add_to_cart`, `purchase` (with value and
+        currency) and the custom `shopify_search_submitted`, `shopify_checkout_started` and
+        `shopify_payment_info_submitted`, each with Whop's `shopify:<event>:<id>` event id so a
+        store that also runs Whop's own pixel reports each event once. The visitor id is kept
+        in Whop's `_wuid` cookie for two years. Whop records purchases itself only for checkouts
+        on Whop, so Shopify orders are reported here. On WordPress the widget holds the official
+        snippet with `whop.setScope` and `whop.track("page")`.
 
         Stores connected before pixel support must re-approve the Zernio app:
         the call then answers 409 `reconnect_required` with `details.authUrl` to send the
@@ -70292,7 +70366,7 @@ paths:
               schema:
                 type: object
                 properties:
-                  platform: { type: string, enum: [metaads, tiktokads, googleads, xads, openaiads, linkedinads, pinterestads] }
+                  platform: { type: string, enum: [metaads, tiktokads, googleads, xads, openaiads, linkedinads, pinterestads, whopads] }
                   install:
                     allOf:
                       - $ref: '#/components/schemas/StorePixelInstall'
@@ -70357,7 +70431,7 @@ paths:
               schema:
                 type: object
                 properties:
-                  platform: { type: string, enum: [metaads, tiktokads, googleads, xads, openaiads, linkedinads, pinterestads] }
+                  platform: { type: string, enum: [metaads, tiktokads, googleads, xads, openaiads, linkedinads, pinterestads, whopads] }
                   install:
                     allOf:
                       - $ref: '#/components/schemas/StorePixelInstall'
@@ -70412,7 +70486,7 @@ paths:
               schema:
                 type: object
                 properties:
-                  platform: { type: string, enum: [metaads, tiktokads, googleads, xads, openaiads, linkedinads, pinterestads] }
+                  platform: { type: string, enum: [metaads, tiktokads, googleads, xads, openaiads, linkedinads, pinterestads, whopads] }
                   install:
                     allOf:
                       - $ref: '#/components/schemas/StorePixelInstall'
@@ -71008,7 +71082,7 @@ paths:
               schema:
                 type: object
                 properties:
-                  platform: { type: string, enum: [metaads, tiktokads, googleads, xads, openaiads, linkedinads, pinterestads] }
+                  platform: { type: string, enum: [metaads, tiktokads, googleads, xads, openaiads, linkedinads, pinterestads, whopads] }
                   stats:
                     type: object
                     properties:
