@@ -152,6 +152,7 @@ class MessagingAdsResource:
         destination: str | None = None,
         destinations: list[str] | None = None,
         placement_assets: Any | None = None,
+        workflow_id: str | None = None,
         validate_only: bool | None = None,
     ) -> dict[str, Any]:
         """Create messaging ad"""
@@ -231,6 +232,7 @@ class MessagingAdsResource:
             destination=destination,
             destinations=destinations,
             placement_assets=placement_assets,
+            workflow_id=workflow_id,
             validate_only=validate_only,
         )
         headers: dict[str, str] = {}
@@ -635,6 +637,7 @@ class MessagingAdsResource:
         destination: str | None = None,
         destinations: list[str] | None = None,
         placement_assets: Any | None = None,
+        workflow_id: str | None = None,
         validate_only: bool | None = None,
     ) -> dict[str, Any]:
         """Create messaging ad (async)"""
@@ -714,6 +717,7 @@ class MessagingAdsResource:
             destination=destination,
             destinations=destinations,
             placement_assets=placement_assets,
+            workflow_id=workflow_id,
             validate_only=validate_only,
         )
         headers: dict[str, str] = {}

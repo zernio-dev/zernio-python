@@ -74,13 +74,13 @@ class AccountSettingsResource:
         return result
 
     def get_messenger_menu(self, account_id: str) -> dict[str, Any]:
-        """Get FB persistent menu"""
+        """Get persistent menu"""
         return self._client._get(f"/v1/accounts/{account_id}/messenger-menu")
 
     def set_messenger_menu(
         self, account_id: str, persistent_menu: list[dict[str, Any]]
     ) -> dict[str, Any]:
-        """Set FB persistent menu"""
+        """Set persistent menu"""
         payload = self._build_payload(
             persistent_menu=persistent_menu,
         )
@@ -89,7 +89,7 @@ class AccountSettingsResource:
         )
 
     def delete_messenger_menu(self, account_id: str) -> dict[str, Any]:
-        """Delete FB persistent menu"""
+        """Delete persistent menu"""
         return self._client._delete(f"/v1/accounts/{account_id}/messenger-menu")
 
     def get_messenger_get_started(self, account_id: str) -> dict[str, Any]:
@@ -110,6 +110,44 @@ class AccountSettingsResource:
     def delete_messenger_get_started(self, account_id: str) -> dict[str, Any]:
         """Delete FB Get Started button"""
         return self._client._delete(f"/v1/accounts/{account_id}/messenger-get-started")
+
+    def get_messenger_greeting(self, account_id: str) -> dict[str, Any]:
+        """Get FB greeting text"""
+        return self._client._get(f"/v1/accounts/{account_id}/messenger-greeting")
+
+    def set_messenger_greeting(
+        self, account_id: str, greeting: list[Any]
+    ) -> dict[str, Any]:
+        """Set FB greeting text"""
+        payload = self._build_payload(
+            greeting=greeting,
+        )
+        return self._client._put(
+            f"/v1/accounts/{account_id}/messenger-greeting", data=payload
+        )
+
+    def delete_messenger_greeting(self, account_id: str) -> dict[str, Any]:
+        """Delete FB greeting text"""
+        return self._client._delete(f"/v1/accounts/{account_id}/messenger-greeting")
+
+    def get_messenger_ice_breakers(self, account_id: str) -> dict[str, Any]:
+        """Get FB ice breakers"""
+        return self._client._get(f"/v1/accounts/{account_id}/messenger-ice-breakers")
+
+    def set_messenger_ice_breakers(
+        self, account_id: str, ice_breakers: list[Any]
+    ) -> dict[str, Any]:
+        """Set FB ice breakers"""
+        payload = self._build_payload(
+            ice_breakers=ice_breakers,
+        )
+        return self._client._put(
+            f"/v1/accounts/{account_id}/messenger-ice-breakers", data=payload
+        )
+
+    def delete_messenger_ice_breakers(self, account_id: str) -> dict[str, Any]:
+        """Delete FB ice breakers"""
+        return self._client._delete(f"/v1/accounts/{account_id}/messenger-ice-breakers")
 
     def get_instagram_ice_breakers(self, account_id: str) -> dict[str, Any]:
         """Get IG ice breakers"""
@@ -150,13 +188,13 @@ class AccountSettingsResource:
         return self._client._delete(f"/v1/accounts/{account_id}/telegram-commands")
 
     async def aget_messenger_menu(self, account_id: str) -> dict[str, Any]:
-        """Get FB persistent menu (async)"""
+        """Get persistent menu (async)"""
         return await self._client._aget(f"/v1/accounts/{account_id}/messenger-menu")
 
     async def aset_messenger_menu(
         self, account_id: str, persistent_menu: list[dict[str, Any]]
     ) -> dict[str, Any]:
-        """Set FB persistent menu (async)"""
+        """Set persistent menu (async)"""
         payload = self._build_payload(
             persistent_menu=persistent_menu,
         )
@@ -165,7 +203,7 @@ class AccountSettingsResource:
         )
 
     async def adelete_messenger_menu(self, account_id: str) -> dict[str, Any]:
-        """Delete FB persistent menu (async)"""
+        """Delete persistent menu (async)"""
         return await self._client._adelete(f"/v1/accounts/{account_id}/messenger-menu")
 
     async def aget_messenger_get_started(self, account_id: str) -> dict[str, Any]:
@@ -189,6 +227,50 @@ class AccountSettingsResource:
         """Delete FB Get Started button (async)"""
         return await self._client._adelete(
             f"/v1/accounts/{account_id}/messenger-get-started"
+        )
+
+    async def aget_messenger_greeting(self, account_id: str) -> dict[str, Any]:
+        """Get FB greeting text (async)"""
+        return await self._client._aget(f"/v1/accounts/{account_id}/messenger-greeting")
+
+    async def aset_messenger_greeting(
+        self, account_id: str, greeting: list[Any]
+    ) -> dict[str, Any]:
+        """Set FB greeting text (async)"""
+        payload = self._build_payload(
+            greeting=greeting,
+        )
+        return await self._client._aput(
+            f"/v1/accounts/{account_id}/messenger-greeting", data=payload
+        )
+
+    async def adelete_messenger_greeting(self, account_id: str) -> dict[str, Any]:
+        """Delete FB greeting text (async)"""
+        return await self._client._adelete(
+            f"/v1/accounts/{account_id}/messenger-greeting"
+        )
+
+    async def aget_messenger_ice_breakers(self, account_id: str) -> dict[str, Any]:
+        """Get FB ice breakers (async)"""
+        return await self._client._aget(
+            f"/v1/accounts/{account_id}/messenger-ice-breakers"
+        )
+
+    async def aset_messenger_ice_breakers(
+        self, account_id: str, ice_breakers: list[Any]
+    ) -> dict[str, Any]:
+        """Set FB ice breakers (async)"""
+        payload = self._build_payload(
+            ice_breakers=ice_breakers,
+        )
+        return await self._client._aput(
+            f"/v1/accounts/{account_id}/messenger-ice-breakers", data=payload
+        )
+
+    async def adelete_messenger_ice_breakers(self, account_id: str) -> dict[str, Any]:
+        """Delete FB ice breakers (async)"""
+        return await self._client._adelete(
+            f"/v1/accounts/{account_id}/messenger-ice-breakers"
         )
 
     async def aget_instagram_ice_breakers(self, account_id: str) -> dict[str, Any]:

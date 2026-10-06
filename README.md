@@ -408,15 +408,21 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 |--------|-------------|
 | `account_settings.get_instagram_ice_breakers()` | Get IG ice breakers |
 | `account_settings.get_messenger_get_started()` | Get FB Get Started button |
-| `account_settings.get_messenger_menu()` | Get FB persistent menu |
+| `account_settings.get_messenger_greeting()` | Get FB greeting text |
+| `account_settings.get_messenger_ice_breakers()` | Get FB ice breakers |
+| `account_settings.get_messenger_menu()` | Get persistent menu |
 | `account_settings.get_telegram_commands()` | Get TG bot commands |
 | `account_settings.delete_instagram_ice_breakers()` | Delete IG ice breakers |
 | `account_settings.delete_messenger_get_started()` | Delete FB Get Started button |
-| `account_settings.delete_messenger_menu()` | Delete FB persistent menu |
+| `account_settings.delete_messenger_greeting()` | Delete FB greeting text |
+| `account_settings.delete_messenger_ice_breakers()` | Delete FB ice breakers |
+| `account_settings.delete_messenger_menu()` | Delete persistent menu |
 | `account_settings.delete_telegram_commands()` | Delete TG bot commands |
 | `account_settings.set_instagram_ice_breakers()` | Set IG ice breakers |
 | `account_settings.set_messenger_get_started()` | Set FB Get Started button |
-| `account_settings.set_messenger_menu()` | Set FB persistent menu |
+| `account_settings.set_messenger_greeting()` | Set FB greeting text |
+| `account_settings.set_messenger_ice_breakers()` | Set FB ice breakers |
+| `account_settings.set_messenger_menu()` | Set persistent menu |
 | `account_settings.set_telegram_commands()` | Set TG bot commands |
 
 ### Ad Accounts
@@ -1047,6 +1053,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `messages.get_message_attachment()` | Resolve message attachment |
 | `messages.update_inbox_conversation()` | Update conversation status |
 | `messages.delete_inbox_message()` | Delete message |
+| `messages.accept_conversation_request()` | Accept a message request |
 | `messages.add_message_reaction()` | Add reaction |
 | `messages.edit_inbox_message()` | Edit message |
 | `messages.mark_conversation_read()` | Mark a conversation as read |
@@ -1054,7 +1061,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `messages.search_inbox_conversations()` | Search conversations |
 | `messages.send_inbox_message()` | Send message |
 | `messages.send_typing_indicator()` | Send typing indicator |
-| `messages.set_conversation_thread_control()` | Hand a conversation to or from Meta Business Agent |
+| `messages.set_conversation_thread_control()` | Change who answers a conversation (handover) |
 | `messages.upload_media_direct()` | Upload media file |
 
 ### Messaging Ads
@@ -1297,6 +1304,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `whatsapp.get_whats_app_blocked_users()` | List blocked users |
 | `whatsapp.get_whats_app_business_profile()` | Get business profile |
 | `whatsapp.get_whats_app_commerce_settings()` | Get a number's commerce settings |
+| `whatsapp.get_whats_app_conversational_automation()` | Get ice breakers and commands |
 | `whatsapp.get_whats_app_dataset()` | Get CTWA conversions dataset |
 | `whatsapp.get_whats_app_display_name()` | Get display name status |
 | `whatsapp.get_whats_app_group_chat()` | Get group info |
@@ -1312,6 +1320,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `whatsapp.update_whats_app_group_chat()` | Update group settings |
 | `whatsapp.update_whats_app_template()` | Update template |
 | `whatsapp.update_whats_app_template_by_id()` | Update template by id |
+| `whatsapp.delete_whats_app_conversational_automation()` | Clear ice breakers and commands |
 | `whatsapp.delete_whats_app_group_chat()` | Delete group |
 | `whatsapp.delete_whats_app_template()` | Delete template |
 | `whatsapp.delete_whats_app_template_by_id()` | Delete template by id |
@@ -1325,6 +1334,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `whatsapp.remove_whats_app_group_participants()` | Remove participants |
 | `whatsapp.request_whats_app_verification_code()` | Request a Meta re-verification code for a BYO WhatsApp number |
 | `whatsapp.send_whats_app_conversion()` | Send WhatsApp conversion event |
+| `whatsapp.set_whats_app_conversational_automation()` | Set ice breakers and commands |
 | `whatsapp.set_whatsapp_business_username()` | Set business username |
 | `whatsapp.unblock_whats_app_users()` | Unblock users |
 | `whatsapp.unlink_whats_app_catalog()` | Unlink a catalog from a WhatsApp number |
@@ -1419,6 +1429,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `workflows.duplicate_workflow()` | Duplicate a workflow |
 | `workflows.pause_workflow()` | Pause workflow |
 | `workflows.restore_workflow_version()` | Restore a workflow version |
+| `workflows.trigger_api_call_workflow()` | Start an API-triggered workflow |
 | `workflows.trigger_workflow()` | Manually start a workflow run |
 
 ### Invites

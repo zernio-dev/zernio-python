@@ -305,6 +305,47 @@ class WhatsappResource:
         )
         return self._client._put("/v1/whatsapp/commerce-settings", data=payload)
 
+    def get_whats_app_conversational_automation(
+        self, account_id: str
+    ) -> dict[str, Any]:
+        """Get ice breakers and commands"""
+        params = self._build_params(
+            account_id=account_id,
+        )
+        return self._client._get(
+            "/v1/whatsapp/conversational-automation", params=params
+        )
+
+    def set_whats_app_conversational_automation(
+        self,
+        account_id: str,
+        *,
+        enable_welcome_message: bool | None = None,
+        prompts: list[str] | None = None,
+        commands: list[dict[str, Any]] | None = None,
+    ) -> dict[str, Any]:
+        """Set ice breakers and commands"""
+        payload = self._build_payload(
+            account_id=account_id,
+            enable_welcome_message=enable_welcome_message,
+            prompts=prompts,
+            commands=commands,
+        )
+        return self._client._post(
+            "/v1/whatsapp/conversational-automation", data=payload
+        )
+
+    def delete_whats_app_conversational_automation(
+        self, account_id: str
+    ) -> dict[str, Any]:
+        """Clear ice breakers and commands"""
+        params = self._build_params(
+            account_id=account_id,
+        )
+        return self._client._delete(
+            "/v1/whatsapp/conversational-automation", params=params
+        )
+
     def get_whats_app_business_profile(self, account_id: str) -> dict[str, Any]:
         """Get business profile"""
         params = self._build_params(
@@ -886,6 +927,47 @@ class WhatsappResource:
             is_catalog_visible=is_catalog_visible,
         )
         return await self._client._aput("/v1/whatsapp/commerce-settings", data=payload)
+
+    async def aget_whats_app_conversational_automation(
+        self, account_id: str
+    ) -> dict[str, Any]:
+        """Get ice breakers and commands (async)"""
+        params = self._build_params(
+            account_id=account_id,
+        )
+        return await self._client._aget(
+            "/v1/whatsapp/conversational-automation", params=params
+        )
+
+    async def aset_whats_app_conversational_automation(
+        self,
+        account_id: str,
+        *,
+        enable_welcome_message: bool | None = None,
+        prompts: list[str] | None = None,
+        commands: list[dict[str, Any]] | None = None,
+    ) -> dict[str, Any]:
+        """Set ice breakers and commands (async)"""
+        payload = self._build_payload(
+            account_id=account_id,
+            enable_welcome_message=enable_welcome_message,
+            prompts=prompts,
+            commands=commands,
+        )
+        return await self._client._apost(
+            "/v1/whatsapp/conversational-automation", data=payload
+        )
+
+    async def adelete_whats_app_conversational_automation(
+        self, account_id: str
+    ) -> dict[str, Any]:
+        """Clear ice breakers and commands (async)"""
+        params = self._build_params(
+            account_id=account_id,
+        )
+        return await self._client._adelete(
+            "/v1/whatsapp/conversational-automation", params=params
+        )
 
     async def aget_whats_app_business_profile(self, account_id: str) -> dict[str, Any]:
         """Get business profile (async)"""

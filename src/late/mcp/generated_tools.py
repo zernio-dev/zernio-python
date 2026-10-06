@@ -185,16 +185,16 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
-            title="Get FB persistent menu",
+            title="Get persistent menu",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
         )
     )
     def account_settings_get_messenger_menu(account_id: str) -> str:
-        """Get FB persistent menu
+        """Get persistent menu
 
-        Get the persistent menu configuration for a Facebook Messenger account.
+        Get the persistent menu configuration for a Facebook Messenger or Instagram account. Instagram accounts connected through Facebook Login are read through their linked Page (Meta's `platform=instagram`), Instagram Login accounts through the Instagram API.
 
         Args:
             account_id: (required)"""
@@ -207,7 +207,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
-            title="Set FB persistent menu",
+            title="Set persistent menu",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
@@ -216,9 +216,9 @@ def register_generated_tools(mcp, _get_client):
     def account_settings_set_messenger_menu(
         account_id: str, persistent_menu: list[dict[str, Any]] | None
     ) -> str:
-        """Set FB persistent menu
+        """Set persistent menu
 
-        Set the persistent menu for a Facebook Messenger account. Max 3 top-level items, max 5 nested items. Meta only shows a persistent menu on a page that has a Get Started button, so set one first with PUT /v1/accounts/{accountId}/messenger-get-started. A postback button whose payload is `zernio:workflow:<workflowId>` starts that workflow when tapped; the workflow must be active on this account and profile.
+        Set the persistent menu for a Facebook Messenger or Instagram account. Max 3 top-level items, max 5 nested items. On Facebook, Meta only shows a persistent menu on a page that has a Get Started button, so set one first with PUT /v1/accounts/{accountId}/messenger-get-started. A postback button whose payload is `zernio:workflow:<workflowId>` starts that workflow when tapped; the workflow must be active on this account and profile.
 
         Args:
             account_id: (required)
@@ -234,16 +234,16 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
-            title="Delete FB persistent menu",
+            title="Delete persistent menu",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
         )
     )
     def account_settings_delete_messenger_menu(account_id: str) -> str:
-        """Delete FB persistent menu
+        """Delete persistent menu
 
-        Removes the persistent menu from Facebook Messenger conversations for this account.
+        Removes the persistent menu from this Facebook Messenger or Instagram account.
 
         Args:
             account_id: (required)"""
@@ -325,6 +325,156 @@ def register_generated_tools(mcp, _get_client):
         client = _get_client()
         try:
             response = client.account_settings.delete_messenger_get_started(
+                account_id=account_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get FB greeting text",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def account_settings_get_messenger_greeting(account_id: str) -> str:
+        """Get FB greeting text
+
+        Get the greeting text a Facebook page shows on its Messenger welcome screen, one entry per locale. `data` is empty when the page has none.
+
+        Args:
+            account_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.account_settings.get_messenger_greeting(
+                account_id=account_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Set FB greeting text",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def account_settings_set_messenger_greeting(
+        account_id: str, greeting: list[dict[str, Any]] | None
+    ) -> str:
+        """Set FB greeting text
+
+        Set the greeting text on a Facebook page's Messenger welcome screen (Meta's `greeting` Messenger Profile field). One entry must use locale `default`; add more for other locales. Meta personalises `{{user_first_name}}`, `{{user_last_name}}` and `{{user_full_name}}`. Replaces every locale already set.
+
+        Args:
+            account_id: (required)
+            greeting: One entry per locale; one must use locale `default`. (required)"""
+        client = _get_client()
+        try:
+            response = client.account_settings.set_messenger_greeting(
+                account_id=account_id, greeting=greeting
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Delete FB greeting text",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def account_settings_delete_messenger_greeting(account_id: str) -> str:
+        """Delete FB greeting text
+
+        Remove the greeting text from every locale.
+
+        Args:
+            account_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.account_settings.delete_messenger_greeting(
+                account_id=account_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get FB ice breakers",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def account_settings_get_messenger_ice_breakers(account_id: str) -> str:
+        """Get FB ice breakers
+
+        Get the ice breakers (FAQ questions shown when a person opens a new Messenger thread) for a Facebook page, one entry per locale. Instagram ice breakers live at /v1/accounts/{accountId}/instagram-ice-breakers.
+
+        Args:
+            account_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.account_settings.get_messenger_ice_breakers(
+                account_id=account_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Set FB ice breakers",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def account_settings_set_messenger_ice_breakers(
+        account_id: str, ice_breakers: list[dict[str, Any]] | None
+    ) -> str:
+        """Set FB ice breakers
+
+        Set up to 4 ice breakers per locale for a Facebook page (Meta's `ice_breakers` Messenger Profile field). One entry must use locale `default`. A tap sends a postback with the question's `payload`, which arrives as `message.received` with `metadata.postbackPayload`; use `zernio:workflow:<workflowId>` to start a workflow (it must be active on this account and profile). Replaces every locale already set.
+
+        Args:
+            account_id: (required)
+            ice_breakers: One entry per locale; one must use locale `default`. (required)"""
+        client = _get_client()
+        try:
+            response = client.account_settings.set_messenger_ice_breakers(
+                account_id=account_id, ice_breakers=ice_breakers
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Delete FB ice breakers",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def account_settings_delete_messenger_ice_breakers(account_id: str) -> str:
+        """Delete FB ice breakers
+
+        Remove the ice breakers from every locale.
+
+        Args:
+            account_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.account_settings.delete_messenger_ice_breakers(
                 account_id=account_id
             )
             return _format_response(response)
@@ -7650,6 +7800,7 @@ def register_generated_tools(mcp, _get_client):
         ]
         | None = None,
         whatsapp_phone_number: str | None = None,
+        workflow_id: str | None = None,
         currency: str | None = None,
         start_date: str | None = None,
         end_date: str | None = None,
@@ -7749,6 +7900,7 @@ def register_generated_tools(mcp, _get_client):
                 instagram_account_id: Meta only. Instagram identity the ad runs AS (creative.instagram_user_id), overriding the account linked to the Page. Live-verified against a Page-post creative.
                 destination_type: Meta only. Ad-set destination_type: where the click LANDS, as opposed to instagramAccountId which is who the ad runs as. Independent of plain link CTAs and their goal. A messaging callToAction selects its destination automatically; an explicit destinationType must then match. Lead ads use ON_AD.
                 whatsapp_phone_number: Meta WhatsApp only. E.164 number already paired with the Page. Omit to use the default pairing. Requires WHATSAPP_MESSAGE callToAction. Stored as creative.whatsappPhoneNumber on the ad.
+                workflow_id: Meta messaging boosts only (callToAction MESSAGE_PAGE, WHATSAPP_MESSAGE or INSTAGRAM_MESSAGE). A workflow in the account's profile, started in the conversation a click on the ad opens. Stored on the ad. 400 without a messaging callToAction or on another platform, 404 when no such workflow exists in the profile.
                 currency: ISO 4217 currency code matching the ad account's currency. Meta only. Optional: Zernio resolves it from the ad account when omitted. The value selects the minor-unit exponent Zernio converts budget/bid amounts by before calling Meta (most currencies are cents; zero-decimal currencies like JPY/KRW are sent as-is).
                 start_date: Ad-set start time (ISO 8601, e.g. "2026-06-10T09:00:00Z"), mapped to the ad set's `start_time`. When omitted the ad starts delivering immediately. On Meta, TikTok, X and Pinterest a value without an offset (`YYYY-MM-DD`, `YYYY-MM-DD HH:MM:SS` or `YYYY-MM-DDTHH:MM:SS`) is read in the ad account timezone. Same field as on POST /v1/ads/create.
                 end_date: Ad-set end time (ISO 8601), mapped to the ad set's `end_time`. Required for lifetime budgets. On Meta, TikTok, X and Pinterest a value without an offset (`YYYY-MM-DD`, `YYYY-MM-DD HH:MM:SS` or `YYYY-MM-DDTHH:MM:SS`) is read in the ad account timezone, and a date-only end runs to 23:59:59 local. Same field as on POST /v1/ads/create.
@@ -7921,6 +8073,7 @@ def register_generated_tools(mcp, _get_client):
                 instagram_account_id=instagram_account_id,
                 destination_type=destination_type,
                 whatsapp_phone_number=whatsapp_phone_number,
+                workflow_id=workflow_id,
                 currency=currency,
                 start_date=start_date,
                 end_date=end_date,
@@ -15365,8 +15518,9 @@ def register_generated_tools(mcp, _get_client):
         profile_id: str,
         account_id: str,
         name: str,
-        dm_message: str,
-        trigger: Literal["comment", "story_reply"] = "comment",
+        trigger: Literal[
+            "comment", "live_comment", "story_reply", "story_mention"
+        ] = "comment",
         platform_post_id: str | None = None,
         post_id: str | None = None,
         post_title: str | None = None,
@@ -15374,6 +15528,7 @@ def register_generated_tools(mcp, _get_client):
         match_mode: Literal["exact", "contains", "word"] = "contains",
         exclude_keywords: list[str] | None = None,
         typo_tolerance: bool | None = None,
+        dm_message: str | None = None,
         buttons: list[dict[str, Any]] | None = None,
         template: dict[str, Any] | None = None,
         comment_reply: str | None = None,
@@ -15386,30 +15541,36 @@ def register_generated_tools(mcp, _get_client):
         also_match_in_dms: bool = False,
         audience: dict[str, Any] | None = None,
         follow_gate: dict[str, Any] | None = None,
+        repeat_policy: dict[str, Any] | None = None,
+        dedupe_same_text_hours: str | None = None,
+        public_reply_policy: Literal["after_dm", "always"] = "after_dm",
+        actions: dict[str, Any] | None = None,
+        quick_replies: list[dict[str, Any]] | None = None,
+        dm_media: str | None = None,
+        is_active: bool = True,
     ) -> str:
         """Create comment-to-DM automation
 
-        Create a keyword-triggered DM automation on an Instagram or Facebook account.
-        When someone comments a matching keyword (or, with `trigger: story_reply`, replies
-        to your Instagram story with one), they automatically receive a DM.
+        Create a keyword-triggered automation. On Instagram and Facebook, when someone
+        comments a matching keyword (or, with `trigger: story_reply`, replies to your
+        Instagram story with one), they automatically receive a DM.
 
-        To continue into a specific workflow after the recipient taps a button, use
-        `{\"type\":\"postback\",\"title\":\"Send it\",\"payload\":\"zernio:workflow:<workflowId>\"}`.
-        The target must be active and belong to the same account and profile. This also
-        works for product-card buttons. The tap starts that workflow directly, without
-        matching its keyword or first-message condition. A different live workflow in
-        the conversation is exited; tapping the same live workflow does not restart it
-        or consume a pending reply. Stale or invalid targets do nothing. The initial
-        comment DM alone does not start the workflow: the recipient must tap.
-
-        Triggers (`trigger`):
-          * `comment` (default): fires on keyword comments on a post or reel.
-          * `story_reply`: fires when someone replies to your ...
+        Platforms:
+          * `instagram`, `facebook`: the full DM automation (private reply, buttons,
+            product card, audience rules, follow gate) plus the optional public reply.
+          * `tiktok`, `threads`, `linkedin`, `youtube`: public reply only. These
+            platforms have no private reply to a comment, so the automation answers a
+            matching comment with `commentReply` and nothing else. `commentReply` is
+            required and the DM fields (`dmMessage`, `dmMessageVariations`, `buttons`,
+            `template`, `quickReplies`, `alsoMatchInDms`, `audience`, `followGate`,
+            `dmDelaySeconds`, `commentReplyDelaySeconds`) are rejected with a 400 naming the
+            field. TikTok comments arrive by webhook (TikTok business accounts only); the
+            others are read by the comment poll, so a reply follows the ...
 
         Args:
             profile_id: (required)
-            account_id: Instagram or Facebook account ID (required)
-            trigger: What fires the automation. 'comment' (keyword comment on a post) or 'story_reply' (keyword reply to an Instagram story). For 'story_reply', platformPostId is the story media id (omit for any story).
+            account_id: Instagram, Facebook, TikTok, Threads, LinkedIn or YouTube account ID. On the last four the automation only posts the public reply. X accounts are refused (400, code platform_not_supported) while X comment polling is off. (required)
+            trigger: What fires the automation. 'comment' (keyword comment on a post), 'live_comment' (keyword comment on an Instagram live broadcast), 'story_reply' (keyword reply to an Instagram story) or 'story_mention' (a story mentioning the Instagram account). For 'story_reply', platformPostId is the story media id (omit for any story). Every trigger but 'comment' is Instagram only; reply-only platforms accept 'comment' only.
             platform_post_id: Platform media/post ID (or story media id when trigger=story_reply). Omit for an account-wide (any-post / any-story) automation.
             post_id: Zernio post ID (24 hexadecimal characters); platform IDs return 400. Optional and never required. Use it INSTEAD of platformPostId to bind a per-post automation to a not-yet-published Zernio post: the automation stays pending and arms itself when that post publishes. For a post already live on the platform, pass platformPostId alone and omit this.
             post_title: Post content snippet for display
@@ -15418,10 +15579,10 @@ def register_generated_tools(mcp, _get_client):
             match_mode: How a keyword is compared with the comment. 'contains' (default) matches anywhere, even inside another word (keyword 'app' fires on 'happy'). 'word' matches the keyword only as a standalone word. 'exact' requires the whole comment to be exactly the keyword.
             exclude_keywords: Comments containing one of these never trigger the automation, even when a trigger keyword also matches. Compared using the same matchMode.
             typo_tolerance: Only with matchMode=word: also fire on close misspellings of a keyword (one edit for 4-7 character keywords, two from 8 up). Keywords shorter than 4 characters are never fuzzy-matched.
-            dm_message: DM text to send to commenter. Max 640 chars when buttons are set, otherwise ~1000. (required)
+            dm_message: DM text sent to the commenter. Required on Instagram and Facebook (400 missing_required_field when absent). Rejected on TikTok, Threads, LinkedIn and YouTube, which have no private reply (400 invalid_field_value). Max 640 chars when buttons are set, otherwise ~1000.
             buttons: Optional inline DM buttons (1-3). Phone buttons are Facebook-only. Omit or pass [] for a plain-text DM.
             template: Optional product card sent INSTEAD of the plain dmMessage bubble. Mutually exclusive with buttons. dmMessage stays required: it is what gets sent the moment the card is cleared.
-            comment_reply: Optional public reply to the comment
+            comment_reply: Public reply to the comment. Optional on Instagram and Facebook; required on TikTok, Threads, LinkedIn and YouTube, where it is the automation's only action.
             dm_message_variations: Optional alternate DM texts for random rotation. When set, each triggered comment sends one picked at random from [dmMessage, ...dmMessageVariations], so repeat commenters get slightly different DMs (helps avoid identical-message patterns). Up to 5. Buttons are attached to whichever text is picked, not varied.
             comment_reply_variations: Optional alternate public replies, rotated at random alongside commentReply (picked independently of the DM). Up to 5.
             link_tracking: Wrap link buttons in the DM in a tracked redirect so clicks are counted (Link Clicks / CTR). Pass false to send links exactly as written. Defaults to on.
@@ -15430,7 +15591,14 @@ def register_generated_tools(mcp, _get_client):
             comment_reply_delay_seconds: Seconds to wait before posting the public comment reply. Omit or send 0 to post it right after the DM (the default). The reply never goes out before the DM, so a value below dmDelaySeconds is raised to it. Ignored when trigger=story_reply, which has no public reply.
             also_match_in_dms: Also fire these keywords on a plain inbound DM, so the automation answers people who message the keyword instead of commenting it. Requires at least one keyword (an empty keyword list means 'match anything', which would answer every inbound message) and is rejected on story_reply automations, which already trigger on DMs. Dedup is per door: a contact who already received the DM from their comment can still receive it from a DM.
             audience
-            follow_gate"""
+            follow_gate
+            repeat_policy
+            dedupe_same_text_hours: Skip the DM when this recipient already received identical DM text (after personalisation) from this account, from any automation, within this many hours. The skip is logged with status skipped.
+            public_reply_policy: 'after_dm' posts commentReply only after a successful DM. 'always' posts it whatever the audience rule, dedupe or DM outcome: the moment a comment matches, or after commentReplyDelaySeconds when set (raised to dmDelaySeconds, so it never precedes the DM attempt).
+            actions
+            quick_replies: Opt-in quick-reply chips on the DM (up to 13). Chips do not render in Message Requests, where a first DM to a cold commenter lands, so prefer buttons for first contact. Mutually exclusive with buttons and template (400).
+            dm_media
+            is_active: Create the automation paused with false."""
         client = _get_client()
         try:
             response = client.comment_automations.create_comment_automation(
@@ -15458,6 +15626,13 @@ def register_generated_tools(mcp, _get_client):
                 also_match_in_dms=also_match_in_dms,
                 audience=audience,
                 follow_gate=follow_gate,
+                repeat_policy=repeat_policy,
+                dedupe_same_text_hours=dedupe_same_text_hours,
+                public_reply_policy=public_reply_policy,
+                actions=actions,
+                quick_replies=quick_replies,
+                dm_media=dm_media,
+                is_active=is_active,
             )
             return _format_response(response)
         except Exception as e:
@@ -15498,7 +15673,8 @@ def register_generated_tools(mcp, _get_client):
     def comment_automations_update_comment_automation(
         automation_id: str,
         name: str | None = None,
-        trigger: Literal["comment", "story_reply"] | None = None,
+        trigger: Literal["comment", "live_comment", "story_reply", "story_mention"]
+        | None = None,
         keywords: list[str] | None = None,
         match_mode: Literal["exact", "contains", "word"] | None = None,
         exclude_keywords: list[str] | None = None,
@@ -15517,17 +15693,26 @@ def register_generated_tools(mcp, _get_client):
         audience: dict[str, Any] | None = None,
         follow_gate: dict[str, Any] | None = None,
         is_active: bool | None = None,
+        repeat_policy: dict[str, Any] | None = None,
+        dedupe_same_text_hours: str | None = None,
+        public_reply_policy: Literal["after_dm", "always"] | None = None,
+        actions: dict[str, Any] | None = None,
+        quick_replies: str | None = None,
+        dm_media: str | None = None,
     ) -> str:
         """Update automation settings
 
         Update an automation's keywords, DM message, inline buttons, comment reply, or active status.
         Pass `buttons: []` to clear all buttons. When `buttons` is non-empty, `dmMessage` (the new
         one if you're changing it, otherwise the stored one) must be 640 characters or less.
+        On a TikTok, Threads, LinkedIn or YouTube automation (public reply only) the DM fields
+        are rejected with a 400 naming the field (`code` invalid_field_value, `param` the field),
+        and `commentReply` cannot be cleared.
 
         Args:
             automation_id: (required)
             name
-            trigger: What fires the automation. Changing it detaches the automation from its bound post or story (a post id and a story id are different objects), unless this same request sets a new binding. 'story_reply' is Instagram only.
+            trigger: What fires the automation. Changing it detaches the automation from its bound post or story (a post id and a story id are different objects), unless this same request sets a new binding. Every trigger but 'comment' is Instagram only; 'story_mention' also requires no keywords and no binding.
             keywords
             match_mode: How a keyword is compared with the comment. 'contains' (default) matches anywhere, even inside another word (keyword 'app' fires on 'happy'). 'word' matches the keyword only as a standalone word. 'exact' requires the whole comment to be exactly the keyword.
             exclude_keywords: Comments containing one of these never trigger the automation, even when a trigger keyword also matches. Compared using the same matchMode.
@@ -15545,7 +15730,13 @@ def register_generated_tools(mcp, _get_client):
             comment_reply_delay_seconds: Seconds to wait before posting the public comment reply. Send 0 to clear it. The reply never goes out before the DM.
             audience
             follow_gate
-            is_active"""
+            is_active
+            repeat_policy
+            dedupe_same_text_hours: Skip the DM when this recipient already received identical DM text (after personalisation) from this account, from any automation, within this many hours. The skip is logged with status skipped. Send null to clear.
+            public_reply_policy: 'after_dm' posts commentReply only after a successful DM. 'always' posts it whatever the audience rule, dedupe or DM outcome: the moment a comment matches, or after commentReplyDelaySeconds when set (raised to dmDelaySeconds, so it never precedes the DM attempt).
+            actions
+            quick_replies: Opt-in quick-reply chips on the DM (up to 13). Chips do not render in Message Requests, where a first DM to a cold commenter lands, so prefer buttons for first contact. Mutually exclusive with buttons and template (400). Send null to clear.
+            dm_media"""
         client = _get_client()
         try:
             response = client.comment_automations.update_comment_automation(
@@ -15570,6 +15761,12 @@ def register_generated_tools(mcp, _get_client):
                 audience=audience,
                 follow_gate=follow_gate,
                 is_active=is_active,
+                repeat_policy=repeat_policy,
+                dedupe_same_text_hours=dedupe_same_text_hours,
+                public_reply_policy=public_reply_policy,
+                actions=actions,
+                quick_replies=quick_replies,
+                dm_media=dm_media,
             )
             return _format_response(response)
         except Exception as e:
@@ -25564,6 +25761,7 @@ def register_generated_tools(mcp, _get_client):
         ]
         | None = None,
         status: Literal["active", "archived"] | None = None,
+        folder: Literal["inbox", "requests"] = "inbox",
         sort_order: Literal["asc", "desc"] = "desc",
         limit: int = 50,
         cursor: str | None = None,
@@ -25585,6 +25783,7 @@ def register_generated_tools(mcp, _get_client):
             profile_id: Filter by profile ID
             platform: Filter by platform
             status: Filter by conversation status
+            folder: requests lists Facebook and Instagram Message Requests (threads from people the account has not accepted) live from Meta, first page only, each item with `folder: requests`. Meta has no accept call: replying moves a thread to the inbox, which is what POST /v1/inbox/conversations/{conversationId}/accept does. When Meta will not list the folder for the one account asked (`accountId`), the call answers 400 PLATFORM_LIMITATION; across several accounts the refusal is reported per account in meta.failedAccounts.
             sort_order: Sort order by updated time
             limit: Maximum number of conversations to return
             cursor: Pagination cursor for next page
@@ -25595,6 +25794,7 @@ def register_generated_tools(mcp, _get_client):
                 profile_id=profile_id,
                 platform=platform,
                 status=status,
+                folder=folder,
                 sort_order=sort_order,
                 limit=limit,
                 cursor=cursor,
@@ -25946,6 +26146,9 @@ def register_generated_tools(mcp, _get_client):
         Instagram / Facebook: also mutually exclusive with `template`.
         A Meta message carries one body shape, so sending both is a 400
         rather than a silent drop of the buttons.
+        The buttons and `message` render as Meta's button_template (one
+        bubble with the text and the buttons below it), so `message` must
+        be 640 characters or less when buttons are attached (400 otherwise).
 
         WhatsApp: buttons always render as interactive reply buttons.
         Only `title` and `payload` are used; `type`, `url`, and `phone`
@@ -26201,7 +26404,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
-            title="Hand a conversation to or from Meta Business Agent",
+            title="Change who answers a conversation (handover)",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
@@ -26210,24 +26413,29 @@ def register_generated_tools(mcp, _get_client):
     def messages_set_conversation_thread_control(
         conversation_id: str,
         account_id: str,
-        action: Literal["release", "take", "pass"],
+        action: Literal["release", "take", "pass", "request"],
         target: Literal["ai_agent"] | None = None,
+        target_app_id: str | None = None,
         metadata: str | None = None,
     ) -> str:
-        """Hand a conversation to or from Meta Business Agent
+        """Change who answers a conversation (handover)
 
-        WhatsApp only, on numbers with Meta Business Agent enabled. Wraps Meta's thread control:
+        Meta's handover protocol on WhatsApp, Facebook and Instagram.
+
+        **WhatsApp**, on numbers with Meta Business Agent enabled:
         - `release`: hand the conversation back to the agent so it resumes answering. You must currently hold control (sending any message takes it implicitly).
         - `take`: take control before sending anything, so the agent stops replying while an operator reads the thread. Meta accepts this only from the business configured as the number's escalation partner; other apps take control by sending a message.
         - `pass`: transfer control to the number's configured escalation partner, or to the agent with `target: ai_agent`. Meta's Cloud API currently rejects it (\"Pass action is not supported\", verified 2026-09-08); use `release` to hand a thread back to the agent.
 
-        The conversation's `threadControl` follows the result; a `conversation.control_changed` webhook fires when Meta later reports the change.
+        **Facebook and Instagram** (Messenger Platform handover between the apps on the Page, such as Page Inbox):
+        - `pass` with `targetAppId`: give the thread to another app (`pass_thread_control`). Page Inbox is ...
 
         Args:
             conversation_id: The conversation ID (required)
             account_id: Social account ID (required)
-            action: (required)
-            target: With action pass: send control to Meta Business Agent instead of the escalation partner.
+            action: `request` is Facebook and Instagram only. (required)
+            target: WhatsApp only. With action pass: send control to Meta Business Agent instead of the escalation partner.
+            target_app_id: Facebook and Instagram only, required with action pass: the Meta app id receiving the thread.
             metadata: Free-form note forwarded verbatim to the app receiving control (its messaging_handovers webhook)."""
         client = _get_client()
         try:
@@ -26236,7 +26444,39 @@ def register_generated_tools(mcp, _get_client):
                 account_id=account_id,
                 action=action,
                 target=target,
+                target_app_id=target_app_id,
                 metadata=metadata,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Accept a message request",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def messages_accept_conversation_request(
+        conversation_id: str, account_id: str, message: str
+    ) -> str:
+        """Accept a message request
+
+        Accept a Facebook or Instagram Message Request (listed with `GET /v1/inbox/conversations?folder=requests`) by replying to it.
+        Meta has no separate accept call: the first reply is what moves the thread into the inbox, so this sends `message`
+        through the same path, checks and webhooks as `POST /v1/inbox/conversations/{conversationId}/messages`, and answers the same way.
+        Supports the `Idempotency-Key` header.
+
+        Args:
+            conversation_id: The `id` of the request item from the requests folder. (required)
+            account_id: Facebook or Instagram social account ID (required)
+            message: The reply that accepts the request (required)"""
+        client = _get_client()
+        try:
+            response = client.messages.accept_conversation_request(
+                conversation_id=conversation_id, account_id=account_id, message=message
             )
             return _format_response(response)
         except Exception as e:
@@ -26562,6 +26802,7 @@ def register_generated_tools(mcp, _get_client):
         destinations: list[Literal["whatsapp", "messenger", "instagram_direct"]]
         | None = None,
         placement_assets: dict[str, Any] | None = None,
+        workflow_id: str | None = None,
         validate_only: bool | None = None,
     ) -> str:
         """Create messaging ad
@@ -26815,6 +27056,7 @@ def register_generated_tools(mcp, _get_client):
         refuses more than one call to action per placement rule with error 1885878), so
         that combination is a 400. Also a 400 with `creatives[]`, `platformPostId`,
         `existingPostId` or `objectStoryId`, and on POST /v1/ads/call.
+                workflow_id: A workflow in the ad account's profile. When someone clicks the ad, that workflow starts in the conversation the click opens (on the first message, a postback or a standalone referral carrying the ad id), ahead of keyword-matched workflows, if it is active on the receiving account. Stored on the ad. 404 when no such workflow exists in the profile.
                 validate_only: Dry-runs the ad on Meta with execution_options validate_only as ONE inline campaign + ad set + creative + ad (or creative + ad on the existing ad set with `adSetId`). Nothing is uploaded or created and nothing is stored; media is checked by URL. Supports one creative with `imageUrl`, image `placementAssets`, `carouselCards`, an existing `video.id`, or an existing post. Several creatives, a new `video.url` and video `placementAssets` need uploads first and return 400. Success returns 200 with per-node results; a Meta rejection returns the Meta error."""
         client = _get_client()
         try:
@@ -26894,6 +27136,7 @@ def register_generated_tools(mcp, _get_client):
                 destination=destination,
                 destinations=destinations,
                 placement_assets=placement_assets,
+                workflow_id=workflow_id,
                 validate_only=validate_only,
             )
             return _format_response(response)
@@ -35026,6 +35269,14 @@ def register_generated_tools(mcp, _get_client):
                 "commerce.product.created",
                 "commerce.product.updated",
                 "commerce.product.deleted",
+                "contact.tag_added",
+                "contact.tag_removed",
+                "contact.field_changed",
+                "sequence.enrolled",
+                "sequence.exited",
+                "workflow.run.started",
+                "workflow.run.completed",
+                "workflow.run.failed",
             ]
         ]
         | None,
@@ -35180,6 +35431,14 @@ def register_generated_tools(mcp, _get_client):
                 "commerce.product.created",
                 "commerce.product.updated",
                 "commerce.product.deleted",
+                "contact.tag_added",
+                "contact.tag_removed",
+                "contact.field_changed",
+                "sequence.enrolled",
+                "sequence.exited",
+                "workflow.run.started",
+                "workflow.run.completed",
+                "workflow.run.failed",
             ]
         ]
         | None = None,
@@ -35979,6 +36238,89 @@ def register_generated_tools(mcp, _get_client):
                 catalog_account_id=catalog_account_id,
                 is_cart_enabled=is_cart_enabled,
                 is_catalog_visible=is_catalog_visible,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get ice breakers and commands",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def whatsapp_get_whats_app_conversational_automation(account_id: str) -> str:
+        """Get ice breakers and commands
+
+        Read the number's conversational automation (Meta's `conversational_automation`): ice breaker prompts, slash commands and the welcome-message flag. A number with none set returns the empty configuration.
+
+        Args:
+            account_id: WhatsApp account ID (required)"""
+        client = _get_client()
+        try:
+            response = client.whatsapp.get_whats_app_conversational_automation(
+                account_id=account_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Set ice breakers and commands",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def whatsapp_set_whats_app_conversational_automation(
+        account_id: str,
+        enable_welcome_message: bool | None = None,
+        prompts: list[str] | None = None,
+        commands: list[dict[str, Any]] | None = None,
+    ) -> str:
+        """Set ice breakers and commands
+
+        Set ice breaker prompts (up to 3, 80 characters each), slash commands (up to 30) and the welcome-message flag on the number. Only the fields you send are changed. A tapped prompt arrives as a normal `message.received` carrying its text.
+
+        Args:
+            account_id: WhatsApp account ID (required)
+            enable_welcome_message: When true, Meta sends a `request_welcome` event the first time a person opens a chat with the number.
+            prompts: Ice breakers shown to a person opening a chat. Tapping one sends its text as a normal message.
+            commands: Slash commands shown when a person types `/`. Names are unique, letters, digits and underscores, without the slash."""
+        client = _get_client()
+        try:
+            response = client.whatsapp.set_whats_app_conversational_automation(
+                account_id=account_id,
+                enable_welcome_message=enable_welcome_message,
+                prompts=prompts,
+                commands=commands,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Clear ice breakers and commands",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def whatsapp_delete_whats_app_conversational_automation(account_id: str) -> str:
+        """Clear ice breakers and commands
+
+        Remove every prompt and command and turn the welcome message off.
+
+        Args:
+            account_id: WhatsApp account ID (required)"""
+        client = _get_client()
+        try:
+            response = client.whatsapp.delete_whats_app_conversational_automation(
+                account_id=account_id
             )
             return _format_response(response)
         except Exception as e:
@@ -39237,6 +39579,44 @@ def register_generated_tools(mcp, _get_client):
                 to=to,
                 conversation_id=conversation_id,
                 text=text,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Start an API-triggered workflow",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def workflows_trigger_api_call_workflow(
+        workflow_id: str,
+        conversation_id: str | None = None,
+        contact_id: str | None = None,
+        to: str | None = None,
+        variables: dict[str, Any] | None = None,
+    ) -> str:
+        """Start an API-triggered workflow
+
+        Starts a run of an active workflow whose trigger type is `api_call`. Pass exactly one target: `conversationId` (a conversation on the workflow's account), `contactId` (resolved to that contact's conversation on the workflow's account), or `to` (WhatsApp workflows only: a phone number, whose conversation is found or created). `variables` are merged over the standard run variables, so each key is available as `{{key}}`.
+
+        Args:
+            workflow_id: (required)
+            conversation_id: A conversation on the workflow's account
+            contact_id: A contact with a conversation on the workflow's account
+            to: Recipient phone in E.164 (WhatsApp workflows only)
+            variables: Seed variables, merged over the standard run variables"""
+        client = _get_client()
+        try:
+            response = client.workflows.trigger_api_call_workflow(
+                workflow_id=workflow_id,
+                conversation_id=conversation_id,
+                contact_id=contact_id,
+                to=to,
+                variables=variables,
             )
             return _format_response(response)
         except Exception as e:

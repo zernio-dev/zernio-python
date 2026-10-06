@@ -79,6 +79,7 @@ class MessagesResource:
         profile_id: str | None = None,
         platform: str | None = None,
         status: str | None = None,
+        folder: str | None = "inbox",
         sort_order: str | None = "desc",
         limit: int | None = 50,
         cursor: str | None = None,
@@ -89,6 +90,7 @@ class MessagesResource:
             profile_id=profile_id,
             platform=platform,
             status=status,
+            folder=folder,
             sort_order=sort_order,
             limit=limit,
             cursor=cursor,
@@ -311,17 +313,31 @@ class MessagesResource:
         action: str,
         *,
         target: str | None = None,
+        target_app_id: str | None = None,
         metadata: str | None = None,
     ) -> dict[str, Any]:
-        """Hand a conversation to or from Meta Business Agent"""
+        """Change who answers a conversation (handover)"""
         payload = self._build_payload(
             account_id=account_id,
             action=action,
             target=target,
+            target_app_id=target_app_id,
             metadata=metadata,
         )
         return self._client._post(
             f"/v1/inbox/conversations/{conversation_id}/thread-control", data=payload
+        )
+
+    def accept_conversation_request(
+        self, conversation_id: str, account_id: str, message: str
+    ) -> dict[str, Any]:
+        """Accept a message request"""
+        payload = self._build_payload(
+            account_id=account_id,
+            message=message,
+        )
+        return self._client._post(
+            f"/v1/inbox/conversations/{conversation_id}/accept", data=payload
         )
 
     def mark_conversation_read(
@@ -389,6 +405,7 @@ class MessagesResource:
         profile_id: str | None = None,
         platform: str | None = None,
         status: str | None = None,
+        folder: str | None = "inbox",
         sort_order: str | None = "desc",
         limit: int | None = 50,
         cursor: str | None = None,
@@ -399,6 +416,7 @@ class MessagesResource:
             profile_id=profile_id,
             platform=platform,
             status=status,
+            folder=folder,
             sort_order=sort_order,
             limit=limit,
             cursor=cursor,
@@ -621,17 +639,31 @@ class MessagesResource:
         action: str,
         *,
         target: str | None = None,
+        target_app_id: str | None = None,
         metadata: str | None = None,
     ) -> dict[str, Any]:
-        """Hand a conversation to or from Meta Business Agent (async)"""
+        """Change who answers a conversation (handover) (async)"""
         payload = self._build_payload(
             account_id=account_id,
             action=action,
             target=target,
+            target_app_id=target_app_id,
             metadata=metadata,
         )
         return await self._client._apost(
             f"/v1/inbox/conversations/{conversation_id}/thread-control", data=payload
+        )
+
+    async def aaccept_conversation_request(
+        self, conversation_id: str, account_id: str, message: str
+    ) -> dict[str, Any]:
+        """Accept a message request (async)"""
+        payload = self._build_payload(
+            account_id=account_id,
+            message=message,
+        )
+        return await self._client._apost(
+            f"/v1/inbox/conversations/{conversation_id}/accept", data=payload
         )
 
     async def amark_conversation_read(

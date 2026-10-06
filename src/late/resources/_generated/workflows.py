@@ -189,6 +189,24 @@ class WorkflowsResource:
             f"/v1/workflows/{workflow_id}/executions", data=payload
         )
 
+    def trigger_api_call_workflow(
+        self,
+        workflow_id: str,
+        *,
+        conversation_id: str | None = None,
+        contact_id: str | None = None,
+        to: str | None = None,
+        variables: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        """Start an API-triggered workflow"""
+        payload = self._build_payload(
+            conversation_id=conversation_id,
+            contact_id=contact_id,
+            to=to,
+            variables=variables,
+        )
+        return self._client._post(f"/v1/workflows/{workflow_id}/trigger", data=payload)
+
     def list_workflow_execution_events(
         self, workflow_id: str, execution_id: str
     ) -> dict[str, Any]:
@@ -331,6 +349,26 @@ class WorkflowsResource:
         )
         return await self._client._apost(
             f"/v1/workflows/{workflow_id}/executions", data=payload
+        )
+
+    async def atrigger_api_call_workflow(
+        self,
+        workflow_id: str,
+        *,
+        conversation_id: str | None = None,
+        contact_id: str | None = None,
+        to: str | None = None,
+        variables: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        """Start an API-triggered workflow (async)"""
+        payload = self._build_payload(
+            conversation_id=conversation_id,
+            contact_id=contact_id,
+            to=to,
+            variables=variables,
+        )
+        return await self._client._apost(
+            f"/v1/workflows/{workflow_id}/trigger", data=payload
         )
 
     async def alist_workflow_execution_events(
