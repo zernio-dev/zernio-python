@@ -126,7 +126,12 @@ class ReviewsResource:
         self, review_id: str, account_id: str
     ) -> dict[str, Any]:
         """Delete review reply"""
-        return self._client._delete(f"/v1/inbox/reviews/{review_id}/reply")
+        payload = self._build_payload(
+            account_id=account_id,
+        )
+        return self._client._delete(
+            f"/v1/inbox/reviews/{review_id}/reply", data=payload
+        )
 
     async def alist_inbox_reviews(
         self,
@@ -181,4 +186,9 @@ class ReviewsResource:
         self, review_id: str, account_id: str
     ) -> dict[str, Any]:
         """Delete review reply (async)"""
-        return await self._client._adelete(f"/v1/inbox/reviews/{review_id}/reply")
+        payload = self._build_payload(
+            account_id=account_id,
+        )
+        return await self._client._adelete(
+            f"/v1/inbox/reviews/{review_id}/reply", data=payload
+        )

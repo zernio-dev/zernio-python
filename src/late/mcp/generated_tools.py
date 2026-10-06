@@ -372,7 +372,7 @@ def register_generated_tools(mcp, _get_client):
 
         Args:
             account_id: (required)
-            greeting: One entry per locale; one must use locale `default`. (required)"""
+            greeting: One entry per locale; one must use locale `default`. Each item is an object with keys: locale (string, required) - Meta locale, e.g. `default`, `en_US`, `es_ES`.; text (string, required) (required)"""
         client = _get_client()
         try:
             response = client.account_settings.set_messenger_greeting(
@@ -447,7 +447,7 @@ def register_generated_tools(mcp, _get_client):
 
         Args:
             account_id: (required)
-            ice_breakers: One entry per locale; one must use locale `default`. (required)"""
+            ice_breakers: One entry per locale; one must use locale `default`. Each item is an object with keys: locale (string, required) - Meta locale, e.g. `default`, `en_US`.; call_to_actions (list of objects with keys question, payload, required) (required)"""
         client = _get_client()
         try:
             response = client.account_settings.set_messenger_ice_breakers(
@@ -522,7 +522,7 @@ def register_generated_tools(mcp, _get_client):
 
         Args:
             account_id: (required)
-            ice_breakers: (required)"""
+            ice_breakers: Each item is an object with keys: question (string, required); payload (string, required) (required)"""
         client = _get_client()
         try:
             response = client.account_settings.set_instagram_ice_breakers(
@@ -597,7 +597,7 @@ def register_generated_tools(mcp, _get_client):
 
         Args:
             account_id: (required)
-            commands: (required)"""
+            commands: Each item is an object with keys: command (string, required) - Bot command without leading slash; description (string, required) - Command description (required)"""
         client = _get_client()
         try:
             response = client.account_settings.set_telegram_commands(
@@ -750,23 +750,20 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Update account
 
-            Updates a connected account's display name or username override.
+        Updates a connected account's display name or username override.
 
-            For X accounts on usage-based billing, also accepts an `xCapabilities`
-            object to toggle background API operations that incur X API pass-through costs.
-            Both fields are opt-in (default `false`). When off, no analytics syncs or DM
-            polling are performed for that account, and no API call is metered for those
-            operations. Publishing and deleting posts are always available regardless of
-            these toggles. Setting `xCapabilities` on a non-X account returns 400.
+        For X accounts on usage-based billing, also accepts an `xCapabilities`
+        object to toggle background API operations that incur X API pass-through costs.
+        Both fields are opt-in (default `false`). When off, no analytics syncs or DM
+        polling are performed for that account, and no API call is metered for those
+        operations. Publishing and deleting posts are always available regardless of
+        these toggles. Setting `xCapabilities` on a non-X account returns 400.
 
-            Args:
-                account_id: (required)
-                username
-                display_name
-                x_capabilities: X only. Per-account opt-in toggles for background API
-        operations that incur X API pass-through costs. Each call is
-        billed at the X tier rate. Either field can be
-        sent independently; omitted fields are unchanged."""
+        Args:
+            account_id: (required)
+            username
+            display_name
+            x_capabilities: X only. Per-account opt-in toggles for background API operations that incur X API pass-through costs. Each call is billed at the X tier rate. Either field can be sent independently; omitted fields are unchanged. Object with keys: analytics (boolean) - Enable periodic analytics reads (impressions, likes, etc.) for this X account. Each X API call is metered as `posts_read` and billed pass-through ...; inbox (boolean) - Enable DM polling and inbox sync for this X account. DM reads are metered as `dm_event_read` (~$0.010/call) and DM sends as `dm_interaction_create` ..."""
         client = _get_client()
         try:
             response = client.accounts.update_account(
@@ -1169,7 +1166,7 @@ def register_generated_tools(mcp, _get_client):
         Args:
             account_id: The Zernio account ID (from /v1/accounts) (required)
             location_id: Override which location to target. If omitted, uses the account's selected location. Use GET /gmb-locations to list valid IDs.
-            menus: Array of food menus to set (required)
+            menus: Array of food menus to set Each item is an object with keys: labels (list of objects with keys displayName, description, languageCode, required); sections (list of objects with keys labels, items); cuisines (list of string) - Cuisine types (e.g. AMERICAN, ITALIAN, JAPANESE); sourceUrl (string) - URL of the original menu source (required)
             update_mask: Field mask for partial updates (e.g. "menus")"""
         client = _get_client()
         try:
@@ -1252,22 +1249,22 @@ def register_generated_tools(mcp, _get_client):
             account_id: The Zernio account ID (from /v1/accounts) (required)
             location_id: Override which location to target. If omitted, uses the account's selected location. Use GET /gmb-locations to list valid IDs.
             update_mask: Required. Comma-separated fields to update (e.g. 'regularHours', 'specialHours', 'profile.description', 'categories', 'serviceItems'). Any valid Google Business Information API updateMask field is supported. (required)
-            regular_hours
-            special_hours
-            profile
+            regular_hours: Object with keys: periods (list of objects with keys openDay, openTime, closeDay, closeTime)
+            special_hours: Object with keys: specialHourPeriods (list of objects with keys startDate, endDate, openTime, closeTime, closed)
+            profile: Object with keys: description (string)
             website_uri
-            phone_numbers
-            categories: Primary and additional business categories. Use updateMask='categories' to update.
-            service_items: Services offered by the business. Use updateMask='serviceItems' to update.
+            phone_numbers: Object with keys: primaryPhone (string); additionalPhones (list of string)
+            categories: Primary and additional business categories. Use updateMask='categories' to update. Object with keys: primaryCategory (object with keys name); additionalCategories (list of objects with keys name)
+            service_items: Services offered by the business. Use updateMask='serviceItems' to update. Each item is an object with keys: structuredServiceItem (object with keys serviceTypeId, description) - A predefined service from Google's service type catalog; freeFormServiceItem (object with keys category, label) - A custom service not in Google's catalog; price (object with keys currencyCode, units, nanos) - Optional price for the service
             title: Business name. Use updateMask='title'.
             store_code: External store identifier, unique within the account. Use updateMask='storeCode'.
             labels: Free-form, internal-only labels for grouping (1-255 characters each). Use updateMask='labels'.
-            storefront_address: Postal address of the storefront. Use updateMask='storefrontAddress'. Omit for service-area-only businesses.
-            service_area: Areas the business serves. Use updateMask='serviceArea'. Full replacement: send every place you want to keep.
-            open_info: Open/closed status of the location. Use updateMask='openInfo'.
-            more_hours: Additional hours for specific services (delivery, drive-through, etc.). Use updateMask='moreHours'.
-            latlng: Precise coordinates. Use updateMask='latlng'. Google restricts latlng writes to approved clients, so this update may be silently ignored or rejected.
-            ad_words_location_extensions: Alternate phone shown in Google Ads location extensions. Use updateMask='adWordsLocationExtensions'."""
+            storefront_address: Postal address of the storefront. Use updateMask='storefrontAddress'. Omit for service-area-only businesses. Object with keys: regionCode (string) - ISO 3166-1 alpha-2 country code (e.g. 'BR'); languageCode (string); postalCode (string); administrativeArea (string) - State or province; locality (string) - City; addressLines (list of string)
+            service_area: Areas the business serves. Use updateMask='serviceArea'. Full replacement: send every place you want to keep. Object with keys: businessType (one of: CUSTOMER_LOCATION_ONLY, CUSTOMER_AND_BUSINESS_LOCATION); places (object with keys placeInfos); regionCode (string) - Immutable. CLDR region code of the country the business is based in (e.g. 'BR')
+            open_info: Open/closed status of the location. Use updateMask='openInfo'. Object with keys: status (one of: OPEN, CLOSED_PERMANENTLY, CLOSED_TEMPORARILY); openingDate (object with keys year, month, day)
+            more_hours: Additional hours for specific services (delivery, drive-through, etc.). Use updateMask='moreHours'. Each item is an object with keys: hoursTypeId (string) - Hours type from Google's catalog (e.g. 'DELIVERY', 'DRIVE_THROUGH'); periods (list of objects with keys openDay, openTime, closeDay, closeTime)
+            latlng: Precise coordinates. Use updateMask='latlng'. Google restricts latlng writes to approved clients, so this update may be silently ignored or rejected. Object with keys: latitude (number); longitude (number)
+            ad_words_location_extensions: Alternate phone shown in Google Ads location extensions. Use updateMask='adWordsLocationExtensions'. Object with keys: adPhone (string)"""
         client = _get_client()
         try:
             response = client.accounts.update_google_business_location_details(
@@ -1525,7 +1522,7 @@ def register_generated_tools(mcp, _get_client):
         Args:
             account_id: (required)
             location_id: Override which location to target. If omitted, uses the account's selected location. Use GET /gmb-locations to list valid IDs.
-            attributes: (required)
+            attributes: Each item is an object with keys: name (string, required); valueType (one of: ATTRIBUTE_VALUE_TYPE_UNSPECIFIED, BOOL, ENUM, URL, REPEATED_ENUM); values (list of any); repeatedEnumValue (object with keys setValues, unsetValues); uriValues (list of objects with keys uri) (required)
             attribute_mask: Comma-separated attribute names to update (e.g. 'has_delivery,has_takeout') (required)"""
         client = _get_client()
         try:
@@ -3214,7 +3211,7 @@ def register_generated_tools(mcp, _get_client):
             account_id: Zernio SocialAccount id (posting or ads variant); its platform decides where the campaign is created. (required)
             ad_account_id: Platform ad account id (Meta act_<n>, Google customer id, LinkedIn account id, ...). (required)
             name: (required)
-            rules: Evaluated in order; the first matching rule wins. (required)"""
+            rules: Evaluated in order; the first matching rule wins. Each item is an object with keys: id (string) - Platform rule id. Echo it on `PUT` to KEEP this rule, omit it to CREATE a new one. A rule left out of the array entirely is DELETED.; name (string, required); adjustSign (one of: INCREASE, DECREASE; required) - Direction of the adjustment. There is no signed value field.; adjustValue (integer, required) - Unsigned percentage magnitude. `INCREASE` accepts 1-1000, `DECREASE` accepts 1-90. 0 is out of range on both.; status (string) - Meta returns `ACTIVE` here but documents no enum for the field. Treat it as a passthrough: echo whatever the `GET` returned, and do not synthesize values.; criteria (list of objects with keys id, criteriaType, operator, criteriaValues, criteriaValueTypes, required) - All criteria on a rule must match for the rule to fire. (required)"""
         client = _get_client()
         try:
             response = client.ad_accounts.create_value_rule_set(
@@ -3299,7 +3296,7 @@ def register_generated_tools(mcp, _get_client):
             value_rule_set_id: Platform value rule set id. (required)
             account_id: Zernio SocialAccount id (posting or ads variant); its platform decides where the campaign is created. (required)
             name: Required: the update replaces the whole set. (required)
-            rules: The COMPLETE rule list. Omitting a rule deletes it on Meta. (required)"""
+            rules: The COMPLETE rule list. Omitting a rule deletes it on Meta. Each item is an object with keys: id (string) - Platform rule id. Echo it on `PUT` to KEEP this rule, omit it to CREATE a new one. A rule left out of the array entirely is DELETED.; name (string, required); adjustSign (one of: INCREASE, DECREASE; required) - Direction of the adjustment. There is no signed value field.; adjustValue (integer, required) - Unsigned percentage magnitude. `INCREASE` accepts 1-1000, `DECREASE` accepts 1-90. 0 is out of range on both.; status (string) - Meta returns `ACTIVE` here but documents no enum for the field. Treat it as a passthrough: echo whatever the `GET` returned, and do not synthesize values.; criteria (list of objects with keys id, criteriaType, operator, criteriaValues, criteriaValueTypes, required) - All criteria on a rule must match for the rule to fire. (required)"""
         client = _get_client()
         try:
             response = client.ad_accounts.update_value_rule_set(
@@ -3745,7 +3742,7 @@ def register_generated_tools(mcp, _get_client):
             account_id: Zernio Google Ads connection id. (required)
             ad_account_id: Platform ad account ID (Google customer ID, digits only). Required when the connection has multiple customers.
             customer_id: Alias of adAccountId, kept for existing callers
-            updates: (required)"""
+            updates: Each item is an object with keys: assetResourceName (string, required) - Asset resource name returned by a list operation. Must belong to the selected customer.; calloutAsset (object with keys calloutText) (required)"""
         client = _get_client()
         try:
             response = client.ad_accounts.update_account_callouts(
@@ -3853,7 +3850,7 @@ def register_generated_tools(mcp, _get_client):
             account_id: Zernio Google Ads connection id. (required)
             ad_account_id: Platform ad account ID (Google customer ID, digits only). Required when the connection has multiple customers.
             customer_id: Alias of adAccountId, kept for existing callers
-            sitelinks: (required)"""
+            sitelinks: Each item is an object with keys: text (string, required); linkUrl (string, required); description1 (string); description2 (string) (required)"""
         client = _get_client()
         try:
             response = client.ad_accounts.add_account_sitelinks(
@@ -3890,7 +3887,7 @@ def register_generated_tools(mcp, _get_client):
             account_id: Zernio Google Ads connection id. (required)
             ad_account_id: Platform ad account ID (Google customer ID, digits only). Required when the connection has multiple customers.
             customer_id: Alias of adAccountId, kept for existing callers
-            updates: (required)"""
+            updates: Each item is an object with keys: assetResourceName (string, required) - Asset resource name returned by a list operation. Must belong to the selected customer.; sitelinkAsset (object with keys linkText, description1, description2, linkUrl); finalUrls (list of string) (required)"""
         client = _get_client()
         try:
             response = client.ad_accounts.update_account_sitelinks(
@@ -3998,7 +3995,7 @@ def register_generated_tools(mcp, _get_client):
             account_id: Zernio Google Ads connection id. (required)
             ad_account_id: Platform ad account ID (Google customer ID, digits only). Required when the connection has multiple customers.
             customer_id: Alias of adAccountId, kept for existing callers
-            structured_snippets: (required)"""
+            structured_snippets: Each item is an object with keys: header (one of: Amenities, Brands, Courses, Degree programs, Destinations, Featured hotels, Insurance coverage, Models, Neighborhoods, Service catalog, Shows, Styles, Types; required); values (list of string, required) (required)"""
         client = _get_client()
         try:
             response = client.ad_accounts.add_account_structured_snippets(
@@ -4035,7 +4032,7 @@ def register_generated_tools(mcp, _get_client):
             account_id: Zernio Google Ads connection id. (required)
             ad_account_id: Platform ad account ID (Google customer ID, digits only). Required when the connection has multiple customers.
             customer_id: Alias of adAccountId, kept for existing callers
-            updates: (required)"""
+            updates: Each item is an object with keys: assetResourceName (string, required) - Asset resource name returned by a list operation. Must belong to the selected customer.; structuredSnippetAsset (object with keys header, values) (required)"""
         client = _get_client()
         try:
             response = client.ad_accounts.update_account_structured_snippets(
@@ -4907,7 +4904,7 @@ def register_generated_tools(mcp, _get_client):
             audience_id: (required)
             name
             description
-            spec: Full replacement for the stored targeting spec."""
+            spec: Full replacement for the stored targeting spec. Object with keys: userOs (list of string) - Meta only. Operating systems and version ranges, such as iOS_ver_14.0_and_above or Android. Emitted as user_os. May also be supplied inside targeting.; userDevice (list of string) - Meta only. Device models such as iPhone. Emitted as user_device. May also be supplied inside targeting.; countries (list of string) - ISO 3166-1 alpha-2 country codes (e.g. ['US']).; regions (list of any) - Region/state targeting. `key` is the platform location ID from /v1/ads/targeting/search?dimension=geo&geoType=region. An entry may also be that id as a plain ...; cities (list of any) - City targeting. Optional `radius` + `distanceUnit` extend beyond the city limits; both must be set together or both omitted. `radius` is only honoured on ...; zips (list of objects with keys key, name) - Postal/ZIP targeting. `key` is the platform's postal location ID (e.g. Meta `US:94304`). Supported on Meta, Google, TikTok, Pinterest, X.; metros (list of objects with keys key, name) - DMA / metro-area targeting. `key` is the platform's metro ID (e.g. Meta `DMA:807`).; countryGroups (list of string) - Meta only. Continents and trade blocs (`geo_locations.country_groups`), for targeting a whole region without listing its countries. Combines with `countries` ...; customLocations (list of objects with keys latitude, longitude, radius, distanceUnit, name, address) - Point-radius (lat/lng) targeting (Meta custom_locations / Google proximity). Honoured on Meta and Google; ignored on platforms without radius support.; excludedLocations (object with keys countries, countryGroups, regions, cities, zips, places, neighborhoods, customLocations) - Geo to exclude from the audience. Mirrors the inclusion geo shape: excluded cities can carry a radius catchment and excluded custom (lat/lng) pins are ...; ageMin (integer) - Minimum age. Applied on Meta, TikTok, Pinterest, LinkedIn, X and Google Search/Display (Google excludes the age ranges outside the request); rejected with 400 ...; ageMax (integer) - Maximum age. Same per-platform application and clamping as ageMin.; gender (one of: all, male, female) - Restrict by gender. 'all' (default) targets everyone. Applied on Meta, TikTok, Pinterest, LinkedIn, X and Google Search/Display (Google excludes the other ...; incomeTier (one of: top_5, top_10, top_10_25, top_25_50) - Normalized household-income tier (ZIP/percentile based). Meta and TikTok express all four. Google maps only `top_10` (its INCOME_RANGE_90_UP); other tiers on ...; languages (list of string) - Language codes restricting the audience by language. Applied on Meta, Google, TikTok, LinkedIn, X and Pinterest; rejected with 400 on OpenAI. A code the ...; interests (list of objects with keys id, name) - Interest entities from /v1/ads/targeting/search?dimension=interest. Each carries the platform's opaque id. On Google, applied as ad-group interest criteria ...; behaviors (list of objects with keys id, name) - Behaviour entities from /v1/ads/targeting/search?dimension=behavior (Meta, TikTok and LinkedIn). On TikTok they target people who interacted with videos ...; workPositions (list of objects with keys id, name) - Meta only. Job title entities from /v1/ads/targeting/search?dimension=workPosition. Not interchangeable with the LinkedIn `jobTitles` URN fragments.; workEmployers (list of objects with keys id, name) - Meta only. Employer entities from /v1/ads/targeting/search?dimension=workEmployer.; workIndustries (list of objects with keys id, name) - Meta only. Work-industry entities from /v1/ads/targeting/search?dimension=workIndustry. Not interchangeable with the LinkedIn `industries` URN fragments.; industries (list of string) - LinkedIn B2B only. Industry URN id fragments, or the full urn:li:industry:* URN from /v1/ads/targeting/search?dimension=industry.; companySizes (list of string) - LinkedIn B2B only. Single-letter size codes (A to I), or the full urn:li:staffCountRange:* URN from /v1/ads/targeting/search?dimension=companySize.; seniorities (list of string) - LinkedIn B2B only. Seniority URN id fragments, or the full urn:li:seniority:* URN from /v1/ads/targeting/search?dimension=seniority.; jobFunctions (list of string) - LinkedIn B2B only. Function URN id fragments, or the full urn:li:function:* URN from /v1/ads/targeting/search?dimension=jobFunction.; audienceInclude (list of string) - Platform audience IDs to include, as returned by GET /v1/ads/audiences (Meta custom audience ids, TikTok audience ids, Pinterest customer list ids, LinkedIn ...; audienceExclude (list of string) - Platform audience IDs to exclude; same ID formats as audienceInclude. Not supported on OpenAI (400)."""
         client = _get_client()
         try:
             response = client.ad_audiences.update_ad_audience(
@@ -4972,7 +4969,7 @@ def register_generated_tools(mcp, _get_client):
 
         Args:
             audience_id: The Zernio audience id (the id field of GET /v1/ads/audiences), not the platform segment id. (required)
-            users: (required)"""
+            users: Each item is an object with keys: email (string); phone (string) (required)"""
         client = _get_client()
         try:
             response = client.ad_audiences.add_users_to_ad_audience(
@@ -5019,7 +5016,7 @@ def register_generated_tools(mcp, _get_client):
 
         Args:
             audience_id: The Zernio audience id (the id field of GET /v1/ads/audiences), not the platform segment id. (required)
-            companies: The complete company list. Each row needs at least one of name, domain, website or linkedinPageUrl. (required)"""
+            companies: The complete company list. Each row needs at least one of name, domain, website or linkedinPageUrl. Each item is an object with keys: name (string); domain (string); website (string); linkedinPageUrl (string) (required)"""
         client = _get_client()
         try:
             response = client.ad_audiences.replace_ad_audience_companies(
@@ -5193,7 +5190,7 @@ def register_generated_tools(mcp, _get_client):
         Args:
             account_id: Google ads SocialAccount id. (required)
             ad_account_id: Google customer id, digits only. Required when the connection has several customers.
-            recommendations: (required)"""
+            recommendations: Each item is an object with keys: resourceName (string, required) - Recommendation resource name from the list, or its id.; parameters (object) - One key, such as campaignBudget, keyword, textAd, targetCpaOptIn, targetRoasOptIn, callAsset, calloutAsset, sitelinkAsset, moveUnusedBudget, ... (required)"""
         client = _get_client()
         try:
             response = client.ad_campaigns.apply_google_recommendations(
@@ -5728,7 +5725,7 @@ def register_generated_tools(mcp, _get_client):
             name: (required)
             goal: Mapped to the ODAX objective (same mapping as POST /v1/ads/create). (required)
             is_skadnetwork_attribution: Meta app promotion only. Immutable campaign flag. Set true for iOS 14+ SKAdNetwork campaigns and supply promotedObject.applicationId plus promotedObject.objectStoreUrl. The campaign receives promotedObject only when this flag is true. Cannot be changed on an existing campaign.
-            promoted_object
+            promoted_object: Object with keys: pixelId (string) - Pixel ID. **Meta:** Facebook Pixel ID, required for `goal: conversions`. Requires `customEventType` alongside it; Meta rejects any promoted_object carrying ...; customEventType (string) - The event the campaign/ad group optimises against. **Meta:** standard event like `PURCHASE`, `LEAD`, `COMPLETE_REGISTRATION`, `ADD_TO_CART`. Uppercased ...; customEventStr (string) - Meta only. Pixel custom-event name to optimise against (Meta's `custom_event_str`), exactly as it appears in Events Manager and in your CAPI payloads ...; pageId (string) - Facebook Page ID. Used by `goal: lead_generation`. Auto-filled from the connected Page when omitted.; applicationId (string) - App ID. Required for `goal: app_promotion`.; objectStoreUrl (string) - App Store / Play Store listing URL. Required for `goal: app_promotion`.; customConversionId (string) - Custom Conversion ID, when optimising against one instead of a standard event. Accepted alone by this API, without `pixelId` or `customEventType`. If ...; productCatalogId (string) - Optional catalog ID. If supplied with productSetId, the set must belong to this catalog (checked by Zernio when the Meta login carries catalog_management, by ...; productSetId (string) - Meta product SET ID, for example from GET /v1/ads/catalogs/{catalogId}/product-sets. Creating catalog ads needs only ads_management on the Meta login, not ...; offlineConversionDataSetId (string) - Meta only. Offline event set (dataset) to optimise toward. Post-merger these are datasets: the id is the dataset id (for pixel-backed datasets, the pixel id).; whatsappPhoneNumber (string) - Meta only. WhatsApp number on messaging-destination ad sets.
             buying_type: Every platform buys at auction by default, so this only needs sending on Meta, and only to choose RESERVED. `AUCTION` is accepted on every platform and changes nothing. `RESERVED` (Reach & Frequency) is Meta-only and is rejected with a 400 elsewhere. SKAdNetwork app promotion requires AUCTION.
             validate_only: Meta and ChatGPT (OpenAI). Runs campaign validation without creating or persisting a campaign; Idempotency-Key storage is bypassed. Returns HTTP 200 with validateOnly true and status VALIDATED. OpenAI has no dry-run, so there Zernio checks the budget, goal and conversion event itself. `true` on any other platform returns 501 `feature_not_available` (same as POST /v1/ads/create); `false` is ignored.
             special_ad_categories
@@ -5909,7 +5906,7 @@ def register_generated_tools(mcp, _get_client):
 
         Args:
             campaign_id: Numeric Google platform campaign id. (required)
-            schedule: The complete set of windows. Required, so clearing the schedule is always deliberate rather than an omission. (required)"""
+            schedule: The complete set of windows. Required, so clearing the schedule is always deliberate rather than an omission. Each item is an object with keys: dayOfWeek (one of: MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY, SUNDAY; required); startHour (integer, required); startMinute (one of: 0, 15, 30, 45) - Quarter-hours only.; endHour (integer, required) - 24 means midnight at the end of the day.; endMinute (one of: 0, 15, 30, 45) - Quarter-hours only. Must be 0 when endHour is 24.; bidModifier (number or null) - Bid adjustment for this window. Null runs it at the campaign bid. (required)"""
         client = _get_client()
         try:
             response = client.ad_campaigns.update_campaign_ad_schedule(
@@ -6067,9 +6064,9 @@ def register_generated_tools(mcp, _get_client):
             roas_average_floor: **Google only.** Decimal ROAS multiplier (2.0 = 2.0x), required for LOWEST_COST_WITH_MIN_ROAS.
             portfolio_bid_strategy_id: **Google only.** Attach an existing portfolio bid strategy (numeric id from GET /v1/ads/bid-strategies) instead of setting bidStrategy. Exclusive with bidStrategy.
             allow_shared_budget_update: Google only. Explicitly allow changing a shared campaign budget, affecting every campaign that uses it. Does not bypass an unknown sharing state.
-            budget: Meta CBO, Google daily, or OpenAI Ads daily or lifetime campaign budget, in whole currency units.
+            budget: Meta CBO, Google daily, or OpenAI Ads daily or lifetime campaign budget, in whole currency units. Object with keys: amount (number, required) - Budget amount in the ad account's currency; type (one of: daily, lifetime; required)
             name: **Meta only.** Rename the campaign.
-            platform_specific_data: **Meta only.** Platform implied by the `platform` body param, same convention as POST /v1/ads/create."""
+            platform_specific_data: **Meta only.** Platform implied by the `platform` body param, same convention as POST /v1/ads/create. Object with keys: spendCap (number or null) - Campaign lifetime spend cap, in the ad account's currency (Meta `spend_cap`). Pass null to remove the cap; 0 is rejected by Meta."""
         client = _get_client()
         try:
             response = client.ad_campaigns.update_ad_campaign(
@@ -6251,7 +6248,7 @@ def register_generated_tools(mcp, _get_client):
 
         Args:
             status: (required)
-            campaigns: (required)"""
+            campaigns: Each item is an object with keys: platformCampaignId (string, required); platform (one of: facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai; required) (required)"""
         client = _get_client()
         try:
             response = client.ad_campaigns.bulk_update_ad_campaign_status(
@@ -6409,7 +6406,7 @@ def register_generated_tools(mcp, _get_client):
         Args:
             campaign_id: Google platform campaign ID (required)
             platform: (required)
-            targeting: (required)"""
+            targeting: Object with keys: devices (list of any) - Devices to include. Devices not listed become excluded (negative) criteria, same contract as the existing devices-only edit.; locations (any) - Bare country-code array, or the nested creation-time shape (countries/regions/cities/zips/metros).; languages (list of string) - Google's language codes (ISO 639-1, plus variants such as `zh_CN`), e.g. [\"en\", \"de\"].; locationTargetingType (one of: presence, presence_or_interest) (required)"""
         client = _get_client()
         try:
             response = client.ad_campaigns.update_campaign_targeting(
@@ -6770,7 +6767,7 @@ def register_generated_tools(mcp, _get_client):
             Args:
                 ad_set_id: Platform ad set ID (required)
                 platform: (required)
-                budget: Omit if not updating budget
+                budget: Omit if not updating budget Object with keys: amount (number); type (one of: daily, lifetime)
                 status: Writes the ad set's own on/off switch (Meta: `configured_status`) on Meta and LinkedIn, whatever delivery status its ads report. Omit if not toggling delivery state.
                 name: Rename the ad set (Meta only; other platforms return 501). At least one of budget/status/bidStrategy/name is required.
                 bid_strategy: Ad-set-level bid strategy. Overrides the campaign-level default.
@@ -6781,13 +6778,7 @@ def register_generated_tools(mcp, _get_client):
         LOWEST_COST_WITH_MIN_ROAS is rejected with 422 (OpenAI has no ROAS-based
         bidding). Other platforms (linkedin, pinterest, google, twitter) return 501
         Not Implemented when bidStrategy is set.
-                smart_targeting: TikTok only (a 400 elsewhere). TikTok Smart Targeting on the ad group: `audience` is
-        TikTok's `smart_audience_enabled`, `interestsBehaviors` its `smart_interest_behavior_enabled`.
-        When on, TikTok may deliver beyond the selected audiences or interests. Available on
-        Video views, Traffic, Lead generation, App install, Web conversion and Community interaction.
-        Only the flags you send are written; an unwritten flag reads back null in
-        `nativeSettings`, so send `false` explicitly to be able to verify it is off.
-        Applied with TikTok's adgroup/update; read it back with GET /v1/ads/ad-sets?adSetId=...&live=true.
+                smart_targeting: TikTok only (a 400 elsewhere). TikTok Smart Targeting on the ad group: `audience` is TikTok's `smart_audience_enabled`, `interestsBehaviors` its `smart_interest_behavior_enabled`. When on, TikTok may deliver beyond the selected audiences or interests. Available on Video views, Traffic, Lead generation, App install, Web conversion and Community interaction. Only the flags you send are written; an unwritten flag reads back null in `nativeSettings`, so send `false` explicitly to be able to verify it is off. Applied with TikTok's adgroup/update; read it back with GET /v1/ads/ad-sets?adSetId=...&live=true. Object with keys: audience (boolean) - TikTok smart_audience_enabled.; interestsBehaviors (boolean) - TikTok smart_interest_behavior_enabled.
                 bid_amount: Bid cap in WHOLE currency units (USD: 5 = $5.00; JPY: 100 = ¥100). Required when
         bidStrategy is LOWEST_COST_WITH_BID_CAP or COST_CAP. Internally converted to Meta's
         smallest-denomination integer, or (on OpenAI) to micros (× 1,000,000). Meta only:
@@ -6805,8 +6796,7 @@ def register_generated_tools(mcp, _get_client):
         rule set and must be sent WITHOUT `valueRuleSetId`; the combination returns
         400. `true` is optional when attaching, since attachment is driven by
         `valueRuleSetId`, and requires it to be present.
-                platform_specific_data: Platform-specific post-launch delivery settings. The platform is implied by the
-        `platform` body param. Meta only; other platforms return 400. Unknown keys are rejected."""
+                platform_specific_data: Platform-specific post-launch delivery settings. The platform is implied by the `platform` body param. Meta only; other platforms return 400. Unknown keys are rejected. Object with keys: optimizationGoal (string) - Meta ad-set optimization_goal (e.g. OFFSITE_CONVERSIONS, LANDING_PAGE_VIEWS).; billingEvent (string) - Meta ad-set billing_event (e.g. IMPRESSIONS, LINK_CLICKS, THRUPLAY).; startDate (string) - Ad set start_time (ISO 8601). A value without an offset (`YYYY-MM-DD`, `YYYY-MM-DD HH:MM:SS` or `YYYY-MM-DDTHH:MM:SS`) is read in the ad account timezone.; endDate (string) - Ad set end_time (ISO 8601). A value without an offset (`YYYY-MM-DD`, `YYYY-MM-DD HH:MM:SS` or `YYYY-MM-DDTHH:MM:SS`) is read in the ad account timezone.; dailyMinSpendTarget (number) - Meta `daily_min_spend_target`: the least this ad set should spend per day, in whole currency units of the ad account. It reserves a share of a CAMPAIGN budget ...; lifetimeMinSpendTarget (number) - Meta `lifetime_min_spend_target`: the lifetime-budget flavour of `dailyMinSpendTarget`, in whole currency units. Send this one when the campaign budget is a ...; customerLifecycle (object with keys strategy, existingCustomerAudienceIds, engagedAudienceIds); promotedObject (object with keys pixelId, customEventType, customEventStr, pageId, applicationId, objectStoreUrl, customConversionId, productCatalogId, productSetId, offlineConversionDataSetId, whatsappPhoneNumber) - Meta ad-set promoted_object, forwarded verbatim (same shape as /v1/ads/create). Unknown keys are rejected with 400."""
         client = _get_client()
         try:
             response = client.ad_campaigns.update_ad_set(
@@ -7155,73 +7145,37 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Update ad
 
-            Patch one or more fields on an ad. Status, budget, targeting, and creative changes
-            are propagated to the platform.
+        Patch one or more fields on an ad. Status, budget, targeting, and creative changes
+        are propagated to the platform.
 
-            Per-platform support:
-            - **Meta** (Facebook + Instagram): all fields supported.
-            - **TikTok**: status, budget, `name` (renames the ad), targeting (via `/v2/adgroup/update/`), and creative
-              (via `/v2/ad/update/` patch-style: `headline` is ignored, `body` becomes `ad_text`).
-            - **Google**: status, budget, KEYWORD edits via `targeting.keywords` /
-              `targeting.negativeKeywords`, DEVICE bid adjustments via `targeting.devices`,
-              LOCATION edits via `targeting.locations` (or the equivalent top-level
-              `targeting.countries` / `regions` / `cities` / `zips` / `metros`), and LANGUAGE
-              edits via `targeting.languages`.
-              Each list you send becomes the FULL new set of its kind (criteria not in the
-              list are removed, except devices, which Google cannot remove and which are
-              switched off with a bid modifier of 0 instead); a kind left out is untouched.
-              Any other `targeting` field ...
+        Per-platform support:
+        - **Meta** (Facebook + Instagram): all fields supported.
+        - **TikTok**: status, budget, `name` (renames the ad), targeting (via `/v2/adgroup/update/`), and creative
+          (via `/v2/ad/update/` patch-style: `headline` is ignored, `body` becomes `ad_text`).
+        - **Google**: status, budget, KEYWORD edits via `targeting.keywords` /
+          `targeting.negativeKeywords`, DEVICE bid adjustments via `targeting.devices`,
+          LOCATION edits via `targeting.locations` (or the equivalent top-level
+          `targeting.countries` / `regions` / `cities` / `zips` / `metros`), and LANGUAGE
+          edits via `targeting.languages`.
+          Each list you send becomes the FULL new set of its kind (criteria not in the
+          list are removed, except devices, which Google cannot remove and which are
+          switched off with a bid modifier of 0 instead); a kind left out is untouched.
+          Any other `targeting` field ...
 
-            Platforms: meta, google, tiktok, linkedin, pinterest, x
+        Platforms: meta, google, tiktok, linkedin, pinterest, x
 
-            Args:
-                ad_id: (required)
-                headlines: Google Search and Display only. Replaces the complete headline list. Search takes 3-15, Display 1-5 and rejects pinnedField; the count is checked once the ad's channel is known. No padding or truncation on update.
-                descriptions: Google Search and Display only. Replaces the complete description list. Search takes 2-4, Display 1-5 and rejects pinnedField. No padding or truncation on update.
-                final_urls: Google Search and Display only. Replaces final URLs. Omitted lists stay unchanged. For Performance Max use assetGroup.finalUrl.
-                asset_group: Google Performance Max only. Replaces whole asset roles on the ad's asset group. Returns 422 on any other platform or channel.
-                demand_gen: Google Demand Gen only. Returns 422 on any other platform or channel.
-                status
-                budget
-                targeting: Meta + TikTok (demographics/interests), Google (keyword and device
-        bid adjustment edits only), and LinkedIn (locations, B2B facets, audiences).
-        Pinterest / X return 501.
-
-        On Meta, TikTok and LinkedIn this is a partial update: every targeting setting
-        you do not send is preserved (on Meta: Advantage+ audience, placements, custom
-        audiences, exclusions, interests, languages; on TikTok: languages, interest
-        keywords, devices, behaviours; on LinkedIn: skills, member traits, interface
-        locales, and any facet set in Campaign Manager). A field you send replaces its
-        platform counterpart, and an empty or null value (for example `audienceInclude: []`,
-        `industries: []` or `gender: "all"`) clears only that field. Any location field
-        (countries, regions, cities, zips, ...) replaces the whole included location set;
-        an update with no location keeps the current locations.
-                creative: Replace or patch the ad's creative. Meta, TikTok, and LinkedIn.
-
-        - **Meta**: patch-style. Pass any subset: fields you omit are preserved from the
-          live creative, including media (`image_hash`/`video_id` are reused, no re-upload)
-          and `url_tags`. Sending the full set (`headline`, `body`, `callToAction`,
-          `linkUrl`, `imageUrl`) rebuilds the creative from scratch instead. Partial
-          patching reads the live `object_story_spec`, which Meta strips on SHARE /
-          page-post / dark / asset_feed creatives. Those return 422 asking for the full
-          set. A `videoUrl`/`videoId` on an image creative is a type change and also
-          needs the full set. `existingCreativeId` repoints the ad at a creative from
-          GET /v1/ads/creatives and ignores every other field. Meta creatives are
-          immutable, so any change creates a new creative and repoints the ad; the old
-          creative is retained on the ad account for historical reporting.
-          `creativeFeatures` is Meta-only. Omitted settings are preserved from the
-          live creative, including full rebuilds. A supplied creativeFeatures map
-          overrides individual existing keys.
-        - **TikTok**: patch-style. Pass any subset; `headline` is ignored (TikTok creatives
-          have no headline slot). `body` becomes the in-feed `ad_text`; `linkUrl` becomes
-          `landing_page_url`; `videoUrl` triggers a fresh upload. `description`, `videoId`
-          and `existingCreativeId` are Meta-only and return 400.
-        - **LinkedIn**: requires new media (image via `imageUrl` or video via `videoUrl`);
-          a text-only creative update returns 400. Uploads the media, creates a new inline
-          media creative on the same campaign, and pauses the old creative (best-effort).
-          The old creative is retained for historical reporting. `videoId` and
-          `existingCreativeId` are Meta-only and return 400.
-                name: Rename the ad. Now propagated to Meta (POST /{ad-id}); non-Meta platforms return 501."""
+        Args:
+            ad_id: (required)
+            headlines: Google Search and Display only. Replaces the complete headline list. Search takes 3-15, Display 1-5 and rejects pinnedField; the count is checked once the ad's channel is known. No padding or truncation on update. Each item is an object with keys: text (string, required); pinnedField (one of: HEADLINE_1, HEADLINE_2, HEADLINE_3) - Optional fixed headline position. Omit to leave the asset unpinned.
+            descriptions: Google Search and Display only. Replaces the complete description list. Search takes 2-4, Display 1-5 and rejects pinnedField. No padding or truncation on update. Each item is an object with keys: text (string, required); pinnedField (one of: DESCRIPTION_1, DESCRIPTION_2) - Optional fixed description position. Omit to leave the asset unpinned.
+            final_urls: Google Search and Display only. Replaces final URLs. Omitted lists stay unchanged. For Performance Max use assetGroup.finalUrl.
+            asset_group: Google Performance Max only. Replaces whole asset roles on the ad's asset group. Returns 422 on any other platform or channel. Object with keys: finalUrl (string) - Replaces the asset group's final URL.; headlines (list of string) - Replaces every HEADLINE asset on the group.; longHeadline (string) - Replaces the LONG_HEADLINE asset.; descriptions (list of string) - Replaces every DESCRIPTION asset. At least one must be 60 characters or fewer.; businessName (string) - Replaces the BUSINESS_NAME asset.; images (object with keys landscape, square, logo) - Public HTTP(S) image URLs. Each role you send replaces that role's images; roles you omit stay. GIF, JPEG or PNG, at most 5120 KB per image.; youtubeVideoIds (list of string) - Replaces YOUTUBE_VIDEO assets with existing YouTube video ids. Video uploads and arbitrary video URLs are not supported.
+            demand_gen: Google Demand Gen only. Returns 422 on any other platform or channel. Object with keys: finalUrl (string); businessName (string); headlines (list of string); longHeadlines (list of string) - Video ads only.; descriptions (list of string); callToAction (string) - Image and carousel ads only.; images (object with keys landscape, square, portrait, logo); youtubeVideoIds (list of string) - Video ads only.; channels (list of string) - Replaces the ad group's channel controls; only the listed channels serve.; audience (object with keys userLists, userInterests, customAudiences, ageRanges, genders); audienceId (string) - Attach an existing Google Audience by numeric id instead of audience.
+            status
+            budget: Object with keys: amount (number) - Minimum varies by platform: TikTok=$20, Pinterest=$5, others=$1; type (one of: daily, lifetime) - OpenAI Ads accepts both and sets the campaign's single spend cap, replacing the previous daily or lifetime cap. A daily cap cannot go back to lifetime (422).
+            targeting: Meta + TikTok (demographics/interests), Google (keyword and device bid adjustment edits only), and LinkedIn (locations, B2B facets, audiences). Pinterest / X return 501. On Meta, TikTok and LinkedIn this is a partial update: every targeting setting you do not send is preserved (on Meta: Advantage+ audience, placements, custom audiences, exclusions, interests, languages; on TikTok: languages, interest keywords, devices, behaviours; on LinkedIn: skills, member traits, interface locales, and any facet set in Campaign Manager). A field you send replaces its platform counterpart, and an empty or null value (for example `audienceInclude: []`, `industries: []` or `gender: "all"`) clears only that field. Any location field (countries, regions, cities, zips, ...) replaces the whole included location set; an update with no location keeps the current locations. Object with keys: keywords (list of any) - Google only. The FULL desired set of positive keywords for the entire ad group. Omit to leave positives unchanged; [] removes all positives. Negatives are ...; negativeKeywords (list of any) - Google only. The FULL desired set of negative keywords for the entire ad group, independent of positives. Omit to leave negatives unchanged; [] removes all ...; devices (list of any) - Google only. The FULL new set of device bid modifiers for the campaign. Entries are a device name alone (targeted, bid modifier reset to 1) or { device, ...; ageMin (integer); ageMax (integer); countries (list of string) - ISO 3166-1 alpha-2 codes. On Google this is the FULL new country set for the campaign (same contract as `locations`); on LinkedIn it replaces the campaign's ...; locations (any) - Google and LinkedIn. The FULL new location set for the campaign. Bare country-code array, or an object with countries/regions/cities/zips/metros key lists ...; languages (list of string) - Google only. The FULL new language set for the campaign, as Google language codes (ISO 639-1, plus variants such as `zh_CN`). An unknown code returns 400.; interests (list of objects with keys id, name) - Interest objects from /v1/ads/interests. Each must include id and name.; advantage_audience (one of: 0, 1) - Meta only. Omit to preserve the existing setting on update. 0 = disabled, 1 = enabled.
+            creative: Replace or patch the ad's creative. Meta, TikTok, and LinkedIn. - **Meta**: patch-style. Pass any subset: fields you omit are preserved from the live creative, including media (`image_hash`/`video_id` are reused, no re-upload) and `url_tags`. Sending the full set (`headline`, `body`, `callToAction`, `linkUrl`, `imageUrl`) rebuilds the creative from scratch instead. Partial patching reads the live `object_story_spec`, which Meta strips on SHARE / page-post / dark / asset_feed creatives. Those return 422 asking for the full set. A `videoUrl`/`videoId` on an image creative is a type change and also needs the full set. `existingCreativeId` repoints the ad at a creative from GET /v1/ads/creatives and ignores every other field. Meta creatives are immutable, so any change creates a new creative and repoints the ad; the old creative is retained on the ad account for historical reporting. `creativeFeatures` is Meta-only. Omitted settings are preserved from the live creative, including full rebuilds. A supplied creativeFeatures map overrides individual existing keys. - **TikTok**: patch-style. Pass any subset; `headline` is ignored (TikTok creatives have no headline slot). `body` becomes the in-feed `ad_text`; `linkUrl` becomes `landing_page_url`; `videoUrl` triggers a fresh upload. `description`, `videoId` and `existingCreativeId` are Meta-only and return 400. - **LinkedIn**: requires new media (image via `imageUrl` or video via `videoUrl`); a text-only creative update returns 400. Uploads the media, creates a new inline media creative on the same campaign, and pauses the old creative (best-effort). The old creative is retained for historical reporting. `videoId` and `existingCreativeId` are Meta-only and return 400. Object with keys: promotion (object or null) - Not supported. Meta validates creative_sourcing_spec.promotion_metadata_spec on the create call and then discards it, so a Promotion set through the Marketing ...; creativeFeatures (object); headline (string) - Meta and LinkedIn (TikTok has no headline slot); longHeadline (string) - Google Display only. Replaces the responsive display ad's long headline.; businessName (string) - Google Display only. Replaces the responsive display ad's business name.; squareImageUrl (string) - Google Display only. Uploaded as a new square (1:1) marketing image asset that replaces the current one.; body (string); description (string) - Link description slot (Meta `link_data.description` / `video_data.link_description`, LinkedIn creative description).; callToAction (string); linkUrl (string); imageUrl (string); videoUrl (string); videoId (string) - Meta only. Reuse an already-uploaded ad video (from POST /v1/ads/videos or GET /v1/ads/videos) instead of re-uploading via videoUrl.; existingCreativeId (string) - Meta only. Repoint the ad at an existing library creative (from GET /v1/ads/creatives); all other creative fields are ignored.
+            name: Rename the ad. Now propagated to Meta (POST /{ad-id}); non-Meta platforms return 501."""
         client = _get_client()
         try:
             response = client.ad_campaigns.update_ad(
@@ -7376,9 +7330,9 @@ def register_generated_tools(mcp, _get_client):
             account_id: Zernio Google Ads connection id. (required)
             ad_account_id: Platform ad account ID (Google customer ID, digits only). Required when the connection has multiple customers.
             customer_id: Alias of adAccountId, kept for existing callers
-            sitelinks
+            sitelinks: Each item is an object with keys: text (string, required); linkUrl (string, required); description1 (string); description2 (string)
             callouts
-            structured_snippets"""
+            structured_snippets: Each item is an object with keys: header (one of: Amenities, Brands, Courses, Degree programs, Destinations, Featured hotels, Insurance coverage, Models, Neighborhoods, Service catalog, Shows, Styles, Types; required); values (list of string, required)"""
         client = _get_client()
         try:
             response = client.ad_campaigns.attach_campaign_assets(
@@ -7420,7 +7374,7 @@ def register_generated_tools(mcp, _get_client):
             account_id: Zernio Google Ads connection id. (required)
             ad_account_id: Platform ad account ID (Google customer ID, digits only). Required when the connection has multiple customers.
             customer_id: Alias of adAccountId, kept for existing callers
-            updates: (required)"""
+            updates: Each item is an object with keys: assetResourceName (string, required) - Asset resource name returned by a list operation. Must belong to the selected customer.; sitelinkAsset (object with keys linkText, description1, description2, linkUrl); finalUrls (list of string); calloutAsset (object with keys calloutText); structuredSnippetAsset (object with keys header, values) (required)"""
         client = _get_client()
         try:
             response = client.ad_campaigns.update_campaign_assets(
@@ -7542,9 +7496,9 @@ def register_generated_tools(mcp, _get_client):
             account_id: Zernio Google Ads connection id. (required)
             ad_account_id: Platform ad account ID (Google customer ID, digits only). Required when the connection has multiple customers.
             customer_id: Alias of adAccountId, kept for existing callers
-            sitelinks
+            sitelinks: Each item is an object with keys: text (string, required); linkUrl (string, required); description1 (string); description2 (string)
             callouts
-            structured_snippets"""
+            structured_snippets: Each item is an object with keys: header (one of: Amenities, Brands, Courses, Degree programs, Destinations, Featured hotels, Insurance coverage, Models, Neighborhoods, Service catalog, Shows, Styles, Types; required); values (list of string, required)"""
         client = _get_client()
         try:
             response = client.ad_campaigns.attach_ad_group_assets(
@@ -7586,7 +7540,7 @@ def register_generated_tools(mcp, _get_client):
             account_id: Zernio Google Ads connection id. (required)
             ad_account_id: Platform ad account ID (Google customer ID, digits only). Required when the connection has multiple customers.
             customer_id: Alias of adAccountId, kept for existing callers
-            updates: (required)"""
+            updates: Each item is an object with keys: assetResourceName (string, required) - Asset resource name returned by a list operation. Must belong to the selected customer.; sitelinkAsset (object with keys linkText, description1, description2, linkUrl); finalUrls (list of string); calloutAsset (object with keys calloutText); structuredSnippetAsset (object with keys header, values) (required)"""
         client = _get_client()
         try:
             response = client.ad_campaigns.update_ad_group_assets(
@@ -7897,7 +7851,7 @@ def register_generated_tools(mcp, _get_client):
                 identity_type: TikTok only. Type of identityId; resolved from the advertiser's identity list when omitted.
                 budget_amount: Budget in whole currency units, the same flat field as POST /v1/ads/create. Required unless adSetId is set. Minimum varies: TikTok=$20, Pinterest=$5, others=$1
                 budget_type: Goes together with budgetAmount. lifetime requires schedule.endDate.
-                budget: Alias of budgetAmount + budgetType, kept for existing callers
+                budget: Alias of budgetAmount + budgetType, kept for existing callers Object with keys: amount (number, required) - Minimum varies: TikTok=$20, Pinterest=$5, others=$1; type (one of: daily, lifetime; required)
                 instagram_account_id: Meta only. Instagram identity the ad runs AS (creative.instagram_user_id), overriding the account linked to the Page. Live-verified against a Page-post creative.
                 destination_type: Meta only. Ad-set destination_type: where the click LANDS, as opposed to instagramAccountId which is who the ad runs as. Independent of plain link CTAs and their goal. A messaging callToAction selects its destination automatically; an explicit destinationType must then match. Lead ads use ON_AD.
                 whatsapp_phone_number: Meta WhatsApp only. E.164 number already paired with the Page. Omit to use the default pairing. Requires WHATSAPP_MESSAGE callToAction. Stored as creative.whatsappPhoneNumber on the ad.
@@ -7905,12 +7859,8 @@ def register_generated_tools(mcp, _get_client):
                 currency: ISO 4217 currency code matching the ad account's currency. Meta only. Optional: Zernio resolves it from the ad account when omitted. The value selects the minor-unit exponent Zernio converts budget/bid amounts by before calling Meta (most currencies are cents; zero-decimal currencies like JPY/KRW are sent as-is).
                 start_date: Ad-set start time (ISO 8601, e.g. "2026-06-10T09:00:00Z"), mapped to the ad set's `start_time`. When omitted the ad starts delivering immediately. On Meta, TikTok, X and Pinterest a value without an offset (`YYYY-MM-DD`, `YYYY-MM-DD HH:MM:SS` or `YYYY-MM-DDTHH:MM:SS`) is read in the ad account timezone. Same field as on POST /v1/ads/create.
                 end_date: Ad-set end time (ISO 8601), mapped to the ad set's `end_time`. Required for lifetime budgets. On Meta, TikTok, X and Pinterest a value without an offset (`YYYY-MM-DD`, `YYYY-MM-DD HH:MM:SS` or `YYYY-MM-DDTHH:MM:SS`) is read in the ad account timezone, and a date-only end runs to 23:59:59 local. Same field as on POST /v1/ads/create.
-                schedule: Alias of the top-level `startDate` / `endDate`, kept for existing callers. Sending both forms with differing values is a 400.
-                targeting: Same geo/demographic fields as the `TargetingSpec` used by /v1/ads/create.
-        Geo keys (`regions`/`cities`/`zips`/`metros`) resolve via
-        GET /v1/ads/targeting/search?dimension=geo. City radius and lat/lng
-        `customLocations` are Meta-only and preserve the boosted post's
-        social proof (the ad references the existing post).
+                schedule: Alias of the top-level `startDate` / `endDate`, kept for existing callers. Sending both forms with differing values is a 400. Object with keys: startDate (string) - Alias of startDate, kept for existing callers; endDate (string) - Alias of endDate, kept for existing callers
+                targeting: Same geo/demographic fields as the `TargetingSpec` used by /v1/ads/create. Geo keys (`regions`/`cities`/`zips`/`metros`) resolve via GET /v1/ads/targeting/search?dimension=geo. City radius and lat/lng `customLocations` are Meta-only and preserve the boosted post's social proof (the ad references the existing post). Object with keys: ageMin (integer); ageMax (integer); gender (one of: all, male, female) - Applied on Meta, TikTok and Pinterest. Ignored on Google, LinkedIn and X.; languages (list of string) - Meta locale ids (numeric), passed through as given.; countries (list of string) - ISO country codes. Required for TikTok boosts (TikTok's ad group requires location_ids); optional on other platforms.; regions (list of objects with keys key, name) - Region/state targeting. `key` from /v1/ads/targeting/search?dimension=geo&geoType=region.; cities (list of objects with keys key, name, radius, distanceUnit) - City targeting. Optional `radius` + `distanceUnit` extend beyond the city limits (both set together, Meta only).; zips (list of objects with keys key, name) - Postal/ZIP targeting. `key` is the platform's postal location ID (e.g. Meta `US:94304`).; metros (list of objects with keys key, name) - DMA / metro-area targeting. `key` is the platform's metro ID (e.g. Meta `DMA:807`).; customLocations (list of objects with keys latitude, longitude, radius, distanceUnit, name, address) - Point-radius (lat/lng) targeting (Meta custom_locations). No geo `key` lookup needed.; interests (list of objects with keys id, name) - Interest objects from /v1/ads/interests. Each must include id and name.; advantage_audience (one of: 0, 1) - Meta only. 0 = disabled (default), 1 = enabled.
                 location_targeting_type: Google only (400 elsewhere). Written on the campaign the boost creates.
                 raw_targeting: Meta only. A Meta-native targeting spec (e.g.
         `{ "geo_locations": { "cities": [{ "key": "...", "radius": 15, "distance_unit": "kilometer" }] } }`).
@@ -7945,16 +7895,8 @@ def register_generated_tools(mcp, _get_client):
         Minimum ROAS as a decimal multiplier (e.g. 2.0 = 2.0x ROAS). Required when
         `bidStrategy` is `LOWEST_COST_WITH_MIN_ROAS`. Sent to Meta as
         `bid_constraints.roas_average_floor` × 10000 (Meta uses fixed-point integers).
-                platform_specific_data: Platform-specific options. The platform is derived from `accountId`;
-        sending options for a different platform returns a 400. LinkedIn
-        (campaign bidding and delivery controls) and Meta (the bid trio)
-        have options today.
-
-        **Meta**: `bidStrategy`, `bidAmount` and `roasAverageFloor` may be
-        sent here instead of at the root, which is the preferred home going forward.
-        Sending the bid fields in BOTH places returns a 400
-        (`mutually_exclusive_fields`).
-                tracking: Meta only. Tracking specs (pixel, URL tags).
+                platform_specific_data: Platform-specific options. The platform is derived from `accountId`; sending options for a different platform returns a 400. LinkedIn (campaign bidding and delivery controls) and Meta (the bid trio) have options today. **Meta**: `bidStrategy`, `bidAmount` and `roasAverageFloor` may be sent here instead of at the root, which is the preferred home going forward. Sending the bid fields in BOTH places returns a 400 (`mutually_exclusive_fields`). Object with keys: costType (one of: CPM, CPC, CPV) - Campaign cost model (billing event). Defaults to `CPM`. Required when `unitCost` is set so the manual bid applies to an explicit cost model.; unitCost (number) - Manual bid in WHOLE account-currency units (e.g. 2.5 = $2.50). Requires `costType`. Omit for LinkedIn's automated (max delivery) bidding. LinkedIn enforces ...; optimizationTargetType (string) - Campaign `optimizationTargetType` (e.g. `MAX_CLICK`, `TARGET_COST_PER_CLICK`, `MAX_IMPRESSION`). Forwarded verbatim, LinkedIn validates compatibility with the ...; creativeSelection (one of: OPTIMIZED, ROUND_ROBIN) - How LinkedIn rotates creatives within the campaign. Defaults to `OPTIMIZED`.; audienceExpansionEnabled (boolean) - Enable LinkedIn audience expansion. Defaults to false.; offsiteDeliveryEnabled (boolean) - Deliver on the LinkedIn Audience Network. Defaults to false.; connectedTelevisionOnly (boolean) - Restrict delivery to Connected TV inventory.; carousel (object with keys cards) - POST /v1/ads/create only. Carousel ad with 2-10 image cards. Mutually exclusive with the other creative sources.; document (object with keys url, title) - POST /v1/ads/create only. Document ad rendered as an in-feed viewer. PDF, PPT or DOC up to 100MB. Mutually exclusive with the other creative sources.; spotlight (object with keys headline, description, callToAction, landingUrl, logoUrl, organizationName, showMemberProfilePhoto, backgroundImageUrl) - POST /v1/ads/create only. Dynamic Spotlight Ad personalized with the viewer's profile photo. Supported goals: traffic, awareness. logoUrl and organizationName ...; follower (object with keys headline, description, callToAction, logoUrl, organizationName, showMemberProfilePhoto) - POST /v1/ads/create only. Dynamic Follower Ad promoting the Company Page. Supported goals: engagement, awareness. headline and description take exactly one of ...; jobs (object with keys headline, buttonLabel, logoUrl, organizationName, showMemberProfilePhoto) - POST /v1/ads/create only. Dynamic Jobs Ad promoting your open roles, personalized with the viewer's profile photo. Requires goal job_applicants and a Company ...; textAd (object with keys headline, description, landingUrl, imageUrl) - POST /v1/ads/create only. Classic right-rail Text Ad. The copy lives here; ad-level body and headline are not used. Mutually exclusive with the other creative ...; conversation (object with keys subject, sender, body, footer, headline, firstMessageId, messages) - POST /v1/ads/create only. Conversation Ad: a choose-your-path message tree delivered to the member's LinkedIn inbox. Messages are flat nodes wired by local ...; event (object with keys urn) - POST /v1/ads/create only. Promotes an existing LinkedIn Event; no headline needed. Mutually exclusive with the other creative sources.; thoughtLeader (object with keys postUrn) - POST /v1/ads/create only. Sponsors an existing LinkedIn post (a share or ugcPost authored by your organization's Company Page) as the creative, keeping its ...
+                tracking: Meta only. Tracking specs (pixel, URL tags). Object with keys: pixelId (string); urlTags (list of objects with keys key, value) - URL parameters appended to the ad link, rendered as `key=value` pairs joined with `&`. Meta dynamic macros ({{ad.id}}, {{campaign.id}}, {{placement}}, ...) ...
                 special_ad_categories: Meta only. Required for housing, employment, credit, or political ads.
                 special_ad_category_country: Meta (metaads) only. 2-letter ISO country codes the special ad category applies to. Requires specialAdCategories to be set (400 otherwise).
                 regional_regulated_categories: Meta only. Regional regulation categories required when the ad set targets certain countries (e.g. BRAZIL_REGULATION, SINGAPORE_UNIVERSAL, TAIWAN_UNIVERSAL, THAILAND_UNIVERSAL, AUSTRALIA_FINSERV, INDIA_FINSERV, TAIWAN_FINSERV). Forwarded to the ad set.
@@ -7991,26 +7933,9 @@ def register_generated_tools(mcp, _get_client):
         code in their TikTok app's Promote settings and shares it with the
         advertiser. Maps to `auth_code` on the creative entry of /v2/ad/create/.
                 smart_plus: TikTok only. Run the Spark post in a Smart+ campaign (goal `conversions` = Smart+ Web Conversions, `lead_generation` = Smart+ Lead Generation) instead of a regular campaign. Requires `sparkAuthCode` (the Smart+ ad runs the post under the identity that redeeming its Spark code creates; a Business Center-owned post is not accepted there) and `promotedObject.pixelId` + `customEventType`. `app_promotion` is not available on a Spark post. Rejected with a 400 on other platforms. A Smart+ Spark ad uses a dynamic CTA portfolio, sent as ad_configuration.call_to_action_id (TikTok does not accept a named call to action there): Zernio creates one per ad account and reuses it, and `callToAction` is rejected with a 400 on this path.
-                spark_posts: TikTok Smart+ only (requires `smartPlus: true`). Several Spark posts as creatives of ONE Smart+ ad, each with its own post code (TikTok allows 1-50 per ad; posts from different creators mix). Replaces `platformPostId` + `sparkAuthCode`. Without `adSetId` it creates campaign + ad group + one ad carrying all of them; with `adSetId` it creates one new ad with all of them in that ad group. Rejected with a 400 on other platforms.
-                promo_codes: TikTok Smart+ Web Conversions only (requires `smartPlus: true`, goal `conversions`). Promo codes or offers TikTok highlights on the ad (Ads Manager's "Add promo code or offer"). A promo code needs shoppers to enter it at checkout; an entry without `promoCode` is an offer applied automatically. Rejected with a 400 on other platforms and on Lead Generation campaigns.
-                promoted_object: Meta and TikTok. What the conversion ad set optimizes toward, so a boost
-        of an existing organic post can run for a conversion instead of only
-        engagement or traffic. Required when `goal` is `conversions` (Meta also
-        `lead_conversion`); ignored on goals that do not optimize for a conversion.
-
-        Meta: `pixelId` + `customEventType` (a commerce event such as PURCHASE
-        under `conversions`, a leads-class event such as LEAD under
-        `lead_conversion`), or `customConversionId` to optimize against a Custom
-        Conversion, or `customEventType: OTHER` + `customEventStr` for a pixel
-        custom event. Becomes the ad set `promoted_object`; without it Meta
-        rejects the ad set ("Please select a promoted object", subcode 1815430).
-        With `adSetId` the existing ad set already carries it.
-
-        TikTok: BOTH `pixelId` and `customEventType` are required. TikTok refuses
-        a conversion ad group with no pixel ("Please select a pixel") and one
-        with a pixel but no event ("Select a pixel event."). Combine freely with
-        `platformPostId` + `sparkAuthCode`: the pixel lives on the ad group and
-        the Spark item on the creative.
+                spark_posts: TikTok Smart+ only (requires `smartPlus: true`). Several Spark posts as creatives of ONE Smart+ ad, each with its own post code (TikTok allows 1-50 per ad; posts from different creators mix). Replaces `platformPostId` + `sparkAuthCode`. Without `adSetId` it creates campaign + ad group + one ad carrying all of them; with `adSetId` it creates one new ad with all of them in that ad group. Rejected with a 400 on other platforms. Each item is an object with keys: platformPostId (string, required) - TikTok post (item) id.; sparkAuthCode (string, required) - That post's Spark code.
+                promo_codes: TikTok Smart+ Web Conversions only (requires `smartPlus: true`, goal `conversions`). Promo codes or offers TikTok highlights on the ad (Ads Manager's "Add promo code or offer"). A promo code needs shoppers to enter it at checkout; an entry without `promoCode` is an offer applied automatically. Rejected with a 400 on other platforms and on Lead Generation campaigns. Each item is an object with keys: discountType (one of: PERCENTAGE, CASH; required); discountValue (number, required) - PERCENTAGE: integer 1-100. CASH: amount greater than 0 in discountCurrency.; discountCurrency (string) - ISO 4217; required for CASH.; promoCode (string) - Code entered at checkout; omit for an automatic offer.; minimumPurchaseType (one of: QUANTITY, SUBTOTAL); minimumPurchaseValue (number) - Required with minimumPurchaseType; QUANTITY is an integer >= 0, SUBTOTAL an amount > 0.; minimumPurchaseCurrency (string) - ISO 4217; required for SUBTOTAL.
+                promoted_object: Meta and TikTok. What the conversion ad set optimizes toward, so a boost of an existing organic post can run for a conversion instead of only engagement or traffic. Required when `goal` is `conversions` (Meta also `lead_conversion`); ignored on goals that do not optimize for a conversion. Meta: `pixelId` + `customEventType` (a commerce event such as PURCHASE under `conversions`, a leads-class event such as LEAD under `lead_conversion`), or `customConversionId` to optimize against a Custom Conversion, or `customEventType: OTHER` + `customEventStr` for a pixel custom event. Becomes the ad set `promoted_object`; without it Meta rejects the ad set ("Please select a promoted object", subcode 1815430). With `adSetId` the existing ad set already carries it. TikTok: BOTH `pixelId` and `customEventType` are required. TikTok refuses a conversion ad group with no pixel ("Please select a pixel") and one with a pixel but no event ("Select a pixel event."). Combine freely with `platformPostId` + `sparkAuthCode`: the pixel lives on the ad group and the Spark item on the creative. Object with keys: pixelId (string) - Meta Pixel id, or TikTok Pixel (numeric id or the alphanumeric pixel code from Events Manager, resolved for you).; customEventType (string) - Meta: standard pixel event (PURCHASE, LEAD, ...) or OTHER with customEventStr. TikTok: optimization_event code (e.g. ON_WEB_ORDER, SHOPPING, FORM) or the ...; customEventStr (string) - Meta only. Pixel custom event name as it appears in Events Manager; requires customEventType OTHER.; customConversionId (string) - Meta only. Custom Conversion to optimize against, instead of pixelId + customEventType.
                 dsa_beneficiary: Legal entity that benefits from the ad. Required when targeting EU users
         (EU DSA, Article 26). Optional if the ad account has a default beneficiary:
         set it once via `PATCH /v1/ads/accounts` or in Meta Ads Manager, and Meta
@@ -8031,15 +7956,9 @@ def register_generated_tools(mcp, _get_client):
 
         X returns a 400: a promoted post has no switch of its own, so hold the line item with `adSetStatus`.
                 budget_level: Meta only, same semantics as POST /v1/ads/create: campaign = Advantage campaign budget (CBO), the budget and bid strategy sit on the campaign and the ad set inherits them. Default adset. Not allowed with adSetId.
-                attribution_spec: Meta only. Ad-set attribution windows, same shape as POST /v1/ads/create. Applied on OUTCOME_SALES, OUTCOME_LEADS and OUTCOME_APP_PROMOTION campaigns (conversions, lead_conversion, lead_generation, app_promotion); other objectives keep Meta's default. Not allowed with adSetId.
+                attribution_spec: Meta only. Ad-set attribution windows, same shape as POST /v1/ads/create. Applied on OUTCOME_SALES, OUTCOME_LEADS and OUTCOME_APP_PROMOTION campaigns (conversions, lead_conversion, lead_generation, app_promotion); other objectives keep Meta's default. Not allowed with adSetId. Each item is an object with keys: eventType (one of: CLICK_THROUGH, VIEW_THROUGH, ENGAGED_VIDEO_VIEW; required); windowDays (one of: 1, 7, 28; required)
                 bodies: Meta only. Extra primary-text options Meta rotates on the boosted post (asset_feed_spec.bodies with DEGREES_OF_FREEDOM); the post keeps its own text as one of the options. Works for Facebook posts and Instagram media. Under a conversions or traffic goal Meta also wants a website URL on the options, taken from `linkUrl` (send it with a `callToAction`); engagement boosts need none.
-                smart_targeting: TikTok only (a 400 elsewhere). TikTok Smart Targeting on the ad group: `audience` is
-        TikTok's `smart_audience_enabled`, `interestsBehaviors` its `smart_interest_behavior_enabled`.
-        When on, TikTok may deliver beyond the selected audiences or interests. Available on
-        Video views, Traffic, Lead generation, App install, Web conversion and Community interaction.
-        Only the flags you send are written; an unwritten flag reads back null in
-        `nativeSettings`, so send `false` explicitly to be able to verify it is off.
-        Not available with smartPlus or when attaching to an existing ad set (adSetId).
+                smart_targeting: TikTok only (a 400 elsewhere). TikTok Smart Targeting on the ad group: `audience` is TikTok's `smart_audience_enabled`, `interestsBehaviors` its `smart_interest_behavior_enabled`. When on, TikTok may deliver beyond the selected audiences or interests. Available on Video views, Traffic, Lead generation, App install, Web conversion and Community interaction. Only the flags you send are written; an unwritten flag reads back null in `nativeSettings`, so send `false` explicitly to be able to verify it is off. Not available with smartPlus or when attaching to an existing ad set (adSetId). Object with keys: audience (boolean) - TikTok smart_audience_enabled.; interestsBehaviors (boolean) - TikTok smart_interest_behavior_enabled.
                 optimization_goal: Meta, or TikTok with `goal: video_views`. TikTok: ENGAGED_VIEW (6-second
         Focused View, the default) or ENGAGED_VIEW_FIFTEEN (15-second views), both
         billed per view (CPV); any other value is a 400. Meta: explicit ad-set
@@ -8175,8 +8094,8 @@ def register_generated_tools(mcp, _get_client):
             path1
             path2: Requires path1.
             status
-            assets
-            listing_group_filter
+            assets: Each item is an object with keys: fieldType (string, required) - Google AssetFieldType, such as HEADLINE, LONG_HEADLINE, DESCRIPTION, BUSINESS_NAME, MARKETING_IMAGE, SQUARE_MARKETING_IMAGE, PORTRAIT_MARKETING_IMAGE, LOGO, ...; asset (string) - Existing asset id or resource name customers/{customerId}/assets/{assetId}. Must belong to the campaign's ad account.; text (string) - Text assets link as HEADLINE, LONG_HEADLINE, DESCRIPTION or BUSINESS_NAME.; imageUrl (string) - Public http(s) image. Links as an image role or LOGO / LANDSCAPE_LOGO.; youtubeVideoId (string) - Links as YOUTUBE_VIDEO.
+            listing_group_filter: Object with keys: children (list of objects with keys dimension, excluded, children)
             validate_only"""
         client = _get_client()
         try:
@@ -8333,8 +8252,8 @@ def register_generated_tools(mcp, _get_client):
         Args:
             campaign_id: Google Ads campaign id. (required)
             asset_group_id: Google asset group id. (required)
-            link
-            unlink
+            link: Each item is an object with keys: fieldType (string, required) - Google AssetFieldType, such as HEADLINE, LONG_HEADLINE, DESCRIPTION, BUSINESS_NAME, MARKETING_IMAGE, SQUARE_MARKETING_IMAGE, PORTRAIT_MARKETING_IMAGE, LOGO, ...; asset (string) - Existing asset id or resource name customers/{customerId}/assets/{assetId}. Must belong to the campaign's ad account.; text (string) - Text assets link as HEADLINE, LONG_HEADLINE, DESCRIPTION or BUSINESS_NAME.; imageUrl (string) - Public http(s) image. Links as an image role or LOGO / LANDSCAPE_LOGO.; youtubeVideoId (string) - Links as YOUTUBE_VIDEO.
+            unlink: Each item is an object with keys: fieldType (string, required); asset (string, required) - Asset id or resource name, as returned in the asset group's assets.
             validate_only"""
         client = _get_client()
         try:
@@ -8372,7 +8291,7 @@ def register_generated_tools(mcp, _get_client):
         Args:
             campaign_id: Google Ads campaign id. (required)
             asset_group_id: Google asset group id. (required)
-            tree: (required)
+            tree: Object with keys: children (list of objects with keys dimension, excluded, children) (required)
             validate_only"""
         client = _get_client()
         try:
@@ -8627,7 +8546,7 @@ def register_generated_tools(mcp, _get_client):
                 campaign_name: Meta only. Exact campaign name. Overrides the default `<name> - Campaign`.
                 ad_set_name: Meta only. Exact ad set name. Overrides the default `<name> - Ad Set`. (For per-ad names on the multi-creative shape, set `name` on each `creatives[]` entry.)
                 ad_name: Meta only. Exact ad name (the single-creative ad object's name). Overrides the default, which is `name`. (For per-ad names on the multi-creative shape, set `name` on each `creatives[]` entry instead.)
-                tracking
+                tracking: Object with keys: pixelId (string) - Meta Pixel ID to attach for offsite-conversion measurement.; urlTags (list of objects with keys key, value) - Click-URL params. Meta: stored on the creative as `url_tags` and returned by GET /v1/ads/{adId}/tracking-tags. App-promotion linkUrl stays byte-identical to ...
                 goal: Required on legacy and multi-creative shapes; the attach shape inherits it from the ad set. Available goals vary by platform.
 
         **Meta**
@@ -8650,13 +8569,7 @@ def register_generated_tools(mcp, _get_client):
 
         **OpenAI Ads**
         - Only `traffic`, `awareness`, and `conversions` are supported (other goals return 400). Maps to OpenAI's `bidding_type` (clicks, impressions, conversions respectively). `conversions` requires an active conversion event setting on the account; create a tracking tag with `defaultEventType` via the tracking-tags API (`POST /v1/accounts/{accountId}/tracking-tags`), or configure a conversion event in OpenAI Ads Manager, or the request returns 400. Pick the event with `promotedObject.customEventType` (see AdPromotedObject); without it the most recently created optimizable event is used.
-                smart_targeting: TikTok only (a 400 elsewhere). TikTok Smart Targeting on the ad group: `audience` is
-        TikTok's `smart_audience_enabled`, `interestsBehaviors` its `smart_interest_behavior_enabled`.
-        When on, TikTok may deliver beyond the selected audiences or interests. Available on
-        Video views, Traffic, Lead generation, App install, Web conversion and Community interaction.
-        Only the flags you send are written; an unwritten flag reads back null in
-        `nativeSettings`, so send `false` explicitly to be able to verify it is off.
-        Not available with smartPlus or when attaching to an existing ad set (adSetId).
+                smart_targeting: TikTok only (a 400 elsewhere). TikTok Smart Targeting on the ad group: `audience` is TikTok's `smart_audience_enabled`, `interestsBehaviors` its `smart_interest_behavior_enabled`. When on, TikTok may deliver beyond the selected audiences or interests. Available on Video views, Traffic, Lead generation, App install, Web conversion and Community interaction. Only the flags you send are written; an unwritten flag reads back null in `nativeSettings`, so send `false` explicitly to be able to verify it is off. Not available with smartPlus or when attaching to an existing ad set (adSetId). Object with keys: audience (boolean) - TikTok smart_audience_enabled.; interestsBehaviors (boolean) - TikTok smart_interest_behavior_enabled.
                 optimization_goal: Meta, or TikTok with goal video_views (ENGAGED_VIEW, the 6-second default, or ENGAGED_VIEW_FIFTEEN; both bill per view). Meta: Explicit ad-set `optimization_goal` (e.g. `LANDING_PAGE_VIEWS`, `LINK_CLICKS`, `REACH`, `IMPRESSIONS`, `OFFSITE_CONVERSIONS`, `THRUPLAY`, `LEAD_GENERATION`). Overrides the default derived from `goal` (e.g. `traffic` defaults to `LINK_CLICKS`). Forwarded verbatim to Meta, which validates compatibility with the campaign objective and rejects incompatible combinations.
                 billing_event: Meta only. Explicit ad-set `billing_event`. Defaults to `IMPRESSIONS`. Forwarded verbatim to Meta, which validates compatibility with the optimization goal.
                 buying_type: Meta only. Defaults to AUCTION and is explicitly sent on new campaigns, including validateOnly. Reusing existingCampaignId does not change the campaign. RESERVED = Reach & Frequency: requires `rfPredictionId` (a RESERVED prediction from /v1/ads/rf-predictions + /reserve). Budget, schedule and pricing come from the reservation, so budgetAmount/budgetType are not required and bid fields are ignored. Only the plain single-ad shape (no creatives[], adSetId, existingCampaignId or dynamicCreative).
@@ -8717,12 +8630,9 @@ def register_generated_tools(mcp, _get_client):
                 link_url: Required on legacy + attach shapes (skip for multi-creative). On LinkedIn it's the ad's destination URL; required for `traffic` ads, optional for `engagement` / `awareness`. NOT required when `goal` is `lead_generation` (the ad opens a Lead Gen form instead of a destination). On LinkedIn, `imageUrl` + `linkUrl` publishes an ARTICLE-content creative; this is LinkedIn's article ad format, with the image as thumbnail and `longHeadline` as description. Required for OpenAI Ads (the chat card's target_url).
                 lead_gen_form_id: Lead Gen form ID to attach to the ad's creative. REQUIRED when `goal` is `lead_generation`. Create one via POST /v1/ads/lead-forms. On Meta (facebook/instagram) this is the leadgen_forms ID; the ad set's promoted_object.page_id + LEAD_GENERATION optimization + destination_type ON_AD are derived automatically from the goal. On LinkedIn this is the adForm ID; the creative's `leadgenCallToAction.destination` is set to `urn:li:adForm:{id}` and the campaign objective is set to MAX_LEAD. Forms must be owned by the sponsoredAccount (not the organization) for the URN to resolve. Also required on every Meta ATTACH (`adSetId`) call that targets a lead ad set (the form attaches per-ad; Meta rejects a formless ad in a lead ad set). `placementAssets`, `dynamicCreative` and `carouselCards` (Meta multi-card Instant-Form lead ad; `linkUrl` and per-card `linkUrl` are optional and forwarded as real destinations when sent, falling back to Meta's lead-form link when omitted) ARE supported on Meta instant-form lead ads.
                 image_url: Image creative for Meta/Google/Pinterest/LinkedIn on legacy + attach shapes (mutually exclusive with `video`). Required for LinkedIn ads unless `video` is set. Not required for Google Search campaigns. For TikTok, this field carries the VIDEO URL (the TikTok ads endpoint is video-only; the field retains the `imageUrl` name for cross-platform consistency). On X, imageUrl + headline + linkUrl together build a website card (image, title and destination under the post; the URL is not added to the post text); sending only some of them is a 400. description, video and callToAction are rejected with 400 on X (promote a post that carries a video with POST /v1/ads/boost). For Google Display, treated as the landscape image (alias of `images.landscape`); supply `images.square` alongside or the request is rejected. For LinkedIn the image is uploaded to LinkedIn under the authoring Company Page (see `organizationId`); recommended ratio 1.91:1 (e.g. 1200×627). Required for OpenAI Ads (uploaded as the chat card's image; OpenAI has no video ad format).
-                images: Google Display (Responsive Display Ads) only. Google RDA requires both a landscape (1.91:1) and a square (1:1) marketing image; sending only one is rejected upstream as 'Too few.' (NOT_ENOUGH_*_MARKETING_IMAGE_ASSET). Supply both URLs here. Either this field or the legacy `imageUrl` can provide the landscape, but `square` has no legacy counterpart so it must be set here for Display.
-                video: Meta (facebook, instagram) and LinkedIn. Creates a single VIDEO ad. Mutually exclusive with `imageUrl`. Supply `url` to upload a file, or `id` to reuse a video already on the ad account (list them with GET /v1/ads/videos). Works on the single-ad and attach (`adSetId`) shapes; for Meta multi-creative, set `video` per entry inside `creatives[]` instead. For LinkedIn the video is uploaded to LinkedIn under the authoring Company Page (see `organizationId`) and the campaign format is set to SINGLE_VIDEO; LinkedIn ignores `thumbnailUrl` (it auto-generates the poster frame). Supply MP4 H.264/AAC, 3s-30min, 75KB-500MB.
-                creatives: Meta-only. When present, switches to the multi-creative shape:
-        creates 1 campaign + 1 ad set + N ads (one per entry here).
-        Top-level `headline` / `body` / `imageUrl` / `linkUrl` /
-        `callToAction` are ignored in this mode. Mutually exclusive with `adSetId`.
+                images: Google Display (Responsive Display Ads) only. Google RDA requires both a landscape (1.91:1) and a square (1:1) marketing image; sending only one is rejected upstream as 'Too few.' (NOT_ENOUGH_*_MARKETING_IMAGE_ASSET). Supply both URLs here. Either this field or the legacy `imageUrl` can provide the landscape, but `square` has no legacy counterpart so it must be set here for Display. Object with keys: landscape (string) - Landscape 1.91:1 marketing image URL (e.g. 1200x628). Also accepted via the top-level `imageUrl` for backward compatibility.; square (string) - Square 1:1 marketing image URL (e.g. 1080x1080). Required for Google Display.
+                video: Meta (facebook, instagram) and LinkedIn. Creates a single VIDEO ad. Mutually exclusive with `imageUrl`. Supply `url` to upload a file, or `id` to reuse a video already on the ad account (list them with GET /v1/ads/videos). Works on the single-ad and attach (`adSetId`) shapes; for Meta multi-creative, set `video` per entry inside `creatives[]` instead. For LinkedIn the video is uploaded to LinkedIn under the authoring Company Page (see `organizationId`) and the campaign format is set to SINGLE_VIDEO; LinkedIn ignores `thumbnailUrl` (it auto-generates the poster frame). Supply MP4 H.264/AAC, 3s-30min, 75KB-500MB. Object with keys: url (string) - Public URL of the video. Meta: uploaded via chunked transfer on /act_X/advideos, then the request blocks on Meta's transcoding until status.video_status === ...; id (string) - Meta only. Reuse a video ALREADY uploaded to this ad account instead of re-uploading the file: pass the `videoId` returned by a previous create. Wins over ...; thumbnailUrl (string) - Public URL of a still-image thumbnail for the video. OPTIONAL: when omitted on Meta, the poster is auto-generated from Meta's own preferred video thumbnail ...
+                creatives: Meta-only. When present, switches to the multi-creative shape: creates 1 campaign + 1 ad set + N ads (one per entry here). Top-level `headline` / `body` / `imageUrl` / `linkUrl` / `callToAction` are ignored in this mode. Mutually exclusive with `adSetId`. Each item is an object with keys: creativeFeatures (object) - Replaces the entire top-level creativeFeatures map for this item. Omit to inherit; an empty map clears these defaults.; name (string) - Exact name for this ad. Falls back to `<name> #N` (N = 1-based position).; headline (string, required); body (string, required); description (string) - Link description for this ad (link_data.description; video creatives: video_data.link_description). Falls back to the top-level `description`; when both are ...; imageUrl (string) - Image creative. Mutually exclusive with `video`.; video (object with keys url, thumbnailUrl) - Video creative for this entry. Mutually exclusive with `imageUrl`. thumbnailUrl is optional: when omitted, the poster is auto-generated from Meta's preferred ...; linkUrl (string, required); callToAction (one of: LEARN_MORE, SHOP_NOW, SIGN_UP, BOOK_TRAVEL, CONTACT_US, DOWNLOAD, GET_OFFER, GET_QUOTE, SUBSCRIBE, WATCH_MORE, ADD_TO_CART, APPLY_NOW, BOOK_NOW, BUY_TICKETS, DONATE, DONATE_NOW, GET_DIRECTIONS, GET_SHOWTIMES, LISTEN_NOW, ORDER_NOW, PLAY_GAME, REQUEST_TIME, SEE_MENU, START_ORDER, INSTALL_MOBILE_APP, USE_APP; required)
                 ad_set_id: When present, switches to the attach shape: adds
         one new ad to this existing ad set without creating a new
         campaign. Budget, targeting, goal, schedule, AND bid strategy
@@ -8814,11 +8724,7 @@ def register_generated_tools(mcp, _get_client):
                 business_name: Google Display only
                 board_id: Pinterest only. Board ID (auto-creates if not provided).
                 organization_id: LinkedIn only. The Company Page that authors the Direct Sponsored Content ("dark") post backing the ad. Accepts a numeric organization ID or a full `urn:li:organization:N` URN. Required unless the resolved `accountId` is a connected LinkedIn Company-Page account (defaults to that page) or the LinkedIn ad account is org-owned (defaults to the account's owning organization). The authenticated member must be an ADMINISTRATOR or DIRECT_SPONSORED_CONTENT_POSTER of this page (and the page must be associated with the ad account), or LinkedIn returns 403. Ignored by every other platform.
-                targeting: Nested targeting object, the same TargetingSpec shape as `POST /v1/ads/boost`,
-        `POST /v1/ads/targeting/reach-estimate`, and `saved_targeting` audiences. Merged
-        UNDER the flat inline targeting fields below: `savedTargetingId` < `targeting` <
-        flat fields (a flat field present on the body replaces the nested value entirely).
-        Both forms are equivalent; use whichever your integration already builds.
+                targeting: Nested targeting object, the same TargetingSpec shape as `POST /v1/ads/boost`, `POST /v1/ads/targeting/reach-estimate`, and `saved_targeting` audiences. Merged UNDER the flat inline targeting fields below: `savedTargetingId` < `targeting` < flat fields (a flat field present on the body replaces the nested value entirely). Both forms are equivalent; use whichever your integration already builds. Object with keys: userOs (list of string) - Meta only. Operating systems and version ranges, such as iOS_ver_14.0_and_above or Android. Emitted as user_os. May also be supplied inside targeting.; userDevice (list of string) - Meta only. Device models such as iPhone. Emitted as user_device. May also be supplied inside targeting.; countries (list of string) - ISO 3166-1 alpha-2 country codes (e.g. ['US']).; regions (list of any) - Region/state targeting. `key` is the platform location ID from /v1/ads/targeting/search?dimension=geo&geoType=region. An entry may also be that id as a plain ...; cities (list of any) - City targeting. Optional `radius` + `distanceUnit` extend beyond the city limits; both must be set together or both omitted. `radius` is only honoured on ...; zips (list of objects with keys key, name) - Postal/ZIP targeting. `key` is the platform's postal location ID (e.g. Meta `US:94304`). Supported on Meta, Google, TikTok, Pinterest, X.; metros (list of objects with keys key, name) - DMA / metro-area targeting. `key` is the platform's metro ID (e.g. Meta `DMA:807`).; countryGroups (list of string) - Meta only. Continents and trade blocs (`geo_locations.country_groups`), for targeting a whole region without listing its countries. Combines with `countries` ...; customLocations (list of objects with keys latitude, longitude, radius, distanceUnit, name, address) - Point-radius (lat/lng) targeting (Meta custom_locations / Google proximity). Honoured on Meta and Google; ignored on platforms without radius support.; excludedLocations (object with keys countries, countryGroups, regions, cities, zips, places, neighborhoods, customLocations) - Geo to exclude from the audience. Mirrors the inclusion geo shape: excluded cities can carry a radius catchment and excluded custom (lat/lng) pins are ...; ageMin (integer) - Minimum age. Applied on Meta, TikTok, Pinterest, LinkedIn, X and Google Search/Display (Google excludes the age ranges outside the request); rejected with 400 ...; ageMax (integer) - Maximum age. Same per-platform application and clamping as ageMin.; gender (one of: all, male, female) - Restrict by gender. 'all' (default) targets everyone. Applied on Meta, TikTok, Pinterest, LinkedIn, X and Google Search/Display (Google excludes the other ...; incomeTier (one of: top_5, top_10, top_10_25, top_25_50) - Normalized household-income tier (ZIP/percentile based). Meta and TikTok express all four. Google maps only `top_10` (its INCOME_RANGE_90_UP); other tiers on ...; languages (list of string) - Language codes restricting the audience by language. Applied on Meta, Google, TikTok, LinkedIn, X and Pinterest; rejected with 400 on OpenAI. A code the ...; interests (list of objects with keys id, name) - Interest entities from /v1/ads/targeting/search?dimension=interest. Each carries the platform's opaque id. On Google, applied as ad-group interest criteria ...; behaviors (list of objects with keys id, name) - Behaviour entities from /v1/ads/targeting/search?dimension=behavior (Meta, TikTok and LinkedIn). On TikTok they target people who interacted with videos ...; workPositions (list of objects with keys id, name) - Meta only. Job title entities from /v1/ads/targeting/search?dimension=workPosition. Not interchangeable with the LinkedIn `jobTitles` URN fragments.; workEmployers (list of objects with keys id, name) - Meta only. Employer entities from /v1/ads/targeting/search?dimension=workEmployer.; workIndustries (list of objects with keys id, name) - Meta only. Work-industry entities from /v1/ads/targeting/search?dimension=workIndustry. Not interchangeable with the LinkedIn `industries` URN fragments.; industries (list of string) - LinkedIn B2B only. Industry URN id fragments, or the full urn:li:industry:* URN from /v1/ads/targeting/search?dimension=industry.; companySizes (list of string) - LinkedIn B2B only. Single-letter size codes (A to I), or the full urn:li:staffCountRange:* URN from /v1/ads/targeting/search?dimension=companySize.; seniorities (list of string) - LinkedIn B2B only. Seniority URN id fragments, or the full urn:li:seniority:* URN from /v1/ads/targeting/search?dimension=seniority.; jobFunctions (list of string) - LinkedIn B2B only. Function URN id fragments, or the full urn:li:function:* URN from /v1/ads/targeting/search?dimension=jobFunction.; audienceInclude (list of string) - Platform audience IDs to include, as returned by GET /v1/ads/audiences (Meta custom audience ids, TikTok audience ids, Pinterest customer list ids, LinkedIn ...; audienceExclude (list of string) - Platform audience IDs to exclude; same ID formats as audienceInclude. Not supported on OpenAI (400).
                 countries: ISO 3166-1 alpha-2 country codes (e.g. ['NL']). Defaults to ['US'] when no other geo targeting (flat or nested `targeting`) is provided. (LinkedIn and OpenAI Ads currently honour country-level targeting only; any other targeting field returns 400 for OpenAI Ads.)
                 country_groups: Meta only. Continents and trade blocs (`geo_locations.country_groups`),
         for targeting a whole region without listing its countries. Combines with
@@ -8830,27 +8736,19 @@ def register_generated_tools(mcp, _get_client):
                 regions: Region-level (state/province) geo targeting (Meta, Google and TikTok). Each region is targeted by the platform's opaque `key` (the region ID) which can be looked up via `GET /v1/ads/targeting/search?dimension=geo&q=<name>&countryCode=<ISO>`. An entry may also be the key alone as a plain string.
                 age_min
                 age_max
-                interests: Interest objects from /v1/ads/interests. Each must include id and name.
+                interests: Interest objects from /v1/ads/interests. Each must include id and name. Each item is an object with keys: id (string, required); name (string, required)
                 zips: Postal/ZIP geo targeting. `key` is the platform's postal location ID from /v1/ads/targeting/search?dimension=geo&geoType=zip. Supported on Meta, Google, TikTok, Pinterest, X.
                 metros: DMA / metro-area geo targeting (Meta and TikTok). `key` is the platform's metro ID from /v1/ads/targeting/search?dimension=geo&geoType=metro (TikTok metros appear as type `metro`, e.g. the New York DMA).
-                custom_locations: Point-radius (lat/lng) geo targeting. Meta only (custom_locations). Rejected on platforms without radius support.
-                behaviors: Behaviour entities from /v1/ads/targeting/search?dimension=behavior (Meta, TikTok and LinkedIn). On TikTok they target people who interacted with videos (watched to the end, liked, commented or shared, last 15 days) or creators (followed or viewed the profile) in the picked categories, and the ad group uses the TikTok placement only. Each must include id.
-                work_positions: Meta only. Job title entities from /v1/ads/targeting/search?dimension=workPosition. Each must include id. Rejected on other platforms (use LinkedIn's `jobTitles` there).
-                work_employers: Meta only. Employer entities from /v1/ads/targeting/search?dimension=workEmployer. Each must include id.
-                work_industries: Meta only. Work-industry entities from /v1/ads/targeting/search?dimension=workIndustry. Each must include id. Rejected on other platforms (use LinkedIn's `industries` there).
+                custom_locations: Point-radius (lat/lng) geo targeting. Meta only (custom_locations). Rejected on platforms without radius support. Each item is an object with keys: latitude (number, required); longitude (number, required); radius (number, required); distanceUnit (one of: mile, kilometer; required); name (string); address (string)
+                behaviors: Behaviour entities from /v1/ads/targeting/search?dimension=behavior (Meta, TikTok and LinkedIn). On TikTok they target people who interacted with videos (watched to the end, liked, commented or shared, last 15 days) or creators (followed or viewed the profile) in the picked categories, and the ad group uses the TikTok placement only. Each must include id. Each item is an object with keys: id (string, required); name (string)
+                work_positions: Meta only. Job title entities from /v1/ads/targeting/search?dimension=workPosition. Each must include id. Rejected on other platforms (use LinkedIn's `jobTitles` there). Each item is an object with keys: id (string, required); name (string)
+                work_employers: Meta only. Employer entities from /v1/ads/targeting/search?dimension=workEmployer. Each must include id. Each item is an object with keys: id (string, required); name (string)
+                work_industries: Meta only. Work-industry entities from /v1/ads/targeting/search?dimension=workIndustry. Each must include id. Rejected on other platforms (use LinkedIn's `industries` there). Each item is an object with keys: id (string, required); name (string)
                 income_tier: Normalized household-income tier. Meta and TikTok express all four; Google maps only
         `top_10`; rejected on LinkedIn, X, and Pinterest. On Meta, income targeting is incompatible
         with housing/employment/credit `specialAdCategories`.
                 languages: e.g. ["en","es"]. Google: campaign language targeting (language_constant) using Google's language codes (ISO 639-1, plus variants such as `zh_CN`); unknown codes return 400. On Meta, a bare code targets all regional variants ("en" = all English), or use a region-qualified code for a specific one ("en_GB", "pt_BR", "zh_TW"); unknown codes are rejected. Other ad platforms use their own language-code systems.
-                placements: Meta only. Manual ad placements. Omit for automatic placements (Meta's default,
-        recommended for most cases, since Meta optimises delivery across all eligible surfaces).
-        When set, restricts delivery to the chosen surfaces, mapped onto the ad set's
-        `targeting.{publisher_platforms, facebook_positions, instagram_positions,
-        messenger_positions, audience_network_positions, threads_positions,
-        whatsapp_positions, device_platforms}`. Enum membership is validated here; Meta
-        additionally enforces co-selection rules (e.g. some positions require their parent
-        publisher platform) and returns an actionable error which we surface. Non-Meta
-        platforms reject this field.
+                placements: Meta only. Manual ad placements. Omit for automatic placements (Meta's default, recommended for most cases, since Meta optimises delivery across all eligible surfaces). When set, restricts delivery to the chosen surfaces, mapped onto the ad set's `targeting.{publisher_platforms, facebook_positions, instagram_positions, messenger_positions, audience_network_positions, threads_positions, whatsapp_positions, device_platforms}`. Enum membership is validated here; Meta additionally enforces co-selection rules (e.g. some positions require their parent publisher platform) and returns an actionable error which we surface. Non-Meta platforms reject this field. Object with keys: publisherPlatforms (list of string) - Top-level platforms to deliver on. A position field below is only honoured when its parent platform is included here.; facebookPositions (list of string); instagramPositions (list of string); messengerPositions (list of string); audienceNetworkPositions (list of string); threadsPositions (list of string); whatsappPositions (list of string); devicePlatforms (list of string) - Restrict by device. Omit to deliver on both mobile and desktop.
                 saved_targeting_id: ID of a `saved_targeting` audience (created via POST /v1/ads/audiences). When set, its stored
         TargetingSpec is expanded as the base targeting; inline fields on this body merge on top. Lets you
         reuse a named targeting preset without re-sending every field.
@@ -8908,123 +8806,30 @@ def register_generated_tools(mcp, _get_client):
         When omitted we use the Instagram actor Meta already runs the Page's other ads as,
         falling back to the Page's page-backed Instagram account. Useful when a Page has more
         than one eligible IG account.
-                dynamic_creative: Meta only. Dynamic Creative: supply a POOL of assets and Meta auto-combines and
-        optimises them into the best-performing variations within a single ad (mapped to the
-        creative's `asset_feed_spec`). When set, the top-level single-creative fields
-        (`imageUrl`, `headline`, `body`, `linkUrl`, `callToAction`) are ignored. Mutually
-        exclusive with the `creatives[]` multi-creative shape. Exactly ONE of `imageUrls` /
-        `videoUrls` is required (Meta allows one ad format per asset feed; sending both →
-        400). Limits remain 10 images or videos and 5 bodies, titles or descriptions.
-        The ad set is created with `is_dynamic_creative: true`. Combining this field
-        with `adSetId` returns 400: omit `adSetId` to create a new dynamic ad set.
-        Multiple headlines go in `titles`; multiple primary texts go in `bodies`.
-                carousel_cards: Meta only. Hand-built carousel: 2-10 authored cards in DETERMINISTIC order, mapped to
-        the creative's `link_data.child_attachments`. Unlike `dynamicCreative`,
-        you control the card order and per-card copy/link. Requires top-level `body`
-        and `callToAction`; `linkUrl` is also required UNLESS `leadGenFormId` is set. Those
-        become the ad's own Destination and button (`link_data.link` / `link_data.call_to_action`),
-        and double as the per-card fallback when a card omits its own.
-        Mutually exclusive with `imageUrl`/`video`, `creatives[]`, `dynamicCreative`,
-        `placementAssets`, `existingCreativeId`, `adSetId` and goal
-        `catalog_sales`. Combines with `leadGenFormId` to build a carousel Instant-Form
-        lead ad: `linkUrl` and per-card `linkUrl` become OPTIONAL and, when sent, are
-        forwarded as the real card and top-level destinations; when omitted, the
-        destination falls back to Meta's lead-form link.
+                dynamic_creative: Meta only. Dynamic Creative: supply a POOL of assets and Meta auto-combines and optimises them into the best-performing variations within a single ad (mapped to the creative's `asset_feed_spec`). When set, the top-level single-creative fields (`imageUrl`, `headline`, `body`, `linkUrl`, `callToAction`) are ignored. Mutually exclusive with the `creatives[]` multi-creative shape. Exactly ONE of `imageUrls` / `videoUrls` is required (Meta allows one ad format per asset feed; sending both → 400). Limits remain 10 images or videos and 5 bodies, titles or descriptions. The ad set is created with `is_dynamic_creative: true`. Combining this field with `adSetId` returns 400: omit `adSetId` to create a new dynamic ad set. Multiple headlines go in `titles`; multiple primary texts go in `bodies`. Object with keys: imageUrls (list of string) - Pool of image URLs (1-10). Uploaded to the ad account and referenced by hash in the asset feed. Mutually exclusive with `videoUrls`.; videoUrls (list of string) - Pool of video URLs (1-10). Uploaded to the ad account and referenced by video id in the asset feed. No thumbnails are needed: Meta auto-generates a poster per ...; bodies (list of string) - Primary-text variations (the body copy).; titles (list of string) - Headline variations.; descriptions (list of string) - Description (link caption) variations.; linkUrls (list of string) - Destination URL variations. At least one is required unless `goal` is `lead_generation`.; callToActionTypes (list of string) - CTA-button variations. Required.; adFormat (one of: SINGLE_IMAGE, CAROUSEL_IMAGE, SINGLE_VIDEO) - Asset-feed ad format. Must match the pool: SINGLE_IMAGE / CAROUSEL_IMAGE require `imageUrls`, SINGLE_VIDEO requires `videoUrls` (400 otherwise). Defaults to ...
+                carousel_cards: Meta only. Hand-built carousel: 2-10 authored cards in DETERMINISTIC order, mapped to the creative's `link_data.child_attachments`. Unlike `dynamicCreative`, you control the card order and per-card copy/link. Requires top-level `body` and `callToAction`; `linkUrl` is also required UNLESS `leadGenFormId` is set. Those become the ad's own Destination and button (`link_data.link` / `link_data.call_to_action`), and double as the per-card fallback when a card omits its own. Mutually exclusive with `imageUrl`/`video`, `creatives[]`, `dynamicCreative`, `placementAssets`, `existingCreativeId`, `adSetId` and goal `catalog_sales`. Combines with `leadGenFormId` to build a carousel Instant-Form lead ad: `linkUrl` and per-card `linkUrl` become OPTIONAL and, when sent, are forwarded as the real card and top-level destinations; when omitted, the destination falls back to Meta's lead-form link. Each item is an object with keys: imageUrl (string, required) - Card image; uploaded to the ad account and referenced by hash.; linkUrl (string) - Card destination URL. Defaults to the top-level linkUrl, or Meta's lead-form link when leadGenFormId is set and neither is provided.; headline (string) - Card headline, shown below the card image.; description (string) - Card description, shown under the headline.; callToAction (string) - Card CTA override. Defaults to the top-level callToAction; same enum.
                 default_locale: Meta only. Language the top-level copy is written in (e.g. `en`, `pt_BR`), used by the `translations` default rule. Defaults to `en`. Meta rejects a language asset feed whose default rule carries no locales of its own. Must NOT also appear as an entry in `translations`.
-                translations: Meta only. Multi-language ads (Dynamic Language Optimization): ONE ad carrying
-        per-locale copy and, optionally, per-locale media: the "Languages" toggle in Ads
-        Manager. Keeps social proof (likes/comments/shares) on a SINGLE post instead of
-        splitting it across one ad per language.
-
-        The ad's top-level copy is the DEFAULT shown to every locale you do NOT list,
-        and it counts as one of the language variants.
-
-        IMPORTANT, and the opposite of what you might expect: text does NOT inherit.
-        Every entry must carry its own `headline`, `body` AND `description`, and all of
-        them must be DISTINCT from each other and from the ad's top-level copy. Meta
-        deduplicates identical strings inside the asset feed, so two locales sharing a
-        string collapse into one asset and the create fails with a misleading "Too few
-        ... texts provided in asset creation" (subcode 1885817) that names a field which
-        is actually present. We validate this before calling Meta and return a 400
-        naming the offending locale and field. `description` is therefore effectively
-        required on the ad whenever `translations` is present, even though it is
-        optional otherwise.
-
-        Do NOT list `defaultLocale` inside `translations`: Meta rejects the duplicate
-        with "The language asset feed includes an unsupported targeting field"
-        (subcode 1885985).
-
-        Media DOES inherit and is uploaded once when shared, and `linkUrl` inherits
-        too: each locale may name its own landing page and unlisted locales fall back
-        to the ad's top-level `linkUrl`. Meta enforces
-        Dynamic Creative image dimensions on language feeds, so an `imageUrl` that
-        works on a normal ad may be rejected with "The following images have invalid
-        dimensions for Dynamic Creative" (subcode 1885558). Video is not affected.
-
-        Mutually exclusive with `dynamicCreative`, `placementAssets`, `carouselCards`,
-        `existingCreativeId` and `creatives[]`. Meta allows one `asset_feed_spec` shape per creative.
-                placement_assets: Meta only. Placement asset customization: pin a SPECIFIC asset (image OR video) to
-        each placement group on a SINGLE ad (e.g. a 9:16 on Stories/Reels and a 4:5 on Feed).
-        The same thing Meta Ads Manager produces with "different creative per placement",
-        mapped to the creative's `asset_feed_spec` + `asset_customization_rules`. Deterministic
-        pinning, NOT the auto-optimizing pool of `dynamicCreative` (mutually exclusive). Works
-        on the legacy single shape AND the attach shape (`adSetId` + placementAssets adds one
-        placement-customized ad to an existing ad set, the way to build N per-placement ads
-        sharing one ad set: create the first normally, attach the rest). Cannot be combined
-        with `creatives[]` or top-level `bodies`/`headlines`/`descriptions` arrays. Each rule
-        can override `headline`, `body` and `description` with one string per field. Omitted
-        fields and unmatched placements use the top-level copy; `linkUrl` and `callToAction`
-        remain shared. Zernio emits labelled text with `optimization_type: PLACEMENT`.
-        Multiple text options rotating within a placement are not supported by this input. Each rule's `placements` accepts the same fields as the top-level
-        `placements` object; Meta enforces co-selection rules and returns an actionable error.
-
-        Meta controls text rendering by placement and format. Validation accepts these fields
-        but does not prove that every field appears in delivery. Preview the ad; put copy that
-        must always be visible into the image or video itself.
-
-        `validateOnly: true` supports all-image placementAssets without uploading or creating
-        anything. Video placement validation remains unsupported because it requires uploads.
-
-        A block is all-image OR all-video, never mixed (Meta's asset_feed_spec carries one ad
-        format). Image mode: `defaultImageUrl` + `rules[].imageUrl`. Video mode:
-        `defaultVideoUrl` + `rules[].videoUrl` (optional `thumbnailUrl`/`defaultThumbnailUrl`
-        posters; Meta auto-generates when omitted). Exactly one catch-all default is required.
+                translations: Meta only. Multi-language ads (Dynamic Language Optimization): ONE ad carrying per-locale copy and, optionally, per-locale media: the "Languages" toggle in Ads Manager. Keeps social proof (likes/comments/shares) on a SINGLE post instead of splitting it across one ad per language. The ad's top-level copy is the DEFAULT shown to every locale you do NOT list, and it counts as one of the language variants. IMPORTANT, and the opposite of what you might expect: text does NOT inherit. Every entry must carry its own `headline`, `body` AND `description`, and all of them must be DISTINCT from each other and from the ad's top-level copy. Meta deduplicates identical strings inside the asset feed, so two locales sharing a string collapse into one asset and the create fails with a misleading "Too few ... texts provided in asset creation" (subcode 1885817) that names a field which is actually present. We validate this before calling Meta and return a 400 naming the offending locale and field. `description` is therefore effectively required on the ad whenever `translations` is present, even though it is optional otherwise. Do NOT list `defaultLocale` inside `translations`: Meta rejects the duplicate with "The language asset feed includes an unsupported targeting field" (subcode 1885985). Media DOES inherit and is uploaded once when shared, and `linkUrl` inherits too: each locale may name its own landing page and unlisted locales fall back to the ad's top-level `linkUrl`. Meta enforces Dynamic Creative image dimensions on language feeds, so an `imageUrl` that works on a normal ad may be rejected with "The following images have invalid dimensions for Dynamic Creative" (subcode 1885558). Video is not affected. Mutually exclusive with `dynamicCreative`, `placementAssets`, `carouselCards`, `existingCreativeId` and `creatives[]`. Meta allows one `asset_feed_spec` shape per creative. Each item is an object with keys: locale (string, required) - Language code, resolved to Meta's numeric locale id. Bare codes target the '(All)' umbrella (`es` = every Spanish variant); region-qualified codes target the ...; headline (string, required) - Headline for this language. REQUIRED, and must differ from every other locale and from the ad's top-level headline.; body (string, required) - Primary text for this language. REQUIRED, and must differ from every other locale and from the ad's top-level body.; description (string, required) - Link description for this language. REQUIRED, and must differ from every other locale and from the ad's top-level description.; linkUrl (string) - Destination URL for this language. Inherits the ad's top-level `linkUrl` when omitted, and requires it to be present (400 otherwise): the top-level URL is the ...; imageUrl (string) - Image for this language. Inherits the ad's `imageUrl` when omitted. The feed is all-image OR all-video.; videoUrl (string) - Video for this language. Inherits the ad's `video.url` when omitted. The feed is all-image OR all-video.; thumbnailUrl (string) - Poster frame for this language's video.
+                placement_assets: Meta only. Placement asset customization: pin a SPECIFIC asset (image OR video) to each placement group on a SINGLE ad (e.g. a 9:16 on Stories/Reels and a 4:5 on Feed). The same thing Meta Ads Manager produces with "different creative per placement", mapped to the creative's `asset_feed_spec` + `asset_customization_rules`. Deterministic pinning, NOT the auto-optimizing pool of `dynamicCreative` (mutually exclusive). Works on the legacy single shape AND the attach shape (`adSetId` + placementAssets adds one placement-customized ad to an existing ad set, the way to build N per-placement ads sharing one ad set: create the first normally, attach the rest). Cannot be combined with `creatives[]` or top-level `bodies`/`headlines`/`descriptions` arrays. Each rule can override `headline`, `body` and `description` with one string per field. Omitted fields and unmatched placements use the top-level copy; `linkUrl` and `callToAction` remain shared. Zernio emits labelled text with `optimization_type: PLACEMENT`. Multiple text options rotating within a placement are not supported by this input. Each rule's `placements` accepts the same fields as the top-level `placements` object; Meta enforces co-selection rules and returns an actionable error. Meta controls text rendering by placement and format. Validation accepts these fields but does not prove that every field appears in delivery. Preview the ad; put copy that must always be visible into the image or video itself. `validateOnly: true` supports all-image placementAssets without uploading or creating anything. Video placement validation remains unsupported because it requires uploads. A block is all-image OR all-video, never mixed (Meta's asset_feed_spec carries one ad format). Image mode: `defaultImageUrl` + `rules[].imageUrl`. Video mode: `defaultVideoUrl` + `rules[].videoUrl` (optional `thumbnailUrl`/`defaultThumbnailUrl` posters; Meta auto-generates when omitted). Exactly one catch-all default is required. Object with keys: defaultImageUrl (string) - Image mode. Catch-all image for any placement no rule matches. Required in image mode (Meta mandates a default rule).; defaultVideoUrl (string) - Video mode. Catch-all video for any placement no rule matches. Required in video mode.; defaultThumbnailUrl (string) - Video mode (optional). Poster image for the default video; Meta auto-generates one when omitted.; rules (list of objects with keys imageUrl, videoUrl, thumbnailUrl, headline, body, description, placements, required) - One entry per placement group you want to pin a specific asset to.
                 audience_id: Custom audience ID for targeting
                 campaign_type: Google only. Performance Max requires assetGroup and Demand Gen requires demandGen; both are always created PAUSED.
                 location_targeting_type: Google only (400 elsewhere). Set on the new campaign; a request that joins an existing campaign (`existingCampaignId` or `adSetId`) returns 400, change that campaign with PUT /v1/ads/campaigns/{campaignId}/targeting instead. `presence` reaches only people in or regularly in the targeted locations.
-                asset_group
-                demand_gen
+                asset_group: Object with keys: name (string) - Defaults to the request name.; finalUrl (string, required) - Required destination URL.; headlines (list of string, required); longHeadline (string, required); descriptions (list of string, required) - At least one description must be 60 characters or fewer.; businessName (string, required); images (object with keys landscape, square, logo, required) - Public HTTP(S) image URLs. GIF, JPEG or PNG, at most 5120 KB per image. Google validates dimensions and aspect ratios.; youtubeVideoId (string) - Optional existing YouTube video id. Google can generate video when omitted. Video uploads and arbitrary video URLs are not supported.
+                demand_gen: Object with keys: adGroupName (string) - Defaults to the ad name.; finalUrl (string, required); businessName (string, required); headlines (list of string, required) - Distinct texts. A carousel ad takes exactly one.; longHeadlines (list of string) - Video ads only, and required there.; descriptions (list of string, required) - A carousel ad takes exactly one.; callToAction (string) - Image and carousel ads only. Call to action text such as 'Learn more'; Google picks one when omitted.; images (object with keys landscape, square, portrait, logo, required) - Public image URLs. An image ad needs landscape or square; video and carousel ads take only one logo (carousel images go on each card).; youtubeVideoIds (list of string) - Makes the ad a video responsive ad.; carouselCards (list of objects with keys headline, finalUrl, callToAction, images) - Makes the ad a carousel ad. Each card needs its own image (no two cards may share one); use the same image shape on every card. Card images are uploaded to ...; channels (list of string) - Channel controls on the ad group. Only the listed channels serve; omit to serve on all of them.; audience (object with keys userLists, userInterests, customAudiences, ageRanges, genders); audienceId (string) - Attach an existing Google Audience by numeric id instead of audience.
                 keywords: Google Search only. Keywords on the new ad group; entries are strings (BROAD) or { text, matchType }. Editable later via PUT /v1/ads/{adId} targeting.keywords.
                 negative_keywords: Google Search only; other platforms return 400. Ad-group-level negative keywords on the new ad group. Editable later via PUT /v1/ads/{adId} targeting.negativeKeywords.
                 campaign_negative_keywords: Google Search only; other platforms return 400. Campaign-level negative keywords (campaign_criterion.negative), created alongside the ad group. Editable later via PUT /v1/ads/campaigns/{campaignId}/negative-keywords.
                 additional_headlines: Google Search RSA only. Extra text assets as strings or objects with text and optional pinnedField. Existing string input remains supported. The effective create lists, including primary text and deduplication, must contain 3-15 headlines and 2-4 descriptions; excess entries return 400.
                 additional_descriptions: Google Search RSA only. Extra text assets as strings or objects with text and optional pinnedField. Existing string input remains supported. The effective create lists, including primary text and deduplication, must contain 3-15 headlines and 2-4 descriptions; excess entries return 400.
-                sitelinks: Google Search only. Sitelink assets to create and attach at the campaign level.
-        Each entry becomes an Asset (with sitelink_asset + Asset.final_urls) plus a
-        CampaignAsset link (field_type SITELINK). Approval is async: Google reviews
-        assets after creation; poll asset.policy_summary later to read the verdict.
-        Google requires at least two sitelinks to surface them on an ad; four or more
-        is Google's own recommendation for maximum visibility. The response's
-        creative.sitelinks[] echoes each input plus its Google resourceName.
+                sitelinks: Google Search only. Sitelink assets to create and attach at the campaign level. Each entry becomes an Asset (with sitelink_asset + Asset.final_urls) plus a CampaignAsset link (field_type SITELINK). Approval is async: Google reviews assets after creation; poll asset.policy_summary later to read the verdict. Google requires at least two sitelinks to surface them on an ad; four or more is Google's own recommendation for maximum visibility. The response's creative.sitelinks[] echoes each input plus its Google resourceName. Each item is an object with keys: text (string, required) - The clickable link text shown under the ad. 25-char cap comes from Google.; linkUrl (string, required) - Final URL the sitelink navigates to.; description1 (string) - First description line under the link text (optional). 35-char cap.; description2 (string) - Second description line (optional; usually paired with description1).
                 callouts: Google Search only. Short callout texts (max 25 chars each) that appear as
         non-clickable annotations under the ad, e.g. "Free shipping", "24/7 support".
         Each becomes one Asset (`callout_asset`) plus a CampaignAsset link with
         field_type CALLOUT. Response's creative.callouts[] echoes each input plus
         its Google resourceName.
-                structured_snippets: Google Search only. Structured snippets: one header from Google's
-        predefined list plus 3-10 values (max 25 chars each). Each becomes one
-        Asset (`structured_snippet_asset`) plus a CampaignAsset link with
-        field_type STRUCTURED_SNIPPET.
+                structured_snippets: Google Search only. Structured snippets: one header from Google's predefined list plus 3-10 values (max 25 chars each). Each becomes one Asset (`structured_snippet_asset`) plus a CampaignAsset link with field_type STRUCTURED_SNIPPET. Each item is an object with keys: header (one of: Amenities, Brands, Courses, Degree programs, Destinations, Featured hotels, Insurance coverage, Models, Neighborhoods, Service catalog, Shows, Styles, Types; required) - One of Google's 13 predefined snippet headers.; values (list of string, required)
                 advantage_audience: Meta only. Controls the Advantage audience feature (targeting_automation). 0 = disabled (default), 1 = enabled. Meta Marketing API requires this field on all ad set creation requests.
-                attribution_spec: Meta only. Conversion attribution window for the ad set, mapping 1:1 to Meta's
-        ad-set `attribution_spec`. Only honored for conversion goals (`conversions`,
-        `lead_generation`, `app_promotion`); ignored for awareness/traffic/engagement.
-        Omit to use Meta's default (`7-day click` + `1-day view`). Meta enforces the
-        valid combinations: `VIEW_THROUGH` only allows `windowDays: 1` (7d/28d view
-        windows were removed Jan 2026); `ENGAGED_VIDEO_VIEW` only `1` and only alongside
-        `VIEW_THROUGH: 1`; `CLICK_THROUGH: 28` only on certain objectives. Invalid combos
-        surface as a Meta 400.
-        Example: `[{ "eventType": "CLICK_THROUGH", "windowDays": 7 }, { "eventType": "VIEW_THROUGH", "windowDays": 1 }]`
+                attribution_spec: Meta only. Conversion attribution window for the ad set, mapping 1:1 to Meta's ad-set `attribution_spec`. Only honored for conversion goals (`conversions`, `lead_generation`, `app_promotion`); ignored for awareness/traffic/engagement. Omit to use Meta's default (`7-day click` + `1-day view`). Meta enforces the valid combinations: `VIEW_THROUGH` only allows `windowDays: 1` (7d/28d view windows were removed Jan 2026); `ENGAGED_VIDEO_VIEW` only `1` and only alongside `VIEW_THROUGH: 1`; `CLICK_THROUGH: 28` only on certain objectives. Invalid combos surface as a Meta 400. Example: `[{ "eventType": "CLICK_THROUGH", "windowDays": 7 }, { "eventType": "VIEW_THROUGH", "windowDays": 1 }]` Each item is an object with keys: eventType (one of: CLICK_THROUGH, VIEW_THROUGH, ENGAGED_VIDEO_VIEW; required); windowDays (one of: 1, 7, 28; required)
                 gender: Restrict the audience by gender. 'male' targets men only, 'female' targets women only, 'all' (default) targets everyone. Applied on Meta, TikTok and Pinterest. Ignored on Google, LinkedIn and X.
                 bid_strategy: Deprecated: send it inside `platformSpecificData` instead (Meta today; TikTok's nested shape is planned). The flat field keeps working during the deprecation window; sending both shapes returns a 400.
 
@@ -9071,19 +8876,7 @@ def register_generated_tools(mcp, _get_client):
         attaching, and requires `valueRuleSetId`. `false` is REJECTED here with 400:
         a newly created ad set has nothing to detach, so detaching lives on
         `PUT /v1/ads/ad-sets/{adSetId}`.
-                platform_specific_data: Platform-specific options. The platform is derived from `accountId`;
-        sending options for a different platform returns a 400. LinkedIn
-        (campaign bidding and delivery controls) and Meta (the bid trio)
-        have options today.
-
-        **Meta**: `bidStrategy`, `bidAmount` and `roasAverageFloor` may be
-        sent here instead of at the root, which is the preferred home going forward.
-        Sending the bid fields in BOTH places returns a 400
-        (`mutually_exclusive_fields`), and sending any of them in
-        `adSetId` attach mode is a 400 too (the ad set already has its bid).
-        `dailyMinSpendTarget` / `lifetimeMinSpendTarget` set the new ad set's
-        minimum spend and live here only; they are rejected in `adSetId` attach
-        mode as well.
+                platform_specific_data: Platform-specific options. The platform is derived from `accountId`; sending options for a different platform returns a 400. LinkedIn (campaign bidding and delivery controls) and Meta (the bid trio) have options today. **Meta**: `bidStrategy`, `bidAmount` and `roasAverageFloor` may be sent here instead of at the root, which is the preferred home going forward. Sending the bid fields in BOTH places returns a 400 (`mutually_exclusive_fields`), and sending any of them in `adSetId` attach mode is a 400 too (the ad set already has its bid). `dailyMinSpendTarget` / `lifetimeMinSpendTarget` set the new ad set's minimum spend and live here only; they are rejected in `adSetId` attach mode as well. Object with keys: costType (one of: CPM, CPC, CPV) - Campaign cost model (billing event). Defaults to `CPM`. Required when `unitCost` is set so the manual bid applies to an explicit cost model.; unitCost (number) - Manual bid in WHOLE account-currency units (e.g. 2.5 = $2.50). Requires `costType`. Omit for LinkedIn's automated (max delivery) bidding. LinkedIn enforces ...; optimizationTargetType (string) - Campaign `optimizationTargetType` (e.g. `MAX_CLICK`, `TARGET_COST_PER_CLICK`, `MAX_IMPRESSION`). Forwarded verbatim, LinkedIn validates compatibility with the ...; creativeSelection (one of: OPTIMIZED, ROUND_ROBIN) - How LinkedIn rotates creatives within the campaign. Defaults to `OPTIMIZED`.; audienceExpansionEnabled (boolean) - Enable LinkedIn audience expansion. Defaults to false.; offsiteDeliveryEnabled (boolean) - Deliver on the LinkedIn Audience Network. Defaults to false.; connectedTelevisionOnly (boolean) - Restrict delivery to Connected TV inventory.; carousel (object with keys cards) - POST /v1/ads/create only. Carousel ad with 2-10 image cards. Mutually exclusive with the other creative sources.; document (object with keys url, title) - POST /v1/ads/create only. Document ad rendered as an in-feed viewer. PDF, PPT or DOC up to 100MB. Mutually exclusive with the other creative sources.; spotlight (object with keys headline, description, callToAction, landingUrl, logoUrl, organizationName, showMemberProfilePhoto, backgroundImageUrl) - POST /v1/ads/create only. Dynamic Spotlight Ad personalized with the viewer's profile photo. Supported goals: traffic, awareness. logoUrl and organizationName ...; follower (object with keys headline, description, callToAction, logoUrl, organizationName, showMemberProfilePhoto) - POST /v1/ads/create only. Dynamic Follower Ad promoting the Company Page. Supported goals: engagement, awareness. headline and description take exactly one of ...; jobs (object with keys headline, buttonLabel, logoUrl, organizationName, showMemberProfilePhoto) - POST /v1/ads/create only. Dynamic Jobs Ad promoting your open roles, personalized with the viewer's profile photo. Requires goal job_applicants and a Company ...; textAd (object with keys headline, description, landingUrl, imageUrl) - POST /v1/ads/create only. Classic right-rail Text Ad. The copy lives here; ad-level body and headline are not used. Mutually exclusive with the other creative ...; conversation (object with keys subject, sender, body, footer, headline, firstMessageId, messages) - POST /v1/ads/create only. Conversation Ad: a choose-your-path message tree delivered to the member's LinkedIn inbox. Messages are flat nodes wired by local ...; event (object with keys urn) - POST /v1/ads/create only. Promotes an existing LinkedIn Event; no headline needed. Mutually exclusive with the other creative sources.; thoughtLeader (object with keys postUrn) - POST /v1/ads/create only. Sponsors an existing LinkedIn post (a share or ugcPost authored by your organization's Company Page) as the creative, keeping its ...
                 dsa_beneficiary: Legal entity that benefits from the ad. Required when targeting EU users
         (EU DSA, Article 26). Optional if the ad account has a default beneficiary:
         set it once via `PATCH /v1/ads/accounts` or in Meta Ads Manager, and Meta
@@ -9092,15 +8885,7 @@ def register_generated_tools(mcp, _get_client):
         (for example, an agency paying for a client's ads). Same rules as
         `dsaBeneficiary`: required for EU targeting unless the ad account has
         a default payor.
-                brand_identity: TikTok only. Synthetic Brand Identity used when the ad
-        attributes to a CUSTOMIZED_USER (instead of a real TT_USER
-        @username). Required on the FIRST CUSTOMIZED_USER ad on a
-        `tiktokads` SocialAccount with no cached identity; omit on
-        subsequent ads (the identity is cached on the account after
-        first creation). Non-TikTok platforms ignore this field.
-
-        Alternative: configure once via `PATCH /v1/connect/tiktok-ads`,
-        then create ads without this field.
+                brand_identity: TikTok only. Synthetic Brand Identity used when the ad attributes to a CUSTOMIZED_USER (instead of a real TT_USER @username). Required on the FIRST CUSTOMIZED_USER ad on a `tiktokads` SocialAccount with no cached identity; omit on subsequent ads (the identity is cached on the account after first creation). Non-TikTok platforms ignore this field. Alternative: configure once via `PATCH /v1/connect/tiktok-ads`, then create ads without this field. Object with keys: displayName (string, required) - Brand name shown above the ad on TikTok.; imageUrl (string, required) - Public URL of a square brand image (≥98×98 px, JPG/PNG). Used as the brand avatar on the ad.
                 identity_id: TikTok: the identity the ad runs as, from GET /v1/ads/tiktok-identities. Overrides the connected account's own identity; must be authorized on the advertiser.
                 identity_type: TikTok only. Forces the identity attribution on the ad:
 
@@ -9134,7 +8919,7 @@ def register_generated_tools(mcp, _get_client):
                 user_device: Meta only. Device models such as iPhone. Emitted as user_device. May also be supplied inside targeting.
                 is_skadnetwork_attribution: Meta app promotion only. Immutable campaign flag. Set true for iOS 14+ SKAdNetwork campaigns and supply promotedObject.applicationId plus promotedObject.objectStoreUrl. The campaign receives promotedObject only when this flag is true. Cannot be changed on an existing campaign.
                 campaign_attribution: Meta ad-set attribution. Required as SKADNETWORK for iOS 14+ app promotion or a SKAdNetwork campaign. Requires AUCTION buying. Standalone Meta ad-set creation is not supported; use this field on /v1/ads/create.
-                promoted_object"""
+                promoted_object: Object with keys: pixelId (string) - Pixel ID. **Meta:** Facebook Pixel ID, required for `goal: conversions`. Requires `customEventType` alongside it; Meta rejects any promoted_object carrying ...; customEventType (string) - The event the campaign/ad group optimises against. **Meta:** standard event like `PURCHASE`, `LEAD`, `COMPLETE_REGISTRATION`, `ADD_TO_CART`. Uppercased ...; customEventStr (string) - Meta only. Pixel custom-event name to optimise against (Meta's `custom_event_str`), exactly as it appears in Events Manager and in your CAPI payloads ...; pageId (string) - Facebook Page ID. Used by `goal: lead_generation`. Auto-filled from the connected Page when omitted.; applicationId (string) - App ID. Required for `goal: app_promotion`.; objectStoreUrl (string) - App Store / Play Store listing URL. Required for `goal: app_promotion`.; customConversionId (string) - Custom Conversion ID, when optimising against one instead of a standard event. Accepted alone by this API, without `pixelId` or `customEventType`. If ...; productCatalogId (string) - Optional catalog ID. If supplied with productSetId, the set must belong to this catalog (checked by Zernio when the Meta login carries catalog_management, by ...; productSetId (string) - Meta product SET ID, for example from GET /v1/ads/catalogs/{catalogId}/product-sets. Creating catalog ads needs only ads_management on the Meta login, not ...; offlineConversionDataSetId (string) - Meta only. Offline event set (dataset) to optimise toward. Post-merger these are datasets: the id is the dataset id (for pixel-backed datasets, the pixel id).; whatsappPhoneNumber (string) - Meta only. WhatsApp number on messaging-destination ad sets."""
         client = _get_client()
         try:
             response = client.ad_campaigns.create_standalone_ad(
@@ -9312,7 +9097,7 @@ def register_generated_tools(mcp, _get_client):
 
         Args:
             campaign_id: Google campaign id (required)
-            goals
+            goals: Each item is an object with keys: category (string, required) - Google ConversionActionCategory, e.g. PURCHASE, SIGNUP, SUBMIT_LEAD_FORM; origin (string, required) - Google ConversionOrigin, e.g. WEBSITE, APP, CALL_FROM_ADS, STORE, GOOGLE_HOSTED; biddable (boolean, required)
             goal_config_level
             custom_conversion_goal_id: Custom goal to bid on, or null to clear"""
         client = _get_client()
@@ -9550,7 +9335,7 @@ def register_generated_tools(mcp, _get_client):
             link_url: (required)
             image_url: Publicly reachable image; uploaded to the account's library server-side.
             image_hash: Existing library image hash (POST /v1/ads/images or GET /v1/ads/images).
-            carousel_cards
+            carousel_cards: Each item is an object with keys: imageUrl (string, required); linkUrl (string, required); headline (string); description (string); callToAction (string)
             url_tags: Appended to every outbound URL (e.g. utm_source=fb).
             promotion: Not supported. Meta validates creative_sourcing_spec.promotion_metadata_spec on the create call and then discards it, so a Promotion set through the Marketing API never reaches the creative. Any object is rejected with 400 invalid_field_value. Send null or omit the field, and set the Promotion on the ad in Ads Manager. Verified on 2026-09-11 across Graph v19.0 to v25.0 and every write path.
             creative_features: Meta only. Applied to each new creative, including standalone and attach shapes. With creatives[], these are defaults; an item replaces the whole feature map, including an empty map. auto_promotion_tag is an Advantage+ enhancement, not the Ads Manager Promotion setting.
@@ -10535,7 +10320,7 @@ def register_generated_tools(mcp, _get_client):
             action_attribution_windows: Meta attribution windows (e.g. ["7d_click", "1d_view"]). Action values are returned keyed per window.
             action_report_time: When actions are counted: impression, conversion or mixed.
             use_unified_attribution_setting: Use the ad sets' own attribution settings for action counting.
-            filtering: Meta filter objects, applied server-side.
+            filtering: Meta filter objects, applied server-side. Each item is an object with keys: field (string, required); operator (string, required); value (any)
             date_preset: Mutually exclusive with fromDate/toDate.
             from_date
             to_date
@@ -10942,7 +10727,7 @@ def register_generated_tools(mcp, _get_client):
             Args:
                 account_id: Zernio account ID on the target ad platform (the estimate runs against its platform). (required)
                 ad_account_id: Required. The platform ad-account ID the reach call runs against (Meta act_..., LinkedIn numeric sponsoredAccount ID, Pinterest ad-account ID, X account ID) - every backing reach API is scoped to one ad account. Get it from GET /v1/ads/accounts. (required)
-                spec: The targeting spec to estimate. Same shape used by POST /v1/ads/create. (required)
+                spec: The targeting spec to estimate. Same shape used by POST /v1/ads/create. Object with keys: userOs (list of string) - Meta only. Operating systems and version ranges, such as iOS_ver_14.0_and_above or Android. Emitted as user_os. May also be supplied inside targeting.; userDevice (list of string) - Meta only. Device models such as iPhone. Emitted as user_device. May also be supplied inside targeting.; countries (list of string) - ISO 3166-1 alpha-2 country codes (e.g. ['US']).; regions (list of any) - Region/state targeting. `key` is the platform location ID from /v1/ads/targeting/search?dimension=geo&geoType=region. An entry may also be that id as a plain ...; cities (list of any) - City targeting. Optional `radius` + `distanceUnit` extend beyond the city limits; both must be set together or both omitted. `radius` is only honoured on ...; zips (list of objects with keys key, name) - Postal/ZIP targeting. `key` is the platform's postal location ID (e.g. Meta `US:94304`). Supported on Meta, Google, TikTok, Pinterest, X.; metros (list of objects with keys key, name) - DMA / metro-area targeting. `key` is the platform's metro ID (e.g. Meta `DMA:807`).; countryGroups (list of string) - Meta only. Continents and trade blocs (`geo_locations.country_groups`), for targeting a whole region without listing its countries. Combines with `countries` ...; customLocations (list of objects with keys latitude, longitude, radius, distanceUnit, name, address) - Point-radius (lat/lng) targeting (Meta custom_locations / Google proximity). Honoured on Meta and Google; ignored on platforms without radius support.; excludedLocations (object with keys countries, countryGroups, regions, cities, zips, places, neighborhoods, customLocations) - Geo to exclude from the audience. Mirrors the inclusion geo shape: excluded cities can carry a radius catchment and excluded custom (lat/lng) pins are ...; ageMin (integer) - Minimum age. Applied on Meta, TikTok, Pinterest, LinkedIn, X and Google Search/Display (Google excludes the age ranges outside the request); rejected with 400 ...; ageMax (integer) - Maximum age. Same per-platform application and clamping as ageMin.; gender (one of: all, male, female) - Restrict by gender. 'all' (default) targets everyone. Applied on Meta, TikTok, Pinterest, LinkedIn, X and Google Search/Display (Google excludes the other ...; incomeTier (one of: top_5, top_10, top_10_25, top_25_50) - Normalized household-income tier (ZIP/percentile based). Meta and TikTok express all four. Google maps only `top_10` (its INCOME_RANGE_90_UP); other tiers on ...; languages (list of string) - Language codes restricting the audience by language. Applied on Meta, Google, TikTok, LinkedIn, X and Pinterest; rejected with 400 on OpenAI. A code the ...; interests (list of objects with keys id, name) - Interest entities from /v1/ads/targeting/search?dimension=interest. Each carries the platform's opaque id. On Google, applied as ad-group interest criteria ...; behaviors (list of objects with keys id, name) - Behaviour entities from /v1/ads/targeting/search?dimension=behavior (Meta, TikTok and LinkedIn). On TikTok they target people who interacted with videos ...; workPositions (list of objects with keys id, name) - Meta only. Job title entities from /v1/ads/targeting/search?dimension=workPosition. Not interchangeable with the LinkedIn `jobTitles` URN fragments.; workEmployers (list of objects with keys id, name) - Meta only. Employer entities from /v1/ads/targeting/search?dimension=workEmployer.; workIndustries (list of objects with keys id, name) - Meta only. Work-industry entities from /v1/ads/targeting/search?dimension=workIndustry. Not interchangeable with the LinkedIn `industries` URN fragments.; industries (list of string) - LinkedIn B2B only. Industry URN id fragments, or the full urn:li:industry:* URN from /v1/ads/targeting/search?dimension=industry.; companySizes (list of string) - LinkedIn B2B only. Single-letter size codes (A to I), or the full urn:li:staffCountRange:* URN from /v1/ads/targeting/search?dimension=companySize.; seniorities (list of string) - LinkedIn B2B only. Seniority URN id fragments, or the full urn:li:seniority:* URN from /v1/ads/targeting/search?dimension=seniority.; jobFunctions (list of string) - LinkedIn B2B only. Function URN id fragments, or the full urn:li:function:* URN from /v1/ads/targeting/search?dimension=jobFunction.; audienceInclude (list of string) - Platform audience IDs to include, as returned by GET /v1/ads/audiences (Meta custom audience ids, TikTok audience ids, Pinterest customer list ids, LinkedIn ...; audienceExclude (list of string) - Platform audience IDs to exclude; same ID formats as audienceInclude. Not supported on OpenAI (400). (required)
                 optimization_goal: Optional. The optimization goal the estimate should assume (platform's
         own vocabulary, e.g. Meta `REACH`, `LINK_CLICKS`, `OFFSITE_CONVERSIONS`).
         Some platforms vary the estimate by goal; omit to use the platform default."""
@@ -10995,7 +10780,7 @@ def register_generated_tools(mcp, _get_client):
         Args:
             account_id: Zernio account ID (LinkedIn). (required)
             ad_account_id: LinkedIn ad account ID (numeric). (required)
-            spec: Same targeting spec used by POST /v1/ads/create. (required)
+            spec: Same targeting spec used by POST /v1/ads/create. Object with keys: userOs (list of string) - Meta only. Operating systems and version ranges, such as iOS_ver_14.0_and_above or Android. Emitted as user_os. May also be supplied inside targeting.; userDevice (list of string) - Meta only. Device models such as iPhone. Emitted as user_device. May also be supplied inside targeting.; countries (list of string) - ISO 3166-1 alpha-2 country codes (e.g. ['US']).; regions (list of any) - Region/state targeting. `key` is the platform location ID from /v1/ads/targeting/search?dimension=geo&geoType=region. An entry may also be that id as a plain ...; cities (list of any) - City targeting. Optional `radius` + `distanceUnit` extend beyond the city limits; both must be set together or both omitted. `radius` is only honoured on ...; zips (list of objects with keys key, name) - Postal/ZIP targeting. `key` is the platform's postal location ID (e.g. Meta `US:94304`). Supported on Meta, Google, TikTok, Pinterest, X.; metros (list of objects with keys key, name) - DMA / metro-area targeting. `key` is the platform's metro ID (e.g. Meta `DMA:807`).; countryGroups (list of string) - Meta only. Continents and trade blocs (`geo_locations.country_groups`), for targeting a whole region without listing its countries. Combines with `countries` ...; customLocations (list of objects with keys latitude, longitude, radius, distanceUnit, name, address) - Point-radius (lat/lng) targeting (Meta custom_locations / Google proximity). Honoured on Meta and Google; ignored on platforms without radius support.; excludedLocations (object with keys countries, countryGroups, regions, cities, zips, places, neighborhoods, customLocations) - Geo to exclude from the audience. Mirrors the inclusion geo shape: excluded cities can carry a radius catchment and excluded custom (lat/lng) pins are ...; ageMin (integer) - Minimum age. Applied on Meta, TikTok, Pinterest, LinkedIn, X and Google Search/Display (Google excludes the age ranges outside the request); rejected with 400 ...; ageMax (integer) - Maximum age. Same per-platform application and clamping as ageMin.; gender (one of: all, male, female) - Restrict by gender. 'all' (default) targets everyone. Applied on Meta, TikTok, Pinterest, LinkedIn, X and Google Search/Display (Google excludes the other ...; incomeTier (one of: top_5, top_10, top_10_25, top_25_50) - Normalized household-income tier (ZIP/percentile based). Meta and TikTok express all four. Google maps only `top_10` (its INCOME_RANGE_90_UP); other tiers on ...; languages (list of string) - Language codes restricting the audience by language. Applied on Meta, Google, TikTok, LinkedIn, X and Pinterest; rejected with 400 on OpenAI. A code the ...; interests (list of objects with keys id, name) - Interest entities from /v1/ads/targeting/search?dimension=interest. Each carries the platform's opaque id. On Google, applied as ad-group interest criteria ...; behaviors (list of objects with keys id, name) - Behaviour entities from /v1/ads/targeting/search?dimension=behavior (Meta, TikTok and LinkedIn). On TikTok they target people who interacted with videos ...; workPositions (list of objects with keys id, name) - Meta only. Job title entities from /v1/ads/targeting/search?dimension=workPosition. Not interchangeable with the LinkedIn `jobTitles` URN fragments.; workEmployers (list of objects with keys id, name) - Meta only. Employer entities from /v1/ads/targeting/search?dimension=workEmployer.; workIndustries (list of objects with keys id, name) - Meta only. Work-industry entities from /v1/ads/targeting/search?dimension=workIndustry. Not interchangeable with the LinkedIn `industries` URN fragments.; industries (list of string) - LinkedIn B2B only. Industry URN id fragments, or the full urn:li:industry:* URN from /v1/ads/targeting/search?dimension=industry.; companySizes (list of string) - LinkedIn B2B only. Single-letter size codes (A to I), or the full urn:li:staffCountRange:* URN from /v1/ads/targeting/search?dimension=companySize.; seniorities (list of string) - LinkedIn B2B only. Seniority URN id fragments, or the full urn:li:seniority:* URN from /v1/ads/targeting/search?dimension=seniority.; jobFunctions (list of string) - LinkedIn B2B only. Function URN id fragments, or the full urn:li:function:* URN from /v1/ads/targeting/search?dimension=jobFunction.; audienceInclude (list of string) - Platform audience IDs to include, as returned by GET /v1/ads/audiences (Meta custom audience ids, TikTok audience ids, Pinterest customer list ids, LinkedIn ...; audienceExclude (list of string) - Platform audience IDs to exclude; same ID formats as audienceInclude. Not supported on OpenAI (400). (required)
             campaign_type: Defaults to SPONSORED_UPDATES.
             bid_type: Defaults to CPM.
             match_type: Defaults to EXACT.
@@ -11066,7 +10851,7 @@ def register_generated_tools(mcp, _get_client):
         Args:
             account_id: (required)
             ad_account_id: (required)
-            spec: (required)
+            spec: Object with keys: userOs (list of string) - Meta only. Operating systems and version ranges, such as iOS_ver_14.0_and_above or Android. Emitted as user_os. May also be supplied inside targeting.; userDevice (list of string) - Meta only. Device models such as iPhone. Emitted as user_device. May also be supplied inside targeting.; countries (list of string) - ISO 3166-1 alpha-2 country codes (e.g. ['US']).; regions (list of any) - Region/state targeting. `key` is the platform location ID from /v1/ads/targeting/search?dimension=geo&geoType=region. An entry may also be that id as a plain ...; cities (list of any) - City targeting. Optional `radius` + `distanceUnit` extend beyond the city limits; both must be set together or both omitted. `radius` is only honoured on ...; zips (list of objects with keys key, name) - Postal/ZIP targeting. `key` is the platform's postal location ID (e.g. Meta `US:94304`). Supported on Meta, Google, TikTok, Pinterest, X.; metros (list of objects with keys key, name) - DMA / metro-area targeting. `key` is the platform's metro ID (e.g. Meta `DMA:807`).; countryGroups (list of string) - Meta only. Continents and trade blocs (`geo_locations.country_groups`), for targeting a whole region without listing its countries. Combines with `countries` ...; customLocations (list of objects with keys latitude, longitude, radius, distanceUnit, name, address) - Point-radius (lat/lng) targeting (Meta custom_locations / Google proximity). Honoured on Meta and Google; ignored on platforms without radius support.; excludedLocations (object with keys countries, countryGroups, regions, cities, zips, places, neighborhoods, customLocations) - Geo to exclude from the audience. Mirrors the inclusion geo shape: excluded cities can carry a radius catchment and excluded custom (lat/lng) pins are ...; ageMin (integer) - Minimum age. Applied on Meta, TikTok, Pinterest, LinkedIn, X and Google Search/Display (Google excludes the age ranges outside the request); rejected with 400 ...; ageMax (integer) - Maximum age. Same per-platform application and clamping as ageMin.; gender (one of: all, male, female) - Restrict by gender. 'all' (default) targets everyone. Applied on Meta, TikTok, Pinterest, LinkedIn, X and Google Search/Display (Google excludes the other ...; incomeTier (one of: top_5, top_10, top_10_25, top_25_50) - Normalized household-income tier (ZIP/percentile based). Meta and TikTok express all four. Google maps only `top_10` (its INCOME_RANGE_90_UP); other tiers on ...; languages (list of string) - Language codes restricting the audience by language. Applied on Meta, Google, TikTok, LinkedIn, X and Pinterest; rejected with 400 on OpenAI. A code the ...; interests (list of objects with keys id, name) - Interest entities from /v1/ads/targeting/search?dimension=interest. Each carries the platform's opaque id. On Google, applied as ad-group interest criteria ...; behaviors (list of objects with keys id, name) - Behaviour entities from /v1/ads/targeting/search?dimension=behavior (Meta, TikTok and LinkedIn). On TikTok they target people who interacted with videos ...; workPositions (list of objects with keys id, name) - Meta only. Job title entities from /v1/ads/targeting/search?dimension=workPosition. Not interchangeable with the LinkedIn `jobTitles` URN fragments.; workEmployers (list of objects with keys id, name) - Meta only. Employer entities from /v1/ads/targeting/search?dimension=workEmployer.; workIndustries (list of objects with keys id, name) - Meta only. Work-industry entities from /v1/ads/targeting/search?dimension=workIndustry. Not interchangeable with the LinkedIn `industries` URN fragments.; industries (list of string) - LinkedIn B2B only. Industry URN id fragments, or the full urn:li:industry:* URN from /v1/ads/targeting/search?dimension=industry.; companySizes (list of string) - LinkedIn B2B only. Single-letter size codes (A to I), or the full urn:li:staffCountRange:* URN from /v1/ads/targeting/search?dimension=companySize.; seniorities (list of string) - LinkedIn B2B only. Seniority URN id fragments, or the full urn:li:seniority:* URN from /v1/ads/targeting/search?dimension=seniority.; jobFunctions (list of string) - LinkedIn B2B only. Function URN id fragments, or the full urn:li:function:* URN from /v1/ads/targeting/search?dimension=jobFunction.; audienceInclude (list of string) - Platform audience IDs to include, as returned by GET /v1/ads/audiences (Meta custom audience ids, TikTok audience ids, Pinterest customer list ids, LinkedIn ...; audienceExclude (list of string) - Platform audience IDs to exclude; same ID formats as audienceInclude. Not supported on OpenAI (400). (required)
             campaign_type: Defaults to SPONSORED_UPDATES.
             time_range_start: Unix ms. Must be in the future. (required)
             time_range_end: Unix ms. Must be after start and within LinkedIn's max horizon. (required)
@@ -11075,7 +10860,7 @@ def register_generated_tools(mcp, _get_client):
             daily_budget: Either dailyBudget or totalBudget is required.
             total_budget
             currency: ISO 4217, defaults to USD.
-            competing_bid: Required for manual-bid forecasts (when optimizationTarget is not set).
+            competing_bid: Required for manual-bid forecasts (when optimizationTarget is not set). Object with keys: bidType (one of: CPM, CPC, CPV; required); amount (number, required)
             enable_audience_network: Defaults to false. Required true for connectedTelevisionOnly.
             enable_audience_expansion: Defaults to false.
             connected_television_only: Defaults to false."""
@@ -12838,8 +12623,8 @@ def register_generated_tools(mcp, _get_client):
             tags: Tag names. WordPress resolves existing names case-insensitively and creates missing tags.
             author: Shopify author display name, or numeric WordPress user id serialized as a string. Assigning another WordPress user may require elevated capability.
             excerpt: Short summary shown in blog listings.
-            image: Featured image from a public URL. WordPress downloads it into the media library; JPEG, PNG, GIF and WebP are accepted up to 10 MB.
-            seo: Shopify only. Search-engine overrides mapped to global title_tag and description_tag metafields. WordPress rejects this field.
+            image: Featured image from a public URL. WordPress downloads it into the media library; JPEG, PNG, GIF and WebP are accepted up to 10 MB. Object with keys: url (string, required); altText (string)
+            seo: Shopify only. Search-engine overrides mapped to global title_tag and description_tag metafields. WordPress rejects this field. Object with keys: title (string); description (string)
             is_published: Set false for a draft or true to publish. On WordPress false takes priority over a future publishDate; omission with no date defaults to draft.
             publish_date: ISO 8601 datetime with offset (or Z). A future date schedules publication natively on the platform."""
         client = _get_client()
@@ -12945,8 +12730,8 @@ def register_generated_tools(mcp, _get_client):
             tags: Replaces the full tag-name list. WordPress resolves existing names case-insensitively and creates missing tags.
             author: Shopify author display name, or numeric WordPress user id serialized as a string. Assigning another WordPress user may require elevated capability.
             excerpt: Short summary shown in blog listings.
-            image: Featured image from a public URL. WordPress downloads it into the media library; JPEG, PNG, GIF and WebP are accepted up to 10 MB. Omit to preserve it; null removal is not supported.
-            seo: Shopify only. Search-engine overrides mapped to global title_tag and description_tag metafields. WordPress rejects this field.
+            image: Featured image from a public URL. WordPress downloads it into the media library; JPEG, PNG, GIF and WebP are accepted up to 10 MB. Omit to preserve it; null removal is not supported. Object with keys: url (string, required); altText (string)
+            seo: Shopify only. Search-engine overrides mapped to global title_tag and description_tag metafields. WordPress rejects this field. Object with keys: title (string); description (string)
             is_published: Set false to move to draft or true to publish. On WordPress false takes priority over a future publishDate; omission preserves status unless publishDate is sent.
             publish_date: ISO 8601 datetime with offset (or Z). A future date schedules publication natively on the platform."""
         client = _get_client()
@@ -13054,10 +12839,10 @@ def register_generated_tools(mcp, _get_client):
             fein: US Federal Employer Identification Number (NN-NNNNNNN) or the Canadian equivalent. Stored encrypted; only the last four digits are ever returned. (required)
             industry: One of the carrier industry labels, e.g. technology, healthcare, retail, finance, legal, insurance, real estate, logistics, education. (required)
             number_of_employees: (required)
-            organization_contact: (required)
-            billing_contact: (required)
-            physical_address: (required)
-            billing_address: (required)"""
+            organization_contact: Object with keys: firstName (string, required); lastName (string, required); email (string, required); jobTitle (string) - Required on organizationContact.; phoneNumber (string, required) - E.164 with a leading +. (required)
+            billing_contact: Object with keys: firstName (string, required); lastName (string, required); email (string, required); jobTitle (string) - Required on organizationContact.; phoneNumber (string, required) - E.164 with a leading +. (required)
+            physical_address: Object with keys: streetAddress (string, required); extendedAddress (string); city (string, required); administrativeArea (string, required) - State or province code (IL, ON).; postalCode (string, required); country (string, required) - ISO 3166-1 alpha-2 (US or CA). (required)
+            billing_address: Object with keys: streetAddress (string, required); extendedAddress (string); city (string, required); administrativeArea (string, required) - State or province code (IL, ON).; postalCode (string, required); country (string, required) - ISO 3166-1 alpha-2 (US or CA). (required)"""
         client = _get_client()
         try:
             response = client.branded_calling.create_branded_calling_enterprise(
@@ -13233,8 +13018,8 @@ def register_generated_tools(mcp, _get_client):
             display_name: Shown on the callee's screen. No emoji. (required)
             call_reasons: 1 to 10 reasons you call, each up to 64 characters. Pick from GET /v1/branded-calling/call-reasons to skip manual vetting. (required)
             logo_url: HTTPS URL of a PNG, JPEG, WebP or SVG logo. Zernio converts it to the 256x256 BMP the carriers require and hosts it.
-            authorizer: (required)
-            references: (required)"""
+            authorizer: Object with keys: name (string, required) - A real person at the business who authorizes the registration.; email (string, required) - The carrier emails a 6-digit code here once the identity passes review. (required)
+            references: Object with keys: business (list of objects with keys fullName, jobTitle, organization, relationshipToRegistrant, phoneNumber, email, timezone, required); financial (object with keys fullName, jobTitle, organization, relationshipToRegistrant, phoneNumber, email, timezone, required) (required)"""
         client = _get_client()
         try:
             response = client.branded_calling.create_branded_calling_identity(
@@ -13298,8 +13083,8 @@ def register_generated_tools(mcp, _get_client):
             display_name: (required)
             call_reasons: (required)
             logo_url
-            authorizer: (required)
-            references: (required)"""
+            authorizer: Object with keys: name (string, required); email (string, required) (required)
+            references: Object with keys: business (list of objects with keys fullName, jobTitle, organization, relationshipToRegistrant, phoneNumber, email, timezone, required); financial (object with keys fullName, jobTitle, organization, relationshipToRegistrant, phoneNumber, email, timezone, required) (required)"""
         client = _get_client()
         try:
             response = client.branded_calling.preflight_branded_calling_identity(
@@ -13366,8 +13151,8 @@ def register_generated_tools(mcp, _get_client):
             display_name: Shown on the callee's screen. No emoji.
             call_reasons: 1 to 10 reasons you call, each up to 64 characters. Pick from GET /v1/branded-calling/call-reasons to skip manual vetting.
             logo_url: HTTPS URL of a PNG, JPEG, WebP or SVG logo. Zernio converts it to the 256x256 BMP the carriers require and hosts it.
-            authorizer
-            references
+            authorizer: Object with keys: name (string, required) - A real person at the business who authorizes the registration.; email (string, required) - The carrier emails a 6-digit code here once the identity passes review.
+            references: Object with keys: business (list of objects with keys fullName, jobTitle, organization, relationshipToRegistrant, phoneNumber, email, timezone, required); financial (object with keys fullName, jobTitle, organization, relationshipToRegistrant, phoneNumber, email, timezone, required)
             review_answers: One entry per point id of the open reviewRequest. A text point takes text; a link point takes url; file and link_or_file points take url set to the URL of a file you uploaded first (POST /v1/media/upload). A point id that is not on the open request is a 422.
             review_note"""
         client = _get_client()
@@ -13506,7 +13291,7 @@ def register_generated_tools(mcp, _get_client):
         Args:
             id: (required)
             phone_number_ids: Phone number record ids (from GET /v1/phone-numbers). Active US numbers only. (required)
-            signature: (required)"""
+            signature: Object with keys: imageBase64 (string, required) - The signer's drawn signature as a PNG, base64 (a data:image/png;base64 prefix is accepted).; signerName (string) - Printed under the signature. Defaults to the business contact's name. (required)"""
         client = _get_client()
         try:
             response = client.branded_calling.attach_branded_calling_numbers(
@@ -13625,9 +13410,9 @@ def register_generated_tools(mcp, _get_client):
             platform: (required)
             name: (required)
             description
-            message
-            template: WhatsApp template (required when platform is whatsapp)
-            segment_filters"""
+            message: Object with keys: text (string) - Required on every platform except WhatsApp (which sends `template`) and an SMS broadcast that carries attachments.; attachments (list of objects with keys type, url, filename) - SMS only: sent as MMS media, one media_url per attachment. Each url must be public http(s); JPEG, PNG, GIF, WEBP, MP4 or 3GPP under 1 MB (checked at create ...; messageTag (one of: CONFIRMED_EVENT_UPDATE, POST_PURCHASE_UPDATE, ACCOUNT_UPDATE, HUMAN_AGENT) - Instagram and Facebook only. Meta message tag sent with every recipient message (messaging_type MESSAGE_TAG) so the broadcast can reach people outside the 24h ...
+            template: WhatsApp template (required when platform is whatsapp) Object with keys: name (string); language (string); components (list of object); variableMapping (object) - Maps template variable positions (\"1\", \"2\") to contact fields or static values. Resolved per recipient at send time.
+            segment_filters: Object with keys: tags (list of string); isSubscribed (boolean); customFields (object) - Custom field values a contact must hold, keyed by field slug. Exact match per key (type included: 5 does not match \"5\"); every key must match."""
         client = _get_client()
         try:
             response = client.broadcasts.create_broadcast(
@@ -13690,8 +13475,8 @@ def register_generated_tools(mcp, _get_client):
             broadcast_id: (required)
             name
             description
-            message: Generic message payload (used for non-WhatsApp platforms).
-            template: WhatsApp template payload (used when platform is `whatsapp`).
+            message: Generic message payload (used for non-WhatsApp platforms). Object with keys: text (string); attachments (list of objects with keys type, url, filename) - SMS only: sent as MMS media.; messageTag (one of: CONFIRMED_EVENT_UPDATE, POST_PURCHASE_UPDATE, ACCOUNT_UPDATE, HUMAN_AGENT) - Instagram and Facebook only. See createBroadcast.
+            template: WhatsApp template payload (used when platform is `whatsapp`). Object with keys: name (string); language (string); variableMapping (object) - Maps template variable positions to contact fields. Keys are position strings (\"1\", \"2\"); values are { field, customValue }.
             segment_filters: Recipient segment filters (tags, channels, subscription state)."""
         client = _get_client()
         try:
@@ -13964,9 +13749,9 @@ def register_generated_tools(mcp, _get_client):
 
         Args:
             agent_id
-            rollout
-            handoff
-            followup
+            rollout: Object with keys: enabled (boolean, required)
+            handoff: Object with keys: enabled (boolean, required); message (string); message_selection (one of: DEFAULT, AGENT, CUSTOM)
+            followup: Object with keys: enabled (boolean, required); followup_interval_in_seconds (one of: 0, 300, 900, 1800, 3600, 7200, 28800, 86400); message (string)
             ai_audience
             never_say_phrases: Exact phrases the agent must never say; the full replacement list."""
         client = _get_client()
@@ -14808,8 +14593,8 @@ def register_generated_tools(mcp, _get_client):
             base_url: Public HTTPS URL reachable from Meta. (required)
             connector_protocol
             auth_type: (required)
-            auth_config
-            user_auth_injection_config
+            auth_config: Object with keys: oauth2_client_credentials (object with keys token_url, scopes_to_request, token_request_content_type, client_id, client_secret); api_key (object with keys headers, query_params, body_params)
+            user_auth_injection_config: Object with keys: location (string, required); field_name (string, required); prefix (string)
             requires_certificate"""
         client = _get_client()
         try:
@@ -14870,8 +14655,8 @@ def register_generated_tools(mcp, _get_client):
             base_url: Public HTTPS URL reachable from Meta. (required)
             connector_protocol
             auth_type: (required)
-            auth_config
-            user_auth_injection_config
+            auth_config: Object with keys: oauth2_client_credentials (object with keys token_url, scopes_to_request, token_request_content_type, client_id, client_secret); api_key (object with keys headers, query_params, body_params)
+            user_auth_injection_config: Object with keys: location (string, required); field_name (string, required); prefix (string)
             requires_certificate"""
         client = _get_client()
         try:
@@ -15187,7 +14972,7 @@ def register_generated_tools(mcp, _get_client):
         The full desired set: budgets left out are removed, an empty list returns to unlimited. Pass `budget_id` to edit one in place. When a cap is hit the agent finishes its turn, stops answering and hands the thread to a human until the window rolls over.
 
         Args:
-            budgets: (required)"""
+            budgets: Each item is an object with keys: budget_id (string) - Pass it back to edit an existing budget; omit to add one.; unit_type (one of: token, ai_turn; required) - Tokens count across the Business Manager, AI turns per conversation.; time_window (one of: one_day, seven_days, fourteen_days, thirty_days; required) - Rolling window in the WABA timezone.; max_budget (integer, required) (required)"""
         client = _get_client()
         try:
             response = client.business_agent.replace_business_agent_budget(
@@ -15581,8 +15366,8 @@ def register_generated_tools(mcp, _get_client):
             exclude_keywords: Comments containing one of these never trigger the automation, even when a trigger keyword also matches. Compared using the same matchMode.
             typo_tolerance: Only with matchMode=word: also fire on close misspellings of a keyword (one edit for 4-7 character keywords, two from 8 up). Keywords shorter than 4 characters are never fuzzy-matched.
             dm_message: DM text sent to the commenter. Required on Instagram and Facebook (400 missing_required_field when absent). Rejected on TikTok, Threads, LinkedIn and YouTube, which have no private reply (400 invalid_field_value). Max 640 chars when buttons are set, otherwise ~1000.
-            buttons: Optional inline DM buttons (1-3). Phone buttons are Facebook-only. Omit or pass [] for a plain-text DM.
-            template: Optional product card sent INSTEAD of the plain dmMessage bubble. Mutually exclusive with buttons. dmMessage stays required: it is what gets sent the moment the card is cleared.
+            buttons: Optional inline DM buttons (1-3). Phone buttons are Facebook-only. Omit or pass [] for a plain-text DM. Each item is an object with keys: type (one of: url, postback, phone; required); title (string, required) - Button label (20 chars max); url (string) - Target URL (required when type is url); payload (string) - Postback payload delivered via the messaging_postbacks webhook (required when type is postback); phone (string) - Phone number, e.g. +14155551234 (required when type is phone; Facebook only)
+            template: Optional product card sent INSTEAD of the plain dmMessage bubble. Mutually exclusive with buttons. dmMessage stays required: it is what gets sent the moment the card is cleared. Object with keys: type (one of: generic; required); imageAspectRatio (one of: horizontal, square) - Facebook only. How Messenger renders each element imageUrl: horizontal (1.91:1, the default) or square (1:1). Instagram has no such setting, so an Instagram ...; elements (list of objects with keys title, subtitle, imageUrl, buttons, required)
             comment_reply: Public reply to the comment. Optional on Instagram and Facebook; required on TikTok, Threads, LinkedIn and YouTube, where it is the automation's only action.
             dm_message_variations: Optional alternate DM texts for random rotation. When set, each triggered comment sends one picked at random from [dmMessage, ...dmMessageVariations], so repeat commenters get slightly different DMs (helps avoid identical-message patterns). Up to 5. Buttons are attached to whichever text is picked, not varied.
             comment_reply_variations: Optional alternate public replies, rotated at random alongside commentReply (picked independently of the DM). Up to 5.
@@ -15591,13 +15376,13 @@ def register_generated_tools(mcp, _get_client):
             dm_delay_seconds: Seconds to wait after the trigger before sending the DM. Omit or send 0 to reply immediately (the default). Max 86400 (24h). The trigger is still matched and deduplicated the moment the comment arrives, so a delay only moves when the response is sent.
             comment_reply_delay_seconds: Seconds to wait before posting the public comment reply. Omit or send 0 to post it right after the DM (the default). The reply never goes out before the DM, so a value below dmDelaySeconds is raised to it. Ignored when trigger=story_reply, which has no public reply.
             also_match_in_dms: Also fire these keywords on a plain inbound DM, so the automation answers people who message the keyword instead of commenting it. Requires at least one keyword (an empty keyword list means 'match anything', which would answer every inbound message) and is rejected on story_reply automations, which already trigger on DMs. Dedup is per door: a contact who already received the DM from their comment can still receive it from a DM.
-            audience
-            follow_gate
-            repeat_policy
+            audience: Object with keys: followerStatus (one of: any, follower, non_follower); minFollowerCount (integer) - Skip commenters with fewer followers than this. Omit for no size rule.; whenUnknown (one of: send, skip, verify) - What to do when Instagram will not reveal the follow relationship. * `send` (default) - deliver the DM anyway (fails open). * `skip` - stay silent. * `verify` ...; tapToUnlock (boolean) - Send `followGate.message` with its button to EVERY commenter and deliver the real DM when they tap it, with no follow check at any point. Cannot be combined ...
+            follow_gate: Object with keys: message (string) - Confirmation DM sent when whenUnknown=verify or tapToUnlock=true. The default copy asks for a follow under whenUnknown=verify and only for the tap under ...; buttonLabel (string) - Confirm button label. Defaults to \"I'm following\" (whenUnknown=verify) or \"Unlock\" (tapToUnlock).; notFollowingMessage (string) - Sent to a commenter we know does not follow (followerStatus=follower), and after a confirm tap that does not unlock the DM. When following is what would ...
+            repeat_policy: Object with keys: mode (one of: once, every_comment; required); cooldownHours (integer) - every_comment only (400 with once). Hours after a DM during which the same person is not DMed again.
             dedupe_same_text_hours: Skip the DM when this recipient already received identical DM text (after personalisation) from this account, from any automation, within this many hours. The skip is logged with status skipped.
             public_reply_policy: 'after_dm' posts commentReply only after a successful DM. 'always' posts it whatever the audience rule, dedupe or DM outcome: the moment a comment matches, or after commentReplyDelaySeconds when set (raised to dmDelaySeconds, so it never precedes the DM attempt).
-            actions
-            quick_replies: Opt-in quick-reply chips on the DM (up to 13). Chips do not render in Message Requests, where a first DM to a cold commenter lands, so prefer buttons for first contact. Mutually exclusive with buttons and template (400).
+            actions: Object with keys: likeComment (boolean) - Like the comment as the account. Facebook always; Instagram only for accounts connected through Facebook Login and allowlisted for likes while Meta reviews ...; hideComment (boolean) - Hide the comment once the first DM has been attempted, so the private reply is never sent to an already hidden comment.
+            quick_replies: Opt-in quick-reply chips on the DM (up to 13). Chips do not render in Message Requests, where a first DM to a cold commenter lands, so prefer buttons for first contact. Mutually exclusive with buttons and template (400). Each item is an object with keys: title (string, required); payload (string, required) - Delivered back via the messaging webhook when tapped.; imageUrl (string)
             dm_media
             is_active: Create the automation paused with false."""
         client = _get_client()
@@ -15719,7 +15504,7 @@ def register_generated_tools(mcp, _get_client):
             exclude_keywords: Comments containing one of these never trigger the automation, even when a trigger keyword also matches. Compared using the same matchMode.
             typo_tolerance: Only with matchMode=word: also fire on close misspellings of a keyword (one edit for 4-7 character keywords, two from 8 up). Keywords shorter than 4 characters are never fuzzy-matched.
             dm_message
-            buttons: Inline DM buttons (1-3). Pass [] to clear all buttons.
+            buttons: Inline DM buttons (1-3). Pass [] to clear all buttons. Each item is an object with keys: type (one of: url, postback, phone; required); title (string, required) - Button label (20 chars max); url (string) - Target URL (required when type is url); payload (string) - Postback payload delivered via the messaging_postbacks webhook (required when type is postback); phone (string) - Phone number, e.g. +14155551234 (required when type is phone; Facebook only)
             template: Product card sent instead of the plain dmMessage bubble. Pass null to clear it and fall back to dmMessage. Mutually exclusive with buttons, including with the buttons already stored on the automation.
             comment_reply
             dm_message_variations: Alternate DM texts for random rotation (see create). Pass [] to clear.
@@ -15729,13 +15514,13 @@ def register_generated_tools(mcp, _get_client):
             also_match_in_dms: Also fire these keywords on a plain inbound DM. Enabling it requires the automation to end up with at least one keyword (this request's keywords if you send them, otherwise the stored ones) and is rejected on story_reply automations.
             dm_delay_seconds: Seconds to wait after the trigger before sending the DM. Send 0 to clear the delay and reply immediately.
             comment_reply_delay_seconds: Seconds to wait before posting the public comment reply. Send 0 to clear it. The reply never goes out before the DM.
-            audience
-            follow_gate
+            audience: Object with keys: followerStatus (one of: any, follower, non_follower); minFollowerCount (integer) - Skip commenters with fewer followers than this. Omit for no size rule.; whenUnknown (one of: send, skip, verify) - What to do when Instagram will not reveal the follow relationship. * `send` (default) - deliver the DM anyway (fails open). * `skip` - stay silent. * `verify` ...; tapToUnlock (boolean) - Send `followGate.message` with its button to EVERY commenter and deliver the real DM when they tap it, with no follow check at any point. Cannot be combined ...
+            follow_gate: Object with keys: message (string) - Confirmation DM sent when whenUnknown=verify or tapToUnlock=true. The default copy asks for a follow under whenUnknown=verify and only for the tap under ...; buttonLabel (string) - Confirm button label. Defaults to \"I'm following\" (whenUnknown=verify) or \"Unlock\" (tapToUnlock).; notFollowingMessage (string) - Sent to a commenter we know does not follow (followerStatus=follower), and after a confirm tap that does not unlock the DM. When following is what would ...
             is_active
-            repeat_policy
+            repeat_policy: Object with keys: mode (one of: once, every_comment; required); cooldownHours (integer) - every_comment only (400 with once). Hours after a DM during which the same person is not DMed again.
             dedupe_same_text_hours: Skip the DM when this recipient already received identical DM text (after personalisation) from this account, from any automation, within this many hours. The skip is logged with status skipped. Send null to clear.
             public_reply_policy: 'after_dm' posts commentReply only after a successful DM. 'always' posts it whatever the audience rule, dedupe or DM outcome: the moment a comment matches, or after commentReplyDelaySeconds when set (raised to dmDelaySeconds, so it never precedes the DM attempt).
-            actions
+            actions: Object with keys: likeComment (boolean) - Like the comment as the account. Facebook always; Instagram only for accounts connected through Facebook Login and allowlisted for likes while Meta reviews ...; hideComment (boolean) - Hide the comment once the first DM has been attempted, so the private reply is never sent to an already hidden comment.
             quick_replies: Opt-in quick-reply chips on the DM (up to 13). Chips do not render in Message Requests, where a first DM to a cold commenter lands, so prefer buttons for first contact. Mutually exclusive with buttons and template (400). Send null to clear.
             dm_media"""
         client = _get_client()
@@ -16461,31 +16246,25 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Send private reply
 
-            Send a direct message to the author of a comment. Supported on Instagram and Facebook only.
-            One reply per comment, must be sent within 7 days. Optionally attach interactive elements:
-            `quickReplies` (chips above the keyboard, max 13) or `buttons` (1-3 inline postback/url
-            buttons rendered in the same bubble via Meta's button_template). Chips do not render in
-            the Instagram Message Requests folder. Since late August 2026 Instagram refuses buttons,
-            cards and attachments to commenters who do not follow the account (Meta code 2, subcode
-            1545133, returned here as a non-retryable 400 that says so), and the failed call still
-            consumes the comment's single private reply. To reach non-followers send plain text and
-            add buttons once they reply. `quickReplies` and `buttons` are mutually exclusive. When
-            the comment's single private reply is spent (by this call or an earlier one) the 400
-            carries `details.privateReplyConsumed: true`; never retry it.
+        Send a direct message to the author of a comment. Supported on Instagram and Facebook only.
+        One reply per comment, must be sent within 7 days. Optionally attach interactive elements:
+        `quickReplies` (chips above the keyboard, max 13) or `buttons` (1-3 inline postback/url
+        buttons rendered in the same bubble via Meta's button_template). Chips do not render in
+        the Instagram Message Requests folder. Since late August 2026 Instagram refuses buttons,
+        cards and attachments to commenters who do not follow the account (Meta code 2, subcode
+        1545133, returned here as a non-retryable 400 that says so), and the failed call still
+        consumes the comment's single private reply. To reach non-followers send plain text and
+        add buttons once they reply. `quickReplies` and `buttons` are mutually exclusive. When
+        the comment's single private reply is spent (by this call or an earlier one) the 400
+        carries `details.privateReplyConsumed: true`; never retry it.
 
-            Args:
-                post_id: The media/post ID (Instagram media ID or Facebook post ID) (required)
-                comment_id: The comment ID to send a private reply to (required)
-                account_id: The account ID (Instagram or Facebook) (required)
-                message: The message text to send as a private DM (required)
-                quick_replies: Optional quick-reply chips appended to the message. Visible only in the
-        Instagram and Messenger apps (not on web). Maximum 13 entries. Mutually
-        exclusive with `buttons`. Note: chips do NOT render in the Instagram
-        Message Requests folder where DMs from non-followers land. Use `buttons`
-        instead for cold reach.
-                buttons: Optional 1-3 inline buttons rendered as part of the same message bubble
-        via Meta's button_template. Visible in the Instagram Message Requests
-        folder (unlike quick replies). Mutually exclusive with `quickReplies`."""
+        Args:
+            post_id: The media/post ID (Instagram media ID or Facebook post ID) (required)
+            comment_id: The comment ID to send a private reply to (required)
+            account_id: The account ID (Instagram or Facebook) (required)
+            message: The message text to send as a private DM (required)
+            quick_replies: Optional quick-reply chips appended to the message. Visible only in the Instagram and Messenger apps (not on web). Maximum 13 entries. Mutually exclusive with `buttons`. Note: chips do NOT render in the Instagram Message Requests folder where DMs from non-followers land. Use `buttons` instead for cold reach. Each item is an object with keys: title (string, required) - Label shown on the chip. Truncated by Meta beyond 20 characters.; payload (string, required) - Opaque value returned in the inbound webhook when the user taps the chip.; imageUrl (string) - Optional thumbnail shown next to the chip title.
+            buttons: Optional 1-3 inline buttons rendered as part of the same message bubble via Meta's button_template. Visible in the Instagram Message Requests folder (unlike quick replies). Mutually exclusive with `quickReplies`. Each item is an object with keys: type (one of: url; required); title (string, required) - Label shown on the button.; url (string, required) - URL opened when the button is tapped."""
         client = _get_client()
         try:
             response = client.comments.send_private_reply_to_comment(
@@ -16629,11 +16408,11 @@ def register_generated_tools(mcp, _get_client):
             vendor
             product_type
             tags
-            seo
+            seo: Object with keys: title (string); description (string)
             status
-            images
-            options
-            variants: (required)"""
+            images: Each item is an object with keys: url (string, required); altText (string)
+            options: Each item is an object with keys: name (string, required); values (list of string, required)
+            variants: Each item is an object with keys: sku (string); price (any, required) - Decimal amount in the store currency.; compareAtPrice (any); options (list of objects with keys name, value) - One value per product option, e.g. [{ name: Size, value: M }]. (required)"""
         client = _get_client()
         try:
             response = client.commerce.create_commerce_product(
@@ -16752,7 +16531,7 @@ def register_generated_tools(mcp, _get_client):
             vendor
             product_type
             tags
-            seo"""
+            seo: Object with keys: title (string); description (string)"""
         client = _get_client()
         try:
             response = client.commerce.update_commerce_product(
@@ -16792,7 +16571,7 @@ def register_generated_tools(mcp, _get_client):
         Args:
             product_id: Platform-native product id. (required)
             account_id: (required)
-            variants: (required)"""
+            variants: Each item is an object with keys: id (string, required) - Variant id from the product response.; price (any); compareAtPrice (any) (required)"""
         client = _get_client()
         try:
             response = client.commerce.update_commerce_product_prices(
@@ -16880,8 +16659,8 @@ def register_generated_tools(mcp, _get_client):
             description_html
             handle
             sort_order
-            seo
-            image
+            seo: Object with keys: title (string); description (string)
+            image: Object with keys: url (string, required); altText (string)
             product_ids"""
         client = _get_client()
         try:
@@ -16968,8 +16747,8 @@ def register_generated_tools(mcp, _get_client):
             description_html
             handle
             sort_order
-            seo
-            image"""
+            seo: Object with keys: title (string); description (string)
+            image: Object with keys: url (string, required); altText (string)"""
         client = _get_client()
         try:
             response = client.commerce.update_commerce_collection(
@@ -17073,7 +16852,7 @@ def register_generated_tools(mcp, _get_client):
         Args:
             product_id: Platform-native id. (required)
             account_id: (required)
-            variants: (required)"""
+            variants: Each item is an object with keys: sku (string); price (any, required); compareAtPrice (any); options (list of objects with keys name, value) (required)"""
         client = _get_client()
         try:
             response = client.commerce.create_commerce_product_variants(
@@ -17136,7 +16915,7 @@ def register_generated_tools(mcp, _get_client):
         Args:
             product_id: Platform-native id. (required)
             account_id: (required)
-            options: (required)
+            options: Each item is an object with keys: name (string, required); values (list of string, required) (required)
             create_variants"""
         client = _get_client()
         try:
@@ -17200,7 +16979,7 @@ def register_generated_tools(mcp, _get_client):
         Args:
             product_id: Platform-native id. (required)
             account_id: (required)
-            images: (required)"""
+            images: Each item is an object with keys: url (string, required); altText (string) (required)"""
         client = _get_client()
         try:
             response = client.commerce.add_commerce_product_images(
@@ -17359,7 +17138,7 @@ def register_generated_tools(mcp, _get_client):
         Args:
             product_id: Platform-native id. (required)
             account_id: (required)
-            metafields: (required)"""
+            metafields: Each item is an object with keys: namespace (string, required); key (string, required); type (string, required) - Platform value type, e.g. single_line_text_field, number_integer, json.; value (string, required) - The value serialized as a string, JSON for structured types. (required)"""
         client = _get_client()
         try:
             response = client.commerce.set_commerce_product_metafields(
@@ -17485,7 +17264,7 @@ def register_generated_tools(mcp, _get_client):
         Args:
             collection_id: Platform-native id. (required)
             account_id: (required)
-            metafields: (required)"""
+            metafields: Each item is an object with keys: namespace (string, required); key (string, required); type (string, required) - Platform value type, e.g. single_line_text_field, number_integer, json.; value (string, required) - The value serialized as a string, JSON for structured types. (required)"""
         client = _get_client()
         try:
             response = client.commerce.set_commerce_collection_metafields(
@@ -17618,7 +17397,7 @@ def register_generated_tools(mcp, _get_client):
         Args:
             collection_id: Platform-native id. (required)
             account_id: (required)
-            moves: (required)"""
+            moves: Each item is an object with keys: productId (string, required); position (integer, required) (required)"""
         client = _get_client()
         try:
             response = client.commerce.reorder_commerce_collection_products(
@@ -17874,7 +17653,7 @@ def register_generated_tools(mcp, _get_client):
             product_id: Platform-native id. (required)
             account_id: (required)
             mode
-            changes: (required)"""
+            changes: Each item is an object with keys: variantId (string, required); locationId (string, required); quantity (integer, required) (required)"""
         client = _get_client()
         try:
             response = client.commerce.change_commerce_inventory(
@@ -18363,7 +18142,7 @@ def register_generated_tools(mcp, _get_client):
             account_id: (required)
             title: (required)
             handle: (required)
-            items: (required)"""
+            items: Each item is an object with keys: title (string, required); type (one of: frontpage, collection, collections, product, catalog, page, blog, article, search, shop_policy, http, metaobject, customer_account_page; required); url (string) - For http items.; resourceId (string) - For product, collection, page, blog, article and metaobject items.; items (list of objects with keys title, type, url, resourceId, items) (required)"""
         client = _get_client()
         try:
             response = client.commerce.create_commerce_menu(
@@ -18426,7 +18205,7 @@ def register_generated_tools(mcp, _get_client):
             account_id: (required)
             title: (required)
             handle
-            items: (required)"""
+            items: Each item is an object with keys: title (string, required); type (one of: frontpage, collection, collections, product, catalog, page, blog, article, search, shop_policy, http, metaobject, customer_account_page; required); url (string) - For http items.; resourceId (string) - For product, collection, page, blog, article and metaobject items.; items (list of objects with keys title, type, url, resourceId, items) (required)"""
         client = _get_client()
         try:
             response = client.commerce.update_commerce_menu(
@@ -18548,7 +18327,7 @@ def register_generated_tools(mcp, _get_client):
             account_id: (required)
             type: (required)
             handle
-            fields: (required)"""
+            fields: Each item is an object with keys: key (string, required); value (string, required) (required)"""
         client = _get_client()
         try:
             response = client.commerce.create_commerce_metaobject(
@@ -18609,7 +18388,7 @@ def register_generated_tools(mcp, _get_client):
             metaobject_id: Platform-native id. (required)
             account_id: (required)
             handle
-            fields: (required)"""
+            fields: Each item is an object with keys: key (string, required); value (string, required) (required)"""
         client = _get_client()
         try:
             response = client.commerce.update_commerce_metaobject(
@@ -18717,7 +18496,7 @@ def register_generated_tools(mcp, _get_client):
         Args:
             price_list_id: Platform-native id. (required)
             account_id: (required)
-            prices: (required)"""
+            prices: Each item is an object with keys: variantId (string, required); price (string, required) - Decimal in the price list currency.; compareAtPrice (string or null) (required)"""
         client = _get_client()
         try:
             response = client.commerce.set_commerce_price_list_prices(
@@ -18804,11 +18583,11 @@ def register_generated_tools(mcp, _get_client):
             title: (required)
             url: (required)
             preview_image_url
-            utm
+            utm: Object with keys: campaign (string, required); source (string, required); medium (string, required)
             tactic: (required)
             channel: (required)
             status: (required)
-            budget
+            budget: Object with keys: type (one of: daily, lifetime; required); amount (string, required) - Decimal in the store currency.
             ad_spend: Decimal in the store currency.
             started_at
             ended_at"""
@@ -19921,7 +19700,7 @@ def register_generated_tools(mcp, _get_client):
         Args:
             profile_id: Profile ID from your connection flow (required)
             location_id: The Google Business Profile location ID selected by the user. Send this or locations, not both.
-            locations: Several locations to connect from one sign-in, each as its own account. The sign-in is used once for the whole batch and handed back only if none connected. With two or more distinct locations the response lists `accounts` and `failed` instead of `account`, and the request is refused with 400 on a reconnect. A single location behaves exactly like locationId.
+            locations: Several locations to connect from one sign-in, each as its own account. The sign-in is used once for the whole batch and handed back only if none connected. With two or more distinct locations the response lists `accounts` and `failed` instead of `account`, and the request is refused with 400 on a reconnect. A single location behaves exactly like locationId. Each item is an object with keys: locationId (string, required); accountId (string) - The location's Google Business Profile Account resource name, as for the top-level accountId.
             account_id: Optional but recommended. The Google Business Profile Account resource name ("accounts/123") that owns the selected location (returned per-location by GET /v1/connect/googlebusiness/locations). When provided, the location is resolved directly instead of by enumerating the account, which is required for accounts that own many locations. Omit only for small accounts.
             pending_data_token: Token from the OAuth callback redirect (pendingDataToken query param). Tokens and profile data are retrieved server-side from this token. (required)
             redirect_url: Optional custom redirect URL to return to after selection"""
@@ -20016,8 +19795,8 @@ def register_generated_tools(mcp, _get_client):
             temp_token: (required)
             user_profile: (required)
             account_type: Send this (with selectedOrganization for an organization) or selections, not both.
-            selections: Several accounts to connect from one sign-in (yourself and/or organizations), each as its own account. With two or more entries the response lists `accounts` and `failed` instead of `account`, and the request is refused with 400 on a reconnect or an ads connect. A single entry behaves exactly like accountType.
-            selected_organization
+            selections: Several accounts to connect from one sign-in (yourself and/or organizations), each as its own account. With two or more entries the response lists `accounts` and `failed` instead of `account`, and the request is refused with 400 on a reconnect or an ads connect. A single entry behaves exactly like accountType. Each item is an object with keys: accountType (one of: personal, organization; required); selectedOrganization (object) - Same shape as selectedOrganization.
+            selected_organization: Object with keys: id (string, required); urn (string, required); name (string, required); logoUrl (string); vanityName (string)
             redirect_url"""
         client = _get_client()
         try:
@@ -20156,7 +19935,7 @@ def register_generated_tools(mcp, _get_client):
 
         Args:
             profile_id: Your Zernio profile ID (required)
-            selected_public_profile: The selected Snapchat Public Profile (required)
+            selected_public_profile: The selected Snapchat Public Profile Object with keys: id (string, required) - Snapchat Public Profile ID; display_name (string, required) - Display name of the public profile; username (string) - Username/handle; profile_image_url (string) - Profile image URL; subscriber_count (integer) - Number of subscribers (required)
             temp_token: Temporary Snapchat access token from OAuth (required)
             user_profile: User profile data from OAuth redirect (required)
             refresh_token: Snapchat refresh token (if available)
@@ -21687,7 +21466,7 @@ def register_generated_tools(mcp, _get_client):
             profile_id: (required)
             account_id: Required when contacts carry channel data (platformIdentifier or a row-level accountId). Omit for a plain CRM import with no channels.
             platform: Ignored when accountId is set: the platform is derived from the resolved account. Only relevant to disambiguate accountId lookup; a mismatch 404s.
-            contacts: (required)"""
+            contacts: Each item is an object with keys: name (string, required); platformIdentifier (string) - Required when the top-level accountId is set (channel mode). A row missing it in that mode is rejected individually and reported in errors[], not a 400 for ...; displayIdentifier (string); email (string); company (string); tags (list of string) (required)"""
         client = _get_client()
         try:
             response = client.contacts.bulk_create_contacts(
@@ -21785,15 +21564,9 @@ def register_generated_tools(mcp, _get_client):
         `urn:lla:llaPartnerConversion:{id}` URN. For OpenAI Ads, the
         pixel wire id. For Pinterest, the numeric ad account id.
          (required)
-                events: (required)
+                events: Each item is an object with keys: eventName (string, required) - Standard event name (Purchase, Lead, CompleteRegistration, AddToCart, InitiateCheckout, AddPaymentInfo, Subscribe, StartTrial, ViewContent, Search, Contact, ...; eventTime (integer, required) - When the conversion happened, in unix seconds.; eventId (string, required) - Unique dedup key. The same eventId must be used on pixel + CAPI to prevent double-counting. Mapped to event_id on Meta, transactionId on Google, eventId on ...; value (number) - Conversion value in the specified currency.; currency (string) - ISO 4217 currency code.; user (object with keys email, phone, firstName, lastName, externalId, ipAddress, userAgent, country, city, state, zip, dob, gender, leadId, clickIds, required) - User identity fields. More signals mean higher match rates.; items (list of objects with keys id, name, price, quantity, category) - Item-level detail for ecommerce events.; sourceUrl (string) - URL where the conversion originated (used by Meta).; actionSource (one of: web, app, offline, crm, phone_call, system_generated) - Where the conversion happened. Used by Meta. Google also requires an event source internally; omitting this field sends OTHER to Google. Send an explicit ...; platformData (object) - Escape hatch for platform-specific fields we haven't normalized. On Meta, keys are shallow-merged into `custom_data` only: fields Zernio already builds ... (required)
                 test_code: Meta `test_event_code` passthrough. On Pinterest any value sends the batch with `test=true` (validated, not recorded). Ignored by Google, LinkedIn, and OpenAI Ads.
-                consent: Batch-level user consent. Required by Google for EEA/UK
-        events under the Feb 2026 restrictions. On Meta, any
-        DENIED flag enables Limited Data Use on every event in
-        the batch (data_processing_options ["LDU"] with
-        geolocation, country 0 / state 0); GRANTED or absent
-        consent sends events with Meta's default processing.
-        Ignored by LinkedIn."""
+                consent: Batch-level user consent. Required by Google for EEA/UK events under the Feb 2026 restrictions. On Meta, any DENIED flag enables Limited Data Use on every event in the batch (data_processing_options ["LDU"] with geolocation, country 0 / state 0); GRANTED or absent consent sends events with Meta's default processing. Ignored by LinkedIn. Object with keys: adUserData (one of: GRANTED, DENIED); adPersonalization (one of: GRANTED, DENIED)"""
         client = _get_client()
         try:
             response = client.conversions.send_conversions(
@@ -21844,7 +21617,7 @@ def register_generated_tools(mcp, _get_client):
         Args:
             account_id: SocialAccount ID. Must be a `googleads` account. (required)
             destination_id: Conversion action resource name, e.g. `customers/1234567890/conversionActions/987654321`. (required)
-            adjustments: (required)"""
+            adjustments: Each item is an object with keys: adjustmentType (one of: RETRACTION, RESTATEMENT, ENHANCEMENT; required); adjustmentTime (number, required) - When the adjustment occurred, unix seconds.; orderId (string) - Transaction ID of the original conversion (the `eventId` you sent). Recommended; required for ENHANCEMENT.; gclid (string) - Alternative key. The original click ID. Pair with `conversionTime`. Not valid for ENHANCEMENT.; conversionTime (number) - The original conversion's time, unix seconds. Required when identifying by `gclid`.; restatementValue (number) - RESTATEMENT only. The corrected TOTAL conversion value.; currency (string) - RESTATEMENT only. ISO 4217 currency for `restatementValue`.; user (object with keys email, phone) - ENHANCEMENT only. First-party identifiers (hashed server-side). At least one of email/phone required.; userAgent (string) - ENHANCEMENT only. The original conversion's user agent (improves match quality). (required)"""
         client = _get_client()
         try:
             response = client.conversions.adjust_conversions(
@@ -22020,7 +21793,7 @@ def register_generated_tools(mcp, _get_client):
             account_id: Zernio SocialAccount id (Google Ads) (required)
             ad_account_id: Google customer id. Required when the connection has multiple customers.
             customer_id: Alias of adAccountId
-            goals: (required)"""
+            goals: Each item is an object with keys: category (string, required) - Google ConversionActionCategory, e.g. PURCHASE, SIGNUP, SUBMIT_LEAD_FORM; origin (string, required) - Google ConversionOrigin, e.g. WEBSITE, APP, CALL_FROM_ADS, STORE, GOOGLE_HOSTED; biddable (boolean, required) (required)"""
         client = _get_client()
         try:
             response = client.conversions.update_ad_conversion_goals(
@@ -22343,9 +22116,7 @@ def register_generated_tools(mcp, _get_client):
                 value_type: LinkedIn only. DYNAMIC (default) uses the per-event `value`
         from `sendConversions`. FIXED uses the rule's `value` field.
         NO_VALUE drops monetary value entirely.
-                value: LinkedIn only. Static conversion value. Used when
-        `valueType=FIXED`. The currency should match the ad
-        account's currency.
+                value: LinkedIn only. Static conversion value. Used when `valueType=FIXED`. The currency should match the ad account's currency. Object with keys: currencyCode (string, required) - ISO 4217 (e.g. \"USD\").; amount (string, required) - Decimal string (e.g. \"49.99\").
                 auto_association_type: LinkedIn only. Controls campaign association at rule-creation
         time:
         - ALL_CAMPAIGNS: associate the rule with every active,
@@ -22462,7 +22233,7 @@ def register_generated_tools(mcp, _get_client):
                 view_through_attribution_window_size: 365 only allowed for LEAD, PURCHASE, ADD_TO_CART,
         QUALIFIED_LEAD, SUBMIT_APPLICATION rule types.
                 value_type
-                value: Used when `valueType=FIXED`."""
+                value: Used when `valueType=FIXED`. Object with keys: currencyCode (string) - ISO 4217.; amount (string) - Decimal string (e.g. \"49.99\")."""
         client = _get_client()
         try:
             response = client.conversions.update_conversion_destination(
@@ -22975,7 +22746,7 @@ def register_generated_tools(mcp, _get_client):
             user_id: Discord snowflake ID of the recipient (15-21 digits). (required)
             content: Message text, up to 2,000 characters.
             embeds: Up to 10 Discord embeds. Same shape as channel-post embeds (title, description, color, fields, etc.). See DiscordPlatformData.embeds for the embed object schema.
-            attachments: Up to 10 media attachments. Each is `{ type: image|video|gif|document, url, filename?, mimeType?, size? }`.
+            attachments: Up to 10 media attachments. Each is `{ type: image|video|gif|document, url, filename?, mimeType?, size? }`. Each item is an object with keys: type (one of: image, video, gif, document; required); url (string, required); filename (string); mimeType (string); size (integer)
             tts: Send as text-to-speech message."""
         client = _get_client()
         try:
@@ -23611,7 +23382,7 @@ def register_generated_tools(mcp, _get_client):
             name: (required)
             description
             starts_at: ISO 8601 start time. Must be in the future. (required)
-            entity: (required)
+            entity: Object with keys: type (one of: external; required); location (string, required) - Where the event takes place (e.g. \"Zoom link\", \"123 Main St\"); endsAt (string, required) (required)
             image_data_uri: Optional cover image as a base64 data URI."""
         client = _get_client()
         try:
@@ -23783,7 +23554,7 @@ def register_generated_tools(mcp, _get_client):
             request_id: The `x-request-id` header of the failing response, if any.
             expected: What you expected to happen.
             actual: What actually happened, e.g. the error message.
-            agent: Optional identification of the agent submitting the feedback."""
+            agent: Optional identification of the agent submitting the feedback. Object with keys: name (string) - Agent or tool name, e.g. `claude-code`.; model (string) - Model powering the agent."""
         client = _get_client()
         try:
             response = client.feedback.submit_feedback(
@@ -23852,7 +23623,7 @@ def register_generated_tools(mcp, _get_client):
         Args:
             account_id: (required)
             location_id: Override which location to target. If omitted, uses the account's selected location.
-            service_items: (required)"""
+            service_items: Each item is an object with keys: structuredServiceItem (object with keys serviceTypeId, description) - Exactly one of structuredServiceItem or freeFormServiceItem is required per item (enforced server-side; not modeled as oneOf because required-only oneOf ...; freeFormServiceItem (object with keys category, label); price (object with keys currencyCode, units, nanos) (required)"""
         client = _get_client()
         try:
             response = client.gmb_services.update_google_business_services(
@@ -24145,7 +23916,7 @@ def register_generated_tools(mcp, _get_client):
             email_domain: Domain for email senders (required for kind: email)
             display_name
             purchase_intent_id: Idempotency key for safe retries
-            contact: Contact card (vCard) attached to the sender, shown when recipients save it. Required before sending with contactCard."""
+            contact: Contact card (vCard) attached to the sender, shown when recipients save it. Required before sending with contactCard. Object with keys: firstName (string, required); lastName (string); photoUrl (string)"""
         client = _get_client()
         try:
             response = client.imessage.order_imessage_sender(
@@ -24206,7 +23977,7 @@ def register_generated_tools(mcp, _get_client):
         Args:
             sender_id: (required)
             display_name
-            contact"""
+            contact: Object with keys: firstName (string, required); lastName (string); photoUrl (string) - Square image"""
         client = _get_client()
         try:
             response = client.imessage.update_imessage_sender(
@@ -25343,7 +25114,7 @@ def register_generated_tools(mcp, _get_client):
         Args:
             account_id: (required)
             name: (required)
-            questions: Deprecated (Meta legacy shape): use platformSpecificData.questions.
+            questions: Deprecated (Meta legacy shape): use platformSpecificData.questions. Each item is an object with keys: type (string, required) - EMAIL, PHONE, FULL_NAME, FIRST_NAME, LAST_NAME, CUSTOM, …; key (string) - CUSTOM questions only.; label (string) - CUSTOM questions only.; options (list of objects with keys key, value); inline_context (string)
             privacy_policy_url: (required)
             privacy_policy_link_text: Deprecated: use platformSpecificData.privacyPolicyLinkText.
             follow_up_action_url: Deprecated: use platformSpecificData.followUpActionUrl.
@@ -25354,7 +25125,7 @@ def register_generated_tools(mcp, _get_client):
             thank_you_button_type: Deprecated: use platformSpecificData.thankYouButtonType.
             thank_you_website_url: Deprecated: use platformSpecificData.thankYouWebsiteUrl.
             is_optimized_for_quality: Deprecated: use platformSpecificData.isOptimizedForQuality.
-            platform_specific_data: Form content; the shape is selected by the accountId's platform. Unknown fields are a 400 (strict-parsed)."""
+            platform_specific_data: Form content; the shape is selected by the accountId's platform. Unknown fields are a 400 (strict-parsed). Object with keys: questions (list of objects with keys type, key, label, options, inline_context, required); privacyPolicyLinkText (string); followUpActionUrl (string); locale (string); thankYouTitle (string); thankYouBody (string); thankYouButtonText (string); thankYouButtonType (string); thankYouWebsiteUrl (string); thankYouEnableMessenger (boolean) - Adds a 'Continue in Messenger' option to the thank-you page (Meta thank_you_page.enable_messenger), so the lead can carry on chatting with the Page. Set ...; isOptimizedForQuality (boolean) - Set true for a higher-intent form (adds a review step before submit).; isPhoneSmsVerifyEnabled (boolean) - Requires the lead to verify their phone number over SMS before the form submits (Meta is_phone_sms_verify_enabled). Only meaningful on a form with a PHONE ...; blockDisplayForNonTargetedViewer (boolean); questionPageCustomHeadline (string); contextCard (object with keys title, content, style, buttonText, coverPhoto)"""
         client = _get_client()
         try:
             response = client.lead_gen.create_lead_form(
@@ -25494,7 +25265,7 @@ def register_generated_tools(mcp, _get_client):
         Args:
             form_id: (required)
             account_id: (required)
-            field_data: (required)"""
+            field_data: Each item is an object with keys: name (string, required); values (list of string, required) (required)"""
         client = _get_client()
         try:
             response = client.lead_gen.create_test_lead(
@@ -25890,10 +25661,10 @@ def register_generated_tools(mcp, _get_client):
             link_preview: WhatsApp only. Set false to send the Direct Send (category: 'utility') text message without a link-preview thumbnail for the first URL in the text. Defaults to true, which is how every WhatsApp text has been sent to date. Does not apply to template sends. Accepted on the JSON body only, not on multipart requests.
             template_language: WhatsApp only. Template language code (e.g. en_US).
             template_params: WhatsApp only. Template variable values as one flat array, in the order the variables appear across the whole template: text-header variables first, then body variables, then one value per dynamic URL button (in button order). Works with positional placeholders ({{1}}, {{2}}, ...) and with named placeholders ({{name}}, {{company}} - how Meta Business Manager creates templates), where values fill the named slots in order of appearance. Example - a body with {{1}}, {{2}} plus a URL button https://example.com/{{1}} takes three values: [body1, body2, buttonSuffix]. For positional templates the list must cover every slot: supplying fewer values than the template's header + body + dynamic URL-button count is rejected with a 400 (code INVALID_TEMPLATE_PARAMS) naming the expected split, rather than delivering a template whose button URL was filled from the wrong value. A dynamic URL button covered by templateButtonParams needs no value here unless another uncovered dynamic URL button follows it, since the override applies after slot numbering. Media headers (image, video, document) are filled automatically from the approved template and take no value here (use headerMedia to override the header asset per send). Buttons that are not dynamic-URL buttons (copy-code, flow) take no value here either; use templateButtonParams.
-            template_button_params: WhatsApp only. Values for template buttons that carry one at send time, each addressed by the button's position in the approved template. This is the only way to send a copy-code button's payload (a Pix payment code, a coupon) or a flow token, because templateParams is a flat array of text variables and covers dynamic URL buttons only. Supplying a button here overrides whatever templateParams would have derived for that same index, so the send never carries one button twice; repeating an index within this array is rejected with 400. Each index must name a button of the matching kind on the approved template, which is also checked before the send and returns 400 (INVALID_TEMPLATE_BUTTON_PARAM) rather than a Meta rejection.
-            template_cards: WhatsApp only. Per-card overrides for a CAROUSEL template, each addressed by the card's card_index. Carousel card body variables restart at {{1}} per card, so they cannot be expressed in the flat templateParams slot order; use this instead. A cardIndex naming a card the approved template does not have, a duplicate cardIndex, or a params count that does not match the card body's token count is rejected with 400 (INVALID_TEMPLATE_CARD_PARAM).
-            header_media: WhatsApp only. Overrides a media-header template's header asset for THIS send, so a template with an image/video/document header can carry a different asset per message (e.g. each recipient their own invoice PDF). Without it, the template's approved sample asset is sent. Provide exactly one of link or id.
-            header_location: WhatsApp only. Required to send a template whose approved header format is LOCATION: Meta only accepts the location's lat/long at send time, never at template creation, so there is nothing to fill in automatically. Cannot be combined with headerMedia (a template has exactly one header)."""
+            template_button_params: WhatsApp only. Values for template buttons that carry one at send time, each addressed by the button's position in the approved template. This is the only way to send a copy-code button's payload (a Pix payment code, a coupon) or a flow token, because templateParams is a flat array of text variables and covers dynamic URL buttons only. Supplying a button here overrides whatever templateParams would have derived for that same index, so the send never carries one button twice; repeating an index within this array is rejected with 400. Each index must name a button of the matching kind on the approved template, which is also checked before the send and returns 400 (INVALID_TEMPLATE_BUTTON_PARAM) rather than a Meta rejection. Each item is an object with keys: index (integer, required) - Zero-based position of the button in the approved template's buttons.; subType (one of: url, copy_code, flow; required) - The button kind, which decides how the value is sent: copy_code sends it as the coupon_code payload, flow as the flow token, url as the dynamic suffix ...; value (string, required) - The value to send (e.g. the Pix copy-and-paste code for a copy_code button).
+            template_cards: WhatsApp only. Per-card overrides for a CAROUSEL template, each addressed by the card's card_index. Carousel card body variables restart at {{1}} per card, so they cannot be expressed in the flat templateParams slot order; use this instead. A cardIndex naming a card the approved template does not have, a duplicate cardIndex, or a params count that does not match the card body's token count is rejected with 400 (INVALID_TEMPLATE_CARD_PARAM). Each item is an object with keys: cardIndex (integer, required) - The card's card_index in the approved template.; params (list of string) - Values for this card's own body variables, in the card's own {{1}}, {{2}}, ... order (or named-slot order of appearance).; headerMedia (object with keys type, link, id) - Overrides this card's header asset for THIS send. Without it, the card's approved sample asset is sent.; buttons (list of objects with keys index, subType, value) - Values for this card's own buttons, each addressed by the button's index within the card.
+            header_media: WhatsApp only. Overrides a media-header template's header asset for THIS send, so a template with an image/video/document header can carry a different asset per message (e.g. each recipient their own invoice PDF). Without it, the template's approved sample asset is sent. Provide exactly one of link or id. Object with keys: type (one of: image, video, document; required) - Must match the template header's media type.; link (string) - Public URL of the asset to send. Must be reachable without auth.; id (string) - A Meta media id (from the media upload endpoint), as an alternative to link.; filename (string) - Document display name shown to the recipient (e.g. \"Factura 0001-123.pdf\"). document type only; ignored for image/video.
+            header_location: WhatsApp only. Required to send a template whose approved header format is LOCATION: Meta only accepts the location's lat/long at send time, never at template creation, so there is nothing to fill in automatically. Cannot be combined with headerMedia (a template has exactly one header). Object with keys: latitude (number, required) - Latitude in decimal degrees.; longitude (number, required) - Longitude in decimal degrees.; name (string) - Location name shown to the recipient (e.g. a business name).; address (string) - Location address shown to the recipient."""
         client = _get_client()
         try:
             response = client.messages.create_inbox_conversation(
@@ -26183,127 +25954,16 @@ def register_generated_tools(mcp, _get_client):
                 effect: iMessage only (JSON body only). Apple screen/bubble animation played when the message arrives. Rejected with 400 on other platforms.
                 contact_card: iMessage only (JSON body only). When `true`, attaches the sender's contact card (vCard) so the recipient can save the sender. Counts as message content on its own, so `message` becomes optional.
                 channel: iMessage only (JSON body only). Overrides the delivery channel for this one send; the provider otherwise picks it automatically. The sender must carry the matching add-on (SMS, RCS or WhatsApp), or the send fails. Not a default to set on every request. Rejected with 400 on other platforms.
-                quick_replies: Quick reply buttons. Mutually exclusive with buttons. Max 13 items.
-                buttons: Action buttons. Mutually exclusive with quickReplies. Max 3 items.
-
-        Instagram / Facebook: also mutually exclusive with `template`.
-        A Meta message carries one body shape, so sending both is a 400
-        rather than a silent drop of the buttons.
-        The buttons and `message` render as Meta's button_template (one
-        bubble with the text and the buttons below it), so `message` must
-        be 640 characters or less when buttons are attached (400 otherwise).
-
-        WhatsApp: buttons always render as interactive reply buttons.
-        Only `title` and `payload` are used; `type`, `url`, and `phone`
-        are ignored (WhatsApp has no URL/phone button in this field; use
-        the `interactive` field with `type: cta_url` for a link button).
-        `payload` becomes the button reply ID delivered on the
-        `message.received` webhook when the user taps. To send a simple
-        reply-button message, provide `title` + `payload` and set
-        `type: postback`, e.g.
-        `{ "type": "postback", "title": "Yes", "payload": "yes" }`.
-
-        Combine `buttons` with `attachmentUrl` and `attachmentType`
-        `image`, `video`, or `file` to render one WhatsApp message with
-        a media header, body text, and reply buttons. Audio is not a
-        supported interactive header and returns 400 when combined
-        with buttons.
-                template: Platform-dependent template payload. Ignored on Telegram.
-
-        Instagram / Facebook: a generic template (carousel). Set `type: generic`
-        and provide up to 10 `elements`, each with a `title` (required) and
-        optional `subtitle`, `imageUrl`, and `buttons`. Mutually exclusive with
-        the top-level `buttons` field (sending both is a 400); put the card's
-        buttons on its `elements` instead. On Facebook, `imageAspectRatio`
-        (`horizontal`, the default, or `square`) sets how Messenger renders the
-        element images; Instagram has no such setting and rejects it.
-
-        WhatsApp: sends an approved WhatsApp template message, the only message
-        type WhatsApp accepts when the 24-hour customer-service window is closed.
-        Provide exactly one element carrying the template reference:
-        `{ "elements": [{ "name": "order_update", "language": "en_US", "components": [...] }] }`
-        (`type` is ignored on WhatsApp). `components` is optional and is forwarded
-        unchanged as the `template.components` array of Meta's Cloud API send
-        payload; use it to fill body/header variables and button parameters, e.g.
-        `[{ "type": "body", "parameters": [{ "type": "text", "text": "John" }] }]`.
-        Templates with media headers (image, video, document) must include the
-        header component with its media link here at send time. To send a template
-        to a phone number with no existing conversation, or to have media headers
-        filled in automatically from the template definition, use the
-        create-conversation endpoint (POST /v1/inbox/conversations) instead.
-                interactive: WhatsApp-only. Rich interactive payload for list messages, CTA URL
-        buttons, Flow prompts, location requests, voice-call buttons, and
-        commerce messages (single product, product list, catalog, and
-        carousel). When set, takes priority over `buttons` and
-        `quickReplies`. The shape mirrors Meta's Cloud API `interactive`
-        object for the types in the enum below.
-
-        Use `buttons` / `quickReplies` for simple button replies
-        (WhatsApp's `interactive.type: "button"`): the abstraction caps at
-        3 buttons and handles the auto-conversion for you. Use this field
-        only for the types listed in the enum below.
-
-        All interactive messages are session messages: they can only be
-        sent inside the 24-hour customer service window opened by the
-        user's last inbound message.
-
-        Commerce types (`product`, `product_list`, `catalog_message`, and
-        product carousels) require a Meta catalog connected to the
-        WhatsApp Business Account in Commerce Manager. Media carousels
-        (image/video cards) do not need a catalog.
-
-        For `product`, `body` is optional (WhatsApp renders the product
-        card itself) and `header` is not allowed (the product image is
-        the header). For `product_list`, a `header` with `type: "text"`
-        is required. For `carousel`, top-level `header`/`footer` are not
-        supported; media goes on each card instead.
-
-        For `voice_call`, the message renders WhatsApp's native call
-        button; tapping it starts a voice call to your business number.
-        Requires WhatsApp Business Calling to be enabled on the sending
-        number. The optional `parameters.payload` string is echoed back on
-        the `calls` webhook (as `cta_payload`) for attribution.
-
-        For `location_request_message`, `action` may be omitted (we default
-        it to `{ "name": "send_location" }`). WhatsApp renders a localized
-        "Send location" button; the user's reply arrives as a regular
-        location message in the conversation.
-
-        For `request_contact_info`, `action` may be omitted (we default it
-        to `{ "name": "request_contact_info" }`). WhatsApp renders a
-        localized share button that cannot be relabelled, so put the reason
-        for asking in `body.text`: this is a consent prompt, and a bare
-        request converts badly. The reply arrives as an inbound `contacts`
-        message with `metadata.contactsOrigin` set to `contact_request`,
-        and we fold the shared number back into the contact automatically.
-        A `contacts` message with origin `other` is a card the user picked
-        from their address book and is NOT proof of their own number.
-
-        For `catalog_message`, `action` may also be omitted (we default it
-        to `{ "name": "catalog_message" }`).
-
-        For `address_message`, `parameters.country` is required (Meta
-        rejects the whole send without it); everything else in
-        `parameters` (`values`, `saved_addresses`, `validation_errors`)
-        is forwarded to Meta as-is. This is Meta's native structured
-        shipping-address capture, generally available in India as of
-        2026-08; check Meta's documentation for current country
-        availability before relying on it elsewhere. The submitted
-        address arrives as an `nfm_reply` on the `message.received`
-        webhook, same as a Flow submission, but with
-        `metadata.nfmReplyName` set to `address_message` so you can
-        tell the two apart.
-
-        Tap events come back via the `message.received` webhook with
-        `metadata.interactiveType` set to `list_reply` or `nfm_reply`.
-        Carts submitted from commerce messages arrive as `metadata.order`;
-        product inquiries arrive as `metadata.referredProduct`.
-                reply_markup: Telegram-native keyboard markup. Ignored on other platforms.
+                quick_replies: Quick reply buttons. Mutually exclusive with buttons. Max 13 items. Each item is an object with keys: title (string, required) - Button label (max 20 chars); payload (string, required) - Payload sent back on tap; imageUrl (string) - Optional icon URL (Meta only)
+                buttons: Action buttons. Mutually exclusive with quickReplies. Max 3 items. Instagram / Facebook: also mutually exclusive with `template`. A Meta message carries one body shape, so sending both is a 400 rather than a silent drop of the buttons. The buttons and `message` render as Meta's button_template (one bubble with the text and the buttons below it), so `message` must be 640 characters or less when buttons are attached (400 otherwise). WhatsApp: buttons always render as interactive reply buttons. Only `title` and `payload` are used; `type`, `url`, and `phone` are ignored (WhatsApp has no URL/phone button in this field; use the `interactive` field with `type: cta_url` for a link button). `payload` becomes the button reply ID delivered on the `message.received` webhook when the user taps. To send a simple reply-button message, provide `title` + `payload` and set `type: postback`, e.g. `{ "type": "postback", "title": "Yes", "payload": "yes" }`. Combine `buttons` with `attachmentUrl` and `attachmentType` `image`, `video`, or `file` to render one WhatsApp message with a media header, body text, and reply buttons. Audio is not a supported interactive header and returns 400 when combined with buttons. Each item is an object with keys: type (one of: url, postback, phone; required) - Button type. phone is Facebook only. Ignored on WhatsApp (buttons always render as reply buttons).; title (string, required) - Button label (max 20 chars); url (string) - URL for url-type buttons (Facebook/Instagram only); payload (string) - Payload for postback-type buttons. On WhatsApp, this is the reply ID returned on the message.received webhook when the button is tapped.; phone (string) - Phone number for phone-type buttons (Facebook only)
+                template: Platform-dependent template payload. Ignored on Telegram. Instagram / Facebook: a generic template (carousel). Set `type: generic` and provide up to 10 `elements`, each with a `title` (required) and optional `subtitle`, `imageUrl`, and `buttons`. Mutually exclusive with the top-level `buttons` field (sending both is a 400); put the card's buttons on its `elements` instead. On Facebook, `imageAspectRatio` (`horizontal`, the default, or `square`) sets how Messenger renders the element images; Instagram has no such setting and rejects it. WhatsApp: sends an approved WhatsApp template message, the only message type WhatsApp accepts when the 24-hour customer-service window is closed. Provide exactly one element carrying the template reference: `{ "elements": [{ "name": "order_update", "language": "en_US", "components": [...] }] }` (`type` is ignored on WhatsApp). `components` is optional and is forwarded unchanged as the `template.components` array of Meta's Cloud API send payload; use it to fill body/header variables and button parameters, e.g. `[{ "type": "body", "parameters": [{ "type": "text", "text": "John" }] }]`. Templates with media headers (image, video, document) must include the header component with its media link here at send time. To send a template to a phone number with no existing conversation, or to have media headers filled in automatically from the template definition, use the create-conversation endpoint (POST /v1/inbox/conversations) instead. Object with keys: type (one of: generic) - Template type. Required for Instagram/Facebook generic templates; ignored on WhatsApp.; imageAspectRatio (one of: horizontal, square) - Facebook only. Aspect ratio Messenger renders element images at: horizontal (1.91:1, default) or square (1:1). A 400 on Instagram.; elements (list of objects with keys title, subtitle, imageUrl, buttons, name, language, components)
+                interactive: WhatsApp-only. Rich interactive payload for list messages, CTA URL buttons, Flow prompts, location requests, voice-call buttons, and commerce messages (single product, product list, catalog, and carousel). When set, takes priority over `buttons` and `quickReplies`. The shape mirrors Meta's Cloud API `interactive` object for the types in the enum below. Use `buttons` / `quickReplies` for simple button replies (WhatsApp's `interactive.type: "button"`): the abstraction caps at 3 buttons and handles the auto-conversion for you. Use this field only for the types listed in the enum below. All interactive messages are session messages: they can only be sent inside the 24-hour customer service window opened by the user's last inbound message. Commerce types (`product`, `product_list`, `catalog_message`, and product carousels) require a Meta catalog connected to the WhatsApp Business Account in Commerce Manager. Media carousels (image/video cards) do not need a catalog. For `product`, `body` is optional (WhatsApp renders the product card itself) and `header` is not allowed (the product image is the header). For `product_list`, a `header` with `type: "text"` is required. For `carousel`, top-level `header`/`footer` are not supported; media goes on each card instead. For `voice_call`, the message renders WhatsApp's native call button; tapping it starts a voice call to your business number. Requires WhatsApp Business Calling to be enabled on the sending number. The optional `parameters.payload` string is echoed back on the `calls` webhook (as `cta_payload`) for attribution. For `location_request_message`, `action` may be omitted (we default it to `{ "name": "send_location" }`). WhatsApp renders a localized "Send location" button; the user's reply arrives as a regular location message in the conversation. For `request_contact_info`, `action` may be omitted (we default it to `{ "name": "request_contact_info" }`). WhatsApp renders a localized share button that cannot be relabelled, so put the reason for asking in `body.text`: this is a consent prompt, and a bare request converts badly. The reply arrives as an inbound `contacts` message with `metadata.contactsOrigin` set to `contact_request`, and we fold the shared number back into the contact automatically. A `contacts` message with origin `other` is a card the user picked from their address book and is NOT proof of their own number. For `catalog_message`, `action` may also be omitted (we default it to `{ "name": "catalog_message" }`). For `address_message`, `parameters.country` is required (Meta rejects the whole send without it); everything else in `parameters` (`values`, `saved_addresses`, `validation_errors`) is forwarded to Meta as-is. This is Meta's native structured shipping-address capture, generally available in India as of 2026-08; check Meta's documentation for current country availability before relying on it elsewhere. The submitted address arrives as an `nfm_reply` on the `message.received` webhook, same as a Flow submission, but with `metadata.nfmReplyName` set to `address_message` so you can tell the two apart. Tap events come back via the `message.received` webhook with `metadata.interactiveType` set to `list_reply` or `nfm_reply`. Carts submitted from commerce messages arrive as `metadata.order`; product inquiries arrive as `metadata.referredProduct`. Object with keys: type (one of: list, cta_url, flow, location_request_message, request_contact_info, voice_call, product, product_list, catalog_message, carousel, address_message; required) - Which interactive layout to render.; header (object with keys type, text, image, video, document) - Optional header shown above the body. Required with `type: \"text\"` for `product_list`; not allowed for `product` or `carousel`.; body (object with keys text) - Required for every type except `product`, where it is optional.; footer (object with keys text) - Optional footer shown below the action.; action (object with keys button, sections)
+                reply_markup: Telegram-native keyboard markup. Ignored on other platforms. Object with keys: type (one of: inline_keyboard, reply_keyboard) - Keyboard type; keyboard (list of array) - Array of rows, each row is an array of buttons; oneTime (boolean) - Hide keyboard after use (reply_keyboard only)
                 messaging_type: Facebook messaging type. Required when using messageTag.
                 message_tag: Facebook message tag for messaging outside 24h window. Requires messagingType MESSAGE_TAG. Instagram only supports HUMAN_AGENT.
                 reply_to: Platform message ID to quote-reply to. For WhatsApp, pass the wamid; for Telegram, the Telegram message ID (delivered as message.platformMessageId on webhooks, and as `id` on each entry of the list-messages endpoint). On Slack it threads the reply (thread_ts) instead of quoting. Instagram and Facebook Messenger do not support send-side quote replies: the message is sent without a quote and the successful response includes a warnings entry with code ignored_field and param replyTo. Other platforms without send-side reply support ignore this field.
-                location: WhatsApp and iMessage. Send a location pin (on iMessage it renders as a native map bubble).
-                contacts: WhatsApp-only. Send one or more contact cards."""
+                location: WhatsApp and iMessage. Send a location pin (on iMessage it renders as a native map bubble). Object with keys: latitude (number, required) - Latitude in decimal degrees.; longitude (number, required) - Longitude in decimal degrees.; name (string) - Optional location name.; address (string) - Optional street address.
+                contacts: WhatsApp-only. Send one or more contact cards. Each item is an object with keys: name (object with keys formatted_name, first_name, last_name, required); phones (list of objects with keys phone, type); emails (list of objects with keys email, type)"""
         client = _get_client()
         try:
             response = client.messages.send_inbox_message(
@@ -26362,7 +26022,7 @@ def register_generated_tools(mcp, _get_client):
             message_id: The platform message ID to edit (iMessage also accepts the Zernio message id) (required)
             account_id: Account ID (required)
             text: New message text
-            reply_markup: New inline keyboard markup"""
+            reply_markup: New inline keyboard markup Object with keys: type (one of: inline_keyboard); keyboard (list of array)"""
         client = _get_client()
         try:
             response = client.messages.edit_inbox_message(
@@ -26868,7 +26528,7 @@ def register_generated_tools(mcp, _get_client):
 
             Args:
                 creative_features: Meta enhancement settings for single or attached ads, and defaults for creatives[]. An item replaces the entire map, including with an empty object.
-                tracking
+                tracking: Object with keys: pixelId (string) - Meta Pixel ID to attach for offsite-conversion measurement.; urlTags (list of objects with keys key, value) - Click-URL params. Meta: stored on the creative as `url_tags` and returned by GET /v1/ads/{adId}/tracking-tags. App-promotion linkUrl stays byte-identical to ...
                 account_id: Facebook or Instagram SocialAccount ID. (required)
                 ad_account_id: Meta ad account ID, e.g. `act_123456789`. (required)
                 name: Ad display name. Used to derive campaign / ad set names.
@@ -26897,31 +26557,10 @@ def register_generated_tools(mcp, _get_client):
                 image_url: Image asset for single-creative shape. Mutually exclusive
         with `video` and with `creatives[]`. Required on the
         single-creative shape if neither `video` nor an existing post reference is supplied.
-                video: Video creative for single-creative shape. Mutually
-        exclusive with `imageUrl` and with `creatives[]`. Required
-        on the single-creative shape if neither `imageUrl` nor an existing post reference is supplied.
-                welcome_message: Custom chat welcome message (Meta's `page_welcome_message`,
-        "Mensaje de bienvenida" / "Mensaje predefinido" in Ads Manager).
-        Single-creative shape only; for `creatives[]` set it per entry.
-                carousel_cards: Messaging and CTWA only (a 400 on POST /v1/ads/call). A hand-built carousel
-        of 2-10 image cards, sent to Meta as `link_data.child_attachments`; every
-        card (and the carousel itself) carries the destination's messaging call to
-        action (WHATSAPP_MESSAGE, MESSAGE_PAGE or INSTAGRAM_MESSAGE), so a tap on any
-        card opens the conversation. Replaces `imageUrl` / `video` (sending either is
-        a 400). `body` is required as the primary text; `headline` is optional and
-        only names the creative (each card has its own `headline`); a top-level
-        `description` is a 400 (set it per card). `welcomeMessage`,
-        `whatsappPhoneNumber` and `destinations` apply as on a single-image ad. Also a
-        400 with `placementAssets`, `platformPostId`, `existingPostId` or
-        `objectStoryId`. Single-creative shape; for `creatives[]` set it per entry.
-                creatives: Multi-creative shape: N CTWA ads under one campaign + one
-        ad set, sharing budget and targeting. Mutually exclusive
-        with the top-level single-creative fields (`headline` /
-        `body` / `imageUrl` / `video`): setting both is a 400,
-        unlike `POST /v1/ads/create` where the top-level fields
-        are silently ignored in multi-creative mode. Each entry
-        supplies headline, body, and image/video, or a platformPostId or
-        objectStoryId reference. Fresh and existing creatives can be mixed.
+                video: Video creative for single-creative shape. Mutually exclusive with `imageUrl` and with `creatives[]`. Required on the single-creative shape if neither `imageUrl` nor an existing post reference is supplied. Object with keys: url (string) - Public URL of the video to upload. Provide either `url` or `id`.; id (string) - Reuse a video already uploaded to this ad account (list them with GET /v1/ads/videos) instead of re-uploading. Wins over `url`. Provide either `url` or `id`. ...; thumbnailUrl (string) - OPTIONAL: when omitted, the poster is auto-generated from Meta's own preferred video thumbnail. When Meta produces no candidate the request fails with a 502 ...
+                welcome_message: Custom chat welcome message (Meta's `page_welcome_message`, "Mensaje de bienvenida" / "Mensaje predefinido" in Ads Manager). Single-creative shape only; for `creatives[]` set it per entry. Object with keys: text (string, required) - Greeting shown when the chat opens. Replaces Meta's default (\"Hi! Can we help you?\").; prefillText (string) - Message put into the user's text input, ready to send. Replaces Meta's default (\"Hi! I want more info.\"). Lets one ad steer the opening message toward what it ...; quickReplies (list of objects with keys title, payload) - Tappable chips under the greeting instead of a prefilled message. Exactly one of prefillText or quickReplies. Put your own campaign or ad key in each payload: ...
+                carousel_cards: Messaging and CTWA only (a 400 on POST /v1/ads/call). A hand-built carousel of 2-10 image cards, sent to Meta as `link_data.child_attachments`; every card (and the carousel itself) carries the destination's messaging call to action (WHATSAPP_MESSAGE, MESSAGE_PAGE or INSTAGRAM_MESSAGE), so a tap on any card opens the conversation. Replaces `imageUrl` / `video` (sending either is a 400). `body` is required as the primary text; `headline` is optional and only names the creative (each card has its own `headline`); a top-level `description` is a 400 (set it per card). `welcomeMessage`, `whatsappPhoneNumber` and `destinations` apply as on a single-image ad. Also a 400 with `placementAssets`, `platformPostId`, `existingPostId` or `objectStoryId`. Single-creative shape; for `creatives[]` set it per entry. Each item is an object with keys: imageUrl (string, required) - Card image. Uploaded to the ad account and sent as the card image_hash (by URL on validateOnly).; headline (string) - Card title (Meta name).; description (string) - Card description, under the title.; callToAction (string) - Optional. Must equal the destination's messaging call to action (WHATSAPP_MESSAGE for whatsapp, MESSAGE_PAGE for messenger, INSTAGRAM_MESSAGE for ...; linkUrl (string) - Not accepted: a 400. The card tap opens the conversation, not a website.
+                creatives: Multi-creative shape: N CTWA ads under one campaign + one ad set, sharing budget and targeting. Mutually exclusive with the top-level single-creative fields (`headline` / `body` / `imageUrl` / `video`): setting both is a 400, unlike `POST /v1/ads/create` where the top-level fields are silently ignored in multi-creative mode. Each entry supplies headline, body, and image/video, or a platformPostId or objectStoryId reference. Fresh and existing creatives can be mixed. Each item is an object with keys: platformPostId (string) - Messaging and CTWA only. Platform post or reel ID, the same input boostPost takes as platformPostId. Facebook IDs become object_story_id; Instagram IDs become ...; existingPostId (string) - Alias of platformPostId, kept for existing callers. Sending both with different values is a 400.; objectStoryId (string) - Messaging and CTWA only. Raw Facebook pageId_postId reference, used as object_story_id even with an Instagram account. Mutually exclusive with platformPostId ...; creativeFeatures (object) - Replaces the top-level creativeFeatures map for this item. Omit to inherit; an empty object clears inherited enrollment choices.; headline (string); body (string) - Primary text shown above the image / video.; imageUrl (string) - Image asset. Mutually exclusive with this entry's `video`. Required if neither `video` nor an existing post reference is supplied.; video (object with keys url, id, thumbnailUrl) - Video creative. Mutually exclusive with this entry's `imageUrl`. Required if neither `imageUrl` nor an existing post reference is supplied.; welcomeMessage (object with keys text, prefillText) - Custom chat welcome message for this entry. See the top-level `welcomeMessage` for the single-creative shape.; carouselCards (list of objects with keys imageUrl, headline, description, callToAction, linkUrl) - A 2-10 card carousel for this entry instead of `imageUrl` / `video`; `body` is required. Same rules as the top-level `carouselCards`. Carousel and ...
                 ad_set_id: Attach the creatives to this EXISTING messaging ad set instead of
         building a campaign, so the ad set keeps its learning phase. It then
         owns budget, targeting and schedule, so `budgetAmount`, `budgetType`,
@@ -26967,55 +26606,37 @@ def register_generated_tools(mcp, _get_client):
                 countries: ISO 3166-1 alpha-2 country codes. Defaults to `["US"]` only
         when no other geo (`cities`, `regions`, `zips`, `metros`,
         `customLocations`) is supplied.
-                cities: City-level geo targeting for local CTWA campaigns. Each entry maps to Meta's
-        TargetingGeoLocationCity. `key` is Meta's city ID. `radius`
-        and `distance_unit` are coupled: set both or neither.
-        Meta enforces a minimum city radius (~17 km / 10 mi);
-        smaller values resolve to a 0-size audience and the ad
-        fails at launch. For a tighter catchment use customLocations
-        (lat/lng).
-                regions: Region / state-level geo targeting. `key` is Meta's region
-        ID (lookupable via GET /v1/ads/targeting/search?type=region).
-                zips: ZIP / postal-code geo targeting. `key` is the platform's
-        postal id resolved via /v1/ads/targeting/search.
-                metros: DMA / metro-area geo targeting. `key` is Meta's metro id
-        (e.g. `DMA:807`).
+                cities: City-level geo targeting for local CTWA campaigns. Each entry maps to Meta's TargetingGeoLocationCity. `key` is Meta's city ID. `radius` and `distance_unit` are coupled: set both or neither. Meta enforces a minimum city radius (~17 km / 10 mi); smaller values resolve to a 0-size audience and the ad fails at launch. For a tighter catchment use customLocations (lat/lng). Each item is an object with keys: key (string, required); radius (number); distance_unit (one of: mile, kilometer)
+                regions: Region / state-level geo targeting. `key` is Meta's region ID (lookupable via GET /v1/ads/targeting/search?type=region). Each item is an object with keys: key (string, required)
+                zips: ZIP / postal-code geo targeting. `key` is the platform's postal id resolved via /v1/ads/targeting/search. Each item is an object with keys: key (string, required); name (string)
+                metros: DMA / metro-area geo targeting. `key` is Meta's metro id (e.g. `DMA:807`). Each item is an object with keys: key (string, required); name (string)
                 country_groups: Meta only. Continents and trade blocs (`geo_locations.country_groups`),
         for targeting a whole region without listing its countries. Combines
         with `countries` rather than replacing it, and is also accepted under
         `excludedLocations`. Discoverable via
         `GET /v1/ads/targeting/search?dimension=geo&geoType=country_group`.
-                custom_locations: Point-radius geo (Meta `geo_locations.custom_locations`).
-        Use for targeting a radius around a specific lat/long when
-        no Meta city/region key fits. `distanceUnit` is required.
+                custom_locations: Point-radius geo (Meta `geo_locations.custom_locations`). Use for targeting a radius around a specific lat/long when no Meta city/region key fits. `distanceUnit` is required. Each item is an object with keys: latitude (number, required); longitude (number, required); radius (number, required); distanceUnit (one of: mile, kilometer; required); name (string); address (string)
                 age_min
                 age_max
-                interests
+                interests: Each item is an object with keys: id (string, required); name (string)
                 audience_id: Custom audience ID to target.
-                placements: Manual ad placements on the shared ad set. Omit
-        for automatic placements. When set, restricts delivery to the chosen surfaces,
-        mapped onto the ad set's `targeting.{publisher_platforms, facebook_positions, instagram_positions,
-        messenger_positions, audience_network_positions, threads_positions,
-        whatsapp_positions, device_platforms}`. Enum membership is validated here; Meta
-        additionally enforces co-selection rules and restricts which
-        placements are eligible for click-to-WhatsApp ads, returning an actionable
-        error which we surface.
+                placements: Manual ad placements on the shared ad set. Omit for automatic placements. When set, restricts delivery to the chosen surfaces, mapped onto the ad set's `targeting.{publisher_platforms, facebook_positions, instagram_positions, messenger_positions, audience_network_positions, threads_positions, whatsapp_positions, device_platforms}`. Enum membership is validated here; Meta additionally enforces co-selection rules and restricts which placements are eligible for click-to-WhatsApp ads, returning an actionable error which we surface. Object with keys: publisherPlatforms (list of string) - Top-level platforms to deliver on. A position field below is only honoured when its parent platform is included here.; facebookPositions (list of string); instagramPositions (list of string); messengerPositions (list of string); audienceNetworkPositions (list of string); threadsPositions (list of string); whatsappPositions (list of string); devicePlatforms (list of string) - Restrict by device. Omit to deliver on both mobile and desktop.
                 gender: Restrict the audience by gender (Meta `genders`). Omit or send all for everyone; all is ignored in adSetId attach mode. Stored on the ad and read back in `targeting.gender`.
                 languages: Audience languages (Meta `locales`). A bare ISO 639-1 code targets all regional variants ("en" = all English), a region-qualified code a specific one ("en_GB", "pt_BR"); unknown codes are rejected.
-                places: Meta place keys (from GET /v1/ads/targeting/search).
-                neighborhoods: Meta neighborhood keys (from GET /v1/ads/targeting/search).
+                places: Meta place keys (from GET /v1/ads/targeting/search). Each item is an object with keys: key (string, required)
+                neighborhoods: Meta neighborhood keys (from GET /v1/ads/targeting/search). Each item is an object with keys: key (string, required)
                 excluded_locations: Geo to exclude, same shape as POST /v1/ads/create (countries, countryGroups, regions, cities, zips, places, neighborhoods, customLocations).
-                behaviors: Behavior ids from /v1/ads/targeting/search?dimension=behavior. Meta: each dimension is its own flexible_spec entry (OR within, AND across). TikTok: video/creator interaction categories, sent as the ad group's actions.
-                work_positions
-                work_employers
-                work_industries
+                behaviors: Behavior ids from /v1/ads/targeting/search?dimension=behavior. Meta: each dimension is its own flexible_spec entry (OR within, AND across). TikTok: video/creator interaction categories, sent as the ad group's actions. Each item is an object with keys: id (string, required); name (string)
+                work_positions: Each item is an object with keys: id (string, required); name (string)
+                work_employers: Each item is an object with keys: id (string, required); name (string)
+                work_industries: Each item is an object with keys: id (string, required); name (string)
                 income_tier: Normalized household-income tier, same as POST /v1/ads/create. Incompatible with housing, employment and credit specialAdCategories.
                 user_os: Meta `user_os`, e.g. ["iOS_ver_14.0_and_above"].
                 user_device: Meta `user_device`.
                 audience_include: Custom or lookalike audience ids to include.
                 audience_exclude: Custom or lookalike audience ids to exclude.
                 saved_targeting_id: ID of a saved_targeting audience (POST /v1/ads/audiences), expanded as the base targeting. Precedence: savedTargetingId, then `targeting`, then the flat fields.
-                targeting: Nested targeting object, same contract as POST /v1/ads/create and boost. Flat fields win per key.
+                targeting: Nested targeting object, same contract as POST /v1/ads/create and boost. Flat fields win per key. Object with keys: userOs (list of string) - Meta only. Operating systems and version ranges, such as iOS_ver_14.0_and_above or Android. Emitted as user_os. May also be supplied inside targeting.; userDevice (list of string) - Meta only. Device models such as iPhone. Emitted as user_device. May also be supplied inside targeting.; countries (list of string) - ISO 3166-1 alpha-2 country codes (e.g. ['US']).; regions (list of any) - Region/state targeting. `key` is the platform location ID from /v1/ads/targeting/search?dimension=geo&geoType=region. An entry may also be that id as a plain ...; cities (list of any) - City targeting. Optional `radius` + `distanceUnit` extend beyond the city limits; both must be set together or both omitted. `radius` is only honoured on ...; zips (list of objects with keys key, name) - Postal/ZIP targeting. `key` is the platform's postal location ID (e.g. Meta `US:94304`). Supported on Meta, Google, TikTok, Pinterest, X.; metros (list of objects with keys key, name) - DMA / metro-area targeting. `key` is the platform's metro ID (e.g. Meta `DMA:807`).; countryGroups (list of string) - Meta only. Continents and trade blocs (`geo_locations.country_groups`), for targeting a whole region without listing its countries. Combines with `countries` ...; customLocations (list of objects with keys latitude, longitude, radius, distanceUnit, name, address) - Point-radius (lat/lng) targeting (Meta custom_locations / Google proximity). Honoured on Meta and Google; ignored on platforms without radius support.; excludedLocations (object with keys countries, countryGroups, regions, cities, zips, places, neighborhoods, customLocations) - Geo to exclude from the audience. Mirrors the inclusion geo shape: excluded cities can carry a radius catchment and excluded custom (lat/lng) pins are ...; ageMin (integer) - Minimum age. Applied on Meta, TikTok, Pinterest, LinkedIn, X and Google Search/Display (Google excludes the age ranges outside the request); rejected with 400 ...; ageMax (integer) - Maximum age. Same per-platform application and clamping as ageMin.; gender (one of: all, male, female) - Restrict by gender. 'all' (default) targets everyone. Applied on Meta, TikTok, Pinterest, LinkedIn, X and Google Search/Display (Google excludes the other ...; incomeTier (one of: top_5, top_10, top_10_25, top_25_50) - Normalized household-income tier (ZIP/percentile based). Meta and TikTok express all four. Google maps only `top_10` (its INCOME_RANGE_90_UP); other tiers on ...; languages (list of string) - Language codes restricting the audience by language. Applied on Meta, Google, TikTok, LinkedIn, X and Pinterest; rejected with 400 on OpenAI. A code the ...; interests (list of objects with keys id, name) - Interest entities from /v1/ads/targeting/search?dimension=interest. Each carries the platform's opaque id. On Google, applied as ad-group interest criteria ...; behaviors (list of objects with keys id, name) - Behaviour entities from /v1/ads/targeting/search?dimension=behavior (Meta, TikTok and LinkedIn). On TikTok they target people who interacted with videos ...; workPositions (list of objects with keys id, name) - Meta only. Job title entities from /v1/ads/targeting/search?dimension=workPosition. Not interchangeable with the LinkedIn `jobTitles` URN fragments.; workEmployers (list of objects with keys id, name) - Meta only. Employer entities from /v1/ads/targeting/search?dimension=workEmployer.; workIndustries (list of objects with keys id, name) - Meta only. Work-industry entities from /v1/ads/targeting/search?dimension=workIndustry. Not interchangeable with the LinkedIn `industries` URN fragments.; industries (list of string) - LinkedIn B2B only. Industry URN id fragments, or the full urn:li:industry:* URN from /v1/ads/targeting/search?dimension=industry.; companySizes (list of string) - LinkedIn B2B only. Single-letter size codes (A to I), or the full urn:li:staffCountRange:* URN from /v1/ads/targeting/search?dimension=companySize.; seniorities (list of string) - LinkedIn B2B only. Seniority URN id fragments, or the full urn:li:seniority:* URN from /v1/ads/targeting/search?dimension=seniority.; jobFunctions (list of string) - LinkedIn B2B only. Function URN id fragments, or the full urn:li:function:* URN from /v1/ads/targeting/search?dimension=jobFunction.; audienceInclude (list of string) - Platform audience IDs to include, as returned by GET /v1/ads/audiences (Meta custom audience ids, TikTok audience ids, Pinterest customer list ids, LinkedIn ...; audienceExclude (list of string) - Platform audience IDs to exclude; same ID formats as audienceInclude. Not supported on OpenAI (400).
                 raw_targeting: Meta targeting spec sent as the BASE layer of the ad set's
         `targeting`, exactly as POST /v1/ads/create does: use it for
         anything the flat fields cannot express, such as a layered
@@ -27088,17 +26709,7 @@ def register_generated_tools(mcp, _get_client):
         set defaults in Meta Ads Manager advertising settings, Meta auto-fills them.
                 destination: Where the conversation opens when the ad is tapped. Set this OR `destinations`, not both.
                 destinations: Two or three messaging apps on ONE ad set, like Ads Manager's "all messaging apps": the ad set gets Meta's combined destination_type (e.g. MESSAGING_INSTAGRAM_DIRECT_MESSENGER_WHATSAPP) and the creative one CTA per app, so Meta opens the app each viewer is likeliest to answer from. WhatsApp in the list still needs the Page paired with a WhatsApp Business number. With `adSetId`, the existing ad set must already use that combined destination_type. Set this OR `destination`, not both.
-                placement_assets: A different image or video per placement on one messaging ad, e.g. a 4:5 image on
-        Feed and a 9:16 image on Stories/Reels. Replaces top-level `imageUrl` / `video`
-        (sending either alongside is a 400); `headline` and `body` stay required as the
-        default copy. The CTA, `welcomeMessage` and `whatsappPhoneNumber` apply to every
-        placement. Works on the single-creative shape and on attach (`adSetId`).
-
-        Single `destination` only: Meta cannot combine per-placement media with
-        `destinations` (it drops the placement rules from a multi-destination creative, or
-        refuses more than one call to action per placement rule with error 1885878), so
-        that combination is a 400. Also a 400 with `creatives[]`, `platformPostId`,
-        `existingPostId` or `objectStoryId`, and on POST /v1/ads/call.
+                placement_assets: A different image or video per placement on one messaging ad, e.g. a 4:5 image on Feed and a 9:16 image on Stories/Reels. Replaces top-level `imageUrl` / `video` (sending either alongside is a 400); `headline` and `body` stay required as the default copy. The CTA, `welcomeMessage` and `whatsappPhoneNumber` apply to every placement. Works on the single-creative shape and on attach (`adSetId`). Single `destination` only: Meta cannot combine per-placement media with `destinations` (it drops the placement rules from a multi-destination creative, or refuses more than one call to action per placement rule with error 1885878), so that combination is a 400. Also a 400 with `creatives[]`, `platformPostId`, `existingPostId` or `objectStoryId`, and on POST /v1/ads/call. Object with keys: defaultImageUrl (string) - Image mode. Catch-all image for any placement no rule matches. Required in image mode (Meta mandates a default rule).; defaultVideoUrl (string) - Video mode. Catch-all video for any placement no rule matches. Required in video mode.; defaultThumbnailUrl (string) - Video mode (optional). Poster image for the default video; Meta auto-generates one when omitted.; rules (list of objects with keys imageUrl, videoUrl, thumbnailUrl, headline, body, description, placements, required) - One entry per placement group you want to pin a specific asset to.
                 workflow_id: A workflow in the ad account's profile. When someone clicks the ad, that workflow starts in the conversation the click opens (on the first message, a postback or a standalone referral carrying the ad id), ahead of keyword-matched workflows, if it is active on the receiving account. Stored on the ad. 404 when no such workflow exists in the profile.
                 validate_only: Dry-runs the ad on Meta with execution_options validate_only as ONE inline campaign + ad set + creative + ad (or creative + ad on the existing ad set with `adSetId`). Nothing is uploaded or created and nothing is stored; media is checked by URL. Supports one creative with `imageUrl`, image `placementAssets`, `carouselCards`, an existing `video.id`, or an existing post. Several creatives, a new `video.url` and video `placementAssets` need uploads first and return 400. Success returns 200 with per-node results; a Meta rejection returns the Meta error."""
         client = _get_client()
@@ -27324,7 +26935,7 @@ def register_generated_tools(mcp, _get_client):
 
             Args:
                 creative_features: Meta enhancement settings for single or attached ads, and defaults for creatives[]. An item replaces the entire map, including with an empty object.
-                tracking
+                tracking: Object with keys: pixelId (string) - Meta Pixel ID to attach for offsite-conversion measurement.; urlTags (list of objects with keys key, value) - Click-URL params. Meta: stored on the creative as `url_tags` and returned by GET /v1/ads/{adId}/tracking-tags. App-promotion linkUrl stays byte-identical to ...
                 account_id: Facebook or Instagram SocialAccount ID. (required)
                 ad_account_id: Meta ad account ID, e.g. `act_123456789`. (required)
                 name: Ad display name. Used to derive campaign / ad set names.
@@ -27353,31 +26964,10 @@ def register_generated_tools(mcp, _get_client):
                 image_url: Image asset for single-creative shape. Mutually exclusive
         with `video` and with `creatives[]`. Required on the
         single-creative shape if neither `video` nor an existing post reference is supplied.
-                video: Video creative for single-creative shape. Mutually
-        exclusive with `imageUrl` and with `creatives[]`. Required
-        on the single-creative shape if neither `imageUrl` nor an existing post reference is supplied.
-                welcome_message: Custom chat welcome message (Meta's `page_welcome_message`,
-        "Mensaje de bienvenida" / "Mensaje predefinido" in Ads Manager).
-        Single-creative shape only; for `creatives[]` set it per entry.
-                carousel_cards: Messaging and CTWA only (a 400 on POST /v1/ads/call). A hand-built carousel
-        of 2-10 image cards, sent to Meta as `link_data.child_attachments`; every
-        card (and the carousel itself) carries the destination's messaging call to
-        action (WHATSAPP_MESSAGE, MESSAGE_PAGE or INSTAGRAM_MESSAGE), so a tap on any
-        card opens the conversation. Replaces `imageUrl` / `video` (sending either is
-        a 400). `body` is required as the primary text; `headline` is optional and
-        only names the creative (each card has its own `headline`); a top-level
-        `description` is a 400 (set it per card). `welcomeMessage`,
-        `whatsappPhoneNumber` and `destinations` apply as on a single-image ad. Also a
-        400 with `placementAssets`, `platformPostId`, `existingPostId` or
-        `objectStoryId`. Single-creative shape; for `creatives[]` set it per entry.
-                creatives: Multi-creative shape: N CTWA ads under one campaign + one
-        ad set, sharing budget and targeting. Mutually exclusive
-        with the top-level single-creative fields (`headline` /
-        `body` / `imageUrl` / `video`): setting both is a 400,
-        unlike `POST /v1/ads/create` where the top-level fields
-        are silently ignored in multi-creative mode. Each entry
-        supplies headline, body, and image/video, or a platformPostId or
-        objectStoryId reference. Fresh and existing creatives can be mixed.
+                video: Video creative for single-creative shape. Mutually exclusive with `imageUrl` and with `creatives[]`. Required on the single-creative shape if neither `imageUrl` nor an existing post reference is supplied. Object with keys: url (string) - Public URL of the video to upload. Provide either `url` or `id`.; id (string) - Reuse a video already uploaded to this ad account (list them with GET /v1/ads/videos) instead of re-uploading. Wins over `url`. Provide either `url` or `id`. ...; thumbnailUrl (string) - OPTIONAL: when omitted, the poster is auto-generated from Meta's own preferred video thumbnail. When Meta produces no candidate the request fails with a 502 ...
+                welcome_message: Custom chat welcome message (Meta's `page_welcome_message`, "Mensaje de bienvenida" / "Mensaje predefinido" in Ads Manager). Single-creative shape only; for `creatives[]` set it per entry. Object with keys: text (string, required) - Greeting shown when the chat opens. Replaces Meta's default (\"Hi! Can we help you?\").; prefillText (string) - Message put into the user's text input, ready to send. Replaces Meta's default (\"Hi! I want more info.\"). Lets one ad steer the opening message toward what it ...; quickReplies (list of objects with keys title, payload) - Tappable chips under the greeting instead of a prefilled message. Exactly one of prefillText or quickReplies. Put your own campaign or ad key in each payload: ...
+                carousel_cards: Messaging and CTWA only (a 400 on POST /v1/ads/call). A hand-built carousel of 2-10 image cards, sent to Meta as `link_data.child_attachments`; every card (and the carousel itself) carries the destination's messaging call to action (WHATSAPP_MESSAGE, MESSAGE_PAGE or INSTAGRAM_MESSAGE), so a tap on any card opens the conversation. Replaces `imageUrl` / `video` (sending either is a 400). `body` is required as the primary text; `headline` is optional and only names the creative (each card has its own `headline`); a top-level `description` is a 400 (set it per card). `welcomeMessage`, `whatsappPhoneNumber` and `destinations` apply as on a single-image ad. Also a 400 with `placementAssets`, `platformPostId`, `existingPostId` or `objectStoryId`. Single-creative shape; for `creatives[]` set it per entry. Each item is an object with keys: imageUrl (string, required) - Card image. Uploaded to the ad account and sent as the card image_hash (by URL on validateOnly).; headline (string) - Card title (Meta name).; description (string) - Card description, under the title.; callToAction (string) - Optional. Must equal the destination's messaging call to action (WHATSAPP_MESSAGE for whatsapp, MESSAGE_PAGE for messenger, INSTAGRAM_MESSAGE for ...; linkUrl (string) - Not accepted: a 400. The card tap opens the conversation, not a website.
+                creatives: Multi-creative shape: N CTWA ads under one campaign + one ad set, sharing budget and targeting. Mutually exclusive with the top-level single-creative fields (`headline` / `body` / `imageUrl` / `video`): setting both is a 400, unlike `POST /v1/ads/create` where the top-level fields are silently ignored in multi-creative mode. Each entry supplies headline, body, and image/video, or a platformPostId or objectStoryId reference. Fresh and existing creatives can be mixed. Each item is an object with keys: platformPostId (string) - Messaging and CTWA only. Platform post or reel ID, the same input boostPost takes as platformPostId. Facebook IDs become object_story_id; Instagram IDs become ...; existingPostId (string) - Alias of platformPostId, kept for existing callers. Sending both with different values is a 400.; objectStoryId (string) - Messaging and CTWA only. Raw Facebook pageId_postId reference, used as object_story_id even with an Instagram account. Mutually exclusive with platformPostId ...; creativeFeatures (object) - Replaces the top-level creativeFeatures map for this item. Omit to inherit; an empty object clears inherited enrollment choices.; headline (string); body (string) - Primary text shown above the image / video.; imageUrl (string) - Image asset. Mutually exclusive with this entry's `video`. Required if neither `video` nor an existing post reference is supplied.; video (object with keys url, id, thumbnailUrl) - Video creative. Mutually exclusive with this entry's `imageUrl`. Required if neither `imageUrl` nor an existing post reference is supplied.; welcomeMessage (object with keys text, prefillText) - Custom chat welcome message for this entry. See the top-level `welcomeMessage` for the single-creative shape.; carouselCards (list of objects with keys imageUrl, headline, description, callToAction, linkUrl) - A 2-10 card carousel for this entry instead of `imageUrl` / `video`; `body` is required. Same rules as the top-level `carouselCards`. Carousel and ...
                 ad_set_id: Attach the creatives to this EXISTING messaging ad set instead of
         building a campaign, so the ad set keeps its learning phase. It then
         owns budget, targeting and schedule, so `budgetAmount`, `budgetType`,
@@ -27423,55 +27013,37 @@ def register_generated_tools(mcp, _get_client):
                 countries: ISO 3166-1 alpha-2 country codes. Defaults to `["US"]` only
         when no other geo (`cities`, `regions`, `zips`, `metros`,
         `customLocations`) is supplied.
-                cities: City-level geo targeting for local CTWA campaigns. Each entry maps to Meta's
-        TargetingGeoLocationCity. `key` is Meta's city ID. `radius`
-        and `distance_unit` are coupled: set both or neither.
-        Meta enforces a minimum city radius (~17 km / 10 mi);
-        smaller values resolve to a 0-size audience and the ad
-        fails at launch. For a tighter catchment use customLocations
-        (lat/lng).
-                regions: Region / state-level geo targeting. `key` is Meta's region
-        ID (lookupable via GET /v1/ads/targeting/search?type=region).
-                zips: ZIP / postal-code geo targeting. `key` is the platform's
-        postal id resolved via /v1/ads/targeting/search.
-                metros: DMA / metro-area geo targeting. `key` is Meta's metro id
-        (e.g. `DMA:807`).
+                cities: City-level geo targeting for local CTWA campaigns. Each entry maps to Meta's TargetingGeoLocationCity. `key` is Meta's city ID. `radius` and `distance_unit` are coupled: set both or neither. Meta enforces a minimum city radius (~17 km / 10 mi); smaller values resolve to a 0-size audience and the ad fails at launch. For a tighter catchment use customLocations (lat/lng). Each item is an object with keys: key (string, required); radius (number); distance_unit (one of: mile, kilometer)
+                regions: Region / state-level geo targeting. `key` is Meta's region ID (lookupable via GET /v1/ads/targeting/search?type=region). Each item is an object with keys: key (string, required)
+                zips: ZIP / postal-code geo targeting. `key` is the platform's postal id resolved via /v1/ads/targeting/search. Each item is an object with keys: key (string, required); name (string)
+                metros: DMA / metro-area geo targeting. `key` is Meta's metro id (e.g. `DMA:807`). Each item is an object with keys: key (string, required); name (string)
                 country_groups: Meta only. Continents and trade blocs (`geo_locations.country_groups`),
         for targeting a whole region without listing its countries. Combines
         with `countries` rather than replacing it, and is also accepted under
         `excludedLocations`. Discoverable via
         `GET /v1/ads/targeting/search?dimension=geo&geoType=country_group`.
-                custom_locations: Point-radius geo (Meta `geo_locations.custom_locations`).
-        Use for targeting a radius around a specific lat/long when
-        no Meta city/region key fits. `distanceUnit` is required.
+                custom_locations: Point-radius geo (Meta `geo_locations.custom_locations`). Use for targeting a radius around a specific lat/long when no Meta city/region key fits. `distanceUnit` is required. Each item is an object with keys: latitude (number, required); longitude (number, required); radius (number, required); distanceUnit (one of: mile, kilometer; required); name (string); address (string)
                 age_min
                 age_max
-                interests
+                interests: Each item is an object with keys: id (string, required); name (string)
                 audience_id: Custom audience ID to target.
-                placements: Manual ad placements on the shared ad set. Omit
-        for automatic placements. When set, restricts delivery to the chosen surfaces,
-        mapped onto the ad set's `targeting.{publisher_platforms, facebook_positions, instagram_positions,
-        messenger_positions, audience_network_positions, threads_positions,
-        whatsapp_positions, device_platforms}`. Enum membership is validated here; Meta
-        additionally enforces co-selection rules and restricts which
-        placements are eligible for click-to-WhatsApp ads, returning an actionable
-        error which we surface.
+                placements: Manual ad placements on the shared ad set. Omit for automatic placements. When set, restricts delivery to the chosen surfaces, mapped onto the ad set's `targeting.{publisher_platforms, facebook_positions, instagram_positions, messenger_positions, audience_network_positions, threads_positions, whatsapp_positions, device_platforms}`. Enum membership is validated here; Meta additionally enforces co-selection rules and restricts which placements are eligible for click-to-WhatsApp ads, returning an actionable error which we surface. Object with keys: publisherPlatforms (list of string) - Top-level platforms to deliver on. A position field below is only honoured when its parent platform is included here.; facebookPositions (list of string); instagramPositions (list of string); messengerPositions (list of string); audienceNetworkPositions (list of string); threadsPositions (list of string); whatsappPositions (list of string); devicePlatforms (list of string) - Restrict by device. Omit to deliver on both mobile and desktop.
                 gender: Restrict the audience by gender (Meta `genders`). Omit or send all for everyone; all is ignored in adSetId attach mode. Stored on the ad and read back in `targeting.gender`.
                 languages: Audience languages (Meta `locales`). A bare ISO 639-1 code targets all regional variants ("en" = all English), a region-qualified code a specific one ("en_GB", "pt_BR"); unknown codes are rejected.
-                places: Meta place keys (from GET /v1/ads/targeting/search).
-                neighborhoods: Meta neighborhood keys (from GET /v1/ads/targeting/search).
+                places: Meta place keys (from GET /v1/ads/targeting/search). Each item is an object with keys: key (string, required)
+                neighborhoods: Meta neighborhood keys (from GET /v1/ads/targeting/search). Each item is an object with keys: key (string, required)
                 excluded_locations: Geo to exclude, same shape as POST /v1/ads/create (countries, countryGroups, regions, cities, zips, places, neighborhoods, customLocations).
-                behaviors: Behavior ids from /v1/ads/targeting/search?dimension=behavior. Meta: each dimension is its own flexible_spec entry (OR within, AND across). TikTok: video/creator interaction categories, sent as the ad group's actions.
-                work_positions
-                work_employers
-                work_industries
+                behaviors: Behavior ids from /v1/ads/targeting/search?dimension=behavior. Meta: each dimension is its own flexible_spec entry (OR within, AND across). TikTok: video/creator interaction categories, sent as the ad group's actions. Each item is an object with keys: id (string, required); name (string)
+                work_positions: Each item is an object with keys: id (string, required); name (string)
+                work_employers: Each item is an object with keys: id (string, required); name (string)
+                work_industries: Each item is an object with keys: id (string, required); name (string)
                 income_tier: Normalized household-income tier, same as POST /v1/ads/create. Incompatible with housing, employment and credit specialAdCategories.
                 user_os: Meta `user_os`, e.g. ["iOS_ver_14.0_and_above"].
                 user_device: Meta `user_device`.
                 audience_include: Custom or lookalike audience ids to include.
                 audience_exclude: Custom or lookalike audience ids to exclude.
                 saved_targeting_id: ID of a saved_targeting audience (POST /v1/ads/audiences), expanded as the base targeting. Precedence: savedTargetingId, then `targeting`, then the flat fields.
-                targeting: Nested targeting object, same contract as POST /v1/ads/create and boost. Flat fields win per key.
+                targeting: Nested targeting object, same contract as POST /v1/ads/create and boost. Flat fields win per key. Object with keys: userOs (list of string) - Meta only. Operating systems and version ranges, such as iOS_ver_14.0_and_above or Android. Emitted as user_os. May also be supplied inside targeting.; userDevice (list of string) - Meta only. Device models such as iPhone. Emitted as user_device. May also be supplied inside targeting.; countries (list of string) - ISO 3166-1 alpha-2 country codes (e.g. ['US']).; regions (list of any) - Region/state targeting. `key` is the platform location ID from /v1/ads/targeting/search?dimension=geo&geoType=region. An entry may also be that id as a plain ...; cities (list of any) - City targeting. Optional `radius` + `distanceUnit` extend beyond the city limits; both must be set together or both omitted. `radius` is only honoured on ...; zips (list of objects with keys key, name) - Postal/ZIP targeting. `key` is the platform's postal location ID (e.g. Meta `US:94304`). Supported on Meta, Google, TikTok, Pinterest, X.; metros (list of objects with keys key, name) - DMA / metro-area targeting. `key` is the platform's metro ID (e.g. Meta `DMA:807`).; countryGroups (list of string) - Meta only. Continents and trade blocs (`geo_locations.country_groups`), for targeting a whole region without listing its countries. Combines with `countries` ...; customLocations (list of objects with keys latitude, longitude, radius, distanceUnit, name, address) - Point-radius (lat/lng) targeting (Meta custom_locations / Google proximity). Honoured on Meta and Google; ignored on platforms without radius support.; excludedLocations (object with keys countries, countryGroups, regions, cities, zips, places, neighborhoods, customLocations) - Geo to exclude from the audience. Mirrors the inclusion geo shape: excluded cities can carry a radius catchment and excluded custom (lat/lng) pins are ...; ageMin (integer) - Minimum age. Applied on Meta, TikTok, Pinterest, LinkedIn, X and Google Search/Display (Google excludes the age ranges outside the request); rejected with 400 ...; ageMax (integer) - Maximum age. Same per-platform application and clamping as ageMin.; gender (one of: all, male, female) - Restrict by gender. 'all' (default) targets everyone. Applied on Meta, TikTok, Pinterest, LinkedIn, X and Google Search/Display (Google excludes the other ...; incomeTier (one of: top_5, top_10, top_10_25, top_25_50) - Normalized household-income tier (ZIP/percentile based). Meta and TikTok express all four. Google maps only `top_10` (its INCOME_RANGE_90_UP); other tiers on ...; languages (list of string) - Language codes restricting the audience by language. Applied on Meta, Google, TikTok, LinkedIn, X and Pinterest; rejected with 400 on OpenAI. A code the ...; interests (list of objects with keys id, name) - Interest entities from /v1/ads/targeting/search?dimension=interest. Each carries the platform's opaque id. On Google, applied as ad-group interest criteria ...; behaviors (list of objects with keys id, name) - Behaviour entities from /v1/ads/targeting/search?dimension=behavior (Meta, TikTok and LinkedIn). On TikTok they target people who interacted with videos ...; workPositions (list of objects with keys id, name) - Meta only. Job title entities from /v1/ads/targeting/search?dimension=workPosition. Not interchangeable with the LinkedIn `jobTitles` URN fragments.; workEmployers (list of objects with keys id, name) - Meta only. Employer entities from /v1/ads/targeting/search?dimension=workEmployer.; workIndustries (list of objects with keys id, name) - Meta only. Work-industry entities from /v1/ads/targeting/search?dimension=workIndustry. Not interchangeable with the LinkedIn `industries` URN fragments.; industries (list of string) - LinkedIn B2B only. Industry URN id fragments, or the full urn:li:industry:* URN from /v1/ads/targeting/search?dimension=industry.; companySizes (list of string) - LinkedIn B2B only. Single-letter size codes (A to I), or the full urn:li:staffCountRange:* URN from /v1/ads/targeting/search?dimension=companySize.; seniorities (list of string) - LinkedIn B2B only. Seniority URN id fragments, or the full urn:li:seniority:* URN from /v1/ads/targeting/search?dimension=seniority.; jobFunctions (list of string) - LinkedIn B2B only. Function URN id fragments, or the full urn:li:function:* URN from /v1/ads/targeting/search?dimension=jobFunction.; audienceInclude (list of string) - Platform audience IDs to include, as returned by GET /v1/ads/audiences (Meta custom audience ids, TikTok audience ids, Pinterest customer list ids, LinkedIn ...; audienceExclude (list of string) - Platform audience IDs to exclude; same ID formats as audienceInclude. Not supported on OpenAI (400).
                 raw_targeting: Meta targeting spec sent as the BASE layer of the ad set's
         `targeting`, exactly as POST /v1/ads/create does: use it for
         anything the flat fields cannot express, such as a layered
@@ -27765,7 +27337,7 @@ def register_generated_tools(mcp, _get_client):
 
             Args:
                 creative_features: Meta enhancement settings for single or attached ads, and defaults for creatives[]. An item replaces the entire map, including with an empty object.
-                tracking
+                tracking: Object with keys: pixelId (string) - Meta Pixel ID to attach for offsite-conversion measurement.; urlTags (list of objects with keys key, value) - Click-URL params. Meta: stored on the creative as `url_tags` and returned by GET /v1/ads/{adId}/tracking-tags. App-promotion linkUrl stays byte-identical to ...
                 account_id: Facebook or Instagram SocialAccount ID. (required)
                 ad_account_id: Meta ad account ID, e.g. `act_123456789`. (required)
                 name: Ad display name. Used to derive campaign / ad set names.
@@ -27794,31 +27366,10 @@ def register_generated_tools(mcp, _get_client):
                 image_url: Image asset for single-creative shape. Mutually exclusive
         with `video` and with `creatives[]`. Required on the
         single-creative shape if neither `video` nor an existing post reference is supplied.
-                video: Video creative for single-creative shape. Mutually
-        exclusive with `imageUrl` and with `creatives[]`. Required
-        on the single-creative shape if neither `imageUrl` nor an existing post reference is supplied.
-                welcome_message: Custom chat welcome message (Meta's `page_welcome_message`,
-        "Mensaje de bienvenida" / "Mensaje predefinido" in Ads Manager).
-        Single-creative shape only; for `creatives[]` set it per entry.
-                carousel_cards: Messaging and CTWA only (a 400 on POST /v1/ads/call). A hand-built carousel
-        of 2-10 image cards, sent to Meta as `link_data.child_attachments`; every
-        card (and the carousel itself) carries the destination's messaging call to
-        action (WHATSAPP_MESSAGE, MESSAGE_PAGE or INSTAGRAM_MESSAGE), so a tap on any
-        card opens the conversation. Replaces `imageUrl` / `video` (sending either is
-        a 400). `body` is required as the primary text; `headline` is optional and
-        only names the creative (each card has its own `headline`); a top-level
-        `description` is a 400 (set it per card). `welcomeMessage`,
-        `whatsappPhoneNumber` and `destinations` apply as on a single-image ad. Also a
-        400 with `placementAssets`, `platformPostId`, `existingPostId` or
-        `objectStoryId`. Single-creative shape; for `creatives[]` set it per entry.
-                creatives: Multi-creative shape: N CTWA ads under one campaign + one
-        ad set, sharing budget and targeting. Mutually exclusive
-        with the top-level single-creative fields (`headline` /
-        `body` / `imageUrl` / `video`): setting both is a 400,
-        unlike `POST /v1/ads/create` where the top-level fields
-        are silently ignored in multi-creative mode. Each entry
-        supplies headline, body, and image/video, or a platformPostId or
-        objectStoryId reference. Fresh and existing creatives can be mixed.
+                video: Video creative for single-creative shape. Mutually exclusive with `imageUrl` and with `creatives[]`. Required on the single-creative shape if neither `imageUrl` nor an existing post reference is supplied. Object with keys: url (string) - Public URL of the video to upload. Provide either `url` or `id`.; id (string) - Reuse a video already uploaded to this ad account (list them with GET /v1/ads/videos) instead of re-uploading. Wins over `url`. Provide either `url` or `id`. ...; thumbnailUrl (string) - OPTIONAL: when omitted, the poster is auto-generated from Meta's own preferred video thumbnail. When Meta produces no candidate the request fails with a 502 ...
+                welcome_message: Custom chat welcome message (Meta's `page_welcome_message`, "Mensaje de bienvenida" / "Mensaje predefinido" in Ads Manager). Single-creative shape only; for `creatives[]` set it per entry. Object with keys: text (string, required) - Greeting shown when the chat opens. Replaces Meta's default (\"Hi! Can we help you?\").; prefillText (string) - Message put into the user's text input, ready to send. Replaces Meta's default (\"Hi! I want more info.\"). Lets one ad steer the opening message toward what it ...; quickReplies (list of objects with keys title, payload) - Tappable chips under the greeting instead of a prefilled message. Exactly one of prefillText or quickReplies. Put your own campaign or ad key in each payload: ...
+                carousel_cards: Messaging and CTWA only (a 400 on POST /v1/ads/call). A hand-built carousel of 2-10 image cards, sent to Meta as `link_data.child_attachments`; every card (and the carousel itself) carries the destination's messaging call to action (WHATSAPP_MESSAGE, MESSAGE_PAGE or INSTAGRAM_MESSAGE), so a tap on any card opens the conversation. Replaces `imageUrl` / `video` (sending either is a 400). `body` is required as the primary text; `headline` is optional and only names the creative (each card has its own `headline`); a top-level `description` is a 400 (set it per card). `welcomeMessage`, `whatsappPhoneNumber` and `destinations` apply as on a single-image ad. Also a 400 with `placementAssets`, `platformPostId`, `existingPostId` or `objectStoryId`. Single-creative shape; for `creatives[]` set it per entry. Each item is an object with keys: imageUrl (string, required) - Card image. Uploaded to the ad account and sent as the card image_hash (by URL on validateOnly).; headline (string) - Card title (Meta name).; description (string) - Card description, under the title.; callToAction (string) - Optional. Must equal the destination's messaging call to action (WHATSAPP_MESSAGE for whatsapp, MESSAGE_PAGE for messenger, INSTAGRAM_MESSAGE for ...; linkUrl (string) - Not accepted: a 400. The card tap opens the conversation, not a website.
+                creatives: Multi-creative shape: N CTWA ads under one campaign + one ad set, sharing budget and targeting. Mutually exclusive with the top-level single-creative fields (`headline` / `body` / `imageUrl` / `video`): setting both is a 400, unlike `POST /v1/ads/create` where the top-level fields are silently ignored in multi-creative mode. Each entry supplies headline, body, and image/video, or a platformPostId or objectStoryId reference. Fresh and existing creatives can be mixed. Each item is an object with keys: platformPostId (string) - Messaging and CTWA only. Platform post or reel ID, the same input boostPost takes as platformPostId. Facebook IDs become object_story_id; Instagram IDs become ...; existingPostId (string) - Alias of platformPostId, kept for existing callers. Sending both with different values is a 400.; objectStoryId (string) - Messaging and CTWA only. Raw Facebook pageId_postId reference, used as object_story_id even with an Instagram account. Mutually exclusive with platformPostId ...; creativeFeatures (object) - Replaces the top-level creativeFeatures map for this item. Omit to inherit; an empty object clears inherited enrollment choices.; headline (string); body (string) - Primary text shown above the image / video.; imageUrl (string) - Image asset. Mutually exclusive with this entry's `video`. Required if neither `video` nor an existing post reference is supplied.; video (object with keys url, id, thumbnailUrl) - Video creative. Mutually exclusive with this entry's `imageUrl`. Required if neither `imageUrl` nor an existing post reference is supplied.; welcomeMessage (object with keys text, prefillText) - Custom chat welcome message for this entry. See the top-level `welcomeMessage` for the single-creative shape.; carouselCards (list of objects with keys imageUrl, headline, description, callToAction, linkUrl) - A 2-10 card carousel for this entry instead of `imageUrl` / `video`; `body` is required. Same rules as the top-level `carouselCards`. Carousel and ...
                 ad_set_id: Attach the creatives to this EXISTING messaging ad set instead of
         building a campaign, so the ad set keeps its learning phase. It then
         owns budget, targeting and schedule, so `budgetAmount`, `budgetType`,
@@ -27864,55 +27415,37 @@ def register_generated_tools(mcp, _get_client):
                 countries: ISO 3166-1 alpha-2 country codes. Defaults to `["US"]` only
         when no other geo (`cities`, `regions`, `zips`, `metros`,
         `customLocations`) is supplied.
-                cities: City-level geo targeting for local CTWA campaigns. Each entry maps to Meta's
-        TargetingGeoLocationCity. `key` is Meta's city ID. `radius`
-        and `distance_unit` are coupled: set both or neither.
-        Meta enforces a minimum city radius (~17 km / 10 mi);
-        smaller values resolve to a 0-size audience and the ad
-        fails at launch. For a tighter catchment use customLocations
-        (lat/lng).
-                regions: Region / state-level geo targeting. `key` is Meta's region
-        ID (lookupable via GET /v1/ads/targeting/search?type=region).
-                zips: ZIP / postal-code geo targeting. `key` is the platform's
-        postal id resolved via /v1/ads/targeting/search.
-                metros: DMA / metro-area geo targeting. `key` is Meta's metro id
-        (e.g. `DMA:807`).
+                cities: City-level geo targeting for local CTWA campaigns. Each entry maps to Meta's TargetingGeoLocationCity. `key` is Meta's city ID. `radius` and `distance_unit` are coupled: set both or neither. Meta enforces a minimum city radius (~17 km / 10 mi); smaller values resolve to a 0-size audience and the ad fails at launch. For a tighter catchment use customLocations (lat/lng). Each item is an object with keys: key (string, required); radius (number); distance_unit (one of: mile, kilometer)
+                regions: Region / state-level geo targeting. `key` is Meta's region ID (lookupable via GET /v1/ads/targeting/search?type=region). Each item is an object with keys: key (string, required)
+                zips: ZIP / postal-code geo targeting. `key` is the platform's postal id resolved via /v1/ads/targeting/search. Each item is an object with keys: key (string, required); name (string)
+                metros: DMA / metro-area geo targeting. `key` is Meta's metro id (e.g. `DMA:807`). Each item is an object with keys: key (string, required); name (string)
                 country_groups: Meta only. Continents and trade blocs (`geo_locations.country_groups`),
         for targeting a whole region without listing its countries. Combines
         with `countries` rather than replacing it, and is also accepted under
         `excludedLocations`. Discoverable via
         `GET /v1/ads/targeting/search?dimension=geo&geoType=country_group`.
-                custom_locations: Point-radius geo (Meta `geo_locations.custom_locations`).
-        Use for targeting a radius around a specific lat/long when
-        no Meta city/region key fits. `distanceUnit` is required.
+                custom_locations: Point-radius geo (Meta `geo_locations.custom_locations`). Use for targeting a radius around a specific lat/long when no Meta city/region key fits. `distanceUnit` is required. Each item is an object with keys: latitude (number, required); longitude (number, required); radius (number, required); distanceUnit (one of: mile, kilometer; required); name (string); address (string)
                 age_min
                 age_max
-                interests
+                interests: Each item is an object with keys: id (string, required); name (string)
                 audience_id: Custom audience ID to target.
-                placements: Manual ad placements on the shared ad set. Omit
-        for automatic placements. When set, restricts delivery to the chosen surfaces,
-        mapped onto the ad set's `targeting.{publisher_platforms, facebook_positions, instagram_positions,
-        messenger_positions, audience_network_positions, threads_positions,
-        whatsapp_positions, device_platforms}`. Enum membership is validated here; Meta
-        additionally enforces co-selection rules and restricts which
-        placements are eligible for click-to-WhatsApp ads, returning an actionable
-        error which we surface.
+                placements: Manual ad placements on the shared ad set. Omit for automatic placements. When set, restricts delivery to the chosen surfaces, mapped onto the ad set's `targeting.{publisher_platforms, facebook_positions, instagram_positions, messenger_positions, audience_network_positions, threads_positions, whatsapp_positions, device_platforms}`. Enum membership is validated here; Meta additionally enforces co-selection rules and restricts which placements are eligible for click-to-WhatsApp ads, returning an actionable error which we surface. Object with keys: publisherPlatforms (list of string) - Top-level platforms to deliver on. A position field below is only honoured when its parent platform is included here.; facebookPositions (list of string); instagramPositions (list of string); messengerPositions (list of string); audienceNetworkPositions (list of string); threadsPositions (list of string); whatsappPositions (list of string); devicePlatforms (list of string) - Restrict by device. Omit to deliver on both mobile and desktop.
                 gender: Restrict the audience by gender (Meta `genders`). Omit or send all for everyone; all is ignored in adSetId attach mode. Stored on the ad and read back in `targeting.gender`.
                 languages: Audience languages (Meta `locales`). A bare ISO 639-1 code targets all regional variants ("en" = all English), a region-qualified code a specific one ("en_GB", "pt_BR"); unknown codes are rejected.
-                places: Meta place keys (from GET /v1/ads/targeting/search).
-                neighborhoods: Meta neighborhood keys (from GET /v1/ads/targeting/search).
+                places: Meta place keys (from GET /v1/ads/targeting/search). Each item is an object with keys: key (string, required)
+                neighborhoods: Meta neighborhood keys (from GET /v1/ads/targeting/search). Each item is an object with keys: key (string, required)
                 excluded_locations: Geo to exclude, same shape as POST /v1/ads/create (countries, countryGroups, regions, cities, zips, places, neighborhoods, customLocations).
-                behaviors: Behavior ids from /v1/ads/targeting/search?dimension=behavior. Meta: each dimension is its own flexible_spec entry (OR within, AND across). TikTok: video/creator interaction categories, sent as the ad group's actions.
-                work_positions
-                work_employers
-                work_industries
+                behaviors: Behavior ids from /v1/ads/targeting/search?dimension=behavior. Meta: each dimension is its own flexible_spec entry (OR within, AND across). TikTok: video/creator interaction categories, sent as the ad group's actions. Each item is an object with keys: id (string, required); name (string)
+                work_positions: Each item is an object with keys: id (string, required); name (string)
+                work_employers: Each item is an object with keys: id (string, required); name (string)
+                work_industries: Each item is an object with keys: id (string, required); name (string)
                 income_tier: Normalized household-income tier, same as POST /v1/ads/create. Incompatible with housing, employment and credit specialAdCategories.
                 user_os: Meta `user_os`, e.g. ["iOS_ver_14.0_and_above"].
                 user_device: Meta `user_device`.
                 audience_include: Custom or lookalike audience ids to include.
                 audience_exclude: Custom or lookalike audience ids to exclude.
                 saved_targeting_id: ID of a saved_targeting audience (POST /v1/ads/audiences), expanded as the base targeting. Precedence: savedTargetingId, then `targeting`, then the flat fields.
-                targeting: Nested targeting object, same contract as POST /v1/ads/create and boost. Flat fields win per key.
+                targeting: Nested targeting object, same contract as POST /v1/ads/create and boost. Flat fields win per key. Object with keys: userOs (list of string) - Meta only. Operating systems and version ranges, such as iOS_ver_14.0_and_above or Android. Emitted as user_os. May also be supplied inside targeting.; userDevice (list of string) - Meta only. Device models such as iPhone. Emitted as user_device. May also be supplied inside targeting.; countries (list of string) - ISO 3166-1 alpha-2 country codes (e.g. ['US']).; regions (list of any) - Region/state targeting. `key` is the platform location ID from /v1/ads/targeting/search?dimension=geo&geoType=region. An entry may also be that id as a plain ...; cities (list of any) - City targeting. Optional `radius` + `distanceUnit` extend beyond the city limits; both must be set together or both omitted. `radius` is only honoured on ...; zips (list of objects with keys key, name) - Postal/ZIP targeting. `key` is the platform's postal location ID (e.g. Meta `US:94304`). Supported on Meta, Google, TikTok, Pinterest, X.; metros (list of objects with keys key, name) - DMA / metro-area targeting. `key` is the platform's metro ID (e.g. Meta `DMA:807`).; countryGroups (list of string) - Meta only. Continents and trade blocs (`geo_locations.country_groups`), for targeting a whole region without listing its countries. Combines with `countries` ...; customLocations (list of objects with keys latitude, longitude, radius, distanceUnit, name, address) - Point-radius (lat/lng) targeting (Meta custom_locations / Google proximity). Honoured on Meta and Google; ignored on platforms without radius support.; excludedLocations (object with keys countries, countryGroups, regions, cities, zips, places, neighborhoods, customLocations) - Geo to exclude from the audience. Mirrors the inclusion geo shape: excluded cities can carry a radius catchment and excluded custom (lat/lng) pins are ...; ageMin (integer) - Minimum age. Applied on Meta, TikTok, Pinterest, LinkedIn, X and Google Search/Display (Google excludes the age ranges outside the request); rejected with 400 ...; ageMax (integer) - Maximum age. Same per-platform application and clamping as ageMin.; gender (one of: all, male, female) - Restrict by gender. 'all' (default) targets everyone. Applied on Meta, TikTok, Pinterest, LinkedIn, X and Google Search/Display (Google excludes the other ...; incomeTier (one of: top_5, top_10, top_10_25, top_25_50) - Normalized household-income tier (ZIP/percentile based). Meta and TikTok express all four. Google maps only `top_10` (its INCOME_RANGE_90_UP); other tiers on ...; languages (list of string) - Language codes restricting the audience by language. Applied on Meta, Google, TikTok, LinkedIn, X and Pinterest; rejected with 400 on OpenAI. A code the ...; interests (list of objects with keys id, name) - Interest entities from /v1/ads/targeting/search?dimension=interest. Each carries the platform's opaque id. On Google, applied as ad-group interest criteria ...; behaviors (list of objects with keys id, name) - Behaviour entities from /v1/ads/targeting/search?dimension=behavior (Meta, TikTok and LinkedIn). On TikTok they target people who interacted with videos ...; workPositions (list of objects with keys id, name) - Meta only. Job title entities from /v1/ads/targeting/search?dimension=workPosition. Not interchangeable with the LinkedIn `jobTitles` URN fragments.; workEmployers (list of objects with keys id, name) - Meta only. Employer entities from /v1/ads/targeting/search?dimension=workEmployer.; workIndustries (list of objects with keys id, name) - Meta only. Work-industry entities from /v1/ads/targeting/search?dimension=workIndustry. Not interchangeable with the LinkedIn `industries` URN fragments.; industries (list of string) - LinkedIn B2B only. Industry URN id fragments, or the full urn:li:industry:* URN from /v1/ads/targeting/search?dimension=industry.; companySizes (list of string) - LinkedIn B2B only. Single-letter size codes (A to I), or the full urn:li:staffCountRange:* URN from /v1/ads/targeting/search?dimension=companySize.; seniorities (list of string) - LinkedIn B2B only. Seniority URN id fragments, or the full urn:li:seniority:* URN from /v1/ads/targeting/search?dimension=seniority.; jobFunctions (list of string) - LinkedIn B2B only. Function URN id fragments, or the full urn:li:function:* URN from /v1/ads/targeting/search?dimension=jobFunction.; audienceInclude (list of string) - Platform audience IDs to include, as returned by GET /v1/ads/audiences (Meta custom audience ids, TikTok audience ids, Pinterest customer list ids, LinkedIn ...; audienceExclude (list of string) - Platform audience IDs to exclude; same ID formats as audienceInclude. Not supported on OpenAI (400).
                 raw_targeting: Meta targeting spec sent as the BASE layer of the ad set's
         `targeting`, exactly as POST /v1/ads/create does: use it for
         anything the flat fields cannot express, such as a layered
@@ -28484,8 +28017,8 @@ def register_generated_tools(mcp, _get_client):
             end_user_first_name: End user's legal first name. Required when the country has an action/ID-verification (Onfido) requirement.
             end_user_last_name: End user's legal last name. Same condition as endUserFirstName.
             values: requirementId → textual value
-            documents: One per document requirement. Each is EITHER inline base64 OR a `documentId` returned by POST /v1/phone-numbers/kyc/upload-document (use the upload endpoint for large files to stay under the request-size limit).
-            address"""
+            documents: One per document requirement. Each is EITHER inline base64 OR a `documentId` returned by POST /v1/phone-numbers/kyc/upload-document (use the upload endpoint for large files to stay under the request-size limit). Each item is an object with keys: requirementId (string, required); filename (string, required); base64 (string, required)
+            address: Object with keys: requirementId (string); country_code (string); business_name (string); first_name (string); last_name (string); street_address (string); extended_address (string) - Address complement: apartment, suite, unit, or the quadra/lote used in some countries. Optional. Does not substitute for a building number on street_address.; locality (string); administrative_area (string); postal_code (string)"""
         client = _get_client()
         try:
             response = client.phone_numbers.submit_phone_number_kyc(
@@ -28651,7 +28184,7 @@ def register_generated_tools(mcp, _get_client):
                 country: ISO 3166-1 alpha-2 country code (must be a regulated/KYC country). (required)
                 area_code: Area code (NDC) the eventual number must be in. Hard constraint carried by the link; the end customer filling the form makes no area choice. Options come from GET /v1/phone-numbers/availability (areaOptions).
                 language: Language of the hosted page: its copy, the carrier requirement texts (translated once per country and cached), the pre-submit review notes and the status emails to the end customer. Omitted: the browser language of the end customer, falling back to English. The end customer can also switch with `?lang=` on the page.
-                branding: Optional white-label of the hosted page the end customer sees.
+                branding: Optional white-label of the hosted page the end customer sees. Object with keys: companyName (string) - Your company name, shown on the hosted page.; logoUrl (string) - Logo shown above the form.; brandColor (string) - Hex color (e.g. #1a73e8) used as a brand accent on the page.
                 redirect_url: Where to send the end customer's browser after a successful
         submit. On completion Zernio appends `kyc=submitted` and
         `country=<ISO-2>` as query params. When omitted, the hosted
@@ -28690,38 +28223,34 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Port numbers in
 
-            Submit a port-in for one or more existing numbers from another carrier.
-            Creates the carrier order(s), attaches the end-user (current account)
-            info plus the LOA and invoice documents, and submits to the losing
-            carrier. The transfer PIN is forwarded to the carrier and never stored.
-            Ported numbers arrive voice-ready (and SMS-ready where the order
-            supports messaging).
+        Submit a port-in for one or more existing numbers from another carrier.
+        Creates the carrier order(s), attaches the end-user (current account)
+        info plus the LOA and invoice documents, and submits to the losing
+        carrier. The transfer PIN is forwarded to the carrier and never stored.
+        Ported numbers arrive voice-ready (and SMS-ready where the order
+        supports messaging).
 
-            Run the portability check (POST /v1/phone-numbers/port-in/check) and
-            upload the two documents (POST /v1/phone-numbers/port-in/documents)
-            first. Uploaded documents must be attached to an order within 30
-            minutes or the carrier deletes them, so upload right before this call.
-            The carrier may split the numbers into several orders (by country,
-            number type, losing carrier); `orders` carries per-order results, and a
-            partial failure still returns 201 with the failed orders' `error` set
-            (they stay as cancellable drafts).
+        Run the portability check (POST /v1/phone-numbers/port-in/check) and
+        upload the two documents (POST /v1/phone-numbers/port-in/documents)
+        first. Uploaded documents must be attached to an order within 30
+        minutes or the carrier deletes them, so upload right before this call.
+        The carrier may split the numbers into several orders (by country,
+        number type, losing carrier); `orders` carries per-order results, and a
+        partial failure still returns 201 with the failed orders' `error` set
+        (they stay as cancellable drafts).
 
-            Non-US/CA numbers additionally need the country-specific values from
-            GET /v1/phone-numbers/port-in/requirements, ...
+        Non-US/CA numbers additionally need the country-specific values from
+        GET /v1/phone-numbers/port-in/requirements, ...
 
-            Args:
-                phone_numbers: E.164 numbers to port in. (required)
-                end_user: End-user / current-carrier account info that authorizes the port. The
-        losing carrier matches every field against its records and rejects the
-        whole port on a mismatch, so enter values exactly as they appear on the
-        carrier bill.
-         (required)
-                loa_document_id: Document id from POST /v1/phone-numbers/port-in/documents (kind=loa). (required)
-                invoice_document_id: Document id from POST /v1/phone-numbers/port-in/documents (kind=invoice). (required)
-                foc_datetime_requested: Requested port date; the carrier confirms the actual FOC later. US/CA default is one week out (shifted off weekends); international orders are scheduled into the carrier's next allowed porting window at or after this date.
-                customer_reference
-                port_type: Whether the losing account ports all its numbers (full) or keeps some (partial).
-                requirements: Country-specific requirement values for international ports (from GET /v1/phone-numbers/port-in/requirements). Not needed for US/CA. The LOA and invoice requirements are satisfied automatically by loaDocumentId/invoiceDocumentId, and address-type requirements by the endUser service address."""
+        Args:
+            phone_numbers: E.164 numbers to port in. (required)
+            end_user: End-user / current-carrier account info that authorizes the port. The losing carrier matches every field against its records and rejects the whole port on a mismatch, so enter values exactly as they appear on the carrier bill. Object with keys: entityName (string, required) - Account holder / business name, as on the carrier account.; authPersonName (string, required) - Full name (first + last) of the person authorizing the port, which must match the LOA signature.; billingPhoneNumber (string) - Phone number on the losing carrier's bill. Defaults to the ported number itself on single-number orders. Validated as a real phone number when present.; accountNumber (string, required) - Account number with the losing carrier. Required (carriers reject ports without it; on prepaid mobile plans it is often the phone number itself).; pinPasscode (string) - Transfer PIN. Required for US/CA mobile numbers (wireless carriers reject PIN-less ports). Forwarded to the carrier, never stored. International porting codes ...; taxIdentifier (string) - Company tax id on the carrier account (EU ports, e.g. Spanish CIF).; businessIdentifier (string) - Business registration id on the carrier account (EU ports).; streetAddress (string, required); extendedAddress (string); locality (string, required); administrativeArea (string) - Region. Required for US/CA as the 2-letter state/province code (full names are accepted and normalized); optional elsewhere.; postalCode (string, required) - Postal code. Validated as a US ZIP / Canadian postal code for US/CA; free-form elsewhere.; countryCode (one of: US, CA, GB, ES, DE, FR, NL, AU, BR; required) - Service-address country (a supported port-in country). (required)
+            loa_document_id: Document id from POST /v1/phone-numbers/port-in/documents (kind=loa). (required)
+            invoice_document_id: Document id from POST /v1/phone-numbers/port-in/documents (kind=invoice). (required)
+            foc_datetime_requested: Requested port date; the carrier confirms the actual FOC later. US/CA default is one week out (shifted off weekends); international orders are scheduled into the carrier's next allowed porting window at or after this date.
+            customer_reference
+            port_type: Whether the losing account ports all its numbers (full) or keeps some (partial).
+            requirements: Country-specific requirement values for international ports (from GET /v1/phone-numbers/port-in/requirements). Not needed for US/CA. The LOA and invoice requirements are satisfied automatically by loaDocumentId/invoiceDocumentId, and address-type requirements by the endUser service address. Each item is an object with keys: requirementTypeId (string, required) - The requirement's id, from the requirements endpoint.; fieldValue (string, required) - Text value, ISO datetime, or a documentId from POST /v1/phone-numbers/port-in/documents, per the requirement's kind."""
         client = _get_client()
         try:
             response = client.phone_numbers.create_phone_number_port_in(
@@ -28968,7 +28497,7 @@ def register_generated_tools(mcp, _get_client):
             number_type: (required)
             values: requirementId to declared textual value.
             address: Declared address (street_address, locality, ...), so a mismatched proof-of-address can be flagged.
-            docs: (required)"""
+            docs: Each item is an object with keys: requirementId (string, required); documentId (string, required) - Id from POST /v1/phone-numbers/kyc/upload-document.; issuedAt (string) - Date printed on the document (YYYY-MM-DD), for slots the regulator windows such as proof of address. The pre-submit review trusts it over its own read of the ... (required)"""
         client = _get_client()
         try:
             response = client.phone_numbers.review_phone_number_kyc_packet(
@@ -29033,7 +28562,7 @@ def register_generated_tools(mcp, _get_client):
         Args:
             id: (required)
             values
-            documents
+            documents: Each item is an object with keys: requirementId (string, required); filename (string, required); base64 (string, required)
             address: Same shape as the KYC submit address."""
         client = _get_client()
         try:
@@ -29071,7 +28600,7 @@ def register_generated_tools(mcp, _get_client):
         Args:
             id: (required)
             text: The reply message to the reviewer.
-            attachments: Files (PDF/JPG/PNG/WEBP, max 10 MB each) whose links are added to the reply."""
+            attachments: Files (PDF/JPG/PNG/WEBP, max 10 MB each) whose links are added to the reply. Each item is an object with keys: filename (string, required); base64 (string, required) - Base64-encoded file bytes."""
         client = _get_client()
         try:
             response = client.phone_numbers.reply_to_phone_number_reviewer(
@@ -29112,10 +28641,10 @@ def register_generated_tools(mcp, _get_client):
         Args:
             id: (required)
             message: Your message to the reviewer.
-            documents: Corrected requirement documents, each keyed to its requirement.
+            documents: Corrected requirement documents, each keyed to its requirement. Each item is an object with keys: requirementId (string, required); filename (string); base64 (string) - Base64-encoded file bytes (or supply documentId instead).; documentId (string) - Id of a document already uploaded out-of-band.; issuedAt (string) - Date printed on the document (YYYY-MM-DD), for slots the regulator windows such as proof of address. The pre-submit review trusts it over its own read of the ...
             address: A corrected address record, keyed to its requirement.
             entity_type
-            attachments: Loose files (PDF/JPG/PNG/WEBP, max 10 MB each) whose links are added to your message."""
+            attachments: Loose files (PDF/JPG/PNG/WEBP, max 10 MB each) whose links are added to your message. Each item is an object with keys: filename (string, required); base64 (string, required) - Base64-encoded file bytes."""
         client = _get_client()
         try:
             response = client.phone_numbers.respond_to_phone_number_reviewer(
@@ -29398,8 +28927,8 @@ def register_generated_tools(mcp, _get_client):
             Args:
                 title: Stored on the post for reference/display only. This field is NOT used as the video title when publishing. To set a YouTube video title, use platformSpecificData.title on the youtube platform target (falls back to the first line of content when omitted).
                 content: Post caption/text. Optional when media is attached, all platforms have customContent, every platform entry is an X Article (platformSpecificData.article), or every platform entry is a LinkedIn text-free reshare (platformSpecificData.reshareUrl with no text). Required for other text-only posts.
-                media_items: Media attached to every platform in the request (a platform entry can override it with `customMedia`). Each entry needs a publicly reachable HTTPS `url`; `type` (image, video, gif, document) is inferred from the URL extension when omitted and a `type` that contradicts the extension is rejected with 400. Upload files with `POST /v1/media/presign` first; per-platform size, duration and format limits are listed on each platform schema.
-                platforms: Target platforms and accounts for this post. Required for non-draft posts (returns 400 if empty). Drafts can omit platforms.
+                media_items: Media attached to every platform in the request (a platform entry can override it with `customMedia`). Each entry needs a publicly reachable HTTPS `url`; `type` (image, video, gif, document) is inferred from the URL extension when omitted and a `type` that contradicts the extension is rejected with 400. Upload files with `POST /v1/media/presign` first; per-platform size, duration and format limits are listed on each platform schema. Each item is an object with keys: type (one of: image, video, gif, document); url (string) - A media item with a null, missing or empty url is dropped.; title (string) - Optional title for the media item. Used as the document title for LinkedIn PDF/carousel posts. If omitted, falls back to the post title, then the filename.; altText (string) - Accessibility alternative text for an image, applied on every platform that supports it: Instagram (feed images only, not Reels/Stories), Facebook, Threads, X ...; filename (string); size (integer) - Optional file size in bytes; mimeType (string) - Optional MIME type (e.g. image/jpeg, video/mp4); thumbnail (string) - Optional custom thumbnail/cover image URL for videos. Supported for Facebook video posts, Facebook Reels, regular video uploads, and LinkedIn video posts. Max ...; instagramThumbnail (string) - Custom cover image URL for Instagram Reels. Can also be set via platformSpecificData.instagramThumbnail or platformSpecificData.reelCover. Resolution order: ...; subtitles (list of objects with keys url, language) - Subtitle (closed caption) files for a video item, in SRT or WebVTT. Each language may appear once per video. Sent to YouTube, Facebook videos, LinkedIn, X and ...; tiktokProcessed (boolean) - Internal flag indicating the image was resized for TikTok
+                platforms: Target platforms and accounts for this post. Required for non-draft posts (returns 400 if empty). Drafts can omit platforms. Each item is an object with keys: platform (string, required); accountId (string, required); customContent (string) - Platform-specific text override. When set, this content is used instead of the top-level post content for this platform. Useful for tailoring captions per ...; customMedia (list of objects with keys type, url, title, altText, filename, size, mimeType, thumbnail, instagramThumbnail, subtitles, tiktokProcessed); scheduledFor (string) - Optional per-platform scheduled time override. When omitted, the top-level scheduledFor is used.; platformSpecificData (object with keys article, replyToTweetId, quoteTweetId, replySettings, threadItems, poll, longVideo, geoRestriction, paidPartnership, madeWithAi, sensitiveMedia)
                 scheduled_for: When to publish. Required unless `publishNow` is true, `queuedFromProfile` is set, or the post is a draft. An ISO 8601 value with a `Z` or offset (`2026-01-15T10:00:00Z`, `2026-01-15T11:00:00+01:00`) is taken as-is; a value without one (`2026-01-15T10:00:00` or `2026-01-15 10:00`) is read as local time in `timezone`. A value already in the past is published synchronously in the same request. Ignored when `publishNow` is true.
                 publish_now: Publish to every platform synchronously in this request instead of scheduling; the response then carries each platform result and `platformPostUrl`, with HTTP 207 when some platforms failed. Takes precedence over `scheduledFor`; ignored when `isDraft` is true.
                 is_draft: When true, saves the post as a draft. When none of scheduledFor, publishNow, or queuedFromProfile are provided, the post defaults to draft automatically.
@@ -29410,9 +28939,9 @@ def register_generated_tools(mcp, _get_client):
                 mentions: Stored for reference only. This field does NOT automatically create @mentions when publishing. For LinkedIn @mentions, use the /v1/accounts/{accountId}/linkedin-mentions endpoint to resolve profile URLs to URNs, then embed the returned mentionFormat directly in the post content field.
                 crossposting_enabled: Stored on the post and echoed back on reads. Publishing does not branch on it: every entry in `platforms` is published regardless, so treat it as a label for your own tooling.
                 metadata: Free-form key/value pairs of your own, stored on the post and returned on reads and in webhook payloads. Zernio also writes the bookkeeping keys `usageCounted`, `usageRefunded` and `hidden` into this object; do not set them, and they are stripped from webhook payloads.
-                tiktok_settings: Root-level TikTok settings applied to the TikTok platforms sent in the same request. Merged into each platform's platformSpecificData, with platform-specific settings taking precedence.
-                facebook_settings: Root-level Facebook settings applied to the Facebook platforms sent in the same request. Merged into each platform's platformSpecificData.facebookSettings, with platform-specific settings taking precedence.
-                recycling
+                tiktok_settings: Root-level TikTok settings applied to the TikTok platforms sent in the same request. Merged into each platform's platformSpecificData, with platform-specific settings taking precedence. Object with keys: draft (boolean) - When true, sends the post to the TikTok Creator Inbox as a draft instead of publishing immediately. The creator receives an inbox notification to complete ...; privacyLevel (string) - One of the values returned by the TikTok creator info API for the account. Accounts connected through the TikTok for Business app publish videos as public ...; allowComment (boolean) - Allow comments on the post; allowDuet (boolean) - Allow duets (required for video posts); allowStitch (boolean) - Allow stitches (required for video posts); commercialContentType (one of: none, brand_organic, brand_content) - Type of commercial content disclosure. Sufficient on its own: \"brand_organic\" (\"Your Brand\") implies isBrandOrganicPost and \"brand_content\" (\"Branded ...; brandPartnerPromote (boolean) - Whether the post promotes a brand partner (branded content / paid partnership). Only needed to disclose BOTH types at once (set it alongside ...; isBrandOrganicPost (boolean) - Whether the post promotes the creator's own brand (brand organic). Only needed to disclose BOTH types at once (set it alongside commercialContentType ...; contentPreviewConfirmed (boolean) - User has confirmed they previewed the content; expressConsentGiven (boolean) - User has given express consent for posting; mediaType (one of: video, photo) - Optional override. Defaults based on provided media items.; videoCoverTimestampMs (integer) - Optional for video posts. Timestamp in milliseconds to select which frame to use as thumbnail (defaults to 1000ms/1 second). Ignored when videoCoverImageUrl ...; videoCoverImageUrl (string) - Optional for video posts. URL of a custom thumbnail image (JPG, PNG, or WebP, max 20MB). Any downloadable URL works: we rehost it ourselves. The image is ...; photoCoverIndex (integer) - Optional for photo carousels. Index of image to use as cover, 0-based (defaults to 0/first image).; autoAddMusic (boolean) - When true, TikTok may add recommended music (photos only). With the brand-organic or branded-content toggle on, TikTok allows Commercial Music Library tracks ...; musicSoundInfo (object with keys musicSoundId, musicSoundVolume, musicSoundStart, musicSoundEnd) - Commercial Music Library track to attach. Accounts connected through the TikTok for Business app only: a developer-app account rejects the post at publish ...; videoOriginalSoundVolume (integer) - Volume of the video's own sound when a commercial track is attached (0 to 100). Requires musicSoundInfo. Video posts only. Omitted, TikTok keeps its API ...; videoMadeWithAi (boolean) - Set true to disclose AI-generated content. Accounts connected through the TikTok for Business app carry the disclosure on video posts only: the business photo ...; locationId (string) - Location tag to attach, as the id of a result from GET /v1/accounts/{accountId}/tiktok/locations. Accounts connected through the TikTok for Business app and ...; locationName (string) - Display name of the location tag, as returned next to its id. Required with locationId; a locationId without it is rejected at creation.; isAdsOnly (boolean) - Set true to publish the video as an \"Only show in ads\" post: it is kept off the profile and exists to be used as a Spark Ad. Accounts connected through the ...; description (string) - Optional long-form caption for photo posts (max 4000 chars). Recommended when content exceeds 90 chars, as photo titles are auto-truncated. Falls back to the ...
+                facebook_settings: Root-level Facebook settings applied to the Facebook platforms sent in the same request. Merged into each platform's platformSpecificData.facebookSettings, with platform-specific settings taking precedence. Object with keys: draft (boolean) - When true, creates the post as a draft in Facebook Publishing Tools instead of publishing immediately. Supported for feed posts (text, link, image, video) and ...; carouselCards (list of objects with keys link, name, description) - Renders the post as a multi-link carousel (organic Page post). When set, mediaItems must be provided with the same length and all items must be images (no ...; carouselLink (string) - Optional top-level \"See more\" destination shown on the carousel end card. Defaults to the first card's link when omitted. Only used together with carouselCards.; textFormatPresetId (string) - Facebook-defined preset ID that renders the post as large text on a colored background (Graph `text_format_preset_id`). Supply the raw numeric ID from Meta; ...
+                recycling: Object with keys: enabled (boolean) - Set to false to disable recycling on this post; gap (integer) - Number of interval units between each repost. Required when enabling recycling.; gapFreq (one of: week, month) - Interval unit for the gap. Defaults to 'month'.; startDate (string) - When to start the recycling cycle. Defaults to the post's scheduledFor date.; expireCount (integer or null) - Stop recycling after this many copies have been created. Send null on update to clear this limit.; expireDate (string or null) - Stop recycling after this date, regardless of count. Send null on update to clear this limit.; contentVariations (list of string) - Array of content variations for recycled copies. On each recycle, the next variation is used in round-robin order. Recommended for X and Pinterest to avoid ...
                 queued_from_profile: Profile ID to schedule via queue. When provided without scheduledFor, the post is auto-assigned to the next available slot. Do not call /v1/queue/next-slot and use that time in scheduledFor, as that bypasses queue locking.
                 queue_id: Specific queue ID to use when scheduling via queue.
         Only used when queuedFromProfile is also provided.
@@ -29512,8 +29041,8 @@ def register_generated_tools(mcp, _get_client):
             post_id: (required)
             title: Stored on the post for reference/display only. This field is NOT used as the video title when publishing. To set a YouTube video title, use platformSpecificData.title on the youtube platform target (falls back to the first line of content when omitted).
             content
-            media_items
-            platforms: Target platforms and accounts for this post. Each item must include platform and accountId.
+            media_items: Each item is an object with keys: type (one of: image, video, gif, document); url (string) - A media item with a null, missing or empty url is dropped.; title (string) - Optional title for the media item. Used as the document title for LinkedIn PDF/carousel posts. If omitted, falls back to the post title, then the filename.; altText (string) - Accessibility alternative text for an image, applied on every platform that supports it: Instagram (feed images only, not Reels/Stories), Facebook, Threads, X ...; filename (string); size (integer) - Optional file size in bytes; mimeType (string) - Optional MIME type (e.g. image/jpeg, video/mp4); thumbnail (string) - Optional custom thumbnail/cover image URL for videos. Supported for Facebook video posts, Facebook Reels, regular video uploads, and LinkedIn video posts. Max ...; instagramThumbnail (string) - Custom cover image URL for Instagram Reels. Can also be set via platformSpecificData.instagramThumbnail or platformSpecificData.reelCover. Resolution order: ...; subtitles (list of objects with keys url, language) - Subtitle (closed caption) files for a video item, in SRT or WebVTT. Each language may appear once per video. Sent to YouTube, Facebook videos, LinkedIn, X and ...; tiktokProcessed (boolean) - Internal flag indicating the image was resized for TikTok
+            platforms: Target platforms and accounts for this post. Each item must include platform and accountId. Each item is an object with keys: platform (string, required); accountId (string, required); customContent (string) - Platform-specific text override.; customMedia (list of objects with keys type, url, title, altText, filename, size, mimeType, thumbnail, instagramThumbnail, subtitles, tiktokProcessed); scheduledFor (string) - Optional per-platform scheduled time override.; platformSpecificData (object) - A <platform>Settings namespace (e.g. facebookSettings, tiktokSettings) omitted from the request is preserved from the stored post. Sending the key replaces ...
             scheduled_for
             publish_now
             is_draft: When omitted, the post keeps its current draft status. Send `false` to promote a draft to scheduled (combined with `scheduledFor`, `publishNow`, or a queue).
@@ -29526,9 +29055,9 @@ def register_generated_tools(mcp, _get_client):
             metadata
             queued_from_profile: Profile ID to schedule via queue.
             queue_id: Specific queue ID to use when scheduling via queue.
-            tiktok_settings: Root-level TikTok settings applied to the TikTok platforms sent in the same request. Merged into each platform's platformSpecificData, with platform-specific settings taking precedence. Returns 400 if sent without a platforms array.
-            facebook_settings: Root-level Facebook settings applied to the Facebook platforms sent in the same request. Merged into each platform's platformSpecificData.facebookSettings, with platform-specific settings taking precedence. Returns 400 if sent without a platforms array.
-            recycling"""
+            tiktok_settings: Root-level TikTok settings applied to the TikTok platforms sent in the same request. Merged into each platform's platformSpecificData, with platform-specific settings taking precedence. Returns 400 if sent without a platforms array. Object with keys: draft (boolean) - When true, sends the post to the TikTok Creator Inbox as a draft instead of publishing immediately. The creator receives an inbox notification to complete ...; privacyLevel (string) - One of the values returned by the TikTok creator info API for the account. Accounts connected through the TikTok for Business app publish videos as public ...; allowComment (boolean) - Allow comments on the post; allowDuet (boolean) - Allow duets (required for video posts); allowStitch (boolean) - Allow stitches (required for video posts); commercialContentType (one of: none, brand_organic, brand_content) - Type of commercial content disclosure. Sufficient on its own: \"brand_organic\" (\"Your Brand\") implies isBrandOrganicPost and \"brand_content\" (\"Branded ...; brandPartnerPromote (boolean) - Whether the post promotes a brand partner (branded content / paid partnership). Only needed to disclose BOTH types at once (set it alongside ...; isBrandOrganicPost (boolean) - Whether the post promotes the creator's own brand (brand organic). Only needed to disclose BOTH types at once (set it alongside commercialContentType ...; contentPreviewConfirmed (boolean) - User has confirmed they previewed the content; expressConsentGiven (boolean) - User has given express consent for posting; mediaType (one of: video, photo) - Optional override. Defaults based on provided media items.; videoCoverTimestampMs (integer) - Optional for video posts. Timestamp in milliseconds to select which frame to use as thumbnail (defaults to 1000ms/1 second). Ignored when videoCoverImageUrl ...; videoCoverImageUrl (string) - Optional for video posts. URL of a custom thumbnail image (JPG, PNG, or WebP, max 20MB). Any downloadable URL works: we rehost it ourselves. The image is ...; photoCoverIndex (integer) - Optional for photo carousels. Index of image to use as cover, 0-based (defaults to 0/first image).; autoAddMusic (boolean) - When true, TikTok may add recommended music (photos only). With the brand-organic or branded-content toggle on, TikTok allows Commercial Music Library tracks ...; musicSoundInfo (object with keys musicSoundId, musicSoundVolume, musicSoundStart, musicSoundEnd) - Commercial Music Library track to attach. Accounts connected through the TikTok for Business app only: a developer-app account rejects the post at publish ...; videoOriginalSoundVolume (integer) - Volume of the video's own sound when a commercial track is attached (0 to 100). Requires musicSoundInfo. Video posts only. Omitted, TikTok keeps its API ...; videoMadeWithAi (boolean) - Set true to disclose AI-generated content. Accounts connected through the TikTok for Business app carry the disclosure on video posts only: the business photo ...; locationId (string) - Location tag to attach, as the id of a result from GET /v1/accounts/{accountId}/tiktok/locations. Accounts connected through the TikTok for Business app and ...; locationName (string) - Display name of the location tag, as returned next to its id. Required with locationId; a locationId without it is rejected at creation.; isAdsOnly (boolean) - Set true to publish the video as an \"Only show in ads\" post: it is kept off the profile and exists to be used as a Spark Ad. Accounts connected through the ...; description (string) - Optional long-form caption for photo posts (max 4000 chars). Recommended when content exceeds 90 chars, as photo titles are auto-truncated. Falls back to the ...
+            facebook_settings: Root-level Facebook settings applied to the Facebook platforms sent in the same request. Merged into each platform's platformSpecificData.facebookSettings, with platform-specific settings taking precedence. Returns 400 if sent without a platforms array. Object with keys: draft (boolean) - When true, creates the post as a draft in Facebook Publishing Tools instead of publishing immediately. Supported for feed posts (text, link, image, video) and ...; carouselCards (list of objects with keys link, name, description) - Renders the post as a multi-link carousel (organic Page post). When set, mediaItems must be provided with the same length and all items must be images (no ...; carouselLink (string) - Optional top-level \"See more\" destination shown on the carousel end card. Defaults to the first card's link when omitted. Only used together with carouselCards.; textFormatPresetId (string) - Facebook-defined preset ID that renders the post as large text on a colored background (Graph `text_format_preset_id`). Supply the raw numeric ID from Meta; ...
+            recycling: Object with keys: enabled (boolean) - Set to false to disable recycling on this post; gap (integer) - Number of interval units between each repost. Required when enabling recycling.; gapFreq (one of: week, month) - Interval unit for the gap. Defaults to 'month'.; startDate (string) - When to start the recycling cycle. Defaults to the post's scheduledFor date.; expireCount (integer or null) - Stop recycling after this many copies have been created. Send null on update to clear this limit.; expireDate (string or null) - Stop recycling after this date, regardless of count. Send null on update to clear this limit.; contentVariations (list of string) - Array of content variations for recycled copies. On each recycle, the next variation is used in round-robin order. Recommended for X and Pinterest to avoid ..."""
         client = _get_client()
         try:
             response = client.posts.update_post(
@@ -29978,7 +29507,7 @@ def register_generated_tools(mcp, _get_client):
         Args:
             account_id: (required)
             catalog_account_id
-            product: (required)"""
+            product: Object with keys: retailerId (string) - Your SKU; unique inside the catalog; name (string); description (string); url (string) - Product page; imageUrl (string); additionalImageUrls (list of string); price (number) - Major units, e.g. 12.99; currency (string) - ISO 4217, e.g. EUR; salePrice (number); salePriceStartDate (string) - ISO 8601; salePriceEndDate (string) - ISO 8601; availability (one of: in stock, out of stock, preorder, available for order, discontinued, pending); condition (one of: new, refurbished, used); brand (string); category (string); googleProductCategory (string); productType (string); gtin (string); mpn (string); inventory (integer); visibility (one of: published, staging); color (string); size (string); gender (one of: female, male, unisex); material (string); pattern (string); customLabel0 (string); customLabel1 (string); customLabel2 (string); customLabel3 (string); customLabel4 (string) (required)"""
         client = _get_client()
         try:
             response = client.product_catalogs.create_ad_catalog_product(
@@ -30012,7 +29541,7 @@ def register_generated_tools(mcp, _get_client):
         Args:
             account_id: (required)
             catalog_account_id
-            requests: (required)"""
+            requests: Each item is an object with keys: method (one of: CREATE, UPDATE, DELETE; required); product (object with keys retailerId, name, description, url, imageUrl, additionalImageUrls, price, currency, salePrice, salePriceStartDate, salePriceEndDate, availability, condition, brand, category, googleProductCategory, productType, gtin, mpn, inventory, visibility, color, size, gender, material, pattern, customLabel0, customLabel1, customLabel2, customLabel3, customLabel4, required) (required)"""
         client = _get_client()
         try:
             response = client.product_catalogs.batch_ad_catalog_products(
@@ -30087,7 +29616,7 @@ def register_generated_tools(mcp, _get_client):
         Args:
             account_id: (required)
             catalog_account_id
-            product: (required)"""
+            product: Object with keys: retailerId (string) - Your SKU; unique inside the catalog; name (string); description (string); url (string) - Product page; imageUrl (string); additionalImageUrls (list of string); price (number) - Major units, e.g. 12.99; currency (string) - ISO 4217, e.g. EUR; salePrice (number); salePriceStartDate (string) - ISO 8601; salePriceEndDate (string) - ISO 8601; availability (one of: in stock, out of stock, preorder, available for order, discontinued, pending); condition (one of: new, refurbished, used); brand (string); category (string); googleProductCategory (string); productType (string); gtin (string); mpn (string); inventory (integer); visibility (one of: published, staging); color (string); size (string); gender (one of: female, male, unisex); material (string); pattern (string); customLabel0 (string); customLabel1 (string); customLabel2 (string); customLabel3 (string); customLabel4 (string) (required)"""
         client = _get_client()
         try:
             response = client.product_catalogs.update_ad_catalog_product(
@@ -30161,7 +29690,7 @@ def register_generated_tools(mcp, _get_client):
             account_id: (required)
             catalog_account_id
             name: (required)
-            schedule"""
+            schedule: Object with keys: interval (one of: HOURLY, DAILY, WEEKLY; required); url (string, required); hour (integer); dayOfWeek (one of: SUNDAY, MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY)"""
         client = _get_client()
         try:
             response = client.product_catalogs.create_ad_catalog_feed(
@@ -30484,8 +30013,8 @@ def register_generated_tools(mcp, _get_client):
             product_type
             tags: Replaces the full tag list.
             status: archived hides the product everywhere; draft keeps it editable but unpublished.
-            seo: Search-engine title and description overrides.
-            variants: Price changes per variant. Only the listed variants change."""
+            seo: Search-engine title and description overrides. Object with keys: title (string); description (string)
+            variants: Price changes per variant. Only the listed variants change. Each item is an object with keys: id (string, required) - Variant id from the product response.; price (any) - Decimal amount in the store currency. Numbers are formatted to two decimals.; compareAtPrice (any) - Strike-through price. Send null to remove it."""
         client = _get_client()
         try:
             response = client.products.update_product(
@@ -30712,7 +30241,7 @@ def register_generated_tools(mcp, _get_client):
             profile_id: Profile ID (required)
             name: Queue name (e.g., Evening Posts) (required)
             timezone: IANA timezone (required)
-            slots: (required)
+            slots: Each item is an object with keys: dayOfWeek (integer) - Day of week (0=Sunday, 6=Saturday); time (string) - Time in HH:mm format (24-hour) (required)
             active"""
         client = _get_client()
         try:
@@ -30754,7 +30283,7 @@ def register_generated_tools(mcp, _get_client):
             queue_id: Queue ID to update (optional)
             name: Queue name
             timezone: (required)
-            slots: (required)
+            slots: Each item is an object with keys: dayOfWeek (integer) - Day of week (0=Sunday, 6=Saturday); time (string) - Time in HH:mm format (24-hour) (required)
             active
             set_as_default: Make this queue the default
             reshuffle_existing: Whether to reschedule existing queued posts to match new slots"""
@@ -30923,10 +30452,10 @@ def register_generated_tools(mcp, _get_client):
         Args:
             profile_id: (required)
             brand_id
-            brand
+            brand: Object with keys: displayName (string, required); legalName (string, required) - Exactly as on IRS records.; legalEntityType (one of: LIMITED_LIABILITY_COMPANY, SOLE_PROPRIETORSHIP, PARTNERSHIP, CORPORATION, S_CORPORATION; required); organizationType (one of: PRIVATE_PROFIT, PUBLIC_PROFIT, NON_PROFIT, GOVERNMENT; required); websiteUrl (string, required); taxId (string, required) - US: the EIN, 9 digits, optionally NN-NNNNNNN. Elsewhere: the national tax or company registration id.; stockSymbol (string) - EXCHANGE:SYMBOL. Required for PUBLIC_PROFIT.; address (object with keys line1, line2, city, state, postalCode, country, required); contact (object with keys firstName, lastName, title, email, phone, required)
             display_name: Shown as the sender name. (required)
             use_case: (required)
-            profile: (required)
+            profile: Object with keys: description (string, required); logoUrl (string, required) - 224x224, max 50 KB. Upload any image through POST /v1/rcs/assets to get a compliant URL.; heroUrl (string, required) - Banner, 1440x448, max 200 KB. Upload through POST /v1/rcs/assets.; brandColor (string, required) - Hex colour, e.g. #1A73E8. Needs 4.5:1 contrast against white.; privacyPolicyUrl (string, required); termsUrl (string, required); phone (object with keys number, label); website (object with keys url, label); email (object with keys address, label) (required)
             sms_fallback_from: One of your SMS-enabled numbers. Phones without RCS get the message as SMS from it."""
         client = _get_client()
         try:
@@ -30990,8 +30519,8 @@ def register_generated_tools(mcp, _get_client):
             agent_id: (required)
             display_name
             use_case
-            profile
-            brand
+            profile: Object with keys: description (string, required); logoUrl (string, required) - 224x224, max 50 KB. Upload any image through POST /v1/rcs/assets to get a compliant URL.; heroUrl (string, required) - Banner, 1440x448, max 200 KB. Upload through POST /v1/rcs/assets.; brandColor (string, required) - Hex colour, e.g. #1A73E8. Needs 4.5:1 contrast against white.; privacyPolicyUrl (string, required); termsUrl (string, required); phone (object with keys number, label); website (object with keys url, label); email (object with keys address, label)
+            brand: Object with keys: displayName (string, required); legalName (string, required) - Exactly as on IRS records.; legalEntityType (one of: LIMITED_LIABILITY_COMPANY, SOLE_PROPRIETORSHIP, PARTNERSHIP, CORPORATION, S_CORPORATION; required); organizationType (one of: PRIVATE_PROFIT, PUBLIC_PROFIT, NON_PROFIT, GOVERNMENT; required); websiteUrl (string, required); taxId (string, required) - US: the EIN, 9 digits, optionally NN-NNNNNNN. Elsewhere: the national tax or company registration id.; stockSymbol (string) - EXCHANGE:SYMBOL. Required for PUBLIC_PROFIT.; address (object with keys line1, line2, city, state, postalCode, country, required); contact (object with keys firstName, lastName, title, email, phone, required)
             sms_fallback_from"""
         client = _get_client()
         try:
@@ -31059,9 +30588,9 @@ def register_generated_tools(mcp, _get_client):
             agent_id: (required)
             company_overview: (required)
             agent_overview: (required)
-            interactions: (required)
+            interactions: Each item is an object with keys: type (one of: TRANSACTIONAL_UPDATES, CUSTOMER_SUPPORT, LOYALTY_OR_REWARD, MARKETING_OR_PROMOTIONAL, ACCOUNT_ALERTS, TWO_WAY_CONVERSATION, OTHER; required); description (string) - Required when type is OTHER. (required)
             message_examples: (required)
-            consent: (required)
+            consent: Object with keys: optInMethods (list of objects with keys type, description, required); callToAction (string, required) - The opt-in wording people agree to.; callToActionUrl (string) - Required for WEBSITE opt-in.; callToActionMediaUrl (string) - Screenshot of the opt-in. Required for WEBSITE and MOBILE_APP opt-in.; doubleOptIn (boolean, required); doubleOptInMessage (string) - Required when doubleOptIn is true.; optInMessage (string, required); helpResponse (string, required); optOutResponse (string, required) (required)
             test_video_url: Public video of a test phone sending START, STOP and HELP plus one example conversation. (required)
             additional_information"""
         client = _get_client()
@@ -31202,7 +30731,7 @@ def register_generated_tools(mcp, _get_client):
             agent_id: (required)
             to: Recipient number (E.164; formatting is normalized). (required)
             text
-            content
+            content: Object with keys: type (one of: text; required); text (string, required); suggestions (list of objects with keys type, text, postbackData)
             fallback_text
             ttl_seconds: Seconds before an undelivered message expires."""
         client = _get_client()
@@ -31687,7 +31216,7 @@ def register_generated_tools(mcp, _get_client):
             platform: (required)
             name: (required)
             description
-            steps
+            steps: Each item is an object with keys: order (integer, required); delayMinutes (integer, required); message (object with keys text); template (object with keys name, language, variableMapping)
             exit_on_reply
             exit_on_unsubscribe"""
         client = _get_client()
@@ -31752,7 +31281,7 @@ def register_generated_tools(mcp, _get_client):
             sequence_id: (required)
             name
             description
-            steps: Replace the full step list. Only allowed while the sequence is draft or paused.
+            steps: Replace the full step list. Only allowed while the sequence is draft or paused. Each item is an object with keys: order (integer, required); delayMinutes (integer, required); message (object with keys text); template (object with keys name, language, variableMapping)
             exit_on_reply
             exit_on_unsubscribe"""
         client = _get_client()
@@ -32185,37 +31714,30 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Start a carrier registration
 
-            Starts the US carrier registration that a number needs before SMS
-            delivers: 10DLC (standard company or sole-proprietor) or toll-free
-            verification. 10DLC needs `brand` + `campaign`; toll-free needs
-            `tollFree`. Approval is asynchronous; poll
-            `GET /v1/sms/registrations/{id}` (sole-prop registrations first need
-            the OTP step: a code is texted to the brand's mobile number, submit it
-            via `/verify-otp`).
+        Starts the US carrier registration that a number needs before SMS
+        delivers: 10DLC (standard company or sole-proprietor) or toll-free
+        verification. 10DLC needs `brand` + `campaign`; toll-free needs
+        `tollFree`. Approval is asynchronous; poll
+        `GET /v1/sms/registrations/{id}` (sole-prop registrations first need
+        the OTP step: a code is texted to the brand's mobile number, submit it
+        via `/verify-otp`).
 
-            Already have an approved registration? Add another number to it with
-            `POST /v1/phone-numbers/{id}/sms/reuse-registration` instead
-            of registering (and paying the carrier brand fee) again.
+        Already have an approved registration? Add another number to it with
+        `POST /v1/phone-numbers/{id}/sms/reuse-registration` instead
+        of registering (and paying the carrier brand fee) again.
 
-            Rather have your client fill in the legal business details? Create a
-            share link with `POST /v1/sms/registrations/share`.
+        Rather have your client fill in the legal business details? Create a
+        share link with `POST /v1/sms/registrations/share`.
 
-            Args:
-                registration_type: (required)
-                phone_numbers: Your numbers this registration covers. When omitted or empty on a 10DLC registration, defaults to your active SMS-enabled US local numbers not already covered by another registration.
-                brand: Required for 10DLC. The legal entity behind the traffic (TCR brand).
-                campaign: Required for 10DLC. What you'll send and how recipients opt in/out.
-        The opt-in/opt-out/help auto-responses (`optinMessage`,
-        `optoutMessage`, `helpMessage`) are optional: when omitted, a
-        compliant, brand-named template with the carrier-required
-        disclosures is generated for you. If you do send them, they must
-        name the registered brand and carry the disclosures. Submissions
-        that don't are rewritten to the compliant template before the
-        campaign is filed.
-                messaging_brand_name: DBA / trade name used to brand message content (samples and auto-replies) when it differs from the legal name, e.g. a sole proprietor texting under a business name. The legal `brand.displayName` is still what the carrier vets.
-                wizard_values: Raw dashboard-wizard answers, stored only to prefill edit-and-resubmit. API integrators can omit.
-                resubmit_request_id: Resubmit a registration that was returned for changes. Updates it in place instead of creating a new one.
-                toll_free: Required for toll_free."""
+        Args:
+            registration_type: (required)
+            phone_numbers: Your numbers this registration covers. When omitted or empty on a 10DLC registration, defaults to your active SMS-enabled US local numbers not already covered by another registration.
+            brand: Required for 10DLC. The legal entity behind the traffic (TCR brand). Object with keys: entityType (one of: PRIVATE_PROFIT, PUBLIC_PROFIT, NON_PROFIT, GOVERNMENT, SOLE_PROPRIETOR; required); displayName (string, required); companyName (string) - Legal company name. Required for every entityType except SOLE_PROPRIETOR.; ein (string) - Required for every entityType except SOLE_PROPRIETOR.; phone (string) - Business contact phone. Required for every entityType except SOLE_PROPRIETOR.; mobilePhone (string) - Required for SOLE_PROPRIETOR; the verification OTP is texted there (US/CA mobile).; street (string, required); city (string, required); state (string, required); postalCode (string, required); country (string, required) - ISO 3166-1 alpha-2 country where the company is registered. Companies worldwide can register standard 10DLC (non-US companies use their local tax ID in `ein`; ...; email (string) - Brand contact email; defaults to your account email when omitted.; website (string, required) - The brand's website (sole proprietors may use a social profile such as LinkedIn or a business Facebook page). Carriers verify the brand against it; a bare ...; vertical (one of: AGRICULTURE, COMMUNICATION, CONSTRUCTION, EDUCATION, ENERGY, ENTERTAINMENT, FINANCIAL, GAMBLING, GOVERNMENT, HEALTHCARE, HOSPITALITY, HUMAN_RESOURCES, INSURANCE, LEGAL, MANUFACTURING, NGO, POLITICAL, POSTAL, PROFESSIONAL, REAL_ESTATE, RETAIL, TECHNOLOGY, TRANSPORTATION; required); stockSymbol (string)
+            campaign: Required for 10DLC. What you'll send and how recipients opt in/out. The opt-in/opt-out/help auto-responses (`optinMessage`, `optoutMessage`, `helpMessage`) are optional: when omitted, a compliant, brand-named template with the carrier-required disclosures is generated for you. If you do send them, they must name the registered brand and carry the disclosures. Submissions that don't are rewritten to the compliant template before the campaign is filed. Object with keys: usecase (string, required); subUsecases (list of string) - The concrete kinds of messages a MIXED campaign sends (the carrier registry requires 2-5, and reviewers match them against the sample messages). Omitted: a ...; description (string, required); messageFlow (string, required) - How a recipient ends up receiving your messages (the opt-in flow). Include a link to the page or form where they opt in, because carrier reviewers reject ...; sample1 (string, required); sample2 (string, required) - Second example message; carriers require two distinct samples, so it must differ from sample1.; helpMessage (string); optinKeywords (string, required); optinMessage (string); optoutKeywords (string, required); optoutMessage (string); helpKeywords (string, required); embeddedLink (boolean) - Whether messages carry links. Auto-derived from the samples when omitted, so the declaration matches what the reviewer reads.; embeddedPhone (boolean) - Whether messages carry phone numbers. Auto-derived from the samples when omitted.; numberPool (boolean); ageGated (boolean); directLending (boolean); privacyPolicyLink (string) - Link to your privacy policy. Recommended: reviewers check that it says mobile information is not sold or shared with third parties for promotional purposes. A ...; termsAndConditionsLink (string) - Link to your terms & conditions. A bare domain is normalized to https://.
+            messaging_brand_name: DBA / trade name used to brand message content (samples and auto-replies) when it differs from the legal name, e.g. a sole proprietor texting under a business name. The legal `brand.displayName` is still what the carrier vets.
+            wizard_values: Raw dashboard-wizard answers, stored only to prefill edit-and-resubmit. API integrators can omit.
+            resubmit_request_id: Resubmit a registration that was returned for changes. Updates it in place instead of creating a new one.
+            toll_free: Required for toll_free. Object with keys: businessName (string, required); corporateWebsite (string, required); phoneNumbers (list of string, required); useCase (string, required); useCaseSummary (string, required); productionMessageContent (string, required); optInWorkflow (string, required) - How recipients opt in to your messages.; optInWorkflowImageUrls (list of string, required) - Screenshot URL(s) showing the opt-in flow (at least one).; messageVolume (one of: 10, 100, 1,000, 10,000, 100,000, 250,000, 500,000, 750,000, 1,000,000, 5,000,000, 10,000,000+; required) - Expected monthly message volume tier.; additionalInformation (string, required); businessAddr1 (string, required); businessAddr2 (string); businessCity (string, required); businessState (string, required); businessZip (string, required); businessContactFirstName (string, required); businessContactLastName (string, required); businessContactEmail (string, required); businessContactPhone (string, required); businessRegistrationNumber (string, required); businessRegistrationType (string, required) - e.g. EIN (US), Companies House (UK), ABN (AU).; businessRegistrationCountry (string, required) - ISO 3166-1 alpha-2."""
         client = _get_client()
         try:
             response = client.sms.start_sms_registration(
@@ -32478,7 +32000,7 @@ def register_generated_tools(mcp, _get_client):
             note: Answer for the reviewer. Required when no files are sent.
             files: Hosted document URLs returned by POST /v1/sms/opt-in-proof.
             request_id: The `reviewRequest.id` you are answering. When it no longer matches the open request the reply is refused with 409.
-            answers: One answer per point of the open `reviewRequest`, each point at most once. Required (every point) when the request has points; a missing, repeated or unknown point is a 400 naming the point ids. At most 10 files per reply."""
+            answers: One answer per point of the open `reviewRequest`, each point at most once. Required (every point) when the request has points; a missing, repeated or unknown point is a 400 naming the point ids. At most 10 files per reply. Each item is an object with keys: pointId (string, required); text (string) - For `text` points (at least 3 characters).; url (string) - For `link` and `link_or_file` points.; files (list of string) - Hosted document URLs from POST /v1/sms/opt-in-proof, for `file` and `link_or_file` points."""
         client = _get_client()
         try:
             response = client.sms.respond_to_sms_registration_review(
@@ -32755,8 +32277,8 @@ def register_generated_tools(mcp, _get_client):
 
         Args:
             ad_id: (required)
-            url_tags: Meta only. Click-URL params appended to a freshly-rebuilt creative. Meta dynamic macros ({{ad.id}}, {{campaign.id}}, {{placement}}, ...) are sent through unescaped so Meta expands them; every other character is percent-encoded.
-            creative: Meta only. OPTIONAL: omit to preserve the existing creative verbatim (default). Provide it only to rebuild the creative explicitly, or for creatives whose object_story_spec Meta strips.
+            url_tags: Meta only. Click-URL params appended to a freshly-rebuilt creative. Meta dynamic macros ({{ad.id}}, {{campaign.id}}, {{placement}}, ...) are sent through unescaped so Meta expands them; every other character is percent-encoded. Each item is an object with keys: key (string, required); value (string, required)
+            creative: Meta only. OPTIONAL: omit to preserve the existing creative verbatim (default). Provide it only to rebuild the creative explicitly, or for creatives whose object_story_spec Meta strips. Object with keys: headline (string, required); body (string, required); callToAction (string, required); linkUrl (string, required); imageUrl (string, required); videoUrl (string)
             tracking_url_template: Google only. Full tracking template (must contain {lpurl}).
             final_url_suffix: Google only. Parse-only key=value params.
             dynamic_value_parameters: LinkedIn only. key -> dynamic value enum (CAMPAIGN_ID, CAMPAIGN_NAME, CREATIVE_ID, ...).
@@ -34431,8 +33953,8 @@ def register_generated_tools(mcp, _get_client):
 
         Args:
             content: Post text content
-            platforms: Target platforms (same format as POST /v1/posts) (required)
-            media_items: Root media items shared across platforms"""
+            platforms: Target platforms (same format as POST /v1/posts) Each item is an object with keys: platform (one of: twitter, instagram, tiktok, youtube, facebook, linkedin, bluesky, threads, reddit, pinterest, telegram, snapchat, googlebusiness, discord, slack; required); accountId (string) - Account to validate against. For twitter, resolves X Premium status to apply the 25000 character limit instead of 280.; customContent (string); platformSpecificData (object); customMedia (list of objects with keys type, url, title, altText, filename, size, mimeType, thumbnail, instagramThumbnail, subtitles, tiktokProcessed) (required)
+            media_items: Root media items shared across platforms Each item is an object with keys: type (one of: image, video, gif, document); url (string) - A media item with a null, missing or empty url is dropped.; title (string) - Optional title for the media item. Used as the document title for LinkedIn PDF/carousel posts. If omitted, falls back to the post title, then the filename.; altText (string) - Accessibility alternative text for an image, applied on every platform that supports it: Instagram (feed images only, not Reels/Stories), Facebook, Threads, X ...; filename (string); size (integer) - Optional file size in bytes; mimeType (string) - Optional MIME type (e.g. image/jpeg, video/mp4); thumbnail (string) - Optional custom thumbnail/cover image URL for videos. Supported for Facebook video posts, Facebook Reels, regular video uploads, and LinkedIn video posts. Max ...; instagramThumbnail (string) - Custom cover image URL for Instagram Reels. Can also be set via platformSpecificData.instagramThumbnail or platformSpecificData.reelCover. Resolution order: ...; subtitles (list of objects with keys url, language) - Subtitle (closed caption) files for a video item, in SRT or WebVTT. Each language may appear once per video. Sent to YouTube, Facebook videos, LinkedIn, X and ...; tiktokProcessed (boolean) - Internal flag indicating the image was resized for TikTok"""
         client = _get_client()
         try:
             response = client.validate.validate_post(
@@ -34980,12 +34502,12 @@ def register_generated_tools(mcp, _get_client):
             voicemail_greeting: Custom spoken greeting; empty string restores the default.
             business_hours_enabled: Outside the windows, inbound skips the forward and goes to voicemail. Off = 24/7.
             business_hours_timezone: IANA timezone the windows are evaluated in.
-            business_hours
+            business_hours: Each item is an object with keys: day (integer, required) - 0 = Sunday.; open (string, required); close (string, required)
             blocked_callers: E.164 numbers rejected before answer. Replaces the whole list; bare 10-digit values are normalized as US numbers.
             forward_caller_id: Caller ID on the forwarded leg: your number (`business`) or the original caller's (`caller`).
             ivr_enabled: IVR menu (supersedes the plain forward within business hours).
             ivr_prompt
-            ivr_options"""
+            ivr_options: Each item is an object with keys: digit (string, required); forwardTo (string, required) - tel:+E164, sip:..., or wss://... destination for this digit.; label (string)"""
         client = _get_client()
         try:
             response = client.voice.enable_voice_on_number(
@@ -35911,15 +35433,14 @@ def register_generated_tools(mcp, _get_client):
                 category: Template category (required)
                 language: Template language code (e.g., en_US) (required)
                 parameter_format: Variable style: POSITIONAL ({{1}}, the default) or NAMED ({{customer_name}}). Named templates provide examples via body_text_named_params / header_text_named_params. Inferred as NAMED when omitted but a named-params example is present.
-                components: Template components (header, body, footer, buttons, carousel, limited_time_offer). Required for custom templates, omit when using library_template_name.
+                components: Template components (header, body, footer, buttons, carousel, limited_time_offer). Required for custom templates, omit when using library_template_name. Each item is an object with keys: type (one of: header; required); format (one of: text, image, video, gif, document, location; required); text (string) - Header text (may include {{1}} variable). Used when format is TEXT.; example (object with keys header_text, header_text_named_params, header_handle)
                 library_template_name: Name of a pre-built template from Meta's template library (e.g., "appointment_reminder",
         "auto_pay_reminder_1", "address_update"). When provided, the template is pre-approved
         by Meta with no review wait. Omit components when using this field.
                 library_template_body_inputs: Optional body customizations for library templates. Available options depend on the
         template (e.g., add_contact_number, add_learn_more_link, add_security_recommendation,
         add_track_package_link, code_expiration_minutes).
-                library_template_button_inputs: Optional button customizations for library templates. Each item specifies button type
-        and configuration (e.g., URL, phone number, quick reply).
+                library_template_button_inputs: Optional button customizations for library templates. Each item specifies button type and configuration (e.g., URL, phone number, quick reply). Each item is an object with keys: type (one of: quick_reply, url, phone_number); url (object with keys base_url); phone_number (string)
                 message_send_ttl_seconds: Delivery validity window in seconds: a message not delivered within it is dropped. Range depends on category: AUTHENTICATION 30 to 900, UTILITY 30 to 43200 (12h), MARKETING 43200 to 2592000 (30 days); -1 (create only) keeps the 30-day default on AUTHENTICATION and UTILITY. Meta defaults to 600 for AUTHENTICATION and 30 days otherwise. If Meta later recategorises the template, it clears the TTL (read it back to check)."""
         client = _get_client()
         try:
@@ -36009,7 +35530,7 @@ def register_generated_tools(mcp, _get_client):
             template_name: Template name (the family). (required)
             account_id: WhatsApp account ID (required)
             language: Language code of the variant to edit (e.g. en_US, es, pt_BR). Required when the family has several languages. Body only: a language query parameter on PATCH is a 400.
-            components: Updated template components. Optional when only message_send_ttl_seconds changes; at least one of the two is required.
+            components: Updated template components. Optional when only message_send_ttl_seconds changes; at least one of the two is required. Each item is an object with keys: type (one of: header; required); format (one of: text, image, video, gif, document, location; required); text (string) - Header text (may include {{1}} variable). Used when format is TEXT.; example (object with keys header_text, header_text_named_params, header_handle)
             message_send_ttl_seconds: Delivery validity window in seconds: a message not delivered within it is dropped. Range depends on category: AUTHENTICATION 30 to 900, UTILITY 30 to 43200 (12h), MARKETING 43200 to 2592000 (30 days); -1 is not accepted here (Meta treats it as an empty edit); send a value in range. A TTL-only edit keeps an APPROVED template approved, no re-review. Meta defaults to 600 for AUTHENTICATION and 30 days otherwise. If Meta later recategorises the template, it clears the TTL (read it back to check)."""
         client = _get_client()
         try:
@@ -36112,7 +35633,7 @@ def register_generated_tools(mcp, _get_client):
         Args:
             template_id: Meta template id (numeric). (required)
             account_id: WhatsApp account ID (required)
-            components: Updated template components. Optional when only message_send_ttl_seconds changes; at least one of the two is required.
+            components: Updated template components. Optional when only message_send_ttl_seconds changes; at least one of the two is required. Each item is an object with keys: type (one of: header; required); format (one of: text, image, video, gif, document, location; required); text (string) - Header text (may include {{1}} variable). Used when format is TEXT.; example (object with keys header_text, header_text_named_params, header_handle)
             message_send_ttl_seconds: Delivery validity window in seconds: a message not delivered within it is dropped. Range depends on category: AUTHENTICATION 30 to 900, UTILITY 30 to 43200 (12h), MARKETING 43200 to 2592000 (30 days); -1 is not accepted here (Meta treats it as an empty edit); send a value in range. A TTL-only edit keeps an APPROVED template approved, no re-review. Meta defaults to 600 for AUTHENTICATION and 30 days otherwise. If Meta later recategorises the template, it clears the TTL (read it back to check)."""
         client = _get_client()
         try:
@@ -36332,7 +35853,7 @@ def register_generated_tools(mcp, _get_client):
             account_id: WhatsApp account ID (required)
             enable_welcome_message: When true, Meta sends a `request_welcome` event the first time a person opens a chat with the number.
             prompts: Ice breakers shown to a person opening a chat. Tapping one sends its text as a normal message.
-            commands: Slash commands shown when a person types `/`. Names are unique, letters, digits and underscores, without the slash."""
+            commands: Slash commands shown when a person types `/`. Names are unique, letters, digits and underscores, without the slash. Each item is an object with keys: command_name (string, required); command_description (string, required)"""
         client = _get_client()
         try:
             response = client.whatsapp.set_whats_app_conversational_automation(
@@ -38407,9 +37928,9 @@ def register_generated_tools(mcp, _get_client):
             flow_cta: CTA button text (e.g. 'Book Now', 'Sign Up') (required)
             flow_action: Action type: navigate opens a screen directly, data_exchange hits your endpoint first
             flow_token: Unique token to correlate responses. If omitted, auto-generated as '<flowId>:<uuid>' so the response can be attributed to this flow in the Flow Responses view.
-            flow_action_payload
+            flow_action_payload: Object with keys: screen (string) - First screen ID to navigate to; data (object) - Optional data to pass to the screen
             body: Message body text (required)
-            header
+            header: Object with keys: type (one of: text); text (string)
             footer: Optional footer text
             draft: Set true to test an unpublished (DRAFT) flow"""
         client = _get_client()
@@ -38869,8 +38390,8 @@ def register_generated_tools(mcp, _get_client):
             end_user_first_name: End user's legal first name. Required when the country has an action/ID-verification (Onfido) requirement.
             end_user_last_name: End user's legal last name. Same condition as endUserFirstName.
             values: requirementId → textual value
-            documents: One per document requirement. Each is EITHER inline base64 OR a `documentId` returned by POST /v1/whatsapp/phone-numbers/kyc/upload-document (use the upload endpoint for large files to stay under the request-size limit).
-            address"""
+            documents: One per document requirement. Each is EITHER inline base64 OR a `documentId` returned by POST /v1/whatsapp/phone-numbers/kyc/upload-document (use the upload endpoint for large files to stay under the request-size limit). Each item is an object with keys: requirementId (string, required); filename (string, required); base64 (string, required)
+            address: Object with keys: requirementId (string); country_code (string); business_name (string); first_name (string); last_name (string); street_address (string); extended_address (string) - Address complement: apartment, suite, unit, or the quadra/lote used in some countries. Optional. Does not substitute for a building number on street_address.; locality (string); administrative_area (string); postal_code (string)"""
         client = _get_client()
         try:
             response = client.whatsapp_phone_numbers.submit_whats_app_number_kyc(
@@ -39015,7 +38536,7 @@ def register_generated_tools(mcp, _get_client):
                 country: ISO 3166-1 alpha-2 country code (must be a regulated/KYC country). (required)
                 area_code: Area code (NDC) the eventual number must be in. Hard constraint carried by the link; the end customer filling the form makes no area choice. Options come from GET /v1/phone-numbers/availability (areaOptions).
                 language: Language of the hosted page: its copy, the carrier requirement texts (translated once per country and cached), the pre-submit review notes and the status emails to the end customer. Omitted: the browser language of the end customer, falling back to English. The end customer can also switch with `?lang=` on the page.
-                branding: Optional white-label of the hosted page the end customer sees.
+                branding: Optional white-label of the hosted page the end customer sees. Object with keys: companyName (string) - Your company name, shown on the hosted page.; logoUrl (string) - Logo shown above the form.; brandColor (string) - Hex color (e.g. #1a73e8) used as a brand accent on the page.
                 redirect_url: Where to send the end customer's browser after a successful
         submit. On completion Zernio appends `kyc=submitted` and
         `country=<ISO-2>` as query params. When omitted, the hosted
@@ -39136,7 +38657,7 @@ def register_generated_tools(mcp, _get_client):
         Args:
             id: (required)
             values
-            documents
+            documents: Each item is an object with keys: requirementId (string, required); filename (string, required); base64 (string, required)
             address: Same shape as the KYC submit address."""
         client = _get_client()
         try:
@@ -39408,8 +38929,8 @@ def register_generated_tools(mcp, _get_client):
             platform
             name: (required)
             description
-            nodes
-            edges
+            nodes: Each item is an object with keys: id (string, required) - Stable node id referenced by edges; type (one of: trigger, send_message, wait_for_reply, condition, set_variable, delay, webhook, ai, handoff, start_call, a_b_split, set_field, enroll_sequence, add_tag, remove_tag, end; required) - Node kind. The 16 supported types break into four groups: messaging (send_message), control flow (trigger, condition, delay, wait_for_reply, a_b_split, end), ...; config (object) - Type-specific settings. All string fields support `{{variable}}` interpolation against the run's variable bag (resolved at execution time). **trigger**: `{ ...; position (object with keys x, y) - Canvas coordinates (ignored by the executor; used by the visual builder).; label (string) - Optional display name shown on the builder canvas and inspector, falling back to the node type when absent. The nodes array is replaced wholesale on update, ...
+            edges: Each item is an object with keys: id (string, required); source (string, required) - Source node id; target (string, required) - Target node id; sourceHandle (string or null) - Selects a branch output of a multi-output node. Null (or omitted) = the node's single/default output. Known handles per node type: - **condition**: a rule's ...
             entry_node_id: The trigger node id; derived from the single trigger node if omitted"""
         client = _get_client()
         try:
@@ -39474,8 +38995,8 @@ def register_generated_tools(mcp, _get_client):
             workflow_id: (required)
             name
             description
-            nodes
-            edges
+            nodes: Each item is an object with keys: id (string, required) - Stable node id referenced by edges; type (one of: trigger, send_message, wait_for_reply, condition, set_variable, delay, webhook, ai, handoff, start_call, a_b_split, set_field, enroll_sequence, add_tag, remove_tag, end; required) - Node kind. The 16 supported types break into four groups: messaging (send_message), control flow (trigger, condition, delay, wait_for_reply, a_b_split, end), ...; config (object) - Type-specific settings. All string fields support `{{variable}}` interpolation against the run's variable bag (resolved at execution time). **trigger**: `{ ...; position (object with keys x, y) - Canvas coordinates (ignored by the executor; used by the visual builder).; label (string) - Optional display name shown on the builder canvas and inspector, falling back to the node type when absent. The nodes array is replaced wholesale on update, ...
+            edges: Each item is an object with keys: id (string, required); source (string, required) - Source node id; target (string, required) - Target node id; sourceHandle (string or null) - Selects a branch output of a multi-output node. Null (or omitted) = the node's single/default output. Known handles per node type: - **condition**: a rule's ...
             entry_node_id
             account_id: Reassign the workflow to a different `SocialAccount`. `platform` and `profileId` are derived server-side from the new account (the client never sends them directly). The account must belong to the caller's team and be on a workflow-supported platform (whatsapp, instagram, facebook, telegram, twitter, bluesky, reddit). Changing this triggers a graph revalidation against the new platform."""
         client = _get_client()

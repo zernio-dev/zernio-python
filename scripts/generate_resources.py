@@ -299,7 +299,7 @@ def generate_method_body(
     # carry query params (e.g. GBP writes take the payload in the body plus a
     # locationId query param). Both must be forwarded, not one or the other.
     use_query_params = http_method.upper() in ("GET", "DELETE") and query_params
-    use_body_params = http_method.upper() in ("POST", "PUT", "PATCH") and body_params
+    use_body_params = http_method.upper() in ("POST", "PUT", "PATCH", "DELETE") and body_params
     use_query_on_post = http_method.upper() in ("POST", "PUT", "PATCH") and query_params
     # Only _get and _post accept a `headers` kwarg (see BaseClient); no
     # operation on PUT/PATCH/DELETE currently has a header param.
@@ -352,10 +352,18 @@ def generate_method_body(
             f"        return {await_prefix}self._client.{client_method}({', '.join(call_args)})"
         )
     elif http_method.upper() == "DELETE":
+        # A DELETE may carry a JSON body (e.g. the ids to remove); dropping it
+        # sent the call with no input and the API answered invalid_json_body.
+        call_args = [path_expr]
         if query_params:
-            lines.append(f"        return {await_prefix}self._client.{client_method}({path_expr}, params=params)")
-        else:
-            lines.append(f"        return {await_prefix}self._client.{client_method}({path_expr})")
+            call_args.append("params=params")
+        if body_params:
+            call_args.append("data=payload")
+        elif raw_body_params:
+            call_args.append(f"data={raw_body_params[0]['name']}")
+        lines.append(
+            f"        return {await_prefix}self._client.{client_method}({', '.join(call_args)})"
+        )
     else:  # POST, PUT, PATCH
         call_args = [path_expr]
         if body_params:
