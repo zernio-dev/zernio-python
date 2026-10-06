@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.218.0"
+  version: "1.218.1"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -40991,6 +40991,7 @@ paths:
                   status: { type: string, enum: [sent] }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: "The API key is profile-scoped and `from` belongs to a profile outside its scope (alphanumeric sender IDs included)" }
         '404': { description: "No SMS-enabled number matches `from`" }
         '409': { description: "Recipient has opted out (replied STOP), or the same Idempotency-Key is still in flight" }
         '422': { $ref: '#/components/responses/IdempotencyKeyReused' }
