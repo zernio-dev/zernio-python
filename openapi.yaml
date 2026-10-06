@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.221.0"
+  version: "1.222.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -17880,6 +17880,86 @@ paths:
                 type: object
                 properties:
                   error: { type: string, example: "Account not found" }
+
+  /v1/analytics/instagram/online-followers:
+    get:
+      x-resource-group: "analytics"
+      operationId: getInstagramOnlineFollowers
+      tags: [Analytics]
+      summary: Get Instagram online followers
+      description: |
+        Returns how many of an Instagram account's followers were online in each hour, for every day of the last 30 days that Meta has data for.
+        Hour keys are "0" to "23" as Meta returns them. endTime is the end_time Meta returns for that day. Meta does not document the timezone of the hour keys.
+        Data is delayed up to 48 hours, so the most recent days are left out until Meta fills them.
+        Requires at least 100 followers; for smaller accounts days is empty. Requires the Analytics add-on.
+      parameters:
+        - name: accountId
+          in: query
+          required: true
+          schema: { type: string }
+          description: The Zernio SocialAccount ID for the Instagram account
+      responses:
+        '200':
+          description: Followers online per hour, one entry per day with data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  accountId: { type: string }
+                  platform: { type: string, enum: [instagram] }
+                  metric: { type: string, enum: [online_followers] }
+                  days:
+                    type: array
+                    description: 'Oldest first, as Meta returns them. Days Meta still reports as empty are left out.'
+                    items:
+                      type: object
+                      properties:
+                        endTime:
+                          type: string
+                          description: The end_time Meta returns for this day.
+                        hours:
+                          type: object
+                          description: 'Followers online per hour, keyed "0" to "23".'
+                          additionalProperties: { type: integer }
+                  note: { type: string }
+              examples:
+                twoDays:
+                  summary: Two days with hourly data
+                  value:
+                    success: true
+                    accountId: "64e1a2b3c4d5e6f7a8b9c0d1"
+                    platform: "instagram"
+                    metric: "online_followers"
+                    days:
+                      - endTime: "2026-10-01T07:00:00+0000"
+                        hours: { "0": 120, "1": 98, "2": 75, "3": 61, "4": 58, "5": 70, "6": 104, "7": 150, "8": 188, "9": 210, "10": 225, "11": 231, "12": 240, "13": 236, "14": 229, "15": 233, "16": 245, "17": 262, "18": 281, "19": 290, "20": 284, "21": 251, "22": 203, "23": 158 }
+                      - endTime: "2026-10-02T07:00:00+0000"
+                        hours: { "0": 117, "1": 95, "2": 77, "3": 63, "4": 55, "5": 72, "6": 101, "7": 148, "8": 190, "9": 207, "10": 222, "11": 235, "12": 238, "13": 230, "14": 226, "15": 239, "16": 248, "17": 266, "18": 279, "19": 293, "20": 280, "21": 249, "22": 206, "23": 160 }
+                    note: "Followers online per hour over the last 30 days. Meta delays data up to 48 hours and returns nothing for accounts under 100 followers."
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '402':
+          description: Analytics access required. Legacy plans need the Analytics add-on; included by default on usage-based plans.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error: { type: string, example: "Analytics add-on required" }
+                  code: { type: string, example: "analytics_addon_required" }
+        '403':
+          description: "The API key cannot reach this account: the account's profile is outside the key's profile scope, or the key's analytics resource group is disabled."
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+              example:
+                error: "This API key does not have access to this profile"
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '502': { $ref: '#/components/responses/UpstreamFailure' }
 
   /v1/analytics/youtube/demographics:
     get:

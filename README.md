@@ -249,6 +249,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `analytics.get_instagram_account_insights()` | Get Instagram insights |
 | `analytics.get_instagram_demographics()` | Get Instagram demographics |
 | `analytics.get_instagram_follower_history()` | Get Instagram follower history |
+| `analytics.get_instagram_online_followers()` | Get Instagram online followers |
 | `analytics.get_linked_in_aggregate_analytics()` | Get LinkedIn aggregate stats |
 | `analytics.get_linked_in_org_aggregate_analytics()` | Get LinkedIn org analytics |
 | `analytics.get_linked_in_post_analytics()` | Get LinkedIn post stats |

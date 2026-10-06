@@ -351,6 +351,15 @@ class AnalyticsResource:
         )
         return self._client._get("/v1/analytics/instagram/demographics", params=params)
 
+    def get_instagram_online_followers(self, account_id: str) -> dict[str, Any]:
+        """Get Instagram online followers"""
+        params = self._build_params(
+            account_id=account_id,
+        )
+        return self._client._get(
+            "/v1/analytics/instagram/online-followers", params=params
+        )
+
     def get_you_tube_demographics(
         self,
         account_id: str,
@@ -887,6 +896,15 @@ class AnalyticsResource:
         )
         return await self._client._aget(
             "/v1/analytics/instagram/demographics", params=params
+        )
+
+    async def aget_instagram_online_followers(self, account_id: str) -> dict[str, Any]:
+        """Get Instagram online followers (async)"""
+        params = self._build_params(
+            account_id=account_id,
+        )
+        return await self._client._aget(
+            "/v1/analytics/instagram/online-followers", params=params
         )
 
     async def aget_you_tube_demographics(

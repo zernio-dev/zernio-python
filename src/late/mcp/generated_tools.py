@@ -11744,6 +11744,33 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="Get Instagram online followers",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def analytics_get_instagram_online_followers(account_id: str) -> str:
+        """Get Instagram online followers
+
+        Returns how many of an Instagram account's followers were online in each hour, for every day of the last 30 days that Meta has data for.
+        Hour keys are \"0\" to \"23\" as Meta returns them. endTime is the end_time Meta returns for that day. Meta does not document the timezone of the hour keys.
+        Data is delayed up to 48 hours, so the most recent days are left out until Meta fills them.
+        Requires at least 100 followers; for smaller accounts days is empty. Requires the Analytics add-on.
+
+        Args:
+            account_id: The Zernio SocialAccount ID for the Instagram account (required)"""
+        client = _get_client()
+        try:
+            response = client.analytics.get_instagram_online_followers(
+                account_id=account_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="Get YouTube demographics",
             readOnlyHint=True,
             destructiveHint=False,
