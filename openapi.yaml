@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.223.0"
+  version: "1.224.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -12749,6 +12749,28 @@ components:
               type: array
               items: { type: string }
               description: All media URLs for this ad (carousel images, multiple assets). Populated for Meta (carousel child_attachments), Google Ads (responsive display marketing_images), and LinkedIn (multi-image posts).
+            carouselCards:
+              type: array
+              description: |
+                Meta only today. The carousel's cards in the order the ad shows them, one per
+                Meta `link_data.child_attachments` entry, using the same field names as the
+                `carouselCards` create input. On a carousel synced from Meta, `imageUrl` is resolved
+                exactly like `mediaUrls` (the stable `/adimages` permalink first), so the cards that
+                carry an image line up with `mediaUrls` in order; a card whose image Meta does not
+                resolve keeps its place without `imageUrl`. On a carousel created through Zernio
+                it starts as the cards you sent. Absent on non-carousel ads and on
+                other platforms. Synced carousels stored before this field existed fill it in on
+                their next sync.
+              items:
+                type: object
+                properties:
+                  imageUrl: { type: string, description: 'Card image, resolved like the matching `mediaUrls` entry. Absent when Meta returns no resolvable image for the card.' }
+                  imageHash: { type: string, description: 'Meta ad image hash of the card image (`image_hash`).' }
+                  headline: { type: string, description: 'Card title (Meta `name`).' }
+                  description: { type: string, description: 'Card description, under the title (Meta `description`).' }
+                  linkUrl: { type: string, description: 'Card destination URL (Meta `link`).' }
+                  callToAction: { type: string, description: 'Card call to action type (Meta `call_to_action.type`), e.g. SHOP_NOW or WATCH_MORE.', example: 'SHOP_NOW' }
+                  videoId: { type: string, description: 'Meta video id when the card is a video (`video_id`).' }
             isServing: { type: [boolean, "null"], description: "LinkedIn only. Whether LinkedIn is currently serving this specific creative. Complements the ad-level `servingStatuses`, which describes the parent campaign." }
             adFormat: { type: [string, "null"], description: "LinkedIn only. The LinkedIn ad format, in LinkedIn's own vocabulary: STANDARD_UPDATE, SINGLE_VIDEO, CAROUSEL, NATIVE_DOCUMENT, EVENT, TEXT_AD, SPOTLIGHT, FOLLOW_COMPANY, JOBS, SPONSORED_INMAILS and others. On an ad Zernio created this is the format it was created as; on an ad synced from Campaign Manager it is the parent campaign's raw `format`, which is what LinkedIn actually enforces on its creatives. The list is open, so treat an unrecognized value as valid. Absent on LinkedIn ads not yet re-synced, and on every other platform." }
             servingHoldReasons:
