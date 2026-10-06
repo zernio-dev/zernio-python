@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.225.0"
+  version: "1.226.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -10319,6 +10319,7 @@ components:
         syncStatus: { type: string, enum: [synced, pending, unavailable], description: 'Sync state of analytics for this platform' }
         platformPostUrl: { type: [string, "null"], format: uri }
         errorMessage: { type: [string, "null"], description: 'Failure detail. On failed entries, why the post failed to publish. On unavailable entries, why analytics cannot be synced (e.g. Google Business Profile, a TikTok upload that never received a video id). On pending entries, the most recent analytics sync error for the account (null while no sync has failed), cleared after the next successful sync.' }
+        errorCode: { type: [string, "null"], enum: [post_not_found, permission_missing, null], description: 'Stable machine-readable reason for errorMessage. post_not_found: the post was deleted or is no longer visible to the account. permission_missing: the last analytics sync of the Facebook account failed because the Page no longer grants pages_read_engagement (pending entries only). null: no stable code, read errorMessage. New values may be added.' }
     AnalyticsOverview:
       type: object
       properties:
