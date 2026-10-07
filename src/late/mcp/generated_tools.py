@@ -6502,7 +6502,7 @@ def register_generated_tools(mcp, _get_client):
         Meta ad account LIVE in one call (for example as a pre-write spend gate), use
         GET /v1/ads/accounts/live ...
 
-        Platforms: meta, google, tiktok, linkedin, pinterest, x
+        Platforms: meta, google, tiktok, linkedin, pinterest, x, openai
 
         Args:
             account_id: Account ID
