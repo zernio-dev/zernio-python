@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.234.0"
+  version: "1.234.1"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -53791,7 +53791,9 @@ paths:
 
         Google budget updates read the current budget before mutation. Shared budgets return
         409 unless allowSharedBudgetUpdate=true is explicitly supplied, because the change
-        affects every campaign using that budget. Unknown sharing state also returns 409.
+        affects every campaign using that budget. A budget counts as shared when Google flags
+        it as shared or when more than one campaign uses it (older budgets can serve several
+        campaigns without the flag). Unknown sharing state also returns 409.
 
         `sharedBudgetId` (Google) moves the campaign onto a shared budget from
         GET /v1/ads/shared-budgets, which also needs `allowSharedBudgetUpdate: true` (409
@@ -53829,7 +53831,7 @@ paths:
                 bidAmount: { type: number, description: "**Google only.** Whole currency units (USD: 12 = $12.00). Max CPC for LOWEST_COST_WITH_BID_CAP, CPA target for COST_CAP; required for both." }
                 roasAverageFloor: { type: number, description: "**Google only.** Decimal ROAS multiplier (2.0 = 2.0x), required for LOWEST_COST_WITH_MIN_ROAS." }
                 portfolioBidStrategyId: { type: string, pattern: '^\d+$', description: "**Google only.** Attach an existing portfolio bid strategy (numeric id from GET /v1/ads/bid-strategies) instead of setting bidStrategy. Exclusive with bidStrategy." }
-                allowSharedBudgetUpdate: { type: boolean, default: false, description: "Google only. Explicitly allow changing a shared campaign budget, affecting every campaign that uses it. Does not bypass an unknown sharing state. Also required to move a campaign onto a shared budget with sharedBudgetId." }
+                allowSharedBudgetUpdate: { type: boolean, default: false, description: "Google only. Explicitly allow changing a shared campaign budget (flagged as shared by Google, or used by more than one campaign), affecting every campaign that uses it. Does not bypass an unknown sharing state. Also required to move a campaign onto a shared budget with sharedBudgetId." }
                 targetImpressionShare:
                   allOf: [{ $ref: '#/components/schemas/GoogleTargetImpressionShare' }]
                   description: "Google Search only. Target impression share bidding. Exclusive with bidStrategy, portfolioBidStrategyId and manualCpc; bidAmount is refused alongside it (the ceiling is maxCpc)."
