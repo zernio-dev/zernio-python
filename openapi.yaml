@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.236.0"
+  version: "1.236.1"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -27,16 +27,16 @@ info:
   x-logo:
     url: https://zernio.com/icon.png?v=3
   x-long-description: |
-    Zernio is the social media API that replaces 16 integrations. Schedule posts, retrieve analytics,
+    Zernio is the social media API that replaces 26 integrations. Schedule posts, retrieve analytics,
     manage DMs, comments, and reviews across X, Instagram, WhatsApp, TikTok, LinkedIn,
     Facebook, YouTube, Threads, Reddit, Pinterest, Bluesky, Telegram, Google Business Profile, Snapchat,
-    Discord, and Slack, all from a single REST API. Run paid ads on Meta (Facebook + Instagram), Google,
+    Discord, Slack, and iMessage, all from a single REST API. Run paid ads on Meta (Facebook + Instagram), Google,
     TikTok, LinkedIn, Pinterest, X, and OpenAI from the same account.
 
     Connect Shopify and WordPress as blog accounts to list sites and manage
     articles, drafts, featured images, tags, authors, and native scheduling.
 
-    Key features: Unified posting to 16 platforms, ads management on 7 ad networks (via /v1/ads), aggregated analytics, unified inbox (DMs, comments, reviews), webhooks, OAuth connect, queue scheduling, and white-label support for agencies managing unlimited accounts.
+    Key features: Unified posting to 17 platforms, ads management on 7 ad networks (via /v1/ads), aggregated analytics, unified inbox (DMs, comments, reviews), webhooks, OAuth connect, queue scheduling, and white-label support for agencies managing unlimited accounts.
 
     Supported posting platforms: X, Instagram, WhatsApp, Facebook, LinkedIn, TikTok, YouTube, Pinterest, Reddit, Bluesky, Threads, Google Business Profile, Telegram, Snapchat, Discord, Slack. Supported ad platforms: Meta Ads, Google Ads, TikTok Ads, LinkedIn Ads, Pinterest Ads, X Ads, OpenAI Ads. Snapchat is a closed beta with no public release date: connections are gated behind approval and return 403 `PLATFORM_BETA_RESTRICTED` until then.
   x-category: Social
@@ -70,7 +70,7 @@ x-documentation:
   readme: |
     # Zernio API
 
-    The social media API that replaces 16 integrations. Build social media and blog publishing features into your app in minutes, not months.
+    The social media API that replaces 26 integrations. Build social media and blog publishing features into your app in minutes, not months.
 
     ## Quick Start
 
