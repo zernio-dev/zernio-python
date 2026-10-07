@@ -140,6 +140,12 @@ class ConversionsResource:
         customer_id: str | None = None,
         default_value: float | None = None,
         always_use_default_value: bool | None = None,
+        category: str | None = None,
+        counting_type: str | None = None,
+        default_currency: str | None = None,
+        click_through_lookback_window_days: int | None = None,
+        view_through_lookback_window_days: int | None = None,
+        primary_for_goal: bool | None = None,
     ) -> dict[str, Any]:
         """Create website conversion action"""
         payload = self._build_payload(
@@ -150,6 +156,12 @@ class ConversionsResource:
             type=type,
             default_value=default_value,
             always_use_default_value=always_use_default_value,
+            category=category,
+            counting_type=counting_type,
+            default_currency=default_currency,
+            click_through_lookback_window_days=click_through_lookback_window_days,
+            view_through_lookback_window_days=view_through_lookback_window_days,
+            primary_for_goal=primary_for_goal,
         )
         return self._client._post("/v1/ads/conversions/actions", data=payload)
 
@@ -189,16 +201,34 @@ class ConversionsResource:
         self,
         action_id: str,
         account_id: str,
-        primary_for_goal: bool,
         *,
         ad_account_id: str | None = None,
         customer_id: str | None = None,
+        name: str | None = None,
+        status: str | None = None,
+        default_value: float | None = None,
+        always_use_default_value: bool | None = None,
+        category: str | None = None,
+        counting_type: str | None = None,
+        default_currency: str | None = None,
+        click_through_lookback_window_days: int | None = None,
+        view_through_lookback_window_days: int | None = None,
+        primary_for_goal: bool | None = None,
     ) -> dict[str, Any]:
-        """Set a conversion action primary or secondary"""
+        """Update a conversion action's settings"""
         payload = self._build_payload(
             account_id=account_id,
             ad_account_id=ad_account_id,
             customer_id=customer_id,
+            name=name,
+            status=status,
+            default_value=default_value,
+            always_use_default_value=always_use_default_value,
+            category=category,
+            counting_type=counting_type,
+            default_currency=default_currency,
+            click_through_lookback_window_days=click_through_lookback_window_days,
+            view_through_lookback_window_days=view_through_lookback_window_days,
             primary_for_goal=primary_for_goal,
         )
         return self._client._patch(
@@ -508,6 +538,12 @@ class ConversionsResource:
         customer_id: str | None = None,
         default_value: float | None = None,
         always_use_default_value: bool | None = None,
+        category: str | None = None,
+        counting_type: str | None = None,
+        default_currency: str | None = None,
+        click_through_lookback_window_days: int | None = None,
+        view_through_lookback_window_days: int | None = None,
+        primary_for_goal: bool | None = None,
     ) -> dict[str, Any]:
         """Create website conversion action (async)"""
         payload = self._build_payload(
@@ -518,6 +554,12 @@ class ConversionsResource:
             type=type,
             default_value=default_value,
             always_use_default_value=always_use_default_value,
+            category=category,
+            counting_type=counting_type,
+            default_currency=default_currency,
+            click_through_lookback_window_days=click_through_lookback_window_days,
+            view_through_lookback_window_days=view_through_lookback_window_days,
+            primary_for_goal=primary_for_goal,
         )
         return await self._client._apost("/v1/ads/conversions/actions", data=payload)
 
@@ -557,16 +599,34 @@ class ConversionsResource:
         self,
         action_id: str,
         account_id: str,
-        primary_for_goal: bool,
         *,
         ad_account_id: str | None = None,
         customer_id: str | None = None,
+        name: str | None = None,
+        status: str | None = None,
+        default_value: float | None = None,
+        always_use_default_value: bool | None = None,
+        category: str | None = None,
+        counting_type: str | None = None,
+        default_currency: str | None = None,
+        click_through_lookback_window_days: int | None = None,
+        view_through_lookback_window_days: int | None = None,
+        primary_for_goal: bool | None = None,
     ) -> dict[str, Any]:
-        """Set a conversion action primary or secondary (async)"""
+        """Update a conversion action's settings (async)"""
         payload = self._build_payload(
             account_id=account_id,
             ad_account_id=ad_account_id,
             customer_id=customer_id,
+            name=name,
+            status=status,
+            default_value=default_value,
+            always_use_default_value=always_use_default_value,
+            category=category,
+            counting_type=counting_type,
+            default_currency=default_currency,
+            click_through_lookback_window_days=click_through_lookback_window_days,
+            view_through_lookback_window_days=view_through_lookback_window_days,
             primary_for_goal=primary_for_goal,
         )
         return await self._client._apatch(

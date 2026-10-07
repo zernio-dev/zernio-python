@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.232.0"
+  version: "1.233.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -67020,6 +67020,12 @@ paths:
                 alwaysUseDefaultValue:
                   type: boolean
                   description: "When true, always use defaultValue and ignore any value sent with the event. Defaults to true when defaultValue is set."
+                category: { type: string, enum: [DEFAULT, PAGE_VIEW, PURCHASE, SIGNUP, DOWNLOAD, ADD_TO_CART, BEGIN_CHECKOUT, SUBSCRIBE_PAID, PHONE_CALL_LEAD, IMPORTED_LEAD, SUBMIT_LEAD_FORM, BOOK_APPOINTMENT, REQUEST_QUOTE, GET_DIRECTIONS, OUTBOUND_CLICK, CONTACT, ENGAGEMENT, STORE_VISIT, STORE_SALE, QUALIFIED_LEAD, CONVERTED_LEAD], description: "conversion_action.category. Defaults to DEFAULT on create." }
+                countingType: { type: string, enum: [ONE_PER_CLICK, MANY_PER_CLICK], description: "ONE_PER_CLICK counts one conversion per ad click (leads); MANY_PER_CLICK counts every one (purchases)." }
+                defaultCurrency: { type: string, pattern: '^[A-Z]{3}$', description: "ISO 4217 currency of defaultValue (value_settings.default_currency_code)." }
+                clickThroughLookbackWindowDays: { type: integer, minimum: 1, maximum: 90, description: "Days after an ad click a conversion still counts." }
+                viewThroughLookbackWindowDays: { type: integer, minimum: 1, maximum: 30, description: "Days after an ad view a view-through conversion still counts." }
+                primaryForGoal: { type: boolean, description: 'true = primary (counts toward bidding when its goal is biddable), false = secondary.' }
       responses:
         '409': { $ref: '#/components/responses/AccountConnectionRequired' }
         '201':
@@ -67123,11 +67129,20 @@ paths:
       operationId: updateConversionAction
       tags: [Conversions]
       x-platforms: ["google"]
-      summary: Set a conversion action primary or secondary
+      summary: Update a conversion action's settings
       description: |-
-        Sets `primary_for_goal` on a Google Ads conversion action. A primary action counts
-        toward its goal's bidding and the Conversions column; a secondary one is
-        observation-only (All conversions).
+        Updates a Google Ads conversion action in one mutate, each field sent written on its own
+        update mask leaf so omitted fields keep their value. Send at least one field.
+
+        `primaryForGoal` sets `primary_for_goal`: a primary action counts toward its goal's
+        bidding and the Conversions column; a secondary one is observation-only (All
+        conversions). `countingType`, `category`, the value settings (`defaultValue`,
+        `defaultCurrency`, `alwaysUseDefaultValue`) and the click-through / view-through
+        lookback windows map to the same-named conversion_action fields.
+
+        `status: REMOVED` removes the action (Google keeps it, with its history, as REMOVED) and
+        must be sent alone; `status: ENABLED` restores a removed action. Google refuses HIDDEN
+        on website actions, so it is not offered.
       security:
         - bearerAuth: []
       parameters:
@@ -67139,12 +67154,23 @@ paths:
             schema:
               type: object
               additionalProperties: false
-              required: [accountId, primaryForGoal]
+              required: [accountId]
+              minProperties: 2
               properties:
                 accountId: { type: string, description: Zernio SocialAccount id (Google Ads) }
                 adAccountId: { type: string, pattern: '^\d+$', description: 'Google customer id. Required when the connection has multiple customers.' }
                 customerId: { type: string, pattern: '^\d+$', deprecated: true, description: Alias of adAccountId }
-                primaryForGoal: { type: boolean, description: 'true = primary, false = secondary' }
+                name: { type: string, minLength: 1, maxLength: 100 }
+                status: { type: string, enum: [ENABLED, REMOVED], description: "REMOVED removes the action and must be sent alone; ENABLED restores a removed one." }
+                defaultValue: { type: number, minimum: 0 }
+                alwaysUseDefaultValue: { type: boolean }
+                category: { type: string, enum: [DEFAULT, PAGE_VIEW, PURCHASE, SIGNUP, DOWNLOAD, ADD_TO_CART, BEGIN_CHECKOUT, SUBSCRIBE_PAID, PHONE_CALL_LEAD, IMPORTED_LEAD, SUBMIT_LEAD_FORM, BOOK_APPOINTMENT, REQUEST_QUOTE, GET_DIRECTIONS, OUTBOUND_CLICK, CONTACT, ENGAGEMENT, STORE_VISIT, STORE_SALE, QUALIFIED_LEAD, CONVERTED_LEAD], description: "conversion_action.category. Defaults to DEFAULT on create." }
+                countingType: { type: string, enum: [ONE_PER_CLICK, MANY_PER_CLICK], description: "ONE_PER_CLICK counts one conversion per ad click (leads); MANY_PER_CLICK counts every one (purchases)." }
+                defaultCurrency: { type: string, pattern: '^[A-Z]{3}$', description: "ISO 4217 currency of defaultValue (value_settings.default_currency_code)." }
+                clickThroughLookbackWindowDays: { type: integer, minimum: 1, maximum: 90, description: "Days after an ad click a conversion still counts." }
+                viewThroughLookbackWindowDays: { type: integer, minimum: 1, maximum: 30, description: "Days after an ad view a view-through conversion still counts." }
+                primaryForGoal: { type: boolean, description: 'true = primary (counts toward bidding when its goal is biddable), false = secondary.' }
+
       responses:
         '200':
           description: Action updated
@@ -67156,9 +67182,19 @@ paths:
                   customerId: { type: string }
                   action:
                     type: object
+                    description: "The action id with the fields written, echoed back."
                     properties:
                       id: { type: string }
+                      name: { type: string }
+                      status: { type: string }
                       primaryForGoal: { type: boolean }
+                      category: { type: string }
+                      countingType: { type: string }
+                      defaultValue: { type: number }
+                      defaultCurrency: { type: string }
+                      alwaysUseDefaultValue: { type: boolean }
+                      clickThroughLookbackWindowDays: { type: integer }
+                      viewThroughLookbackWindowDays: { type: integer }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/AccountUnavailable' }

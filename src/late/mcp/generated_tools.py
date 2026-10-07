@@ -21854,6 +21854,35 @@ def register_generated_tools(mcp, _get_client):
         customer_id: str | None = None,
         default_value: float | None = None,
         always_use_default_value: bool | None = None,
+        category: Literal[
+            "DEFAULT",
+            "PAGE_VIEW",
+            "PURCHASE",
+            "SIGNUP",
+            "DOWNLOAD",
+            "ADD_TO_CART",
+            "BEGIN_CHECKOUT",
+            "SUBSCRIBE_PAID",
+            "PHONE_CALL_LEAD",
+            "IMPORTED_LEAD",
+            "SUBMIT_LEAD_FORM",
+            "BOOK_APPOINTMENT",
+            "REQUEST_QUOTE",
+            "GET_DIRECTIONS",
+            "OUTBOUND_CLICK",
+            "CONTACT",
+            "ENGAGEMENT",
+            "STORE_VISIT",
+            "STORE_SALE",
+            "QUALIFIED_LEAD",
+            "CONVERTED_LEAD",
+        ]
+        | None = None,
+        counting_type: Literal["ONE_PER_CLICK", "MANY_PER_CLICK"] | None = None,
+        default_currency: str | None = None,
+        click_through_lookback_window_days: int | None = None,
+        view_through_lookback_window_days: int | None = None,
+        primary_for_goal: bool | None = None,
     ) -> str:
         """Create website conversion action
 
@@ -21872,7 +21901,13 @@ def register_generated_tools(mcp, _get_client):
             name: (required)
             type: Only WEBPAGE is supported for creation today. (required)
             default_value: Default conversion value used when an event doesn't carry its own value.
-            always_use_default_value: When true, always use defaultValue and ignore any value sent with the event. Defaults to true when defaultValue is set."""
+            always_use_default_value: When true, always use defaultValue and ignore any value sent with the event. Defaults to true when defaultValue is set.
+            category: conversion_action.category. Defaults to DEFAULT on create.
+            counting_type: ONE_PER_CLICK counts one conversion per ad click (leads); MANY_PER_CLICK counts every one (purchases).
+            default_currency: ISO 4217 currency of defaultValue (value_settings.default_currency_code).
+            click_through_lookback_window_days: Days after an ad click a conversion still counts.
+            view_through_lookback_window_days: Days after an ad view a view-through conversion still counts.
+            primary_for_goal: true = primary (counts toward bidding when its goal is biddable), false = secondary."""
         client = _get_client()
         try:
             response = client.conversions.create_conversion_action(
@@ -21883,6 +21918,12 @@ def register_generated_tools(mcp, _get_client):
                 type=type,
                 default_value=default_value,
                 always_use_default_value=always_use_default_value,
+                category=category,
+                counting_type=counting_type,
+                default_currency=default_currency,
+                click_through_lookback_window_days=click_through_lookback_window_days,
+                view_through_lookback_window_days=view_through_lookback_window_days,
+                primary_for_goal=primary_for_goal,
             )
             return _format_response(response)
         except Exception as e:
@@ -21968,7 +22009,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
-            title="Set a conversion action primary or secondary",
+            title="Update a conversion action's settings",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
@@ -21977,15 +22018,56 @@ def register_generated_tools(mcp, _get_client):
     def conversions_update_conversion_action(
         action_id: str,
         account_id: str,
-        primary_for_goal: bool,
         ad_account_id: str | None = None,
         customer_id: str | None = None,
+        name: str | None = None,
+        status: Literal["ENABLED", "REMOVED"] | None = None,
+        default_value: float | None = None,
+        always_use_default_value: bool | None = None,
+        category: Literal[
+            "DEFAULT",
+            "PAGE_VIEW",
+            "PURCHASE",
+            "SIGNUP",
+            "DOWNLOAD",
+            "ADD_TO_CART",
+            "BEGIN_CHECKOUT",
+            "SUBSCRIBE_PAID",
+            "PHONE_CALL_LEAD",
+            "IMPORTED_LEAD",
+            "SUBMIT_LEAD_FORM",
+            "BOOK_APPOINTMENT",
+            "REQUEST_QUOTE",
+            "GET_DIRECTIONS",
+            "OUTBOUND_CLICK",
+            "CONTACT",
+            "ENGAGEMENT",
+            "STORE_VISIT",
+            "STORE_SALE",
+            "QUALIFIED_LEAD",
+            "CONVERTED_LEAD",
+        ]
+        | None = None,
+        counting_type: Literal["ONE_PER_CLICK", "MANY_PER_CLICK"] | None = None,
+        default_currency: str | None = None,
+        click_through_lookback_window_days: int | None = None,
+        view_through_lookback_window_days: int | None = None,
+        primary_for_goal: bool | None = None,
     ) -> str:
-        """Set a conversion action primary or secondary
+        """Update a conversion action's settings
 
-        Sets `primary_for_goal` on a Google Ads conversion action. A primary action counts
-        toward its goal's bidding and the Conversions column; a secondary one is
-        observation-only (All conversions).
+        Updates a Google Ads conversion action in one mutate, each field sent written on its own
+        update mask leaf so omitted fields keep their value. Send at least one field.
+
+        `primaryForGoal` sets `primary_for_goal`: a primary action counts toward its goal's
+        bidding and the Conversions column; a secondary one is observation-only (All
+        conversions). `countingType`, `category`, the value settings (`defaultValue`,
+        `defaultCurrency`, `alwaysUseDefaultValue`) and the click-through / view-through
+        lookback windows map to the same-named conversion_action fields.
+
+        `status: REMOVED` removes the action (Google keeps it, with its history, as REMOVED) and
+        must be sent alone; `status: ENABLED` restores a removed action. Google refuses HIDDEN
+        on website actions, so it is not offered.
 
         Platforms: google
 
@@ -21994,7 +22076,16 @@ def register_generated_tools(mcp, _get_client):
             account_id: Zernio SocialAccount id (Google Ads) (required)
             ad_account_id: Google customer id. Required when the connection has multiple customers.
             customer_id: Alias of adAccountId
-            primary_for_goal: true = primary, false = secondary (required)"""
+            name
+            status: REMOVED removes the action and must be sent alone; ENABLED restores a removed one.
+            default_value
+            always_use_default_value
+            category: conversion_action.category. Defaults to DEFAULT on create.
+            counting_type: ONE_PER_CLICK counts one conversion per ad click (leads); MANY_PER_CLICK counts every one (purchases).
+            default_currency: ISO 4217 currency of defaultValue (value_settings.default_currency_code).
+            click_through_lookback_window_days: Days after an ad click a conversion still counts.
+            view_through_lookback_window_days: Days after an ad view a view-through conversion still counts.
+            primary_for_goal: true = primary (counts toward bidding when its goal is biddable), false = secondary."""
         client = _get_client()
         try:
             response = client.conversions.update_conversion_action(
@@ -22002,6 +22093,15 @@ def register_generated_tools(mcp, _get_client):
                 account_id=account_id,
                 ad_account_id=ad_account_id,
                 customer_id=customer_id,
+                name=name,
+                status=status,
+                default_value=default_value,
+                always_use_default_value=always_use_default_value,
+                category=category,
+                counting_type=counting_type,
+                default_currency=default_currency,
+                click_through_lookback_window_days=click_through_lookback_window_days,
+                view_through_lookback_window_days=view_through_lookback_window_days,
                 primary_for_goal=primary_for_goal,
             )
             return _format_response(response)
