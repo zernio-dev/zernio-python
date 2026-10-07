@@ -23983,12 +23983,13 @@ def register_generated_tools(mcp, _get_client):
         GET /v1/imessage/senders/{senderId} or subscribe to the
         account.connected webhook. Billing starts at activation (monthly per
         sender, no proration); when the account spend threshold is below the
-        sender price, the first month is charged before the number is bought. Requires usage-based billing and a valid
+        sender price, the first month is charged before the number is bought; when the card's
+        answer takes longer than this request, the order is returned as `status: awaiting_payment`
+        and the number is ordered automatically once it is paid (usually under 5 minutes). Requires usage-based billing and a valid
         payment method. Pass purchaseIntentId to make retries idempotent —
         the provider-side order is never retried automatically. Ordered phone
         senders include SMS/RCS fallback with call forwarding and the ability
-        to message contacts who have not written first (sending intervals
-        still apply).
+        to message contacts who have not written ...
 
         Args:
             profile_id: (required)

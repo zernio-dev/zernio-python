@@ -1904,7 +1904,7 @@ components:
         region: { type: [string, "null"], enum: [US, GB, null] }
         handle: { type: [string, "null"], description: The sender handle once activation assigns it }
         optInLink: { type: [string, "null"], description: 'imessage:// deep link that opens Messages on this sender with a prefilled text. Share it so contacts message you first (Apple only lets a sender reach contacts who wrote to it first); null until the handle is assigned.' }
-        status: { type: string, enum: [ordering, activating, active, suspended, canceled, failed] }
+        status: { type: string, enum: [ordering, awaiting_payment, activating, active, suspended, canceled, failed], description: '`awaiting_payment`: the first-month charge is still being confirmed by the card; the number is ordered automatically once it is paid (usually under 5 minutes), or the order fails with `failureReason` when the card declines or nothing confirms within 30 minutes.' }
         priceCents: { type: integer, description: Monthly price billed while the sender is active }
         provider: { type: string }
         profileId: { type: string }
@@ -41401,7 +41401,9 @@ paths:
         GET /v1/imessage/senders/{senderId} or subscribe to the
         account.connected webhook. Billing starts at activation (monthly per
         sender, no proration); when the account spend threshold is below the
-        sender price, the first month is charged before the number is bought. Requires usage-based billing and a valid
+        sender price, the first month is charged before the number is bought; when the card's
+        answer takes longer than this request, the order is returned as `status: awaiting_payment`
+        and the number is ordered automatically once it is paid (usually under 5 minutes). Requires usage-based billing and a valid
         payment method. Pass purchaseIntentId to make retries idempotent —
         the provider-side order is never retried automatically. Ordered phone
         senders include SMS/RCS fallback with call forwarding and the ability
@@ -41436,7 +41438,7 @@ paths:
                     photoUrl: { type: string, format: uri }
       responses:
         '202':
-          description: Order accepted; activation continues asynchronously
+          description: 'Order accepted; activation continues asynchronously. `sender.status` is `ordering` or `activating` when the provider has the order, `awaiting_payment` while the first-month charge is still being confirmed (poll the sender; it moves on by itself).'
           content:
             application/json:
               schema:
@@ -41449,7 +41451,7 @@ paths:
         '402': { description: 'A valid payment method is required (code: payment_method_required); the last payment failed and is still unpaid, or the card was declined for the first month (code: payment_required). Nothing is ordered; update the card in Billing, then order again.' }
         '403': { description: 'Sender limit reached (code: imessage_sender_limit)' }
         '404': { description: Profile not found or access denied }
-        '409': { description: 'Billing setup is incomplete and support must finish it (code: billing_setup_incomplete), or the first-month payment was not confirmed in time (code: invalid_resource_state; details.purchase_intent_id): nothing was ordered, retry with that purchaseIntentId within the hour and you are not charged twice.' }
+        '409': { description: 'Billing setup is incomplete and support must finish it (code: billing_setup_incomplete).' }
         '422': { description: 'Workspace is not on usage-based billing (code: usage_billing_required)' }
         '502': { description: 'The provider rejected the order. Nothing was charged, or a first month already billed is given back as account credit.' }
 
