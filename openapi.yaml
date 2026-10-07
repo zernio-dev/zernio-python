@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.231.0"
+  version: "1.232.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -52833,6 +52833,95 @@ paths:
         '429': { description: "Google Ads operations budget exhausted; retry later." }
         '501': { description: Only available on Google Ads accounts }
 
+  /v1/ads/shared-budgets:
+    get:
+      x-resource-group: "ads"
+      operationId: listSharedBudgets
+      tags: ["Ad Campaigns"]
+      x-platforms: ["google"]
+      summary: List shared budgets
+      description: |
+        Lists the Google Ads customer's shared campaign budgets (`campaign_budget.explicitly_shared`
+        = true, not removed), with how many campaigns use each. Move a campaign onto one with
+        `sharedBudgetId` on PUT /v1/ads/campaigns/{campaignId}. Google only; other platforms return 501.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: accountId, in: query, required: true, schema: { type: string }, description: "Google ads SocialAccount id." }
+        - { name: adAccountId, in: query, schema: { type: string }, description: "Platform ad account ID (Google customer ID, digits only). Defaults to the account's connected customer." }
+      responses:
+        '200':
+          description: Shared budgets
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  customerId: { type: string }
+                  budgets:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id: { type: string, description: "Numeric budget id; pass as sharedBudgetId." }
+                        name: { type: string }
+                        amount: { type: [number, "null"], description: "In the account's currency units." }
+                        type: { type: [string, "null"], enum: [daily, lifetime, null] }
+                        deliveryMethod: { type: [string, "null"] }
+                        status: { type: [string, "null"] }
+                        campaignCount: { type: integer, description: "campaign_budget.reference_count" }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/AccountUnavailable' }
+        '409': { $ref: '#/components/responses/AccountConnectionRequired' }
+        '501': { description: Only available on Google Ads accounts }
+    post:
+      x-resource-group: "ads"
+      operationId: createSharedBudget
+      tags: ["Ad Campaigns"]
+      x-platforms: ["google"]
+      summary: Create a shared budget
+      description: |
+        Creates a daily shared campaign budget (`explicitly_shared: true`, standard delivery) that
+        several campaigns can draw from. A lifetime budget returns 422, like every Google budget.
+        Google refuses some bidding strategies on a shared budget; that error surfaces when a
+        campaign is moved onto it.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [accountId, name, amount]
+              properties:
+                accountId: { type: string, description: "Google ads SocialAccount id." }
+                adAccountId: { type: string, description: "Platform ad account ID (Google customer ID, digits only). Defaults to the account's connected customer." }
+                name: { type: string, minLength: 1, maxLength: 255 }
+                amount: { type: number, exclusiveMinimum: 0, description: "Daily amount in the account's currency units." }
+                type: { type: string, enum: [daily, lifetime], default: daily, description: "Only daily is accepted (lifetime returns 422)." }
+      responses:
+        '201':
+          description: Shared budget created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  budget:
+                    type: object
+                    properties:
+                      customerId: { type: string }
+                      id: { type: string }
+                      resourceName: { type: string }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/AccountUnavailable' }
+        '409': { $ref: '#/components/responses/AccountConnectionRequired' }
+        '422': { description: "Lifetime budget requested." }
+        '501': { description: Only available on Google Ads accounts }
+
   /v1/ads/local-services/leads:
     get:
       x-resource-group: "ads"
@@ -53665,7 +53754,7 @@ paths:
       description: |
         Campaign-level edits. Send at least one of `budget`, `bidStrategy`,
         `portfolioBidStrategyId`, `targetImpressionShare`, `manualCpc`, `networkSettings`,
-        `trackingUrlTemplate`, `finalUrlSuffix`, `name` or `platformSpecificData`. An unsupported
+        `trackingUrlTemplate`, `finalUrlSuffix`, `sharedBudgetId`, `name` or `platformSpecificData`. An unsupported
         field is always an error, never a silent drop.
 
         | Body field | Meta | Google | Others |
@@ -53677,6 +53766,7 @@ paths:
         | `manualCpc` | 400 | Search and Display | 400 |
         | `networkSettings` | 400 | Search only | 400 |
         | `trackingUrlTemplate`, `finalUrlSuffix` | 400 | Yes | 400 |
+        | `sharedBudgetId` | 400 | Yes | 400 |
         | `budget` (CBO; ABO returns 409) | Yes | Daily only | OpenAI: daily or lifetime; others 501 |
         | `name` | Yes | 501 | 501 |
         | `platformSpecificData.spendCap` | Yes | 400 | 400 |
@@ -53702,6 +53792,15 @@ paths:
         Google budget updates read the current budget before mutation. Shared budgets return
         409 unless allowSharedBudgetUpdate=true is explicitly supplied, because the change
         affects every campaign using that budget. Unknown sharing state also returns 409.
+
+        `sharedBudgetId` (Google) moves the campaign onto a shared budget from
+        GET /v1/ads/shared-budgets, which also needs `allowSharedBudgetUpdate: true` (409
+        otherwise) because the campaign then splits that budget with every campaign on it;
+        `budget` cannot ride along. `sharedBudgetId: null` moves it back onto a new budget of its
+        own, sized by `budget` (required, daily); the new budget and the switch go out in one
+        atomic Google mutate. A campaign that already has its own budget returns 409 for null.
+        The budget a campaign leaves is not removed. The response carries the budget the
+        campaign now uses.
 
         OpenAI Ads campaigns carry exactly one spend cap: `budget.type` daily or lifetime
         replaces whichever cap the campaign had, with a minimum of 1 in the ad account's
@@ -53730,7 +53829,7 @@ paths:
                 bidAmount: { type: number, description: "**Google only.** Whole currency units (USD: 12 = $12.00). Max CPC for LOWEST_COST_WITH_BID_CAP, CPA target for COST_CAP; required for both." }
                 roasAverageFloor: { type: number, description: "**Google only.** Decimal ROAS multiplier (2.0 = 2.0x), required for LOWEST_COST_WITH_MIN_ROAS." }
                 portfolioBidStrategyId: { type: string, pattern: '^\d+$', description: "**Google only.** Attach an existing portfolio bid strategy (numeric id from GET /v1/ads/bid-strategies) instead of setting bidStrategy. Exclusive with bidStrategy." }
-                allowSharedBudgetUpdate: { type: boolean, default: false, description: "Google only. Explicitly allow changing a shared campaign budget, affecting every campaign that uses it. Does not bypass an unknown sharing state." }
+                allowSharedBudgetUpdate: { type: boolean, default: false, description: "Google only. Explicitly allow changing a shared campaign budget, affecting every campaign that uses it. Does not bypass an unknown sharing state. Also required to move a campaign onto a shared budget with sharedBudgetId." }
                 targetImpressionShare:
                   allOf: [{ $ref: '#/components/schemas/GoogleTargetImpressionShare' }]
                   description: "Google Search only. Target impression share bidding. Exclusive with bidStrategy, portfolioBidStrategyId and manualCpc; bidAmount is refused alongside it (the ceiling is maxCpc)."
@@ -53738,6 +53837,10 @@ paths:
                 networkSettings: { $ref: '#/components/schemas/GoogleNetworkSettings' }
                 trackingUrlTemplate: { type: string, description: "**Google only.** campaign.tracking_url_template; an empty string clears it." }
                 finalUrlSuffix: { type: string, description: "**Google only.** campaign.final_url_suffix; an empty string clears it." }
+                sharedBudgetId:
+                  type: [string, "null"]
+                  pattern: '^\d+$'
+                  description: "**Google only.** Move the campaign onto this shared budget (id from GET /v1/ads/shared-budgets), or null to move it back onto a budget of its own sized by `budget`."
                 budget:
                   type: object
                   description: "Meta CBO, Google daily, or OpenAI Ads daily or lifetime campaign budget, in whole currency units."
@@ -53775,6 +53878,7 @@ paths:
                   networkSettings: { $ref: '#/components/schemas/GoogleNetworkSettings' }
                   trackingUrlTemplate: { type: string }
                   finalUrlSuffix: { type: string }
+                  sharedBudgetId: { type: [string, "null"], description: "Google only. Echoed back when the campaign moved budgets; `budget` is then the budget it now uses." }
                   platformSpecificData: { type: object }
         '400': { description: "Invalid input, or a field the resolved platform does not support at the campaign level (see the support table)" }
         '401': { $ref: '#/components/responses/Unauthorized' }

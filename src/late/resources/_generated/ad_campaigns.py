@@ -237,6 +237,35 @@ class AdCampaignsResource:
             f"/v1/ads/bid-strategies/{strategy_id}", data=payload
         )
 
+    def list_shared_budgets(
+        self, account_id: str, *, ad_account_id: str | None = None
+    ) -> dict[str, Any]:
+        """List shared budgets"""
+        params = self._build_params(
+            account_id=account_id,
+            ad_account_id=ad_account_id,
+        )
+        return self._client._get("/v1/ads/shared-budgets", params=params)
+
+    def create_shared_budget(
+        self,
+        account_id: str,
+        name: str,
+        amount: float,
+        *,
+        ad_account_id: str | None = None,
+        type: str | None = "daily",
+    ) -> dict[str, Any]:
+        """Create a shared budget"""
+        payload = self._build_payload(
+            account_id=account_id,
+            ad_account_id=ad_account_id,
+            name=name,
+            amount=amount,
+            type=type,
+        )
+        return self._client._post("/v1/ads/shared-budgets", data=payload)
+
     def list_ad_keywords(
         self,
         *,
@@ -481,6 +510,7 @@ class AdCampaignsResource:
         network_settings: Any | None = None,
         tracking_url_template: str | None = None,
         final_url_suffix: str | None = None,
+        shared_budget_id: Any | None = None,
         budget: dict[str, Any] | None = None,
         name: str | None = None,
         platform_specific_data: dict[str, Any] | None = None,
@@ -499,6 +529,7 @@ class AdCampaignsResource:
             network_settings=network_settings,
             tracking_url_template=tracking_url_template,
             final_url_suffix=final_url_suffix,
+            shared_budget_id=shared_budget_id,
             budget=budget,
             name=name,
             platform_specific_data=platform_specific_data,
@@ -1764,6 +1795,35 @@ class AdCampaignsResource:
             f"/v1/ads/bid-strategies/{strategy_id}", data=payload
         )
 
+    async def alist_shared_budgets(
+        self, account_id: str, *, ad_account_id: str | None = None
+    ) -> dict[str, Any]:
+        """List shared budgets (async)"""
+        params = self._build_params(
+            account_id=account_id,
+            ad_account_id=ad_account_id,
+        )
+        return await self._client._aget("/v1/ads/shared-budgets", params=params)
+
+    async def acreate_shared_budget(
+        self,
+        account_id: str,
+        name: str,
+        amount: float,
+        *,
+        ad_account_id: str | None = None,
+        type: str | None = "daily",
+    ) -> dict[str, Any]:
+        """Create a shared budget (async)"""
+        payload = self._build_payload(
+            account_id=account_id,
+            ad_account_id=ad_account_id,
+            name=name,
+            amount=amount,
+            type=type,
+        )
+        return await self._client._apost("/v1/ads/shared-budgets", data=payload)
+
     async def alist_ad_keywords(
         self,
         *,
@@ -2014,6 +2074,7 @@ class AdCampaignsResource:
         network_settings: Any | None = None,
         tracking_url_template: str | None = None,
         final_url_suffix: str | None = None,
+        shared_budget_id: Any | None = None,
         budget: dict[str, Any] | None = None,
         name: str | None = None,
         platform_specific_data: dict[str, Any] | None = None,
@@ -2032,6 +2093,7 @@ class AdCampaignsResource:
             network_settings=network_settings,
             tracking_url_template=tracking_url_template,
             final_url_suffix=final_url_suffix,
+            shared_budget_id=shared_budget_id,
             budget=budget,
             name=name,
             platform_specific_data=platform_specific_data,

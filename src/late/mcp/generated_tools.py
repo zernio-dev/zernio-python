@@ -5398,6 +5398,80 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="List shared budgets",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def ad_campaigns_list_shared_budgets(
+        account_id: str, ad_account_id: str | None = None
+    ) -> str:
+        """List shared budgets
+
+        Lists the Google Ads customer's shared campaign budgets (`campaign_budget.explicitly_shared`
+        = true, not removed), with how many campaigns use each. Move a campaign onto one with
+        `sharedBudgetId` on PUT /v1/ads/campaigns/{campaignId}. Google only; other platforms return 501.
+
+        Platforms: google
+
+        Args:
+            account_id: Google ads SocialAccount id. (required)
+            ad_account_id: Platform ad account ID (Google customer ID, digits only). Defaults to the account's connected customer."""
+        client = _get_client()
+        try:
+            response = client.ad_campaigns.list_shared_budgets(
+                account_id=account_id, ad_account_id=ad_account_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Create a shared budget",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def ad_campaigns_create_shared_budget(
+        account_id: str,
+        name: str,
+        amount: float,
+        ad_account_id: str | None = None,
+        type: Literal["daily", "lifetime"] = "daily",
+    ) -> str:
+        """Create a shared budget
+
+        Creates a daily shared campaign budget (`explicitly_shared: true`, standard delivery) that
+        several campaigns can draw from. A lifetime budget returns 422, like every Google budget.
+        Google refuses some bidding strategies on a shared budget; that error surfaces when a
+        campaign is moved onto it.
+
+        Platforms: google
+
+        Args:
+            account_id: Google ads SocialAccount id. (required)
+            ad_account_id: Platform ad account ID (Google customer ID, digits only). Defaults to the account's connected customer.
+            name: (required)
+            amount: Daily amount in the account's currency units. (required)
+            type: Only daily is accepted (lifetime returns 422)."""
+        client = _get_client()
+        try:
+            response = client.ad_campaigns.create_shared_budget(
+                account_id=account_id,
+                ad_account_id=ad_account_id,
+                name=name,
+                amount=amount,
+                type=type,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="List Search keywords",
             readOnlyHint=True,
             destructiveHint=False,
@@ -6054,6 +6128,7 @@ def register_generated_tools(mcp, _get_client):
         network_settings: dict[str, Any] | None = None,
         tracking_url_template: str | None = None,
         final_url_suffix: str | None = None,
+        shared_budget_id: str | None = None,
         budget: dict[str, Any] | None = None,
         name: str | None = None,
         platform_specific_data: dict[str, Any] | None = None,
@@ -6062,7 +6137,7 @@ def register_generated_tools(mcp, _get_client):
 
         Campaign-level edits. Send at least one of `budget`, `bidStrategy`,
         `portfolioBidStrategyId`, `targetImpressionShare`, `manualCpc`, `networkSettings`,
-        `trackingUrlTemplate`, `finalUrlSuffix`, `name` or `platformSpecificData`. An unsupported
+        `trackingUrlTemplate`, `finalUrlSuffix`, `sharedBudgetId`, `name` or `platformSpecificData`. An unsupported
         field is always an error, never a silent drop.
 
         | Body field | Meta | Google | Others |
@@ -6074,12 +6149,11 @@ def register_generated_tools(mcp, _get_client):
         | `manualCpc` | 400 | Search and Display | 400 |
         | `networkSettings` | 400 | Search only | 400 |
         | `trackingUrlTemplate`, `finalUrlSuffix` | 400 | Yes | 400 |
+        | `sharedBudgetId` | 400 | Yes | 400 |
         | `budget` (CBO; ABO returns 409) | Yes | Daily only | OpenAI: daily or lifetime; others 501 |
         | `name` | Yes | 501 | 501 |
         | `platformSpecificData.spendCap` | Yes | 400 | 400 |
-        | `accountId` (empty campaigns) | Yes | - | - |
-
-        Meta budget edits check the live campaign budget, so an ...
+        | `accountId` (empty campaigns) | Yes | - | - | ...
 
         Platforms: meta, google, tiktok, linkedin, pinterest, x, openai
 
@@ -6091,12 +6165,13 @@ def register_generated_tools(mcp, _get_client):
             bid_amount: **Google only.** Whole currency units (USD: 12 = $12.00). Max CPC for LOWEST_COST_WITH_BID_CAP, CPA target for COST_CAP; required for both.
             roas_average_floor: **Google only.** Decimal ROAS multiplier (2.0 = 2.0x), required for LOWEST_COST_WITH_MIN_ROAS.
             portfolio_bid_strategy_id: **Google only.** Attach an existing portfolio bid strategy (numeric id from GET /v1/ads/bid-strategies) instead of setting bidStrategy. Exclusive with bidStrategy.
-            allow_shared_budget_update: Google only. Explicitly allow changing a shared campaign budget, affecting every campaign that uses it. Does not bypass an unknown sharing state.
+            allow_shared_budget_update: Google only. Explicitly allow changing a shared campaign budget, affecting every campaign that uses it. Does not bypass an unknown sharing state. Also required to move a campaign onto a shared budget with sharedBudgetId.
             target_impression_share: Google Search only. Target impression share bidding. Exclusive with bidStrategy, portfolioBidStrategyId and manualCpc; bidAmount is refused alongside it (the ceiling is maxCpc). Object with keys: location (one of: ANYWHERE_ON_PAGE, TOP_OF_PAGE, ABSOLUTE_TOP_OF_PAGE; required); percent (number, required) - Target share of impressions, in percent (65 = 65%). Sent to Google as location_fraction_micros (1% = 10,000).; maxCpc (number, required) - Max CPC bid limit, in the account's currency units. Google requires it.
             manual_cpc: Object with keys: maxCpc (number, required) - Max CPC of the ad groups, in the account's currency units: set on the ad group created with the campaign, and on every ad group of the campaign when an update ...
             network_settings: Object with keys: searchPartners (boolean) - campaign.network_settings.target_search_network; displayNetwork (boolean) - campaign.network_settings.target_content_network (Search with Display expansion)
             tracking_url_template: **Google only.** campaign.tracking_url_template; an empty string clears it.
             final_url_suffix: **Google only.** campaign.final_url_suffix; an empty string clears it.
+            shared_budget_id: **Google only.** Move the campaign onto this shared budget (id from GET /v1/ads/shared-budgets), or null to move it back onto a budget of its own sized by `budget`.
             budget: Meta CBO, Google daily, or OpenAI Ads daily or lifetime campaign budget, in whole currency units. Object with keys: amount (number, required) - Budget amount in the ad account's currency; type (one of: daily, lifetime; required)
             name: **Meta only.** Rename the campaign.
             platform_specific_data: **Meta only.** Platform implied by the `platform` body param, same convention as POST /v1/ads/create. Object with keys: spendCap (number or null) - Campaign lifetime spend cap, in the ad account's currency (Meta `spend_cap`). Pass null to remove the cap; 0 is rejected by Meta."""
@@ -6116,6 +6191,7 @@ def register_generated_tools(mcp, _get_client):
                 network_settings=network_settings,
                 tracking_url_template=tracking_url_template,
                 final_url_suffix=final_url_suffix,
+                shared_budget_id=shared_budget_id,
                 budget=budget,
                 name=name,
                 platform_specific_data=platform_specific_data,
