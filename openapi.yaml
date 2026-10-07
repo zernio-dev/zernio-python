@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.230.1"
+  version: "1.231.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -11482,13 +11482,37 @@ components:
         managerLinkId: { type: [string, "null"], description: "Null on a validateOnly invitation, where Google creates nothing." }
         status: { type: string, enum: [PENDING, ACTIVE, REFUSED, CANCELED, INACTIVE], description: "Status the link has after this call." }
         validateOnly: { type: boolean }
+    GoogleTargetImpressionShare:
+      type: object
+      additionalProperties: false
+      required: [location, percent, maxCpc]
+      description: "Google only. Target impression share bidding (Search campaigns only): Google sets bids so the ads show in `location` for `percent` of eligible impressions."
+      properties:
+        location: { type: string, enum: [ANYWHERE_ON_PAGE, TOP_OF_PAGE, ABSOLUTE_TOP_OF_PAGE] }
+        percent: { type: number, exclusiveMinimum: 0, maximum: 100, description: "Target share of impressions, in percent (65 = 65%). Sent to Google as location_fraction_micros (1% = 10,000)." }
+        maxCpc: { type: number, exclusiveMinimum: 0, description: "Max CPC bid limit, in the account's currency units. Google requires it." }
+    GoogleManualCpc:
+      type: object
+      additionalProperties: false
+      required: [maxCpc]
+      description: "Google Search and Display only. Manual CPC bidding. Enhanced CPC is not offered: Google no longer lets Search and Display campaigns enable it. Exclusive with every other strategy field."
+      properties:
+        maxCpc: { type: number, exclusiveMinimum: 0, description: "Max CPC of the ad groups, in the account's currency units: set on the ad group created with the campaign, and on every ad group of the campaign when an update switches it to Manual CPC. Google gives an ad group without one a 0.01 bid." }
+    GoogleNetworkSettings:
+      type: object
+      additionalProperties: false
+      minProperties: 1
+      description: "Google Search campaigns only. Which networks the campaign serves on besides Google Search. When omitted at creation, search partners are ON and the Display Network is OFF (the defaults Zernio has always used); on an update only the fields sent change."
+      properties:
+        searchPartners: { type: boolean, description: "campaign.network_settings.target_search_network" }
+        displayNetwork: { type: boolean, description: "campaign.network_settings.target_content_network (Search with Display expansion)" }
     PortfolioBidStrategy:
       type: object
       description: "A Google Ads portfolio bid strategy: a named bidding strategy shared across campaigns, with its R.130 report metrics over the queried date range."
       properties:
         id: { type: string, description: "Numeric bid strategy id; pass as portfolioBidStrategyId or in the {strategyId} path." }
         name: { type: string }
-        type: { type: string, enum: [TARGET_CPA, TARGET_ROAS, MAXIMIZE_CONVERSIONS, MAXIMIZE_CONVERSION_VALUE] }
+        type: { type: string, enum: [TARGET_CPA, TARGET_ROAS, MAXIMIZE_CONVERSIONS, MAXIMIZE_CONVERSION_VALUE, TARGET_IMPRESSION_SHARE] }
         status: { type: string, description: "ENABLED or REMOVED." }
         campaignCount: { type: integer, description: "Number of campaigns currently attached." }
         clicks: { type: integer }
@@ -11499,6 +11523,11 @@ components:
         conversions: { type: number }
         targetCpa: { type: [number, "null"], description: "Current target, in the account's currency units. Null for a ROAS-family type (TARGET_ROAS, MAXIMIZE_CONVERSION_VALUE), or a Maximize type with no target set. Pre-fills the edit form's target field." }
         targetRoas: { type: [number, "null"], description: "Current target as a decimal multiplier (2.0 = 2.0x). Null for a CPA-family type (TARGET_CPA, MAXIMIZE_CONVERSIONS), or a Maximize type with no target set." }
+        targetImpressionShare:
+          description: "Current target for a TARGET_IMPRESSION_SHARE strategy, null for every other type."
+          oneOf:
+            - { $ref: '#/components/schemas/GoogleTargetImpressionShare' }
+            - { type: "null" }
     CampaignBidding:
       type: object
       description: "A Google campaign's current bidding, mapped onto the same triplet PUT /v1/ads/campaigns/{campaignId} accepts."
@@ -52717,9 +52746,12 @@ paths:
                 adAccountId: { type: string, description: "Platform ad account ID (Google customer ID, digits only). Defaults to the account's connected customer." }
                 customerId: { type: string, deprecated: true, description: "Alias of adAccountId, kept for existing callers" }
                 name: { type: string, minLength: 1, maxLength: 255 }
-                type: { type: string, enum: [TARGET_CPA, TARGET_ROAS, MAXIMIZE_CONVERSIONS, MAXIMIZE_CONVERSION_VALUE] }
+                type: { type: string, enum: [TARGET_CPA, TARGET_ROAS, MAXIMIZE_CONVERSIONS, MAXIMIZE_CONVERSION_VALUE, TARGET_IMPRESSION_SHARE] }
                 targetCpa: { type: number, exclusiveMinimum: 0, description: "Required when type is TARGET_CPA, in the account's currency units." }
                 targetRoas: { type: number, exclusiveMinimum: 0, description: "Required when type is TARGET_ROAS; a multiplier (2.0 = 2.0x)." }
+                targetImpressionShare:
+                  allOf: [{ $ref: '#/components/schemas/GoogleTargetImpressionShare' }]
+                  description: "Required when type is TARGET_IMPRESSION_SHARE, and refused with any other type." 
       responses:
         '409': { $ref: '#/components/responses/AccountConnectionRequired' }
         '201':
@@ -52773,9 +52805,12 @@ paths:
                 adAccountId: { type: string, description: "Platform ad account ID (Google customer ID, digits only). Defaults to the account's connected customer." }
                 customerId: { type: string, deprecated: true, description: "Alias of adAccountId, kept for existing callers" }
                 name: { type: string, minLength: 1, maxLength: 255 }
-                type: { type: string, enum: [TARGET_CPA, TARGET_ROAS, MAXIMIZE_CONVERSIONS, MAXIMIZE_CONVERSION_VALUE] }
+                type: { type: string, enum: [TARGET_CPA, TARGET_ROAS, MAXIMIZE_CONVERSIONS, MAXIMIZE_CONVERSION_VALUE, TARGET_IMPRESSION_SHARE] }
                 targetCpa: { type: number, exclusiveMinimum: 0 }
                 targetRoas: { type: number, exclusiveMinimum: 0 }
+                targetImpressionShare:
+                  allOf: [{ $ref: '#/components/schemas/GoogleTargetImpressionShare' }]
+                  description: "Retargets a TARGET_IMPRESSION_SHARE strategy; location, percent and maxCpc are all written."
       responses:
         '409': { $ref: '#/components/responses/AccountConnectionRequired' }
         '200':
@@ -53264,6 +53299,11 @@ paths:
                 bidAmount: { type: number, description: "Whole currency units (USD: 5 = $5.00). Required for LOWEST_COST_WITH_BID_CAP and COST_CAP; ignored otherwise. On Meta, validated here but NOT stored: the campaign object has no bid_amount field, only bid_strategy lives on it, and the amount takes effect once an ad set joins this campaign (existingCampaignId on POST /v1/ads/create) and supplies its own bidAmount there. On Google, stored directly on the campaign's bidding strategy." }
                 roasAverageFloor: { type: number, description: "Decimal ROAS multiplier (2.0 = 2.0x). Required for LOWEST_COST_WITH_MIN_ROAS." }
                 portfolioBidStrategyId: { type: string, pattern: '^\d+$', description: "Google only. Attach an existing portfolio bid strategy (numeric id from GET /v1/ads/bid-strategies) to the new campaign instead of a standard one. Exclusive with bidStrategy." }
+                targetImpressionShare:
+                  allOf: [{ $ref: '#/components/schemas/GoogleTargetImpressionShare' }]
+                  description: "Google Search only. Target impression share bidding. Exclusive with bidStrategy, portfolioBidStrategyId and manualCpc; bidAmount is refused alongside it (the ceiling is maxCpc)."
+                manualCpc: { $ref: '#/components/schemas/GoogleManualCpc' }
+                networkSettings: { $ref: '#/components/schemas/GoogleNetworkSettings' }
             example:
               accountId: '69fc524892b3d8e85f893e73'
               adAccountId: 'act_757082720485182'
@@ -53622,7 +53662,8 @@ paths:
       summary: Update a campaign
       description: |
         Campaign-level edits. Send at least one of `budget`, `bidStrategy`,
-        `portfolioBidStrategyId`, `name` or `platformSpecificData`. An unsupported
+        `portfolioBidStrategyId`, `targetImpressionShare`, `manualCpc`, `networkSettings`,
+        `trackingUrlTemplate`, `finalUrlSuffix`, `name` or `platformSpecificData`. An unsupported
         field is always an error, never a silent drop.
 
         | Body field | Meta | Google | Others |
@@ -53630,6 +53671,10 @@ paths:
         | `bidStrategy` | Yes | Yes | 501 |
         | `bidAmount`, `roasAverageFloor` | 400 (ad-set level) | Yes | 400 |
         | `portfolioBidStrategyId` | 400 | Yes | 400 |
+        | `targetImpressionShare` | 400 | Search only | 400 |
+        | `manualCpc` | 400 | Search and Display | 400 |
+        | `networkSettings` | 400 | Search only | 400 |
+        | `trackingUrlTemplate`, `finalUrlSuffix` | 400 | Yes | 400 |
         | `budget` (CBO; ABO returns 409) | Yes | Daily only | OpenAI: daily or lifetime; others 501 |
         | `name` | Yes | 501 | 501 |
         | `platformSpecificData.spendCap` | Yes | 400 | 400 |
@@ -53643,7 +53688,12 @@ paths:
         `bidAmount` = Target CPA, `LOWEST_COST_WITH_MIN_ROAS` + `roasAverageFloor` =
         Target ROAS, `LOWEST_COST_WITH_BID_CAP` + `bidAmount` = Maximize Clicks with a
         CPC ceiling; `portfolioBidStrategyId` attaches a portfolio strategy instead
-        (exclusive with `bidStrategy`). Setting the standard triplet on a campaign that
+        (exclusive with `bidStrategy`). `targetImpressionShare` switches the campaign to
+        Target impression share and `manualCpc: { maxCpc }` to Manual CPC (every ad group of the campaign gets `maxCpc` as its bid, in the same mutate); each is exclusive with
+        every other strategy field. `networkSettings`, `trackingUrlTemplate` and
+        `finalUrlSuffix` go out in one campaign update, each field sent written on its own
+        leaf, so an omitted one keeps its current value; an empty string clears a URL field.
+        Setting the standard triplet on a campaign that
         is currently on a PORTFOLIO strategy is rejected: detach it in Google Ads
         first, since it is shared across campaigns.
 
@@ -53679,6 +53729,13 @@ paths:
                 roasAverageFloor: { type: number, description: "**Google only.** Decimal ROAS multiplier (2.0 = 2.0x), required for LOWEST_COST_WITH_MIN_ROAS." }
                 portfolioBidStrategyId: { type: string, pattern: '^\d+$', description: "**Google only.** Attach an existing portfolio bid strategy (numeric id from GET /v1/ads/bid-strategies) instead of setting bidStrategy. Exclusive with bidStrategy." }
                 allowSharedBudgetUpdate: { type: boolean, default: false, description: "Google only. Explicitly allow changing a shared campaign budget, affecting every campaign that uses it. Does not bypass an unknown sharing state." }
+                targetImpressionShare:
+                  allOf: [{ $ref: '#/components/schemas/GoogleTargetImpressionShare' }]
+                  description: "Google Search only. Target impression share bidding. Exclusive with bidStrategy, portfolioBidStrategyId and manualCpc; bidAmount is refused alongside it (the ceiling is maxCpc)."
+                manualCpc: { $ref: '#/components/schemas/GoogleManualCpc' }
+                networkSettings: { $ref: '#/components/schemas/GoogleNetworkSettings' }
+                trackingUrlTemplate: { type: string, description: "**Google only.** campaign.tracking_url_template; an empty string clears it." }
+                finalUrlSuffix: { type: string, description: "**Google only.** campaign.final_url_suffix; an empty string clears it." }
                 budget:
                   type: object
                   description: "Meta CBO, Google daily, or OpenAI Ads daily or lifetime campaign budget, in whole currency units."
@@ -53711,6 +53768,11 @@ paths:
                   bidAmount: { type: number }
                   roasAverageFloor: { type: number }
                   portfolioBidStrategyId: { type: string, description: "Google only. Echoed back, but NOT mirrored onto local Ad documents (no column for it yet)." }
+                  targetImpressionShare: { $ref: '#/components/schemas/GoogleTargetImpressionShare' }
+                  manualCpc: { $ref: '#/components/schemas/GoogleManualCpc' }
+                  networkSettings: { $ref: '#/components/schemas/GoogleNetworkSettings' }
+                  trackingUrlTemplate: { type: string }
+                  finalUrlSuffix: { type: string }
                   platformSpecificData: { type: object }
         '400': { description: "Invalid input, or a field the resolved platform does not support at the campaign level (see the support table)" }
         '401': { $ref: '#/components/responses/Unauthorized' }
@@ -54479,6 +54541,7 @@ paths:
                 campaignId: { type: string, description: "Google platform campaign ID (numeric) the ad group is created under." }
                 name: { type: string, minLength: 1, maxLength: 255 }
                 status: { type: string, enum: [ACTIVE, PAUSED], default: PAUSED }
+                maxCpc: { type: number, exclusiveMinimum: 0, description: "Max CPC of the new ad group, in the account's currency units. Send it when the campaign uses Manual CPC: Google gives an ad group without one a 0.01 bid." }
                 adAccountId: { type: string, description: "Platform ad account ID (Google customer ID, digits only). Only required when the connection has more than one." }
                 customerId: { type: string, deprecated: true, description: "Alias of adAccountId, kept for existing callers" }
       responses:
@@ -61650,7 +61713,7 @@ paths:
       x-resource-group: "ads"
       operationId: updateAdAccount
       tags: ["Ad Accounts"]
-      x-platforms: ["meta"]
+      x-platforms: ["meta", "google"]
       summary: Update ad account settings
       description: |
         Updates a Meta ad account in place: its name, its account-level spend cap, and its
@@ -61678,7 +61741,14 @@ paths:
         covers the common case where the same entity benefits from and pays for the ads.
         Read the current values back with `GET /v1/ads/dsa-defaults`.
 
-        Currently supported for Meta accounts only; other platforms return 400.
+        **Google: account-level URL tracking.** On a Google Ads connection, `adAccountId` is the
+        customer id and only `trackingUrlTemplate` / `finalUrlSuffix` are accepted (the Meta
+        fields return 400). They write `customer.tracking_url_template` and
+        `customer.final_url_suffix`, one update mask leaf per field sent; an empty string clears
+        the field. The response carries `urlTracking` with the values written. For one campaign,
+        send the same fields to PUT /v1/ads/campaigns/{campaignId}.
+
+        Other platforms return 400.
       security:
         - bearerAuth: []
       requestBody:
@@ -61696,6 +61766,8 @@ paths:
                 resetAmountSpent: { type: boolean, description: "Restart the amount counted against the cap from zero. Cannot be combined with spendCap null." }
                 defaultDsaBeneficiary: { type: string, maxLength: 100, description: "Legal entity benefiting from ads on this ad account" }
                 defaultDsaPayor: { type: string, maxLength: 100, description: "Legal entity paying for ads on this ad account. Defaults to defaultDsaBeneficiary when omitted. Requires defaultDsaBeneficiary." }
+                trackingUrlTemplate: { type: string, description: "**Google only.** Account tracking template (customer.tracking_url_template); an empty string clears it." }
+                finalUrlSuffix: { type: string, description: "**Google only.** Account final URL suffix (customer.final_url_suffix); an empty string clears it." }
             example:
               accountId: "64b1f0c8a1b2c3d4e5f60718"
               adAccountId: "act_123456789"
@@ -61710,6 +61782,12 @@ paths:
                 type: object
                 properties:
                   adAccountId: { type: string }
+                  urlTracking:
+                    type: object
+                    description: "Google only. The URL tracking fields written."
+                    properties:
+                      trackingUrlTemplate: { type: string }
+                      finalUrlSuffix: { type: string }
                   dsaDefaults:
                     type: object
                     description: "Present when defaultDsaBeneficiary was passed."
@@ -63581,6 +63659,13 @@ paths:
                   type: string
                   pattern: '^\d+$'
                   description: "Google Search and Display only. Performance Max rejects portfolio bidding. Attach an existing portfolio bid strategy (numeric id from GET /v1/ads/bid-strategies) to the new campaign instead of a standard one. Exclusive with bidStrategy."
+                targetImpressionShare:
+                  allOf: [{ $ref: '#/components/schemas/GoogleTargetImpressionShare' }]
+                  description: "Google Search only. Target impression share bidding. Exclusive with bidStrategy, portfolioBidStrategyId and manualCpc; bidAmount is refused alongside it (the ceiling is maxCpc)."
+                manualCpc: { $ref: '#/components/schemas/GoogleManualCpc' }
+                networkSettings:
+                  allOf: [{ $ref: '#/components/schemas/GoogleNetworkSettings' }]
+                  description: "Google Search only, when the call creates the campaign (400 with existingCampaignId or adSetId)."
                 valueRuleSetId:
                   type: string
                   pattern: '^\d+$'

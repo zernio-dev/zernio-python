@@ -1060,6 +1060,8 @@ class AdAccountsResource:
         reset_amount_spent: bool | None = None,
         default_dsa_beneficiary: str | None = None,
         default_dsa_payor: str | None = None,
+        tracking_url_template: str | None = None,
+        final_url_suffix: str | None = None,
     ) -> dict[str, Any]:
         """Update ad account settings"""
         payload = self._build_payload(
@@ -1070,6 +1072,8 @@ class AdAccountsResource:
             reset_amount_spent=reset_amount_spent,
             default_dsa_beneficiary=default_dsa_beneficiary,
             default_dsa_payor=default_dsa_payor,
+            tracking_url_template=tracking_url_template,
+            final_url_suffix=final_url_suffix,
         )
         return self._client._patch("/v1/ads/accounts", data=payload)
 
@@ -2139,6 +2143,8 @@ class AdAccountsResource:
         reset_amount_spent: bool | None = None,
         default_dsa_beneficiary: str | None = None,
         default_dsa_payor: str | None = None,
+        tracking_url_template: str | None = None,
+        final_url_suffix: str | None = None,
     ) -> dict[str, Any]:
         """Update ad account settings (async)"""
         payload = self._build_payload(
@@ -2149,6 +2155,8 @@ class AdAccountsResource:
             reset_amount_spent=reset_amount_spent,
             default_dsa_beneficiary=default_dsa_beneficiary,
             default_dsa_payor=default_dsa_payor,
+            tracking_url_template=tracking_url_template,
+            final_url_suffix=final_url_suffix,
         )
         return await self._client._apatch("/v1/ads/accounts", data=payload)
 

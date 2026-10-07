@@ -4527,6 +4527,8 @@ def register_generated_tools(mcp, _get_client):
         reset_amount_spent: bool | None = None,
         default_dsa_beneficiary: str | None = None,
         default_dsa_payor: str | None = None,
+        tracking_url_template: str | None = None,
+        final_url_suffix: str | None = None,
     ) -> str:
         """Update ad account settings
 
@@ -4547,7 +4549,7 @@ def register_generated_tools(mcp, _get_client):
 
         The values are written to the ad account on Meta, the same ...
 
-        Platforms: meta
+        Platforms: meta, google
 
         Args:
             account_id: Account ID (metaads, or a facebook/instagram posting account) (required)
@@ -4556,7 +4558,9 @@ def register_generated_tools(mcp, _get_client):
             spend_cap: Account spend cap in whole currency units; null removes it.
             reset_amount_spent: Restart the amount counted against the cap from zero. Cannot be combined with spendCap null.
             default_dsa_beneficiary: Legal entity benefiting from ads on this ad account
-            default_dsa_payor: Legal entity paying for ads on this ad account. Defaults to defaultDsaBeneficiary when omitted. Requires defaultDsaBeneficiary."""
+            default_dsa_payor: Legal entity paying for ads on this ad account. Defaults to defaultDsaBeneficiary when omitted. Requires defaultDsaBeneficiary.
+            tracking_url_template: **Google only.** Account tracking template (customer.tracking_url_template); an empty string clears it.
+            final_url_suffix: **Google only.** Account final URL suffix (customer.final_url_suffix); an empty string clears it."""
         client = _get_client()
         try:
             response = client.ad_accounts.update_ad_account(
@@ -4567,6 +4571,8 @@ def register_generated_tools(mcp, _get_client):
                 reset_amount_spent=reset_amount_spent,
                 default_dsa_beneficiary=default_dsa_beneficiary,
                 default_dsa_payor=default_dsa_payor,
+                tracking_url_template=tracking_url_template,
+                final_url_suffix=final_url_suffix,
             )
             return _format_response(response)
         except Exception as e:
@@ -5292,11 +5298,13 @@ def register_generated_tools(mcp, _get_client):
             "TARGET_ROAS",
             "MAXIMIZE_CONVERSIONS",
             "MAXIMIZE_CONVERSION_VALUE",
+            "TARGET_IMPRESSION_SHARE",
         ],
         ad_account_id: str | None = None,
         customer_id: str | None = None,
         target_cpa: float | None = None,
         target_roas: float | None = None,
+        target_impression_share: dict[str, Any] | None = None,
     ) -> str:
         """Create portfolio bid strategy
 
@@ -5311,7 +5319,8 @@ def register_generated_tools(mcp, _get_client):
             name: (required)
             type: (required)
             target_cpa: Required when type is TARGET_CPA, in the account's currency units.
-            target_roas: Required when type is TARGET_ROAS; a multiplier (2.0 = 2.0x)."""
+            target_roas: Required when type is TARGET_ROAS; a multiplier (2.0 = 2.0x).
+            target_impression_share: Required when type is TARGET_IMPRESSION_SHARE, and refused with any other type. Object with keys: location (one of: ANYWHERE_ON_PAGE, TOP_OF_PAGE, ABSOLUTE_TOP_OF_PAGE; required); percent (number, required) - Target share of impressions, in percent (65 = 65%). Sent to Google as location_fraction_micros (1% = 10,000).; maxCpc (number, required) - Max CPC bid limit, in the account's currency units. Google requires it."""
         client = _get_client()
         try:
             response = client.ad_campaigns.create_bid_strategy(
@@ -5322,6 +5331,7 @@ def register_generated_tools(mcp, _get_client):
                 type=type,
                 target_cpa=target_cpa,
                 target_roas=target_roas,
+                target_impression_share=target_impression_share,
             )
             return _format_response(response)
         except Exception as e:
@@ -5346,10 +5356,12 @@ def register_generated_tools(mcp, _get_client):
             "TARGET_ROAS",
             "MAXIMIZE_CONVERSIONS",
             "MAXIMIZE_CONVERSION_VALUE",
+            "TARGET_IMPRESSION_SHARE",
         ]
         | None = None,
         target_cpa: float | None = None,
         target_roas: float | None = None,
+        target_impression_share: dict[str, Any] | None = None,
     ) -> str:
         """Update portfolio bid strategy
 
@@ -5365,7 +5377,8 @@ def register_generated_tools(mcp, _get_client):
             name
             type
             target_cpa
-            target_roas"""
+            target_roas
+            target_impression_share: Retargets a TARGET_IMPRESSION_SHARE strategy; location, percent and maxCpc are all written. Object with keys: location (one of: ANYWHERE_ON_PAGE, TOP_OF_PAGE, ABSOLUTE_TOP_OF_PAGE; required); percent (number, required) - Target share of impressions, in percent (65 = 65%). Sent to Google as location_fraction_micros (1% = 10,000).; maxCpc (number, required) - Max CPC bid limit, in the account's currency units. Google requires it."""
         client = _get_client()
         try:
             response = client.ad_campaigns.update_bid_strategy(
@@ -5377,6 +5390,7 @@ def register_generated_tools(mcp, _get_client):
                 type=type,
                 target_cpa=target_cpa,
                 target_roas=target_roas,
+                target_impression_share=target_impression_share,
             )
             return _format_response(response)
         except Exception as e:
@@ -5699,6 +5713,9 @@ def register_generated_tools(mcp, _get_client):
         bid_amount: float | None = None,
         roas_average_floor: float | None = None,
         portfolio_bid_strategy_id: str | None = None,
+        target_impression_share: dict[str, Any] | None = None,
+        manual_cpc: dict[str, Any] | None = None,
+        network_settings: dict[str, Any] | None = None,
     ) -> str:
         """Create a standalone campaign
 
@@ -5736,7 +5753,10 @@ def register_generated_tools(mcp, _get_client):
             bid_strategy: Campaign bid strategy. Meta stores `bid_strategy` alongside the budget, so this REQUIRES `budgetAmount` + `budgetType` on the same request; sending it without a campaign budget is a 400. A campaign carrying a strategy without its `bid_amount` makes every ad set created under it fail with an error that names the ad set (code 100, subcode 1815857), so the bad state is rejected up front rather than accepted. To bid at ad-set level on Meta, set the strategy there instead. On Google: LOWEST_COST_WITHOUT_CAP = Maximize Conversions, COST_CAP + bidAmount = Target CPA, LOWEST_COST_WITH_MIN_ROAS + roasAverageFloor = Target ROAS, LOWEST_COST_WITH_BID_CAP + bidAmount = Maximize Clicks with a CPC ceiling; portfolioBidStrategyId attaches a portfolio strategy instead.
             bid_amount: Whole currency units (USD: 5 = $5.00). Required for LOWEST_COST_WITH_BID_CAP and COST_CAP; ignored otherwise. On Meta, validated here but NOT stored: the campaign object has no bid_amount field, only bid_strategy lives on it, and the amount takes effect once an ad set joins this campaign (existingCampaignId on POST /v1/ads/create) and supplies its own bidAmount there. On Google, stored directly on the campaign's bidding strategy.
             roas_average_floor: Decimal ROAS multiplier (2.0 = 2.0x). Required for LOWEST_COST_WITH_MIN_ROAS.
-            portfolio_bid_strategy_id: Google only. Attach an existing portfolio bid strategy (numeric id from GET /v1/ads/bid-strategies) to the new campaign instead of a standard one. Exclusive with bidStrategy."""
+            portfolio_bid_strategy_id: Google only. Attach an existing portfolio bid strategy (numeric id from GET /v1/ads/bid-strategies) to the new campaign instead of a standard one. Exclusive with bidStrategy.
+            target_impression_share: Google Search only. Target impression share bidding. Exclusive with bidStrategy, portfolioBidStrategyId and manualCpc; bidAmount is refused alongside it (the ceiling is maxCpc). Object with keys: location (one of: ANYWHERE_ON_PAGE, TOP_OF_PAGE, ABSOLUTE_TOP_OF_PAGE; required); percent (number, required) - Target share of impressions, in percent (65 = 65%). Sent to Google as location_fraction_micros (1% = 10,000).; maxCpc (number, required) - Max CPC bid limit, in the account's currency units. Google requires it.
+            manual_cpc: Object with keys: maxCpc (number, required) - Max CPC of the ad groups, in the account's currency units: set on the ad group created with the campaign, and on every ad group of the campaign when an update ...
+            network_settings: Object with keys: searchPartners (boolean) - campaign.network_settings.target_search_network; displayNetwork (boolean) - campaign.network_settings.target_content_network (Search with Display expansion)"""
         client = _get_client()
         try:
             response = client.ad_campaigns.create_ad_campaign(
@@ -5757,6 +5777,9 @@ def register_generated_tools(mcp, _get_client):
                 bid_amount=bid_amount,
                 roas_average_floor=roas_average_floor,
                 portfolio_bid_strategy_id=portfolio_bid_strategy_id,
+                target_impression_share=target_impression_share,
+                manual_cpc=manual_cpc,
+                network_settings=network_settings,
             )
             return _format_response(response)
         except Exception as e:
@@ -6026,6 +6049,11 @@ def register_generated_tools(mcp, _get_client):
         roas_average_floor: float | None = None,
         portfolio_bid_strategy_id: str | None = None,
         allow_shared_budget_update: bool = False,
+        target_impression_share: dict[str, Any] | None = None,
+        manual_cpc: dict[str, Any] | None = None,
+        network_settings: dict[str, Any] | None = None,
+        tracking_url_template: str | None = None,
+        final_url_suffix: str | None = None,
         budget: dict[str, Any] | None = None,
         name: str | None = None,
         platform_specific_data: dict[str, Any] | None = None,
@@ -6033,7 +6061,8 @@ def register_generated_tools(mcp, _get_client):
         """Update a campaign
 
         Campaign-level edits. Send at least one of `budget`, `bidStrategy`,
-        `portfolioBidStrategyId`, `name` or `platformSpecificData`. An unsupported
+        `portfolioBidStrategyId`, `targetImpressionShare`, `manualCpc`, `networkSettings`,
+        `trackingUrlTemplate`, `finalUrlSuffix`, `name` or `platformSpecificData`. An unsupported
         field is always an error, never a silent drop.
 
         | Body field | Meta | Google | Others |
@@ -6041,17 +6070,16 @@ def register_generated_tools(mcp, _get_client):
         | `bidStrategy` | Yes | Yes | 501 |
         | `bidAmount`, `roasAverageFloor` | 400 (ad-set level) | Yes | 400 |
         | `portfolioBidStrategyId` | 400 | Yes | 400 |
+        | `targetImpressionShare` | 400 | Search only | 400 |
+        | `manualCpc` | 400 | Search and Display | 400 |
+        | `networkSettings` | 400 | Search only | 400 |
+        | `trackingUrlTemplate`, `finalUrlSuffix` | 400 | Yes | 400 |
         | `budget` (CBO; ABO returns 409) | Yes | Daily only | OpenAI: daily or lifetime; others 501 |
         | `name` | Yes | 501 | 501 |
         | `platformSpecificData.spendCap` | Yes | 400 | 400 |
         | `accountId` (empty campaigns) | Yes | - | - |
 
-        Meta budget edits check the live campaign budget, so an older local ABO stamp
-        cannot block a CBO campaign. A successful edit repairs local ad budget fields.
-        A live ABO campaign still returns 409 with the ad-set budget endpoint.
-
-        On Google: `LOWEST_COST_WITHOUT_CAP` = Maximize Conversions, `COST_CAP` +
-        `bidAmount` = Target CPA, `LOWEST_COST_WITH_MIN_ROAS` + ...
+        Meta budget edits check the live campaign budget, so an ...
 
         Platforms: meta, google, tiktok, linkedin, pinterest, x, openai
 
@@ -6064,6 +6092,11 @@ def register_generated_tools(mcp, _get_client):
             roas_average_floor: **Google only.** Decimal ROAS multiplier (2.0 = 2.0x), required for LOWEST_COST_WITH_MIN_ROAS.
             portfolio_bid_strategy_id: **Google only.** Attach an existing portfolio bid strategy (numeric id from GET /v1/ads/bid-strategies) instead of setting bidStrategy. Exclusive with bidStrategy.
             allow_shared_budget_update: Google only. Explicitly allow changing a shared campaign budget, affecting every campaign that uses it. Does not bypass an unknown sharing state.
+            target_impression_share: Google Search only. Target impression share bidding. Exclusive with bidStrategy, portfolioBidStrategyId and manualCpc; bidAmount is refused alongside it (the ceiling is maxCpc). Object with keys: location (one of: ANYWHERE_ON_PAGE, TOP_OF_PAGE, ABSOLUTE_TOP_OF_PAGE; required); percent (number, required) - Target share of impressions, in percent (65 = 65%). Sent to Google as location_fraction_micros (1% = 10,000).; maxCpc (number, required) - Max CPC bid limit, in the account's currency units. Google requires it.
+            manual_cpc: Object with keys: maxCpc (number, required) - Max CPC of the ad groups, in the account's currency units: set on the ad group created with the campaign, and on every ad group of the campaign when an update ...
+            network_settings: Object with keys: searchPartners (boolean) - campaign.network_settings.target_search_network; displayNetwork (boolean) - campaign.network_settings.target_content_network (Search with Display expansion)
+            tracking_url_template: **Google only.** campaign.tracking_url_template; an empty string clears it.
+            final_url_suffix: **Google only.** campaign.final_url_suffix; an empty string clears it.
             budget: Meta CBO, Google daily, or OpenAI Ads daily or lifetime campaign budget, in whole currency units. Object with keys: amount (number, required) - Budget amount in the ad account's currency; type (one of: daily, lifetime; required)
             name: **Meta only.** Rename the campaign.
             platform_specific_data: **Meta only.** Platform implied by the `platform` body param, same convention as POST /v1/ads/create. Object with keys: spendCap (number or null) - Campaign lifetime spend cap, in the ad account's currency (Meta `spend_cap`). Pass null to remove the cap; 0 is rejected by Meta."""
@@ -6078,6 +6111,11 @@ def register_generated_tools(mcp, _get_client):
                 roas_average_floor=roas_average_floor,
                 portfolio_bid_strategy_id=portfolio_bid_strategy_id,
                 allow_shared_budget_update=allow_shared_budget_update,
+                target_impression_share=target_impression_share,
+                manual_cpc=manual_cpc,
+                network_settings=network_settings,
+                tracking_url_template=tracking_url_template,
+                final_url_suffix=final_url_suffix,
                 budget=budget,
                 name=name,
                 platform_specific_data=platform_specific_data,
@@ -6508,6 +6546,7 @@ def register_generated_tools(mcp, _get_client):
         campaign_id: str,
         name: str,
         status: Literal["ACTIVE", "PAUSED"] = "PAUSED",
+        max_cpc: float | None = None,
         ad_account_id: str | None = None,
         customer_id: str | None = None,
     ) -> str:
@@ -6532,6 +6571,7 @@ def register_generated_tools(mcp, _get_client):
             campaign_id: Google platform campaign ID (numeric) the ad group is created under. (required)
             name: (required)
             status
+            max_cpc: Max CPC of the new ad group, in the account's currency units. Send it when the campaign uses Manual CPC: Google gives an ad group without one a 0.01 bid.
             ad_account_id: Platform ad account ID (Google customer ID, digits only). Only required when the connection has more than one.
             customer_id: Alias of adAccountId, kept for existing callers"""
         client = _get_client()
@@ -6542,6 +6582,7 @@ def register_generated_tools(mcp, _get_client):
                 campaign_id=campaign_id,
                 name=name,
                 status=status,
+                max_cpc=max_cpc,
                 ad_account_id=ad_account_id,
                 customer_id=customer_id,
             )
@@ -8516,6 +8557,9 @@ def register_generated_tools(mcp, _get_client):
         bid_amount: float | None = None,
         roas_average_floor: float | None = None,
         portfolio_bid_strategy_id: str | None = None,
+        target_impression_share: dict[str, Any] | None = None,
+        manual_cpc: dict[str, Any] | None = None,
+        network_settings: dict[str, Any] | None = None,
         value_rule_set_id: str | None = None,
         value_rules_applied: bool | None = None,
         platform_specific_data: dict[str, Any] | None = None,
@@ -8872,6 +8916,9 @@ def register_generated_tools(mcp, _get_client):
         ROAS floor lives on the campaign only (set via `POST /v1/ads/campaigns`);
         there is no supported way to set it while joining a CBO campaign here.
                 portfolio_bid_strategy_id: Google Search and Display only. Performance Max rejects portfolio bidding. Attach an existing portfolio bid strategy (numeric id from GET /v1/ads/bid-strategies) to the new campaign instead of a standard one. Exclusive with bidStrategy.
+                target_impression_share: Google Search only. Target impression share bidding. Exclusive with bidStrategy, portfolioBidStrategyId and manualCpc; bidAmount is refused alongside it (the ceiling is maxCpc). Object with keys: location (one of: ANYWHERE_ON_PAGE, TOP_OF_PAGE, ABSOLUTE_TOP_OF_PAGE; required); percent (number, required) - Target share of impressions, in percent (65 = 65%). Sent to Google as location_fraction_micros (1% = 10,000).; maxCpc (number, required) - Max CPC bid limit, in the account's currency units. Google requires it.
+                manual_cpc: Object with keys: maxCpc (number, required) - Max CPC of the ad groups, in the account's currency units: set on the ad group created with the campaign, and on every ad group of the campaign when an update ...
+                network_settings: Google Search only, when the call creates the campaign (400 with existingCampaignId or adSetId). Object with keys: searchPartners (boolean) - campaign.network_settings.target_search_network; displayNetwork (boolean) - campaign.network_settings.target_content_network (Search with Display expansion)
                 value_rule_set_id: Meta only (facebook, instagram; other platforms return 400). Value rule set
         to attach to the new ad set, from `/v1/ads/value-rule-sets`. Attachment is
         driven by this id, so `valueRulesApplied` is optional alongside it.
@@ -9037,6 +9084,9 @@ def register_generated_tools(mcp, _get_client):
                 bid_amount=bid_amount,
                 roas_average_floor=roas_average_floor,
                 portfolio_bid_strategy_id=portfolio_bid_strategy_id,
+                target_impression_share=target_impression_share,
+                manual_cpc=manual_cpc,
+                network_settings=network_settings,
                 value_rule_set_id=value_rule_set_id,
                 value_rules_applied=value_rules_applied,
                 platform_specific_data=platform_specific_data,

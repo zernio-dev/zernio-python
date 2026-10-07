@@ -194,6 +194,7 @@ class AdCampaignsResource:
         customer_id: str | None = None,
         target_cpa: float | None = None,
         target_roas: float | None = None,
+        target_impression_share: Any | None = None,
     ) -> dict[str, Any]:
         """Create portfolio bid strategy"""
         payload = self._build_payload(
@@ -204,6 +205,7 @@ class AdCampaignsResource:
             type=type,
             target_cpa=target_cpa,
             target_roas=target_roas,
+            target_impression_share=target_impression_share,
         )
         return self._client._post("/v1/ads/bid-strategies", data=payload)
 
@@ -218,6 +220,7 @@ class AdCampaignsResource:
         type: str | None = None,
         target_cpa: float | None = None,
         target_roas: float | None = None,
+        target_impression_share: Any | None = None,
     ) -> dict[str, Any]:
         """Update portfolio bid strategy"""
         payload = self._build_payload(
@@ -228,6 +231,7 @@ class AdCampaignsResource:
             type=type,
             target_cpa=target_cpa,
             target_roas=target_roas,
+            target_impression_share=target_impression_share,
         )
         return self._client._patch(
             f"/v1/ads/bid-strategies/{strategy_id}", data=payload
@@ -354,6 +358,9 @@ class AdCampaignsResource:
         bid_amount: float | None = None,
         roas_average_floor: float | None = None,
         portfolio_bid_strategy_id: str | None = None,
+        target_impression_share: Any | None = None,
+        manual_cpc: Any | None = None,
+        network_settings: Any | None = None,
     ) -> dict[str, Any]:
         """Create a standalone campaign"""
         payload = self._build_payload(
@@ -374,6 +381,9 @@ class AdCampaignsResource:
             bid_amount=bid_amount,
             roas_average_floor=roas_average_floor,
             portfolio_bid_strategy_id=portfolio_bid_strategy_id,
+            target_impression_share=target_impression_share,
+            manual_cpc=manual_cpc,
+            network_settings=network_settings,
         )
         headers: dict[str, str] = {}
         if idempotency_key is not None:
@@ -466,6 +476,11 @@ class AdCampaignsResource:
         roas_average_floor: float | None = None,
         portfolio_bid_strategy_id: str | None = None,
         allow_shared_budget_update: bool | None = False,
+        target_impression_share: Any | None = None,
+        manual_cpc: Any | None = None,
+        network_settings: Any | None = None,
+        tracking_url_template: str | None = None,
+        final_url_suffix: str | None = None,
         budget: dict[str, Any] | None = None,
         name: str | None = None,
         platform_specific_data: dict[str, Any] | None = None,
@@ -479,6 +494,11 @@ class AdCampaignsResource:
             roas_average_floor=roas_average_floor,
             portfolio_bid_strategy_id=portfolio_bid_strategy_id,
             allow_shared_budget_update=allow_shared_budget_update,
+            target_impression_share=target_impression_share,
+            manual_cpc=manual_cpc,
+            network_settings=network_settings,
+            tracking_url_template=tracking_url_template,
+            final_url_suffix=final_url_suffix,
             budget=budget,
             name=name,
             platform_specific_data=platform_specific_data,
@@ -615,6 +635,7 @@ class AdCampaignsResource:
         *,
         idempotency_key: str | None = None,
         status: str | None = "PAUSED",
+        max_cpc: float | None = None,
         ad_account_id: str | None = None,
         customer_id: str | None = None,
     ) -> dict[str, Any]:
@@ -625,6 +646,7 @@ class AdCampaignsResource:
             campaign_id=campaign_id,
             name=name,
             status=status,
+            max_cpc=max_cpc,
             ad_account_id=ad_account_id,
             customer_id=customer_id,
         )
@@ -1413,6 +1435,9 @@ class AdCampaignsResource:
         bid_amount: float | None = None,
         roas_average_floor: float | None = None,
         portfolio_bid_strategy_id: str | None = None,
+        target_impression_share: Any | None = None,
+        manual_cpc: Any | None = None,
+        network_settings: Any | None = None,
         value_rule_set_id: str | None = None,
         value_rules_applied: bool | None = None,
         platform_specific_data: Any | None = None,
@@ -1530,6 +1555,9 @@ class AdCampaignsResource:
             bid_amount=bid_amount,
             roas_average_floor=roas_average_floor,
             portfolio_bid_strategy_id=portfolio_bid_strategy_id,
+            target_impression_share=target_impression_share,
+            manual_cpc=manual_cpc,
+            network_settings=network_settings,
             value_rule_set_id=value_rule_set_id,
             value_rules_applied=value_rules_applied,
             platform_specific_data=platform_specific_data,
@@ -1693,6 +1721,7 @@ class AdCampaignsResource:
         customer_id: str | None = None,
         target_cpa: float | None = None,
         target_roas: float | None = None,
+        target_impression_share: Any | None = None,
     ) -> dict[str, Any]:
         """Create portfolio bid strategy (async)"""
         payload = self._build_payload(
@@ -1703,6 +1732,7 @@ class AdCampaignsResource:
             type=type,
             target_cpa=target_cpa,
             target_roas=target_roas,
+            target_impression_share=target_impression_share,
         )
         return await self._client._apost("/v1/ads/bid-strategies", data=payload)
 
@@ -1717,6 +1747,7 @@ class AdCampaignsResource:
         type: str | None = None,
         target_cpa: float | None = None,
         target_roas: float | None = None,
+        target_impression_share: Any | None = None,
     ) -> dict[str, Any]:
         """Update portfolio bid strategy (async)"""
         payload = self._build_payload(
@@ -1727,6 +1758,7 @@ class AdCampaignsResource:
             type=type,
             target_cpa=target_cpa,
             target_roas=target_roas,
+            target_impression_share=target_impression_share,
         )
         return await self._client._apatch(
             f"/v1/ads/bid-strategies/{strategy_id}", data=payload
@@ -1855,6 +1887,9 @@ class AdCampaignsResource:
         bid_amount: float | None = None,
         roas_average_floor: float | None = None,
         portfolio_bid_strategy_id: str | None = None,
+        target_impression_share: Any | None = None,
+        manual_cpc: Any | None = None,
+        network_settings: Any | None = None,
     ) -> dict[str, Any]:
         """Create a standalone campaign (async)"""
         payload = self._build_payload(
@@ -1875,6 +1910,9 @@ class AdCampaignsResource:
             bid_amount=bid_amount,
             roas_average_floor=roas_average_floor,
             portfolio_bid_strategy_id=portfolio_bid_strategy_id,
+            target_impression_share=target_impression_share,
+            manual_cpc=manual_cpc,
+            network_settings=network_settings,
         )
         headers: dict[str, str] = {}
         if idempotency_key is not None:
@@ -1971,6 +2009,11 @@ class AdCampaignsResource:
         roas_average_floor: float | None = None,
         portfolio_bid_strategy_id: str | None = None,
         allow_shared_budget_update: bool | None = False,
+        target_impression_share: Any | None = None,
+        manual_cpc: Any | None = None,
+        network_settings: Any | None = None,
+        tracking_url_template: str | None = None,
+        final_url_suffix: str | None = None,
         budget: dict[str, Any] | None = None,
         name: str | None = None,
         platform_specific_data: dict[str, Any] | None = None,
@@ -1984,6 +2027,11 @@ class AdCampaignsResource:
             roas_average_floor=roas_average_floor,
             portfolio_bid_strategy_id=portfolio_bid_strategy_id,
             allow_shared_budget_update=allow_shared_budget_update,
+            target_impression_share=target_impression_share,
+            manual_cpc=manual_cpc,
+            network_settings=network_settings,
+            tracking_url_template=tracking_url_template,
+            final_url_suffix=final_url_suffix,
             budget=budget,
             name=name,
             platform_specific_data=platform_specific_data,
@@ -2124,6 +2172,7 @@ class AdCampaignsResource:
         *,
         idempotency_key: str | None = None,
         status: str | None = "PAUSED",
+        max_cpc: float | None = None,
         ad_account_id: str | None = None,
         customer_id: str | None = None,
     ) -> dict[str, Any]:
@@ -2134,6 +2183,7 @@ class AdCampaignsResource:
             campaign_id=campaign_id,
             name=name,
             status=status,
+            max_cpc=max_cpc,
             ad_account_id=ad_account_id,
             customer_id=customer_id,
         )
@@ -2932,6 +2982,9 @@ class AdCampaignsResource:
         bid_amount: float | None = None,
         roas_average_floor: float | None = None,
         portfolio_bid_strategy_id: str | None = None,
+        target_impression_share: Any | None = None,
+        manual_cpc: Any | None = None,
+        network_settings: Any | None = None,
         value_rule_set_id: str | None = None,
         value_rules_applied: bool | None = None,
         platform_specific_data: Any | None = None,
@@ -3049,6 +3102,9 @@ class AdCampaignsResource:
             bid_amount=bid_amount,
             roas_average_floor=roas_average_floor,
             portfolio_bid_strategy_id=portfolio_bid_strategy_id,
+            target_impression_share=target_impression_share,
+            manual_cpc=manual_cpc,
+            network_settings=network_settings,
             value_rule_set_id=value_rule_set_id,
             value_rules_applied=value_rules_applied,
             platform_specific_data=platform_specific_data,
