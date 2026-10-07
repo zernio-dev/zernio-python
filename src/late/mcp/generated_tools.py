@@ -651,6 +651,9 @@ def register_generated_tools(mcp, _get_client):
         | None = None,
         order: Literal["asc", "desc"] = "asc",
         include_over_limit: bool = False,
+        exclude_hidden: bool = False,
+        include_sandbox: bool = False,
+        include_status_counts: bool = False,
         page: int | None = None,
         limit: int | None = None,
         profile_ids: str | None = None,
@@ -658,23 +661,36 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """List accounts
 
-        Returns connected accounts. Only includes accounts within the plan limit by default. Follower data requires analytics add-on.
-        Supports optional server-side pagination via page/limit params. When omitted, returns all accounts (backward-compatible).
-        page and limit must be supplied together; out-of-range page/limit values are rejected with 400 rather than silently clamped.
+            Returns connected accounts. Only includes accounts within the plan limit by default. Follower data requires analytics add-on.
+            Supports optional server-side pagination via page/limit params. When omitted, returns all accounts (backward-compatible).
+            page and limit must be supplied together; out-of-range page/limit values are rejected with 400 rather than silently clamped.
 
-        Args:
-            profile_id: Filter accounts by profile ID. Must be a valid ObjectId.
-            platform: Filter accounts by platform (e.g. "instagram", "twitter").
-            status: Filter accounts by connection status. `connected` returns healthy accounts; `disconnected` returns accounts that need reconnection (per the same reconnection check surfaced in the dashboard). Omit to return accounts in any status. When combined with page/limit, pagination totals reflect the filtered result set.
-            search: Case-insensitive match on the account username, display name or platform user id, or an exact account id. Combine with page/limit to paginate the matches.
-            category: Only accounts of this kind. ads = ad accounts (Meta, Google, LinkedIn, Pinterest, TikTok, X, OpenAI), communication = WhatsApp, Telegram, Discord, Slack and iMessage, blogs = Shopify and WordPress, social = every other platform.
-            sort: Sort a paginated listing (page/limit) by account name, platform, profile name, status (accounts needing a reconnect first when ascending) or connection date. Ties keep the default order: platform, then newest first.
-            order: Direction for `sort`.
-            include_over_limit: When true, includes accounts from over-limit profiles.
-            page: Page number (1-based). Must be provided together with limit to enable server-side pagination; sending only one of the two returns 400. Omit both for all accounts.
-            limit: Page size. Must be provided together with page; sending only one of the two returns 400.
-            profile_ids: Comma-separated profile IDs (up to 50) to preview, together with perProfile. The response then also carries `profileTotals`.
-            per_profile: Return a preview of each profile in profileIds: the newest account of every platform it has, topped up to at least N. Requires profileIds; cannot be combined with page and limit."""
+            Args:
+                profile_id: Filter accounts by profile ID. Must be a valid ObjectId.
+                platform: Filter accounts by platform (e.g. "instagram", "twitter").
+                status: Filter accounts by connection status. `connected` returns healthy accounts; `disconnected` returns accounts that need reconnection (per the same reconnection check surfaced in the dashboard). Omit to return accounts in any status. When combined with page/limit, pagination totals reflect the filtered result set.
+                search: Case-insensitive match on the account username, display name or platform user id, or an exact account id. Combine with page/limit to paginate the matches.
+                category: Only accounts of this kind. ads = ad accounts (Meta, Google, LinkedIn, Pinterest, TikTok, X, OpenAI), communication = WhatsApp, Telegram, Discord, Slack and iMessage, blogs = Shopify and WordPress, social = every other platform.
+                sort: Sort a paginated listing (page/limit) by account name, platform, profile name, status (accounts needing a reconnect first when ascending) or connection date. Ties keep the default order: platform, then newest first.
+                order: Direction for `sort`.
+                include_over_limit: When true, includes accounts from over-limit profiles.
+                exclude_hidden: When true, leaves out accounts the dashboard does not show as connections: posting
+        accounts with `enabled: false` (ads accounts are always kept, whatever their `enabled`
+        value) and the internal `sms` and `phone` accounts behind each phone number. Applied
+        before pagination, so page totals and `statusCounts` count only the remaining accounts.
+        Sandbox accounts added by `includeSandbox` are appended after this filter. Accepts
+        `true` or `false` in any letter case; any other value returns 400.
+                include_sandbox: When true, appends the shared WhatsApp sandbox account and the iMessage sandbox account
+        to the list when they are active, honouring `platform` but no other filter. Ignored on
+        a paginated request (page/limit) and together with `perProfile`. Accepts `true` or
+        `false` in any letter case; any other value returns 400.
+                include_status_counts: When true, the response carries `statusCounts`: how many accounts match every other
+        filter of the request (with `status` lifted) in total and how many of those need a
+        reconnection. Accepts `true` or `false` in any letter case; any other value returns 400.
+                page: Page number (1-based). Must be provided together with limit to enable server-side pagination; sending only one of the two returns 400. Omit both for all accounts.
+                limit: Page size. Must be provided together with page; sending only one of the two returns 400.
+                profile_ids: Comma-separated profile IDs (up to 50) to preview, together with perProfile. The response then also carries `profileTotals`.
+                per_profile: Return a preview of each profile in profileIds: the newest account of every platform it has, topped up to at least N. Requires profileIds; cannot be combined with page and limit."""
         client = _get_client()
         try:
             response = client.accounts.list_accounts(
@@ -686,6 +702,9 @@ def register_generated_tools(mcp, _get_client):
                 sort=sort,
                 order=order,
                 include_over_limit=include_over_limit,
+                exclude_hidden=exclude_hidden,
+                include_sandbox=include_sandbox,
+                include_status_counts=include_status_counts,
                 page=page,
                 limit=limit,
                 profile_ids=profile_ids,

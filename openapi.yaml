@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.234.1"
+  version: "1.235.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -9713,8 +9713,11 @@ components:
           description: |
             Whether the user explicitly activated this account. false means the account was
             created as a side effect (e.g., posting account auto-created when user connected
-            ads first). Such accounts are hidden from this list, cannot be posted to
-            (`ACCOUNT_NOT_ENABLED_FOR_POSTING`), and are not billed as connected accounts.
+            ads first). GET /v1/accounts still returns such accounts unless `excludeHidden=true`
+            is passed. They cannot be posted to (`ACCOUNT_NOT_ENABLED_FOR_POSTING`) and are not
+            billed as connected accounts. On an ads account (`metaads`, `googleads`, ...) the value
+            does not hide the connection: ads accounts are listed whatever their `enabled` value and
+            keep working for ads.
         metadata:
           type: object
           description: |
@@ -10818,6 +10821,17 @@ components:
           type: object
           additionalProperties: { type: integer }
           description: 'Only with profileIds and perProfile. Accounts matching the filters per profile ID; a profile with none is absent.'
+        statusCounts:
+          type: object
+          description: 'Only with includeStatusCounts=true. Counts over every filter of the request except status.'
+          required: [all, disconnected]
+          properties:
+            all:
+              type: integer
+              description: Accounts matching the filters in any status.
+            disconnected:
+              type: integer
+              description: Of those, the accounts that need reconnection.
     FollowerStatsResponse:
       type: object
       properties:
@@ -23129,6 +23143,40 @@ paths:
             type: boolean
             default: false
           description: When true, includes accounts from over-limit profiles.
+        - name: excludeHidden
+          in: query
+          required: false
+          schema:
+            type: boolean
+            default: false
+          description: |
+            When true, leaves out accounts the dashboard does not show as connections: posting
+            accounts with `enabled: false` (ads accounts are always kept, whatever their `enabled`
+            value) and the internal `sms` and `phone` accounts behind each phone number. Applied
+            before pagination, so page totals and `statusCounts` count only the remaining accounts.
+            Sandbox accounts added by `includeSandbox` are appended after this filter. Accepts
+            `true` or `false` in any letter case; any other value returns 400.
+        - name: includeSandbox
+          in: query
+          required: false
+          schema:
+            type: boolean
+            default: false
+          description: |
+            When true, appends the shared WhatsApp sandbox account and the iMessage sandbox account
+            to the list when they are active, honouring `platform` but no other filter. Ignored on
+            a paginated request (page/limit) and together with `perProfile`. Accepts `true` or
+            `false` in any letter case; any other value returns 400.
+        - name: includeStatusCounts
+          in: query
+          required: false
+          schema:
+            type: boolean
+            default: false
+          description: |
+            When true, the response carries `statusCounts`: how many accounts match every other
+            filter of the request (with `status` lifted) in total and how many of those need a
+            reconnection. Accepts `true` or `false` in any letter case; any other value returns 400.
         - name: page
           in: query
           schema: { type: integer, minimum: 1 }
