@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.226.1"
+  version: "1.227.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -25606,6 +25606,9 @@ paths:
                         access_token: { type: string, description: Page-specific access token }
                         category: { type: string, description: Page category }
                         tasks: { type: array, items: { type: string }, description: User permissions for this page }
+                  truncated:
+                    type: boolean
+                    description: "True when Meta still had more Pages after the listing hit its time budget or the 10,000 Page cap, so `pages` is incomplete. Do not ask the user to reconnect with fewer Pages ticked: Meta replaces the Page grant on every authorization, so unticked Pages lose access."
               example:
                 pages:
                   - id: "123456789"
@@ -25614,6 +25617,7 @@ paths:
                     access_token: "EAAxxxxx..."
                     category: "Brand"
                     tasks: ["MANAGE", "CREATE_CONTENT"]
+                truncated: false
         '400': { description: 'Invalid or expired selectionToken, no granted Pages, or missing classic profileId and tempToken.' }
         '403': { description: 'The caller is not the initiating user or no longer has profile access.' }
         '401': { $ref: '#/components/responses/Unauthorized' }
