@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.239.1"
+  version: "1.240.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -31521,8 +31521,10 @@ paths:
                     description: "Product photography"
                     privacy: "PUBLIC"
         '400': { description: Not a Pinterest account }
-        '401': { $ref: '#/components/responses/Unauthorized' }
+        '401': { description: 'Missing or invalid API key (missing_credentials / invalid_credentials), or the stored Pinterest token was revoked or expired (reconnect_required): reconnect the account.' }
         '404': { description: Account not found }
+        '409': { description: 'The account has no stored access token (ads_connection_required). Reconnect it.' }
+        '502': { description: 'Pinterest rejected or failed the request.' }
     put:
       x-resource-group: "accounts"
       operationId: updatePinterestBoards
@@ -31794,7 +31796,7 @@ paths:
                     thumbnailUrl: "https://i.ytimg.com/vi/yyy/mqdefault.jpg"
                 defaultPlaylistId: null
         '400': { description: Not a YouTube account }
-        '401': { $ref: '#/components/responses/Unauthorized' }
+        '401': { description: 'Missing or invalid API key (missing_credentials / invalid_credentials), or the stored YouTube token was revoked or expired (reconnect_required): reconnect the account.' }
         '404': { description: Account not found }
     post:
       x-resource-group: "accounts"
