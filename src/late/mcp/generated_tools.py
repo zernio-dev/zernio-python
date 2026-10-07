@@ -9552,7 +9552,11 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def ad_creatives_get_ad_creative(
-        creative_id: str, account_id: str, fields: str | None = None
+        creative_id: str,
+        account_id: str,
+        fields: str | None = None,
+        thumbnail_width: int | None = None,
+        thumbnail_height: int | None = None,
     ) -> str:
         """Creative details
 
@@ -9564,11 +9568,17 @@ def register_generated_tools(mcp, _get_client):
         Args:
             creative_id: Platform creative id (required)
             account_id: Zernio SocialAccount id (posting or ads variant) used to resolve the Meta token. (required)
-            fields: Comma-separated Graph field override. Supports nested {} projections and Graph field modifiers, so a nested edge can be paged explicitly: without a .limit() modifier the expansion runs at the Meta default page size and the tail is dropped silently."""
+            fields: Comma-separated Graph field override. Supports nested {} projections and Graph field modifiers, so a nested edge can be paged explicitly: without a .limit() modifier the expansion runs at the Meta default page size and the tail is dropped silently.
+            thumbnail_width: Width in pixels of the `thumbnail_url` rendering, forwarded to Meta as `thumbnail_width`. Without it Meta returns a 64x64 thumbnail.
+            thumbnail_height: Height in pixels of the `thumbnail_url` rendering, forwarded to Meta as `thumbnail_height`. Without it Meta returns a 64x64 thumbnail."""
         client = _get_client()
         try:
             response = client.ad_creatives.get_ad_creative(
-                creative_id=creative_id, account_id=account_id, fields=fields
+                creative_id=creative_id,
+                account_id=account_id,
+                fields=fields,
+                thumbnail_width=thumbnail_width,
+                thumbnail_height=thumbnail_height,
             )
             return _format_response(response)
         except Exception as e:

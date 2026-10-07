@@ -174,12 +174,20 @@ class AdCreativesResource:
         return self._client._post("/v1/ads/creatives", data=payload)
 
     def get_ad_creative(
-        self, creative_id: str, account_id: str, *, fields: str | None = None
+        self,
+        creative_id: str,
+        account_id: str,
+        *,
+        fields: str | None = None,
+        thumbnail_width: int | None = None,
+        thumbnail_height: int | None = None,
     ) -> dict[str, Any]:
         """Creative details"""
         params = self._build_params(
             account_id=account_id,
             fields=fields,
+            thumbnail_width=thumbnail_width,
+            thumbnail_height=thumbnail_height,
         )
         return self._client._get(f"/v1/ads/creatives/{creative_id}", params=params)
 
@@ -435,12 +443,20 @@ class AdCreativesResource:
         return await self._client._apost("/v1/ads/creatives", data=payload)
 
     async def aget_ad_creative(
-        self, creative_id: str, account_id: str, *, fields: str | None = None
+        self,
+        creative_id: str,
+        account_id: str,
+        *,
+        fields: str | None = None,
+        thumbnail_width: int | None = None,
+        thumbnail_height: int | None = None,
     ) -> dict[str, Any]:
         """Creative details (async)"""
         params = self._build_params(
             account_id=account_id,
             fields=fields,
+            thumbnail_width=thumbnail_width,
+            thumbnail_height=thumbnail_height,
         )
         return await self._client._aget(
             f"/v1/ads/creatives/{creative_id}", params=params
