@@ -4343,33 +4343,33 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Read an ad account's campaigns and ad sets live
 
-            Reads the campaigns and ad sets of one Meta ad account **live from Meta**, in a single
-            Graph call per request (the account's `/campaigns` and `/adsets` edges, filtered by
-            `effective_status`), so it is cheap enough to run before every write: for example a
-            per-ad-account spend ceiling that must see the current `daily_budget` / `lifetime_budget`
-            rather than the synced copy.
+            Reads the campaigns and ad sets of one Meta ad account or TikTok advertiser **live from
+            the platform**, so it is cheap enough to run before every write: for example a
+            per-ad-account spend ceiling that must see the current daily / lifetime budget rather
+            than the synced copy. On Meta it is a single Graph call per request (the account's
+            `/campaigns` and `/adsets` edges, filtered by `effective_status`); on TikTok one
+            `campaign/get` and one `adgroup/get` page (TikTok ad groups are returned as `adSets`).
 
             **Live vs synced.** GET /v1/ads/campaigns and GET /v1/ads/ad-sets serve Zernio's synced
             store, refreshed by background sync (typically 15 to 60 minutes behind Meta), and their
             `live=true` re-reads only the on/off switches of at most 20 objects. This endpoint returns
             what Meta reports at `readAt`, for every matching campaign and ad set, and stores nothing.
 
-            Budgets and bid amounts are converted from Meta's minor units to whole units of
-            `currency`, the same units as the synced rows. A campaign with a campaign budget
-            (Advantage+ campaign budget) carries `budget` and its ad sets have `budget: null`;
-            otherwise each ad ...
+            Budgets and bid amounts are in whole units of `currency`, the same units as the synced
+            rows (Meta's minor units are converted; TikTok ...
 
-            Platforms: meta
+            Platforms: meta, tiktok
 
             Args:
-                account_id: Zernio SocialAccount id (posting or ads variant) used to resolve the Meta token. (required)
-                ad_account_id: Meta ad account id (act_<n>). (required)
+                account_id: Zernio SocialAccount id (posting or ads variant) used to resolve the platform token. (required)
+                ad_account_id: Meta ad account id (act_<n>) or TikTok advertiser id (digits). (required)
                 status: Comma-separated Meta `effective_status` values to keep: ACTIVE, PAUSED, IN_PROCESS,
         WITH_ISSUES, DELETED, ARCHIVED, and CAMPAIGN_PAUSED (ad sets only; the campaigns level
         ignores it). Defaults to every status except DELETED and ARCHIVED. An unknown value is a 400.
+        TikTok takes a single value: ACTIVE, PAUSED or DELETED (see the description).
                 level: Read only one level. Required with `after`. Both levels are read when omitted.
                 limit: Maximum rows per level in this response.
-                after: Cursor from `paging.campaigns.after` or `paging.adSets.after` of a previous response. Requires `level`."""
+                after: Cursor from `paging.campaigns.after` or `paging.adSets.after` of a previous response. Requires `level` (and on TikTok the same `limit`)."""
         client = _get_client()
         try:
             response = client.ad_accounts.get_ad_account_live_entities(

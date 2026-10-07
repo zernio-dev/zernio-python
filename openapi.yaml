@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.229.0"
+  version: "1.230.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -61208,33 +61208,48 @@ paths:
       x-resource-group: "ads"
       operationId: getAdAccountLiveEntities
       tags: ["Ad Accounts"]
-      x-platforms: ["meta"]
+      x-platforms: ["meta", "tiktok"]
       summary: Read an ad account's campaigns and ad sets live
       description: |-
-        Reads the campaigns and ad sets of one Meta ad account **live from Meta**, in a single
-        Graph call per request (the account's `/campaigns` and `/adsets` edges, filtered by
-        `effective_status`), so it is cheap enough to run before every write: for example a
-        per-ad-account spend ceiling that must see the current `daily_budget` / `lifetime_budget`
-        rather than the synced copy.
+        Reads the campaigns and ad sets of one Meta ad account or TikTok advertiser **live from
+        the platform**, so it is cheap enough to run before every write: for example a
+        per-ad-account spend ceiling that must see the current daily / lifetime budget rather
+        than the synced copy. On Meta it is a single Graph call per request (the account's
+        `/campaigns` and `/adsets` edges, filtered by `effective_status`); on TikTok one
+        `campaign/get` and one `adgroup/get` page (TikTok ad groups are returned as `adSets`).
 
         **Live vs synced.** GET /v1/ads/campaigns and GET /v1/ads/ad-sets serve Zernio's synced
         store, refreshed by background sync (typically 15 to 60 minutes behind Meta), and their
         `live=true` re-reads only the on/off switches of at most 20 objects. This endpoint returns
         what Meta reports at `readAt`, for every matching campaign and ad set, and stores nothing.
 
-        Budgets and bid amounts are converted from Meta's minor units to whole units of
-        `currency`, the same units as the synced rows. A campaign with a campaign budget
-        (Advantage+ campaign budget) carries `budget` and its ad sets have `budget: null`;
-        otherwise each ad set carries its own.
+        Budgets and bid amounts are in whole units of `currency`, the same units as the synced
+        rows (Meta's minor units are converted; TikTok already reports whole units). A campaign
+        with a campaign budget (Meta Advantage+ campaign budget, TikTok campaign budget
+        optimization) carries `budget`; otherwise each ad set carries its own.
 
         Each level returns at most `limit` rows. When more match, `paging.<level>.after` is a
         cursor: pass it back as `after` together with `level` to read the next page of that
-        level only. Other platforms answer 501 rather than serving synced data.
+        level only. TikTok pages by number, so a TikTok cursor must be sent with the same
+        `limit` that produced it (another `limit` is a 400). Other platforms answer 501 rather
+        than serving synced data.
+
+        **TikTok specifics.** `status` maps to TikTok's `primary_status` filter, which takes one
+        value: ACTIVE = delivering (`STATUS_DELIVERY_OK`), PAUSED = switched off
+        (`STATUS_DISABLE`), DELETED = `STATUS_DELETE`; omitted = every status except deleted
+        (`STATUS_NOT_DELETE`, which includes enabled entities that are not delivering, such as
+        an ad group in review). Several values, or IN_PROCESS, WITH_ISSUES, CAMPAIGN_PAUSED and
+        ARCHIVED, are a 400. `budgetRemaining` and `spendCap` are always null (TikTok reports
+        neither), campaign `bidStrategy` is null (TikTok bids per ad group), ad set `bidStrategy`
+        is normalized to the Meta vocabulary like GET /v1/ads, `promotedObject` is
+        `{ pixelId, customEventType, applicationId, customConversionId }` (the keys TikTok has
+        set, as POST /v1/ads/create takes them), and `targeting` holds TikTok's targeting
+        fields verbatim.
       security:
         - bearerAuth: []
       parameters:
-        - { name: accountId, in: query, required: true, schema: { type: string }, description: "Zernio SocialAccount id (posting or ads variant) used to resolve the Meta token." }
-        - { name: adAccountId, in: query, required: true, schema: { type: string }, description: "Meta ad account id (act_<n>)." }
+        - { name: accountId, in: query, required: true, schema: { type: string }, description: "Zernio SocialAccount id (posting or ads variant) used to resolve the platform token." }
+        - { name: adAccountId, in: query, required: true, schema: { type: string }, description: "Meta ad account id (act_<n>) or TikTok advertiser id (digits)." }
         - name: status
           in: query
           required: false
@@ -61243,9 +61258,10 @@ paths:
             Comma-separated Meta `effective_status` values to keep: ACTIVE, PAUSED, IN_PROCESS,
             WITH_ISSUES, DELETED, ARCHIVED, and CAMPAIGN_PAUSED (ad sets only; the campaigns level
             ignores it). Defaults to every status except DELETED and ARCHIVED. An unknown value is a 400.
+            TikTok takes a single value: ACTIVE, PAUSED or DELETED (see the description).
         - { name: level, in: query, required: false, schema: { type: string, enum: [campaign, adSet] }, description: "Read only one level. Required with `after`. Both levels are read when omitted." }
         - { name: limit, in: query, required: false, schema: { type: integer, minimum: 1, maximum: 500, default: 200 }, description: "Maximum rows per level in this response." }
-        - { name: after, in: query, required: false, schema: { type: string }, description: "Cursor from `paging.campaigns.after` or `paging.adSets.after` of a previous response. Requires `level`." }
+        - { name: after, in: query, required: false, schema: { type: string }, description: "Cursor from `paging.campaigns.after` or `paging.adSets.after` of a previous response. Requires `level` (and on TikTok the same `limit`)." }
       responses:
         '200':
           description: Live campaigns and ad sets
@@ -61256,9 +61272,9 @@ paths:
                 properties:
                   accountId: { type: string }
                   adAccountId: { type: string }
-                  platform: { type: string, enum: [facebook] }
+                  platform: { type: string, enum: [facebook, tiktok] }
                   currency: { type: string, description: "ISO 4217 code every budget and bid amount is expressed in." }
-                  readAt: { type: string, format: date-time, description: "When Meta was read." }
+                  readAt: { type: string, format: date-time, description: "When the platform was read." }
                   campaigns:
                     type: array
                     description: "Absent when `level=adSet`."
@@ -61267,8 +61283,8 @@ paths:
                       properties:
                         platformCampaignId: { type: string }
                         campaignName: { type: [string, "null"] }
-                        platformCampaignStatus: { type: [string, "null"], description: "Meta `effective_status`, for example ACTIVE, PAUSED, WITH_ISSUES." }
-                        configuredStatus: { type: [string, "null"], description: "Meta `status`: the campaign's own switch (ACTIVE, PAUSED, DELETED, ARCHIVED)." }
+                        platformCampaignStatus: { type: [string, "null"], description: "Meta `effective_status` (ACTIVE, PAUSED, WITH_ISSUES...) or TikTok `secondary_status` (CAMPAIGN_STATUS_ENABLE...)." }
+                        configuredStatus: { type: [string, "null"], description: "The campaign's own switch: Meta `status` (ACTIVE, PAUSED, DELETED, ARCHIVED), or TikTok `operation_status` as ACTIVE (ENABLE) / PAUSED (DISABLE)." }
                         status: { type: string, description: "Zernio's normalized status (active, paused, ...), derived from `platformCampaignStatus`." }
                         budget:
                           type: [object, "null"]
@@ -61276,11 +61292,12 @@ paths:
                           properties:
                             amount: { type: number }
                             type: { type: string, enum: [daily, lifetime] }
-                        dailyBudget: { type: [number, "null"], description: "Meta `daily_budget` in whole units of `currency`." }
-                        lifetimeBudget: { type: [number, "null"], description: "Meta `lifetime_budget` in whole units of `currency`." }
-                        budgetRemaining: { type: [number, "null"], description: "Meta `budget_remaining` in whole units of `currency`. Null when the campaign has no budget of its own." }
-                        spendCap: { type: [number, "null"], description: "Campaign spending limit (Meta `spend_cap`) in whole units of `currency`. Null when none is set." }
-                        bidStrategy: { type: [string, "null"], description: "Meta `bid_strategy`, set on campaigns with a campaign budget." }
+                        dailyBudget: { type: [number, "null"], description: "Daily budget in whole units of `currency` (Meta `daily_budget`; TikTok `budget` under a daily budget mode)." }
+                        lifetimeBudget: { type: [number, "null"], description: "Lifetime budget in whole units of `currency` (Meta `lifetime_budget`; TikTok `budget` under BUDGET_MODE_TOTAL)." }
+                        budgetMode: { type: [string, "null"], description: "TikTok only: `budget_mode` as TikTok reports it (BUDGET_MODE_DAY, BUDGET_MODE_DYNAMIC_DAILY_BUDGET, BUDGET_MODE_TOTAL, BUDGET_MODE_INFINITE)." }
+                        budgetRemaining: { type: [number, "null"], description: "Meta `budget_remaining` in whole units of `currency`. Null when the campaign has no budget of its own, and always on TikTok." }
+                        spendCap: { type: [number, "null"], description: "Campaign spending limit (Meta `spend_cap`) in whole units of `currency`. Null when none is set, and always on TikTok." }
+                        bidStrategy: { type: [string, "null"], description: "Meta `bid_strategy`, set on campaigns with a campaign budget. Null on TikTok." }
                   adSets:
                     type: array
                     description: "Absent when `level=campaign`."
@@ -61290,8 +61307,8 @@ paths:
                         platformAdSetId: { type: string }
                         adSetName: { type: [string, "null"] }
                         platformCampaignId: { type: [string, "null"] }
-                        platformAdSetStatus: { type: [string, "null"], description: "Meta `effective_status`, for example ACTIVE, PAUSED, CAMPAIGN_PAUSED." }
-                        configuredStatus: { type: [string, "null"], description: "Meta `status`: the ad set's own switch." }
+                        platformAdSetStatus: { type: [string, "null"], description: "Meta `effective_status` (ACTIVE, PAUSED, CAMPAIGN_PAUSED...) or TikTok `secondary_status` (ADGROUP_STATUS_DELIVERY_OK, ADGROUP_STATUS_AUDIT...)." }
+                        configuredStatus: { type: [string, "null"], description: "The ad set's own switch: Meta `status`, or TikTok `operation_status` as ACTIVE / PAUSED." }
                         status: { type: string, description: "Zernio's normalized status, derived from `platformAdSetStatus`." }
                         budget:
                           type: [object, "null"]
@@ -61299,15 +61316,16 @@ paths:
                           properties:
                             amount: { type: number }
                             type: { type: string, enum: [daily, lifetime] }
-                        dailyBudget: { type: [number, "null"], description: "Meta `daily_budget` in whole units of `currency`." }
-                        lifetimeBudget: { type: [number, "null"], description: "Meta `lifetime_budget` in whole units of `currency`." }
-                        budgetRemaining: { type: [number, "null"], description: "Meta `budget_remaining` in whole units of `currency`. Null when the ad set has no budget of its own." }
-                        bidStrategy: { type: [string, "null"], description: "Meta `bid_strategy`." }
-                        bidAmount: { type: [number, "null"], description: "Meta `bid_amount` (bid cap or cost target) in whole units of `currency`. Null when the strategy has none." }
-                        optimizationGoal: { type: [string, "null"], description: "Meta `optimization_goal`." }
-                        billingEvent: { type: [string, "null"], description: "Meta `billing_event`." }
-                        promotedObject: { type: [object, "null"], additionalProperties: true, description: "Meta `promoted_object` verbatim (snake_case)." }
-                        targeting: { type: [object, "null"], additionalProperties: true, description: "Meta `targeting` verbatim (snake_case), as Meta returns it now." }
+                        dailyBudget: { type: [number, "null"], description: "Daily budget in whole units of `currency`." }
+                        lifetimeBudget: { type: [number, "null"], description: "Lifetime budget in whole units of `currency`." }
+                        budgetMode: { type: [string, "null"], description: "TikTok only: `budget_mode` as TikTok reports it." }
+                        budgetRemaining: { type: [number, "null"], description: "Meta `budget_remaining` in whole units of `currency`. Null when the ad set has no budget of its own, and always on TikTok." }
+                        bidStrategy: { type: [string, "null"], description: "Meta `bid_strategy`. On TikTok the ad group's `bid_type` normalized to the same vocabulary (LOWEST_COST_WITHOUT_CAP, LOWEST_COST_WITH_BID_CAP, LOWEST_COST_WITH_MIN_ROAS)." }
+                        bidAmount: { type: [number, "null"], description: "Bid cap or cost target in whole units of `currency` (Meta `bid_amount`; TikTok `bid_price`, else `conversion_bid_price`, else `deep_cpa_bid`). Null when the strategy has none." }
+                        optimizationGoal: { type: [string, "null"], description: "Meta or TikTok `optimization_goal`." }
+                        billingEvent: { type: [string, "null"], description: "Meta or TikTok `billing_event`." }
+                        promotedObject: { type: [object, "null"], additionalProperties: true, description: "Meta `promoted_object` verbatim (snake_case). On TikTok `{ pixelId, customEventType, applicationId, customConversionId }` from `pixel_id`, `optimization_event`, `app_id` and `custom_conversion_id`, only the keys TikTok has set; null when none is." }
+                        targeting: { type: [object, "null"], additionalProperties: true, description: "The platform's targeting verbatim (snake_case), as it reports it now: Meta `targeting`, or TikTok's ad group targeting fields (location_ids, age_groups, gender, languages, interest_category_ids, audience_ids, placements...)." }
                         schedule:
                           type: [object, "null"]
                           properties:
@@ -61331,9 +61349,9 @@ paths:
           description: Ads access required (Ads add-on on legacy plans, included on usage-based plans).
         '404': { $ref: '#/components/responses/AccountUnavailable' }
         '409': { $ref: '#/components/responses/AccountConnectionRequired' }
-        '429': { description: "Meta rate limit reached; retry after the indicated delay." }
-        '501': { description: "The platform has no bulk live read (only Meta today). Use the synced GET /v1/ads/campaigns and GET /v1/ads/ad-sets there." }
-        '502': { description: "Meta did not return the ad account (for example a deleted ad account)." }
+        '429': { description: "Platform rate limit reached; retry later (after the indicated delay on Meta)." }
+        '501': { description: "The platform has no bulk live read (Meta and TikTok today). Use the synced GET /v1/ads/campaigns and GET /v1/ads/ad-sets there." }
+        '502': { description: "The platform did not return the ad account or its currency (for example a deleted ad account)." }
 
   /v1/ads/accounts:
     post:
