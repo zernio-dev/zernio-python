@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.239.0"
+  version: "1.239.1"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -35446,7 +35446,7 @@ paths:
                       code: { type: string, enum: [rate_limited, new_contact_limit] }
                   - { $ref: '#/components/schemas/WhatsAppTemplateLookupError' }
         '502':
-          description: The exact approved WhatsApp template definition is unavailable. No message was sent.
+          description: The WhatsApp account has no Business Account ID, so the template definition cannot be looked up (a template with no approved variant in that language is a 400). No message was sent.
           content:
             application/json:
               schema: { $ref: '#/components/schemas/WhatsAppTemplateLookupError' }
@@ -36801,7 +36801,7 @@ paths:
                   - { $ref: '#/components/schemas/WhatsAppTemplateLookupError' }
         '503': { $ref: '#/components/responses/TemporarilyUnavailable' }
         '502':
-          description: The exact approved WhatsApp template definition is unavailable, or the platform returned an upstream failure. No WhatsApp template message is sent when definition lookup fails.
+          description: The WhatsApp account has no Business Account ID, or the platform returned an upstream failure (a template with no approved variant in that language is a 400). No WhatsApp template message is sent when definition lookup fails.
           content:
             application/json:
               schema:
