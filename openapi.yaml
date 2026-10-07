@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.236.1"
+  version: "1.237.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -41044,6 +41044,7 @@ paths:
                 transcriptionLanguage: { type: string, enum: [auto, en, es], description: "'auto' derives from the callee's country; 'en'/'es' force it." }
                 amd: { type: boolean, description: Answering-machine detection; defers the bridge until human vs machine is known. }
                 voicemailDropMessage: { type: string, maxLength: 1000, description: "Spoken to a detected machine, then hang up (implies `amd`). For outbound voicemail drops." }
+                ringTimeoutSeconds: { type: integer, minimum: 5, maximum: 120, default: 30, description: "Seconds to let the callee's phone ring before the call ends as no_answer. The destination carrier can end it sooner." }
       responses:
         '200':
           description: Call originated; lifecycle continues asynchronously.
@@ -41064,6 +41065,7 @@ paths:
                   recordingEnabled: { type: boolean }
                   transcriptionEnabled: { type: boolean }
                   transcriptionLanguage: { type: string, enum: [auto, en, es] }
+        '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '422': { description: "No voice-enabled number matches `fromNumber`, or no forward destination configured (set the number's forward or pass `forwardTo`)." }
         '429': { description: Outbound call limit reached (per rolling hour). }
@@ -41333,6 +41335,7 @@ paths:
                 credentialId: { type: string, description: "The WebRTC credential id returned by POST /v1/voice/calls/web (the registered browser)." }
                 fromNumber: { type: string, pattern: '^\+\d{6,15}$', description: Which of your voice-enabled numbers to call from (optional when you have one). }
                 recordOverride: { type: boolean }
+                ringTimeoutSeconds: { type: integer, minimum: 5, maximum: 120, default: 30, description: "Seconds to let the callee's phone ring before the call ends as no_answer. The destination carrier can end it sooner." }
       responses:
         '200':
           description: Call originated; answer/bridge continue asynchronously.
@@ -41349,6 +41352,7 @@ paths:
                   from: { type: string }
                   to: { type: string }
                   recordingEnabled: { type: boolean }
+        '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '422': { description: "Invalid or unknown WebRTC credential, or no voice-enabled number matches `fromNumber`" }
         '429': { description: Outbound call limit reached (per rolling hour). }

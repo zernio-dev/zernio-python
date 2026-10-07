@@ -34460,6 +34460,7 @@ def register_generated_tools(mcp, _get_client):
         transcription_language: Literal["auto", "en", "es"] | None = None,
         amd: bool | None = None,
         voicemail_drop_message: str | None = None,
+        ring_timeout_seconds: int = 30,
     ) -> str:
         """Place an outbound phone call
 
@@ -34486,7 +34487,8 @@ def register_generated_tools(mcp, _get_client):
             transcribe_override: Per-call transcription toggle; defaults to the number's setting.
             transcription_language: 'auto' derives from the callee's country; 'en'/'es' force it.
             amd: Answering-machine detection; defers the bridge until human vs machine is known.
-            voicemail_drop_message: Spoken to a detected machine, then hang up (implies `amd`). For outbound voicemail drops."""
+            voicemail_drop_message: Spoken to a detected machine, then hang up (implies `amd`). For outbound voicemail drops.
+            ring_timeout_seconds: Seconds to let the callee's phone ring before the call ends as no_answer. The destination carrier can end it sooner."""
         client = _get_client()
         try:
             response = client.voice.create_voice_call(
@@ -34499,6 +34501,7 @@ def register_generated_tools(mcp, _get_client):
                 transcription_language=transcription_language,
                 amd=amd,
                 voicemail_drop_message=voicemail_drop_message,
+                ring_timeout_seconds=ring_timeout_seconds,
             )
             return _format_response(response)
         except Exception as e:
@@ -34735,6 +34738,7 @@ def register_generated_tools(mcp, _get_client):
         credential_id: str,
         from_number: str | None = None,
         record_override: bool | None = None,
+        ring_timeout_seconds: int = 30,
     ) -> str:
         """Dial from the browser softphone
 
@@ -34748,7 +34752,8 @@ def register_generated_tools(mcp, _get_client):
             to: The number to call, E.164 with leading +. (required)
             credential_id: The WebRTC credential id returned by POST /v1/voice/calls/web (the registered browser). (required)
             from_number: Which of your voice-enabled numbers to call from (optional when you have one).
-            record_override"""
+            record_override
+            ring_timeout_seconds: Seconds to let the callee's phone ring before the call ends as no_answer. The destination carrier can end it sooner."""
         client = _get_client()
         try:
             response = client.voice.dial_voice_web_call(
@@ -34756,6 +34761,7 @@ def register_generated_tools(mcp, _get_client):
                 credential_id=credential_id,
                 from_number=from_number,
                 record_override=record_override,
+                ring_timeout_seconds=ring_timeout_seconds,
             )
             return _format_response(response)
         except Exception as e:

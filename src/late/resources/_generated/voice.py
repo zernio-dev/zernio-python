@@ -88,6 +88,7 @@ class VoiceResource:
         transcription_language: str | None = None,
         amd: bool | None = None,
         voicemail_drop_message: str | None = None,
+        ring_timeout_seconds: int | None = 30,
     ) -> dict[str, Any]:
         """Place an outbound phone call"""
         payload = self._build_payload(
@@ -100,6 +101,7 @@ class VoiceResource:
             transcription_language=transcription_language,
             amd=amd,
             voicemail_drop_message=voicemail_drop_message,
+            ring_timeout_seconds=ring_timeout_seconds,
         )
         headers: dict[str, str] = {}
         if idempotency_key is not None:
@@ -179,6 +181,7 @@ class VoiceResource:
         *,
         from_number: str | None = None,
         record_override: bool | None = None,
+        ring_timeout_seconds: int | None = 30,
     ) -> dict[str, Any]:
         """Dial from the browser softphone"""
         payload = self._build_payload(
@@ -186,6 +189,7 @@ class VoiceResource:
             credential_id=credential_id,
             from_number=from_number,
             record_override=record_override,
+            ring_timeout_seconds=ring_timeout_seconds,
         )
         return self._client._post("/v1/voice/calls/web/dial", data=payload)
 
@@ -290,6 +294,7 @@ class VoiceResource:
         transcription_language: str | None = None,
         amd: bool | None = None,
         voicemail_drop_message: str | None = None,
+        ring_timeout_seconds: int | None = 30,
     ) -> dict[str, Any]:
         """Place an outbound phone call (async)"""
         payload = self._build_payload(
@@ -302,6 +307,7 @@ class VoiceResource:
             transcription_language=transcription_language,
             amd=amd,
             voicemail_drop_message=voicemail_drop_message,
+            ring_timeout_seconds=ring_timeout_seconds,
         )
         headers: dict[str, str] = {}
         if idempotency_key is not None:
@@ -385,6 +391,7 @@ class VoiceResource:
         *,
         from_number: str | None = None,
         record_override: bool | None = None,
+        ring_timeout_seconds: int | None = 30,
     ) -> dict[str, Any]:
         """Dial from the browser softphone (async)"""
         payload = self._build_payload(
@@ -392,6 +399,7 @@ class VoiceResource:
             credential_id=credential_id,
             from_number=from_number,
             record_override=record_override,
+            ring_timeout_seconds=ring_timeout_seconds,
         )
         return await self._client._apost("/v1/voice/calls/web/dial", data=payload)
 
