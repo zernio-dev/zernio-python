@@ -533,7 +533,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `ad_campaigns.get_campaign_ad_schedule()` | Read a campaign's ad schedule (dayparting) |
 | `ad_campaigns.get_campaign_bidding()` | Read a campaign's current bidding |
 | `ad_campaigns.get_campaign_conversion_goals()` | Get campaign conversion goals |
-| `ad_campaigns.get_campaign_targeting()` | Read a Google campaign's device, location, and language targeting |
+| `ad_campaigns.get_campaign_targeting()` | Read a Google campaign's device, location, excluded location, and language targeting |
 | `ad_campaigns.get_google_asset_group()` | Get a Performance Max asset group |
 | `ad_campaigns.update_ad()` | Update ad |
 | `ad_campaigns.update_ad_campaign()` | Update a campaign |
@@ -547,7 +547,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `ad_campaigns.update_campaign_ad_schedule()` | Replace a campaign's ad schedule (dayparting) |
 | `ad_campaigns.update_campaign_assets()` | Update campaign assets |
 | `ad_campaigns.update_campaign_conversion_goals()` | Update campaign conversion goals |
-| `ad_campaigns.update_campaign_targeting()` | Edit a Google campaign's device, location, or language targeting |
+| `ad_campaigns.update_campaign_targeting()` | Edit a Google campaign's device, location, excluded location, or language targeting |
 | `ad_campaigns.update_google_asset_group()` | Update a Performance Max asset group |
 | `ad_campaigns.delete_ad()` | Cancel an ad |
 | `ad_campaigns.delete_ad_campaign()` | Delete a campaign |

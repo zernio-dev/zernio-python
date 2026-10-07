@@ -6333,7 +6333,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
-            title="Read a Google campaign's device, location, and language targeting",
+            title="Read a Google campaign's device, location, excluded location, and language targe",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
@@ -6342,7 +6342,7 @@ def register_generated_tools(mcp, _get_client):
     def ad_campaigns_get_campaign_targeting(
         campaign_id: str, platform: Literal["google"] | None = None
     ) -> str:
-        """Read a Google campaign's device, location, and language targeting
+        """Read a Google campaign's device, location, excluded location, and language targeting
 
         Google Ads compliance requires geo, language, budget, and bidding targeting
         set at creation to stay editable afterwards; this reads the campaign state
@@ -6355,6 +6355,11 @@ def register_generated_tools(mcp, _get_client):
         campaigns also have CONNECTED_TV. `bidModifier` is Google's bid adjustment
         for that device, `null` when it has none, and `0` when the device is
         switched off; `included` is false for exactly that case.
+
+        `excludedLocations` lists the campaign's negative location criteria (the
+        places it never serves in). `locations` still lists every location criterion,
+        each flagged with `negative`, so a client reading the targeted set filters
+        `negative: false`.
 
         Platforms: google
 
@@ -6372,7 +6377,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
-            title="Edit a Google campaign's device, location, or language targeting",
+            title="Edit a Google campaign's device, location, excluded location, or language target",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
@@ -6381,11 +6386,11 @@ def register_generated_tools(mcp, _get_client):
     def ad_campaigns_update_campaign_targeting(
         campaign_id: str, platform: Literal["google"], targeting: dict[str, Any] | None
     ) -> str:
-        """Edit a Google campaign's device, location, or language targeting
+        """Edit a Google campaign's device, location, excluded location, or language targeting
 
         Google Ads compliance row M.10: geo and language targeting set at
         creation must stay editable afterwards. Send at least one of `devices`,
-        `locations`, `languages`, `locationTargetingType`; each provided field REPLACES that field's
+        `locations`, `excludedLocations`, `languages`, `locationTargetingType`; each provided field REPLACES that field's
         existing criteria on the campaign (a full set, not a delta). Fields left
         out of the body are untouched. Google only; every other platform returns
         501.
@@ -6397,16 +6402,16 @@ def register_generated_tools(mcp, _get_client):
 
         `locations` accepts the same shapes as campaign creation: a bare array of
         ISO country codes, or an object with `countries`/`regions`/`cities`/`zips`/`metros`
-        key lists (`key` from GET /v1/ads/targeting/search?dimension=geo). Negative
-        (excluded) locations are left untouched by this endpoint. An empty location list
-        returns 400 instead ...
+        key lists (`key` from GET /v1/ads/targeting/search?dimension=geo). Excluded
+        locations are left untouched by `locations`. An empty location list
+        returns 400 ...
 
         Platforms: google
 
         Args:
             campaign_id: Google platform campaign ID (required)
             platform: (required)
-            targeting: Object with keys: devices (list of any) - Devices to include. Devices not listed become excluded (negative) criteria, same contract as the existing devices-only edit.; locations (any) - Bare country-code array, or the nested creation-time shape (countries/regions/cities/zips/metros).; languages (list of string) - Google's language codes (ISO 639-1, plus variants such as `zh_CN`), e.g. [\"en\", \"de\"].; locationTargetingType (one of: presence, presence_or_interest) (required)"""
+            targeting: Object with keys: devices (list of any) - Devices to include. Devices not listed become excluded (negative) criteria, same contract as the existing devices-only edit.; locations (any) - Bare country-code array, or the nested creation-time shape (countries/regions/cities/zips/metros).; languages (list of string) - Google's language codes (ISO 639-1, plus variants such as `zh_CN`), e.g. [\"en\", \"de\"].; excludedLocations (any) - Locations the campaign never serves in, as a bare country-code array or the nested countries/regions/cities/zips/metros shape. Replaces the excluded set; [] ...; locationTargetingType (one of: presence, presence_or_interest) (required)"""
         client = _get_client()
         try:
             response = client.ad_campaigns.update_campaign_targeting(

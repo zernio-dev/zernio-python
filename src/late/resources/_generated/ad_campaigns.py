@@ -565,7 +565,7 @@ class AdCampaignsResource:
     def get_campaign_targeting(
         self, campaign_id: str, *, platform: str | None = None
     ) -> dict[str, Any]:
-        """Read a Google campaign's device, location, and language targeting"""
+        """Read a Google campaign's device, location, excluded location, and language targeting"""
         params = self._build_params(
             platform=platform,
         )
@@ -576,7 +576,7 @@ class AdCampaignsResource:
     def update_campaign_targeting(
         self, campaign_id: str, platform: str, targeting: dict[str, Any]
     ) -> dict[str, Any]:
-        """Edit a Google campaign's device, location, or language targeting"""
+        """Edit a Google campaign's device, location, excluded location, or language targeting"""
         payload = self._build_payload(
             platform=platform,
             targeting=targeting,
@@ -2074,7 +2074,7 @@ class AdCampaignsResource:
     async def aget_campaign_targeting(
         self, campaign_id: str, *, platform: str | None = None
     ) -> dict[str, Any]:
-        """Read a Google campaign's device, location, and language targeting (async)"""
+        """Read a Google campaign's device, location, excluded location, and language targeting (async)"""
         params = self._build_params(
             platform=platform,
         )
@@ -2085,7 +2085,7 @@ class AdCampaignsResource:
     async def aupdate_campaign_targeting(
         self, campaign_id: str, platform: str, targeting: dict[str, Any]
     ) -> dict[str, Any]:
-        """Edit a Google campaign's device, location, or language targeting (async)"""
+        """Edit a Google campaign's device, location, excluded location, or language targeting (async)"""
         payload = self._build_payload(
             platform=platform,
             targeting=targeting,
