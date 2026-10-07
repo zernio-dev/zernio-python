@@ -31325,6 +31325,52 @@ def register_generated_tools(mcp, _get_client):
         except Exception as e:
             return f"Error: {e}"
 
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get the comments of a Reddit post",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def reddit_get_reddit_post_comments(
+        post_id: str,
+        account_id: str,
+        sort: Literal["new", "top", "best", "controversial", "old", "qa"] = "new",
+        limit: int = 25,
+        comment_id: str | None = None,
+    ) -> str:
+        """Get the comments of a Reddit post
+
+        Reads the comments of any Reddit post the connected account can see, for example one found
+        through `/v1/reddit/feed` or `/v1/reddit/search`, straight from Reddit on every call. The tree
+        comes flattened in thread order (a reply follows its parent); rebuild it from `parentId`, which
+        is `t3_…` for a reply to the post and `t1_…` for a reply to a comment. Deleted and removed
+        comments are passed through as Reddit sends them (`[deleted]` / `[removed]`). Where Reddit
+        truncates a thread, the ids it left out are listed in `more`; `commentId` fetches one such
+        comment with its replies. A post Reddit no longer serves answers 404 and a private subreddit
+        403, both with `platform_api_error`. For comments on posts published through Zernio,
+        `/v1/inbox/comments/{postId}` adds caching, moderation and replies.
+
+        Args:
+            post_id: Reddit post id, with or without the `t3_` prefix (as `id` or `fullname` on RedditPost). (required)
+            account_id: An active Reddit account the request is made as. (required)
+            sort
+            limit: Maximum number of top-level comments.
+            comment_id: Return only this comment and its replies, with or without the `t1_` prefix; pass an id from `more` to expand it."""
+        client = _get_client()
+        try:
+            response = client.reddit.get_reddit_post_comments(
+                post_id=post_id,
+                account_id=account_id,
+                sort=sort,
+                limit=limit,
+                comment_id=comment_id,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
     # REVIEWS
 
     @mcp.tool(

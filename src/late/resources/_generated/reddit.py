@@ -117,6 +117,24 @@ class RedditResource:
         )
         return self._client._get("/v1/reddit/feed", params=params)
 
+    def get_reddit_post_comments(
+        self,
+        post_id: str,
+        account_id: str,
+        *,
+        sort: str | None = "new",
+        limit: int | None = 25,
+        comment_id: str | None = None,
+    ) -> dict[str, Any]:
+        """Get the comments of a Reddit post"""
+        params = self._build_params(
+            account_id=account_id,
+            sort=sort,
+            limit=limit,
+            comment_id=comment_id,
+        )
+        return self._client._get(f"/v1/reddit/comments/{post_id}", params=params)
+
     async def asearch_reddit(
         self,
         account_id: str,
@@ -160,3 +178,21 @@ class RedditResource:
             t=t,
         )
         return await self._client._aget("/v1/reddit/feed", params=params)
+
+    async def aget_reddit_post_comments(
+        self,
+        post_id: str,
+        account_id: str,
+        *,
+        sort: str | None = "new",
+        limit: int | None = 25,
+        comment_id: str | None = None,
+    ) -> dict[str, Any]:
+        """Get the comments of a Reddit post (async)"""
+        params = self._build_params(
+            account_id=account_id,
+            sort=sort,
+            limit=limit,
+            comment_id=comment_id,
+        )
+        return await self._client._aget(f"/v1/reddit/comments/{post_id}", params=params)

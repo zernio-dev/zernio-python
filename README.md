@@ -402,6 +402,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | Method | Description |
 |--------|-------------|
 | `reddit.get_reddit_feed()` | Get subreddit feed |
+| `reddit.get_reddit_post_comments()` | Get the comments of a Reddit post |
 | `reddit.search_reddit()` | Search posts |
 
 ### Account Settings
