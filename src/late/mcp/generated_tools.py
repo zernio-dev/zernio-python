@@ -7318,10 +7318,11 @@ def register_generated_tools(mcp, _get_client):
         sitelinks: list[dict[str, Any]] | None = None,
         callouts: list[str] | None = None,
         structured_snippets: list[dict[str, Any]] | None = None,
+        images: list[str] | None = None,
     ) -> str:
         """Attach campaign assets
 
-        Creates and attaches sitelinks, callouts and structured snippets in one Google mutation.
+        Creates and attaches sitelinks, callouts, structured snippets and image assets in one Google mutation. Google shows images only on accounts it deems eligible (account age, policy history, vertical).
 
         Platforms: google
 
@@ -7332,7 +7333,8 @@ def register_generated_tools(mcp, _get_client):
             customer_id: Alias of adAccountId, kept for existing callers
             sitelinks: Each item is an object with keys: text (string, required); linkUrl (string, required); description1 (string); description2 (string)
             callouts
-            structured_snippets: Each item is an object with keys: header (one of: Amenities, Brands, Courses, Degree programs, Destinations, Featured hotels, Insurance coverage, Models, Neighborhoods, Service catalog, Shows, Styles, Types; required); values (list of string, required)"""
+            structured_snippets: Each item is an object with keys: header (one of: Amenities, Brands, Courses, Degree programs, Destinations, Featured hotels, Insurance coverage, Models, Neighborhoods, Service catalog, Shows, Styles, Types; required); values (list of string, required)
+            images: Public image URLs, uploaded to Google as image assets. Landscape 1.91:1 (min 600x314) or square 1:1 (min 300x300), up to 5 MB each."""
         client = _get_client()
         try:
             response = client.ad_campaigns.attach_campaign_assets(
@@ -7343,6 +7345,7 @@ def register_generated_tools(mcp, _get_client):
                 sitelinks=sitelinks,
                 callouts=callouts,
                 structured_snippets=structured_snippets,
+                images=images,
             )
             return _format_response(response)
         except Exception as e:
@@ -7484,10 +7487,11 @@ def register_generated_tools(mcp, _get_client):
         sitelinks: list[dict[str, Any]] | None = None,
         callouts: list[str] | None = None,
         structured_snippets: list[dict[str, Any]] | None = None,
+        images: list[str] | None = None,
     ) -> str:
         """Attach ad-group assets
 
-        Creates and attaches sitelinks, callouts and structured snippets in one Google mutation.
+        Creates and attaches sitelinks, callouts, structured snippets and image assets in one Google mutation. Google shows images only on accounts it deems eligible (account age, policy history, vertical).
 
         Platforms: google
 
@@ -7498,7 +7502,8 @@ def register_generated_tools(mcp, _get_client):
             customer_id: Alias of adAccountId, kept for existing callers
             sitelinks: Each item is an object with keys: text (string, required); linkUrl (string, required); description1 (string); description2 (string)
             callouts
-            structured_snippets: Each item is an object with keys: header (one of: Amenities, Brands, Courses, Degree programs, Destinations, Featured hotels, Insurance coverage, Models, Neighborhoods, Service catalog, Shows, Styles, Types; required); values (list of string, required)"""
+            structured_snippets: Each item is an object with keys: header (one of: Amenities, Brands, Courses, Degree programs, Destinations, Featured hotels, Insurance coverage, Models, Neighborhoods, Service catalog, Shows, Styles, Types; required); values (list of string, required)
+            images: Public image URLs, uploaded to Google as image assets. Landscape 1.91:1 (min 600x314) or square 1:1 (min 300x300), up to 5 MB each."""
         client = _get_client()
         try:
             response = client.ad_campaigns.attach_ad_group_assets(
@@ -7509,6 +7514,7 @@ def register_generated_tools(mcp, _get_client):
                 sitelinks=sitelinks,
                 callouts=callouts,
                 structured_snippets=structured_snippets,
+                images=images,
             )
             return _format_response(response)
         except Exception as e:

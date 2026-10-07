@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.227.0"
+  version: "1.228.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -55655,6 +55655,23 @@ paths:
                           type: array
                           items:
                             type: string
+                  images:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        assetResourceName:
+                          type: string
+                        campaignAssetResourceName:
+                          type: string
+                        imageUrl:
+                          type: string
+                          format: uri
+                          description: "Google-hosted copy of the image."
+                        width:
+                          type: integer
+                        height:
+                          type: integer
                   cachedAt:
                     type:
                     - string
@@ -55684,7 +55701,8 @@ paths:
       - Ad Campaigns
       x-platforms:
       - google
-      description: "Creates and attaches sitelinks, callouts and structured snippets in one Google mutation."
+      description: "Creates and attaches sitelinks, callouts, structured snippets and image assets in one Google mutation.\
+        \ Google shows images only on accounts it deems eligible (account age, policy history, vertical)."
       security:
       - bearerAuth: []
       parameters:
@@ -55737,7 +55755,16 @@ paths:
                     $ref: '#/components/schemas/GoogleStructuredSnippet'
                   minItems: 1
                   maxItems: 20
-              description: "Provide at least one of sitelinks, callouts or structuredSnippets. Sitelink description1\
+                images:
+                  type: array
+                  items:
+                    type: string
+                    format: uri
+                  minItems: 1
+                  maxItems: 20
+                  description: "Public image URLs, uploaded to Google as image assets. Landscape 1.91:1 (min 600x314)\
+                    \ or square 1:1 (min 300x300), up to 5 MB each."
+              description: "Provide at least one of sitelinks, callouts, structuredSnippets or images. Sitelink description1\
                 \ and description2 must be supplied together."
             example:
               accountId: 64b1f0c8a1b2c3d4e5f60718
@@ -55775,6 +55802,10 @@ paths:
                     items:
                       type: string
                   structuredSnippetAssetResourceNames:
+                    type: array
+                    items:
+                      type: string
+                  imageAssetResourceNames:
                     type: array
                     items:
                       type: string
@@ -56014,6 +56045,23 @@ paths:
                           type: array
                           items:
                             type: string
+                  images:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        assetResourceName:
+                          type: string
+                        adGroupAssetResourceName:
+                          type: string
+                        imageUrl:
+                          type: string
+                          format: uri
+                          description: "Google-hosted copy of the image."
+                        width:
+                          type: integer
+                        height:
+                          type: integer
                   cachedAt:
                     type:
                     - string
@@ -56043,7 +56091,8 @@ paths:
       - Ad Campaigns
       x-platforms:
       - google
-      description: "Creates and attaches sitelinks, callouts and structured snippets in one Google mutation."
+      description: "Creates and attaches sitelinks, callouts, structured snippets and image assets in one Google mutation.\
+        \ Google shows images only on accounts it deems eligible (account age, policy history, vertical)."
       security:
       - bearerAuth: []
       parameters:
@@ -56096,7 +56145,16 @@ paths:
                     $ref: '#/components/schemas/GoogleStructuredSnippet'
                   minItems: 1
                   maxItems: 20
-              description: "Provide at least one of sitelinks, callouts or structuredSnippets. Sitelink description1\
+                images:
+                  type: array
+                  items:
+                    type: string
+                    format: uri
+                  minItems: 1
+                  maxItems: 20
+                  description: "Public image URLs, uploaded to Google as image assets. Landscape 1.91:1 (min 600x314)\
+                    \ or square 1:1 (min 300x300), up to 5 MB each."
+              description: "Provide at least one of sitelinks, callouts, structuredSnippets or images. Sitelink description1\
                 \ and description2 must be supplied together."
             example:
               accountId: 64b1f0c8a1b2c3d4e5f60718
@@ -56134,6 +56192,10 @@ paths:
                     items:
                       type: string
                   structuredSnippetAssetResourceNames:
+                    type: array
+                    items:
+                      type: string
+                  imageAssetResourceNames:
                     type: array
                     items:
                       type: string

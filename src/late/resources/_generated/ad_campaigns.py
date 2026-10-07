@@ -897,6 +897,7 @@ class AdCampaignsResource:
         sitelinks: list[Any] | None = None,
         callouts: list[str] | None = None,
         structured_snippets: list[Any] | None = None,
+        images: list[str] | None = None,
     ) -> dict[str, Any]:
         """Attach campaign assets"""
         payload = self._build_payload(
@@ -906,6 +907,7 @@ class AdCampaignsResource:
             sitelinks=sitelinks,
             callouts=callouts,
             structured_snippets=structured_snippets,
+            images=images,
         )
         return self._client._post(
             f"/v1/ads/campaigns/{campaign_id}/assets", data=payload
@@ -979,6 +981,7 @@ class AdCampaignsResource:
         sitelinks: list[Any] | None = None,
         callouts: list[str] | None = None,
         structured_snippets: list[Any] | None = None,
+        images: list[str] | None = None,
     ) -> dict[str, Any]:
         """Attach ad-group assets"""
         payload = self._build_payload(
@@ -988,6 +991,7 @@ class AdCampaignsResource:
             sitelinks=sitelinks,
             callouts=callouts,
             structured_snippets=structured_snippets,
+            images=images,
         )
         return self._client._post(f"/v1/ads/ad-sets/{ad_set_id}/assets", data=payload)
 
@@ -2406,6 +2410,7 @@ class AdCampaignsResource:
         sitelinks: list[Any] | None = None,
         callouts: list[str] | None = None,
         structured_snippets: list[Any] | None = None,
+        images: list[str] | None = None,
     ) -> dict[str, Any]:
         """Attach campaign assets (async)"""
         payload = self._build_payload(
@@ -2415,6 +2420,7 @@ class AdCampaignsResource:
             sitelinks=sitelinks,
             callouts=callouts,
             structured_snippets=structured_snippets,
+            images=images,
         )
         return await self._client._apost(
             f"/v1/ads/campaigns/{campaign_id}/assets", data=payload
@@ -2490,6 +2496,7 @@ class AdCampaignsResource:
         sitelinks: list[Any] | None = None,
         callouts: list[str] | None = None,
         structured_snippets: list[Any] | None = None,
+        images: list[str] | None = None,
     ) -> dict[str, Any]:
         """Attach ad-group assets (async)"""
         payload = self._build_payload(
@@ -2499,6 +2506,7 @@ class AdCampaignsResource:
             sitelinks=sitelinks,
             callouts=callouts,
             structured_snippets=structured_snippets,
+            images=images,
         )
         return await self._client._apost(
             f"/v1/ads/ad-sets/{ad_set_id}/assets", data=payload
