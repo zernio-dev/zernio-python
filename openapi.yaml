@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.230.0"
+  version: "1.230.1"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -19990,7 +19990,7 @@ paths:
                     items:
                       type: object
                       properties:
-                        conversationId: { type: string, description: "The platformConversationId (the same identity used by metadata.conversationId)" }
+                        conversationId: { type: string, description: "The platformConversationId. A thread whose events were logged under both its ids comes back as one row." }
                         mongoId: { type: [string, "null"], description: "The Zernio conversation id, when a matching conversation exists" }
                         accountId: { type: string }
                         platform: { type: string }
