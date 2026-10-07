@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.233.0"
+  version: "1.234.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -56762,14 +56762,23 @@ paths:
       x-resource-group: "ads"
       operationId: getAdReview
       tags: ["Ad Campaigns"]
-      x-platforms: ["tiktok"]
+      x-platforms: ["tiktok", "google"]
       summary: Read the platform's review verdict for an ad
       description: |-
         Reads the ad's review verdict from the platform now: whether it was approved, where it may
         not deliver, and every rejection reason with TikTok's suggestion and the piece of content it
         refers to. Read-only, so it works on a paused ad without re-enabling it.
 
-        TikTok only (`/ad/review_info/`); every other platform returns 501. Use it alongside the ad's
+        **Google**: reads `ad_group_ad.policy_summary` live. `approvalStatus` and `reviewStatus` are
+        Google's verbatim (`approvalStatus`: APPROVED, APPROVED_LIMITED, AREA_OF_INTEREST_ONLY,
+        DISAPPROVED, UNKNOWN; `reviewStatus`: REVIEW_IN_PROGRESS, REVIEWED, UNDER_APPEAL,
+        ELIGIBLE_MAY_SERVE); `approved` is true for the three approved statuses, false for
+        DISAPPROVED, null otherwise. `policyTopics` carries every policy topic entry with its
+        `type` (PROHIBITED, LIMITED, ...) and Google's `evidences` and `constraints` verbatim; each
+        PROHIBITED topic is also listed in `rejections` (reason = the topic). The `forbidden*`
+        arrays are TikTok-only and always empty on Google.
+
+        TikTok uses `/ad/review_info/`; every other platform returns 501. On TikTok, use it alongside the ad's
         `platformStatus`: TikTok reports `AD_STATUS_AUDIT` while the ad is in review and
         `AD_STATUS_AD_PRE_ONLINE` once it passed and is about to deliver (both map to
         `status: pending_review`); `AD_STATUS_AUDIT_DENY` maps to `rejected`.
@@ -56817,11 +56826,22 @@ paths:
                                 imageId: { type: [string, "null"] }
                                 videoId: { type: [string, "null"] }
                                 musicId: { type: [string, "null"] }
-                      readAt: { type: string, format: date-time, description: "When the verdict was read from TikTok." }
+                      approvalStatus: { type: [string, "null"], description: "Google only. ad_group_ad.policy_summary.approval_status, verbatim." }
+                      policyTopics:
+                        type: array
+                        description: "Google only. ad_group_ad.policy_summary.policy_topic_entries."
+                        items:
+                          type: object
+                          properties:
+                            topic: { type: [string, "null"] }
+                            type: { type: [string, "null"], description: "PROHIBITED, LIMITED, FULLY_LIMITED, DESCRIPTIVE, BROADENING, AREA_OF_INTEREST_ONLY." }
+                            evidences: { type: array, items: { type: object }, description: "Google's PolicyTopicEvidence objects, verbatim." }
+                            constraints: { type: array, items: { type: object }, description: "Google's PolicyTopicConstraint objects, verbatim." }
+                      readAt: { type: string, format: date-time, description: "When the verdict was read from the platform." }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '404': { description: "Ad not found, it has no TikTok ad id yet, or TikTok has no review record for it" }
-        '501': { description: Only supported on TikTok }
+        '404': { description: "Ad not found, it has no platform ad id yet, or the platform has no review record for it" }
+        '501': { description: Only supported on TikTok and Google }
 
   /v1/ads/{adId}/media:
     get:
@@ -57771,9 +57791,22 @@ paths:
       x-resource-group: "ads"
       operationId: getAdsActivityLog
       tags: ["Ad Accounts"]
-      x-platforms: ["meta"]
+      x-platforms: ["meta", "google"]
       summary: Ad account change / audit log
       description: |-
+        **Google**: reads the customer's `change_event` history, newest first. Google keeps 30 days
+        of it, so `since` defaults to 29 days ago and an older `since` returns 400; `until`
+        defaults to today. Each change is mapped onto the Meta row shape: `event_type` =
+        resource_change_operation (CREATE, UPDATE, REMOVE), `event_time` = change_date_time,
+        `actor_name` = user_email, `object_type` = change_resource_type, `object_id` = the last numeric id
+        of `object_resource_name`, `application_name` = client_type, `changed_fields` (array), and
+        `extra_data` = a JSON string `{ old, new }` with Google's old and new resource.
+        Pass `paging.after` back as `after` for the next page; it is null when nothing older is
+        left. A page never splits a change batch (the changes of one request share an
+        `event_time`), so a page can hold fewer rows than `limit` while more follow, or more
+        when one batch is larger than `limit`. `adAccountId` is the numeric customer id.
+
+        **Meta**:
         Account-level audit log from Meta's `/act_X/activities`: who changed what and when
         (creates, edits, status flips, budget changes...) with Meta's translated event names and
         the structured before/after in `extra_data`. Rows are returned verbatim. Meta has no
@@ -57783,17 +57816,17 @@ paths:
         - bearerAuth: []
       parameters:
         - { name: accountId, in: query, required: true, schema: { type: string }, description: "Zernio SocialAccount id (posting or ads variant) used to resolve the Meta token." }
-        - { name: adAccountId, in: query, required: true, schema: { type: string }, description: "Meta ad account id (act_<n>)." }
-        - { name: since, in: query, schema: { type: string, format: date }, description: "Start of range (YYYY-MM-DD)." }
+        - { name: adAccountId, in: query, required: true, schema: { type: string }, description: "Meta ad account id (act_<n>), or the Google customer id (digits only)." }
+        - { name: since, in: query, schema: { type: string, format: date }, description: "Start of range (YYYY-MM-DD). Google: at most 29 days ago, the default." }
         - { name: until, in: query, schema: { type: string, format: date }, description: "End of range (YYYY-MM-DD)." }
-        - { name: objectId, in: query, schema: { type: string }, description: "Client-side filter to one Meta object id (campaign, ad set or ad)." }
+        - { name: objectId, in: query, schema: { type: string }, description: "Client-side filter to one object id (campaign, ad set / ad group or ad)." }
         - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 200, default: 50 }, description: Rows per page }
         - { name: after, in: query, schema: { type: string }, description: "Cursor from paging.after of the previous page." }
       responses:
         '409': { $ref: '#/components/responses/AccountConnectionRequired' }
         '404': { $ref: '#/components/responses/AccountUnavailable' }
         '200':
-          description: Activity rows (raw Meta shape)
+          description: Activity rows (raw Meta shape; Google changes mapped onto it)
           content:
             application/json:
               schema:
@@ -57802,14 +57835,14 @@ paths:
                   adAccountId: { type: string }
                   data:
                     type: array
-                    items: { type: object, description: "Raw Meta activity row: event_type, translated_event_type, event_time, actor_name, object_id, object_name, object_type, application_name, extra_data (JSON string with before/after)." }
+                    items: { type: object, description: "Raw Meta activity row: event_type, translated_event_type, event_time, actor_name, object_id, object_name, object_type, application_name, extra_data (JSON string with before/after). Google rows carry event_type, event_time, actor_name, object_id, object_type, object_resource_name, application_name, changed_fields and extra_data (see the description)." }
                   paging:
                     type: object
                     properties:
                       after: { type: [string, "null"], description: "Cursor for the next page; null when exhausted." }
-        '400': { description: "Invalid input, or Meta rejected the query" }
+        '400': { description: "Invalid input, a Google since older than 30 days, or the platform rejected the query" }
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '501': { description: Only supported on Meta (facebook/instagram) }
+        '501': { description: Only supported on Meta (facebook/instagram) and Google }
 
   /v1/ads/rf-predictions:
     post:
