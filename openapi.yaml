@@ -25864,6 +25864,7 @@ paths:
         '400': { description: 'Invalid or expired selectionToken, no granted Pages, or missing classic profileId and tempToken.' }
         '403': { description: 'The caller is not the initiating user or no longer has profile access.' }
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '429': { description: 'Meta is rate limiting Page reads for this Facebook account (code `rate_limited`). Retry after `Retry-After` seconds; the listing stops at the first throttle instead of retrying.', headers: { Retry-After: { schema: { type: integer } } } }
         '500': 
           description: Failed to fetch pages (e.g., invalid token, insufficient permissions)
           content:
@@ -26000,6 +26001,7 @@ paths:
         '400':
           description: "Invalid or expired selectionToken, invalid Page choice, forbidden grant overrides, or missing classic connection fields."
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '429': { description: 'Meta is rate limiting Page reads for this Facebook account (code `rate_limited`). Retry after `Retry-After` seconds; the listing stops at the first throttle instead of retrying.', headers: { Retry-After: { schema: { type: integer } } } }
         '403':
           description: User does not have access to the specified profile
         '404':
@@ -26095,6 +26097,7 @@ paths:
                       profile_picture_url: "https://..."
         '400': { description: 'Missing required parameters (profileId or tempToken)' }
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '429': { description: 'Meta is rate limiting Page reads for this Facebook account (code `rate_limited`). Retry after `Retry-After` seconds; the listing stops at the first throttle instead of retrying.', headers: { Retry-After: { schema: { type: integer } } } }
         '403': { description: User does not have access to the specified profile }
     post:
       x-resource-group: "accounts"
@@ -26195,6 +26198,7 @@ paths:
         '400':
           description: 'Missing required fields, or the selected Page has no linked Instagram professional account'
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '429': { description: 'Meta is rate limiting Page reads for this Facebook account (code `rate_limited`). Retry after `Retry-After` seconds; the listing stops at the first throttle instead of retrying.', headers: { Retry-After: { schema: { type: integer } } } }
         '402': { $ref: '#/components/responses/PaymentRequired' }
         '403': { description: User does not have access to the specified profile }
         '404': { description: Selected page not found among the pages this token can manage }
