@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.244.1"
+  version: "1.244.2"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -47429,6 +47429,7 @@ paths:
                   fields: { type: array, items: { type: object }, description: Same field shape as GET /v1/phone-numbers/kyc. }
         '400': { description: Number is not awaiting remediation }
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'The API key is scoped to profiles that do not include this number.' }
         '404': { description: Number not found }
     post:
       x-resource-group: "telephony"
@@ -47472,6 +47473,7 @@ paths:
                   phoneNumber: { type: object, properties: { id: { type: string }, status: { type: string } } }
         '400': { description: Number is not awaiting remediation / nothing to remediate }
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'The API key is scoped to profiles that do not include this number.' }
         '404': { description: Number not found }
 
   /v1/phone-numbers/{id}/remediate/reply:
@@ -47524,6 +47526,7 @@ paths:
                   attachments: { type: integer, description: Number of attachments uploaded. }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'The API key is scoped to profiles that do not include this number.' }
         '404': { description: Number not found }
         '502': { description: Couldn't deliver the reply to the reviewer; retry. }
 
@@ -47602,6 +47605,7 @@ paths:
                   siblingsResubmitted: { type: integer, description: Other numbers on the same registration the correction fanned out to. }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'The API key is scoped to profiles that do not include this number.' }
         '404': { description: Number not found }
         '409': { description: Number's registration is held under our own carrier registration; nothing for you to correct. }
         '502': { description: Couldn't deliver your response to the reviewer; retry. }
@@ -48066,6 +48070,7 @@ paths:
                   fields: { type: array, items: { type: object }, description: Same field shape as GET /v1/whatsapp/phone-numbers/kyc. }
         '400': { description: Number is not awaiting remediation }
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'The API key is scoped to profiles that do not include this number.' }
         '404': { description: Number not found }
     post:
       x-resource-group: "telephony"
@@ -48113,6 +48118,7 @@ paths:
                   phoneNumber: { type: object, properties: { id: { type: string }, status: { type: string } } }
         '400': { description: Number is not awaiting remediation / nothing to remediate }
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'The API key is scoped to profiles that do not include this number.' }
         '404': { description: Number not found }
 
   /v1/phone-numbers/{id}/voice:
@@ -48204,6 +48210,7 @@ paths:
                   ivrPrompt: { type: [string, "null"] }
                   ivrOptions: { type: array, items: { type: object, properties: { digit: { type: string }, forwardTo: { type: string }, label: { type: string } } } }
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'The API key is scoped to profiles that do not include this number.' }
         '404': { description: Number not found }
         '409': { description: 'This number is attached to a SIP trunk; detach it first (code invalid_resource_state).' }
         '422': { description: "This number is hosted by your own carrier (brought via WhatsApp embedded signup), so calls can't be enabled on it." }
@@ -48230,6 +48237,7 @@ paths:
                   enabled: { type: boolean, description: Always false after a successful disable. }
                   phoneNumber: { type: string }
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'The API key is scoped to profiles that do not include this number.' }
         '404': { description: Number not found }
 
   /v1/phone-numbers/stock-watches:
@@ -48567,7 +48575,7 @@ paths:
                   trunkId: { type: string }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '403': { description: 'The team is on legacy (non-usage-based) billing, which cannot invoice trunk call costs (code feature_not_available). Move to usage-based billing to use SIP trunking.' }
+        '403': { description: 'The team is on legacy (non-usage-based) billing, which cannot invoice trunk call costs (code feature_not_available). Move to usage-based billing to use SIP trunking. Also returned when the API key is scoped to profiles that do not include this number.' }
         '404': { description: Number or trunk not found }
         '409': { description: 'The number still has Calls or WhatsApp calling enabled, is mid WhatsApp verification, is not active, or is attached to another trunk (code invalid_resource_state).' }
         '422': { description: 'This number is hosted by your own carrier (brought via WhatsApp embedded signup), so it cannot be trunked.' }
@@ -48595,6 +48603,7 @@ paths:
                   phoneNumber: { type: string }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'The API key is scoped to profiles that do not include this number.' }
         '404': { description: Number not found }
 
   /v1/phone-numbers/{id}/sms:
@@ -48653,6 +48662,7 @@ paths:
                       status: { type: string }
                   message: { type: string, description: Human-readable explanation when `enabled` is false. }
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'The API key is scoped to profiles that do not include this number.' }
         '404': { description: Number not found }
         '422': { description: "This number is hosted by your own carrier (brought via WhatsApp embedded signup), so SMS can't be enabled on it." }
     delete:
@@ -48680,6 +48690,7 @@ paths:
                   phoneNumber: { type: string }
                   disabled: { type: boolean, description: False when SMS was already off. Legacy field; prefer `enabled`. }
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'The API key is scoped to profiles that do not include this number.' }
         '404': { description: Number not found }
 
   /v1/phone-numbers/{id}/sms/reuse-registration:
@@ -48709,6 +48720,7 @@ paths:
                   registrationId: { type: string }
                   status: { type: string, enum: [pending, approved, rejected, requested, changes_requested, deactivated], description: "requested/changes_requested = pre-submission review states; customers see them as pending / needs changes." }
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'The API key is scoped to profiles that do not include this number.' }
         '404': { description: Number not found }
         '409': { description: No existing SMS registration to reuse for this number }
 
@@ -48760,6 +48772,7 @@ paths:
                   newPhoneNumber: { type: string, description: 'The replacement number, present when `replaced` is true.' }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'The API key is scoped to profiles that do not include this number.' }
         '404': { $ref: '#/components/responses/NotFound' }
         '409':
           description: |
@@ -48972,6 +48985,7 @@ paths:
                   method: { type: string, enum: [sms, call] }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'The API key is scoped to profiles that do not include this number.' }
         '404': { description: Number not found }
         '429': { description: 'Too many verification attempts for this number; wait before retrying' }
 
@@ -49009,6 +49023,7 @@ paths:
                   verified: { type: boolean }
         '400': { description: 'Invalid or expired code, or malformed request' }
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'The API key is scoped to profiles that do not include this number.' }
         '404': { description: Number not found }
         '429': { description: 'Attempt lockout from the carrier; wait a few minutes, then request a fresh code' }
 
@@ -49063,6 +49078,7 @@ paths:
                       provisionedAt: { type: string, format: date-time }
                       sipTrunkId: { type: [string, "null"], description: 'SIP trunk the number is attached to; null when not trunked. While attached, enabling Calls or WhatsApp calling, requesting WhatsApp verification, and releasing the number all return 409.' }
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'The API key is scoped to profiles that do not include this number.' }
         '404': { $ref: '#/components/responses/NotFound' }
     delete:
       x-resource-group: "telephony"
