@@ -53,6 +53,7 @@ from ._generated.reviews import ReviewsResource
 from ._generated.sequences import SequencesResource
 from ._generated.slack import SlackResource
 from ._generated.sms import SmsResource
+from ._generated.support_runs import SupportRunsResource
 from ._generated.tracking_tags import TrackingTagsResource
 from ._generated.twitter_engagement import TwitterEngagementResource
 from ._generated.usage import UsageResource
@@ -132,6 +133,7 @@ __all__ = [
     "SequencesResource",
     "SlackResource",
     "SmsResource",
+    "SupportRunsResource",
     "ToolsResource",
     "TrackingTagsResource",
     "TwitterEngagementResource",

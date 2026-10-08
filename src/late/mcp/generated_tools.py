@@ -32537,6 +32537,65 @@ def register_generated_tools(mcp, _get_client):
         except Exception as e:
             return f"Error: {e}"
 
+    # SUPPORT_RUNS
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Start a support run (private beta)",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def support_runs_create_support_run(
+        message: str,
+        thread_id: str | None = None,
+        context: dict[str, Any] | None = None,
+        max_cost_usd: float = 3,
+    ) -> str:
+        """Start a support run (private beta)
+
+        Private beta: returns 403 `feature_not_available` unless enabled for your account. Asks Ana, the Zernio support agent, a question about your workspace. The run is asynchronous: this returns 202 with a `runId`, and the answer arrives through the `support.run.completed` and `support.run.failed` webhooks. `GET /v1/support/runs/{runId}` is the fallback. Pass `threadId` to continue an earlier conversation, and `context` to point Ana at a post, account or profile. Billed when the run finishes at the model cost plus 20%, never above `maxCostUsd`; failed runs are free. Requires an unrestricted API key, usage-based billing and a card on file. Limits per account: 3 active runs and $100 of runs per UTC month. Send an Idempotency-Key header to make retries safe.
+
+        Args:
+            message: The question. Leading and trailing whitespace is trimmed. (required)
+            thread_id: Continue this thread. The thread must have a run started by your team, and no run in progress.
+            context: Ids Ana should look at. Each must belong to your workspace. Object with keys: postId (string); accountId (string); profileId (string)
+            max_cost_usd: Cost cap for this run, in USD. The run stops at the cap and bills at most this amount."""
+        client = _get_client()
+        try:
+            response = client.support_runs.create_support_run(
+                message=message,
+                thread_id=thread_id,
+                context=context,
+                max_cost_usd=max_cost_usd,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get a support run (private beta)",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def support_runs_get_support_run(run_id: str) -> str:
+        """Get a support run (private beta)
+
+        Private beta: returns 403 `feature_not_available` unless enabled for your account. Returns a run started by your team. Prefer the `support.run.completed` and `support.run.failed` webhooks; use this as the fallback, waiting `pollAfterSeconds` between polls. `costUsd` is the amount billed: the model cost plus 20%, never above `maxCostUsd`, and 0 for a failed run.
+
+        Args:
+            run_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.support_runs.get_support_run(run_id=run_id)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
     # TOOLS
 
     @mcp.tool(
@@ -35213,6 +35272,8 @@ def register_generated_tools(mcp, _get_client):
                 "workflow.run.started",
                 "workflow.run.completed",
                 "workflow.run.failed",
+                "support.run.completed",
+                "support.run.failed",
             ]
         ]
         | None,
@@ -35375,6 +35436,8 @@ def register_generated_tools(mcp, _get_client):
                 "workflow.run.started",
                 "workflow.run.completed",
                 "workflow.run.failed",
+                "support.run.completed",
+                "support.run.failed",
             ]
         ]
         | None = None,

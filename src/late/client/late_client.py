@@ -63,6 +63,7 @@ from ..resources import (
     SequencesResource,
     SlackResource,
     SmsResource,
+    SupportRunsResource,
     ToolsResource,
     TrackingTagsResource,
     TwitterEngagementResource,
@@ -213,6 +214,7 @@ class Zernio(BaseClient):
         self.sequences = SequencesResource(self)
         self.slack = SlackResource(self)
         self.sms = SmsResource(self)
+        self.support_runs = SupportRunsResource(self)
         self.tools = ToolsResource(self)
         self.tracking_tags = TrackingTagsResource(self)
         self.twitter_engagement = TwitterEngagementResource(self)
