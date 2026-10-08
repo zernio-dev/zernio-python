@@ -19727,6 +19727,7 @@ def register_generated_tools(mcp, _get_client):
     def connect_list_facebook_pages(
         profile_id: str | None = None,
         temp_token: str | None = None,
+        connect_flow: str | None = None,
         selection_token: str | None = None,
     ) -> str:
         """List Facebook pages
@@ -19737,13 +19738,15 @@ def register_generated_tools(mcp, _get_client):
 
         Args:
             profile_id: Profile ID from your classic connection flow. Required with tempToken.
-            temp_token: Temporary Facebook access token from the classic OAuth callback. Required with profileId.
+            temp_token: Temporary Facebook access token from the classic OAuth callback. Required with profileId unless sent in the X-Temp-Token header.
+            connect_flow: Set by the Zernio-hosted picker, whose user token stays in an httpOnly cookie. Integrators send tempToken instead.
             selection_token: Encrypted dashboard business-login grant. Send alone instead of profileId and tempToken. Expires after ten minutes."""
         client = _get_client()
         try:
             response = client.connect.list_facebook_pages(
                 profile_id=profile_id,
                 temp_token=temp_token,
+                connect_flow=connect_flow,
                 selection_token=selection_token,
             )
             return _format_response(response)
@@ -19782,7 +19785,9 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=False,
         )
     )
-    def connect_list_instagram_pages(profile_id: str, temp_token: str) -> str:
+    def connect_list_instagram_pages(
+        profile_id: str, temp_token: str | None = None, connect_flow: str | None = None
+    ) -> str:
         """List Pages with a linked Instagram account
 
         Completes the `loginMethod=facebook_login` Instagram flow, i.e. \"Instagram API with Facebook Login\".
@@ -19793,11 +19798,12 @@ def register_generated_tools(mcp, _get_client):
 
         Args:
             profile_id: Profile ID from your connection flow (required)
-            temp_token: Long-lived Facebook user access token from the OAuth callback redirect (required)"""
+            temp_token: Long-lived Facebook user access token from the OAuth callback redirect. Required unless sent in the X-Temp-Token header.
+            connect_flow: Set by the Zernio-hosted picker, whose user token stays in an httpOnly cookie. Integrators send tempToken instead."""
         client = _get_client()
         try:
             response = client.connect.list_instagram_pages(
-                profile_id=profile_id, temp_token=temp_token
+                profile_id=profile_id, temp_token=temp_token, connect_flow=connect_flow
             )
             return _format_response(response)
         except Exception as e:
@@ -19813,9 +19819,10 @@ def register_generated_tools(mcp, _get_client):
     )
     def connect_select_instagram_account(
         profile_id: str,
-        temp_token: str,
         page_id: str | None = None,
         page_ids: list[str] | None = None,
+        temp_token: str | None = None,
+        connect_flow: str | None = None,
         redirect_url: str | None = None,
     ) -> str:
         """Select the Page whose Instagram account to connect
@@ -19828,7 +19835,8 @@ def register_generated_tools(mcp, _get_client):
             profile_id: Profile ID from your connection flow (required)
             page_id: The Facebook Page ID selected by the user, from GET /v1/connect/instagram/select-account. Send this or pageIds, not both.
             page_ids: Several Page IDs whose linked Instagram accounts to connect from one sign-in, each as its own account. With two or more distinct IDs the response lists `accounts` and `failed` instead of `account`, and the request is refused with 400 on a reconnect or an ads connect. A single distinct ID behaves exactly like pageId.
-            temp_token: Long-lived Facebook user access token from the OAuth callback redirect (required)
+            temp_token: Long-lived Facebook user access token from the OAuth callback redirect. Required unless sent in the X-Temp-Token header.
+            connect_flow: Set by the Zernio-hosted picker, whose user token stays in an httpOnly cookie. Integrators send tempToken instead.
             redirect_url: Optional custom redirect URL to return to after selection"""
         client = _get_client()
         try:
@@ -19837,6 +19845,7 @@ def register_generated_tools(mcp, _get_client):
                 page_id=page_id,
                 page_ids=page_ids,
                 temp_token=temp_token,
+                connect_flow=connect_flow,
                 redirect_url=redirect_url,
             )
             return _format_response(response)

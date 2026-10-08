@@ -221,35 +221,57 @@ class ConnectResource:
         *,
         profile_id: str | None = None,
         temp_token: str | None = None,
+        x_temp_token: str | None = None,
+        connect_flow: str | None = None,
         selection_token: str | None = None,
     ) -> dict[str, Any]:
         """List Facebook pages"""
         params = self._build_params(
             profile_id=profile_id,
             temp_token=temp_token,
+            connect_flow=connect_flow,
             selection_token=selection_token,
         )
-        return self._client._get("/v1/connect/facebook/select-page", params=params)
+        headers: dict[str, str] = {}
+        if x_temp_token is not None:
+            headers["X-Temp-Token"] = x_temp_token
+        return self._client._get(
+            "/v1/connect/facebook/select-page", params=params, headers=headers
+        )
 
     def select_facebook_page(self, body: dict[str, Any]) -> dict[str, Any]:
         """Select Facebook page"""
         return self._client._post("/v1/connect/facebook/select-page", data=body)
 
-    def list_instagram_pages(self, profile_id: str, temp_token: str) -> dict[str, Any]:
+    def list_instagram_pages(
+        self,
+        profile_id: str,
+        *,
+        temp_token: str | None = None,
+        x_temp_token: str | None = None,
+        connect_flow: str | None = None,
+    ) -> dict[str, Any]:
         """List Pages with a linked Instagram account"""
         params = self._build_params(
             profile_id=profile_id,
             temp_token=temp_token,
+            connect_flow=connect_flow,
         )
-        return self._client._get("/v1/connect/instagram/select-account", params=params)
+        headers: dict[str, str] = {}
+        if x_temp_token is not None:
+            headers["X-Temp-Token"] = x_temp_token
+        return self._client._get(
+            "/v1/connect/instagram/select-account", params=params, headers=headers
+        )
 
     def select_instagram_account(
         self,
         profile_id: str,
-        temp_token: str,
         *,
         page_id: str | None = None,
         page_ids: list[str] | None = None,
+        temp_token: str | None = None,
+        connect_flow: str | None = None,
         redirect_url: str | None = None,
     ) -> dict[str, Any]:
         """Select the Page whose Instagram account to connect"""
@@ -258,6 +280,7 @@ class ConnectResource:
             page_id=page_id,
             page_ids=page_ids,
             temp_token=temp_token,
+            connect_flow=connect_flow,
             redirect_url=redirect_url,
         )
         return self._client._post("/v1/connect/instagram/select-account", data=payload)
@@ -1073,16 +1096,22 @@ class ConnectResource:
         *,
         profile_id: str | None = None,
         temp_token: str | None = None,
+        x_temp_token: str | None = None,
+        connect_flow: str | None = None,
         selection_token: str | None = None,
     ) -> dict[str, Any]:
         """List Facebook pages (async)"""
         params = self._build_params(
             profile_id=profile_id,
             temp_token=temp_token,
+            connect_flow=connect_flow,
             selection_token=selection_token,
         )
+        headers: dict[str, str] = {}
+        if x_temp_token is not None:
+            headers["X-Temp-Token"] = x_temp_token
         return await self._client._aget(
-            "/v1/connect/facebook/select-page", params=params
+            "/v1/connect/facebook/select-page", params=params, headers=headers
         )
 
     async def aselect_facebook_page(self, body: dict[str, Any]) -> dict[str, Any]:
@@ -1090,24 +1119,34 @@ class ConnectResource:
         return await self._client._apost("/v1/connect/facebook/select-page", data=body)
 
     async def alist_instagram_pages(
-        self, profile_id: str, temp_token: str
+        self,
+        profile_id: str,
+        *,
+        temp_token: str | None = None,
+        x_temp_token: str | None = None,
+        connect_flow: str | None = None,
     ) -> dict[str, Any]:
         """List Pages with a linked Instagram account (async)"""
         params = self._build_params(
             profile_id=profile_id,
             temp_token=temp_token,
+            connect_flow=connect_flow,
         )
+        headers: dict[str, str] = {}
+        if x_temp_token is not None:
+            headers["X-Temp-Token"] = x_temp_token
         return await self._client._aget(
-            "/v1/connect/instagram/select-account", params=params
+            "/v1/connect/instagram/select-account", params=params, headers=headers
         )
 
     async def aselect_instagram_account(
         self,
         profile_id: str,
-        temp_token: str,
         *,
         page_id: str | None = None,
         page_ids: list[str] | None = None,
+        temp_token: str | None = None,
+        connect_flow: str | None = None,
         redirect_url: str | None = None,
     ) -> dict[str, Any]:
         """Select the Page whose Instagram account to connect (async)"""
@@ -1116,6 +1155,7 @@ class ConnectResource:
             page_id=page_id,
             page_ids=page_ids,
             temp_token=temp_token,
+            connect_flow=connect_flow,
             redirect_url=redirect_url,
         )
         return await self._client._apost(
