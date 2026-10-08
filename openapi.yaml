@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.244.0"
+  version: "1.244.1"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -45521,6 +45521,7 @@ paths:
                       provisionedAt: { type: string, format: date-time }
                       sipTrunkId: { type: [string, "null"], description: 'SIP trunk the number is attached to; null when not trunked. While attached, enabling Calls or WhatsApp calling, requesting WhatsApp verification, and releasing the number all return 409.' }
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'The API key is scoped to profiles that do not include this number.' }
         '404': { $ref: '#/components/responses/NotFound' }
     delete:
       x-resource-group: "telephony"
@@ -48819,6 +48820,7 @@ paths:
                   forwardCallerId: { type: string, enum: [business, caller] }
         '400': { description: Invalid request }
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'The API key is scoped to profiles that do not include this number.' }
         '404': { description: Number not found }
     post:
       x-resource-group: "telephony"
