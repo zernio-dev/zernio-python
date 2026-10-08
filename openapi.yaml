@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.242.0"
+  version: "1.242.1"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -36827,7 +36827,11 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/ErrorResponse' }
-        '422': { $ref: '#/components/responses/IdempotencyKeyReused' }
+        '422':
+          description: 'Idempotency-Key reused with a different request, or the audio at attachmentUrl could not be downloaded (code attachment_fetch_failed, param attachmentUrl, the upstream HTTP status in the message): the URL is private, expired or gone. Nothing was sent.'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
         '429':
           description: 'Rate limited. Either the connected account''s upstream platform quota is exhausted (code rate_limited, see Retry-After; Reddit allows 1000 requests per 10 minutes per connected user), or Meta rejected the WhatsApp template-definition lookup (code platform_api_error). No message was sent.'
           headers:
