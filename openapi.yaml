@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.240.0"
+  version: "1.240.1"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -11026,7 +11026,7 @@ components:
               ctr: { type: number, description: "Click-through rate as a percentage (0 to 100)." }
               cpc: { type: number, description: "Cost per click in native currency." }
               cpm: { type: number, description: "Cost per 1000 impressions in native currency." }
-              conversions: { type: number, description: "Sum of conversion events over the range. Fractional values are normal (attribution splitting + Google modeled conversions). Meta: events matching the campaign optimization goal. Google: tracked conversions. X / LinkedIn: reported website/lead conversions (added 2026-07)." }
+              conversions: { type: number, description: "Sum of conversion events over the range. Fractional values are normal (attribution splitting + Google modeled conversions). Meta: the ad set Ads Manager Results (see AdMetrics.conversions). Google: tracked conversions. X / LinkedIn: reported website/lead conversions (added 2026-07)." }
               allConversions:
                 type: number
                 description: 'All conversions, including actions excluded from the Conversions column (Google metrics.all_conversions). 0 on platforms without the concept.'
@@ -11210,7 +11210,7 @@ components:
         engagement: { type: integer }
         conversions:
           type: number
-          description: "Count of conversion events over the requested date range. FRACTIONAL: attribution splits one conversion across touchpoints and Google additionally reports modeled conversions, so values like 0.347 are normal. Meta: events matching the campaign's promoted_object.custom_event_type (PURCHASE, LEAD, etc.). Google: the account's tracked conversions. X and LinkedIn: their reported website/lead conversions (added 2026-07). 0 for non-conversion campaigns or when no events have fired."
+          description: "Count of conversion events over the requested date range. FRACTIONAL: attribution splits one conversion across touchpoints and Google additionally reports modeled conversions, so values like 0.347 are normal. Meta: the ad set's Ads Manager Results, derived per ad set: the optimization goal's result (LEAD_GENERATION and QUALITY_LEAD = leads, CONVERSATIONS = messaging conversations started, APP_INSTALLS = installs, LANDING_PAGE_VIEWS = landing page views, LINK_CLICKS = link clicks, THRUPLAY = ThruPlays; REACH, IMPRESSIONS, POST_ENGAGEMENT and PAGE_LIKES report 0), otherwise the promoted_object event (custom_conversion_id when set, else custom_event_type, else PURCHASE). Google: the account's tracked conversions. X and LinkedIn: their reported website/lead conversions (added 2026-07). 0 for non-conversion campaigns or when no events have fired."
         allConversions:
           type: number
           description: 'All conversions, including actions excluded from the Conversions column (Google metrics.all_conversions). 0 on platforms without the concept.'
@@ -11236,7 +11236,7 @@ components:
             offsite_conversion.fb_pixel_add_to_cart: 980.50
         purchaseValue:
           type: number
-          description: "Convenience sum of purchase-type action values, picked from `actionValues` via the same priority list as `conversions` so both fields describe the same events. In ad-account native currency. 0 when the campaign has no purchase event configured. Meta-only."
+          description: "Convenience sum of purchase-type action values, picked from `actionValues` for the ad set promoted_object event (custom conversion, custom_event_type, else PURCHASE). It matches `conversions` for conversion-optimized ad sets; when the optimization goal reports a different result (LINK_CLICKS, LANDING_PAGE_VIEWS, ...) it stays on the promoted event so ROAS keeps its purchase basis. In ad-account native currency. 0 when the campaign has no purchase event configured. Meta-only."
         roas:
           type: number
           description: "Return on ad spend, derived as `purchaseValue / spend`. 0 when `spend` is 0. Equivalent to Meta's `purchase_roas` under default attribution. At ad-set and campaign levels this is recomputed from summed purchaseValue + spend (NOT averaged across children) so it's mathematically correct at every rollup level."
