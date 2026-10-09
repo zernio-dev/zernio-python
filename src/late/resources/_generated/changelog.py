@@ -79,6 +79,7 @@ class ChangelogResource:
         self,
         *,
         type: str | None = None,
+        impact: str | None = None,
         platform: str | None = None,
         before: datetime | str | None = None,
         limit: int | None = 20,
@@ -86,6 +87,7 @@ class ChangelogResource:
         """List API changelog entries"""
         params = self._build_params(
             type=type,
+            impact=impact,
             platform=platform,
             before=before,
             limit=limit,
@@ -96,6 +98,7 @@ class ChangelogResource:
         self,
         *,
         type: str | None = None,
+        impact: str | None = None,
         platform: str | None = None,
         before: datetime | str | None = None,
         limit: int | None = 20,
@@ -103,6 +106,7 @@ class ChangelogResource:
         """List API changelog entries (async)"""
         params = self._build_params(
             type=type,
+            impact=impact,
             platform=platform,
             before=before,
             limit=limit,

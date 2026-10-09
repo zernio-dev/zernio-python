@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.248.0"
+  version: "1.249.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -227,7 +227,7 @@ x-documentation:
     - `branded_calling.identity.action_required` - A caller identity waits on you: answer a change request, enter the authorizer's code, fix a carrier rejection, respond to an infringement claim or renew an expired verification
     - `branded_calling.number.status_updated` - A number attached to a caller identity changed vetting status (verified = the identity now shows on its calls)
     - `rcs.agent.status_updated` - An RCS agent changed status: changes_requested, brand_vetting, agent_review, testing, launch_review, launching, live, rejected or deactivated
-    - `api.changelog.published` - An entry was published to the API changelog (https://docs.zernio.com/changelog). Carries the entry (`type`, `platforms`, markdown `message`, docs `url`) and the deterministic OpenAPI diff behind it (`changes`: operations and schemas added, removed and modified). Tenant-free: one broadcast reaches every subscription that opted in. Back-fill with GET /v1/changelog.
+    - `api.changelog.published` - An entry was published to the API changelog (https://docs.zernio.com/changelog). Carries the entry (`type`, `impact`, `platforms`, markdown `message`, docs `url`) and the deterministic OpenAPI diff behind it (`changes`: operations and schemas added, removed and modified). Tenant-free: one broadcast reaches every subscription that opted in. Back-fill with GET /v1/changelog.
     - `contact.tag_added` - A tag was added to a contact. `source` says who wrote it: `api` (the API or dashboard), `workflow` (an add_tag node) or `automation` (a comment-automation link click). One event per tag actually added; re-adding a tag the contact already has fires nothing
     - `contact.tag_removed` - A tag was removed from a contact (same `source` vocabulary)
     - `contact.field_changed` - A contact custom field changed value. Carries `field` (the slug), `previousValue` and `value` (null when the field was absent before or was removed), and `source`
@@ -7582,15 +7582,22 @@ components:
         method: { type: string, example: POST }
         path: { type: string, example: /v1/ads/create }
         operationId: { type: string, example: createAd }
+        tags: { type: array, items: { type: string }, description: 'OpenAPI tags of the operation.', example: [Ad Campaigns] }
+        xPlatforms: { type: array, items: { type: string }, description: 'The operation''s `x-platforms` list, verbatim.', example: [google] }
     ApiChangelogEntry:
       type: object
       description: One API changelog entry, as shown on https://docs.zernio.com/changelog.
-      required: [id, type, platforms, message, publishedAt, specVersion, url, changes]
+      required: [id, type, impact, platforms, message, publishedAt, specVersion, url, changes]
       properties:
         id: { type: string, description: 'Stable entry id; the same entry is never published twice.' }
         type:
           type: string
           enum: [new_feature, breaking_change, improvement, deprecation, minor]
+          description: 'When `impact` is set, `breaking_change` means exactly `impact: action_required`.'
+        impact:
+          type: [string, "null"]
+          enum: [none, additive, action_required, null]
+          description: 'What an integrator has to do, computed from the OpenAPI diff rather than from the prose. `action_required`: an existing call or parser can break (an operation, parameter or field removed, a field newly required, a type narrowed, an enum value removed, or authentication changed). `additive`: only new or looser things, existing integrations keep working. `none`: descriptions or examples only. Null on entries published before October 2026.'
         platforms:
           type: array
           items: { type: string }
@@ -16518,7 +16525,7 @@ webhooks:
       operationId: onApiChangelogPublished
       summary: API changelog entry published event
       description: |
-        Fired when an entry is published to the API changelog (https://docs.zernio.com/changelog), which happens when a change to this OpenAPI spec goes live. The event belongs to no profile or account: every active subscription that opted in receives it, scoped subscriptions (`profileIds` / `accountIds`) do not. `entry.changes` is the deterministic diff of the spec (operations and schemas added, removed and modified); `entry.message` is the written announcement. Act on `changes` and `type`, read `message` for the why. Entries are listed by `GET /v1/changelog`.
+        Fired when an entry is published to the API changelog (https://docs.zernio.com/changelog), which happens when a change to this OpenAPI spec goes live. The event belongs to no profile or account: every active subscription that opted in receives it, scoped subscriptions (`profileIds` / `accountIds`) do not. `entry.changes` is the deterministic diff of the spec (operations and schemas added, removed and modified); `entry.impact` says whether an existing integration must act (`action_required`), only gained something (`additive`) or nothing changed beyond descriptions (`none`); `entry.message` is the written announcement. Act on `impact` and `changes`, read `message` for the why. Entries are listed by `GET /v1/changelog`.
       tags: [Webhook Events]
       requestBody:
         required: true
@@ -76129,7 +76136,7 @@ paths:
       summary: List API changelog entries
       security: []
       description: |
-        The API changelog, newest first. No API key needed; one address may make 120 requests a minute. Each entry is what the `api.changelog.published` webhook delivered: the announcement in `message`, and in `changes` the deterministic diff of the OpenAPI spec (operations and schemas added, removed and modified) for automation to act on. Page with `before` set to the previous page's `nextCursor`.
+        The API changelog, newest first. No API key needed; one address may make 120 requests a minute. Each entry is what the `api.changelog.published` webhook delivered: the announcement in `message`, its `impact` on existing integrations, and in `changes` the deterministic diff of the OpenAPI spec (operations and schemas added, removed and modified) for automation to act on. Page with `before` set to the previous page's `nextCursor`.
       parameters:
         - name: type
           in: query
@@ -76138,6 +76145,13 @@ paths:
             type: string
             enum: [new_feature, breaking_change, improvement, deprecation, minor]
           description: Only entries of this type.
+        - name: impact
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [none, additive, action_required]
+          description: 'Only entries with this impact. `action_required` lists the changes an integration may need to act on.'
         - name: platform
           in: query
           required: false

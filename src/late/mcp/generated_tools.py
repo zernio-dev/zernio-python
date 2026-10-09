@@ -15486,23 +15486,25 @@ def register_generated_tools(mcp, _get_client):
             "new_feature", "breaking_change", "improvement", "deprecation", "minor"
         ]
         | None = None,
+        impact: Literal["none", "additive", "action_required"] | None = None,
         platform: str | None = None,
         before: str | None = None,
         limit: int = 20,
     ) -> str:
         """List API changelog entries
 
-        The API changelog, newest first. No API key needed; one address may make 120 requests a minute. Each entry is what the `api.changelog.published` webhook delivered: the announcement in `message`, and in `changes` the deterministic diff of the OpenAPI spec (operations and schemas added, removed and modified) for automation to act on. Page with `before` set to the previous page's `nextCursor`.
+        The API changelog, newest first. No API key needed; one address may make 120 requests a minute. Each entry is what the `api.changelog.published` webhook delivered: the announcement in `message`, its `impact` on existing integrations, and in `changes` the deterministic diff of the OpenAPI spec (operations and schemas added, removed and modified) for automation to act on. Page with `before` set to the previous page's `nextCursor`.
 
         Args:
             type: Only entries of this type.
+            impact: Only entries with this impact. `action_required` lists the changes an integration may need to act on.
             platform: Only entries tagged with this platform or area slug (see `platforms` on the entry). One slug per request.
             before: Only entries published strictly before this instant. Pass the previous page's `nextCursor`.
             limit"""
         client = _get_client()
         try:
             response = client.changelog.list_changelog(
-                type=type, platform=platform, before=before, limit=limit
+                type=type, impact=impact, platform=platform, before=before, limit=limit
             )
             return _format_response(response)
         except Exception as e:
