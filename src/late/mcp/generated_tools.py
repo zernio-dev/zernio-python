@@ -35628,23 +35628,114 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=True,
         )
     )
-    def webhooks_test_webhook(webhook_id: str) -> str:
+    def webhooks_test_webhook(
+        webhook_id: str,
+        event: Literal[
+            "post.scheduled",
+            "post.published",
+            "post.failed",
+            "post.partial",
+            "post.cancelled",
+            "post.recycled",
+            "post.platform.published",
+            "post.platform.failed",
+            "post.platform.deleted",
+            "post.tiktok.url_resolved",
+            "post.external.created",
+            "post.external.updated",
+            "post.external.deleted",
+            "account.connected",
+            "account.disconnected",
+            "account.ads.initial_sync_completed",
+            "account.ads.sync_failed",
+            "account.ads.sync_recovered",
+            "analytics.synced",
+            "message.received",
+            "message.sent",
+            "message.edited",
+            "message.deleted",
+            "message.delivered",
+            "message.read",
+            "message.played",
+            "message.failed",
+            "reaction.received",
+            "referral.received",
+            "conversation.started",
+            "conversation.control_changed",
+            "contact.tag_added",
+            "contact.tag_removed",
+            "contact.field_changed",
+            "sequence.enrolled",
+            "sequence.exited",
+            "workflow.run.started",
+            "workflow.run.completed",
+            "workflow.run.failed",
+            "support.run.completed",
+            "support.run.failed",
+            "call.received",
+            "call.ended",
+            "call.failed",
+            "call.permission_request",
+            "comment.received",
+            "review.new",
+            "review.updated",
+            "ad.status_changed",
+            "ad.video.processed",
+            "lead.received",
+            "whatsapp.template.status_updated",
+            "whatsapp.template.category_updated",
+            "whatsapp.account.name_status_updated",
+            "whatsapp.account.quality_updated",
+            "whatsapp.account.status_updated",
+            "whatsapp.account.alert_received",
+            "whatsapp.contact.identity_changed",
+            "whatsapp.number.activated",
+            "whatsapp.number.declined",
+            "whatsapp.number.action_required",
+            "whatsapp.automatic_event",
+            "whatsapp.number.verification_required",
+            "whatsapp.number.suspended",
+            "whatsapp.number.reactivated",
+            "whatsapp.number.released",
+            "whatsapp.number.kyc_submitted",
+            "phone_number.stock_available",
+            "sms.registration.action_required",
+            "sms.registration.status_updated",
+            "branded_calling.identity.status_updated",
+            "branded_calling.identity.action_required",
+            "branded_calling.number.status_updated",
+            "rcs.agent.status_updated",
+            "verification.approved",
+            "verification.failed",
+            "commerce.product.created",
+            "commerce.product.updated",
+            "commerce.product.deleted",
+            "api.changelog.published",
+        ]
+        | None = None,
+    ) -> str:
         """Send test webhook
 
         Send a test webhook to verify your endpoint is configured correctly. The test payload includes event: \"webhook.test\" to distinguish it from real events.
 
+        Pass `event` to receive a sample payload of that event instead, so you can exercise the handler
+        for an event that only fires on a real outage or lifecycle change (e.g. `account.ads.sync_failed`).
+        The sample has the exact shape documented for the event under Webhook Events and is delivered
+        like a real one (same `X-Zernio-Event`, `X-Zernio-Event-Id` and `X-Zernio-Signature` headers),
+        with a top-level `test: true` and placeholder ids, never your data. The webhook does not have
+        to be subscribed to the event, but a webhook that lists the event's resource group in its
+        `disabledResourceGroups` answers 403, as does an API key with that group disabled. The delivery
+        shows up in the webhook logs with `test: true`.
+
         `webhook.test` belongs to the `webhooks` resource group, so a key with that
-        group disabled is rejected with 403, as is a test fire on a subscription that
-        lists `webhooks` in its own `disabledResourceGroups` (a 403, not a reported
-        delivery failure). Replays of real events (redelivery, dead-letter requeue) run
-        the same checks as live delivery, against both the key's groups and the
-        subscription's.
+        group disabled is rejected with 403, as is a test fire ...
 
         Args:
-            webhook_id: ID of the webhook to test (required)"""
+            webhook_id: ID of the webhook to test (required)
+            event: Send a sample payload of this event instead of `webhook.test`. The sample is marked with `test: true`."""
         client = _get_client()
         try:
-            response = client.webhooks.test_webhook(webhook_id=webhook_id)
+            response = client.webhooks.test_webhook(webhook_id=webhook_id, event=event)
             return _format_response(response)
         except Exception as e:
             return f"Error: {e}"

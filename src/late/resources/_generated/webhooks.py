@@ -174,10 +174,13 @@ class WebhooksResource:
         )
         return self._client._post("/v1/webhooks/logs/redeliver", data=payload)
 
-    def test_webhook(self, webhook_id: str) -> dict[str, Any]:
+    def test_webhook(
+        self, webhook_id: str, *, event: str | None = None
+    ) -> dict[str, Any]:
         """Send test webhook"""
         payload = self._build_payload(
             webhook_id=webhook_id,
+            event=event,
         )
         return self._client._post("/v1/webhooks/test", data=payload)
 
@@ -284,9 +287,12 @@ class WebhooksResource:
         )
         return await self._client._apost("/v1/webhooks/logs/redeliver", data=payload)
 
-    async def atest_webhook(self, webhook_id: str) -> dict[str, Any]:
+    async def atest_webhook(
+        self, webhook_id: str, *, event: str | None = None
+    ) -> dict[str, Any]:
         """Send test webhook (async)"""
         payload = self._build_payload(
             webhook_id=webhook_id,
+            event=event,
         )
         return await self._client._apost("/v1/webhooks/test", data=payload)
