@@ -7991,9 +7991,9 @@ def register_generated_tools(mcp, _get_client):
             the post as `platformPostId` (Facebook `pageId_postId` or an Instagram
             media id); a Zernio `postId` is a 400 there.
 
-            **Messaging boosts (Meta).** Use `goal: engagement` with
-            `callToAction: WHATSAPP_MESSAGE`, `MESSAGE_PAGE`, or `INSTAGRAM_MESSAGE`.
-            The CTA implies ...
+            For X, `accountId` may be the posting X account or its X Ads
+            connection: either resolves the other on the same profile. A Zernio
+            `postId` on an X Ads ...
 
             Platforms: meta, google, tiktok, linkedin, pinterest, x
 
