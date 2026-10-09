@@ -25591,7 +25591,11 @@ paths:
             `instagram`, `linkedin`, `pinterest`) it picks which posting account the ads
             connection uses when the profile holds several of that platform; with one it can
             be omitted, and an id that names no active account of the platform on the profile
-            is ignored. Ignored for standalone platforms (`googleads`).
+            is ignored, except with `force=true` when it names the posting account the
+            profile's ads connection hangs off: that account is no longer connected, so the
+            call returns 409 `reconnect_required` instead of reconnecting another account.
+            Reconnect it via GET /v1/connect/{platform} first. Ignored for standalone
+            platforms (`googleads`).
         - name: redirect_url
           in: query
           schema: { type: string, format: uri }
@@ -25735,7 +25739,7 @@ paths:
         '404':
           description: "Profile or posting account not found"
         '409':
-          description: "The Business Login connection needs reconnecting (reconnect it with loginMode=business, or pass force=true or disconnect it first to switch to the standard login), or the profile holds several active accounts of the platform and no accountId names one (ambiguous_account)."
+          description: "The Business Login connection needs reconnecting (reconnect it with loginMode=business, or pass force=true or disconnect it first to switch to the standard login), or the profile holds several active accounts of the platform and no accountId names one (ambiguous_account), or force=true names the posting account the ads connection hangs off and it is no longer connected (reconnect_required)."
         '503':
           description: "Business login is not configured or the platform is temporarily unavailable."
 
