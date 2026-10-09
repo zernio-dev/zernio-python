@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.246.0"
+  version: "1.247.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -65871,6 +65871,97 @@ paths:
         '403':
           description: Ads access required. Legacy plans need the Ads add-on; included by default on usage-based plans.
         '404': { $ref: '#/components/responses/AccountUnavailable' }
+  /v1/ads/targeting/browse:
+    get:
+      x-resource-group: "ads"
+      operationId: browseAdTargeting
+      tags: ["Ad Targeting"]
+      x-platforms: ["meta"]
+      summary: Browse targeting categories
+      description: |
+        The whole Meta detailed-targeting category tree of one ad account (Meta's
+        `GET /act_{ad_account_id}/targetingbrowse`), as one flat list you can render as a
+        tree. Use it to show what can be targeted without a keyword; use
+        `GET /v1/ads/targeting/search` to find an entry by name.
+
+        Every node is one of two kinds:
+
+        - **Selectable entity** (`selectable: true`): an interest, behavior or demographic Meta
+          gives an id. `id` plus `type` is what a targeting spec takes. `interests`, `behaviors`
+          and `industries` ids go in `TargetingSpec.interests`, `behaviors` and `workIndustries`
+          on `POST /v1/ads/create`; every other type goes in `rawTargeting.flexible_spec` under
+          its `type` as the key. `life_events`, `family_statuses` and `income` take objects
+          (`{ "flexible_spec": [{ "life_events": [{ "id": "6017476616183" }] }] }`), while
+          `education_statuses` and `relationship_statuses` take the bare number
+          (`{ "flexible_spec": [{ "education_statuses": [3] }] }`): Meta answers an object
+          there with a 500.
+        - **Organizational node** (`selectable: false`, `id: null`): a category such as
+          `Demographics > Financial > Income` that only groups other nodes and cannot be targeted.
+          A few carry a `type` and have no children (`Schools`, `Employers`, `Job titles`,
+          `Fields of study`, `Undergrad years`): those are open-ended categories Meta only exposes
+          through search (`dimension=workEmployer` / `workPosition` on the search endpoint).
+
+        `nodeId` identifies a node within this response and `parentNodeId` points at its parent
+        (`null` for the three roots `Demographics`, `Interests`, `Behaviors`). A selectable node's
+        `nodeId` is `{type}:{id}`, because Meta reuses small ids across types (education status 3
+        and relationship status 3 are different entities). An organizational node's `nodeId` is
+        its full path joined with ` > `. Labels are kept exactly as Meta sends them, including
+        stray leading or trailing spaces, because Meta has sibling nodes that differ only by
+        whitespace.
+
+        The interests branch is Meta's curated browse list (a few hundred entries), not every
+        interest Meta can target: search finds the long tail.
+
+        **No pagination.** Meta returns the whole catalog in one response (about 770 nodes) and
+        ignores `limit`, so there is no cursor. Narrow it with `type`, `parentNodeId` and
+        `selectable` instead; they are applied by Zernio. The catalog is cached for an hour per
+        ad account and connection.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: accountId, in: query, required: true, schema: { type: string }, description: "A connected Meta account (metaads, facebook or instagram). Any other ad platform returns 501 platform_not_supported." }
+        - { name: adAccountId, in: query, required: true, schema: { type: string, pattern: '^act_\d+$' }, description: 'The Meta ad account to browse as, in the form "act_<digits>".' }
+        - { name: type, in: query, required: false, schema: { type: string }, description: "Only the nodes of this Meta type (e.g. interests, behaviors, life_events, income), plus the organizational nodes leading to them. A type that is not in the catalog returns 400." }
+        - { name: parentNodeId, in: query, required: false, schema: { type: string }, description: "Only the descendants (every depth) of this organizational node, e.g. `Demographics > Financial`. A nodeId that is not an organizational node of the catalog returns 400." }
+        - { name: selectable, in: query, required: false, schema: { type: boolean }, description: "`true` for selectable entities only, `false` for organizational nodes only." }
+      responses:
+        '200':
+          description: The category tree as a flat list, in Meta's order (parents before their children).
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [adAccountId, nodes]
+                properties:
+                  adAccountId: { type: string }
+                  nodes:
+                    type: array
+                    items:
+                      type: object
+                      required: [nodeId, parentNodeId, id, name, type, path, selectable]
+                      properties:
+                        nodeId: { type: string, description: "Identifies the node within this response. Not a Meta id: never put it in a targeting spec." }
+                        parentNodeId: { type: [string, "null"], description: "nodeId of the parent organizational node, null for a root." }
+                        id: { type: [string, "null"], description: "Meta targeting id, null on organizational nodes." }
+                        name: { type: string }
+                        type: { type: [string, "null"], description: "Meta's targeting spec key (interests, behaviors, industries, life_events, education_statuses, relationship_statuses, family_statuses, income, ...). Null on most organizational nodes." }
+                        path: { type: array, items: { type: string }, description: "Labels of the ancestors, root first. Does not include the node itself." }
+                        selectable: { type: boolean, description: "True when the node can be targeted (it has a Meta id)." }
+                        description: { type: string, description: "Meta's description, when it has one." }
+                        audienceSizeLowerBound: { type: integer, description: "Meta's estimated audience size, lower bound, when reported." }
+                        audienceSizeUpperBound: { type: integer, description: "Meta's estimated audience size, upper bound, when reported." }
+              example:
+                adAccountId: act_1234567890
+                nodes:
+                  - { nodeId: "Demographics > Financial > Income", parentNodeId: "Demographics > Financial", id: null, name: Income, type: null, path: [Demographics, Financial], selectable: false }
+                  - { nodeId: "income:6107813551783", parentNodeId: "Demographics > Financial > Income", id: "6107813551783", name: "Household income: top 10% of ZIP codes (US)", type: income, path: [Demographics, Financial, Income], selectable: true, description: "People who live in the top 10% of US ZIP codes by average household income based on publicly available information", audienceSizeLowerBound: 31201895, audienceSizeUpperBound: 36693429 }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403':
+          description: Ads access required. Legacy plans need the Ads add-on; included by default on usage-based plans.
+        '404': { $ref: '#/components/responses/AccountUnavailable' }
+        '409': { $ref: '#/components/responses/AccountConnectionRequired' }
+        '501': { description: "accountId is not a Meta connection (platform_not_supported)." }
   /v1/ads/library:
     get:
       x-resource-group: "ads"

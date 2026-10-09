@@ -620,6 +620,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 |--------|-------------|
 | `ad_targeting.get_linked_in_bid_pricing()` | Suggested bid and budget bounds |
 | `ad_targeting.get_linked_in_supply_forecast()` | Forecast ad delivery |
+| `ad_targeting.browse_ad_targeting()` | Browse targeting categories |
 | `ad_targeting.estimate_ad_reach()` | Estimate audience reach |
 | `ad_targeting.search_ad_interests()` | Search targeting interests |
 | `ad_targeting.search_ad_targeting()` | Search targeting options |

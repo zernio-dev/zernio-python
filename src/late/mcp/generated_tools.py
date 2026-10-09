@@ -10888,6 +10888,61 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="Browse targeting categories",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def ad_targeting_browse_ad_targeting(
+        account_id: str,
+        ad_account_id: str,
+        type: str | None = None,
+        parent_node_id: str | None = None,
+        selectable: bool | None = None,
+    ) -> str:
+        """Browse targeting categories
+
+        The whole Meta detailed-targeting category tree of one ad account (Meta's
+        `GET /act_{ad_account_id}/targetingbrowse`), as one flat list you can render as a
+        tree. Use it to show what can be targeted without a keyword; use
+        `GET /v1/ads/targeting/search` to find an entry by name.
+
+        Every node is one of two kinds:
+
+        - **Selectable entity** (`selectable: true`): an interest, behavior or demographic Meta
+          gives an id. `id` plus `type` is what a targeting spec takes. `interests`, `behaviors`
+          and `industries` ids go in `TargetingSpec.interests`, `behaviors` and `workIndustries`
+          on `POST /v1/ads/create`; every other type goes in `rawTargeting.flexible_spec` under
+          its `type` as the key. `life_events`, `family_statuses` and `income` take objects
+          (`{ \"flexible_spec\": [{ \"life_events\": [{ \"id\": \"6017476616183\" }] }] }`), while
+          `education_statuses` and `relationship_statuses` take the bare number
+          (`{ \"flexible_spec\": [{ \"education_statuses\": [3] }] }`): Meta answers an object
+          there ...
+
+        Platforms: meta
+
+        Args:
+            account_id: A connected Meta account (metaads, facebook or instagram). Any other ad platform returns 501 platform_not_supported. (required)
+            ad_account_id: The Meta ad account to browse as, in the form "act_<digits>". (required)
+            type: Only the nodes of this Meta type (e.g. interests, behaviors, life_events, income), plus the organizational nodes leading to them. A type that is not in the catalog returns 400.
+            parent_node_id: Only the descendants (every depth) of this organizational node, e.g. `Demographics > Financial`. A nodeId that is not an organizational node of the catalog returns 400.
+            selectable: `true` for selectable entities only, `false` for organizational nodes only."""
+        client = _get_client()
+        try:
+            response = client.ad_targeting.browse_ad_targeting(
+                account_id=account_id,
+                ad_account_id=ad_account_id,
+                type=type,
+                parent_node_id=parent_node_id,
+                selectable=selectable,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="Estimate audience reach",
             readOnlyHint=False,
             destructiveHint=True,

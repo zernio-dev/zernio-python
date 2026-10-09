@@ -104,6 +104,25 @@ class AdTargetingResource:
         )
         return self._client._get("/v1/ads/targeting/search", params=params)
 
+    def browse_ad_targeting(
+        self,
+        account_id: str,
+        ad_account_id: str,
+        *,
+        type: str | None = None,
+        parent_node_id: str | None = None,
+        selectable: bool | None = None,
+    ) -> dict[str, Any]:
+        """Browse targeting categories"""
+        params = self._build_params(
+            account_id=account_id,
+            ad_account_id=ad_account_id,
+            type=type,
+            parent_node_id=parent_node_id,
+            selectable=selectable,
+        )
+        return self._client._get("/v1/ads/targeting/browse", params=params)
+
     def estimate_ad_reach(
         self,
         account_id: str,
@@ -219,6 +238,25 @@ class AdTargetingResource:
             limit=limit,
         )
         return await self._client._aget("/v1/ads/targeting/search", params=params)
+
+    async def abrowse_ad_targeting(
+        self,
+        account_id: str,
+        ad_account_id: str,
+        *,
+        type: str | None = None,
+        parent_node_id: str | None = None,
+        selectable: bool | None = None,
+    ) -> dict[str, Any]:
+        """Browse targeting categories (async)"""
+        params = self._build_params(
+            account_id=account_id,
+            ad_account_id=ad_account_id,
+            type=type,
+            parent_node_id=parent_node_id,
+            selectable=selectable,
+        )
+        return await self._client._aget("/v1/ads/targeting/browse", params=params)
 
     async def aestimate_ad_reach(
         self,
