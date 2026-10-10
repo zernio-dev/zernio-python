@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.251.1"
+  version: "1.251.2"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -180,7 +180,7 @@ x-documentation:
     - `analytics.synced` - One connected account's analytics sync cycle finished. A trigger, not a transport: it carries no metrics and no cursor, so call `GET /v1/analytics/delta` with your own last `nextCursor` to read what changed across every account. Poll-driven (~hourly per account), not real-time. High volume: subscribe to it on a dedicated endpoint.
     - `message.received` - New inbound DM or SMS received (SMS arrives with `platform: "sms"`)
     - `conversation.started` - A new conversation opened between one of your accounts and a contact, in either direction (any DM platform, and SMS); fires only the first time the thread appears
-    - `conversation.control_changed` - Meta's handover protocol moved a conversation. WhatsApp: Meta Business Agent took it over or handed it to you; while `control.owner` is `ai_agent`, inbound messages arrive with `metadata.standby: true` and the agent answers them, and sending a message takes control back. Facebook and Instagram: another app (such as Page Inbox) passed or took the thread; while you are not the owner, inbound arrive with `metadata.standby: true` and sends fail with `not_thread_owner` until you take control with thread-control
+    - `conversation.control_changed` - Meta's handover protocol moved a conversation. WhatsApp: Meta Business Agent took it over or handed it to you; while `control.owner` is `ai_agent`, inbound messages arrive with `metadata.standby: true` and the agent answers them, and sending a message takes control back. Facebook and Instagram: another app (such as Page Inbox) passed or took the thread; while you are not the owner, inbound arrive with `metadata.standby: true` and sends fail with `not_thread_owner` until you take control with thread-control (accounts connected through a Facebook Page; an Instagram Login connection cannot take and waits for the owner to pass it)
     - `message.sent` - DM sent via the API. `message.sentVia` says which Zernio surface produced it, and `automationId`, `workflowId` / `executionId`, `broadcastId` or `sequenceId` name the automation, workflow run, broadcast or sequence that sent it
     - `message.edited` - A sender edited a message (Instagram, Messenger, Telegram, WhatsApp)
     - `message.deleted` - A sender deleted ("unsent") a message (Instagram; WhatsApp in both directions, whether the business deleted a message it sent or the customer deleted one they sent). `message.direction` tells the two apart.
@@ -5930,7 +5930,7 @@ components:
           properties:
             standby:
               type: boolean
-              description: 'true when this inbound arrived on Meta''s standby path because another app owned the conversation: Meta Business Agent on WhatsApp, another handover receiver (such as Page Inbox) on Facebook and Instagram. That app answers it, Zernio only observes, and no automation runs. On WhatsApp sending a reply takes control back; on Facebook and Instagram take control first with POST /v1/inbox/conversations/{conversationId}/thread-control. See conversation.control_changed.'
+              description: 'true when this inbound arrived on Meta''s standby path because another app owned the conversation: Meta Business Agent on WhatsApp, another handover receiver (such as Page Inbox) on Facebook and Instagram. That app answers it, Zernio only observes, and no automation runs. On WhatsApp sending a reply takes control back; on Facebook, and on Instagram accounts connected through a Facebook Page, take control first with POST /v1/inbox/conversations/{conversationId}/thread-control; an Instagram Login connection cannot take or request and waits for the owner to pass it. See conversation.control_changed.'
             quotedMessageId:
               type: string
               description: |
@@ -15068,7 +15068,8 @@ webhooks:
         (`owner: app`) or took or received it (`owner: other`, with `ownerAppId`); while you
         are not the owner, inbound arrive with `metadata.standby: true`, no automation runs,
         and sends fail with `not_thread_owner`. Change control with
-        `POST /v1/inbox/conversations/{conversationId}/thread-control`.
+        `POST /v1/inbox/conversations/{conversationId}/thread-control`. `take` and `request`
+        answer 400 `platform_not_supported` on Instagram Login connections.
       tags: [Webhook Events]
       requestBody:
         required: true
@@ -37219,7 +37220,7 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/ErrorResponse' }
         '409':
-          description: 'The same Idempotency-Key is still processing (retry after a short backoff), or, on Facebook and Instagram, another app owns the thread under Meta''s handover protocol (code not_thread_owner, Meta subcode 2534037 in platformError, `details.ownerAppId` names the owner when Meta reports it). Take control with POST /v1/inbox/conversations/{conversationId}/thread-control, then resend.'
+          description: 'The same Idempotency-Key is still processing (retry after a short backoff), or, on Facebook and Instagram, another app owns the thread under Meta''s handover protocol (code not_thread_owner, Meta subcode 2534037 in platformError, `details.ownerAppId` names the owner when Meta reports it). Take control with POST /v1/inbox/conversations/{conversationId}/thread-control (accounts connected through a Facebook Page only; an Instagram Login connection cannot take), then resend.'
           content:
             application/json:
               schema: { $ref: '#/components/schemas/ErrorResponse' }
@@ -37475,8 +37476,8 @@ paths:
 
         **Facebook and Instagram** (Messenger Platform handover between the apps on the Page, such as Page Inbox):
         - `pass` with `targetAppId`: give the thread to another app (`pass_thread_control`). Page Inbox is 263902037430900.
-        - `take`: take the thread back (`take_thread_control`); Meta allows it only to the Page's primary receiver.
-        - `request`: ask the current owner to pass the thread (`request_thread_control`); nothing changes until it does.
+        - `take`: take the thread back (`take_thread_control`); Meta allows it only to the Page's primary receiver, and only on accounts connected through a Facebook Page. On an Instagram Login connection it answers 400 `platform_not_supported`.
+        - `request`: ask the current owner to pass the thread (`request_thread_control`); nothing changes until it does. Not available on Instagram Login connections (400 `platform_not_supported`).
         - `release`: give the thread back to the primary receiver (`release_thread_control`).
 
         While another app owns a Facebook or Instagram thread, inbound arrive with `metadata.standby: true` and a send answers 409 `not_thread_owner`. The conversation's `threadControl` follows the result; a `conversation.control_changed` webhook fires when Meta later reports the change.
@@ -37500,7 +37501,7 @@ paths:
                 action:
                   type: string
                   enum: [release, take, pass, request]
-                  description: '`request` is Facebook and Instagram only.'
+                  description: '`request` is Facebook and Instagram only. `take` and `request` are refused with `platform_not_supported` on Instagram accounts connected with Instagram Login.'
                 target:
                   type: string
                   enum: [ai_agent]
@@ -37536,7 +37537,11 @@ paths:
                       ownerAppId:
                         type: string
                         description: 'The app that received the thread, on a Facebook or Instagram pass.'
-        '400': { $ref: '#/components/responses/BadRequest' }
+        '400':
+          description: 'Invalid field, or take / request on an Instagram account connected with Instagram Login (code platform_not_supported)'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403':
           description: Inbox addon required
@@ -37598,7 +37603,7 @@ paths:
         '404':
           description: Account or conversation not found
         '409':
-          description: 'The same Idempotency-Key is still processing, or another app owns the thread under Meta''s handover protocol (code not_thread_owner, `details.ownerAppId` names it when Meta says). Take control with thread-control first.'
+          description: 'The same Idempotency-Key is still processing, or another app owns the thread under Meta''s handover protocol (code not_thread_owner, `details.ownerAppId` names it when Meta says). Take control with thread-control first (accounts connected through a Facebook Page only; an Instagram Login connection cannot take).'
           content:
             application/json:
               schema: { $ref: '#/components/schemas/ErrorResponse' }

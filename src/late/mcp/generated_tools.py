@@ -26518,7 +26518,7 @@ def register_generated_tools(mcp, _get_client):
         Args:
             conversation_id: The conversation ID (required)
             account_id: Social account ID (required)
-            action: `request` is Facebook and Instagram only. (required)
+            action: `request` is Facebook and Instagram only. `take` and `request` are refused with `platform_not_supported` on Instagram accounts connected with Instagram Login. (required)
             target: WhatsApp only. With action pass: send control to Meta Business Agent instead of the escalation partner.
             target_app_id: Facebook and Instagram only, required with action pass: the Meta app id receiving the thread.
             metadata: Free-form note forwarded verbatim to the app receiving control (its messaging_handovers webhook)."""
