@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.250.1"
+  version: "1.251.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -23881,7 +23881,7 @@ paths:
       operationId: getAllAccountsHealth
       tags: [Accounts]
       summary: Check accounts health
-      description: Returns health status of all connected accounts including token validity, permissions, and issues needing attention.
+      description: 'Returns health status of all connected accounts including token validity, permissions, and issues needing attention. A failing or stalled analytics sync (see `analyticsSync`) raises a healthy account to at least warning.'
       parameters:
         - name: profileId
           in: query
@@ -23932,6 +23932,12 @@ paths:
                         tokenExpiresAt: { type: string, format: date-time }
                         needsReconnect: { type: boolean, description: 'True when the token is expired or revoked, permissions are missing, the account is inactive, or the platform rejected its stored credentials (the same flag the account listing reports as needsReconnection).' }
                         issues: { type: array, items: { type: string } }
+                        analyticsSync:
+                          type: object
+                          description: 'Absent on platforms without analytics sync. failing: several consecutive sync attempts failed. stalled: a sync was requested over 6 hours ago and never completed. never_synced: no sync has completed yet. Failing and stalled raise the account status to at least warning.'
+                          properties:
+                            status: { type: string, enum: [ok, failing, stalled, never_synced] }
+                            lastSyncedAt: { type: [string, "null"], format: date-time, description: 'Last successful sync. Null when never synced or the latest attempt failed.' }
                         messagingRestriction:
                           type: [object, "null"]
                           description: 'Observed from Meta''s own errors on our own sends, not a live probe. Facebook/Instagram: error subcodes 2534122, 1893063, 2534029, set on the first refused send and cleared when a later send succeeds. WhatsApp: Cloud API error codes 131042 (payment or eligibility issue), 131031 (Business Account locked) and 368 (policy block), set when a send or a delivery status fails with one and cleared when a later message is delivered. It lags reality by one message in each direction. After subcode 1893063 (Meta refusing the Page''s messages), comment automation DMs are held and one is retried at `pausedUntil`: 30 minutes, doubling per refused retry up to 4 hours; held DMs stay pending and are sent once Meta accepts again, within the 7-day private-reply window.'
@@ -24152,6 +24158,8 @@ paths:
       description: |
         Returns detailed health info for a specific account including token status, permissions, and recommendations.
 
+        A failing or stalled analytics sync (see `analyticsSync`) raises a healthy account to at least `warning`.
+
         For WhatsApp accounts the response also includes `platformConnection`, a live probe of the
         Meta link behind the channel (the same read as `GET /v1/whatsapp/number-info`). The OAuth
         token can be perfectly valid while Meta refuses to serve the phone-number object (for
@@ -24231,6 +24239,12 @@ paths:
                     type: array
                     items: { type: string }
                     description: Actionable recommendations to fix issues
+                  analyticsSync:
+                    type: object
+                    description: 'Absent on platforms without analytics sync. failing: several consecutive sync attempts failed. stalled: a sync was requested over 6 hours ago and never completed. never_synced: no sync has completed yet. Failing and stalled raise the account status to at least warning.'
+                    properties:
+                      status: { type: string, enum: [ok, failing, stalled, never_synced] }
+                      lastSyncedAt: { type: [string, "null"], format: date-time, description: 'Last successful sync. Null when never synced or the latest attempt failed.' }
                   messagingRestriction:
                     type: [object, "null"]
                     description: 'Observed from Meta''s own errors on our own sends, not a live probe. Facebook/Instagram: error subcodes 2534122, 1893063, 2534029, set on the first refused send and cleared when a later send succeeds. WhatsApp: Cloud API error codes 131042 (payment or eligibility issue), 131031 (Business Account locked) and 368 (policy block), set when a send or a delivery status fails with one and cleared when a later message is delivered. It lags reality by one message in each direction. After subcode 1893063 (Meta refusing the Page''s messages), comment automation DMs are held and one is retried at `pausedUntil`: 30 minutes, doubling per refused retry up to 4 hours; held DMs stay pending and are sent once Meta accepts again, within the 7-day private-reply window.'
