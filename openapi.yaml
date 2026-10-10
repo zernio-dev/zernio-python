@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.249.1"
+  version: "1.250.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -12044,7 +12044,7 @@ components:
         languages: { type: array, items: { type: string }, description: "Language codes restricting the audience by language. Applied on Meta, Google, TikTok, LinkedIn, X and Pinterest; rejected with 400 on OpenAI. A code the platform cannot target returns 400 listing the ones it can. On Meta, ISO 639-1 codes (e.g. ['en']); a bare code targets all regional variants (\"en\" = all English), or use a region-qualified code (\"en_GB\", \"pt_BR\") for a specific one. Unknown codes are rejected." }
         interests:
           type: array
-          description: "Interest entities from /v1/ads/targeting/search?dimension=interest. Each carries the platform's opaque id. On Google, applied as ad-group interest criteria (affinity and in-market categories) on Display and Search ad groups the request creates; rejected with 400 on Performance Max, on Demand Gen (use the Demand Gen audience `userInterests` there), when attaching to an existing ad group (`adSetId`), and on OpenAI. On Google, interests are create-only."
+          description: "Interest entities from /v1/ads/targeting/search?dimension=interest. Each carries the platform's opaque id. On Google, applied as ad-group interest criteria (affinity and in-market categories) on Display and Search ad groups the request creates; rejected with 400 on Performance Max, on Demand Gen (use the Demand Gen audience `userInterests` there), when attaching to an existing ad group (`adSetId`), and on OpenAI. On Google, interests are create-only. On TikTok, bare numeric ids are interest categories (`interest_category_ids`) and ids like `keyword:123456` from `dimension=interestKeyword` are additional interests (`interest_keyword_ids`); any other id returns 422 naming `targeting.interests`. TikTok matches people who fit ANY selected interest, additional interest or behavior (one OR'd group), and that group is ANDed with location, age, gender and the other dimensions."
           items:
             type: object
             required: [id]
@@ -12053,7 +12053,7 @@ components:
               name: { type: string }
         behaviors:
           type: array
-          description: "Behaviour entities from /v1/ads/targeting/search?dimension=behavior (Meta, TikTok and LinkedIn). On TikTok they target people who interacted with videos (watched to the end, liked, commented or shared, last 15 days) or creators (followed or viewed the profile) in the picked categories, and the ad group uses the TikTok placement only."
+          description: "Behaviour entities from /v1/ads/targeting/search?dimension=behavior (Meta, TikTok and LinkedIn). On TikTok they target people who interacted with videos (watched to the end, liked, commented or shared, last 15 days) or creators (followed or viewed the profile) in the picked categories, or who viewed videos with a picked hashtag (`hashtag:<id>` ids from `dimension=hashtag`, sent as a `HASHTAG_RELATED` action with `VIEW_HASHTAG`), and the ad group uses the TikTok placement only. On TikTok, behaviors are OR'd with interests and additional interests."
           items:
             type: object
             required: [id]
@@ -64066,7 +64066,7 @@ paths:
                 ageMax: { type: integer, minimum: 13, maximum: 65 }
                 interests:
                   type: array
-                  description: "Interest objects from /v1/ads/interests. Each must include id and name."
+                  description: "Interest objects from /v1/ads/targeting/search?dimension=interest (or dimension=interestKeyword on TikTok). Each must include id and name. On TikTok, bare numeric ids are interest categories (`interest_category_ids`) and ids like `keyword:123456` from `dimension=interestKeyword` are additional interests (`interest_keyword_ids`); any other id returns 422 naming `targeting.interests`. TikTok matches people who fit ANY selected interest, additional interest or behavior (one OR'd group), and that group is ANDed with location, age, gender and the other dimensions."
                   items:
                     type: object
                     required: [id, name]
@@ -64110,7 +64110,7 @@ paths:
                       address: { type: string }
                 behaviors:
                   type: array
-                  description: "Behaviour entities from /v1/ads/targeting/search?dimension=behavior (Meta, TikTok and LinkedIn). On TikTok they target people who interacted with videos (watched to the end, liked, commented or shared, last 15 days) or creators (followed or viewed the profile) in the picked categories, and the ad group uses the TikTok placement only. Each must include id."
+                  description: "Behaviour entities from /v1/ads/targeting/search?dimension=behavior (Meta, TikTok and LinkedIn). On TikTok they target people who interacted with videos (watched to the end, liked, commented or shared, last 15 days) or creators (followed or viewed the profile) in the picked categories, or who viewed videos with a picked hashtag (`hashtag:<id>` ids from `dimension=hashtag`, sent as a `HASHTAG_RELATED` action with `VIEW_HASHTAG`), and the ad group uses the TikTok placement only. On TikTok, behaviors are OR'd with interests and additional interests. Each must include id."
                   items:
                     type: object
                     required: [id]
@@ -65769,10 +65769,17 @@ paths:
           Meta: its fixed behaviors catalog (e.g. `Small business owners`, `Frequent Travelers`).
           TikTok: video and creator interaction categories (e.g. `Software & Apps`), with ids like
           `video:1913101` or `creator:24001` and `path` starting with `Video interactions` or
-          `Creator interactions`. LinkedIn: member behaviors (e.g. `Frequent Travelers`,
+          `Creator interactions` (hashtags are their own `hashtag` dimension). LinkedIn: member behaviors (e.g. `Frequent Travelers`,
           `Job Seekers`, `Recently Promoted`), ids like `urn:li:memberBehavior:9`. Google has no
           separate behavior catalog: its in-market and affinity segments come back from `interest`,
           and X removed behavior targeting from its Ads API
+        - `interestKeyword`: TikTok only. The "Additional interests" of TikTok Ads Manager (e.g. `folk`
+          returns `Folk Music`), from TikTok's keyword recommendations for the seed `q`. Ids look like
+          `keyword:123456` and go in `TargetingSpec.interests`, next to interest categories. Only keywords
+          TikTok lets an ad group target come back (`status` `EFFECTIVE`). TikTok returns no audience size
+        - `hashtag`: TikTok only. Hashtags recommended for the seed `q`, to target people who viewed videos
+          with them. Ids look like `hashtag:123456` and go in `TargetingSpec.behaviors`. Only hashtags
+          TikTok reports `ONLINE` come back. Spaces in `q` are removed first, because TikTok recommends no hashtags for a multi-word seed (`acoustic guitar` searches `acousticguitar`)
         - `income`: the household-income tiers the platform can target (Meta, TikTok, Google).
           The id is the normalized tier (`top_5`, `top_10`, `top_10_25`, `top_25_50`) to pass as
           `TargetingSpec.incomeTier`, never a platform segment id. Meta's tiers are US-only
@@ -65792,6 +65799,10 @@ paths:
         TikTok `interest` searches TikTok's interest category catalog (about 700 categories over
         four levels, `path` holds the parent categories), matched by name in Zernio. The ids are
         what `TargetingSpec.interests` sends to TikTok as `interest_category_ids`.
+        For `interestKeyword` and `hashtag`, a `q` made only of prefixed ids (`keyword:101,keyword:102` or
+        `hashtag:201`) looks those ids up instead of searching, unavailable ones included with their `status`
+        (`INEFFECTIVE` or `OFFLINE`), so ids read back from an ad group (`interest_keyword_ids`, `actions`
+        in `nativeSettings`) resolve to names. An `interestKeyword` lookup takes at most 50 ids (more returns 400 naming `q`).
         Work industries are a fixed ~30-entry Meta catalog with no server-side query,
         so `workIndustry` matching, ranking and `limit` happen in Zernio. `language`
         is likewise a fixed, checked-in table of Google's targetable
@@ -65868,7 +65879,7 @@ paths:
       parameters:
         - { name: accountId, in: query, required: true, schema: { type: string }, description: "Account ID (a connected account on the target ad platform)." }
         - { name: q, in: query, required: true, schema: { type: string }, description: "Search query. For geo, the locality name only (no region/country suffix)." }
-        - { name: dimension, in: query, required: false, schema: { type: string, enum: [geo, interest, behavior, income, language, workPosition, workEmployer, workIndustry, industry, jobFunction, seniority, companySize], default: interest }, description: "What to search. `geo` resolves locations (scope further with `geoType`), `interest`/`behavior` resolve audience entities (`behavior` is Meta only), `income` resolves the normalized income tiers, `language` resolves Google's targetable language_constant table (Google only), `workPosition`/`workEmployer`/`workIndustry` resolve Meta work demographics, `industry`/`jobFunction`/`seniority`/`companySize` resolve LinkedIn B2B facets (LinkedIn only). Defaults to `interest` for backward compatibility with the deprecated /v1/ads/interests alias." }
+        - { name: dimension, in: query, required: false, schema: { type: string, enum: [geo, interest, interestKeyword, behavior, hashtag, income, language, workPosition, workEmployer, workIndustry, industry, jobFunction, seniority, companySize], default: interest }, description: "What to search. `geo` resolves locations (scope further with `geoType`), `interest`/`behavior` resolve audience entities (`behavior` on Meta, TikTok and LinkedIn), `interestKeyword`/`hashtag` resolve TikTok additional interests and hashtags (TikTok only), `income` resolves the normalized income tiers, `language` resolves Google's targetable language_constant table (Google only), `workPosition`/`workEmployer`/`workIndustry` resolve Meta work demographics, `industry`/`jobFunction`/`seniority`/`companySize` resolve LinkedIn B2B facets (LinkedIn only). Defaults to `interest` for backward compatibility with the deprecated /v1/ads/interests alias." }
         - { name: geoType, in: query, required: false, schema: { type: string, enum: [all, country, country_group, region, city, subcity, neighborhood, place, zip, metro_area, geo_market], default: city }, description: "Only used when `dimension=geo`. The kind of location to resolve. `all` searches every type in one relevance-ranked call. Defaults to `city`." }
         - { name: countryCode, in: query, required: false, schema: { type: string, minLength: 2, maxLength: 2 }, description: "ISO 3166-1 alpha-2 country code (e.g. NL) to scope a geo search." }
         - { name: adAccountId, in: query, required: false, schema: { type: string }, description: "TikTok only: the advertiser to search as, when the connection holds several. Each TikTok advertiser has its own targetable regions and catalogs. Defaults to the connection's first advertiser; an advertiser the connection does not hold returns 400." }
@@ -65890,9 +65901,10 @@ paths:
                       properties:
                         id: { type: string, description: "The platform's opaque id. Use as a geo `key` (regions/cities/zips/metros) or an entity `id` (interests/behaviors) in TargetingSpec. A `country` result is the exception on every platform: its id is the ISO 3166-1 alpha-2 code, which is what `targeting.countries` takes." }
                         name: { type: string, description: "Human-readable label." }
-                        type: { type: string, description: "What the result is. Equals the requested dimension (interest, behavior, income, language, workPosition, workEmployer, workIndustry, industry, jobFunction, seniority, companySize), or the location level for geo (country, region, city, zip, metro, ...)." }
+                        type: { type: string, description: "What the result is. Equals the requested dimension (interest, interestKeyword, behavior, hashtag, income, language, workPosition, workEmployer, workIndustry, industry, jobFunction, seniority, companySize), or the location level for geo (country, region, city, zip, metro, ...)." }
                         path: { type: array, items: { type: string }, description: "Optional breadcrumb of parent labels (e.g. ['United States', 'California', 'Los Angeles']). Disambiguates same-named results." }
                         audienceSize: { type: [integer, "null"], description: "Optional estimated reachable users for this option, when the platform returns it." }
+                        status: { type: string, description: "TikTok `interestKeyword` and `hashtag` results only: TikTok's availability status. `EFFECTIVE` / `INEFFECTIVE` for additional interests, `ONLINE` / `OFFLINE` for hashtags. Only `EFFECTIVE` and `ONLINE` ids can be targeted." }
                         countryCode: { type: string, description: "ISO-3166 alpha-2 of the country a sub-country geo result (city, region, zip, metro) belongs to, when the platform reports it (Meta does). Useful to know whether a location falls under the EU DSA disclosure rules before creating the ad." }
                         platformId: { type: string, description: "Only on `country` results: the platform's own id for the country, which `id` replaced with the ISO code (TikTok's native location_id, a GeoNames id such as 2635167 for GB; Meta's country key; Google's geo target constant id; X's targeting value; LinkedIn's geo URN). Use it to match a country against what the platform reports back, e.g. `location_ids` in a TikTok `nativeSettings` read." }
         '400':
