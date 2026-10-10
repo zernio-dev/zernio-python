@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.251.0"
+  version: "1.251.1"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -51667,6 +51667,7 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/ErrorResponse' }
+        '503': { $ref: '#/components/responses/TemporarilyUnavailable' }
   /v1/support/runs/{runId}:
     get:
       x-resource-group: "admin-plane"
