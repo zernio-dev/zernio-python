@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.252.2"
+  version: "1.252.3"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -2646,7 +2646,8 @@ components:
             Facebook, WhatsApp, Telegram groups), `comment` on an Instagram or Facebook comment (the
             run starts with no conversation and its first `send_message`, which must be text (with
             optional buttons or quick replies) or cards and must follow the trigger directly (checked
-            on save; Instagram delivers only plain text to commenters who do not follow the account),
+            on save; on some Instagram accounts Meta refuses buttons and cards to commenters who do
+            not follow the account),
             is sent as a private reply to the comment;
             the run then continues in the conversation that reply opens; when an active comment
             automation's keywords match the comment, the automation answers and the workflow does
@@ -39440,13 +39441,15 @@ paths:
         One reply per comment, must be sent within 7 days. Optionally attach interactive elements:
         `quickReplies` (chips above the keyboard, max 13) or `buttons` (1-3 inline postback/url
         buttons rendered in the same bubble via Meta's button_template). Chips do not render in
-        the Instagram Message Requests folder. Since late August 2026 Instagram refuses buttons,
-        cards and attachments to commenters who do not follow the account (Meta code 2, subcode
-        1545133, returned here as a non-retryable 400 that says so), and the failed call still
-        consumes the comment's single private reply. To reach non-followers send plain text and
-        add buttons once they reply. `quickReplies` and `buttons` are mutually exclusive. When
-        the comment's single private reply is spent (by this call or an earlier one) the 400
-        carries `details.privateReplyConsumed: true`; never retry it.
+        the Instagram Message Requests folder. Instagram can refuse buttons, cards and
+        attachments to commenters who do not follow the account (Meta code 2, subcode 1545133,
+        returned here as a non-retryable 400 that says so). The refusal is uneven: most accounts
+        do not get it, an affected account gets it on many of its non-followers, and only that
+        account's own past refusals show whether it is affected. The failed call still consumes the
+        comment's single private reply. On an affected account, send plain text to reach
+        non-followers and add buttons once they reply. `quickReplies` and `buttons` are mutually
+        exclusive. When the comment's single private reply is spent (by this call or an earlier
+        one) the 400 carries `details.privateReplyConsumed: true`; never retry it.
       tags: [Comments]
       security: [{ bearerAuth: [] }]
       parameters:
@@ -39592,7 +39595,7 @@ paths:
                 followGated:
                   summary: "Media refused, commenter does not follow the account (reply consumed)"
                   value:
-                    error: "Instagram refused this private reply because it carries a card, buttons or an attachment and the commenter does not follow this account. Meta delivers only plain text to non-followers. This attempt consumed the comment's single private reply, so do not retry it; send a text-only private reply to reach non-followers."
+                    error: "Instagram refused this private reply because it carries a card, buttons or an attachment and the commenter does not follow this account. Meta applies this refusal unevenly: most accounts do not get it, an affected account gets it on many of its non-followers. This attempt consumed the comment's single private reply, so do not retry it; send a text-only private reply to reach other non-followers."
                     type: "platform_error"
                     code: "platform_api_error"
                     platform: "instagram"
@@ -39602,7 +39605,7 @@ paths:
                       is_transient: false
                       message: "Service temporarily unavailable"
                       error_user_title: "Your message can't be delivered"
-                      error_user_msg: "You can't send media to Jejum de Daniel unless they follow you."
+                      error_user_msg: "You can't send media to Someone unless they follow you."
                     details:
                       privateReplyConsumed: true
                 alreadyReplied:
