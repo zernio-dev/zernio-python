@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.252.1"
+  version: "1.252.2"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -18933,7 +18933,7 @@ paths:
                   error: { type: string, example: "Analytics add-on required" }
                   code: { type: string, example: "analytics_addon_required" }
         '403':
-          description: Access denied to this account
+          description: 'Access denied to this account, or the connected YouTube account or channel is suspended'
           content:
             application/json:
               schema:
