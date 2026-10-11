@@ -264,11 +264,27 @@ def _meta(*scopes: str, **extra: Any) -> dict[str, Any]:
 # ---------------------------------------------------------------------------
 
 
+# An explicit list, not a suffix check: "threads" ends with "ads".
+_AD_PLATFORMS = frozenset(
+    {
+        "metaads",
+        "tiktokads",
+        "googleads",
+        "linkedinads",
+        "pinterestads",
+        "xads",
+        "openaiads",
+        "redditads",
+        "whopads",
+    }
+)
+
+
 def _is_posting_account(account: dict[str, Any]) -> bool:
     platform = str(account.get("platform") or "")
     return (
         bool(platform)
-        and not platform.endswith("ads")
+        and platform not in _AD_PLATFORMS
         and account.get("enabled") is not False
     )
 

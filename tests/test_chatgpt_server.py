@@ -45,9 +45,23 @@ ACCOUNTS = {
             "enabled": True,
         },
         {
+            "_id": "acc_th",
+            "platform": "threads",
+            "username": "demo_th",
+            "isActive": True,
+            "enabled": True,
+        },
+        {
             "_id": "acc_ads",
             "platform": "metaads",
             "username": "ads",
+            "isActive": True,
+            "enabled": True,
+        },
+        {
+            "_id": "acc_reddit_ads",
+            "platform": "redditads",
+            "username": "reddit_ads",
             "isActive": True,
             "enabled": True,
         },
@@ -136,7 +150,7 @@ async def test_list_social_accounts_hides_ads_and_disabled_and_strips_internal_f
     )
     result = await _call("list_social_accounts")
     accounts = result.structured_content["accounts"]
-    assert [a["id"] for a in accounts] == ["acc_tw", "acc_ig"]
+    assert [a["id"] for a in accounts] == ["acc_tw", "acc_ig", "acc_th"]
     assert accounts[1]["status"] == "needs_reconnection"
     dumped = json.dumps(result.structured_content)
     assert (
@@ -223,6 +237,25 @@ async def test_schedule_post_sends_utc_time_and_explicit_targets():
         "mediaItems": [{"type": "video", "url": "https://cdn/clip.mp4"}],
     }
     assert "publishNow" not in body
+
+
+@respx.mock
+async def test_schedule_post_accepts_a_threads_account():
+    respx.get(f"{API}/v1/accounts").mock(
+        return_value=httpx.Response(200, json=ACCOUNTS)
+    )
+    create = respx.post(f"{API}/v1/posts").mock(
+        return_value=httpx.Response(201, json={"post": POST})
+    )
+    result = await _call(
+        "schedule_post",
+        content="Hello",
+        account_ids=["acc_th"],
+        scheduled_for="2030-01-01T09:00:00Z",
+    )
+    assert not result.is_error
+    body = json.loads(create.calls[0].request.content)
+    assert body["platforms"] == [{"platform": "threads", "accountId": "acc_th"}]
 
 
 @respx.mock
