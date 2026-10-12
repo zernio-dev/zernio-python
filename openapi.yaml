@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.252.3"
+  version: "1.252.4"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -17826,6 +17826,7 @@ paths:
                       hasAnalyticsScope: false
                       requiresReauthorization: true
                       reauthorizeUrl: "https://accounts.google.com/o/oauth2/auth?client_id=..."
+        '429': { $ref: '#/components/responses/RateLimited' }
         '500':
           description: Internal server error
           content:
@@ -17977,6 +17978,7 @@ paths:
                       hasAnalyticsScope: false
                       requiresReauthorization: true
                       reauthorizeUrl: "https://accounts.google.com/o/oauth2/auth?client_id=..."
+        '429': { $ref: '#/components/responses/RateLimited' }
         '500':
           description: Internal server error
           content:
