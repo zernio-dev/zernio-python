@@ -78,6 +78,7 @@ class ProfilesResource:
         *,
         include_over_limit: bool | None = False,
         name: str | None = None,
+        external_id: str | None = None,
         limit: int | None = None,
         skip: int | None = None,
     ) -> dict[str, Any]:
@@ -85,6 +86,7 @@ class ProfilesResource:
         params = self._build_params(
             include_over_limit=include_over_limit,
             name=name,
+            external_id=external_id,
             limit=limit,
             skip=skip,
         )
@@ -98,6 +100,7 @@ class ProfilesResource:
         description: str | None = None,
         color: str | None = None,
         timezone: str | None = None,
+        external_id: str | None = None,
     ) -> dict[str, Any]:
         """Create profile"""
         payload = self._build_payload(
@@ -105,6 +108,7 @@ class ProfilesResource:
             description=description,
             color=color,
             timezone=timezone,
+            external_id=external_id,
         )
         headers: dict[str, str] = {}
         if idempotency_key is not None:
@@ -123,6 +127,7 @@ class ProfilesResource:
         description: Any | None = None,
         color: str | None = None,
         timezone: Any | None = None,
+        external_id: Any | None = None,
         is_default: bool | None = None,
     ) -> dict[str, Any]:
         """Update profile"""
@@ -131,6 +136,7 @@ class ProfilesResource:
             description=description,
             color=color,
             timezone=timezone,
+            external_id=external_id,
             is_default=is_default,
         )
         return self._client._put(f"/v1/profiles/{profile_id}", data=payload)
@@ -144,6 +150,7 @@ class ProfilesResource:
         *,
         include_over_limit: bool | None = False,
         name: str | None = None,
+        external_id: str | None = None,
         limit: int | None = None,
         skip: int | None = None,
     ) -> dict[str, Any]:
@@ -151,6 +158,7 @@ class ProfilesResource:
         params = self._build_params(
             include_over_limit=include_over_limit,
             name=name,
+            external_id=external_id,
             limit=limit,
             skip=skip,
         )
@@ -164,6 +172,7 @@ class ProfilesResource:
         description: str | None = None,
         color: str | None = None,
         timezone: str | None = None,
+        external_id: str | None = None,
     ) -> dict[str, Any]:
         """Create profile (async)"""
         payload = self._build_payload(
@@ -171,6 +180,7 @@ class ProfilesResource:
             description=description,
             color=color,
             timezone=timezone,
+            external_id=external_id,
         )
         headers: dict[str, str] = {}
         if idempotency_key is not None:
@@ -189,6 +199,7 @@ class ProfilesResource:
         description: Any | None = None,
         color: str | None = None,
         timezone: Any | None = None,
+        external_id: Any | None = None,
         is_default: bool | None = None,
     ) -> dict[str, Any]:
         """Update profile (async)"""
@@ -197,6 +208,7 @@ class ProfilesResource:
             description=description,
             color=color,
             timezone=timezone,
+            external_id=external_id,
             is_default=is_default,
         )
         return await self._client._aput(f"/v1/profiles/{profile_id}", data=payload)

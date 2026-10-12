@@ -30790,22 +30790,28 @@ def register_generated_tools(mcp, _get_client):
     def profiles_list_profiles(
         include_over_limit: bool = False,
         name: str | None = None,
+        external_id: str | None = None,
         limit: int | None = None,
         skip: int | None = None,
     ) -> str:
         """List profiles
 
-        Returns profiles sorted default-first, then by creation date. Filter with name (exact match) and paginate with limit/skip; without those params the full list is returned unchanged. Use includeOverLimit=true to include profiles that exceed the plan limit.
+        Returns profiles sorted default-first, then by creation date. Filter with name or externalId (exact match) and paginate with limit/skip; without those params the full list is returned unchanged. Use includeOverLimit=true to include profiles that exceed the plan limit.
 
         Args:
             include_over_limit: When true, includes over-limit profiles (marked with isOverLimit: true).
             name: Exact-match filter on the profile name. Useful to recover a profile id after an ambiguous create (timeout followed by a 409 on retry).
+            external_id: Exact-match filter on the externalId you set on the profile, to find the profile of one of your tenants without storing its Zernio id. Team members can each own a profile with the same externalId, so the result is a list.
             limit: Page size. When limit or skip is present, the response includes total and skip (and echoes limit).
             skip: Number of profiles to skip, applied after sorting and filtering."""
         client = _get_client()
         try:
             response = client.profiles.list_profiles(
-                include_over_limit=include_over_limit, name=name, limit=limit, skip=skip
+                include_over_limit=include_over_limit,
+                name=name,
+                external_id=external_id,
+                limit=limit,
+                skip=skip,
             )
             return _format_response(response)
         except Exception as e:
@@ -30824,20 +30830,26 @@ def register_generated_tools(mcp, _get_client):
         description: str | None = None,
         color: str | None = None,
         timezone: str | None = None,
+        external_id: str | None = None,
     ) -> str:
         """Create profile
 
-        Creates a new profile with a name, optional description, and color. Names are unique per team: a duplicate returns a 409 whose details.existingProfileId carries the id of the existing profile. Send an Idempotency-Key header to make retries safe: a retried create with the same key and body replays the original 201 (same _id) instead of conflicting.
+        Creates a new profile with a name, optional description, and color. Names are unique per team: a duplicate returns a 409 whose details.existingProfileId carries the id of the existing profile. Set externalId to your own tenant or client id to find the profile later without storing its Zernio id. A duplicate externalId returns the same kind of 409, with code profile_external_id_conflict. Send an Idempotency-Key header to make retries safe: a retried create with the same key and body replays the original 201 (same _id) instead of conflicting.
 
         Args:
             name: (required)
             description
             color
-            timezone: IANA timezone new posts on this profile use when they name no `timezone`. Omit to keep UTC. An unknown name returns 400."""
+            timezone: IANA timezone new posts on this profile use when they name no `timezone`. Omit to keep UTC. An unknown name returns 400.
+            external_id: Your own identifier for this profile, typically the id of the tenant or client it serves in your system (1 to 255 characters, trimmed). Unique among the profiles of the user who owns the profile: a duplicate returns 409 profile_external_id_conflict. Look a profile up by it with GET /v1/profiles?externalId=."""
         client = _get_client()
         try:
             response = client.profiles.create_profile(
-                name=name, description=description, color=color, timezone=timezone
+                name=name,
+                description=description,
+                color=color,
+                timezone=timezone,
+                external_id=external_id,
             )
             return _format_response(response)
         except Exception as e:
@@ -30879,11 +30891,12 @@ def register_generated_tools(mcp, _get_client):
         description: str | None = None,
         color: str | None = None,
         timezone: str | None = None,
+        external_id: str | None = None,
         is_default: bool | None = None,
     ) -> str:
         """Update profile
 
-        Updates a profile's name, description, color, default timezone, or default status.
+        Updates a profile's name, description, color, default timezone, externalId, or default status.
 
         Args:
             profile_id: (required)
@@ -30891,6 +30904,7 @@ def register_generated_tools(mcp, _get_client):
             description: Set to null to clear the description.
             color
             timezone: IANA timezone new posts on this profile use when they name no `timezone`. Set to null to go back to UTC. An unknown name returns 400.
+            external_id: Your own identifier for this profile (1 to 255 characters, trimmed). Set to null to clear it. A value another profile of the same owner already holds returns 409 profile_external_id_conflict.
             is_default"""
         client = _get_client()
         try:
@@ -30900,6 +30914,7 @@ def register_generated_tools(mcp, _get_client):
                 description=description,
                 color=color,
                 timezone=timezone,
+                external_id=external_id,
                 is_default=is_default,
             )
             return _format_response(response)

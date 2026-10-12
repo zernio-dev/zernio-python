@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.256.0"
+  version: "1.257.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -9803,6 +9803,9 @@ components:
         timezone:
           type: [string, "null"]
           description: 'IANA timezone new posts on this profile use when the request names no `timezone`. Null means UTC.'
+        externalId:
+          type: [string, "null"]
+          description: 'Your own identifier for this profile, set on create or update. Null when none is set.'
         isDefault: { type: boolean }
         isOverLimit:
           type: boolean
@@ -23319,7 +23322,7 @@ paths:
       summary: List profiles
       description: >-
         Returns profiles sorted default-first, then by creation date. Filter
-        with name (exact match) and paginate with limit/skip; without those
+        with name or externalId (exact match) and paginate with limit/skip; without those
         params the full list is returned unchanged. Use includeOverLimit=true
         to include profiles that exceed the plan limit.
       parameters:
@@ -23335,6 +23338,11 @@ paths:
           required: false
           schema: { type: string }
           description: 'Exact-match filter on the profile name. Useful to recover a profile id after an ambiguous create (timeout followed by a 409 on retry).'
+        - name: externalId
+          in: query
+          required: false
+          schema: { type: string }
+          description: 'Exact-match filter on the externalId you set on the profile, to find the profile of one of your tenants without storing its Zernio id. Team members can each own a profile with the same externalId, so the result is a list.'
         - name: limit
           in: query
           required: false
@@ -23371,6 +23379,9 @@ paths:
         Creates a new profile with a name, optional description, and color.
         Names are unique per team: a duplicate returns a 409 whose
         details.existingProfileId carries the id of the existing profile.
+        Set externalId to your own tenant or client id to find the profile
+        later without storing its Zernio id. A duplicate externalId returns
+        the same kind of 409, with code profile_external_id_conflict.
         Send an Idempotency-Key header to make retries safe: a retried create
         with the same key and body replays the original 201 (same _id)
         instead of conflicting.
@@ -23388,11 +23399,13 @@ paths:
                 description: { type: string }
                 color: { type: string, example: '#ffeda0' }
                 timezone: { type: string, example: 'Europe/Istanbul', description: 'IANA timezone new posts on this profile use when they name no `timezone`. Omit to keep UTC. An unknown name returns 400.' }
+                externalId: { type: string, minLength: 1, maxLength: 255, example: 'tenant_42', description: 'Your own identifier for this profile, typically the id of the tenant or client it serves in your system (1 to 255 characters, trimmed). Unique among the profiles of the user who owns the profile: a duplicate returns 409 profile_external_id_conflict. Look a profile up by it with GET /v1/profiles?externalId=.' }
             example:
               name: "Marketing Team"
               description: "Profile for marketing campaigns"
               color: "#4CAF50"
               timezone: "Europe/Istanbul"
+              externalId: "tenant_42"
       responses:
         '201':
           description: Created
@@ -23408,13 +23421,14 @@ paths:
                   name: "Marketing Team"
                   description: "Profile for marketing campaigns"
                   color: "#4CAF50"
+                  externalId: "tenant_42"
                   isDefault: false
                   createdAt: "2024-11-01T10:00:00Z"
         '400': { description: Invalid request }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '402': { $ref: '#/components/responses/PaymentRequired' }
         '403': { description: Profile limit exceeded }
-        '409': { description: 'A profile with this name already exists (code: profile_name_conflict); details.existingProfileId carries the id of the existing profile. Also returned while a request with the same Idempotency-Key is still processing.' }
+        '409': { description: 'A profile with this name (code: profile_name_conflict) or this externalId (code: profile_external_id_conflict) already exists; details.existingProfileId carries the id of the existing profile. Also returned while a request with the same Idempotency-Key is still processing.' }
         '422': { $ref: '#/components/responses/IdempotencyKeyReused' }
   /v1/profiles/{profileId}:
     get:
@@ -23451,7 +23465,7 @@ paths:
       operationId: updateProfile
       tags: [Profiles]
       summary: Update profile
-      description: "Updates a profile's name, description, color, default timezone, or default status."
+      description: "Updates a profile's name, description, color, default timezone, externalId, or default status."
       parameters:
         - name: profileId
           in: path
@@ -23469,6 +23483,7 @@ paths:
                 description: { type: [string, "null"], description: 'Set to null to clear the description.' }
                 color: { type: string }
                 timezone: { type: [string, "null"], example: 'Europe/Istanbul', description: 'IANA timezone new posts on this profile use when they name no `timezone`. Set to null to go back to UTC. An unknown name returns 400.' }
+                externalId: { type: [string, "null"], minLength: 1, maxLength: 255, example: 'tenant_42', description: 'Your own identifier for this profile (1 to 255 characters, trimmed). Set to null to clear it. A value another profile of the same owner already holds returns 409 profile_external_id_conflict.' }
                 isDefault: { type: boolean }
             example:
               name: "Marketing Team (Updated)"
@@ -23491,10 +23506,10 @@ paths:
                   color: "#2196F3"
                   isDefault: true
                   createdAt: "2024-11-01T10:00:00Z"
-        '400': { description: 'Invalid request, including an unknown timezone or a body that carries none of name, description, color, timezone or isDefault (code: missing_required_field).' }
+        '400': { description: 'Invalid request, including an unknown timezone or a body that carries none of name, description, color, timezone, externalId or isDefault (code: missing_required_field).' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
-        '409': { description: "A profile with this name already exists (code: profile_name_conflict)." }
+        '409': { description: "A profile with this name (code: profile_name_conflict) or this externalId (code: profile_external_id_conflict) already exists." }
     delete:
       x-resource-group: "accounts"
       operationId: deleteProfile
