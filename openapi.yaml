@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.255.0"
+  version: "1.256.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -236,8 +236,8 @@ x-documentation:
     - `workflow.run.started` - A workflow run started for a conversation
     - `workflow.run.completed` - A workflow run ended. `execution.status` is `completed`, or `exited` when the run was ended on purpose before its last node (a handoff, or a button that switched the contact to another workflow)
     - `workflow.run.failed` - A workflow run failed; `error` says which node failed and why
-    - `support.run.completed` - An Ana support run finished (private beta). `run.status` is `completed`, or `needs_human` when Ana handed the question to a person; `run.answer` holds the answer. The `run` object is exactly what `GET /v1/support/runs/{runId}` answers
-    - `support.run.failed` - An Ana support run failed or expired (private beta). Failed runs are not billed, so `run.costUsd` is 0
+    - `support.run.completed` - The Support Assistant finished a question (private beta). `run.status` is `completed`, or `needs_human` when Ana handed the question to a person; `run.answer` holds the answer. The `run` object is exactly what `GET /v1/support/runs/{runId}` answers
+    - `support.run.failed` - A Support Assistant question failed or expired (private beta). Failed runs are not billed, so `run.costUsd` is 0
     - `webhook.test` - Test event sent when verifying a webhook endpoint
 
     Every delivery carries `X-Zernio-Event` (the event name) and `X-Zernio-Event-Id` (the payload's `id`, a UUID generated once when the event is emitted). That id is identical on every subscription that receives the event, on every automatic retry and on a redelivery via `POST /v1/webhooks/logs/redeliver`, so it is the key to dedupe on. Payloads are signed with HMAC-SHA256 via the `X-Zernio-Signature` header when the subscription has a secret. Legacy `X-Late-*` copies of these three headers are still sent and will be removed in a future major version.
@@ -592,9 +592,9 @@ tags:
       Resource groups. Every event belongs to one group: post.* to publishing, message.*, reaction.*, conversation.*, call.* and whatsapp.automatic_event to messages, comment.* and review.* to engagement, lead.* and contact.* to contacts, sequence.*, workflow.run.* and support.run.* to messages, ad.* to ads, account.*, whatsapp.template.* and whatsapp.account.* to accounts, analytics.* to analytics, whatsapp.number.*, verification.* and sms.registration.* to telephony, api.changelog.published and webhook.test to webhooks. Two independent controls use that mapping. (1) A restricted (zrk_) API key can only subscribe to, test-fire, redeliver, or read delivery logs for events in the groups it holds, so it can never create a subscription broader than itself. (2) Each subscription carries its own `disabledResourceGroups` denylist: events in a disabled group are dropped before delivery to that endpoint, on live delivery and on every replay path, no matter which key or session created the subscription. Changing that denylist applies to every event emitted after the change; events already queued when it landed can still be delivered for up to five minutes after they were enqueued, because the delivery worker trusts a five-minute enqueue-time snapshot before re-checking. Absent or empty on a subscription means it receives everything it subscribes to, which is the behavior of every subscription created before the field existed.
 
       Profile and account filters. A subscription can also carry `profileIds`, an allowlist of profiles, and `accountIds`, an allowlist of connected accounts with the same semantics keyed on the account; each non-empty list narrows delivery and a subscription with both must be satisfied on both. A scoped subscription is only sent events it can attribute to one of those profiles: the profile of the connected account behind the event, or for an aggregate `post.*` event the profile of every account the post targets (a post spanning two scoped endpoints' profiles reaches both). So an integrator can route the profile holding test accounts to a staging endpoint while a second subscription, scoped to the production profiles, keeps production traffic. Events that belong to no profile (`verification.*`, `phone_number.*`, and a legacy post whose accounts were deleted) reach only unscoped subscriptions. The filter runs when an event is emitted; redelivery replays a delivery already made to that endpoint and test fires ignore it. Absent or empty means every profile (or every account).
-  - name: Support Runs
+  - name: Support Assistant
     description: |
-      Private beta: returns 403 `feature_not_available` unless enabled for your account. Ask Ana, the Zernio support agent, a question about your own workspace (a post, a connected account or a profile) over the API. Runs are asynchronous: start one with `POST /v1/support/runs`, then receive the answer through the `support.run.completed` and `support.run.failed` webhooks, or poll `GET /v1/support/runs/{runId}`. Requires an unrestricted API key and a usage-based plan with a card on file.
+      Get help from Ana, the Zernio support agent, without leaving your code: ask about a post, a connected account or a profile in your workspace, and Ana looks into it and answers. Private beta: returns 403 `feature_not_available` unless enabled for your account. Each question starts a run that answers asynchronously: ask with `POST /v1/support/runs`, then receive the answer through the `support.run.completed` and `support.run.failed` webhooks, or poll `GET /v1/support/runs/{runId}`. Requires an unrestricted API key and a usage-based plan with a card on file.
   - name: Webhook Events
     description: |
       Incoming webhook deliveries sent by Zernio to your configured endpoint URL.
@@ -16668,8 +16668,8 @@ webhooks:
   support.run.completed:
     post:
       operationId: onSupportRunCompleted
-      summary: Support run completed event
-      description: 'Fired when an Ana support run finishes (private beta). run.status is completed, or needs_human when Ana handed the question to a person. The run object matches GET /v1/support/runs/{runId}.'
+      summary: Support Assistant finished event
+      description: 'Fired when the Support Assistant finishes a question (private beta). run.status is completed, or needs_human when Ana handed the question to a person. The run object matches GET /v1/support/runs/{runId}.'
       tags: [Webhook Events]
       requestBody:
         required: true
@@ -16683,8 +16683,8 @@ webhooks:
   support.run.failed:
     post:
       operationId: onSupportRunFailed
-      summary: Support run failed event
-      description: 'Fired when an Ana support run fails or expires (private beta). Failed runs are not billed.'
+      summary: Support Assistant failed event
+      description: 'Fired when a Support Assistant question fails or expires (private beta). Failed runs are not billed.'
       tags: [Webhook Events]
       requestBody:
         required: true
@@ -51643,14 +51643,14 @@ paths:
   /v1/support/runs:
     post:
       x-resource-group: "admin-plane"
-      operationId: createSupportRun
-      tags: [Support Runs]
-      summary: Start a support run (private beta)
+      operationId: askSupportQuestion
+      tags: [Support Assistant]
+      summary: Ask a support question (private beta)
       description: >-
         Private beta: returns 403 `feature_not_available` unless enabled for your account.
-        Asks Ana, the Zernio support agent, a question about your workspace. The run is
-        asynchronous: this returns 202 with a `runId`, and the answer arrives through the
-        `support.run.completed` and `support.run.failed` webhooks. `GET /v1/support/runs/{runId}`
+        Asks Ana, the Zernio support agent, a question about your workspace. Each question
+        starts a run that answers asynchronously: this returns 202 with a `runId`, and the
+        answer arrives through the `support.run.completed` and `support.run.failed` webhooks. `GET /v1/support/runs/{runId}`
         is the fallback. Pass `threadId` to continue an earlier conversation, and `context`
         to point Ana at a post, account or profile. Billed when the run finishes at the model
         cost plus 20%, never above `maxCostUsd`; failed runs are free. When Ana finds a problem
@@ -51704,7 +51704,7 @@ paths:
         '404': { description: 'Code `support_thread_not_found` (`threadId`), `post_not_found`, `account_not_found` or `profile_not_found` (`context.*`).', content: { application/json: { schema: { $ref: '#/components/schemas/ErrorResponse' } } } }
         '409': { description: 'Code `support_run_in_progress`: the thread already has a run queued or running, so poll it first. Code `billing_setup_incomplete`: no billing customer to attach a card to, contact support. Also returned while a request with the same Idempotency-Key is still processing.', content: { application/json: { schema: { $ref: '#/components/schemas/ErrorResponse' } } } }
         '422':
-          description: 'Code `usage_billing_required`: support runs need a usage-based plan. Also returned when an Idempotency-Key is reused with a different request.'
+          description: 'Code `usage_billing_required`: the Support Assistant needs a usage-based plan. Also returned when an Idempotency-Key is reused with a different request.'
           content:
             application/json:
               schema: { $ref: '#/components/schemas/ErrorResponse' }
@@ -51721,13 +51721,13 @@ paths:
   /v1/support/runs/{runId}:
     get:
       x-resource-group: "admin-plane"
-      operationId: getSupportRun
-      tags: [Support Runs]
-      summary: Get a support run (private beta)
+      operationId: getSupportAnswer
+      tags: [Support Assistant]
+      summary: Get a support answer (private beta)
       description: >-
         Private beta: returns 403 `feature_not_available` unless enabled for your account.
-        Returns a run started by your team. Prefer the `support.run.completed` and
-        `support.run.failed` webhooks; use this as the fallback, waiting `pollAfterSeconds`
+        Returns a run started by your team, with Ana's answer once it is ready. Prefer the
+        `support.run.completed` and `support.run.failed` webhooks; use this as the fallback, waiting `pollAfterSeconds`
         between polls. `costUsd` is the amount billed: the model cost plus 20%, never above
         `maxCostUsd`, and 0 for a failed run.
       parameters:

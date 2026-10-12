@@ -1218,11 +1218,11 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `sms.upload_sms_opt_in_proof_file()` | Upload opt-in form proof |
 | `sms.verify_sms_registration_otp()` | Submit the sole-prop OTP |
 
-### Support Runs
+### Support Assistant
 | Method | Description |
 |--------|-------------|
-| `support_runs.create_support_run()` | Start a support run (private beta) |
-| `support_runs.get_support_run()` | Get a support run (private beta) |
+| `support_assistant.get_support_answer()` | Get a support answer (private beta) |
+| `support_assistant.ask_support_question()` | Ask a support question (private beta) |
 
 ### Tracking Tags
 | Method | Description |
