@@ -33003,7 +33003,7 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """List a thread's support answers
 
-        Lists the runs of one thread that your team started, with Ana's answers, oldest first. Replies from the Zernio team after a support ticket arrive by email and are not included. Runs are kept for 90 days. Page through a long thread with `limit` and `cursor`: pass `nextCursor` as `cursor` until it is null.
+        Lists the runs of one thread that your team started, with their answers, oldest first. Replies from the Zernio team after a support ticket arrive by email and are not included. Runs are kept for 90 days. Page through a long thread with `limit` and `cursor`: pass `nextCursor` as `cursor` until it is null.
 
         Args:
             thread_id: The thread to list, as returned by `POST /v1/support/runs`. (required)
@@ -33034,13 +33034,13 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Ask a support question
 
-        Asks Ana, the Zernio support agent, a question about your workspace. Each question
+        Asks the Zernio Support Assistant a question about your workspace. Each question
         starts a run that answers asynchronously: this returns 202 with a `runId`, and the
         answer arrives through the `support.run.completed` and `support.run.failed` webhooks.
         `GET /v1/support/runs/{runId}` is the fallback. Pass `threadId` to continue an earlier
-        conversation, and `context` to point Ana at a post, account or profile. When Ana finds
-        a problem on Zernio's side she opens a support ticket with the team (see
-        `supportTicket` on the run) and the run ends as `needs_human`.
+        conversation, and `context` to point the assistant at a post, account or profile.
+        When the assistant finds a problem on Zernio's side it opens a support ticket with
+        the team (see `supportTicket` on the run) and the run ends as `needs_human`.
 
         **Pricing.** You pay per question, once it finishes. The exact amount charged is the
         run's `costUsd`.
@@ -33051,14 +33051,12 @@ def register_generated_tools(mcp, _get_client):
         | Most one question can cost | Its `maxCostUsd`: $0.50 to $3, $3 by default |
         | Handed to the Zernio team (`needs_human`) | Charged like an answered question |
         | Failed or expired | $0 |
-        | All questions in a UTC month | At most $100 per account |
-
-        Near its ...
+        | All questions in a UTC month | At most $100 per ...
 
         Args:
             message: The question. Leading and trailing whitespace is trimmed. (required)
             thread_id: Continue this thread. The thread must have a run started by your team, and no run in progress.
-            context: Ids Ana should look at. Each must belong to your workspace. Object with keys: postId (string); accountId (string); profileId (string)
+            context: Ids the assistant should look at. Each must belong to your workspace. Object with keys: postId (string); accountId (string); profileId (string)
             max_cost_usd: Cost cap for this run, in USD. The run stops at the cap and bills at most this amount."""
         client = _get_client()
         try:
@@ -33083,7 +33081,7 @@ def register_generated_tools(mcp, _get_client):
     def support_assistant_get_support_answer(run_id: str) -> str:
         """Get a support answer
 
-        Returns a run started by your team, with Ana's answer once it is ready. Prefer the `support.run.completed` and `support.run.failed` webhooks; use this as the fallback, waiting `pollAfterSeconds` between polls. `costUsd` is the amount billed for the question, never above `maxCostUsd`, and 0 for a failed run (pricing on Ask a support question).
+        Returns a run started by your team, with the answer once it is ready. Prefer the `support.run.completed` and `support.run.failed` webhooks; use this as the fallback, waiting `pollAfterSeconds` between polls. `costUsd` is the amount billed for the question, never above `maxCostUsd`, and 0 for a failed run (pricing on Ask a support question).
 
         Args:
             run_id: (required)"""

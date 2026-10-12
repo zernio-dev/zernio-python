@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.261.0"
+  version: "1.261.1"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -236,7 +236,7 @@ x-documentation:
     - `workflow.run.started` - A workflow run started for a conversation
     - `workflow.run.completed` - A workflow run ended. `execution.status` is `completed`, or `exited` when the run was ended on purpose before its last node (a handoff, or a button that switched the contact to another workflow)
     - `workflow.run.failed` - A workflow run failed; `error` says which node failed and why
-    - `support.run.completed` - The Support Assistant finished a question. `run.status` is `completed`, or `needs_human` when Ana handed the question to a person; `run.answer` holds the answer. The `run` object is exactly what `GET /v1/support/runs/{runId}` answers
+    - `support.run.completed` - The Support Assistant finished a question. `run.status` is `completed`, or `needs_human` when the assistant handed the question to a person; `run.answer` holds the answer. The `run` object is exactly what `GET /v1/support/runs/{runId}` answers
     - `support.run.failed` - A Support Assistant question failed or expired. Failed runs are not billed, so `run.costUsd` is 0
     - `webhook.test` - Test event sent when verifying a webhook endpoint
 
@@ -594,7 +594,7 @@ tags:
       Profile and account filters. A subscription can also carry `profileIds`, an allowlist of profiles, and `accountIds`, an allowlist of connected accounts with the same semantics keyed on the account; each non-empty list narrows delivery and a subscription with both must be satisfied on both. A scoped subscription is only sent events it can attribute to one of those profiles: the profile of the connected account behind the event, or for an aggregate `post.*` event the profile of every account the post targets (a post spanning two scoped endpoints' profiles reaches both). So an integrator can route the profile holding test accounts to a staging endpoint while a second subscription, scoped to the production profiles, keeps production traffic. Events that belong to no profile (`verification.*`, `phone_number.*`, and a legacy post whose accounts were deleted) reach only unscoped subscriptions. The filter runs when an event is emitted; redelivery replays a delivery already made to that endpoint and test fires ignore it. Absent or empty means every profile (or every account).
   - name: Support Assistant
     description: |
-      Get help from Ana, the Zernio support agent, without leaving your code: ask about a post, a connected account or a profile in your workspace, and Ana looks into it and answers. Each question starts a run that answers asynchronously: ask with `POST /v1/support/runs`, then receive the answer through the `support.run.completed` and `support.run.failed` webhooks, or poll `GET /v1/support/runs/{runId}`. List a thread's answers with `GET /v1/support/runs?threadId=`. You pay per question: most cost between $0.10 and $0.50, none more than its `maxCostUsd` cap ($3 by default), and failed questions are free. Requires an unrestricted API key and a usage-based plan with a card on file.
+      Get help from the Zernio Support Assistant without leaving your code: ask about a post, a connected account or a profile in your workspace, and the assistant looks into it and answers. Each question starts a run that answers asynchronously: ask with `POST /v1/support/runs`, then receive the answer through the `support.run.completed` and `support.run.failed` webhooks, or poll `GET /v1/support/runs/{runId}`. List a thread's answers with `GET /v1/support/runs?threadId=`. You pay per question: most cost between $0.10 and $0.50, none more than its `maxCostUsd` cap ($3 by default), and failed questions are free. Requires an unrestricted API key and a usage-based plan with a card on file.
   - name: Webhook Events
     description: |
       Incoming webhook deliveries sent by Zernio to your configured endpoint URL.
@@ -14283,12 +14283,12 @@ components:
       properties:
         runId: { type: string, description: 'Run id, a 24-character hex string.' }
         threadId: { type: string, description: 'Conversation thread id. Send it back as `threadId` to ask a follow-up in the same thread.' }
-        status: { type: string, enum: [queued, running, completed, needs_human, failed], description: 'queued and running are in progress. needs_human means Ana handed the question to a person instead of answering; when `supportTicket` is set, a Zernio teammate has been notified and will follow up by email.' }
+        status: { type: string, enum: [queued, running, completed, needs_human, failed], description: 'queued and running are in progress. needs_human means the assistant handed the question to a person instead of answering; when `supportTicket` is set, a Zernio teammate has been notified and will follow up by email.' }
         stopReason:
           type: [string, "null"]
           enum: [answered, human_review, cost_cap, deadline, max_iterations, error, expired, null]
           description: 'Why the run stopped. Null while it is in progress.'
-        answer: { type: [string, "null"], description: 'Ana''s answer. Null while the run is in progress or when it failed.' }
+        answer: { type: [string, "null"], description: 'The assistant''s answer. Null while the run is in progress or when it failed.' }
         usage: { $ref: '#/components/schemas/SupportRunUsage' }
         costUsd: { type: number, description: 'The exact amount charged for the question, in USD, never above `maxCostUsd`. 0 for a failed run.' }
         maxCostUsd: { type: number, description: 'The cost cap this run was started with, in USD.' }
@@ -14297,7 +14297,7 @@ components:
         finishedAt: { type: [string, "null"], format: date-time }
         supportTicket:
           type: [object, "null"]
-          description: 'Set when Ana opened a support ticket with the Zernio team. Null otherwise. A teammate follows up by email with the user whose API key started the run.'
+          description: 'Set when the assistant opened a support ticket with the Zernio team. Null otherwise. A teammate follows up by email with the user whose API key started the run.'
           required: [openedAt]
           properties:
             openedAt: { type: string, format: date-time }
@@ -16732,7 +16732,7 @@ webhooks:
     post:
       operationId: onSupportRunCompleted
       summary: Support Assistant finished event
-      description: 'Fired when the Support Assistant finishes a question. run.status is completed, or needs_human when Ana handed the question to a person. The run object matches GET /v1/support/runs/{runId}.'
+      description: 'Fired when the Support Assistant finishes a question. run.status is completed, or needs_human when the assistant handed the question to a person. The run object matches GET /v1/support/runs/{runId}.'
       tags: [Webhook Events]
       requestBody:
         required: true
@@ -51729,7 +51729,7 @@ paths:
       tags: [Support Assistant]
       summary: List a thread's support answers
       description: >-
-        Lists the runs of one thread that your team started, with Ana's answers, oldest first.
+        Lists the runs of one thread that your team started, with their answers, oldest first.
         Replies from the Zernio team after a support ticket arrive by email and are not
         included. Runs are kept for 90 days. Page through a long thread with `limit` and
         `cursor`: pass `nextCursor` as `cursor` until it is null.
@@ -51761,13 +51761,13 @@ paths:
       tags: [Support Assistant]
       summary: Ask a support question
       description: |
-        Asks Ana, the Zernio support agent, a question about your workspace. Each question
+        Asks the Zernio Support Assistant a question about your workspace. Each question
         starts a run that answers asynchronously: this returns 202 with a `runId`, and the
         answer arrives through the `support.run.completed` and `support.run.failed` webhooks.
         `GET /v1/support/runs/{runId}` is the fallback. Pass `threadId` to continue an earlier
-        conversation, and `context` to point Ana at a post, account or profile. When Ana finds
-        a problem on Zernio's side she opens a support ticket with the team (see
-        `supportTicket` on the run) and the run ends as `needs_human`.
+        conversation, and `context` to point the assistant at a post, account or profile.
+        When the assistant finds a problem on Zernio's side it opens a support ticket with
+        the team (see `supportTicket` on the run) and the run ends as `needs_human`.
 
         **Pricing.** You pay per question, once it finishes. The exact amount charged is the
         run's `costUsd`.
@@ -51803,7 +51803,7 @@ paths:
                 context:
                   type: object
                   additionalProperties: false
-                  description: 'Ids Ana should look at. Each must belong to your workspace.'
+                  description: 'Ids the assistant should look at. Each must belong to your workspace.'
                   properties:
                     postId: { type: string }
                     accountId: { type: string }
@@ -51854,7 +51854,7 @@ paths:
       tags: [Support Assistant]
       summary: Get a support answer
       description: >-
-        Returns a run started by your team, with Ana's answer once it is ready. Prefer the
+        Returns a run started by your team, with the answer once it is ready. Prefer the
         `support.run.completed` and `support.run.failed` webhooks; use this as the fallback,
         waiting `pollAfterSeconds` between polls. `costUsd` is the amount billed for the
         question, never above `maxCostUsd`, and 0 for a failed run (pricing on Ask a support
