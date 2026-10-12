@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.252.4"
+  version: "1.253.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -14227,11 +14227,11 @@ components:
         cacheWriteTokens: { type: integer }
     SupportRun:
       type: object
-      required: [runId, threadId, status, stopReason, answer, usage, costUsd, maxCostUsd, createdAt, startedAt, finishedAt]
+      required: [runId, threadId, status, stopReason, answer, usage, costUsd, maxCostUsd, createdAt, startedAt, finishedAt, supportTicket]
       properties:
         runId: { type: string, description: 'Run id, a 24-character hex string.' }
         threadId: { type: string, description: 'Conversation thread id. Send it back as `threadId` to ask a follow-up in the same thread.' }
-        status: { type: string, enum: [queued, running, completed, needs_human, failed], description: 'queued and running are in progress. needs_human means Ana handed the question to a person instead of answering.' }
+        status: { type: string, enum: [queued, running, completed, needs_human, failed], description: 'queued and running are in progress. needs_human means Ana handed the question to a person instead of answering; when `supportTicket` is set, a Zernio teammate has been notified and will follow up by email.' }
         stopReason:
           type: [string, "null"]
           enum: [answered, human_review, cost_cap, deadline, max_iterations, error, expired, null]
@@ -14243,6 +14243,12 @@ components:
         createdAt: { type: string, format: date-time }
         startedAt: { type: [string, "null"], format: date-time }
         finishedAt: { type: [string, "null"], format: date-time }
+        supportTicket:
+          type: [object, "null"]
+          description: 'Set when Ana opened a support ticket with the Zernio team. Null otherwise. A teammate follows up by email with the user whose API key started the run.'
+          required: [openedAt]
+          properties:
+            openedAt: { type: string, format: date-time }
         pollAfterSeconds: { type: integer, description: 'Seconds to wait before polling again. Present only while the run is queued or running.' }
     CommerceCollection:
       type: object
@@ -51615,7 +51621,9 @@ paths:
         `support.run.completed` and `support.run.failed` webhooks. `GET /v1/support/runs/{runId}`
         is the fallback. Pass `threadId` to continue an earlier conversation, and `context`
         to point Ana at a post, account or profile. Billed when the run finishes at the model
-        cost plus 20%, never above `maxCostUsd`; failed runs are free. Requires an unrestricted
+        cost plus 20%, never above `maxCostUsd`; failed runs are free. When Ana finds a problem
+        on Zernio's side she opens a support ticket with the team (see `supportTicket` on the
+        run) and the run ends as `needs_human`. Requires an unrestricted
         API key, usage-based billing and a card on file. Limits per account: 3 active runs and
         $100 of runs per UTC month. Send an Idempotency-Key header to make retries safe.
       parameters:
