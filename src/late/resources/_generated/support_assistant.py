@@ -82,7 +82,7 @@ class SupportAssistantResource:
         context: dict[str, Any] | None = None,
         max_cost_usd: float | None = 3,
     ) -> dict[str, Any]:
-        """Ask a support question (private beta)"""
+        """Ask a support question"""
         payload = self._build_payload(
             message=message,
             thread_id=thread_id,
@@ -95,7 +95,7 @@ class SupportAssistantResource:
         return self._client._post("/v1/support/runs", data=payload, headers=headers)
 
     def get_support_answer(self, run_id: str) -> dict[str, Any]:
-        """Get a support answer (private beta)"""
+        """Get a support answer"""
         return self._client._get(f"/v1/support/runs/{run_id}")
 
     async def aask_support_question(
@@ -107,7 +107,7 @@ class SupportAssistantResource:
         context: dict[str, Any] | None = None,
         max_cost_usd: float | None = 3,
     ) -> dict[str, Any]:
-        """Ask a support question (private beta) (async)"""
+        """Ask a support question (async)"""
         payload = self._build_payload(
             message=message,
             thread_id=thread_id,
@@ -122,5 +122,5 @@ class SupportAssistantResource:
         )
 
     async def aget_support_answer(self, run_id: str) -> dict[str, Any]:
-        """Get a support answer (private beta) (async)"""
+        """Get a support answer (async)"""
         return await self._client._aget(f"/v1/support/runs/{run_id}")

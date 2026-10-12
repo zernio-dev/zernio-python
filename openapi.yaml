@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.257.0"
+  version: "1.258.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -236,8 +236,8 @@ x-documentation:
     - `workflow.run.started` - A workflow run started for a conversation
     - `workflow.run.completed` - A workflow run ended. `execution.status` is `completed`, or `exited` when the run was ended on purpose before its last node (a handoff, or a button that switched the contact to another workflow)
     - `workflow.run.failed` - A workflow run failed; `error` says which node failed and why
-    - `support.run.completed` - The Support Assistant finished a question (private beta). `run.status` is `completed`, or `needs_human` when Ana handed the question to a person; `run.answer` holds the answer. The `run` object is exactly what `GET /v1/support/runs/{runId}` answers
-    - `support.run.failed` - A Support Assistant question failed or expired (private beta). Failed runs are not billed, so `run.costUsd` is 0
+    - `support.run.completed` - The Support Assistant finished a question. `run.status` is `completed`, or `needs_human` when Ana handed the question to a person; `run.answer` holds the answer. The `run` object is exactly what `GET /v1/support/runs/{runId}` answers
+    - `support.run.failed` - A Support Assistant question failed or expired. Failed runs are not billed, so `run.costUsd` is 0
     - `webhook.test` - Test event sent when verifying a webhook endpoint
 
     Every delivery carries `X-Zernio-Event` (the event name) and `X-Zernio-Event-Id` (the payload's `id`, a UUID generated once when the event is emitted). That id is identical on every subscription that receives the event, on every automatic retry and on a redelivery via `POST /v1/webhooks/logs/redeliver`, so it is the key to dedupe on. Payloads are signed with HMAC-SHA256 via the `X-Zernio-Signature` header when the subscription has a secret. Legacy `X-Late-*` copies of these three headers are still sent and will be removed in a future major version.
@@ -594,7 +594,7 @@ tags:
       Profile and account filters. A subscription can also carry `profileIds`, an allowlist of profiles, and `accountIds`, an allowlist of connected accounts with the same semantics keyed on the account; each non-empty list narrows delivery and a subscription with both must be satisfied on both. A scoped subscription is only sent events it can attribute to one of those profiles: the profile of the connected account behind the event, or for an aggregate `post.*` event the profile of every account the post targets (a post spanning two scoped endpoints' profiles reaches both). So an integrator can route the profile holding test accounts to a staging endpoint while a second subscription, scoped to the production profiles, keeps production traffic. Events that belong to no profile (`verification.*`, `phone_number.*`, and a legacy post whose accounts were deleted) reach only unscoped subscriptions. The filter runs when an event is emitted; redelivery replays a delivery already made to that endpoint and test fires ignore it. Absent or empty means every profile (or every account).
   - name: Support Assistant
     description: |
-      Get help from Ana, the Zernio support agent, without leaving your code: ask about a post, a connected account or a profile in your workspace, and Ana looks into it and answers. Private beta: returns 403 `feature_not_available` unless enabled for your account. Each question starts a run that answers asynchronously: ask with `POST /v1/support/runs`, then receive the answer through the `support.run.completed` and `support.run.failed` webhooks, or poll `GET /v1/support/runs/{runId}`. Requires an unrestricted API key and a usage-based plan with a card on file.
+      Get help from Ana, the Zernio support agent, without leaving your code: ask about a post, a connected account or a profile in your workspace, and Ana looks into it and answers. Each question starts a run that answers asynchronously: ask with `POST /v1/support/runs`, then receive the answer through the `support.run.completed` and `support.run.failed` webhooks, or poll `GET /v1/support/runs/{runId}`. Each question is billed by the tokens it uses: most cost between $0.10 and $0.50, and none bills more than its `maxCostUsd` cap ($3 by default). Failed questions are free. Requires an unrestricted API key and a usage-based plan with a card on file.
   - name: Webhook Events
     description: |
       Incoming webhook deliveries sent by Zernio to your configured endpoint URL.
@@ -14242,7 +14242,7 @@ components:
           description: 'Why the run stopped. Null while it is in progress.'
         answer: { type: [string, "null"], description: 'Ana''s answer. Null while the run is in progress or when it failed.' }
         usage: { $ref: '#/components/schemas/SupportRunUsage' }
-        costUsd: { type: number, description: 'The amount billed for the run, in USD: the model cost plus 20%, never above `maxCostUsd`. 0 for a failed run.' }
+        costUsd: { type: number, description: 'The amount billed for the run, in USD: the tokens in `usage` at the Support Assistant rates (see Ask a support question), never above `maxCostUsd`. 0 for a failed run.' }
         maxCostUsd: { type: number, description: 'The cost cap this run was started with, in USD.' }
         createdAt: { type: string, format: date-time }
         startedAt: { type: [string, "null"], format: date-time }
@@ -16672,7 +16672,7 @@ webhooks:
     post:
       operationId: onSupportRunCompleted
       summary: Support Assistant finished event
-      description: 'Fired when the Support Assistant finishes a question (private beta). run.status is completed, or needs_human when Ana handed the question to a person. The run object matches GET /v1/support/runs/{runId}.'
+      description: 'Fired when the Support Assistant finishes a question. run.status is completed, or needs_human when Ana handed the question to a person. The run object matches GET /v1/support/runs/{runId}.'
       tags: [Webhook Events]
       requestBody:
         required: true
@@ -16687,7 +16687,7 @@ webhooks:
     post:
       operationId: onSupportRunFailed
       summary: Support Assistant failed event
-      description: 'Fired when a Support Assistant question fails or expires (private beta). Failed runs are not billed.'
+      description: 'Fired when a Support Assistant question fails or expires. Failed runs are not billed.'
       tags: [Webhook Events]
       requestBody:
         required: true
@@ -51660,19 +51660,32 @@ paths:
       x-resource-group: "admin-plane"
       operationId: askSupportQuestion
       tags: [Support Assistant]
-      summary: Ask a support question (private beta)
-      description: >-
-        Private beta: returns 403 `feature_not_available` unless enabled for your account.
+      summary: Ask a support question
+      description: |
         Asks Ana, the Zernio support agent, a question about your workspace. Each question
         starts a run that answers asynchronously: this returns 202 with a `runId`, and the
-        answer arrives through the `support.run.completed` and `support.run.failed` webhooks. `GET /v1/support/runs/{runId}`
-        is the fallback. Pass `threadId` to continue an earlier conversation, and `context`
-        to point Ana at a post, account or profile. Billed when the run finishes at the model
-        cost plus 20%, never above `maxCostUsd`; failed runs are free. When Ana finds a problem
-        on Zernio's side she opens a support ticket with the team (see `supportTicket` on the
-        run) and the run ends as `needs_human`. Requires an unrestricted
-        API key, usage-based billing and a card on file. Limits per account: 3 active runs and
-        $100 of runs per UTC month. Send an Idempotency-Key header to make retries safe.
+        answer arrives through the `support.run.completed` and `support.run.failed` webhooks.
+        `GET /v1/support/runs/{runId}` is the fallback. Pass `threadId` to continue an earlier
+        conversation, and `context` to point Ana at a post, account or profile. When Ana finds
+        a problem on Zernio's side she opens a support ticket with the team (see
+        `supportTicket` on the run) and the run ends as `needs_human`.
+
+        **Pricing.** Each question is billed once, when its run finishes, for the tokens Ana used:
+
+        - Input: $6 per million tokens
+        - Output: $30 per million tokens
+        - Cache reads: $0.60 per million tokens
+        - Cache writes: $7.50 per million tokens
+
+        Most questions cost between $0.10 and $0.50. A run never bills more than its
+        `maxCostUsd` ($0.50 to $3, $3 by default): near the cap Ana stops investigating and
+        answers with what she found. Runs that end as `needs_human` are billed like any other;
+        failed runs are free. The run's `usage` holds the token counts and `costUsd` the amount
+        billed. Charges appear as "Support API" on your invoice.
+
+        Requires an unrestricted API key, usage-based billing and a card on file. Limits per
+        account: 3 active runs and $100 of runs per UTC month. Send an Idempotency-Key header
+        to make retries safe.
       parameters:
         - $ref: '#/components/parameters/IdempotencyKeyHeader'
       requestBody:
@@ -51715,7 +51728,7 @@ paths:
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '402': { description: 'A card is required (code `payment_method_required`) or the last payment failed (code `payment_required`). Add or update the card in Billing.', content: { application/json: { schema: { $ref: '#/components/schemas/ErrorResponse' } } } }
-        '403': { description: 'Code `insufficient_permissions`: the credential is not an unrestricted API key, or the user is read-only, restricted or profile-scoped. Code `feature_not_available`: the private beta is not enabled for your account.', content: { application/json: { schema: { $ref: '#/components/schemas/ErrorResponse' } } } }
+        '403': { description: 'Code `insufficient_permissions`: the credential is not an unrestricted API key, or the user is read-only, restricted or profile-scoped.', content: { application/json: { schema: { $ref: '#/components/schemas/ErrorResponse' } } } }
         '404': { description: 'Code `support_thread_not_found` (`threadId`), `post_not_found`, `account_not_found` or `profile_not_found` (`context.*`).', content: { application/json: { schema: { $ref: '#/components/schemas/ErrorResponse' } } } }
         '409': { description: 'Code `support_run_in_progress`: the thread already has a run queued or running, so poll it first. Code `billing_setup_incomplete`: no billing customer to attach a card to, contact support. Also returned while a request with the same Idempotency-Key is still processing.', content: { application/json: { schema: { $ref: '#/components/schemas/ErrorResponse' } } } }
         '422':
@@ -51738,13 +51751,13 @@ paths:
       x-resource-group: "admin-plane"
       operationId: getSupportAnswer
       tags: [Support Assistant]
-      summary: Get a support answer (private beta)
+      summary: Get a support answer
       description: >-
-        Private beta: returns 403 `feature_not_available` unless enabled for your account.
         Returns a run started by your team, with Ana's answer once it is ready. Prefer the
-        `support.run.completed` and `support.run.failed` webhooks; use this as the fallback, waiting `pollAfterSeconds`
-        between polls. `costUsd` is the amount billed: the model cost plus 20%, never above
-        `maxCostUsd`, and 0 for a failed run.
+        `support.run.completed` and `support.run.failed` webhooks; use this as the fallback,
+        waiting `pollAfterSeconds` between polls. `costUsd` is the amount billed for the
+        question, never above `maxCostUsd`, and 0 for a failed run (rates on Ask a support
+        question).
       parameters:
         - name: runId
           in: path
@@ -51759,7 +51772,7 @@ paths:
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '402': { description: 'A card is required (code `payment_method_required`) or the last payment failed (code `payment_required`).', content: { application/json: { schema: { $ref: '#/components/schemas/ErrorResponse' } } } }
-        '403': { description: 'Code `insufficient_permissions` (not an unrestricted API key, or a read-only, restricted or profile-scoped user) or `feature_not_available` (private beta not enabled).', content: { application/json: { schema: { $ref: '#/components/schemas/ErrorResponse' } } } }
+        '403': { description: 'Code `insufficient_permissions`: not an unrestricted API key, or a read-only, restricted or profile-scoped user.', content: { application/json: { schema: { $ref: '#/components/schemas/ErrorResponse' } } } }
         '404': { description: 'Code `support_run_not_found`: no such run, or it was not started by your team.', content: { application/json: { schema: { $ref: '#/components/schemas/ErrorResponse' } } } }
   /v1/workflows:
     get:
