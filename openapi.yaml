@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.253.0"
+  version: "1.253.1"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -53165,7 +53165,7 @@ paths:
       operationId: deleteCommentAutomation
       tags: [Comment Automations]
       summary: Delete automation
-      description: Permanently delete an automation and all its trigger logs.
+      description: 'Delete an automation. Its trigger logs are kept so tracked links already sent in DMs keep redirecting; they are removed with the account.'
       security:
         - bearerAuth: []
       parameters:
