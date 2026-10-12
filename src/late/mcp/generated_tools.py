@@ -33003,7 +33003,7 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """List a thread's support answers
 
-        Lists the runs of one thread that your team started, with their answers, oldest first. Replies from the Zernio team after a support ticket arrive by email and are not included. Runs are kept for 90 days. Page through a long thread with `limit` and `cursor`: pass `nextCursor` as `cursor` until it is null.
+        Lists the runs of one thread that your team started, with each question and its answer, oldest first. Replies from the Zernio team after a support ticket arrive by email and are not included. Runs are kept for 90 days. Page through a long thread with `limit` and `cursor`: pass `nextCursor` as `cursor` until it is null.
 
         Args:
             thread_id: The thread to list, as returned by `POST /v1/support/runs`. (required)

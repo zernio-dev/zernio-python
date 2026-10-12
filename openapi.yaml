@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.261.1"
+  version: "1.262.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -14279,7 +14279,7 @@ components:
         cacheWriteTokens: { type: integer }
     SupportRun:
       type: object
-      required: [runId, threadId, status, stopReason, answer, usage, costUsd, maxCostUsd, createdAt, startedAt, finishedAt, supportTicket]
+      required: [runId, threadId, status, stopReason, question, answer, usage, costUsd, maxCostUsd, createdAt, startedAt, finishedAt, supportTicket]
       properties:
         runId: { type: string, description: 'Run id, a 24-character hex string.' }
         threadId: { type: string, description: 'Conversation thread id. Send it back as `threadId` to ask a follow-up in the same thread.' }
@@ -14288,6 +14288,7 @@ components:
           type: [string, "null"]
           enum: [answered, human_review, cost_cap, deadline, max_iterations, error, expired, null]
           description: 'Why the run stopped. Null while it is in progress.'
+        question: { type: [string, "null"], description: 'The question as asked, with leading and trailing whitespace trimmed. Null only on runs created before this field was added.' }
         answer: { type: [string, "null"], description: 'The assistant''s answer. Null while the run is in progress or when it failed.' }
         usage: { $ref: '#/components/schemas/SupportRunUsage' }
         costUsd: { type: number, description: 'The exact amount charged for the question, in USD, never above `maxCostUsd`. 0 for a failed run.' }
@@ -51729,7 +51730,7 @@ paths:
       tags: [Support Assistant]
       summary: List a thread's support answers
       description: >-
-        Lists the runs of one thread that your team started, with their answers, oldest first.
+        Lists the runs of one thread that your team started, with each question and its answer, oldest first.
         Replies from the Zernio team after a support ticket arrive by email and are not
         included. Runs are kept for 90 days. Page through a long thread with `limit` and
         `cursor`: pass `nextCursor` as `cursor` until it is null.
