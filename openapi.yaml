@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.258.1"
+  version: "1.259.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -594,7 +594,7 @@ tags:
       Profile and account filters. A subscription can also carry `profileIds`, an allowlist of profiles, and `accountIds`, an allowlist of connected accounts with the same semantics keyed on the account; each non-empty list narrows delivery and a subscription with both must be satisfied on both. A scoped subscription is only sent events it can attribute to one of those profiles: the profile of the connected account behind the event, or for an aggregate `post.*` event the profile of every account the post targets (a post spanning two scoped endpoints' profiles reaches both). So an integrator can route the profile holding test accounts to a staging endpoint while a second subscription, scoped to the production profiles, keeps production traffic. Events that belong to no profile (`verification.*`, `phone_number.*`, and a legacy post whose accounts were deleted) reach only unscoped subscriptions. The filter runs when an event is emitted; redelivery replays a delivery already made to that endpoint and test fires ignore it. Absent or empty means every profile (or every account).
   - name: Support Assistant
     description: |
-      Get help from Ana, the Zernio support agent, without leaving your code: ask about a post, a connected account or a profile in your workspace, and Ana looks into it and answers. Each question starts a run that answers asynchronously: ask with `POST /v1/support/runs`, then receive the answer through the `support.run.completed` and `support.run.failed` webhooks, or poll `GET /v1/support/runs/{runId}`. Each question is billed by the tokens it uses: most cost between $0.10 and $0.50, and none bills more than its `maxCostUsd` cap ($3 by default). Failed questions are free. Requires an unrestricted API key and a usage-based plan with a card on file.
+      Get help from Ana, the Zernio support agent, without leaving your code: ask about a post, a connected account or a profile in your workspace, and Ana looks into it and answers. Each question starts a run that answers asynchronously: ask with `POST /v1/support/runs`, then receive the answer through the `support.run.completed` and `support.run.failed` webhooks, or poll `GET /v1/support/runs/{runId}`. List a thread's answers with `GET /v1/support/runs?threadId=`. Each question is billed by the tokens it uses: most cost between $0.10 and $0.50, and none bills more than its `maxCostUsd` cap ($3 by default). Failed questions are free. Requires an unrestricted API key and a usage-based plan with a card on file.
   - name: Webhook Events
     description: |
       Incoming webhook deliveries sent by Zernio to your configured endpoint URL.
@@ -51663,6 +51663,38 @@ paths:
   # ─── Sequences ────────────────────────────────────────────────────
 
   /v1/support/runs:
+    get:
+      x-resource-group: "admin-plane"
+      operationId: listSupportAnswers
+      tags: [Support Assistant]
+      summary: List a thread's support answers
+      description: >-
+        Lists the runs of one thread that your team started, with Ana's answers, oldest first.
+        Replies from the Zernio team after a support ticket arrive by email and are not
+        included. Runs are kept for 90 days. Page through a long thread with `limit` and
+        `cursor`: pass `nextCursor` as `cursor` until it is null.
+      parameters:
+        - { name: threadId, in: query, required: true, schema: { type: string }, description: 'The thread to list, as returned by `POST /v1/support/runs`.' }
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 50, default: 20 }, description: 'Runs per page.' }
+        - { name: cursor, in: query, schema: { type: string }, description: 'Pass `nextCursor` from the previous page.' }
+      responses:
+        '200':
+          description: "The thread's runs, oldest first"
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [runs, nextCursor]
+                properties:
+                  runs:
+                    type: array
+                    items: { $ref: '#/components/schemas/SupportRun' }
+                  nextCursor: { type: [string, "null"], description: 'Pass as `cursor` to get the next page. Null on the last page.' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '402': { description: 'A card is required (code `payment_method_required`) or the last payment failed (code `payment_required`).', content: { application/json: { schema: { $ref: '#/components/schemas/ErrorResponse' } } } }
+        '403': { description: 'Code `insufficient_permissions`: not an unrestricted API key, or a read-only, restricted or profile-scoped user.', content: { application/json: { schema: { $ref: '#/components/schemas/ErrorResponse' } } } }
+        '404': { description: 'Code `support_thread_not_found`: no run in this thread was started by your team, or its runs are older than 90 days.', content: { application/json: { schema: { $ref: '#/components/schemas/ErrorResponse' } } } }
     post:
       x-resource-group: "admin-plane"
       operationId: askSupportQuestion

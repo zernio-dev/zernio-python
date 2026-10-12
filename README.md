@@ -1221,6 +1221,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 ### Support Assistant
 | Method | Description |
 |--------|-------------|
+| `support_assistant.list_support_answers()` | List a thread's support answers |
 | `support_assistant.get_support_answer()` | Get a support answer |
 | `support_assistant.ask_support_question()` | Ask a support question |
 

@@ -32992,6 +32992,34 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="List a thread's support answers",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def support_assistant_list_support_answers(
+        thread_id: str, limit: int = 20, cursor: str | None = None
+    ) -> str:
+        """List a thread's support answers
+
+        Lists the runs of one thread that your team started, with Ana's answers, oldest first. Replies from the Zernio team after a support ticket arrive by email and are not included. Runs are kept for 90 days. Page through a long thread with `limit` and `cursor`: pass `nextCursor` as `cursor` until it is null.
+
+        Args:
+            thread_id: The thread to list, as returned by `POST /v1/support/runs`. (required)
+            limit: Runs per page.
+            cursor: Pass `nextCursor` from the previous page."""
+        client = _get_client()
+        try:
+            response = client.support_assistant.list_support_answers(
+                thread_id=thread_id, limit=limit, cursor=cursor
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="Ask a support question",
             readOnlyHint=False,
             destructiveHint=True,

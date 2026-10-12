@@ -73,6 +73,17 @@ class SupportAssistantResource:
                 result[to_camel(k)] = v
         return result
 
+    def list_support_answers(
+        self, thread_id: str, *, limit: int | None = 20, cursor: str | None = None
+    ) -> dict[str, Any]:
+        """List a thread's support answers"""
+        params = self._build_params(
+            thread_id=thread_id,
+            limit=limit,
+            cursor=cursor,
+        )
+        return self._client._get("/v1/support/runs", params=params)
+
     def ask_support_question(
         self,
         message: str,
@@ -97,6 +108,17 @@ class SupportAssistantResource:
     def get_support_answer(self, run_id: str) -> dict[str, Any]:
         """Get a support answer"""
         return self._client._get(f"/v1/support/runs/{run_id}")
+
+    async def alist_support_answers(
+        self, thread_id: str, *, limit: int | None = 20, cursor: str | None = None
+    ) -> dict[str, Any]:
+        """List a thread's support answers (async)"""
+        params = self._build_params(
+            thread_id=thread_id,
+            limit=limit,
+            cursor=cursor,
+        )
+        return await self._client._aget("/v1/support/runs", params=params)
 
     async def aask_support_question(
         self,
