@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.254.1"
+  version: "1.255.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -57709,7 +57709,7 @@ paths:
       x-resource-group: "ads"
       operationId: getAdReview
       tags: ["Ad Campaigns"]
-      x-platforms: ["tiktok", "google"]
+      x-platforms: ["tiktok", "google", "meta"]
       summary: Read the platform's review verdict for an ad
       description: |-
         Shows whether the platform approved an ad, where it may not deliver, and every rejection reason, without re-enabling a paused ad.
@@ -57727,7 +57727,21 @@ paths:
         PROHIBITED topic is also listed in `rejections` (reason = the topic). The `forbidden*`
         arrays are TikTok-only and always empty on Google.
 
-        TikTok uses `/ad/review_info/`; every other platform returns 501. On TikTok, use it alongside the ad's
+        **Meta** (Facebook and Instagram ads): reads the Ad's `ad_review_feedback`, `effective_status`
+        and `issues_info` live. `reviewStatus` is Meta's `effective_status` verbatim (ACTIVE, PAUSED,
+        PENDING_REVIEW, DISAPPROVED, PREAPPROVED, WITH_ISSUES, IN_PROCESS, ...); `approved` is true for
+        ACTIVE and PREAPPROVED, false for DISAPPROVED, null otherwise. `reviewFeedback` carries Meta's
+        feedback verbatim: `global` (reason -> explanation) and `placementSpecific` (placement ->
+        reason -> explanation). Each global reason is listed in `rejections`, and so is each
+        placement-specific reason, with that placement in its `forbiddenPlacements`; the review's
+        `forbiddenPlacements` lists every placement with feedback. When Meta returns no feedback (usually
+        an ad in review or approved everywhere), the status comes back with empty `rejections` and empty
+        `reviewFeedback` maps; an ACTIVE ad rejected on one placement still carries that placement's
+        feedback. A deleted ad answers 404. `issues` is Meta's
+        `issues_info` verbatim. `forbiddenAges`, `forbiddenLocations` and `forbiddenOperatingSystems`
+        are always empty on Meta.
+
+        TikTok uses `/ad/review_info/`. Platforms other than TikTok, Google and Meta return 501. On TikTok, use it alongside the ad's
         `platformStatus`: TikTok reports `AD_STATUS_AUDIT` while the ad is in review and
         `AD_STATUS_AD_PRE_ONLINE` once it passed and is about to deliver (both map to
         `status: pending_review`); `AD_STATUS_AUDIT_DENY` maps to `rejected`.
@@ -57749,8 +57763,8 @@ paths:
                   review:
                     type: object
                     properties:
-                      approved: { type: [boolean, "null"], description: "TikTok `is_approved`." }
-                      reviewStatus: { type: [string, "null"], description: "TikTok `review_status`, verbatim: ALL_AVAILABLE (approved everywhere), PART_AVAILABLE (approved for part of the targeting), UNAVAILABLE (rejected)." }
+                      approved: { type: [boolean, "null"], description: "TikTok `is_approved`. Google and Meta: derived from the platform status (see the description)." }
+                      reviewStatus: { type: [string, "null"], description: "TikTok `review_status`, verbatim: ALL_AVAILABLE (approved everywhere), PART_AVAILABLE (approved for part of the targeting), UNAVAILABLE (rejected). Google: `review_status`. Meta: the ad's `effective_status`." }
                       forbiddenPlacements: { type: array, items: { type: string } }
                       forbiddenAges: { type: array, items: { type: string } }
                       forbiddenLocations: { type: array, items: { type: string } }
@@ -57786,11 +57800,30 @@ paths:
                             type: { type: [string, "null"], description: "PROHIBITED, LIMITED, FULLY_LIMITED, DESCRIPTIVE, BROADENING, AREA_OF_INTEREST_ONLY." }
                             evidences: { type: array, items: { type: object }, description: "Google's PolicyTopicEvidence objects, verbatim." }
                             constraints: { type: array, items: { type: object }, description: "Google's PolicyTopicConstraint objects, verbatim." }
+                      reviewFeedback:
+                        type: object
+                        description: "Meta only. The Ad's `ad_review_feedback`, verbatim. Both maps are empty when Meta returned no feedback (approved or in-review ad)."
+                        properties:
+                          global:
+                            type: object
+                            additionalProperties: { type: string }
+                            description: "Meta `global`: policy or reason -> Meta's explanation."
+                          placementSpecific:
+                            type: object
+                            additionalProperties:
+                              type: object
+                              additionalProperties: { type: string }
+                            description: "Meta `placement_specific`: placement (facebook, instagram, ...) -> reason -> Meta's explanation."
+                      issues:
+                        type: array
+                        items: { type: object }
+                        description: "Meta only. The Ad's `issues_info` objects (`error_code`, `error_message`, `error_summary`, `error_type`, `level`), verbatim."
                       readAt: { type: string, format: date-time, description: "When the verdict was read from the platform." }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { description: "Ad not found, it has no platform ad id yet, or the platform has no review record for it" }
-        '501': { description: Only supported on TikTok and Google }
+        '429': { $ref: '#/components/responses/RateLimited' }
+        '501': { description: "Only supported on TikTok, Google and Meta (Facebook and Instagram ads)" }
 
   /v1/ads/{adId}/media:
     get:

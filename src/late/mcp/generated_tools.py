@@ -7971,7 +7971,7 @@ def register_generated_tools(mcp, _get_client):
         `type` (PROHIBITED, LIMITED, ...) and Google's `evidences` and `constraints` verbatim; each
         PROHIBITED topic is also listed in `rejections` (reason = the topic). The ...
 
-        Platforms: tiktok, google
+        Platforms: tiktok, google, meta
 
         Args:
             ad_id: Zernio ad id (24-char hex) or the platform ad id. (required)"""
