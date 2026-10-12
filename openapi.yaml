@@ -4264,6 +4264,15 @@ components:
           type: string
           format: date-time
           description: Timestamp the delivery was attempted
+    WebhookProfiles:
+      type: array
+      description: 'The profiles this event belongs to, each with the externalId you set on it (null when none is set). Present on every event tied to a profile and absent on events that belong to none. Events spanning several profiles (a post published to accounts of different profiles) list each once. Use it to route the event to your tenant without storing Zernio profile ids.'
+      items:
+        type: object
+        required: [id, externalId]
+        properties:
+          id: { type: string }
+          externalId: { type: [string, "null"], example: 'tenant_42' }
     WebhookPayloadPost:
       type: object
       description: Webhook payload for post events
@@ -4272,6 +4281,7 @@ components:
         id:
           type: string
           description: 'Stable webhook event ID: the dedupe key, also sent as the X-Zernio-Event-Id header and identical on every retry and redelivery. It identifies the event only, never an account or other resource.'
+        profiles: { $ref: '#/components/schemas/WebhookProfiles' }
         test:
           type: boolean
           description: 'Always true when present: only a sample sent by POST /v1/webhooks/test with an event carries it. Real deliveries never do.'
@@ -4356,6 +4366,7 @@ components:
         id:
           type: string
           description: 'Stable webhook event ID: the dedupe key, also sent as the X-Zernio-Event-Id header and identical on every retry and redelivery. It identifies the event only, never an account or other resource.'
+        profiles: { $ref: '#/components/schemas/WebhookProfiles' }
         test:
           type: boolean
           description: 'Always true when present: only a sample sent by POST /v1/webhooks/test with an event carries it. Real deliveries never do.'
@@ -4449,6 +4460,7 @@ components:
         id:
           type: string
           description: 'Stable webhook event ID: the dedupe key, also sent as the X-Zernio-Event-Id header and identical on every retry and redelivery. It identifies the event only, never an account or other resource.'
+        profiles: { $ref: '#/components/schemas/WebhookProfiles' }
         test:
           type: boolean
           description: 'Always true when present: only a sample sent by POST /v1/webhooks/test with an event carries it. Real deliveries never do.'
@@ -4631,6 +4643,7 @@ components:
         id:
           type: string
           description: 'Stable webhook event ID: the dedupe key, also sent as the X-Zernio-Event-Id header and identical on every retry and redelivery. It identifies the event only, never an account or other resource.'
+        profiles: { $ref: '#/components/schemas/WebhookProfiles' }
         test:
           type: boolean
           description: 'Always true when present: only a sample sent by POST /v1/webhooks/test with an event carries it. Real deliveries never do.'
@@ -4701,6 +4714,7 @@ components:
         id:
           type: string
           description: 'Stable webhook event ID: the dedupe key, also sent as the X-Zernio-Event-Id header and identical on every retry and redelivery.'
+        profiles: { $ref: '#/components/schemas/WebhookProfiles' }
         test:
           type: boolean
           description: 'Always true when present: only a sample sent by POST /v1/webhooks/test with an event carries it. Real deliveries never do.'
@@ -4746,6 +4760,7 @@ components:
         id:
           type: string
           description: 'Stable webhook event ID: the dedupe key, also sent as the X-Zernio-Event-Id header and identical on every retry and redelivery.'
+        profiles: { $ref: '#/components/schemas/WebhookProfiles' }
         test:
           type: boolean
           description: 'Always true when present: only a sample sent by POST /v1/webhooks/test with an event carries it. Real deliveries never do.'
@@ -4782,6 +4797,7 @@ components:
         id:
           type: string
           description: 'Stable webhook event ID: the dedupe key, also sent as the X-Zernio-Event-Id header and identical on every retry and redelivery. It identifies the event only, never an account or other resource.'
+        profiles: { $ref: '#/components/schemas/WebhookProfiles' }
         test:
           type: boolean
           description: 'Always true when present: only a sample sent by POST /v1/webhooks/test with an event carries it. Real deliveries never do.'
@@ -4909,6 +4925,7 @@ components:
         id:
           type: string
           description: 'Stable webhook event ID: the dedupe key, also sent as the X-Zernio-Event-Id header and identical on every retry and redelivery. It identifies the event only, never an account or other resource.'
+        profiles: { $ref: '#/components/schemas/WebhookProfiles' }
         test:
           type: boolean
           description: 'Always true when present: only a sample sent by POST /v1/webhooks/test with an event carries it. Real deliveries never do.'
@@ -4962,6 +4979,7 @@ components:
         id:
           type: string
           description: 'Stable webhook event ID: the dedupe key, also sent as the X-Zernio-Event-Id header and identical on every retry and redelivery. It identifies the event only, never an account or other resource.'
+        profiles: { $ref: '#/components/schemas/WebhookProfiles' }
         test:
           type: boolean
           description: 'Always true when present: only a sample sent by POST /v1/webhooks/test with an event carries it. Real deliveries never do.'
@@ -5119,6 +5137,7 @@ components:
         id:
           type: string
           description: 'Stable webhook event ID: the dedupe key, also sent as the X-Zernio-Event-Id header and identical on every retry and redelivery. It identifies the event only, never an account or other resource.'
+        profiles: { $ref: '#/components/schemas/WebhookProfiles' }
         test:
           type: boolean
           description: 'Always true when present: only a sample sent by POST /v1/webhooks/test with an event carries it. Real deliveries never do.'
@@ -5237,6 +5256,7 @@ components:
         id:
           type: string
           description: 'Stable webhook event ID: the dedupe key, also sent as the X-Zernio-Event-Id header and identical on every retry and redelivery. It identifies the event only, never an account or other resource.'
+        profiles: { $ref: '#/components/schemas/WebhookProfiles' }
         test:
           type: boolean
           description: 'Always true when present: only a sample sent by POST /v1/webhooks/test with an event carries it. Real deliveries never do.'
@@ -5276,6 +5296,7 @@ components:
         id:
           type: string
           description: 'Stable webhook event ID: the dedupe key, also sent as the X-Zernio-Event-Id header and identical on every retry and redelivery. It identifies the event only, never an account or other resource.'
+        profiles: { $ref: '#/components/schemas/WebhookProfiles' }
         test:
           type: boolean
           description: 'Always true when present: only a sample sent by POST /v1/webhooks/test with an event carries it. Real deliveries never do.'
@@ -5366,6 +5387,7 @@ components:
         id:
           type: string
           description: 'Stable webhook event ID: the dedupe key, also sent as the X-Zernio-Event-Id header and identical on every retry and redelivery. It identifies the event only, never an account or other resource.'
+        profiles: { $ref: '#/components/schemas/WebhookProfiles' }
         test:
           type: boolean
           description: 'Always true when present: only a sample sent by POST /v1/webhooks/test with an event carries it. Real deliveries never do.'
@@ -5587,6 +5609,7 @@ components:
         id:
           type: string
           description: 'Stable webhook event ID: the dedupe key, also sent as the X-Zernio-Event-Id header and identical on every retry and redelivery. It identifies the event only, never an account or other resource.'
+        profiles: { $ref: '#/components/schemas/WebhookProfiles' }
         test:
           type: boolean
           description: 'Always true when present: only a sample sent by POST /v1/webhooks/test with an event carries it. Real deliveries never do.'
@@ -5651,6 +5674,7 @@ components:
         id:
           type: string
           description: 'Stable webhook event ID: the dedupe key, also sent as the X-Zernio-Event-Id header and identical on every retry and redelivery. It identifies the event only, never an account or other resource.'
+        profiles: { $ref: '#/components/schemas/WebhookProfiles' }
         test:
           type: boolean
           description: 'Always true when present: only a sample sent by POST /v1/webhooks/test with an event carries it. Real deliveries never do.'
@@ -5724,6 +5748,7 @@ components:
         id:
           type: string
           description: 'Stable webhook event ID: the dedupe key, also sent as the X-Zernio-Event-Id header and identical on every retry and redelivery. It identifies the event only, never an account or other resource.'
+        profiles: { $ref: '#/components/schemas/WebhookProfiles' }
         test:
           type: boolean
           description: 'Always true when present: only a sample sent by POST /v1/webhooks/test with an event carries it. Real deliveries never do.'
@@ -6266,6 +6291,7 @@ components:
         id:
           type: string
           description: 'Stable webhook event ID: the dedupe key, also sent as the X-Zernio-Event-Id header and identical on every retry and redelivery. It identifies the event only, never an account or other resource.'
+        profiles: { $ref: '#/components/schemas/WebhookProfiles' }
         test:
           type: boolean
           description: 'Always true when present: only a sample sent by POST /v1/webhooks/test with an event carries it. Real deliveries never do.'
@@ -6507,6 +6533,7 @@ components:
           type: boolean
           description: 'Always true when present: only a sample sent by POST /v1/webhooks/test with an event carries it. Real deliveries never do.'
         id: { type: string, description: 'Stable webhook event ID: the dedupe key, also sent as the X-Zernio-Event-Id header and identical on every retry and redelivery. It identifies the event only, never an account or other resource.' }
+        profiles: { $ref: '#/components/schemas/WebhookProfiles' }
         event: { type: string, enum: [message.edited] }
         message:
           $ref: '#/components/schemas/InboxWebhookMessage'
@@ -6550,6 +6577,7 @@ components:
           type: boolean
           description: 'Always true when present: only a sample sent by POST /v1/webhooks/test with an event carries it. Real deliveries never do.'
         id: { type: string, description: 'Stable webhook event ID: the dedupe key, also sent as the X-Zernio-Event-Id header and identical on every retry and redelivery. It identifies the event only, never an account or other resource.' }
+        profiles: { $ref: '#/components/schemas/WebhookProfiles' }
         event: { type: string, enum: [message.deleted] }
         message:
           $ref: '#/components/schemas/InboxWebhookMessage'
@@ -6585,6 +6613,7 @@ components:
           type: boolean
           description: 'Always true when present: only a sample sent by POST /v1/webhooks/test with an event carries it. Real deliveries never do.'
         id: { type: string, description: 'Stable webhook event ID: the dedupe key, also sent as the X-Zernio-Event-Id header and identical on every retry and redelivery. It identifies the event only, never an account or other resource.' }
+        profiles: { $ref: '#/components/schemas/WebhookProfiles' }
         event:
           type: string
           enum: [message.delivered, message.read, message.played, message.failed]
@@ -6685,6 +6714,7 @@ components:
           type: boolean
           description: 'Always true when present: only a sample sent by POST /v1/webhooks/test with an event carries it. Real deliveries never do.'
         id: { type: string, description: 'Stable webhook event ID: the dedupe key, also sent as the X-Zernio-Event-Id header and identical on every retry and redelivery. It identifies the event only, never an account or other resource.' }
+        profiles: { $ref: '#/components/schemas/WebhookProfiles' }
         event:
           type: string
           enum: [conversation.started]
@@ -6754,6 +6784,7 @@ components:
           type: boolean
           description: 'Always true when present: only a sample sent by POST /v1/webhooks/test with an event carries it. Real deliveries never do.'
         id: { type: string, description: 'Stable webhook event ID: the dedupe key, also sent as the X-Zernio-Event-Id header and identical on every retry and redelivery. It identifies the event only, never an account or other resource.' }
+        profiles: { $ref: '#/components/schemas/WebhookProfiles' }
         event:
           type: string
           enum: [conversation.control_changed]
@@ -6866,6 +6897,7 @@ components:
           type: boolean
           description: 'Always true when present: only a sample sent by POST /v1/webhooks/test with an event carries it. Real deliveries never do.'
         id: { type: string, description: 'Stable webhook event ID: the dedupe key, also sent as the X-Zernio-Event-Id header and identical on every retry and redelivery. It identifies the event only, never an account or other resource.' }
+        profiles: { $ref: '#/components/schemas/WebhookProfiles' }
         event:
           type: string
           enum: [call.received]
@@ -6899,6 +6931,7 @@ components:
           type: boolean
           description: 'Always true when present: only a sample sent by POST /v1/webhooks/test with an event carries it. Real deliveries never do.'
         id: { type: string, description: 'Stable webhook event ID: the dedupe key, also sent as the X-Zernio-Event-Id header and identical on every retry and redelivery. It identifies the event only, never an account or other resource.' }
+        profiles: { $ref: '#/components/schemas/WebhookProfiles' }
         event:
           type: string
           enum: [call.ended]
@@ -6953,6 +6986,7 @@ components:
           type: boolean
           description: 'Always true when present: only a sample sent by POST /v1/webhooks/test with an event carries it. Real deliveries never do.'
         id: { type: string, description: 'Stable webhook event ID: the dedupe key, also sent as the X-Zernio-Event-Id header and identical on every retry and redelivery. It identifies the event only, never an account or other resource.' }
+        profiles: { $ref: '#/components/schemas/WebhookProfiles' }
         event:
           type: string
           enum: [call.failed]
@@ -6989,6 +7023,7 @@ components:
           type: boolean
           description: 'Always true when present: only a sample sent by POST /v1/webhooks/test with an event carries it. Real deliveries never do.'
         id: { type: string, description: 'Stable webhook event ID: the dedupe key, also sent as the X-Zernio-Event-Id header and identical on every retry and redelivery. It identifies the event only, never an account or other resource.' }
+        profiles: { $ref: '#/components/schemas/WebhookProfiles' }
         event:
           type: string
           enum: [call.permission_request]
@@ -7016,6 +7051,7 @@ components:
         id:
           type: string
           description: 'Stable webhook event ID: the dedupe key, also sent as the X-Zernio-Event-Id header and identical on every retry and redelivery.'
+        profiles: { $ref: '#/components/schemas/WebhookProfiles' }
         test:
           type: boolean
           description: 'Always true when present: only a sample sent by POST /v1/webhooks/test with an event carries it. Real deliveries never do.'
@@ -7068,6 +7104,7 @@ components:
         id:
           type: string
           description: 'Stable webhook event ID: the dedupe key, also sent as the X-Zernio-Event-Id header and identical on every retry and redelivery. It identifies the event only, never an account or other resource.'
+        profiles: { $ref: '#/components/schemas/WebhookProfiles' }
         test:
           type: boolean
           description: 'Always true when present: only a sample sent by POST /v1/webhooks/test with an event carries it. Real deliveries never do.'
@@ -7175,6 +7212,7 @@ components:
         id:
           type: string
           description: 'Stable webhook event ID: the dedupe key, also sent as the X-Zernio-Event-Id header and identical on every retry and redelivery. It identifies the event only, never an account or other resource.'
+        profiles: { $ref: '#/components/schemas/WebhookProfiles' }
         test:
           type: boolean
           description: 'Always true when present: only a sample sent by POST /v1/webhooks/test with an event carries it. Real deliveries never do.'
@@ -7231,6 +7269,7 @@ components:
         id:
           type: string
           description: 'Stable webhook event ID: the dedupe key, also sent as the X-Zernio-Event-Id header and identical on every retry and redelivery. It identifies the event only, never an account or other resource.'
+        profiles: { $ref: '#/components/schemas/WebhookProfiles' }
         test:
           type: boolean
           description: 'Always true when present: only a sample sent by POST /v1/webhooks/test with an event carries it. Real deliveries never do.'
@@ -7300,6 +7339,7 @@ components:
         id:
           type: string
           description: 'Stable webhook event ID: the dedupe key, also sent as the X-Zernio-Event-Id header and identical on every retry and redelivery. It identifies the event only, never an account or other resource.'
+        profiles: { $ref: '#/components/schemas/WebhookProfiles' }
         test:
           type: boolean
           description: 'Always true when present: only a sample sent by POST /v1/webhooks/test with an event carries it. Real deliveries never do.'
@@ -7347,6 +7387,7 @@ components:
         id:
           type: string
           description: 'Stable webhook event ID: the dedupe key, also sent as the X-Zernio-Event-Id header and identical on every retry and redelivery. It identifies the event only, never an account or other resource.'
+        profiles: { $ref: '#/components/schemas/WebhookProfiles' }
         test:
           type: boolean
           description: 'Always true when present: only a sample sent by POST /v1/webhooks/test with an event carries it. Real deliveries never do.'
@@ -7397,6 +7438,7 @@ components:
         id:
           type: string
           description: 'Stable webhook event ID: the dedupe key, also sent as the X-Zernio-Event-Id header and identical on every retry and redelivery. It identifies the event only, never an account or other resource.'
+        profiles: { $ref: '#/components/schemas/WebhookProfiles' }
         test:
           type: boolean
           description: 'Always true when present: only a sample sent by POST /v1/webhooks/test with an event carries it. Real deliveries never do.'
@@ -7463,6 +7505,7 @@ components:
         id:
           type: string
           description: 'Stable webhook event ID: the dedupe key, also sent as the X-Zernio-Event-Id header and identical on every retry and redelivery. It identifies the event only, never an account or other resource.'
+        profiles: { $ref: '#/components/schemas/WebhookProfiles' }
         test:
           type: boolean
           description: 'Always true when present: only a sample sent by POST /v1/webhooks/test with an event carries it. Real deliveries never do.'
@@ -7529,6 +7572,7 @@ components:
         id:
           type: string
           description: 'Stable webhook event ID: the dedupe key, also sent as the X-Zernio-Event-Id header and identical on every retry and redelivery. It identifies the event only, never an account or other resource.'
+        profiles: { $ref: '#/components/schemas/WebhookProfiles' }
         test:
           type: boolean
           description: 'Always true when present: only a sample sent by POST /v1/webhooks/test with an event carries it. Real deliveries never do.'
@@ -14113,6 +14157,7 @@ components:
           type: boolean
           description: 'Always true when present: only a sample sent by POST /v1/webhooks/test with an event carries it. Real deliveries never do.'
         id: { type: string, description: 'Event id, the dedupe key.' }
+        profiles: { $ref: '#/components/schemas/WebhookProfiles' }
         event: { type: string, enum: [contact.tag_added, contact.tag_removed] }
         timestamp: { type: string, format: date-time }
         contact:
@@ -14132,6 +14177,7 @@ components:
           type: boolean
           description: 'Always true when present: only a sample sent by POST /v1/webhooks/test with an event carries it. Real deliveries never do.'
         id: { type: string, description: 'Event id, the dedupe key.' }
+        profiles: { $ref: '#/components/schemas/WebhookProfiles' }
         event: { type: string, enum: [contact.field_changed] }
         timestamp: { type: string, format: date-time }
         contact:
@@ -14153,6 +14199,7 @@ components:
           type: boolean
           description: 'Always true when present: only a sample sent by POST /v1/webhooks/test with an event carries it. Real deliveries never do.'
         id: { type: string, description: 'Event id, the dedupe key.' }
+        profiles: { $ref: '#/components/schemas/WebhookProfiles' }
         event: { type: string, enum: [sequence.enrolled, sequence.exited] }
         timestamp: { type: string, format: date-time }
         sequence:
@@ -14180,6 +14227,7 @@ components:
           type: boolean
           description: 'Always true when present: only a sample sent by POST /v1/webhooks/test with an event carries it. Real deliveries never do.'
         id: { type: string, description: 'Event id, the dedupe key.' }
+        profiles: { $ref: '#/components/schemas/WebhookProfiles' }
         event: { type: string, enum: [workflow.run.started, workflow.run.completed, workflow.run.failed] }
         timestamp: { type: string, format: date-time }
         workflow:
@@ -15862,6 +15910,7 @@ webhooks:
                   type: boolean
                   description: 'Always true when present: only a sample sent by POST /v1/webhooks/test with an event carries it. Real deliveries never do.'
                 id: { type: string, description: 'Stable webhook event ID: the dedupe key, also sent as the X-Zernio-Event-Id header and identical on every retry and redelivery. It identifies the event only, never an account or other resource.' }
+                profiles: { $ref: '#/components/schemas/WebhookProfiles' }
                 event: { type: string, enum: [whatsapp.number.activated] }
                 timestamp:
                   type: string
@@ -15897,6 +15946,7 @@ webhooks:
                   type: boolean
                   description: 'Always true when present: only a sample sent by POST /v1/webhooks/test with an event carries it. Real deliveries never do.'
                 id: { type: string, description: 'Stable webhook event ID: the dedupe key, also sent as the X-Zernio-Event-Id header and identical on every retry and redelivery. It identifies the event only, never an account or other resource.' }
+                profiles: { $ref: '#/components/schemas/WebhookProfiles' }
                 event: { type: string, enum: [whatsapp.number.declined] }
                 timestamp:
                   type: string
@@ -16027,6 +16077,7 @@ webhooks:
                   type: boolean
                   description: 'Always true when present: only a sample sent by POST /v1/webhooks/test with an event carries it. Real deliveries never do.'
                 id: { type: string, description: 'Stable webhook event ID: the dedupe key, also sent as the X-Zernio-Event-Id header and identical on every retry and redelivery. It identifies the event only, never an account or other resource.' }
+                profiles: { $ref: '#/components/schemas/WebhookProfiles' }
                 event: { type: string, enum: [whatsapp.number.suspended] }
                 timestamp:
                   type: string
@@ -16062,6 +16113,7 @@ webhooks:
                   type: boolean
                   description: 'Always true when present: only a sample sent by POST /v1/webhooks/test with an event carries it. Real deliveries never do.'
                 id: { type: string, description: 'Stable webhook event ID: the dedupe key, also sent as the X-Zernio-Event-Id header and identical on every retry and redelivery. It identifies the event only, never an account or other resource.' }
+                profiles: { $ref: '#/components/schemas/WebhookProfiles' }
                 event: { type: string, enum: [whatsapp.number.reactivated] }
                 timestamp:
                   type: string
