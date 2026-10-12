@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.259.0"
+  version: "1.260.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -594,7 +594,7 @@ tags:
       Profile and account filters. A subscription can also carry `profileIds`, an allowlist of profiles, and `accountIds`, an allowlist of connected accounts with the same semantics keyed on the account; each non-empty list narrows delivery and a subscription with both must be satisfied on both. A scoped subscription is only sent events it can attribute to one of those profiles: the profile of the connected account behind the event, or for an aggregate `post.*` event the profile of every account the post targets (a post spanning two scoped endpoints' profiles reaches both). So an integrator can route the profile holding test accounts to a staging endpoint while a second subscription, scoped to the production profiles, keeps production traffic. Events that belong to no profile (`verification.*`, `phone_number.*`, and a legacy post whose accounts were deleted) reach only unscoped subscriptions. The filter runs when an event is emitted; redelivery replays a delivery already made to that endpoint and test fires ignore it. Absent or empty means every profile (or every account).
   - name: Support Assistant
     description: |
-      Get help from Ana, the Zernio support agent, without leaving your code: ask about a post, a connected account or a profile in your workspace, and Ana looks into it and answers. Each question starts a run that answers asynchronously: ask with `POST /v1/support/runs`, then receive the answer through the `support.run.completed` and `support.run.failed` webhooks, or poll `GET /v1/support/runs/{runId}`. List a thread's answers with `GET /v1/support/runs?threadId=`. Each question is billed by the tokens it uses: most cost between $0.10 and $0.50, and none bills more than its `maxCostUsd` cap ($3 by default). Failed questions are free. Requires an unrestricted API key and a usage-based plan with a card on file.
+      Get help from Ana, the Zernio support agent, without leaving your code: ask about a post, a connected account or a profile in your workspace, and Ana looks into it and answers. Each question starts a run that answers asynchronously: ask with `POST /v1/support/runs`, then receive the answer through the `support.run.completed` and `support.run.failed` webhooks, or poll `GET /v1/support/runs/{runId}`. List a thread's answers with `GET /v1/support/runs?threadId=`. You pay per question: most cost between $0.10 and $0.50, none more than its `maxCostUsd` cap ($3 by default), and failed questions are free. Requires an unrestricted API key and a usage-based plan with a card on file.
   - name: Webhook Events
     description: |
       Incoming webhook deliveries sent by Zernio to your configured endpoint URL.
@@ -14290,7 +14290,7 @@ components:
           description: 'Why the run stopped. Null while it is in progress.'
         answer: { type: [string, "null"], description: 'Ana''s answer. Null while the run is in progress or when it failed.' }
         usage: { $ref: '#/components/schemas/SupportRunUsage' }
-        costUsd: { type: number, description: 'The amount billed for the run, in USD: the tokens in `usage` at the Support Assistant rates (see Ask a support question), never above `maxCostUsd`. 0 for a failed run.' }
+        costUsd: { type: number, description: 'The exact amount charged for the question, in USD, never above `maxCostUsd`. 0 for a failed run.' }
         maxCostUsd: { type: number, description: 'The cost cap this run was started with, in USD.' }
         createdAt: { type: string, format: date-time }
         startedAt: { type: [string, "null"], format: date-time }
@@ -51761,18 +51761,20 @@ paths:
         a problem on Zernio's side she opens a support ticket with the team (see
         `supportTicket` on the run) and the run ends as `needs_human`.
 
-        **Pricing.** Each question is billed once, when its run finishes, for the tokens Ana used:
+        **Pricing.** You pay per question, once it finishes. The exact amount charged is the
+        run's `costUsd`.
 
-        - Input: $6 per million tokens
-        - Output: $30 per million tokens
-        - Cache reads: $0.60 per million tokens
-        - Cache writes: $7.50 per million tokens
+        | Question | You pay |
+        | --- | --- |
+        | Typical question | $0.10 to $0.50 |
+        | Most one question can cost | Its `maxCostUsd`: $0.50 to $3, $3 by default |
+        | Handed to the Zernio team (`needs_human`) | Charged like an answered question |
+        | Failed or expired | $0 |
+        | All questions in a UTC month | At most $100 per account |
 
-        Most questions cost between $0.10 and $0.50. A run never bills more than its
-        `maxCostUsd` ($0.50 to $3, $3 by default): near the cap Ana stops investigating and
-        answers with what she found. Runs that end as `needs_human` are billed like any other;
-        failed runs are free. The run's `usage` holds the token counts and `costUsd` the amount
-        billed. Charges appear as "Support API" on your invoice.
+        Near its `maxCostUsd` a run stops investigating and answers with what it found so far,
+        so it never charges more than the cap; with nothing to answer yet it fails and costs
+        nothing. Charges appear as "Support API" on your invoice.
 
         Requires an unrestricted API key, usage-based billing and a card on file. Limits per
         account: 3 active runs and $100 of runs per UTC month. Send an Idempotency-Key header
@@ -51847,7 +51849,7 @@ paths:
         Returns a run started by your team, with Ana's answer once it is ready. Prefer the
         `support.run.completed` and `support.run.failed` webhooks; use this as the fallback,
         waiting `pollAfterSeconds` between polls. `costUsd` is the amount billed for the
-        question, never above `maxCostUsd`, and 0 for a failed run (rates on Ask a support
+        question, never above `maxCostUsd`, and 0 for a failed run (pricing on Ask a support
         question).
       parameters:
         - name: runId

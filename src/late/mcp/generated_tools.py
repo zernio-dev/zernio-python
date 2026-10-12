@@ -33042,16 +33042,18 @@ def register_generated_tools(mcp, _get_client):
         a problem on Zernio's side she opens a support ticket with the team (see
         `supportTicket` on the run) and the run ends as `needs_human`.
 
-        **Pricing.** Each question is billed once, when its run finishes, for the tokens Ana used:
+        **Pricing.** You pay per question, once it finishes. The exact amount charged is the
+        run's `costUsd`.
 
-        - Input: $6 per million tokens
-        - Output: $30 per million tokens
-        - Cache reads: $0.60 per million tokens
-        - Cache writes: $7.50 per million tokens
+        | Question | You pay |
+        | --- | --- |
+        | Typical question | $0.10 to $0.50 |
+        | Most one question can cost | Its `maxCostUsd`: $0.50 to $3, $3 by default |
+        | Handed to the Zernio team (`needs_human`) | Charged like an answered question |
+        | Failed or expired | $0 |
+        | All questions in a UTC month | At most $100 per account |
 
-        Most questions cost between $0.10 and $0.50. A run never bills more than its
-        `maxCostUsd` ($0.50 to $3, $3 by default): near the cap Ana stops investigating and
-        answers with what she found. Runs ...
+        Near its ...
 
         Args:
             message: The question. Leading and trailing whitespace is trimmed. (required)
@@ -33081,7 +33083,7 @@ def register_generated_tools(mcp, _get_client):
     def support_assistant_get_support_answer(run_id: str) -> str:
         """Get a support answer
 
-        Returns a run started by your team, with Ana's answer once it is ready. Prefer the `support.run.completed` and `support.run.failed` webhooks; use this as the fallback, waiting `pollAfterSeconds` between polls. `costUsd` is the amount billed for the question, never above `maxCostUsd`, and 0 for a failed run (rates on Ask a support question).
+        Returns a run started by your team, with Ana's answer once it is ready. Prefer the `support.run.completed` and `support.run.failed` webhooks; use this as the fallback, waiting `pollAfterSeconds` between polls. `costUsd` is the amount billed for the question, never above `maxCostUsd`, and 0 for a failed run (pricing on Ask a support question).
 
         Args:
             run_id: (required)"""
