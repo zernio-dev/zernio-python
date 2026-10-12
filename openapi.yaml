@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.253.1"
+  version: "1.254.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -3060,7 +3060,8 @@ components:
           description: |
             Additional structured context (e.g. field-level validation errors), for example
             `privateReplyConsumed` on the private-reply endpoint's 400 when the comment's
-            single reply is already spent.
+            single reply is already spent, and `privateReplyOutcome: "unknown"` on its 502 when Meta
+            answered a server error and the reply may have been delivered.
 
             On a Google Ads 429 it carries `quotaExhausted: true`, which marks the failure as
             Google's own ads quota rather than a Zernio rate limit, so you can keep calling
@@ -39458,6 +39459,9 @@ paths:
         non-followers and add buttons once they reply. `quickReplies` and `buttons` are mutually
         exclusive. When the comment's single private reply is spent (by this call or an earlier
         one) the 400 carries `details.privateReplyConsumed: true`; never retry it.
+        A 502 means Meta answered a server error after receiving the reply; it carries
+        `details.privateReplyOutcome: "unknown"`, the reply is usually delivered and the comment's
+        private reply spent, so check the conversation before retrying.
       tags: [Comments]
       security: [{ bearerAuth: [] }]
       parameters:
@@ -39656,6 +39660,23 @@ paths:
           description: Inbox addon required
         '404':
           description: Account not found
+        '502':
+          description: 'Meta returned a server error after receiving the reply; outcome unknown, usually delivered. Do not retry blindly.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "Meta did not confirm this private reply (server error or no response). In most observed cases the reply was still delivered and the comment's single private reply is spent, so do not retry: check the conversation first. A retry on a spent comment answers 400 with details.privateReplyConsumed: true."
+                type: "platform_error"
+                code: "platform_api_error"
+                platform: "instagram"
+                platformError:
+                  message: "An unknown error has occurred."
+                  type: "OAuthException"
+                  code: 1
+                details:
+                  privateReplyOutcome: "unknown"
 
   /v1/twitter/retweet:
     post:
