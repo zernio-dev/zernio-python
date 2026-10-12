@@ -920,14 +920,16 @@ def register_generated_tools(mcp, _get_client):
 
         A failing or stalled analytics sync (see `analyticsSync`) raises a healthy account to at least `warning`.
 
+        On Facebook, Instagram and Threads the token is also probed live. A probe Meta refuses with a
+        dead-token error sets `tokenStatus.valid` to `false` and names Meta's code, subcode and
+        fbtrace in `issues`, unless an analytics sync succeeded with that token in the last six
+        hours: then the token stays `valid` and `issues` reports the probe as inconclusive, since
+        Meta answers a transient 190 to live tokens now and then. Neither verdict disconnects the
+        account; that happens only when a real operation fails, and `account.disconnected` is sent.
+
         For WhatsApp accounts the response also includes `platformConnection`, a live probe of the
         Meta link behind the channel (the same read as `GET /v1/whatsapp/number-info`). The OAuth
-        token can be perfectly valid while Meta refuses to serve the phone-number object (for
-        example after a phone-side coexistence disconnect), so `tokenStatus` alone is not a
-        liveness signal for WhatsApp. When the Meta link is dead, `platformConnection.status` is
-        `disconnected` and the overall `status` is `error`. When Meta reports that the number's
-        inbound message webhook does not reach Zernio, `platformConnection.inboundWebhookSubscribed`
-        is `false`, an entry is added to `issues`, and the overall `status` is at least `warning`.
+        token can be perfectly valid while Meta refuses to serve ...
 
         Args:
             account_id: The account ID to check (required)"""
