@@ -537,12 +537,18 @@ class AdCampaignsResource:
         return self._client._put(f"/v1/ads/campaigns/{campaign_id}", data=payload)
 
     def delete_ad_campaign(
-        self, campaign_id: str, platform: str, *, account_id: str | None = None
+        self,
+        campaign_id: str,
+        platform: str,
+        *,
+        account_id: str | None = None,
+        ad_account_id: str | None = None,
     ) -> dict[str, Any]:
         """Delete a campaign"""
         payload = self._build_payload(
             platform=platform,
             account_id=account_id,
+            ad_account_id=ad_account_id,
         )
         return self._client._delete(f"/v1/ads/campaigns/{campaign_id}", data=payload)
 
@@ -1134,6 +1140,7 @@ class AdCampaignsResource:
         identity_type: str | None = None,
         budget_amount: float | None = None,
         budget_type: str | None = None,
+        lifetime_budget_cap: float | None = None,
         budget: dict[str, Any] | None = None,
         instagram_account_id: str | None = None,
         destination_type: str | None = None,
@@ -1192,6 +1199,7 @@ class AdCampaignsResource:
             identity_type=identity_type,
             budget_amount=budget_amount,
             budget_type=budget_type,
+            lifetime_budget_cap=lifetime_budget_cap,
             budget=budget,
             instagram_account_id=instagram_account_id,
             destination_type=destination_type,
@@ -2103,12 +2111,18 @@ class AdCampaignsResource:
         )
 
     async def adelete_ad_campaign(
-        self, campaign_id: str, platform: str, *, account_id: str | None = None
+        self,
+        campaign_id: str,
+        platform: str,
+        *,
+        account_id: str | None = None,
+        ad_account_id: str | None = None,
     ) -> dict[str, Any]:
         """Delete a campaign (async)"""
         payload = self._build_payload(
             platform=platform,
             account_id=account_id,
+            ad_account_id=ad_account_id,
         )
         return await self._client._adelete(
             f"/v1/ads/campaigns/{campaign_id}", data=payload
@@ -2712,6 +2726,7 @@ class AdCampaignsResource:
         identity_type: str | None = None,
         budget_amount: float | None = None,
         budget_type: str | None = None,
+        lifetime_budget_cap: float | None = None,
         budget: dict[str, Any] | None = None,
         instagram_account_id: str | None = None,
         destination_type: str | None = None,
@@ -2770,6 +2785,7 @@ class AdCampaignsResource:
             identity_type=identity_type,
             budget_amount=budget_amount,
             budget_type=budget_type,
+            lifetime_budget_cap=lifetime_budget_cap,
             budget=budget,
             instagram_account_id=instagram_account_id,
             destination_type=destination_type,

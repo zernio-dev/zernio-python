@@ -6393,8 +6393,9 @@ def register_generated_tools(mcp, _get_client):
     )
     def ad_campaigns_delete_ad_campaign(
         campaign_id: str,
-        platform: Literal["facebook", "instagram", "google"],
+        platform: Literal["facebook", "instagram", "google", "twitter"],
         account_id: str | None = None,
+        ad_account_id: str | None = None,
     ) -> str:
         """Delete a campaign
 
@@ -6407,20 +6408,29 @@ def register_generated_tools(mcp, _get_client):
         to resolve, so it is invisible to `/v1/ads/tree` and this endpoint would
         404. That state is produced by the two-step create flow (campaign, then
         ads via `existingCampaignId`) whenever Meta rejects the ad step. To
-        delete such a shell, send `accountId` in the body: we skip the local
-        lookup entirely and forward the delete to Meta. `accountId` is ignored
-        when the campaign does have ads.
+        delete such a shell, send `accountId` in the body or the query string:
+        we skip the local lookup entirely and forward the delete to Meta, or to
+        X when `accountId` is an X or X Ads connection. On X the ad account comes
+        from the synced campaign, which wins over `adAccountId`; when the campaign
+        was never synced, send `adAccountId` too. Before deleting, Zernio asks X
+        whether the campaign still holds undeleted line items (ads not synced
+        yet); if it does the answer is 409 and nothing is deleted, so sync the ad
+        account and retry. ...
 
         Platforms: meta, google, tiktok, linkedin, pinterest, x, openai
 
         Args:
             campaign_id: Platform campaign ID (required)
             platform: (required)
-            account_id: Zernio SocialAccount id owning the ad account. Required only to delete an EMPTY campaign (zero ads), which has no local Ad documents to resolve a token from."""
+            account_id: Zernio SocialAccount id owning the ad account. Required only to delete an EMPTY campaign (zero ads), which has no local Ad documents to resolve a token from.
+            ad_account_id: X only, for an EMPTY campaign that was never synced: the X ad account id the campaign belongs to (lowercase letters and digits). The synced campaign's ad account wins when there is one. Also accepted on the query string."""
         client = _get_client()
         try:
             response = client.ad_campaigns.delete_ad_campaign(
-                campaign_id=campaign_id, platform=platform, account_id=account_id
+                campaign_id=campaign_id,
+                platform=platform,
+                account_id=account_id,
+                ad_account_id=ad_account_id,
             )
             return _format_response(response)
         except Exception as e:
@@ -7089,20 +7099,25 @@ def register_generated_tools(mcp, _get_client):
                 ad_set_id: Platform ad set ID (required)
                 platform: (required)
                 budget: Omit if not updating budget Object with keys: amount (number); type (one of: daily, lifetime)
-                status: Writes the ad set's own on/off switch (Meta: `configured_status`) on Meta and LinkedIn, whatever delivery status its ads report. Omit if not toggling delivery state.
-                name: Rename the ad set (Meta only; other platforms return 501). At least one of budget/status/bidStrategy/name is required.
+                status: Writes the ad set's own on/off switch (Meta: `configured_status`; X: the line item's `entity_status` ACTIVE / PAUSED), whatever delivery status its ads report. Omit if not toggling delivery state.
+                name: Rename the ad set (on X, the line item `name`). Platforms without a rename return 501. At least one of budget/status/bidStrategy/name is required.
                 bid_strategy: Ad-set-level bid strategy. Overrides the campaign-level default.
         Supported on Meta (facebook, instagram), TikTok, and OpenAI. On TikTok the
         Meta-style enum is mapped to bid_type / bid_price / deep_bid_type
         automatically. On OpenAI, LOWEST_COST_WITH_BID_CAP and COST_CAP both map to
         the ad group's `bidding_config.max_bid_micros` (one knob covers both);
         LOWEST_COST_WITH_MIN_ROAS is rejected with 422 (OpenAI has no ROAS-based
-        bidding). Other platforms (linkedin, pinterest, google, twitter) return 501
-        Not Implemented when bidStrategy is set.
+        bidding). On X it writes the line item's `bid_strategy`:
+        LOWEST_COST_WITHOUT_CAP = AUTO, LOWEST_COST_WITH_BID_CAP = MAX and
+        COST_CAP = TARGET, with `bidAmount` as `bid_amount_local_micro`;
+        LOWEST_COST_WITH_MIN_ROAS is rejected with 422. X decides which strategy
+        the line item's objective allows (TARGET only on REACH, FOLLOWERS and
+        WEBSITE_CLICKS, MAX not on REACH or FOLLOWERS). Other platforms
+        (linkedin, pinterest, google) return 501 Not Implemented when bidStrategy is set.
                 smart_targeting: TikTok only (a 400 elsewhere). TikTok Smart Targeting on the ad group: `audience` is TikTok's `smart_audience_enabled`, `interestsBehaviors` its `smart_interest_behavior_enabled`. When on, TikTok may deliver beyond the selected audiences or interests. Available on Video views, Traffic, Lead generation, App install, Web conversion and Community interaction. Only the flags you send are written; an unwritten flag reads back null in `nativeSettings`, so send `false` explicitly to be able to verify it is off. Applied with TikTok's adgroup/update; read it back with GET /v1/ads/ad-sets?adSetId=...&live=true. Object with keys: audience (boolean) - TikTok smart_audience_enabled.; interestsBehaviors (boolean) - TikTok smart_interest_behavior_enabled.
                 bid_amount: Bid cap in WHOLE currency units (USD: 5 = $5.00; JPY: 100 = ¥100). Required when
         bidStrategy is LOWEST_COST_WITH_BID_CAP or COST_CAP. Internally converted to Meta's
-        smallest-denomination integer, or (on OpenAI) to micros (× 1,000,000). Meta only:
+        smallest-denomination integer, or (on OpenAI and X) to micros (× 1,000,000). Meta only:
         may be sent alone, WITHOUT bidStrategy, to update the cap amount on an ad set whose
         parent campaign is COST_CAP or LOWEST_COST_WITH_BID_CAP (the strategy is inherited
         from the campaign and is left untouched).
@@ -8103,6 +8118,7 @@ def register_generated_tools(mcp, _get_client):
         | None = None,
         budget_amount: float | None = None,
         budget_type: Literal["daily", "lifetime"] | None = None,
+        lifetime_budget_cap: float | None = None,
         budget: dict[str, Any] | None = None,
         instagram_account_id: str | None = None,
         destination_type: Literal[
@@ -8211,6 +8227,7 @@ def register_generated_tools(mcp, _get_client):
                 identity_type: TikTok only. Type of identityId; resolved from the advertiser's identity list when omitted.
                 budget_amount: Budget in whole currency units, the same flat field as POST /v1/ads/create. Required unless adSetId is set. Minimum varies: TikTok=$20, Pinterest=$5, others=$1
                 budget_type: Goes together with budgetAmount. lifetime requires schedule.endDate.
+                lifetime_budget_cap: X only. A lifetime total, in whole currency units, that caps a daily budget (budgetType daily): the line item gets both daily_budget_amount_local_micro and total_budget_amount_local_micro, and stops spending once the total is reached. Must be at least budgetAmount. Read back as budget.daily and budget.lifetime. 400 on a lifetime budget or on another platform.
                 budget: Alias of budgetAmount + budgetType, kept for existing callers Object with keys: amount (number, required) - Minimum varies: TikTok=$20, Pinterest=$5, others=$1; type (one of: daily, lifetime; required)
                 instagram_account_id: Meta only. Instagram identity the ad runs AS (creative.instagram_user_id), overriding the account linked to the Page. Live-verified against a Page-post creative.
                 destination_type: Meta only. Ad-set destination_type: where the click LANDS, as opposed to instagramAccountId which is who the ad runs as. Independent of plain link CTAs and their goal. A messaging callToAction selects its destination automatically; an explicit destinationType must then match. Lead ads use ON_AD.
@@ -8218,7 +8235,7 @@ def register_generated_tools(mcp, _get_client):
                 workflow_id: Meta messaging boosts only (callToAction MESSAGE_PAGE, WHATSAPP_MESSAGE or INSTAGRAM_MESSAGE). A workflow in the account's profile, started in the conversation a click on the ad opens. Stored on the ad. 400 without a messaging callToAction or on another platform, 404 when no such workflow exists in the profile.
                 currency: ISO 4217 currency code matching the ad account's currency. Meta only. Optional: Zernio resolves it from the ad account when omitted. The value selects the minor-unit exponent Zernio converts budget/bid amounts by before calling Meta (most currencies are cents; zero-decimal currencies like JPY/KRW are sent as-is).
                 start_date: Ad-set start time (ISO 8601, e.g. "2026-06-10T09:00:00Z"), mapped to the ad set's `start_time`. When omitted the ad starts delivering immediately. On Meta, TikTok, X and Pinterest a value without an offset (`YYYY-MM-DD`, `YYYY-MM-DD HH:MM:SS` or `YYYY-MM-DDTHH:MM:SS`) is read in the ad account timezone. Same field as on POST /v1/ads/create.
-                end_date: Ad-set end time (ISO 8601), mapped to the ad set's `end_time`. Required for lifetime budgets. On Meta, TikTok, X and Pinterest a value without an offset (`YYYY-MM-DD`, `YYYY-MM-DD HH:MM:SS` or `YYYY-MM-DDTHH:MM:SS`) is read in the ad account timezone, and a date-only end runs to 23:59:59 local. Same field as on POST /v1/ads/create.
+                end_date: Ad-set end time (ISO 8601), mapped to the ad set's `end_time` (on X, the line item's `end_time`; X campaigns carry no flight dates). Required for lifetime budgets. On Meta, TikTok, X and Pinterest a value without an offset (`YYYY-MM-DD`, `YYYY-MM-DD HH:MM:SS` or `YYYY-MM-DDTHH:MM:SS`) is read in the ad account timezone, and a date-only end runs to 23:59:59 local. Same field as on POST /v1/ads/create.
                 schedule: Alias of the top-level `startDate` / `endDate`, kept for existing callers. Sending both forms with differing values is a 400. Object with keys: startDate (string) - Alias of startDate, kept for existing callers; endDate (string) - Alias of endDate, kept for existing callers
                 targeting: Same geo/demographic fields as the `TargetingSpec` used by /v1/ads/create. Geo keys (`regions`/`cities`/`zips`/`metros`) resolve via GET /v1/ads/targeting/search?dimension=geo. City radius and lat/lng `customLocations` are Meta-only and preserve the boosted post's social proof (the ad references the existing post). Object with keys: ageMin (integer); ageMax (integer); gender (one of: all, male, female) - Applied on Meta, TikTok and Pinterest. Ignored on Google, LinkedIn and X.; languages (list of string) - Meta locale ids (numeric), passed through as given.; countries (list of string) - ISO country codes. Required for TikTok boosts (TikTok's ad group requires location_ids); optional on other platforms.; regions (list of objects with keys key, name) - Region/state targeting. `key` from /v1/ads/targeting/search?dimension=geo&geoType=region.; cities (list of objects with keys key, name, radius, distanceUnit) - City targeting. Optional `radius` + `distanceUnit` extend beyond the city limits (both set together, Meta only).; zips (list of objects with keys key, name) - Postal/ZIP targeting. `key` is the platform's postal location ID (e.g. Meta `US:94304`).; metros (list of objects with keys key, name) - DMA / metro-area targeting. `key` is the platform's metro ID (e.g. Meta `DMA:807`).; customLocations (list of objects with keys latitude, longitude, radius, distanceUnit, name, address) - Point-radius (lat/lng) targeting (Meta custom_locations). No geo `key` lookup needed.; interests (list of objects with keys id, name) - Interest objects from /v1/ads/interests. Each must include id and name.; advantage_audience (one of: 0, 1) - Meta only. 0 = disabled (default), 1 = enabled.
                 location_targeting_type: Google only (400 elsewhere). Written on the campaign the boost creates.
@@ -8349,6 +8366,7 @@ def register_generated_tools(mcp, _get_client):
                 identity_type=identity_type,
                 budget_amount=budget_amount,
                 budget_type=budget_type,
+                lifetime_budget_cap=lifetime_budget_cap,
                 budget=budget,
                 instagram_account_id=instagram_account_id,
                 destination_type=destination_type,

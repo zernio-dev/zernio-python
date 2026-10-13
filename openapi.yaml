@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.262.0"
+  version: "1.263.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -733,7 +733,13 @@ components:
         read. At most 20 platform objects are read per request. Where a read
         fails (credentials, platform error, no reader on that platform), the
         stored values come back with `statusReadAt: null`. See "Status
-        freshness" in the operation description.
+        freshness" in the operation description. On X the budget is read live
+        in the same read: on GET /v1/ads/{adId} `budget`, `adSetBudget`,
+        `campaignBudget` and `budgetLevel` are the line item and campaign
+        budgets X holds now (stored like the switches); on the ad set and
+        campaign listings `budget` is the one that line item or campaign holds
+        now (returned, not stored); a row whose budget the other level holds
+        keeps its synced `budget`.
     CatalogId:
       name: catalogId
       in: path
@@ -12842,8 +12848,8 @@ components:
           properties:
             amount: { type: number }
             type: { type: string, enum: [daily, lifetime] }
-            daily: { type: number, description: "LinkedIn only. The parent campaign's `dailyBudget`. LinkedIn allows a daily AND a lifetime budget on the same campaign, which `amount`/`type` cannot express (daily wins there); read `daily` and `lifetime` to see both." }
-            lifetime: { type: number, description: "LinkedIn only. The parent campaign's `totalBudget`, readable even when a daily budget is also set." }
+            daily: { type: number, description: "LinkedIn and X only. The daily budget (LinkedIn: the parent campaign's `dailyBudget`; X: the line item's, or the campaign's when the line item has none). Both allow a daily AND a lifetime budget together, which `amount`/`type` cannot express (daily wins there); read `daily` and `lifetime` to see both." }
+            lifetime: { type: number, description: "LinkedIn and X only. The lifetime total (LinkedIn: the parent campaign's `totalBudget`; X: `total_budget_amount_local_micro`, for example the `lifetimeBudgetCap` of a boost), readable even when a daily budget is also set." }
             pacing: { type: string, description: "LinkedIn only. The campaign's `pacingStrategy`: how fast LinkedIn may spend the budget. Typically LINEAR or ACCELERATED; the list is open." }
         metrics:
           anyOf:
@@ -13112,8 +13118,8 @@ components:
           properties:
             amount: { type: number }
             type: { type: string, enum: [daily, lifetime] }
-            daily: { type: number, description: "LinkedIn only. The campaign's `dailyBudget`. LinkedIn allows a daily AND a lifetime budget on the same campaign, which `amount`/`type` cannot express (daily wins there); read `daily` and `lifetime` to see both." }
-            lifetime: { type: number, description: "LinkedIn only. The campaign's `totalBudget`, readable even when a daily budget is also set." }
+            daily: { type: number, description: "LinkedIn and X only. The daily budget (LinkedIn: the campaign's `dailyBudget`; X: the line item's `daily_budget_amount_local_micro`). Both allow a daily AND a lifetime budget together, which `amount`/`type` cannot express (daily wins there); read `daily` and `lifetime` to see both." }
+            lifetime: { type: number, description: "LinkedIn and X only. The lifetime total (LinkedIn: the campaign's `totalBudget`; X: the line item's `total_budget_amount_local_micro`), readable even when a daily budget is also set." }
             pacing: { type: string, description: "LinkedIn only. The campaign's `pacingStrategy`: how fast LinkedIn may spend the budget. Typically LINEAR or ACCELERATED; the list is open." }
         adSetBudget:
           type: [object, "null"]
@@ -54928,9 +54934,15 @@ paths:
         to resolve, so it is invisible to `/v1/ads/tree` and this endpoint would
         404. That state is produced by the two-step create flow (campaign, then
         ads via `existingCampaignId`) whenever Meta rejects the ad step. To
-        delete such a shell, send `accountId` in the body: we skip the local
-        lookup entirely and forward the delete to Meta. `accountId` is ignored
-        when the campaign does have ads.
+        delete such a shell, send `accountId` in the body or the query string:
+        we skip the local lookup entirely and forward the delete to Meta, or to
+        X when `accountId` is an X or X Ads connection. On X the ad account comes
+        from the synced campaign, which wins over `adAccountId`; when the campaign
+        was never synced, send `adAccountId` too. Before deleting, Zernio asks X
+        whether the campaign still holds undeleted line items (ads not synced
+        yet); if it does the answer is 409 and nothing is deleted, so sync the ad
+        account and retry. Other platforms answer 501 for an empty campaign.
+        `accountId` is ignored when the campaign does have ads.
       security:
         - bearerAuth: []
       parameters:
@@ -54943,8 +54955,9 @@ paths:
               type: object
               required: [platform]
               properties:
-                platform: { type: string, enum: [facebook, instagram, google] }
+                platform: { type: string, enum: [facebook, instagram, google, twitter] }
                 accountId: { type: string, description: "Zernio SocialAccount id owning the ad account. Required only to delete an EMPTY campaign (zero ads), which has no local Ad documents to resolve a token from." }
+                adAccountId: { type: string, pattern: '^[0-9a-z]{1,32}$', description: "X only, for an EMPTY campaign that was never synced: the X ad account id the campaign belongs to (lowercase letters and digits). The synced campaign's ad account wins when there is one. Also accepted on the query string." }
       responses:
         '409': { $ref: '#/components/responses/AccountConnectionRequired' }
         '400': { $ref: '#/components/responses/BadRequest' }
@@ -55601,8 +55614,8 @@ paths:
                           properties:
                             amount: { type: number }
                             type: { type: string, enum: [daily, lifetime] }
-                            daily: { type: number, description: "LinkedIn only. The campaign's `dailyBudget`. LinkedIn allows a daily AND a lifetime budget on the same campaign, which `amount`/`type` cannot express (daily wins there); read `daily` and `lifetime` to see both." }
-                            lifetime: { type: number, description: "LinkedIn only. The campaign's `totalBudget`, readable even when a daily budget is also set." }
+                            daily: { type: number, description: "LinkedIn and X only. The daily budget (LinkedIn: the campaign's `dailyBudget`; X: the line item's `daily_budget_amount_local_micro`). Both allow a daily AND a lifetime budget together, which `amount`/`type` cannot express (daily wins there); read `daily` and `lifetime` to see both." }
+                            lifetime: { type: number, description: "LinkedIn and X only. The lifetime total (LinkedIn: the campaign's `totalBudget`; X: the line item's `total_budget_amount_local_micro`), readable even when a daily budget is also set." }
                             pacing: { type: string, description: "LinkedIn only. The campaign's `pacingStrategy`: how fast LinkedIn may spend the budget. Typically LINEAR or ACCELERATED; the list is open." }
                         schedule:
                           type: [object, "null"]
@@ -55978,8 +55991,8 @@ paths:
                   properties:
                     amount: { type: number }
                     type: { type: string, enum: [daily, lifetime] }
-                status: { type: string, enum: [active, paused], description: "Writes the ad set's own on/off switch (Meta: `configured_status`) on Meta and LinkedIn, whatever delivery status its ads report. Omit if not toggling delivery state." }
-                name: { type: string, maxLength: 255, description: "Rename the ad set (Meta only; other platforms return 501). At least one of budget/status/bidStrategy/name is required." }
+                status: { type: string, enum: [active, paused], description: "Writes the ad set's own on/off switch (Meta: `configured_status`; X: the line item's `entity_status` ACTIVE / PAUSED), whatever delivery status its ads report. Omit if not toggling delivery state." }
+                name: { type: string, maxLength: 255, description: "Rename the ad set (on X, the line item `name`). Platforms without a rename return 501. At least one of budget/status/bidStrategy/name is required." }
                 bidStrategy:
                   allOf: [{ $ref: '#/components/schemas/BidStrategy' }]
                   description: |
@@ -55989,8 +56002,13 @@ paths:
                     automatically. On OpenAI, LOWEST_COST_WITH_BID_CAP and COST_CAP both map to
                     the ad group's `bidding_config.max_bid_micros` (one knob covers both);
                     LOWEST_COST_WITH_MIN_ROAS is rejected with 422 (OpenAI has no ROAS-based
-                    bidding). Other platforms (linkedin, pinterest, google, twitter) return 501
-                    Not Implemented when bidStrategy is set.
+                    bidding). On X it writes the line item's `bid_strategy`:
+                    LOWEST_COST_WITHOUT_CAP = AUTO, LOWEST_COST_WITH_BID_CAP = MAX and
+                    COST_CAP = TARGET, with `bidAmount` as `bid_amount_local_micro`;
+                    LOWEST_COST_WITH_MIN_ROAS is rejected with 422. X decides which strategy
+                    the line item's objective allows (TARGET only on REACH, FOLLOWERS and
+                    WEBSITE_CLICKS, MAX not on REACH or FOLLOWERS). Other platforms
+                    (linkedin, pinterest, google) return 501 Not Implemented when bidStrategy is set.
                 smartTargeting:
                   type: object
                   description: |
@@ -56009,7 +56027,7 @@ paths:
                   description: |
                     Bid cap in WHOLE currency units (USD: 5 = $5.00; JPY: 100 = ¥100). Required when
                     bidStrategy is LOWEST_COST_WITH_BID_CAP or COST_CAP. Internally converted to Meta's
-                    smallest-denomination integer, or (on OpenAI) to micros (× 1,000,000). Meta only:
+                    smallest-denomination integer, or (on OpenAI and X) to micros (× 1,000,000). Meta only:
                     may be sent alone, WITHOUT bidStrategy, to update the cap amount on an ad set whose
                     parent campaign is COST_CAP or LOWEST_COST_WITH_BID_CAP (the strategy is inherited
                     from the campaign and is left untouched).
@@ -56778,7 +56796,7 @@ paths:
 
         Deletes the ad on the platform and marks it as cancelled in the database. The ad is preserved for history. OpenAI Ads has no delete API; the ad is archived instead (a terminal state, the closest equivalent).
 
-        Only the ad is deleted; a campaign or ad set is never deleted while it still holds another ad. On Meta, when the ad set and campaign were created by Zernio (by `POST /v1/ads/create` or `POST /v1/ads/boost`) and Meta lists no other ad in the ad set (archived ads count), the emptied ad set is deleted too, then the campaign once it holds no other ad set. Parents created outside Zernio, and the parents of an ad imported from the platform, are always kept. On LinkedIn the ad is a creative inside a campaign inside a campaign group: the creative is always removed, the campaign only when Zernio created it and LinkedIn lists no other creative in it that is not archived, canceled or deleted, and the campaign group only when Zernio created it and LinkedIn lists no other campaign in it that is not canceled or deleted (archived campaigns count). If the creative itself cannot be removed the request fails and no parent is touched. To delete a whole campaign on purpose use `DELETE /v1/ads/campaigns/{campaignId}`.
+        Only the ad is deleted; a campaign or ad set is never deleted while it still holds another ad. On Meta, when the ad set and campaign were created by Zernio (by `POST /v1/ads/create` or `POST /v1/ads/boost`) and Meta lists no other ad in the ad set (archived ads count), the emptied ad set is deleted too, then the campaign once it holds no other ad set. Parents created outside Zernio, and the parents of an ad imported from the platform, are always kept. On LinkedIn the ad is a creative inside a campaign inside a campaign group: the creative is always removed, the campaign only when Zernio created it and LinkedIn lists no other creative in it that is not archived, canceled or deleted, and the campaign group only when Zernio created it and LinkedIn lists no other campaign in it that is not canceled or deleted (archived campaigns count). If the creative itself cannot be removed the request fails and no parent is touched. On X the ad is a promoted post inside a line item inside a campaign: the promoted post is always removed, the line item only when Zernio created it (by `POST /v1/ads/create` or `POST /v1/ads/boost`) and X lists no other undeleted promoted post in it, and the campaign only when Zernio created it and X lists no other undeleted line item in it. If X refuses the promoted post delete the request fails and no parent is touched. To delete a whole campaign on purpose use `DELETE /v1/ads/campaigns/{campaignId}`.
       security:
         - bearerAuth: []
       parameters:
@@ -63411,6 +63429,7 @@ paths:
                 identityType: { type: string, enum: [TT_USER, CUSTOMIZED_USER, BC_AUTH_TT], description: "TikTok only. Type of identityId; resolved from the advertiser's identity list when omitted." }
                 budgetAmount: { type: number, description: "Budget in whole currency units, the same flat field as POST /v1/ads/create. Required unless adSetId is set. Minimum varies: TikTok=$20, Pinterest=$5, others=$1" }
                 budgetType: { type: string, enum: [daily, lifetime], description: "Goes together with budgetAmount. lifetime requires schedule.endDate." }
+                lifetimeBudgetCap: { type: number, exclusiveMinimum: 0, description: "X only. A lifetime total, in whole currency units, that caps a daily budget (budgetType daily): the line item gets both daily_budget_amount_local_micro and total_budget_amount_local_micro, and stops spending once the total is reached. Must be at least budgetAmount. Read back as budget.daily and budget.lifetime. 400 on a lifetime budget or on another platform." }
                 budget:
                   type: object
                   deprecated: true
@@ -63431,7 +63450,7 @@ paths:
                 endDate:
                   type: string
                   format: date-time
-                  description: 'Ad-set end time (ISO 8601), mapped to the ad set''s `end_time`. Required for lifetime budgets. On Meta, TikTok, X and Pinterest a value without an offset (`YYYY-MM-DD`, `YYYY-MM-DD HH:MM:SS` or `YYYY-MM-DDTHH:MM:SS`) is read in the ad account timezone, and a date-only end runs to 23:59:59 local. Same field as on POST /v1/ads/create.'
+                  description: 'Ad-set end time (ISO 8601), mapped to the ad set''s `end_time` (on X, the line item''s `end_time`; X campaigns carry no flight dates). Required for lifetime budgets. On Meta, TikTok, X and Pinterest a value without an offset (`YYYY-MM-DD`, `YYYY-MM-DD HH:MM:SS` or `YYYY-MM-DDTHH:MM:SS`) is read in the ad account timezone, and a date-only end runs to 23:59:59 local. Same field as on POST /v1/ads/create.'
                 schedule:
                   type: object
                   deprecated: true
