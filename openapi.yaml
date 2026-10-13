@@ -14317,9 +14317,30 @@ components:
         outputTokens: { type: integer }
         cacheReadTokens: { type: integer }
         cacheWriteTokens: { type: integer }
+    SupportRunDiagnosis:
+      type: object
+      required: [category, cause, fixSteps, docsLinks, whoMustAct]
+      properties:
+        category:
+          type: string
+          enum: [account_connection, content_rejected, rate_limited, platform_issue, zernio_issue, billing, configuration, how_to, other]
+          description: 'What kind of problem the answer describes. New values may be added: treat any value you do not recognize as `other`.'
+        cause: { type: [string, "null"], description: 'The cause the answer gives, in one sentence. Null when the answer reports no problem, for example a how-to question.' }
+        fixSteps:
+          type: array
+          items: { type: string }
+          description: 'The steps the answer recommends, in order. Empty when it recommends none.'
+        docsLinks:
+          type: array
+          items: { type: string }
+          description: 'Links to docs.zernio.com that the answer itself cites. Empty when it cites none.'
+        whoMustAct:
+          type: string
+          enum: [integrator, end_user, zernio, platform, none]
+          description: 'Who has to act to resolve it: you (`integrator`), your end user, Zernio, the social platform, or nobody. New values may be added: treat any value you do not recognize as `none`.'
     SupportRun:
       type: object
-      required: [runId, threadId, status, stopReason, question, answer, usage, costUsd, maxCostUsd, createdAt, startedAt, finishedAt, supportTicket]
+      required: [runId, threadId, status, stopReason, question, answer, diagnosis, usage, costUsd, maxCostUsd, createdAt, startedAt, finishedAt, supportTicket]
       properties:
         runId: { type: string, description: 'Run id, a 24-character hex string.' }
         threadId: { type: string, description: 'Conversation thread id. Send it back as `threadId` to ask a follow-up in the same thread.' }
@@ -14330,6 +14351,11 @@ components:
           description: 'Why the run stopped. Null while it is in progress.'
         question: { type: [string, "null"], description: 'The question as asked, with leading and trailing whitespace trimmed. Null only on runs created before this field was added.' }
         answer: { type: [string, "null"], description: 'The assistant''s answer. Null while the run is in progress or when it failed.' }
+        diagnosis:
+          anyOf:
+            - { $ref: '#/components/schemas/SupportRunDiagnosis' }
+            - { type: "null" }
+          description: 'The answer as structured fields you can route on. Null while in progress, when the run failed or went to a person (needs_human), or when no diagnosis could be produced.'
         usage: { $ref: '#/components/schemas/SupportRunUsage' }
         costUsd: { type: number, description: 'The exact amount charged for the question, in USD, never above `maxCostUsd`. 0 for a failed run.' }
         maxCostUsd: { type: number, description: 'The cost cap this run was started with, in USD.' }
