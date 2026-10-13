@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.263.0"
+  version: "1.264.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -27,18 +27,18 @@ info:
   x-logo:
     url: https://zernio.com/icon.png?v=3
   x-long-description: |
-    Zernio is the social media API that replaces 26 integrations. Schedule posts, retrieve analytics,
+    Zernio is the social media API that replaces 27 integrations. Schedule posts, retrieve analytics,
     manage DMs, comments, and reviews across X, Instagram, WhatsApp, TikTok, LinkedIn,
     Facebook, YouTube, Threads, Reddit, Pinterest, Bluesky, Telegram, Google Business Profile, Snapchat,
     Discord, Slack, and iMessage, all from a single REST API. Run paid ads on Meta (Facebook + Instagram), Google,
-    TikTok, LinkedIn, Pinterest, X, and OpenAI from the same account.
+    TikTok, LinkedIn, Pinterest, X, OpenAI, and Reddit from the same account.
 
     Connect Shopify and WordPress as blog accounts to list sites and manage
     articles, drafts, featured images, tags, authors, and native scheduling.
 
-    Key features: Unified posting to 17 platforms, ads management on 7 ad networks (via /v1/ads), aggregated analytics, unified inbox (DMs, comments, reviews), webhooks, OAuth connect, queue scheduling, and white-label support for agencies managing unlimited accounts.
+    Key features: Unified posting to 17 platforms, ads management on 8 ad networks (via /v1/ads), aggregated analytics, unified inbox (DMs, comments, reviews), webhooks, OAuth connect, queue scheduling, and white-label support for agencies managing unlimited accounts.
 
-    Supported posting platforms: X, Instagram, WhatsApp, Facebook, LinkedIn, TikTok, YouTube, Pinterest, Reddit, Bluesky, Threads, Google Business Profile, Telegram, Snapchat, Discord, Slack. Supported ad platforms: Meta Ads, Google Ads, TikTok Ads, LinkedIn Ads, Pinterest Ads, X Ads, OpenAI Ads. Snapchat is a closed beta with no public release date: connections are gated behind approval and return 403 `PLATFORM_BETA_RESTRICTED` until then.
+    Supported posting platforms: X, Instagram, WhatsApp, Facebook, LinkedIn, TikTok, YouTube, Pinterest, Reddit, Bluesky, Threads, Google Business Profile, Telegram, Snapchat, Discord, Slack. Supported ad platforms: Meta Ads, Google Ads, TikTok Ads, LinkedIn Ads, Pinterest Ads, X Ads, OpenAI Ads, Reddit Ads. Snapchat is a closed beta with no public release date: connections are gated behind approval and return 403 `PLATFORM_BETA_RESTRICTED` until then.
   x-category: Social
   x-website: https://zernio.com
   x-thumbnail: https://rapidapi-prod-apis.s3.amazonaws.com/b24d3df5-563c-4a50-9e1e-1ad3eb1fce69.png
@@ -70,7 +70,7 @@ x-documentation:
   readme: |
     # Zernio API
 
-    The social media API that replaces 26 integrations. Build social media and blog publishing features into your app in minutes, not months.
+    The social media API that replaces 27 integrations. Build social media and blog publishing features into your app in minutes, not months.
 
     ## Quick Start
 
@@ -481,7 +481,7 @@ tags:
 
       **Status model.** Every level keeps its own on/off switch, exactly as in each platform's own
       UI (Meta `configured_status`, TikTok `operation_status`, Google `status`, LinkedIn `status`,
-      Pinterest `status`, X `entity_status`, ChatGPT (OpenAI) `status`):
+      Pinterest `status`, X `entity_status`, ChatGPT (OpenAI) `status`, Reddit `configured_status`):
 
       - **Own switch** is what you set. Ads return it as `configuredStatus`, ad sets as
         `platformAdSetStatus`, campaigns as `platformCampaignStatus`.
@@ -529,7 +529,8 @@ tags:
     description: |
       Server-side Conversions API: send + adjust conversion events (with hashed matching and consent/LDU
       forwarding), read Event Match Quality, and manage conversion destinations (pixels/datasets) and their
-      ad-account associations. Supported on Meta, Google, TikTok and LinkedIn (badges show per operation).
+      ad-account associations. Supported on Meta, Google, TikTok, LinkedIn, Pinterest, OpenAI Ads and Reddit
+      (badges show per operation).
       Requires the Ads add-on.
   - name: Messaging Ads
     description: |
@@ -1754,9 +1755,9 @@ components:
               additionalProperties: false
     AdTracking:
       type: object
-      description: "Meta, plus `urlTags` on ChatGPT (OpenAI). Meta: attaches pixel measurement to the ad regardless of the optimization goal (the \"Website events\" tracking row in Ads Manager). `pixelId` becomes the ad's `tracking_specs` (offsite_conversion + fb_pixel); `urlTags` is stored on the new creative as `url_tags` and retained on the ad for compatibility. Applied on the legacy single-creative shape, every ad of the multi-creative shape, and the attach shape. NOTE: tracking lives on the AD object and is not inherited from the ad set, so pass it on EVERY attach call that should carry the pixel. ChatGPT (OpenAI): `urlTags` becomes the ad's `landing_page_configuration.query_string_template`, which OpenAI appends to `linkUrl` on click."
+      description: "Meta, plus `urlTags` on ChatGPT (OpenAI) and `pixelId` on Reddit. Meta: attaches pixel measurement to the ad regardless of the optimization goal (the \"Website events\" tracking row in Ads Manager). `pixelId` becomes the ad's `tracking_specs` (offsite_conversion + fb_pixel); `urlTags` is stored on the new creative as `url_tags` and retained on the ad for compatibility. Applied on the legacy single-creative shape, every ad of the multi-creative shape, and the attach shape. NOTE: tracking lives on the AD object and is not inherited from the ad set, so pass it on EVERY attach call that should carry the pixel. ChatGPT (OpenAI): `urlTags` becomes the ad's `landing_page_configuration.query_string_template`, which OpenAI appends to `linkUrl` on click. Reddit: `pixelId` picks the pixel of the new ad group, like `promotedObject.pixelId` (which wins when both are sent)."
       properties:
-        pixelId: { type: string, description: "Meta Pixel ID to attach for offsite-conversion measurement." }
+        pixelId: { type: string, description: "Meta Pixel ID to attach for offsite-conversion measurement, or the Reddit pixel of the new ad group." }
         urlTags:
           type: array
           description: "Click-URL params. Meta: stored on the creative as `url_tags` and returned by GET /v1/ads/{adId}/tracking-tags. App-promotion linkUrl stays byte-identical to promotedObject.objectStoreUrl. Meta dynamic macros ({{ad.id}}, {{campaign.id}}, {{placement}}, ...) are sent through unescaped so Meta expands them; every other character is percent-encoded. ChatGPT (OpenAI): the same encoding, with OpenAI's macros `{campaign_id}`, `{ad_group_id}`, `{ad_id}` and `{oppref}` (click id) passed through raw. OpenAI expands macros here, not inside `linkUrl`."
@@ -9877,7 +9878,7 @@ components:
         _id: { type: string }
         platform:
           type: string
-          enum: [tiktok, instagram, facebook, youtube, linkedin, twitter, threads, pinterest, reddit, bluesky, googlebusiness, telegram, snapchat, discord, slack, whatsapp, shopify, wordpress, linkedinads, metaads, pinterestads, tiktokads, xads, googleads, openaiads, sms, phone, rcs, whopads]
+          enum: [tiktok, instagram, facebook, youtube, linkedin, twitter, threads, pinterest, reddit, bluesky, googlebusiness, telegram, snapchat, discord, slack, whatsapp, shopify, wordpress, linkedinads, metaads, pinterestads, tiktokads, xads, googleads, openaiads, redditads, sms, phone, rcs, whopads]
         profileId:
           oneOf:
             - type: string
@@ -11839,8 +11840,17 @@ components:
         optimizes for (sent as the campaign's `conversion_event_setting_ids`); every other
         `promotedObject` field is rejected with a 400. See `customEventType` below.
 
+        **Reddit Ads**: Reddit puts a pixel on every ad group, whatever the goal. `pixelId`
+        (or `tracking.pixelId`) picks it; when omitted the ad account's first pixel is used,
+        and an ad account with no pixel returns 422 (create the pixel in Reddit Ads Manager).
+        A `pixelId` that is not a pixel of the ad account returns 400. `goal: conversions`
+        requires `customEventType` (see below). `goal: lead_generation` optimizes toward the
+        pixel's Lead event. Reddit only optimizes toward an event the pixel has already
+        received: when it never fired, the request returns 422 `invalid_resource_state`.
+        Fire it from your site or send it with POST /v1/ads/conversions first.
+
         The remaining `promotedObject.*` fields are Meta-only. Platforms other than
-        Meta, TikTok and OpenAI ignore `promotedObject` entirely.
+        Meta, TikTok, OpenAI and Reddit ignore `promotedObject` entirely.
       properties:
         pixelId:
           type: string
@@ -11850,6 +11860,7 @@ components:
             carrying `pixel_id` without `custom_event_type` (error_subcode 1885014),
             even when `customConversionId` is also present.
             **TikTok:** TikTok Pixel ID, required for `goal: conversions`.
+            **Reddit:** Reddit pixel ID (e.g. `a2_abc123`), optional on every goal (see above).
             To discover the pixels an ad account can use, call
             `GET /v1/accounts/{accountId}/tracking-tags?adAccountId=act_...` (each entry
             carries `kind` and `ownerAdAccountId`), or
@@ -11885,6 +11896,11 @@ components:
             check and names the resolved event in its `message`. Optional: when omitted,
             the campaign optimizes for the first optimizable event in OpenAI's own list
             order, which is the most recently created one.
+
+            **Reddit:** required for `goal: conversions` (400 without it). One of `PURCHASE`,
+            `LEAD`, `COMPLETE_REGISTRATION` or `SIGN_UP` (both sent as Reddit's SIGN_UP),
+            `ADD_TO_CART`, `PAGE_VISIT`, `VIEW_CONTENT` or `CONTENT_VIEW` (both sent as
+            PAGE_VISIT), any case. The pixel must already have received the event (422 otherwise).
         customEventStr:
           type: string
           description: |
@@ -12090,9 +12106,9 @@ components:
                   distanceUnit: { type: string, enum: [mile, kilometer] }
                   name: { type: string }
                   address: { type: string, description: "Optional label, sent to Meta as `address_string`. latitude/longitude take precedence for the pin location." }
-        ageMin: { type: integer, minimum: 13, maximum: 100, description: "Minimum age. Applied on Meta, TikTok, Pinterest, LinkedIn, X and Google Search/Display (Google excludes the age ranges outside the request); rejected with 400 on OpenAI and on Google Performance Max / Demand Gen. Each platform clamps to its own range: Meta and Pinterest effectively cap at 65 (65 = 65+), TikTok maps up to 100. LinkedIn rounds out to its buckets (18-24, 25-34, 35-54, 55+) and has no under-18 audience; X rounds out to the narrowest of its fixed ranges (e.g. 25-34 becomes 25-49, 18-65 becomes 18+). Pinterest has no under-18 bucket, so an ageMin below 18 starts at 18 there." }
+        ageMin: { type: integer, minimum: 13, maximum: 100, description: "Minimum age. Applied on Meta, TikTok, Pinterest, LinkedIn, X and Google Search/Display (Google excludes the age ranges outside the request); rejected with 400 on OpenAI, Reddit and on Google Performance Max / Demand Gen. Each platform clamps to its own range: Meta and Pinterest effectively cap at 65 (65 = 65+), TikTok maps up to 100. LinkedIn rounds out to its buckets (18-24, 25-34, 35-54, 55+) and has no under-18 audience; X rounds out to the narrowest of its fixed ranges (e.g. 25-34 becomes 25-49, 18-65 becomes 18+). Pinterest has no under-18 bucket, so an ageMin below 18 starts at 18 there." }
         ageMax: { type: integer, minimum: 13, maximum: 100, description: "Maximum age. Same per-platform application and clamping as ageMin." }
-        gender: { type: string, enum: [all, male, female], description: "Restrict by gender. 'all' (default) targets everyone. Applied on Meta, TikTok, Pinterest, LinkedIn, X and Google Search/Display (Google excludes the other gender); rejected with 400 on OpenAI and on Google Performance Max / Demand Gen." }
+        gender: { type: string, enum: [all, male, female], description: "Restrict by gender. 'all' (default) targets everyone. Applied on Meta, TikTok, Pinterest, LinkedIn, X, Reddit and Google Search/Display (Google excludes the other gender); rejected with 400 on OpenAI and on Google Performance Max / Demand Gen." }
         incomeTier:
           type: string
           enum: [top_5, top_10, top_10_25, top_25_50]
@@ -12102,7 +12118,7 @@ components:
             tiers on Google, and any income tier on LinkedIn / X / Pinterest, are rejected.
             On Meta, income/zip targeting requires the relevant `specialAdCategories` to be
             unset (housing/employment/credit ads cannot use it).
-        languages: { type: array, items: { type: string }, description: "Language codes restricting the audience by language. Applied on Meta, Google, TikTok, LinkedIn, X and Pinterest; rejected with 400 on OpenAI. A code the platform cannot target returns 400 listing the ones it can. On Meta, ISO 639-1 codes (e.g. ['en']); a bare code targets all regional variants (\"en\" = all English), or use a region-qualified code (\"en_GB\", \"pt_BR\") for a specific one. Unknown codes are rejected." }
+        languages: { type: array, items: { type: string }, description: "Language codes restricting the audience by language. Applied on Meta, Google, TikTok, LinkedIn, X, Pinterest and Reddit; rejected with 400 on OpenAI. A code the platform cannot target returns 400 listing the ones it can. On Meta, ISO 639-1 codes (e.g. ['en']); a bare code targets all regional variants (\"en\" = all English), or use a region-qualified code (\"en_GB\", \"pt_BR\") for a specific one. Unknown codes are rejected." }
         interests:
           type: array
           description: "Interest entities from /v1/ads/targeting/search?dimension=interest. Each carries the platform's opaque id. On Google, applied as ad-group interest criteria (affinity and in-market categories) on Display and Search ad groups the request creates; rejected with 400 on Performance Max, on Demand Gen (use the Demand Gen audience `userInterests` there), when attaching to an existing ad group (`adSetId`), and on OpenAI. On Google, interests are create-only. On TikTok, bare numeric ids are interest categories (`interest_category_ids`) and ids like `keyword:123456` from `dimension=interestKeyword` are additional interests (`interest_keyword_ids`); any other id returns 422 naming `targeting.interests`. TikTok matches people who fit ANY selected interest, additional interest or behavior (one OR'd group), and that group is ANDed with location, age, gender and the other dimensions."
@@ -12152,8 +12168,12 @@ components:
         companySizes: { type: array, items: { type: string }, description: "LinkedIn B2B only. Single-letter size codes (A to I), or the full urn:li:staffCountRange:* URN from /v1/ads/targeting/search?dimension=companySize." }
         seniorities: { type: array, items: { type: string }, description: "LinkedIn B2B only. Seniority URN id fragments, or the full urn:li:seniority:* URN from /v1/ads/targeting/search?dimension=seniority." }
         jobFunctions: { type: array, items: { type: string }, description: "LinkedIn B2B only. Function URN id fragments, or the full urn:li:function:* URN from /v1/ads/targeting/search?dimension=jobFunction." }
-        audienceInclude: { type: array, items: { type: string }, description: 'Platform audience IDs to include, as returned by GET /v1/ads/audiences (Meta custom audience ids, TikTok audience ids, Pinterest customer list ids, LinkedIn segment ids (the platformAudienceId from GET /v1/ads/audiences; Zernio resolves it to the targetable LinkedIn ad segment, an unknown id returns 400), Google user list ids, X custom audience ids). Not supported on OpenAI (400).' }
+        audienceInclude: { type: array, items: { type: string }, description: 'Platform audience IDs to include, as returned by GET /v1/ads/audiences (Meta custom audience ids, TikTok audience ids, Pinterest customer list ids, LinkedIn segment ids (the platformAudienceId from GET /v1/ads/audiences; Zernio resolves it to the targetable LinkedIn ad segment, an unknown id returns 400), Google user list ids, X custom audience ids). On Reddit, the ids of custom audiences built in Reddit Ads Manager (GET /v1/ads/audiences does not list Reddit audiences). Not supported on OpenAI (400).' }
         audienceExclude: { type: array, items: { type: string }, description: 'Platform audience IDs to exclude; same ID formats as audienceInclude. Not supported on OpenAI (400).' }
+        communities: { type: array, items: { type: string, minLength: 1 }, description: "Reddit only (400 elsewhere). Subreddits to target, by name, with or without the `r/` prefix (e.g. `['marketing', 'r/startups']`), as returned by /v1/ads/targeting/search?dimension=community." }
+        excludedCommunities: { type: array, items: { type: string, minLength: 1 }, description: "Reddit only (400 elsewhere). Subreddits to exclude, named like `communities`." }
+        conversationKeywords: { type: array, items: { type: string, minLength: 1 }, description: "Reddit only (400 elsewhere). Keywords that place the ad in Reddit conversations about them, as returned by /v1/ads/targeting/search?dimension=conversationKeyword." }
+        excludedConversationKeywords: { type: array, items: { type: string, minLength: 1 }, description: "Reddit only (400 elsewhere). Conversation keywords to keep the ad away from." }
     MetaPlacementAssets:
       type: object
       description: |
@@ -12826,11 +12846,11 @@ components:
       properties:
         _id: { type: string }
         name: { type: string }
-        platform: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai] }
+        platform: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit] }
         status: { allOf: [{ $ref: '#/components/schemas/AdStatus' }], description: "Delivery status. Derived from the platform `effective_status`, so it inherits ancestor pauses (an ACTIVE ad under a PAUSED campaign reads `paused`). For the ad's own on/off toggle use `configuredStatus`; for the review state use `reviewStatus`." }
         configuredStatus:
           type: [string, "null"]
-          description: "The ad's own on/off switch as configured on the platform, independent of its parents: an ACTIVE ad under a paused ad set or campaign still reads ACTIVE here while `status` reads `paused`. Sources: Meta `configured_status`, TikTok ad `operation_status` (ENABLE -> ACTIVE, DISABLE -> PAUSED), ChatGPT (OpenAI) ad `status` (ACTIVE / PAUSED, plus ARCHIVED on OpenAI). On create it is read back from the platform, not copied from the request: a `PAUSED` create pauses only the top-most object it creates, so an ad under a new paused campaign or ad set reads ACTIVE here with `status: paused`, and only an ad attached to an existing ad set reads PAUSED. Distinct from `status`, which is the ancestor-cascaded delivery status. Only present for Meta, TikTok and OpenAI ads created or synced after the field was added for that platform; null otherwise."
+          description: "The ad's own on/off switch as configured on the platform, independent of its parents: an ACTIVE ad under a paused ad set or campaign still reads ACTIVE here while `status` reads `paused`. Sources: Meta `configured_status`, TikTok ad `operation_status` (ENABLE -> ACTIVE, DISABLE -> PAUSED), ChatGPT (OpenAI) ad `status` (ACTIVE / PAUSED, plus ARCHIVED on OpenAI), Reddit `configured_status` (ACTIVE / PAUSED / ARCHIVED). On create it is read back from the platform, not copied from the request: a `PAUSED` create pauses only the top-most object it creates, so an ad under a new paused campaign or ad set reads ACTIVE here with `status: paused`, and only an ad attached to an existing ad set reads PAUSED. Distinct from `status`, which is the ancestor-cascaded delivery status. Only present for Meta, TikTok, OpenAI and Reddit ads created or synced after the field was added for that platform; null otherwise."
           example: ACTIVE
         reviewStatus:
           allOf: [{ $ref: '#/components/schemas/AdReviewStatus' }]
@@ -13165,7 +13185,7 @@ components:
       description: Campaign with nested ad sets and rolled-up metrics
       properties:
         platformCampaignId: { type: string }
-        platform: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai] }
+        platform: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit] }
         campaignName: { type: string }
         createdTime:
           type: [string, "null"]
@@ -13185,7 +13205,7 @@ components:
             the Campaign, plus ad-level PENDING_REVIEW rollup.
         platformCampaignStatus:
           type: [string, "null"]
-          description: "Raw platform-level campaign status (Meta `effective_status`: ACTIVE, PAUSED, DELETED, ARCHIVED, IN_PROCESS, WITH_ISSUES; ChatGPT (OpenAI): the campaign's own switch, active / paused / archived, independent of the delivery `status`; TikTok: the campaign's own switch `operation_status`, ENABLE / DISABLE). Distinct from per-ad `platformStatus`."
+          description: "Raw platform-level campaign status (Meta `effective_status`: ACTIVE, PAUSED, DELETED, ARCHIVED, IN_PROCESS, WITH_ISSUES; ChatGPT (OpenAI): the campaign's own switch, active / paused / archived, independent of the delivery `status`; TikTok: the campaign's own switch `operation_status`, ENABLE / DISABLE; Reddit: the campaign's `configured_status`, ACTIVE / PAUSED / ARCHIVED). Distinct from per-ad `platformStatus`."
         campaignIssuesInfo:
           type: [array, "null"]
           description: "Platform-reported campaign issues (Meta `issues_info[]`). Populated only when the platform has delivery issues to report; contains the specific error codes and messages."
@@ -13258,7 +13278,7 @@ components:
       type: object
       properties:
         platformCampaignId: { type: string }
-        platform: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai] }
+        platform: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit] }
         campaignName: { type: string }
         status: { allOf: [{ $ref: '#/components/schemas/AdStatus' }], description: "Delivery status derived from child ad statuses. Distinct from `reviewStatus`." }
         reviewStatus:
@@ -13268,7 +13288,7 @@ components:
           description: "Platform-side review state of the campaign. See AdTreeCampaign.reviewStatus for the full description."
         platformCampaignStatus:
           type: [string, "null"]
-          description: "Raw platform-level campaign status (Meta `effective_status`; ChatGPT (OpenAI): the campaign's own switch, active / paused / archived; TikTok: the campaign's own switch `operation_status`, ENABLE / DISABLE)."
+          description: "Raw platform-level campaign status (Meta `effective_status`; ChatGPT (OpenAI): the campaign's own switch, active / paused / archived; TikTok: the campaign's own switch `operation_status`, ENABLE / DISABLE; Reddit: the campaign's `configured_status`, ACTIVE / PAUSED / ARCHIVED)."
         statusReadAt:
           type: [string, "null"]
           format: date-time
@@ -13505,14 +13525,15 @@ components:
             Standard event name (Purchase, Lead, CompleteRegistration, AddToCart,
             InitiateCheckout, AddPaymentInfo, Subscribe, StartTrial, ViewContent,
             Search, Contact, SubmitApplication, Schedule) or a custom string
-            (only supported on platforms that accept custom events: Meta and
-            OpenAI Ads).
+            (only supported on platforms that accept custom events: Meta,
+            OpenAI Ads and Reddit).
 
             Per-platform behavior:
             - Meta: free-form; standard names match Meta's built-ins.
             - Google: ignored. The conversion action's category determines the type.
             - LinkedIn: ignored. The conversion rule's `type` is locked to the destination.
             - OpenAI Ads: a fixed subset of standard names (Purchase, Lead, AddToCart, ViewContent, InitiateCheckout, CompleteRegistration, Subscribe, StartTrial, Schedule) maps 1:1 onto OpenAI's own event-type enum; anything else is sent as a custom event with the name preserved.
+            - Reddit: Purchase, Lead, CompleteRegistration (SIGN_UP), AddToCart, AddToWishlist, ViewContent, Search and PageView (PAGE_VISIT) map onto Reddit's tracking types; anything else is sent as a CUSTOM event with the name preserved.
           example: Purchase
         eventTime:
           type: integer
@@ -13525,7 +13546,8 @@ components:
             to prevent double-counting. Mapped to event_id on Meta,
             transactionId on Google, eventId on LinkedIn (LinkedIn deduplicates
             against Insight Tag events with the same eventId; the Insight Tag
-            event wins when both arrive).
+            event wins when both arrive), and `metadata.conversion_id` on Reddit
+            (Reddit's dedup key against Reddit Pixel events).
           example: order_abc_123
         value:
           type: number
@@ -13585,6 +13607,8 @@ components:
                     LINKEDIN_FIRST_PARTY_ADS_TRACKING_UUID userId. Opaque
                     token, not hashed.
                 epik: { type: string, description: "Pinterest click ID (the `epik` URL param or `_epik` cookie). Sent to Pinterest as `click_id`, not hashed." }
+                rdt_cid: { type: string, description: "Reddit click ID (the `rdt_cid` URL param Reddit adds to ad clicks). Sent to Reddit as `click_id`, not hashed." }
+                rdt_uuid: { type: string, description: "Reddit Pixel browser id (the `_rdt_uuid` first-party cookie). Sent to Reddit as `user.uuid`, not hashed." }
         items:
           type: array
           description: Item-level detail for ecommerce events.
@@ -23649,7 +23673,7 @@ paths:
           schema:
             type: string
             enum: [social, ads, communication, blogs]
-          description: 'Only accounts of this kind. ads = ad accounts (Meta, Google, LinkedIn, Pinterest, TikTok, X, OpenAI), communication = WhatsApp, Telegram, Discord, Slack and iMessage, blogs = Shopify and WordPress, social = every other platform.'
+          description: 'Only accounts of this kind. ads = ad accounts (Meta, Google, LinkedIn, Pinterest, TikTok, X, OpenAI, Reddit), communication = WhatsApp, Telegram, Discord, Slack and iMessage, blogs = Shopify and WordPress, social = every other platform.'
         - name: sort
           in: query
           schema:
@@ -23991,7 +24015,7 @@ paths:
           description: Filter by platform
           schema:
             type: string
-            enum: [facebook, instagram, linkedin, twitter, tiktok, youtube, threads, pinterest, reddit, bluesky, googlebusiness, telegram, snapchat, discord, slack, whatsapp, shopify, wordpress, linkedinads, metaads, pinterestads, tiktokads, xads, googleads, openaiads, whopads]
+            enum: [facebook, instagram, linkedin, twitter, tiktok, youtube, threads, pinterest, reddit, bluesky, googlebusiness, telegram, snapchat, discord, slack, whatsapp, shopify, wordpress, linkedinads, metaads, pinterestads, tiktokads, xads, googleads, openaiads, redditads, whopads]
         - name: status
           in: query
           description: Filter by health status
@@ -24274,6 +24298,13 @@ paths:
         `disconnected` and the overall `status` is `error`. When Meta reports that the number's
         inbound message webhook does not reach Zernio, `platformConnection.inboundWebhookSubscribed`
         is `false`, an entry is added to `issues`, and the overall `status` is at least `warning`.
+
+        For the standalone ads connections (`googleads`, `redditads`) a connection that cannot serve
+        requests until a fresh OAuth repairs it adds an entry to `issues` and a recommendation to call
+        `GET /v1/connect/{platform}/ads`, whose `authUrl` reconnects the same account. On `redditads`
+        this is a connection authorized before Zernio needed a Reddit permission it now uses (for
+        example `adsconversions`): Reddit refuses those requests until the user reconnects and allows
+        every permission on Reddit's consent screen.
       parameters:
         - name: accountId
           in: path
@@ -25394,6 +25425,10 @@ paths:
               x_ads_denied, x_ads_auth_failed, x_ads_config_error, x_ads_account_not_found,
               x_ads_state_error, x_ads_token_failed, x_ads_token_missing, x_ads_callback_error
 
+            Reddit Ads (platform=redditads):
+              reddit_ads_auth_failed, reddit_ads_invalid_state, reddit_ads_access_denied,
+              reddit_ads_scope_not_granted, reddit_ads_no_ad_accounts, reddit_ads_callback_error
+
             Shopify (platform=shopify):
               shopify_auth_failed, shopify_config_error, shopify_invalid_state, shopify_invalid_hmac,
               shopify_invalid_shop, shopify_missing_scopes, shopify_callback_error
@@ -25404,8 +25439,8 @@ paths:
             and `tiktok_ads_auth_failed` may carry the provider's raw error string in `error_message`.
 
             2. On the tiktok and twitter ads flows `platform` carries the ads platform id
-            (`tiktokads`, `xads`), not the value used in the request path. The googleads and shopify
-            flows report `googleads` and `shopify`.
+            (`tiktokads`, `xads`), not the value used in the request path. The googleads, redditads and
+            shopify flows report `googleads`, `redditads` and `shopify`.
 
             3. `missing_tiktok_permissions` means the TikTok authorization left out a permission the
             already-connected account needs, so nothing was changed and it keeps working as before.
@@ -25583,7 +25618,7 @@ paths:
       x-resource-group: "accounts"
       operationId: connectAds
       tags: [Connect]
-      x-platforms: [meta, linkedin, tiktok, twitter, pinterest, google]
+      x-platforms: [meta, linkedin, tiktok, twitter, pinterest, google, reddit]
       summary: Connect ads for a platform
       description: |
         Starts connecting a platform's ads account, giving you a dedicated ads connection to manage campaigns without touching posting accounts.
@@ -25676,6 +25711,22 @@ paths:
         whose token lacks that permission is flagged needsReconnection, and the health endpoints
         report "Google Ads permission not granted"; this endpoint then returns an authUrl for it.
 
+        **Standalone platforms (redditads).** Starts the Reddit Ads OAuth flow (Reddit permissions
+        `adsread`, `adsedit` and `adsconversions`) and creates a standalone ads SocialAccount
+        (redditads) with no parent, separate from any organic `reddit` posting account. It is
+        reached only as `redditads` in the path. If an active Reddit Ads connection already exists
+        on the profile, is not flagged needsReconnection and holds every one of those permissions,
+        returns alreadyConnected: true. Otherwise it returns an authUrl; completing it reconnects
+        the same account (same accountId). A connection authorized without `adsconversions` keeps
+        managing ads, but the health endpoints list an issue asking to reconnect Reddit Ads and
+        allow every permission, the Conversions API answers 403 `reconnect_required`, and this
+        endpoint returns an authUrl for it. Discovery lists every Reddit ad account the Reddit user
+        can reach. When the user unticks `adsread` or `adsedit` on Reddit's consent screen the
+        callback saves nothing and redirects with `error=reddit_ads_scope_not_granted`; when the
+        user reaches no Reddit ad account it redirects with `error=reddit_ads_no_ad_accounts`
+        (both with `platform=redditads`). Without `redirect_url` the browser lands on the Zernio
+        dashboard's ad account picker for the new connection.
+
         Ads accounts appear as regular SocialAccount documents with ads platform values (e.g., metaads, tiktokads) in GET /v1/accounts.
       parameters:
         - name: loginMode
@@ -25698,7 +25749,7 @@ paths:
           required: true
           schema:
             type: string
-            enum: [facebook, instagram, linkedin, tiktok, twitter, pinterest, googleads]
+            enum: [facebook, instagram, linkedin, tiktok, twitter, pinterest, googleads, redditads]
           description: |
             Platform to connect ads for. Only platforms with ads support are accepted.
 
@@ -25724,24 +25775,26 @@ paths:
             profile's ads connection hangs off: that account is no longer connected, so the
             call returns 409 `reconnect_required` instead of reconnecting another account.
             Reconnect it via GET /v1/connect/{platform} first. Ignored for standalone
-            platforms (`googleads`).
+            platforms (`googleads`, `redditads`).
         - name: redirect_url
           in: query
           schema: { type: string, format: uri }
           description: |
             Custom URL the browser is sent to once the OAuth flow finishes. Honored on
             every ads platform, including the separate-token (`tiktok`, `twitter`) and
-            standalone (`googleads`) flows. MUST be an absolute http(s) URL or a custom
+            standalone (`googleads`, `redditads`) flows. MUST be an absolute http(s) URL or a custom
             app scheme for mobile deeplinks (e.g. myapp://callback); a relative path is
             rejected with 400 INVALID_REDIRECT_URL. On success
-            `tiktok`, `twitter` and `googleads` land on the URL unchanged, while the
+            `tiktok` lands on the URL unchanged; `twitter`, `googleads` and `redditads`
+            append `connected` (the ads platform id: `xads`, `googleads` or `redditads`),
+            `profileId`, `accountId` (the ads connection) and `username`; and the
             same-token platforms (`facebook`, `instagram`, `linkedin`, `pinterest`)
             append `connected`, `profileId`, `accountId`, `username` and, on API-key
             calls, `connect_token`. On failure the same error contract applies as on
             GET /v1/connect/{platform}: `error` and `platform` are always appended,
             other params are optional, and the value list there is not exhaustive.
-            On the tiktok, twitter and googleads flows `platform` carries
-            the ads platform id (`tiktokads`, `xads`, `googleads`), not the value
+            On the tiktok, twitter, googleads and redditads flows `platform` carries
+            the ads platform id (`tiktokads`, `xads`, `googleads`, `redditads`), not the value
             used in the request path. When omitted, the browser lands on
             the Zernio dashboard.
         - name: headless
@@ -25772,7 +25825,8 @@ paths:
             preserve the existing scope; supplied IDs are checked against the new grant. To change
             that scope after migration, call this endpoint with the IDs and omit loginMode. Supported
             on `facebook`/`instagram` (Meta, `act_<digits>`), `linkedin` (bare
-            numeric sponsored-account id), `googleads` (bare customer id digits)
+            numeric sponsored-account id), `googleads` (bare customer id digits),
+            `redditads` (Reddit ad account id, `a2_<id>` or `t2_<id>`)
             and `twitter` (X Ads, base36 account id). `tiktok` scopes advertisers
             at OAuth and `pinterest` has no ads discovery, so both ignore it.
             Meta ids are additionally validated against the connected token:
@@ -25788,9 +25842,9 @@ paths:
             scoped ones, instead of every ad account the login can reach. The scope
             is kept when this call returns an `authUrl`, so the Meta Ads account
             created after OAuth is scoped (and only its scoped ad accounts synced and
-            subscribed) from the start. On `googleads` the scope is kept through
-            OAuth when `redirect_url` is set, so the Google Ads connection created
-            after OAuth syncs only its scoped customers from the first sync.
+            subscribed) from the start. On `googleads` and `redditads` the scope is kept through
+            OAuth when `redirect_url` is set, so the connection created after OAuth
+            syncs only its scoped ad accounts from the first sync.
             For multiple accounts use `adAccountIds` instead.
           example: act_1330190928038136
         - name: adAccountIds
@@ -53409,7 +53463,7 @@ paths:
       x-resource-group: "ads"
       operationId: listAds
       tags: ["Ad Campaigns"]
-      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "reddit"]
       summary: List ads
       description: |
         Lists your ads with their performance over a date range, including ads created directly in each platform's ads manager.
@@ -53430,7 +53484,7 @@ paths:
         - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 500, default: 50 } }
         - { name: source, in: query, schema: { type: string, enum: [zernio, all], default: all }, description: "all (default) = Zernio-created + platform-discovered ads. zernio = restrict to Zernio-created only." }
         - { name: status, in: query, schema: { $ref: '#/components/schemas/AdStatus' } }
-        - { name: platform, in: query, schema: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai] } }
+        - { name: platform, in: query, schema: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit] } }
         - { name: accountId, in: query, schema: { type: string }, description: Account ID }
         - { name: adAccountId, in: query, schema: { type: string }, description: "Platform ad account ID (e.g. act_123 for Meta). Mirrors the same filter on /v1/ads/campaigns and /v1/ads/tree." }
         - { name: pageId, in: query, schema: { type: string }, description: "Meta only: Facebook Page ID. Returns only ads whose creative is backed by this Page (a Meta ad account serves ads for every Page in the Business Manager). Matches each ad's `creative.pageId`; ads with no page signal (rare IG-only creatives) never match. Mirrors the same filter on /v1/ads/campaigns and /v1/ads/tree." }
@@ -54238,7 +54292,7 @@ paths:
       x-resource-group: "ads"
       operationId: listAdCampaigns
       tags: ["Ad Campaigns"]
-      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "reddit"]
       summary: List campaigns
       description: |
         Lists your campaigns with spend, impressions and clicks summed across their ads, plus each campaign's status and budget.
@@ -54258,7 +54312,7 @@ paths:
         which reads the switches from the platform now, stores them, and returns `statusReadAt`
         (null when the read failed and the stored values were returned).
         With `live=true` (which needs `limit` of 20 or less) each returned campaign's own switch
-        (`platformCampaignStatus`) is read live. Live reads cover TikTok, Meta, Google and OpenAI.
+        (`platformCampaignStatus`) is read live. Live reads cover TikTok, Meta, Google, OpenAI and Reddit.
         The rolled-up `status` is not re-derived by a live read.
 
         **Budgets here are SYNCED**, never read live, including with `live=true`. To read the
@@ -54282,7 +54336,7 @@ paths:
         - $ref: '#/components/parameters/PageParam'
         - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 20 } }
         - { name: source, in: query, schema: { type: string, enum: [zernio, all], default: all }, description: "`all` (default) returns both Zernio-created ads and those discovered from the platform's ad manager. Matches the web UI's default view. Pass `zernio` to restrict to isExternal=false only. Status is NOT filtered by default; use the `status` param for that." }
-        - { name: platform, in: query, schema: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai] } }
+        - { name: platform, in: query, schema: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit] } }
         - { name: status, in: query, schema: { $ref: '#/components/schemas/AdStatus' }, description: Filter by derived campaign status (post-aggregation) }
         - { name: adAccountId, in: query, schema: { type: string }, description: Platform ad account ID (e.g. act_123 for Meta) }
         - { name: campaignId, in: query, schema: { type: string }, description: "Platform campaign ID (the `platformCampaignId` on each returned campaign). Returns only that campaign, or an empty list when it is not visible to the caller. Mirrors the same filter on /v1/ads and /v1/ads/tree." }
@@ -54330,7 +54384,7 @@ paths:
       x-resource-group: "ads"
       operationId: createAdCampaign
       tags: ["Ad Campaigns"]
-      x-platforms: ["meta", "google", "linkedin", "tiktok", "x", "pinterest", "openai"]
+      x-platforms: ["meta", "google", "linkedin", "tiktok", "x", "pinterest", "openai", "reddit"]
       summary: Create a standalone campaign
       description: |-
         Creates an empty campaign, paused, so you can add ad sets and ads to it afterwards.
@@ -54343,7 +54397,14 @@ paths:
         accepts `portfolioBidStrategyId` instead. Google, X and OpenAI require a budget
         (422 without one; OpenAI accepts daily or lifetime, Google only
         `budgetType: daily`). On OpenAI `goal` sets the campaign objective, and
-        `conversions` needs an active standard conversion event on the account. LinkedIn creates the
+        `conversions` needs an active standard conversion event on the account. On Reddit
+        `goal` is one of traffic, awareness, conversions, video_views or lead_generation
+        (422 otherwise) and the budget is optional: with one, the campaign uses Reddit's
+        campaign budget optimization and carries the pixel (see `promotedObject`, which then
+        needs `customEventType` for `conversions`), daily or lifetime (a lifetime budget
+        needs `endDate`, 400 otherwise). `startDate` / `endDate` set the campaign's schedule
+        and need that campaign budget (400 without one). Without a budget, each ad set
+        carries its own budget and dates. LinkedIn creates the
         campaign GROUP (our campaign level) and rejects a budget, which lives on the
         campaign (ad set) level there; it comes back `status: DRAFT`. Created `PAUSED`
         (TikTok `DISABLE`) unless `status: ACTIVE` where the platform supports it.
@@ -54395,6 +54456,8 @@ paths:
                 budgetAmount: { type: number, description: "Campaign-level (CBO) budget in WHOLE currency units (USD: 50 = $50.00), NOT cents. Meta's own Marketing API takes this same number in minor units, so it is an easy and expensive mix-up. Requires budgetType." }
                 budgetType: { type: string, enum: [daily, lifetime] }
                 status: { type: string, enum: [ACTIVE, PAUSED], default: PAUSED }
+                startDate: { type: string, format: date-time, description: "Reddit only (400 elsewhere). Campaign start (ISO 8601); a value without an offset is read in the ad account time zone. Requires a campaign budget (`budgetAmount` + `budgetType`, 400 otherwise). Defaults to now." }
+                endDate: { type: string, format: date-time, description: "Reddit only (400 elsewhere). Campaign end (ISO 8601); a value without an offset is read in the ad account time zone. Requires a campaign budget (400 otherwise), and is required for `budgetType: lifetime`." }
                 locationTargetingType:
                   allOf: [{ $ref: '#/components/schemas/GoogleLocationTargetingType' }]
                   description: "Google only (400 elsewhere). Written on the new campaign."
@@ -54456,7 +54519,7 @@ paths:
       x-resource-group: "ads"
       operationId: updateAdCampaignStatus
       tags: ["Ad Campaigns"]
-      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "openai"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "openai", "reddit"]
       summary: Pause or resume a campaign
       description: |
         Pauses or resumes a campaign, leaving the on/off switches of its ad sets and ads as they are.
@@ -54489,7 +54552,7 @@ paths:
               required: [status, platform]
               properties:
                 status: { type: string, enum: [active, paused] }
-                platform: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai] }
+                platform: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit] }
       responses:
         '200':
           description: Campaign status updated
@@ -54499,7 +54562,7 @@ paths:
                 type: object
                 properties:
                   status: { type: string, enum: [active, paused], description: "The campaign's delivery status derived from its switch as read back (`paused` when the switch is off). Echoes the request when the platform could not be read." }
-                  platformCampaignStatus: { type: [string, "null"], description: "The campaign's own switch as read back from the platform, in the raw platform vocabulary (Meta effective_status, TikTok ENABLE / DISABLE, Google ENABLED / PAUSED, ChatGPT (OpenAI) status). Null when the platform could not be read, which is always the case on Pinterest, LinkedIn and X (no single-campaign read)." }
+                  platformCampaignStatus: { type: [string, "null"], description: "The campaign's own switch as read back from the platform, in the raw platform vocabulary (Meta effective_status, TikTok ENABLE / DISABLE, Google ENABLED / PAUSED, ChatGPT (OpenAI) status, Reddit configured_status). Null when the platform could not be read, which is always the case on Pinterest, LinkedIn and X (no single-campaign read)." }
                   statusReadAt: { type: [string, "null"], format: date-time, description: 'When the switch was read back. Null when it could not be read.' }
                   updated: { type: integer, enum: [0, 1], description: "1 when the campaign's switch was written." }
                   skipped: { type: integer, enum: [0, 1], description: '1 when a live read showed the campaign already in the requested state, so nothing was written.' }
@@ -54774,7 +54837,7 @@ paths:
       x-resource-group: "ads"
       operationId: updateAdCampaign
       tags: ["Ad Campaigns"]
-      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "openai"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "openai", "reddit"]
       summary: Update a campaign
       description: |
         Changes a campaign's settings, such as its name, budget, bidding or tracking URLs.
@@ -54794,8 +54857,8 @@ paths:
         | `networkSettings` | 400 | Search only | 400 |
         | `trackingUrlTemplate`, `finalUrlSuffix` | 400 | Yes | 400 |
         | `sharedBudgetId` | 400 | Yes | 400 |
-        | `budget` (CBO; ABO returns 409) | Yes | Daily only | OpenAI: daily or lifetime; others 501 |
-        | `name` | Yes | 501 | 501 |
+        | `budget` (CBO; ABO returns 409) | Yes | Daily only | OpenAI and Reddit: daily or lifetime; others 501 |
+        | `name` | Yes | 501 | Reddit: Yes; others 501 |
         | `platformSpecificData.spendCap` | Yes | 400 | 400 |
         | `accountId` (empty campaigns) | Yes | - | - |
 
@@ -54836,6 +54899,12 @@ paths:
         currency (422 below it). Lifetime can switch to daily, but OpenAI never switches a
         daily cap back to lifetime (422).
 
+        Reddit Ads: `budget` changes the amount of a campaign budget (Reddit campaign budget
+        optimization); a campaign whose ad groups carry the budget returns 409 or 422, use
+        PUT /v1/ads/ad-sets/{adSetId} there. Reddit cannot switch a published budget between
+        daily and lifetime, so `budget.type` must match the current one (422 otherwise).
+        `bidStrategy` is set per ad group on Reddit (PUT /v1/ads/ad-sets/{adSetId}).
+
         `accountId` forwards the update straight to Meta for a campaign with zero ads,
         which would otherwise 404; the response then carries `updated: 0`.
       security:
@@ -54850,7 +54919,7 @@ paths:
               type: object
               required: [platform]
               properties:
-                platform: { type: string, enum: [facebook, instagram, google], description: "Required: platform campaign IDs are not globally unique." }
+                platform: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit], description: "Required: platform campaign IDs are not globally unique." }
                 accountId: { type: string, description: "**Meta only.** Zernio SocialAccount id owning the ad account. Needed only for an EMPTY campaign (zero ads); ignored otherwise." }
                 bidStrategy:
                   allOf: [{ $ref: '#/components/schemas/BidStrategy' }]
@@ -54872,12 +54941,12 @@ paths:
                   description: "**Google only.** Move the campaign onto this shared budget (id from GET /v1/ads/shared-budgets), or null to move it back onto a budget of its own sized by `budget`."
                 budget:
                   type: object
-                  description: "Meta CBO, Google daily, or OpenAI Ads daily or lifetime campaign budget, in whole currency units."
+                  description: "Meta CBO, Google daily, or OpenAI Ads or Reddit Ads daily or lifetime campaign budget, in whole currency units."
                   required: [amount, type]
                   properties:
                     amount: { type: number, description: Budget amount in the ad account's currency }
                     type: { type: string, enum: [daily, lifetime] }
-                name: { type: string, maxLength: 255, description: "**Meta only.** Rename the campaign." }
+                name: { type: string, maxLength: 255, description: "**Meta and Reddit.** Rename the campaign." }
                 platformSpecificData:
                   type: object
                   description: "**Meta only.** Platform implied by the `platform` body param, same convention as POST /v1/ads/create."
@@ -54922,7 +54991,7 @@ paths:
       x-resource-group: "ads"
       operationId: deleteAdCampaign
       tags: ["Ad Campaigns"]
-      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "openai"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "openai", "reddit"]
       summary: Delete a campaign
       description: |
         Deletes a campaign along with all of its ad sets and ads, including a campaign that never got any ads.
@@ -54943,6 +55012,10 @@ paths:
         yet); if it does the answer is 409 and nothing is deleted, so sync the ad
         account and retry. Other platforms answer 501 for an empty campaign.
         `accountId` is ignored when the campaign does have ads.
+
+        Reddit Ads has no delete: the campaign is archived instead (`configured_status`
+        ARCHIVED), which stops delivery for good. Its ad groups and ads keep their own
+        switches but cannot deliver under an archived campaign.
       security:
         - bearerAuth: []
       parameters:
@@ -54955,7 +55028,7 @@ paths:
               type: object
               required: [platform]
               properties:
-                platform: { type: string, enum: [facebook, instagram, google, twitter] }
+                platform: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit] }
                 accountId: { type: string, description: "Zernio SocialAccount id owning the ad account. Required only to delete an EMPTY campaign (zero ads), which has no local Ad documents to resolve a token from." }
                 adAccountId: { type: string, pattern: '^[0-9a-z]{1,32}$', description: "X only, for an EMPTY campaign that was never synced: the X ad account id the campaign belongs to (lowercase letters and digits). The synced campaign's ad account wins when there is one. Also accepted on the query string." }
       responses:
@@ -54998,7 +55071,7 @@ paths:
         - bearerAuth: []
       parameters:
         - { name: campaignId, in: path, required: true, schema: { type: string }, description: Platform campaign ID }
-        - { name: platform, in: query, schema: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai] }, description: 'Optional and NOT authoritative: the resolved campaign''s own platform decides 200 vs 501, never this hint.' }
+        - { name: platform, in: query, schema: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit] }, description: 'Optional and NOT authoritative: the resolved campaign''s own platform decides 200 vs 501, never this hint.' }
       responses:
         '200':
           description: Campaign-level negative keywords
@@ -55049,7 +55122,7 @@ paths:
               type: object
               required: [keywords]
               properties:
-                platform: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai], description: 'Optional and NOT authoritative: the resolved campaign''s own platform decides 200 vs 501, never this hint.' }
+                platform: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit], description: 'Optional and NOT authoritative: the resolved campaign''s own platform decides 200 vs 501, never this hint.' }
                 keywords:
                   type: array
                   maxItems: 1000
@@ -55084,7 +55157,7 @@ paths:
       x-resource-group: "ads"
       operationId: bulkUpdateAdCampaignStatus
       tags: ["Ad Campaigns"]
-      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "reddit"]
       summary: Pause or resume many campaigns
       description: |
         Pauses or resumes up to 50 campaigns in one call, with a separate result per campaign so one failure does not block the rest.
@@ -55114,7 +55187,7 @@ paths:
                     required: [platformCampaignId, platform]
                     properties:
                       platformCampaignId: { type: string, description: "The campaign id on the ad platform (e.g. the numeric Google campaign id), not a Zernio id." }
-                      platform: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, googleads, tiktokads, linkedinads, pinterestads, xads, openaiads], description: "The ad platform, e.g. `google` for Google Ads. The ads connection slug (`googleads`, `tiktokads`, ...) is accepted as an alias. `metaads` is not: send `facebook` or `instagram`." }
+                      platform: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit, googleads, tiktokads, linkedinads, pinterestads, xads, openaiads, redditads], description: "The ad platform, e.g. `google` for Google Ads. The ads connection slug (`googleads`, `tiktokads`, ...) is accepted as an alias. `metaads` is not: send `facebook` or `instagram`." }
             example:
               status: paused
               campaigns:
@@ -55535,7 +55608,7 @@ paths:
       x-resource-group: "ads"
       operationId: listAdSets
       tags: ["Ad Campaigns"]
-      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "openai"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "openai", "reddit"]
       summary: List ad sets
       description: |-
         Lists ad sets (ad groups on Google) with their targeting, bidding and optimization settings, optionally for one campaign.
@@ -55566,7 +55639,7 @@ paths:
         (null when the read failed and the stored values were returned).
         With `live=true` (which needs a `campaignId` or `adSetId` filter) each listed ad set's own
         switch (`platformAdSetStatus`) is read live, for the first 20 rows; later rows keep their
-        synced value with `statusReadAt: null`. Live reads cover TikTok, Meta, Google and OpenAI.
+        synced value with `statusReadAt: null`. Live reads cover TikTok, Meta, Google, OpenAI and Reddit.
         The rolled-up `status` is not re-derived by a live read. On TikTok the same live read also
         returns the ad group's applied `optimizationGoal` and `billingEvent`, as TikTok's adgroup/get
         reports them, so you can verify the goal TikTok applied rather than the one you requested.
@@ -55584,7 +55657,7 @@ paths:
         - { name: adAccountId, in: query, schema: { type: string }, description: "Platform ad account id (Meta act_<n>). Lists every synced ad set of that ad account; no campaignId needed." }
         - { name: campaignId, in: query, schema: { type: string }, description: Platform campaign ID }
         - { name: adSetId, in: query, schema: { type: string }, description: Platform ad set ID }
-        - { name: platform, in: query, schema: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai] } }
+        - { name: platform, in: query, schema: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit] } }
         - $ref: '#/components/parameters/LiveStatusRead'
       responses:
         '200':
@@ -55714,7 +55787,7 @@ paths:
               required: [accountId, platform, campaignId, name]
               properties:
                 accountId: { type: string, description: "Zernio SocialAccount id owning the Google Ads connection." }
-                platform: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai], description: "Only \"google\" is implemented today; every other value returns 501." }
+                platform: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit], description: "Only \"google\" is implemented today; every other value returns 501." }
                 campaignId: { type: string, description: "Google platform campaign ID (numeric) the ad group is created under." }
                 name: { type: string, minLength: 1, maxLength: 255 }
                 status: { type: string, enum: [ACTIVE, PAUSED], default: PAUSED }
@@ -55925,7 +55998,7 @@ paths:
       x-resource-group: "ads"
       operationId: updateAdSet
       tags: ["Ad Campaigns"]
-      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "openai"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "openai", "reddit"]
       summary: Update an ad set
       description: |
         Changes an ad set's settings, such as its budget, bid strategy, status or delivery options.
@@ -55968,6 +56041,14 @@ paths:
         CBO, the response is 409 with code BUDGET_LEVEL_MISMATCH. Route to
         PUT /v1/ads/campaigns/{campaignId} instead.
 
+        Reddit Ads: `budget` changes the ad group's amount; an ad group that spends its
+        campaign budget returns 422 (update the campaign instead), and Reddit cannot switch
+        a published budget between daily and lifetime, so `budget.type` must match the
+        current one (422 otherwise). `name` renames the ad group. `bidStrategy` maps to the
+        ad group's `bid_strategy`: LOWEST_COST_WITHOUT_CAP = automatic bidding (BIDLESS),
+        LOWEST_COST_WITH_BID_CAP = MANUAL_BIDDING with `bidAmount` as the bid, COST_CAP =
+        MAXIMIZE_VOLUME with `bidAmount` as the cap; LOWEST_COST_WITH_MIN_ROAS returns 422.
+
         `status` behaves exactly as PUT /v1/ads/ad-sets/{adSetId}/status
         describes: only the ad set's own switch is written, its ads keep
         theirs, and `statusUpdated` / `statusSkipped` report whether that switch
@@ -55984,7 +56065,7 @@ paths:
               type: object
               required: [platform]
               properties:
-                platform: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai] }
+                platform: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit] }
                 budget:
                   type: object
                   description: Omit if not updating budget
@@ -56007,7 +56088,8 @@ paths:
                     COST_CAP = TARGET, with `bidAmount` as `bid_amount_local_micro`;
                     LOWEST_COST_WITH_MIN_ROAS is rejected with 422. X decides which strategy
                     the line item's objective allows (TARGET only on REACH, FOLLOWERS and
-                    WEBSITE_CLICKS, MAX not on REACH or FOLLOWERS). Other platforms
+                    WEBSITE_CLICKS, MAX not on REACH or FOLLOWERS). On Reddit, see the mapping in the
+                    description above (LOWEST_COST_WITH_MIN_ROAS returns 422). Other platforms
                     (linkedin, pinterest, google) return 501 Not Implemented when bidStrategy is set.
                 smartTargeting:
                   type: object
@@ -56125,13 +56207,13 @@ paths:
           description: 'Returned with code `ads_allowance_exceeded` when the team has no payment method on file and has reached the 500 free live ads: add a card to resume.'
         '404': { description: Ad set not found }
         '409': { description: "Campaign is CBO. Route to /v1/ads/campaigns/{campaignId} instead" }
-        '422': { description: "bidStrategy is LOWEST_COST_WITH_MIN_ROAS on OpenAI (unsupported: no ROAS-based bidding)" }
-        '501': { description: "bidStrategy not supported on the platform (Meta, TikTok, and OpenAI only)" }
+        '422': { description: "bidStrategy is LOWEST_COST_WITH_MIN_ROAS on OpenAI or Reddit (unsupported: no ROAS-based bidding), or a Reddit budget that the ad group cannot take (campaign budget, or a daily/lifetime switch)" }
+        '501': { description: "bidStrategy not supported on the platform (Meta, TikTok, OpenAI and Reddit only)" }
     delete:
       x-resource-group: "ads"
       operationId: deleteAdSet
       tags: ["Ad Campaigns"]
-      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "reddit"]
       summary: Delete an ad set
       description: |
         Deletes an ad set and its ads while keeping the campaign, archiving it instead on platforms without a hard delete.
@@ -56140,7 +56222,7 @@ paths:
         `status: cancelled`.
 
         Delete is soft on platforms that have no hard delete: LinkedIn moves the
-        campaign to `PENDING_DELETION`, Pinterest archives the ad group, and X
+        campaign to `PENDING_DELETION`, Pinterest and Reddit archive the ad group, and X
         soft-flags the line item. Google removes the ad group. All remain readable
         for reporting.
       security:
@@ -56166,7 +56248,7 @@ paths:
       x-resource-group: "ads"
       operationId: updateAdSetStatus
       tags: ["Ad Campaigns"]
-      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "openai"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "openai", "reddit"]
       summary: Pause or resume a single ad set
       description: |
         Pauses or resumes one ad set without touching its campaign, its sibling ad sets or the switches of its ads.
@@ -56179,7 +56261,7 @@ paths:
         Writes the ad set's own on/off switch and nothing else, on every platform
         (Meta `configured_status`, TikTok ad group `operation_status`, Google ad
         group status, LinkedIn campaign, Pinterest ad group, X line item, ChatGPT
-        (OpenAI) ad group). Its ads keep their own switches: an ad you paused
+        (OpenAI) ad group, Reddit ad group `configured_status`). Its ads keep their own switches: an ad you paused
         individually stays paused when the ad set resumes. The campaign above is
         not touched either, so an ad set resumed under a paused campaign reads
         `status: paused` until the campaign is resumed too. See the Status model
@@ -56208,7 +56290,7 @@ paths:
               required: [status, platform]
               properties:
                 status: { type: string, enum: [active, paused] }
-                platform: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai] }
+                platform: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit] }
       responses:
         '200':
           description: Ad set status updated
@@ -56218,7 +56300,7 @@ paths:
                 type: object
                 properties:
                   status: { type: string, enum: [active, paused], description: "The ad set's delivery status derived from the switches read back: `paused` when its own switch or its campaign's switch is off. Echoes the request when the platform could not be read." }
-                  platformAdSetStatus: { type: [string, "null"], description: "The ad set's own switch as read back from the platform, in the raw platform vocabulary (Meta effective_status, TikTok ENABLE / DISABLE, Google ENABLED / PAUSED, LinkedIn and Pinterest ACTIVE / PAUSED, ChatGPT (OpenAI) status). Null when the platform could not be read, which is always the case on X." }
+                  platformAdSetStatus: { type: [string, "null"], description: "The ad set's own switch as read back from the platform, in the raw platform vocabulary (Meta effective_status, TikTok ENABLE / DISABLE, Google ENABLED / PAUSED, LinkedIn and Pinterest ACTIVE / PAUSED, ChatGPT (OpenAI) status, Reddit configured_status). Null when the platform could not be read, which is always the case on X." }
                   platformCampaignStatus: { type: [string, "null"], description: "The parent campaign's switch, read in the same call where the platform returns it, otherwise the stored value." }
                   statusReadAt: { type: [string, "null"], format: date-time, description: 'When the ad set switch was read back. Null when it could not be read.' }
                   updated: { type: integer, enum: [0, 1], description: "1 when the ad set's switch was written." }
@@ -56235,7 +56317,7 @@ paths:
       x-resource-group: "ads"
       operationId: getAdTree
       tags: ["Ad Campaigns"]
-      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "reddit"]
       summary: Get campaign tree
       description: |
         Shows your campaigns with their ad sets and ads nested inside, with spend and results rolled up at every level.
@@ -56262,7 +56344,7 @@ paths:
         - $ref: '#/components/parameters/PageParam'
         - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 20 }, description: Campaigns per page }
         - { name: source, in: query, schema: { type: string, enum: [zernio, all], default: all }, description: "`all` (default) returns both Zernio-created ads and those discovered from the platform's ad manager. Matches the web UI's default view. Pass `zernio` to restrict to isExternal=false only. Status is NOT filtered by default; use the `status` param for that." }
-        - { name: platform, in: query, schema: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai] } }
+        - { name: platform, in: query, schema: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit] } }
         - { name: status, in: query, schema: { $ref: '#/components/schemas/AdStatus' }, description: Filter by derived campaign status (post-aggregation) }
         - { name: adAccountId, in: query, schema: { type: string }, description: "One or more platform ad account IDs to scope the tree to (agency profiles connect a whole Business Manager but a team usually cares about a subset). Comma-separate for multiple (`?adAccountId=act_1,act_2,act_3`); single value keeps its old shape. Max 50 accounts per request; the plural aliases `adAccountIds` and `platformAdAccountIds` are rejected with a 400 to stop them from silently returning the unfiltered fleet." }
         - { name: pageId, in: query, schema: { type: string }, description: "Meta only: Facebook Page ID. Prunes the tree to ads whose creative is backed by this Page: campaigns and ad sets with no ad on the Page drop out, and rolled-up metrics cover only the Page's ads. Mirrors the same filter on /v1/ads and /v1/ads/campaigns." }
@@ -56307,7 +56389,7 @@ paths:
       x-resource-group: "ads"
       operationId: getAdsTimeline
       tags: ["Ad Campaigns"]
-      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "reddit"]
       summary: Get daily account metrics
       description: |
         Returns an ads account's spend, results and other metrics day by day, ready for a daily performance chart.
@@ -56334,7 +56416,7 @@ paths:
         - { name: adAccountId, in: query, schema: { type: string }, description: "Optional platform-native ad account ID (e.g. Meta `act_…`, TikTok advertiser ID). Use when the connection wraps multiple platform ad accounts and the chart should show one only. Note: rows ingested before 2026-05-13 don't carry this column; the recurring 7-day re-sync repopulates them naturally." }
         - { name: fromDate, in: query, schema: { type: string, format: date }, description: "Inclusive start of metrics range (YYYY-MM-DD). Defaults to 90 days ago." }
         - { name: toDate, in: query, schema: { type: string, format: date }, description: "Inclusive end of metrics range (YYYY-MM-DD). Defaults to today. Max 730-day range." }
-        - { name: platform, in: query, schema: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai] }, description: Restrict to one platform. }
+        - { name: platform, in: query, schema: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit] }, description: Restrict to one platform. }
       responses:
         '200':
           description: Daily time series of aggregate metrics. Empty `rows` means the account has no ad activity in the range.
@@ -56365,7 +56447,7 @@ paths:
       x-resource-group: "ads"
       operationId: getAd
       tags: ["Ad Campaigns"]
-      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "reddit"]
       summary: Get ad details
       description: |
         Shows one ad with its creative, targeting, status and performance metrics.
@@ -56440,7 +56522,7 @@ paths:
       x-resource-group: "ads"
       operationId: updateAd
       tags: ["Ad Campaigns"]
-      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "reddit"]
       summary: Update ad
       description: |
         Changes an ad's status, budget, targeting or creative and applies the change on the platform.
@@ -56491,6 +56573,12 @@ paths:
         - **Pinterest / X / OpenAI Ads**: status + budget only. Sending
           `targeting` or `creative` returns 501 with code `unsupported_platform_operation`.
           OpenAI Ads budget is the campaign's spend cap, daily or lifetime (see `budget.type` below).
+        - **Reddit Ads**: status, budget, `name` (renames the ad) and targeting. `budget` goes to
+          the ad's ad group, or to its campaign when the ad group spends a campaign budget, and
+          keeps its daily or lifetime type (422 to switch). `targeting` REPLACES the ad group's
+          whole targeting (geo, communities, conversation keywords, interests, audiences,
+          languages, gender), so it applies to every ad in the ad group. `creative` returns 501:
+          a Reddit ad runs a post, so create a new ad with the new creative instead.
 
         **Google location and language replacement:** locations, languages and devices are
         campaign-level criteria on Google, so these edits apply to every ad group and ad in
@@ -56789,12 +56877,12 @@ paths:
       x-resource-group: "ads"
       operationId: deleteAd
       tags: ["Ad Campaigns"]
-      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "reddit"]
       summary: Cancel an ad
       description: |
         Deletes an ad on the platform while keeping its history, and removes empty parents only when they were created through this API.
 
-        Deletes the ad on the platform and marks it as cancelled in the database. The ad is preserved for history. OpenAI Ads has no delete API; the ad is archived instead (a terminal state, the closest equivalent).
+        Deletes the ad on the platform and marks it as cancelled in the database. The ad is preserved for history. OpenAI Ads has no delete API; the ad is archived instead (a terminal state, the closest equivalent). Reddit Ads has no delete either: the ad is archived (`configured_status` ARCHIVED).
 
         Only the ad is deleted; a campaign or ad set is never deleted while it still holds another ad. On Meta, when the ad set and campaign were created by Zernio (by `POST /v1/ads/create` or `POST /v1/ads/boost`) and Meta lists no other ad in the ad set (archived ads count), the emptied ad set is deleted too, then the campaign once it holds no other ad set. Parents created outside Zernio, and the parents of an ad imported from the platform, are always kept. On LinkedIn the ad is a creative inside a campaign inside a campaign group: the creative is always removed, the campaign only when Zernio created it and LinkedIn lists no other creative in it that is not archived, canceled or deleted, and the campaign group only when Zernio created it and LinkedIn lists no other campaign in it that is not canceled or deleted (archived campaigns count). If the creative itself cannot be removed the request fails and no parent is touched. On X the ad is a promoted post inside a line item inside a campaign: the promoted post is always removed, the line item only when Zernio created it (by `POST /v1/ads/create` or `POST /v1/ads/boost`) and X lists no other undeleted promoted post in it, and the campaign only when Zernio created it and X lists no other undeleted line item in it. If X refuses the promoted post delete the request fails and no parent is touched. To delete a whole campaign on purpose use `DELETE /v1/ads/campaigns/{campaignId}`.
       security:
@@ -56818,14 +56906,14 @@ paths:
       x-resource-group: "ads"
       operationId: updateAdStatus
       tags: ["Ad Campaigns"]
-      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "reddit"]
       summary: Pause or resume a single ad
       description: |
         Pauses or resumes a single ad without touching its ad set, campaign or sibling ads.
 
         Ad-scoped pause/resume: flips ONLY this ad's own switch (Meta
         `configured_status`, TikTok `operation_status`, Google ad group ad
-        status, LinkedIn creative, Pinterest ad), never its parent ad set or
+        status, LinkedIn creative, Pinterest ad, Reddit ad `configured_status`), never its parent ad set or
         campaign, so sibling ads keep running. X is the exception: its smallest
         switch is the line item. Thin wrapper over the `status` field of
         PUT /v1/ads/{adId}, for callers that want a URL symmetric to
@@ -57681,7 +57769,7 @@ paths:
       x-resource-group: "ads"
       operationId: getCampaignAnalytics
       tags: ["Ad Insights"]
-      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "reddit"]
       summary: Get campaign analytics
       description: |
         Returns a campaign's performance summary and daily timeline, with optional breakdowns by age, gender and other audience dimensions.
@@ -58387,7 +58475,7 @@ paths:
       x-resource-group: "ads"
       operationId: getAdAnalytics
       tags: ["Ad Insights"]
-      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "reddit"]
       summary: Get ad analytics
       description: |
         Returns one ad's performance summary and daily timeline, with optional audience breakdowns on Meta and TikTok.
@@ -60664,6 +60752,7 @@ paths:
               - "google"
               - "twitter"
               - "openai"
+              - "reddit"
             description: "Optional courtesy field. The resolved account or campaign determines support; other platforms return 501."
       responses:
         "200":
@@ -60765,6 +60854,7 @@ paths:
                     - "google"
                     - "twitter"
                     - "openai"
+                    - "reddit"
                   description: "Optional courtesy field. The resolved account or campaign determines support; other platforms return 501."
                 name:
                   type: "string"
@@ -60887,6 +60977,7 @@ paths:
               - "google"
               - "twitter"
               - "openai"
+              - "reddit"
             description: "Optional courtesy field. The resolved account or campaign determines support; other platforms return 501."
       responses:
         "200":
@@ -61008,6 +61099,7 @@ paths:
                     - "google"
                     - "twitter"
                     - "openai"
+                    - "reddit"
                   description: "Optional courtesy field. The resolved account or campaign determines support; other platforms return 501."
                 name:
                   type: "string"
@@ -61109,6 +61201,7 @@ paths:
               - "google"
               - "twitter"
               - "openai"
+              - "reddit"
             description: "Optional courtesy field. The resolved account or campaign determines support; other platforms return 501."
       responses:
         "200":
@@ -61201,6 +61294,7 @@ paths:
                     - "google"
                     - "twitter"
                     - "openai"
+                    - "reddit"
                   description: "Optional courtesy field. The resolved account or campaign determines support; other platforms return 501."
                 keywords:
                   type: "array"
@@ -61289,6 +61383,7 @@ paths:
               - "google"
               - "twitter"
               - "openai"
+              - "reddit"
             description: "Optional courtesy field. The resolved account or campaign determines support; other platforms return 501."
       responses:
         "200":
@@ -61384,6 +61479,7 @@ paths:
                     - "google"
                     - "twitter"
                     - "openai"
+                    - "reddit"
                   description: "Optional courtesy field. The resolved account or campaign determines support; other platforms return 501."
                 listIds:
                   type: "array"
@@ -63051,7 +63147,7 @@ paths:
       x-resource-group: "ads"
       operationId: listAdAccounts
       tags: ["Ad Accounts"]
-      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "reddit"]
       summary: List ad accounts
       description: |
         Lists the ad accounts a connection can manage, such as Meta ad accounts, TikTok advertisers or Google Ads customers.
@@ -63070,6 +63166,9 @@ paths:
 
         For Google Ads: responds `429` when Google's API quota is temporarily exhausted
         (instead of an empty list). Retry after a delay.
+
+        For Reddit Ads (`redditads`): every Reddit ad account the connected Reddit user can reach,
+        with `businessId`, `approvalStatus` (Reddit's `admin_approval`), `timezone` and `type`.
       security:
         - bearerAuth: []
       parameters:
@@ -63121,7 +63220,9 @@ paths:
                             - `9` IN_GRACE_PERIOD. Still running, on a deadline.
                             - `100` PENDING_CLOSURE. Scheduled to close.
                             - `101` CLOSED. Terminal.
-                        approvalStatus: { type: string, description: "X only. X's own ad account approval status. Observed values are `ACCEPTED`, `PENDING` and `REJECTED`, but X does not publish the full vocabulary, so treat an unrecognised value as not usable. Other platforms report `accountStatus` or `status` instead." }
+                        approvalStatus: { type: string, description: "X and Reddit only. X's own ad account approval status, or Reddit's `admin_approval`. Observed X values are `ACCEPTED`, `PENDING` and `REJECTED`, but X does not publish the full vocabulary, so treat an unrecognised value as not usable. Other platforms report `accountStatus` or `status` instead." }
+                        timezone: { type: string, description: "Reddit only. The ad account's time zone as Reddit reports it (`time_zone_id`). Schedules on Reddit ads are read in this zone." }
+                        type: { type: string, description: "Reddit only. Reddit's ad account type, forwarded unchanged." }
                         disableReason: { type: integer, description: "Meta only. Meta's `disable_reason` code, forwarded unchanged. Present when `accountStatus` is `2` (DISABLED) and Meta gives a reason, which is what separates a policy action from a payment problem. Meta does not publish a stable list of values for this field, so none are enumerated here: resolve the code against Meta's own ad account reference. Absent when Meta reports no reason, or when the connected token cannot read the field." }
                         balance: { type: number, description: "TikTok only. Total balance the advertiser can spend (cash plus grant), in whole units of `currency`. Read from the Business Center balance when the connection has a finance role there, which is the only TikTok source that counts cash held in a shared payment portfolio; otherwise TikTok's advertiser-level balance, which can read 0 for a cash-funded advertiser." }
                         cashBalance: { type: number, description: "TikTok only. Cash part of `balance`, in whole units of `currency`. Absent when the connection has no finance role in the advertiser's Business Center." }
@@ -63352,7 +63453,7 @@ paths:
       x-resource-group: "ads"
       operationId: boostPost
       tags: ["Ad Campaigns"]
-      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "reddit"]
       summary: Boost post as ad
       description: |
         Turns an already published post into a paid ad that keeps the post's likes and comments, creating the campaign around it.
@@ -63378,6 +63479,22 @@ paths:
         connection: either resolves the other on the same profile. A Zernio
         `postId` on an X Ads connection resolves through its X account, and is
         a 400 when the profile has none (pass `platformPostId` instead).
+
+        **Reddit.** `accountId` is the Reddit Ads connection (platform `redditads`).
+        Pass the Reddit post as `platformPostId` (`t3_abc123` or the bare id), or a
+        Zernio `postId`, which resolves through the Reddit account connected on the
+        same profile (400 when there is none). Reddit promotes only posts made by a
+        profile of the ad account: a post by any other author returns 422. Goals are
+        traffic, awareness, conversions, video_views (the post must be a video, 422
+        otherwise) and lead_generation; conversions and lead_generation need a pixel
+        that already received the event (see `promotedObject`). `leadGenFormId` returns
+        400: Reddit retired its native lead forms, so `lead_generation` sends people to
+        `linkUrl` and optimizes toward the pixel's Lead event. Each boost creates a
+        campaign, an ad group carrying the budget, the targeting and the bid, and the ad.
+        `bidStrategy` sets the ad group's bid: LOWEST_COST_WITHOUT_CAP (or omitted) is
+        automatic bidding (BIDLESS), LOWEST_COST_WITH_BID_CAP is MANUAL_BIDDING with
+        `bidAmount` as the bid, COST_CAP is MAXIMIZE_VOLUME with `bidAmount` as the cap; any
+        other strategy returns 422 before anything is created.
 
         **Messaging boosts (Meta).** Use `goal: engagement` with
         `callToAction: WHATSAPP_MESSAGE`, `MESSAGE_PAGE`, or `INSTAGRAM_MESSAGE`.
@@ -63416,13 +63533,13 @@ paths:
               properties:
                 creativeFeatures: { $ref: '#/components/schemas/MetaCreativeFeatures' }
                 postId: { type: string, description: Zernio post ID (provide this or platformPostId) }
-                platformPostId: { type: string, description: 'Platform post ID (alternative to postId). Meta: a Page post id (`<pageId>_<postId>` or the bare post id) or an Instagram media id. On a Meta Ads business-login connection (platform metaads) the id is resolved live: an Instagram media id is boosted as that media, running as the Instagram account that owns it.' }
-                accountId: { type: string, description: "Zernio account id. Normally the connected posting account (facebook, instagram, tiktok, linkedin, pinterest, twitter) or a googleads account. TikTok: the TikTok Ads connection (platform tiktokads) is accepted too when the post brings its own authorization (sparkAuthCode or sparkPosts), so Spark ads need no organic TikTok account connected; such a call must use platformPostId, not postId." }
+                platformPostId: { type: string, description: 'Platform post ID (alternative to postId). Reddit: the post id, with or without the `t3_` prefix. Meta: a Page post id (`<pageId>_<postId>` or the bare post id) or an Instagram media id. On a Meta Ads business-login connection (platform metaads) the id is resolved live: an Instagram media id is boosted as that media, running as the Instagram account that owns it.' }
+                accountId: { type: string, description: "Zernio account id. Normally the connected posting account (facebook, instagram, tiktok, linkedin, pinterest, twitter), a googleads account or a redditads account. TikTok: the TikTok Ads connection (platform tiktokads) is accepted too when the post brings its own authorization (sparkAuthCode or sparkPosts), so Spark ads need no organic TikTok account connected; such a call must use platformPostId, not postId." }
                 adAccountId: { type: string, description: Platform ad account ID }
                 name: { type: string, maxLength: 255 }
                 campaignName: { type: string, maxLength: 255, description: "Exact name for the campaign this boost provisions. Omitted keeps the default `<name> - Campaign`. Every platform: on LinkedIn it names the campaign group. Ignored on the Meta attach shape (`adSetId`), which creates no campaign." }
                 adSetName: { type: string, maxLength: 255, description: "Exact name for the ad-group level this boost provisions. Omitted keeps the default `<name> - Ad Group`. Meta: ad set; TikTok, Pinterest, Google: ad group; X: line item; LinkedIn: the campaign under the campaign group. Ignored on the Meta attach shape." }
-                goal: { type: string, enum: [engagement, traffic, awareness, video_views, lead_generation, conversions, app_promotion], description: "Available goals vary by platform. Meta (Facebook/Instagram) and TikTok support all 7. LinkedIn supports all except app_promotion. X supports engagement, traffic, awareness, video_views, app_promotion. Pinterest and Google Ads support only engagement, traffic, awareness, video_views." }
+                goal: { type: string, enum: [engagement, traffic, awareness, video_views, lead_generation, conversions, app_promotion], description: "Available goals vary by platform. Meta (Facebook/Instagram) and TikTok support all 7. LinkedIn supports all except app_promotion. X supports engagement, traffic, awareness, video_views, app_promotion. Pinterest and Google Ads support only engagement, traffic, awareness, video_views. Reddit supports traffic, awareness, video_views, lead_generation and conversions." }
                 adSetId: { type: string, description: "Meta, or TikTok with `smartPlus: true`. Attach the boosted post to this existing ad set instead of creating a campaign. On TikTok the id is an existing Smart+ ad group: the post is added as one more Spark ad in it (up to 30 per ad group), under the identity its `sparkAuthCode` creates; goal and budget are inherited from the Smart+ campaign; a regular ad group is rejected with a 400. Meta: The ad set then owns budget, schedule and targeting; sending those too is a 400." }
                 existingCampaignId: { type: string, description: "TikTok only. Create the ad group and the Spark ad under this existing TikTok campaign instead of creating a new campaign. The campaign keeps its own status and objective (the objective must fit `goal`). Cannot be combined with adSetId or smartPlus. On Meta use POST /v1/ads/create with existingCampaignId." }
                 identityId: { type: string, description: "TikTok only. The identity the ad runs as (the profile shown on the ad), from GET /v1/ads/tiktok-identities. Default: the connected TikTok account's own identity. Must be authorized on the advertiser or the call fails naming the available ones." }
@@ -63446,11 +63563,11 @@ paths:
                 startDate:
                   type: string
                   format: date-time
-                  description: 'Ad-set start time (ISO 8601, e.g. "2026-06-10T09:00:00Z"), mapped to the ad set''s `start_time`. When omitted the ad starts delivering immediately. On Meta, TikTok, X and Pinterest a value without an offset (`YYYY-MM-DD`, `YYYY-MM-DD HH:MM:SS` or `YYYY-MM-DDTHH:MM:SS`) is read in the ad account timezone. Same field as on POST /v1/ads/create.'
+                  description: 'Ad-set start time (ISO 8601, e.g. "2026-06-10T09:00:00Z"), mapped to the ad set''s `start_time`. When omitted the ad starts delivering immediately. On Meta, TikTok, X, Pinterest and Reddit a value without an offset (`YYYY-MM-DD`, `YYYY-MM-DD HH:MM:SS` or `YYYY-MM-DDTHH:MM:SS`) is read in the ad account timezone. Same field as on POST /v1/ads/create.'
                 endDate:
                   type: string
                   format: date-time
-                  description: 'Ad-set end time (ISO 8601), mapped to the ad set''s `end_time` (on X, the line item''s `end_time`; X campaigns carry no flight dates). Required for lifetime budgets. On Meta, TikTok, X and Pinterest a value without an offset (`YYYY-MM-DD`, `YYYY-MM-DD HH:MM:SS` or `YYYY-MM-DDTHH:MM:SS`) is read in the ad account timezone, and a date-only end runs to 23:59:59 local. Same field as on POST /v1/ads/create.'
+                  description: 'Ad-set end time (ISO 8601), mapped to the ad set''s `end_time` (on X, the line item''s `end_time`; X campaigns carry no flight dates). Required for lifetime budgets. On Meta, TikTok, X, Pinterest and Reddit a value without an offset (`YYYY-MM-DD`, `YYYY-MM-DD HH:MM:SS` or `YYYY-MM-DDTHH:MM:SS`) is read in the ad account timezone, and a date-only end runs to 23:59:59 local. Same field as on POST /v1/ads/create.'
                 schedule:
                   type: object
                   deprecated: true
@@ -63465,12 +63582,16 @@ paths:
                     Geo keys (`regions`/`cities`/`zips`/`metros`) resolve via
                     GET /v1/ads/targeting/search?dimension=geo. City radius and lat/lng
                     `customLocations` are Meta-only and preserve the boosted post's
-                    social proof (the ad references the existing post).
+                    social proof (the ad references the existing post). On Reddit the whole
+                    `TargetingSpec` applies, including `communities`, `excludedCommunities`,
+                    `conversationKeywords`, `excludedConversationKeywords`, `interests`,
+                    `audienceInclude` / `audienceExclude` and `excludedLocations`; without
+                    any geo the ad targets the US.
                   properties:
                     ageMin: { type: integer, minimum: 13, maximum: 65 }
                     ageMax: { type: integer, minimum: 13, maximum: 65 }
-                    gender: { type: string, enum: [all, male, female], description: "Applied on Meta, TikTok and Pinterest. Ignored on Google, LinkedIn and X." }
-                    languages: { type: array, items: { type: string }, description: "Meta locale ids (numeric), passed through as given." }
+                    gender: { type: string, enum: [all, male, female], description: "Applied on Meta, TikTok, Pinterest and Reddit. Ignored on Google, LinkedIn and X." }
+                    languages: { type: array, items: { type: string }, description: "Meta locale ids (numeric), passed through as given. Reddit: language codes (e.g. `en`)." }
                     countries: { type: array, items: { type: string }, description: "ISO country codes. Required for TikTok boosts (TikTok's ad group requires location_ids); optional on other platforms." }
                     regions:
                       type: array
@@ -63566,7 +63687,9 @@ paths:
                     Deprecated: send it inside `platformSpecificData` instead (Meta today; TikTok's nested shape is planned). The flat field keeps working during the deprecation window; sending both shapes returns a 400.
 
                     Meta bid strategy applied to the ad set. On TikTok, mapped to
-                    `bid_type` / `bid_price` / `deep_bid_type` automatically.
+                    `bid_type` / `bid_price` / `deep_bid_type` automatically. On Reddit,
+                    applied to the new ad group (see the Reddit section above; 422 for
+                    LOWEST_COST_WITH_MIN_ROAS).
                 bidAmount:
                   type: number
                   deprecated: true
@@ -63601,7 +63724,7 @@ paths:
                     - $ref: '#/components/schemas/MetaAdsPlatformData'
                 tracking:
                   type: object
-                  description: "Meta only. Tracking specs (pixel, URL tags)."
+                  description: "Meta only, except `pixelId`, which also picks the Reddit pixel of the new ad group (`promotedObject.pixelId` wins when both are sent). Tracking specs (pixel, URL tags)."
                   properties:
                     pixelId: { type: string }
                     urlTags:
@@ -63643,6 +63766,8 @@ paths:
                     **TikTok**: maps to `landing_page_url` on the Spark Ad creative
                     (`AdcreateCreatives.landing_page_url`); Spark Ads have no clickable
                     destination without it.
+
+                    **Reddit**: the ad's `click_url`, where a click on the promoted post lands.
 
                     Ignored on LinkedIn / Pinterest / X / Google, which infer the destination
                     from the boosted post.
@@ -63700,7 +63825,7 @@ paths:
                 promotedObject:
                   type: object
                   description: |
-                    Meta and TikTok. What the conversion ad set optimizes toward, so a boost
+                    Meta, TikTok and Reddit. What the conversion ad set optimizes toward, so a boost
                     of an existing organic post can run for a conversion instead of only
                     engagement or traffic. Required when `goal` is `conversions` (Meta also
                     `lead_conversion`); ignored on goals that do not optimize for a conversion.
@@ -63718,10 +63843,17 @@ paths:
                     with a pixel but no event ("Select a pixel event."). Combine freely with
                     `platformPostId` + `sparkAuthCode`: the pixel lives on the ad group and
                     the Spark item on the creative.
+
+                    Reddit: every ad group carries a pixel, whatever the goal. `pixelId` picks
+                    it (default: the ad account's first pixel; 422 when the account has none).
+                    `conversions` requires `customEventType` (PURCHASE, LEAD,
+                    COMPLETE_REGISTRATION, SIGN_UP, ADD_TO_CART, PAGE_VISIT, VIEW_CONTENT or
+                    CONTENT_VIEW), and the pixel must already have received that event (422
+                    otherwise); `lead_generation` needs the pixel to have received Lead.
                   properties:
                     pixelId:
                       type: string
-                      description: 'Meta Pixel id, or TikTok Pixel (numeric id or the alphanumeric pixel code from Events Manager, resolved for you).'
+                      description: 'Meta Pixel id, TikTok Pixel (numeric id or the alphanumeric pixel code from Events Manager, resolved for you), or Reddit pixel id.'
                     customEventType:
                       type: string
                       description: 'Meta: standard pixel event (PURCHASE, LEAD, ...) or OTHER with customEventStr. TikTok: optimization_event code (e.g. ON_WEB_ORDER, SHOPPING, FORM) or the exact event name shown in Events Manager, resolved to its code; the event must already exist on that pixel.'
@@ -63747,7 +63879,7 @@ paths:
                     (for example, an agency paying for a client's ads). Same rules as
                     `dsaBeneficiary`: required for EU targeting unless the ad account has
                     a default payor.
-                leadGenFormId: { type: string, description: "Lead Gen form ID to attach to the boosted ad's creative. REQUIRED when `goal` is `lead_generation`. On Meta this is the leadgen_forms ID (create one via POST /v1/ads/lead-forms). On LinkedIn this is the adForm ID (create one via POST /v1/ads/lead-forms with a LinkedIn account); the creative's `leadgenCallToAction.destination` is set to `urn:li:adForm:{id}`. Ignored for other goals." }
+                leadGenFormId: { type: string, description: "Lead Gen form ID to attach to the boosted ad's creative. REQUIRED when `goal` is `lead_generation`. On Meta this is the leadgen_forms ID (create one via POST /v1/ads/lead-forms). On LinkedIn this is the adForm ID (create one via POST /v1/ads/lead-forms with a LinkedIn account); the creative's `leadgenCallToAction.destination` is set to `urn:li:adForm:{id}`. Ignored for other goals. Reddit: rejected with 400 on every goal (Reddit retired its native lead forms)." }
                 status:
                   type: string
                   enum: [ACTIVE, PAUSED]
@@ -64194,12 +64326,12 @@ paths:
       x-resource-group: "ads"
       operationId: createStandaloneAd
       tags: ["Ad Campaigns"]
-      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "openai"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "openai", "reddit"]
       summary: Create standalone ad
       description: |
         Creates a paid ad with your own creative, building the campaign and ad set it needs or adding it to existing ones.
 
-        Create a paid ad with custom creative across Meta, Google Ads, Pinterest, TikTok, X, LinkedIn, and OpenAI Ads (ChatGPT Ads).
+        Create a paid ad with custom creative across Meta, Google Ads, Pinterest, TikTok, X, LinkedIn, OpenAI Ads (ChatGPT Ads) and Reddit Ads.
 
         Google Performance Max: set `campaignType: "pmax"` and supply `assetGroup` with
         text, images by role, business name and finalUrl. Creates a daily budget, PAUSED
@@ -64252,6 +64384,8 @@ paths:
 
         LinkedIn creates a Single Image or Single Video Ad backed by a Direct Sponsored Content "dark post" authored by a Company Page (see `organizationId`). Supported goals are engagement, traffic, awareness, and video_views (video ads use the `video` field; video_views requires a video), and traffic ads require `linkUrl`.
 
+        Reddit Ads (`accountId` of a `redditads` connection, `adAccountId` like `a2_abc123`) creates a campaign, an ad group carrying the budget, schedule, targeting and pixel, and an ad running a new promoted post authored by the ad account's first profile (422 when it has none). The creative format follows the body: `carouselCards` builds a carousel, `video` a video ad, `imageUrl` an image ad, and none of them a text ad, which cannot link out (`linkUrl` is a 400 there; `body` is required). Only the legacy single-creative shape is available: `creatives[]`, `adSetId`, `existingCampaignId` and `validateOnly` are refused. Reddit throttling surfaces as 429 `rate_limited` with `platform: reddit`; retry after a delay. To promote an existing Reddit post use POST /v1/ads/boost.
+
         **Idempotency:** this endpoint is not idempotent at the platform level (a blind retry creates a second campaign/ad set/ad). Send an `Idempotency-Key` header to make retries safe: the first request with a given key creates the ad and we store the response; a retry with the same key replays that exact response (with `Idempotent-Replayed: true`) instead of creating duplicates. Reusing a key with a different body returns 422; a key whose first request is still in flight returns 409 (retry after a short backoff). Keys are scoped to your credential and expire after 24h.
       security:
         - bearerAuth: []
@@ -64268,8 +64402,8 @@ paths:
                 accountId: { type: string }
                 adAccountId: { type: string }
                 name: { type: string, maxLength: 255 }
-                campaignName: { type: string, maxLength: 255, description: "Meta only. Exact campaign name. Overrides the default `<name> - Campaign`." }
-                adSetName: { type: string, maxLength: 255, description: "Meta only. Exact ad set name. Overrides the default `<name> - Ad Set`. (For per-ad names on the multi-creative shape, set `name` on each `creatives[]` entry.)" }
+                campaignName: { type: string, maxLength: 255, description: "Meta and Reddit. Exact campaign name. Overrides the default `<name> - Campaign`." }
+                adSetName: { type: string, maxLength: 255, description: "Meta and Reddit (the ad group). Exact ad set name. Overrides the default `<name> - Ad Set`. (For per-ad names on the multi-creative shape, set `name` on each `creatives[]` entry.)" }
                 adName: { type: string, maxLength: 255, description: "Meta only. Exact ad name (the single-creative ad object's name). Overrides the default, which is `name`. (For per-ad names on the multi-creative shape, set `name` on each `creatives[]` entry instead.)" }
                 tracking: { $ref: '#/components/schemas/AdTracking' }
                 goal:
@@ -64298,6 +64432,12 @@ paths:
 
                     **OpenAI Ads**
                     - Only `traffic`, `awareness`, and `conversions` are supported (other goals return 400). Maps to OpenAI's `bidding_type` (clicks, impressions, conversions respectively). `conversions` requires an active conversion event setting on the account; create a tracking tag with `defaultEventType` via the tracking-tags API (`POST /v1/accounts/{accountId}/tracking-tags`), or configure a conversion event in OpenAI Ads Manager, or the request returns 400. Pick the event with `promotedObject.customEventType` (see AdPromotedObject); without it the most recently created optimizable event is used.
+
+                    **Reddit Ads**
+                    - `traffic` (CLICKS), `awareness` (BRAND_AWARENESS), `conversions`, `video_views` (VIDEO_VIEWABLE_IMPRESSIONS) and `lead_generation` (LEAD_GENERATION); any other goal returns 400.
+                    - `conversions` requires `promotedObject.customEventType`; the pixel must already have received that event (see AdPromotedObject).
+                    - `lead_generation` sends people to `linkUrl` and optimizes toward the pixel's Lead event, which the pixel must already have received. Reddit retired its native lead forms on September 30, 2026, so `leadGenFormId` returns 400.
+                    - `video_views` needs a `video` (422 otherwise); `optimizationGoal` picks VIDEO_VIEW_6S (default) or VIDEO_VIEW_15S.
                 smartTargeting:
                   type: object
                   description: |
@@ -64311,7 +64451,7 @@ paths:
                   properties:
                     audience: { type: boolean, description: "TikTok smart_audience_enabled." }
                     interestsBehaviors: { type: boolean, description: "TikTok smart_interest_behavior_enabled." }
-                optimizationGoal: { type: string, description: "Meta, or TikTok with goal video_views (ENGAGED_VIEW, the 6-second default, or ENGAGED_VIEW_FIFTEEN; both bill per view). Meta: Explicit ad-set `optimization_goal` (e.g. `LANDING_PAGE_VIEWS`, `LINK_CLICKS`, `REACH`, `IMPRESSIONS`, `OFFSITE_CONVERSIONS`, `THRUPLAY`, `LEAD_GENERATION`). Overrides the default derived from `goal` (e.g. `traffic` defaults to `LINK_CLICKS`). Forwarded verbatim to Meta, which validates compatibility with the campaign objective and rejects incompatible combinations." }
+                optimizationGoal: { type: string, description: "Meta, TikTok with goal video_views (ENGAGED_VIEW, the 6-second default, or ENGAGED_VIEW_FIFTEEN; both bill per view), or Reddit with goal video_views (VIDEO_VIEW_6S, the default, or VIDEO_VIEW_15S; other values return 400). Meta: Explicit ad-set `optimization_goal` (e.g. `LANDING_PAGE_VIEWS`, `LINK_CLICKS`, `REACH`, `IMPRESSIONS`, `OFFSITE_CONVERSIONS`, `THRUPLAY`, `LEAD_GENERATION`). Overrides the default derived from `goal` (e.g. `traffic` defaults to `LINK_CLICKS`). Forwarded verbatim to Meta, which validates compatibility with the campaign objective and rejects incompatible combinations." }
                 billingEvent: { type: string, description: "Meta only. Explicit ad-set `billing_event`. Defaults to `IMPRESSIONS`. Forwarded verbatim to Meta, which validates compatibility with the optimization goal." }
                 buyingType: { type: string, enum: [AUCTION, RESERVED], default: AUCTION, description: "Meta only. Defaults to AUCTION and is explicitly sent on new campaigns, including validateOnly. Reusing existingCampaignId does not change the campaign. RESERVED = Reach & Frequency: requires `rfPredictionId` (a RESERVED prediction from /v1/ads/rf-predictions + /reserve). Budget, schedule and pricing come from the reservation, so budgetAmount/budgetType are not required and bid fields are ignored. Only the plain single-ad shape (no creatives[], adSetId, existingCampaignId or dynamicCreative)." }
                 rfPredictionId: { type: string, description: "Meta only. The RESERVED prediction id the R&F ad set runs on (reserving mints a new id, so pass that one). Requires buyingType RESERVED." }
@@ -64333,7 +64473,7 @@ paths:
                   type: boolean
                   description: 'Google Performance Max validates the complete atomic campaign and asset group with no resource creation or local persistence. Google validation still downloads image URLs and consumes quota. On Meta, validates the complete inline campaign, ad set, creative and ad with execution_options validate_only. Nothing is uploaded or created, and validation bypasses Idempotency-Key storage. Supports a single image, all-image placementAssets with per-rule copy, existing video.id or existingCreativeId; other media pools, new video uploads, creatives[], adSetId and RESERVED buying return 400. Placement validation uses existing Instagram identities only. Existing campaign or creative nodes are marked skipped. Success returns 200 with per-node results; Meta rejection returns an error. ChatGPT (OpenAI) has no platform dry-run: Zernio runs every check it knows (creative lengths, budget, bid strategy, targeting) plus live lookups of the conversion event and target countries, and uploads or creates nothing. OpenAI''s own write-time checks (image fetch, currency-specific minimums, ad review) still run only on a real create. Any other platform, or a Google campaignType other than pmax or demand_gen, returns 501 `feature_not_available`.'
                 budgetAmount: { type: number, description: "Budget in WHOLE currency units (USD: 50 = $50.00), NOT cents. Meta's own Marketing API takes this same number in minor units, so it is an easy and expensive mix-up. Required on legacy, multi-creative and Performance Max shapes. Inherited on attach. OpenAI Ads: in the ad account currency, minimum 1; OpenAI can require a higher daily minimum for some currencies and names it in the error." }
-                budgetType: { type: string, enum: [daily, lifetime], description: "Required on legacy, multi-creative and Performance Max shapes. Inherited on attach. OpenAI Ads accepts both as the campaign's single spend cap. A lifetime cap can later switch to daily with PUT /v1/ads/campaigns/{campaignId}, but OpenAI never switches a daily cap back to lifetime (422). Automatic bidding (Maximize Results) needs a daily budget." }
+                budgetType: { type: string, enum: [daily, lifetime], description: "Required on legacy, multi-creative and Performance Max shapes. Inherited on attach. OpenAI Ads accepts both as the campaign's single spend cap. A lifetime cap can later switch to daily with PUT /v1/ads/campaigns/{campaignId}, but OpenAI never switches a daily cap back to lifetime (422). Automatic bidding (Maximize Results) needs a daily budget. Reddit Ads: the ad group's daily or lifetime spend goal; lifetime needs `endDate`." }
                 status:
                   type: string
                   enum: [ACTIVE, PAUSED]
@@ -64375,9 +64515,9 @@ paths:
                     Meta requires the budget at exactly one level, never both. Non-Meta platforms ignore
                     this field. Ignored on the attach shape (`adSetId`), which inherits the existing budget.
                 currency: { type: string, minLength: 3, maxLength: 3, description: "ISO 4217 currency code matching the ad account's currency (e.g. `USD`). Meta only. Optional: Zernio resolves it from the ad account when omitted. The value selects the minor-unit exponent Zernio converts budget/bid amounts by before calling Meta (most currencies are cents; zero-decimal currencies like JPY/KRW are sent as-is)." }
-                headline: { type: string, description: "Required for Meta, Google, Pinterest, LinkedIn, and OpenAI Ads on legacy + attach shapes (skip for multi-creative; use `creatives[].headline`). Ignored for TikTok. On X, the website card title (needs imageUrl and linkUrl, max 70). Max: Meta=255, Google=30, Pinterest=100, LinkedIn=400, OpenAI=50 (min 3). On LinkedIn this is the ad's headline (the bold text on the creative); for traffic ads it's the link card title. On OpenAI Ads this is the chat card's title." }
+                headline: { type: string, description: "Required for Meta, Google, Pinterest, LinkedIn, OpenAI Ads and Reddit Ads on legacy + attach shapes (skip for multi-creative; use `creatives[].headline`). Ignored for TikTok. On X, the website card title (needs imageUrl and linkUrl, max 70). Max: Meta=255, Google=30, Pinterest=100, LinkedIn=400, OpenAI=50 (min 3), Reddit=300 (the promoted post's title). On LinkedIn this is the ad's headline (the bold text on the creative); for traffic ads it's the link card title. On OpenAI Ads this is the chat card's title." }
                 longHeadline: { type: string, maxLength: 90, description: "Google Display only. Defaults to `headline` if omitted. On LinkedIn, reused as the optional secondary description text on traffic (link) ads; omitted if not provided." }
-                body: { type: string, description: "Required on legacy + attach shapes. For X this is the tweet text (max 280 chars including a ~24-char URL when `linkUrl` is set). On LinkedIn this is the post commentary (the intro text shown above the ad). On OpenAI Ads this is the chat card's body text. Max: Google=90, Pinterest=500, OpenAI=100." }
+                body: { type: string, description: "Required on legacy + attach shapes. For X this is the tweet text (max 280 chars including a ~24-char URL when `linkUrl` is set). On LinkedIn this is the post commentary (the intro text shown above the ad). On OpenAI Ads this is the chat card's body text. On Reddit it is the promoted post's body: optional on image, video and carousel ads, required on text ads. Max: Google=90, Pinterest=500, OpenAI=100." }
                 description: { type: string, maxLength: 255, description: "Meta only (facebook/instagram). Link description: the secondary text shown below the headline (Meta's link_data.description; on video creatives mapped to video_data.link_description). When omitted, Meta auto-pulls the destination URL's OpenGraph description. Applies on legacy, attach, and placementAssets shapes; for multi-creative use creatives[].description (this field is the shared fallback). For multi-text variations use `descriptions` (array) instead." }
                 bodies:
                   type: array
@@ -64414,10 +64554,10 @@ paths:
                   maxItems: 5
                   items: { type: string, maxLength: 255 }
                   description: 'Meta only. Optional description variations for Multiple Text Options. Sent alongside `bodies` and `headlines`.'
-                callToAction: { type: string, enum: [LEARN_MORE, SHOP_NOW, SIGN_UP, BOOK_TRAVEL, CONTACT_US, DOWNLOAD, GET_OFFER, GET_QUOTE, SUBSCRIBE, WATCH_MORE, ADD_TO_CART, APPLY_NOW, BOOK_NOW, BUY_TICKETS, DONATE, DONATE_NOW, GET_DIRECTIONS, GET_SHOWTIMES, LISTEN_NOW, ORDER_NOW, PLAY_GAME, REQUEST_TIME, SEE_MENU, START_ORDER, INSTALL_MOBILE_APP, USE_APP, REGISTER, JOIN, ATTEND, REQUEST_DEMO, VIEW_QUOTE, APPLY, SEE_MORE, BUY_NOW], description: "Required on legacy + attach shapes for Meta. Honoured on TikTok (passes through to the Spark Ad creative's `call_to_action`) and on LinkedIn (the CTA button on the ad; defaults to LEARN_MORE when `linkUrl` is set). LinkedIn accepts: LEARN_MORE, SIGN_UP, DOWNLOAD, SUBSCRIBE, REGISTER, JOIN, ATTEND, REQUEST_DEMO, VIEW_QUOTE, APPLY, SEE_MORE, SHOP_NOW, BUY_NOW. Ignored by Google, Pinterest, and X." }
-                linkUrl: { type: string, format: uri, description: "Required on legacy + attach shapes (skip for multi-creative). On LinkedIn it's the ad's destination URL; required for `traffic` ads, optional for `engagement` / `awareness`. NOT required when `goal` is `lead_generation` (the ad opens a Lead Gen form instead of a destination). On LinkedIn, `imageUrl` + `linkUrl` publishes an ARTICLE-content creative; this is LinkedIn's article ad format, with the image as thumbnail and `longHeadline` as description. Required for OpenAI Ads (the chat card's target_url)." }
-                leadGenFormId: { type: string, description: "Lead Gen form ID to attach to the ad's creative. REQUIRED when `goal` is `lead_generation`. Create one via POST /v1/ads/lead-forms. On Meta (facebook/instagram) this is the leadgen_forms ID; the ad set's promoted_object.page_id + LEAD_GENERATION optimization + destination_type ON_AD are derived automatically from the goal. On LinkedIn this is the adForm ID; the creative's `leadgenCallToAction.destination` is set to `urn:li:adForm:{id}` and the campaign objective is set to MAX_LEAD. Forms must be owned by the sponsoredAccount (not the organization) for the URN to resolve. Also required on every Meta ATTACH (`adSetId`) call that targets a lead ad set (the form attaches per-ad; Meta rejects a formless ad in a lead ad set). `placementAssets`, `dynamicCreative` and `carouselCards` (Meta multi-card Instant-Form lead ad; `linkUrl` and per-card `linkUrl` are optional and forwarded as real destinations when sent, falling back to Meta's lead-form link when omitted) ARE supported on Meta instant-form lead ads." }
-                imageUrl: { type: string, format: uri, description: "Image creative for Meta/Google/Pinterest/LinkedIn on legacy + attach shapes (mutually exclusive with `video`). Required for LinkedIn ads unless `video` is set. Not required for Google Search campaigns. For TikTok, this field carries the VIDEO URL (the TikTok ads endpoint is video-only; the field retains the `imageUrl` name for cross-platform consistency). On X, imageUrl + headline + linkUrl together build a website card (image, title and destination under the post; the URL is not added to the post text); sending only some of them is a 400. description, video and callToAction are rejected with 400 on X (promote a post that carries a video with POST /v1/ads/boost). For Google Display, treated as the landscape image (alias of `images.landscape`); supply `images.square` alongside or the request is rejected. For LinkedIn the image is uploaded to LinkedIn under the authoring Company Page (see `organizationId`); recommended ratio 1.91:1 (e.g. 1200×627). Required for OpenAI Ads (uploaded as the chat card's image; OpenAI has no video ad format)." }
+                callToAction: { type: string, enum: [LEARN_MORE, SHOP_NOW, SIGN_UP, BOOK_TRAVEL, CONTACT_US, DOWNLOAD, GET_OFFER, GET_QUOTE, SUBSCRIBE, WATCH_MORE, ADD_TO_CART, APPLY_NOW, BOOK_NOW, BUY_TICKETS, DONATE, DONATE_NOW, GET_DIRECTIONS, GET_SHOWTIMES, LISTEN_NOW, ORDER_NOW, PLAY_GAME, REQUEST_TIME, SEE_MENU, START_ORDER, INSTALL_MOBILE_APP, USE_APP, REGISTER, JOIN, ATTEND, REQUEST_DEMO, VIEW_QUOTE, APPLY, SEE_MORE, BUY_NOW], description: "Required on legacy + attach shapes for Meta. Honoured on TikTok (passes through to the Spark Ad creative's `call_to_action`) and on LinkedIn (the CTA button on the ad; defaults to LEARN_MORE when `linkUrl` is set). LinkedIn accepts: LEARN_MORE, SIGN_UP, DOWNLOAD, SUBSCRIBE, REGISTER, JOIN, ATTEND, REQUEST_DEMO, VIEW_QUOTE, APPLY, SEE_MORE, SHOP_NOW, BUY_NOW. Reddit (image, video and carousel ads) accepts: LEARN_MORE, SHOP_NOW, SIGN_UP, CONTACT_US, DOWNLOAD, GET_QUOTE, SUBSCRIBE, APPLY_NOW, BOOK_NOW, BUY_TICKETS, DONATE_NOW, GET_DIRECTIONS, GET_SHOWTIMES, LISTEN_NOW, ORDER_NOW, SEE_MENU, INSTALL_MOBILE_APP (other values return 400). Ignored by Google, Pinterest, and X." }
+                linkUrl: { type: string, format: uri, description: "Required on legacy + attach shapes (skip for multi-creative). On LinkedIn it's the ad's destination URL; required for `traffic` ads, optional for `engagement` / `awareness`. NOT required when `goal` is `lead_generation` (the ad opens a Lead Gen form instead of a destination). On LinkedIn, `imageUrl` + `linkUrl` publishes an ARTICLE-content creative; this is LinkedIn's article ad format, with the image as thumbnail and `longHeadline` as description. Required for OpenAI Ads (the chat card's target_url). Reddit: required on image and video ads (the post's destination and the ad's click URL), the fallback for carousel cards without their own, and refused with 400 on text ads." }
+                leadGenFormId: { type: string, description: "Lead Gen form ID to attach to the ad's creative. REQUIRED when `goal` is `lead_generation`. Create one via POST /v1/ads/lead-forms. On Meta (facebook/instagram) this is the leadgen_forms ID; the ad set's promoted_object.page_id + LEAD_GENERATION optimization + destination_type ON_AD are derived automatically from the goal. On LinkedIn this is the adForm ID; the creative's `leadgenCallToAction.destination` is set to `urn:li:adForm:{id}` and the campaign objective is set to MAX_LEAD. Forms must be owned by the sponsoredAccount (not the organization) for the URN to resolve. Also required on every Meta ATTACH (`adSetId`) call that targets a lead ad set (the form attaches per-ad; Meta rejects a formless ad in a lead ad set). `placementAssets`, `dynamicCreative` and `carouselCards` (Meta multi-card Instant-Form lead ad; `linkUrl` and per-card `linkUrl` are optional and forwarded as real destinations when sent, falling back to Meta's lead-form link when omitted) ARE supported on Meta instant-form lead ads. Reddit: rejected with 400 on every goal (Reddit retired its native lead forms)." }
+                imageUrl: { type: string, format: uri, description: "Image creative for Meta/Google/Pinterest/LinkedIn on legacy + attach shapes (mutually exclusive with `video`). Required for LinkedIn ads unless `video` is set. Not required for Google Search campaigns. For TikTok, this field carries the VIDEO URL (the TikTok ads endpoint is video-only; the field retains the `imageUrl` name for cross-platform consistency). On X, imageUrl + headline + linkUrl together build a website card (image, title and destination under the post; the URL is not added to the post text); sending only some of them is a 400. description, video and callToAction are rejected with 400 on X (promote a post that carries a video with POST /v1/ads/boost). For Google Display, treated as the landscape image (alias of `images.landscape`); supply `images.square` alongside or the request is rejected. For LinkedIn the image is uploaded to LinkedIn under the authoring Company Page (see `organizationId`); recommended ratio 1.91:1 (e.g. 1200×627). Required for OpenAI Ads (uploaded as the chat card's image; OpenAI has no video ad format). Reddit: builds an image ad (requires `linkUrl`); on a Reddit video ad it is the fallback for `video.thumbnailUrl`." }
                 images:
                   type: object
                   description: "Google Display (Responsive Display Ads) only. Google RDA requires both a landscape (1.91:1) and a square (1:1) marketing image; sending only one is rejected upstream as 'Too few.' (NOT_ENOUGH_*_MARKETING_IMAGE_ASSET). Supply both URLs here. Either this field or the legacy `imageUrl` can provide the landscape, but `square` has no legacy counterpart so it must be set here for Display."
@@ -64426,7 +64566,7 @@ paths:
                     square: { type: string, format: uri, description: "Square 1:1 marketing image URL (e.g. 1080x1080). Required for Google Display." }
                 video:
                   type: object
-                  description: "Meta (facebook, instagram) and LinkedIn. Creates a single VIDEO ad. Mutually exclusive with `imageUrl`. Supply `url` to upload a file, or `id` to reuse a video already on the ad account (list them with GET /v1/ads/videos). Works on the single-ad and attach (`adSetId`) shapes; for Meta multi-creative, set `video` per entry inside `creatives[]` instead. For LinkedIn the video is uploaded to LinkedIn under the authoring Company Page (see `organizationId`) and the campaign format is set to SINGLE_VIDEO; LinkedIn ignores `thumbnailUrl` (it auto-generates the poster frame). Supply MP4 H.264/AAC, 3s-30min, 75KB-500MB."
+                  description: "Meta (facebook, instagram), LinkedIn and Reddit. On Reddit `url`, `linkUrl` and a thumbnail (`thumbnailUrl`, or `imageUrl`) are all required. Creates a single VIDEO ad. Mutually exclusive with `imageUrl`. Supply `url` to upload a file, or `id` to reuse a video already on the ad account (list them with GET /v1/ads/videos). Works on the single-ad and attach (`adSetId`) shapes; for Meta multi-creative, set `video` per entry inside `creatives[]` instead. For LinkedIn the video is uploaded to LinkedIn under the authoring Company Page (see `organizationId`) and the campaign format is set to SINGLE_VIDEO; LinkedIn ignores `thumbnailUrl` (it auto-generates the poster frame). Supply MP4 H.264/AAC, 3s-30min, 75KB-500MB."
                   properties:
                     url: { type: string, format: uri, description: "Public URL of the video. Meta: uploaded via chunked transfer on /act_X/advideos, then the request blocks on Meta's transcoding until status.video_status === 'ready'. LinkedIn: uploaded via the Videos API (multipart), then the request blocks until LinkedIn finishes transcoding (status AVAILABLE); short clips take ~10-30s. Provide either `url` or `id`."}
                     id: { type: string, description: "Meta only. Reuse a video ALREADY uploaded to this ad account instead of re-uploading the file: pass the `videoId` returned by a previous create. Wins over `url`, so N ads that differ only in copy share one upload (`existingCreativeId` only covers the identical-copy case). Provide either `url` or `id`."}
@@ -64575,6 +64715,8 @@ paths:
                     UNDER the flat inline targeting fields below: `savedTargetingId` < `targeting` <
                     flat fields (a flat field present on the body replaces the nested value entirely).
                     Both forms are equivalent; use whichever your integration already builds.
+                    Reddit-only targeting (`communities`, `excludedCommunities`,
+                    `conversationKeywords`, `excludedConversationKeywords`) is sent here.
                   allOf:
                     - $ref: '#/components/schemas/TargetingSpec'
                 countries: { type: array, items: { type: string }, description: "ISO 3166-1 alpha-2 country codes (e.g. ['NL']). Defaults to ['US'] when no other geo targeting (flat or nested `targeting`) is provided. (LinkedIn and OpenAI Ads currently honour country-level targeting only; any other targeting field returns 400 for OpenAI Ads.)" }
@@ -64802,7 +64944,7 @@ paths:
                     numeric IDs from Meta verification. Keys vary by category (e.g. universal_beneficiary /
                     universal_payer for BRAZIL_REGULATION and THAILAND_UNIVERSAL). If omitted, Meta uses
                     Ads Manager defaults when configured.
-                endDate: { type: string, format: date-time, description: 'Required for lifetime budgets. Read like `startDate` (account timezone on Meta, TikTok, X, Pinterest and OpenAI; whole account-local days on Google; UTC on LinkedIn), and a date-only end runs to 23:59:59 local.' }
+                endDate: { type: string, format: date-time, description: 'Required for lifetime budgets. Read like `startDate` (account timezone on Meta, TikTok, X, Pinterest, OpenAI and Reddit; whole account-local days on Google; UTC on LinkedIn), and a date-only end runs to 23:59:59 local.' }
                 startDate:
                   type: string
                   format: date-time
@@ -64810,7 +64952,7 @@ paths:
                     Ad-set start time (ISO 8601, e.g. "2026-06-10T09:00:00Z"), mapped to the ad set's
                     start (Meta `start_time`, TikTok ad group `schedule_start_time`, LinkedIn / Pinterest / X
                     / Google campaign start). When omitted the ad starts delivering immediately. For lifetime
-                    budgets Meta also requires `endDate`. On Meta, TikTok, X, Pinterest and OpenAI a value
+                    budgets Meta also requires `endDate`. On Meta, TikTok, X, Pinterest, OpenAI and Reddit a value
                     without an offset (`YYYY-MM-DD`, `YYYY-MM-DD HH:MM:SS` or `YYYY-MM-DDTHH:MM:SS`) is read
                     in the ad account timezone (Meta itself would read it as UTC). Google runs whole days in
                     the customer account timezone and takes the value's calendar date as written. LinkedIn
@@ -64892,6 +65034,11 @@ paths:
                   minItems: 2
                   maxItems: 10
                   description: |
+                    Reddit: builds a carousel ad, each card with its image, destination (card `linkUrl`,
+                    falling back to the top-level `linkUrl`, 400 when neither is set), call to action
+                    (card `callToAction`, falling back to the top-level one) and caption (card
+                    `headline`, else `description`). `headline` is still required.
+
                     Meta only. Hand-built carousel: 2-10 authored cards in DETERMINISTIC order, mapped to
                     the creative's `link_data.child_attachments`. Unlike `dynamicCreative`,
                     you control the card order and per-card copy/link. Requires top-level `body`
@@ -65106,7 +65253,7 @@ paths:
                     `VIEW_THROUGH: 1`; `CLICK_THROUGH: 28` only on certain objectives. Invalid combos
                     surface as a Meta 400.
                     Example: `[{ "eventType": "CLICK_THROUGH", "windowDays": 7 }, { "eventType": "VIEW_THROUGH", "windowDays": 1 }]`
-                gender: { type: string, enum: [all, male, female], default: all, description: "Restrict the audience by gender. 'male' targets men only, 'female' targets women only, 'all' (default) targets everyone. Applied on Meta, TikTok and Pinterest. Ignored on Google, LinkedIn and X." }
+                gender: { type: string, enum: [all, male, female], default: all, description: "Restrict the audience by gender. 'male' targets men only, 'female' targets women only, 'all' (default) targets everyone. Applied on Meta, TikTok, Pinterest and Reddit. Ignored on Google, LinkedIn and X." }
                 bidStrategy:
                   allOf: [{ $ref: '#/components/schemas/BidStrategy' }]
                   deprecated: true
@@ -65116,6 +65263,8 @@ paths:
                     Meta bid strategy applied to the ad set.
 
                     OpenAI Ads: sent via this flat field, the only channel it supports (`platformSpecificData` is Meta/LinkedIn-only and returns 400 for OpenAI). `LOWEST_COST_WITH_BID_CAP` or `COST_CAP` with `bidAmount` sets a fixed bid (`fixed_bid`, the CPA bid on `conversions`). Omitted or `LOWEST_COST_WITHOUT_CAP` bids automatically with OpenAI's Maximize Results (`maximize_clicks` for `traffic`, `maximize_conversions` for `conversions`), which needs `budgetType: daily`; on a lifetime budget or the `awareness` goal it returns 400.
+
+                    Reddit Ads: sent via this flat field and applied to the new ad group. LOWEST_COST_WITHOUT_CAP or omitted = automatic bidding (BIDLESS), LOWEST_COST_WITH_BID_CAP + `bidAmount` = MANUAL_BIDDING with that bid, COST_CAP + `bidAmount` = MAXIMIZE_VOLUME with that cap. Any other strategy returns 422 before anything is created.
 
                     Google (not deprecated there, this shared flat field is Google's only shape): applied to the campaign this call creates. On Google: LOWEST_COST_WITHOUT_CAP = Maximize Conversions, COST_CAP + bidAmount = Target CPA, LOWEST_COST_WITH_MIN_ROAS + roasAverageFloor = Target ROAS, LOWEST_COST_WITH_BID_CAP + bidAmount = Maximize Clicks with a CPC ceiling; portfolioBidStrategyId attaches a portfolio strategy instead. Omitted, the campaign falls back to a goal-based default.
                 bidAmount:
@@ -65516,6 +65665,9 @@ paths:
             Platform ads connection required (TikTok Ads, X Ads) or missing linked account.
             Also returned with code `ad_account_unusable` when Meta refuses writes on the ad
             account because its status is ineligible to manage ads (see `ErrorResponse.details`).
+            On Reddit: `video_views` without a video, an ad account with no
+            pixel or no profile, or (code `invalid_resource_state`) a pixel that never received
+            the event the ad group optimizes toward.
         '501':
           description: |
             The requested option is not supported on this platform: `validateOnly` outside Meta
@@ -66318,7 +66470,7 @@ paths:
       x-resource-group: "ads"
       operationId: searchAdTargeting
       tags: ["Ad Targeting"]
-      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "reddit"]
       summary: Search targeting options
       description: |
         Finds targeting options by name, such as locations, interests or behaviors, and returns the ids to use in ad targeting.
@@ -66358,6 +66510,11 @@ paths:
           ids feed `TargetingSpec.workPositions`/`workEmployers`/`workIndustries`
         - `industry`, `jobFunction`, `seniority`, `companySize`: the LinkedIn-only B2B facets, whose
           URNs feed `TargetingSpec.industries`/`jobFunctions`/`seniorities`/`companySizes`
+        - `community`: Reddit only. Subreddits matching `q`; the id is the subreddit name for
+          `TargetingSpec.communities` / `excludedCommunities`, `platformId` Reddit's own id and
+          `audienceSize` its subscriber count when Reddit reports it
+        - `conversationKeyword`: Reddit only. Reddit's keyword suggestions for the seed `q`; the id is
+          the keyword for `TargetingSpec.conversationKeywords` / `excludedConversationKeywords`
 
         Availability of each dimension varies by platform. A dimension a platform cannot search
         returns a 400 naming `dimension`; it never falls back to another dimension, and every
@@ -66377,7 +66534,7 @@ paths:
         at 20, with no network call; its ids feed `TargetingSpec.languages`.
 
         Results are normalized across platforms into a single shape, so the same client code
-        consumes Meta, TikTok, LinkedIn, X, Pinterest, and Google results.
+        consumes Meta, TikTok, LinkedIn, X, Pinterest, Google and Reddit results.
 
         TikTok geo searches return every matching level in one list (`type` is
         `country`, `region`, `city`, `district`, or `metro` for DMA areas), and
@@ -66439,6 +66596,15 @@ paths:
           exposes no postal-code catalog, pass postal codes directly as
           `targeting.zips: [{ key }]` on `POST /v1/ads/create`
 
+        Reddit (`redditads` connection) searches `geo`, `interest`, `community` and
+        `conversationKeyword`; any other dimension returns 400. Its geo search honours `geoType`
+        `city` (the default, a server-side city search), `zip` (`q` is the postal code), `country`,
+        `region` and `metro_area` (matched in Zernio against Reddit's geolocation catalog) and
+        `all`; other values return 400. `countryCode` scopes every geo search. Each result's id is
+        Reddit's geolocation id, usable as a `regions`/`metros`/`cities`/`zips` `key` (country
+        ids go in `countries`). `interest` matches Reddit's interest catalog in Zernio, with the
+        category as `path`.
+
         For geo queries, `q` should contain only the locality name (e.g. `"Amsterdam"`,
         not `"Amsterdam, NL"`). Use `countryCode` to disambiguate.
       security:
@@ -66446,7 +66612,7 @@ paths:
       parameters:
         - { name: accountId, in: query, required: true, schema: { type: string }, description: "Account ID (a connected account on the target ad platform)." }
         - { name: q, in: query, required: true, schema: { type: string }, description: "Search query. For geo, the locality name only (no region/country suffix)." }
-        - { name: dimension, in: query, required: false, schema: { type: string, enum: [geo, interest, interestKeyword, behavior, hashtag, income, language, workPosition, workEmployer, workIndustry, industry, jobFunction, seniority, companySize], default: interest }, description: "What to search. `geo` resolves locations (scope further with `geoType`), `interest`/`behavior` resolve audience entities (`behavior` on Meta, TikTok and LinkedIn), `interestKeyword`/`hashtag` resolve TikTok additional interests and hashtags (TikTok only), `income` resolves the normalized income tiers, `language` resolves Google's targetable language_constant table (Google only), `workPosition`/`workEmployer`/`workIndustry` resolve Meta work demographics, `industry`/`jobFunction`/`seniority`/`companySize` resolve LinkedIn B2B facets (LinkedIn only). Defaults to `interest` for backward compatibility with the deprecated /v1/ads/interests alias." }
+        - { name: dimension, in: query, required: false, schema: { type: string, enum: [geo, interest, interestKeyword, behavior, hashtag, income, language, workPosition, workEmployer, workIndustry, industry, jobFunction, seniority, companySize, community, conversationKeyword], default: interest }, description: "What to search. `geo` resolves locations (scope further with `geoType`), `interest`/`behavior` resolve audience entities (`behavior` on Meta, TikTok and LinkedIn), `interestKeyword`/`hashtag` resolve TikTok additional interests and hashtags (TikTok only), `income` resolves the normalized income tiers, `language` resolves Google's targetable language_constant table (Google only), `workPosition`/`workEmployer`/`workIndustry` resolve Meta work demographics, `industry`/`jobFunction`/`seniority`/`companySize` resolve LinkedIn B2B facets (LinkedIn only). Defaults to `interest` for backward compatibility with the deprecated /v1/ads/interests alias." }
         - { name: geoType, in: query, required: false, schema: { type: string, enum: [all, country, country_group, region, city, subcity, neighborhood, place, zip, metro_area, geo_market], default: city }, description: "Only used when `dimension=geo`. The kind of location to resolve. `all` searches every type in one relevance-ranked call. Defaults to `city`." }
         - { name: countryCode, in: query, required: false, schema: { type: string, minLength: 2, maxLength: 2 }, description: "ISO 3166-1 alpha-2 country code (e.g. NL) to scope a geo search." }
         - { name: adAccountId, in: query, required: false, schema: { type: string }, description: "TikTok only: the advertiser to search as, when the connection holds several. Each TikTok advertiser has its own targetable regions and catalogs. Defaults to the connection's first advertiser; an advertiser the connection does not hold returns 400." }
@@ -66468,12 +66634,12 @@ paths:
                       properties:
                         id: { type: string, description: "The platform's opaque id. Use as a geo `key` (regions/cities/zips/metros) or an entity `id` (interests/behaviors) in TargetingSpec. A `country` result is the exception on every platform: its id is the ISO 3166-1 alpha-2 code, which is what `targeting.countries` takes." }
                         name: { type: string, description: "Human-readable label." }
-                        type: { type: string, description: "What the result is. Equals the requested dimension (interest, interestKeyword, behavior, hashtag, income, language, workPosition, workEmployer, workIndustry, industry, jobFunction, seniority, companySize), or the location level for geo (country, region, city, zip, metro, ...)." }
+                        type: { type: string, description: "What the result is. Equals the requested dimension (interest, interestKeyword, behavior, hashtag, income, language, workPosition, workEmployer, workIndustry, industry, jobFunction, seniority, companySize, community, conversationKeyword), or the location level for geo (country, region, city, zip, metro, ...)." }
                         path: { type: array, items: { type: string }, description: "Optional breadcrumb of parent labels (e.g. ['United States', 'California', 'Los Angeles']). Disambiguates same-named results." }
                         audienceSize: { type: [integer, "null"], description: "Optional estimated reachable users for this option, when the platform returns it." }
                         status: { type: string, description: "TikTok `interestKeyword` and `hashtag` results only: TikTok's availability status. `EFFECTIVE` / `INEFFECTIVE` for additional interests, `ONLINE` / `OFFLINE` for hashtags. Only `EFFECTIVE` and `ONLINE` ids can be targeted." }
                         countryCode: { type: string, description: "ISO-3166 alpha-2 of the country a sub-country geo result (city, region, zip, metro) belongs to, when the platform reports it (Meta does). Useful to know whether a location falls under the EU DSA disclosure rules before creating the ad." }
-                        platformId: { type: string, description: "Only on `country` results: the platform's own id for the country, which `id` replaced with the ISO code (TikTok's native location_id, a GeoNames id such as 2635167 for GB; Meta's country key; Google's geo target constant id; X's targeting value; LinkedIn's geo URN). Use it to match a country against what the platform reports back, e.g. `location_ids` in a TikTok `nativeSettings` read." }
+                        platformId: { type: string, description: "On Reddit `community` results: Reddit's own subreddit id (the `id` is the name). Otherwise only on `country` results: the platform's own id for the country, which `id` replaced with the ISO code (TikTok's native location_id, a GeoNames id such as 2635167 for GB; Meta's country key; Google's geo target constant id; X's targeting value; LinkedIn's geo URN). Use it to match a country against what the platform reports back, e.g. `location_ids` in a TikTok `nativeSettings` read." }
         '400':
           description: Missing or invalid query parameters
         '401': { $ref: '#/components/responses/Unauthorized' }
@@ -68195,7 +68361,7 @@ paths:
       x-resource-group: "ads"
       operationId: sendConversions
       tags: [Conversions]
-      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "reddit"]
       summary: Send conversion events
       description: |
         Sends conversion events, such as purchases or leads, from your server to an ad platform so it can attribute and optimize ads.
@@ -68211,6 +68377,7 @@ paths:
         - TikTok (`tiktokads`) via the Offline Events API `/offline/batch/` (OFFLINE conversions only)
         - OpenAI Ads (`openaiads`) via its Conversions API (a separate host, `bzr.openai.com`)
         - Pinterest (`pinterestads`) via `POST /v5/ad_accounts/{id}/events`
+        - Reddit (`redditads`) via the Reddit Conversions API (`POST /api/v3/pixels/{pixelId}/conversion_events`)
 
         `destinationId` semantics differ per platform:
 
@@ -68220,6 +68387,7 @@ paths:
         - TikTok: Offline Event Set ID, e.g. `7057103914977558530`
         - OpenAI Ads: pixel wire id (numeric `pixel_id`, distinct from the internal pixel id), as returned by `GET /v1/accounts/{accountId}/conversion-destinations`
         - Pinterest: numeric ad account id, e.g. `549755885175` (Pinterest attributes to the ad account, not to a tag)
+        - Reddit: pixel id, e.g. `a2_abc123`, as returned by `GET /v1/accounts/{accountId}/conversion-destinations` (any other shape returns 400)
 
         Pinterest notes: each event needs an `email`, or `ipAddress` plus `userAgent`; others are
         listed in `failures` with code `INVALID_EVENT` and the rest are still sent. `clickIds.epik`
@@ -68228,6 +68396,21 @@ paths:
         or `app_ios`. Pinterest answers per event, so one bad event does not fail its chunk
         (failures carry code `PINTEREST_EVENT_FAILED`). `consent.adUserData: DENIED` sets `opt_out`.
         The connected user needs a Business Access role on the ad account (403 otherwise).
+
+        Reddit notes: each event needs a match key: `clickIds.rdt_cid`, `clickIds.rdt_uuid`,
+        `email`, `phone`, `externalId`, or `ipAddress` plus `userAgent`. Reddit accepts events up to
+        7 days old, and `eventTime` is unix SECONDS (a value more than an hour in the future is
+        refused as milliseconds). Events failing these checks are listed in `failures` with code
+        `INVALID_EVENT` and the rest are still sent. Email (lowercased, dots and `+tags` stripped
+        from the local part), phone (E.164 with the leading `+`) and `externalId` are SHA-256
+        hashed; IP and user agent go plaintext. `consent.adUserData: DENIED` sends no user fields.
+        `actionSource` maps to WEBSITE (`web`), APP (`app`) or OTHER, overridable with
+        `platformData.action_source`; `platformData.order_id` is forwarded. `testCode` is sent as
+        Reddit's `test_id`. The connection must hold the `adsconversions` permission: one
+        authorized without it returns 403 `reconnect_required` (reconnect via
+        GET /v1/connect/redditads/ads), and a Reddit user with no role on the ad account that owns
+        the pixel returns 403 `insufficient_permissions`. Reddit throttling and other rejections are
+        reported per chunk in `failures` with code `REDDIT_REJECTED`.
 
         TikTok notes: this path sends OFFLINE conversions (in-store / CRM / call-center), not web-pixel
         events. Each event must carry an email or phone (TikTok requires at least one). The connected
@@ -68251,10 +68434,11 @@ paths:
         entire batch if any event is malformed. Google caps at 2000. LinkedIn caps at 5000 and is
         also all-or-nothing per chunk. OpenAI Ads caps at 1000 per request; larger submissions are
         split into 1000-event chunks, each all-or-nothing (a malformed event fails every event in
-        that chunk, not the whole request).
+        that chunk, not the whole request). Reddit works the same way, in chunks of 1000.
 
         Dedup: pass a stable `eventId` on every event. Meta and LinkedIn use it to dedupe against
-        browser-side pixel/Insight Tag events; Google maps it to `transactionId`.
+        browser-side pixel/Insight Tag events; Google maps it to `transactionId`; Reddit receives it as
+        `conversion_id`, its dedup key against Reddit Pixel events.
 
         Per-platform `eventName` semantics:
 
@@ -68275,7 +68459,7 @@ paths:
               properties:
                 accountId:
                   type: string
-                  description: SocialAccount ID (metaads, googleads, linkedinads, tiktokads, openaiads, or pinterestads).
+                  description: SocialAccount ID (metaads, googleads, linkedinads, tiktokads, openaiads, pinterestads, or redditads).
                 destinationId:
                   type: string
                   description: |
@@ -68283,14 +68467,15 @@ paths:
                     ID. For Google, the conversion action resource name. For
                     LinkedIn, the conversion rule ID or full
                     `urn:lla:llaPartnerConversion:{id}` URN. For OpenAI Ads, the
-                    pixel wire id. For Pinterest, the numeric ad account id.
+                    pixel wire id. For Pinterest, the numeric ad account id. For
+                    Reddit, the pixel id (`a2_...`).
                 events:
                   type: array
                   minItems: 1
                   items: { $ref: '#/components/schemas/ConversionEvent' }
                 testCode:
                   type: string
-                  description: Meta `test_event_code` passthrough. On Pinterest any value sends the batch with `test=true` (validated, not recorded). Ignored by Google, LinkedIn, and OpenAI Ads.
+                  description: Meta `test_event_code` passthrough. On Pinterest any value sends the batch with `test=true` (validated, not recorded). On Reddit, sent as `test_id` so the events show in the pixel's test view. Ignored by Google, LinkedIn, and OpenAI Ads.
                 consent:
                   type: object
                   description: |
@@ -68300,7 +68485,8 @@ paths:
                     the batch (data_processing_options ["LDU"] with
                     geolocation, country 0 / state 0); GRANTED or absent
                     consent sends events with Meta's default processing.
-                    Ignored by LinkedIn.
+                    On Reddit, `adUserData: DENIED` drops every user field
+                    from the events. Ignored by LinkedIn.
                   properties:
                     adUserData: { type: string, enum: [GRANTED, DENIED] }
                     adPersonalization: { type: string, enum: [GRANTED, DENIED] }
@@ -68312,14 +68498,14 @@ paths:
             partial failure. For Meta, a batch is all-or-nothing (either every
             event in a chunk succeeds, or every event in the chunk is listed
             in failures). For Google, the API returns success/failure at the
-            request level only. For OpenAI Ads, each 1000-event chunk is
+            request level only. For OpenAI Ads and Reddit, each 1000-event chunk is
             all-or-nothing, same as Meta.
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  platform: { type: string, enum: [metaads, googleads, linkedinads, tiktokads, openaiads, pinterestads] }
+                  platform: { type: string, enum: [metaads, googleads, linkedinads, tiktokads, openaiads, pinterestads, redditads] }
                   eventsReceived: { type: integer, description: Events accepted by the platform. }
                   eventsFailed: { type: integer, description: Events rejected (see failures). }
                   failures:
@@ -68336,15 +68522,18 @@ paths:
                     description: |
                       Platform trace ID for debugging. fbtrace_id for Meta,
                       requestId for Google. Absent for LinkedIn (LinkedIn's
-                      conversionEvents endpoint does not surface a trace ID)
-                      and OpenAI Ads (no trace ID surfaced).
+                      conversionEvents endpoint does not surface a trace ID),
+                      OpenAI Ads and Reddit (no trace ID surfaced).
         '400':
           description: Invalid body (missing accountId/destinationId/events, malformed event shape).
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403':
           description: |
             Ads access required (Ads add-on on legacy plans, included on usage-based plans),
-            OR (for LinkedIn) the connected account lacks the `rw_conversions` scope and must be reconnected.
+            OR (for LinkedIn) the connected account lacks the `rw_conversions` scope and must be reconnected,
+            OR (for Reddit) the connection lacks the `adsconversions` permission (code
+            `reconnect_required`, reconnect Reddit Ads) or the Reddit user has no role on the ad
+            account that owns the pixel (code `insufficient_permissions`).
         '404': { $ref: '#/components/responses/AccountUnavailable' }
 
         '422':
@@ -69013,20 +69202,24 @@ paths:
       x-resource-group: "ads"
       operationId: listConversionDestinations
       tags: [Conversions]
-      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "reddit"]
       summary: List conversion destinations
       description: |
         Lists where an ad account can receive conversion events (pixels, conversion actions or rules), so you know where to send them.
 
         Returns the list of pixels (Meta), conversion actions (Google),
-        conversion rules (LinkedIn), pixels (OpenAI Ads) or ad accounts
+        conversion rules (LinkedIn), pixels (OpenAI Ads, Reddit) or ad accounts
         (Pinterest) accessible to the connected ads account. Use the returned `id` as `destinationId` when
         posting to `POST /v1/ads/conversions`.
 
         For Google and LinkedIn, each destination's `type` reflects the
         conversion type (PURCHASE, LEAD, SIGN_UP, etc.), and the event type is
-        locked to the destination. For Meta and OpenAI Ads, `type` is absent:
+        locked to the destination. For Meta, OpenAI Ads and Reddit, `type` is absent:
         pixels accept any event name per request.
+
+        For Reddit, the pixels of every ad account the connection reaches (only the scoped
+        ones when the connection has an ad-account scope), each with the `adAccountId` that owns
+        it. Reddit pixels are created in Reddit Ads Manager, not through Zernio.
 
         For LinkedIn, destinations are returned across every sponsored ad
         account the connected token can access; the `adAccountId` field on
@@ -69039,7 +69232,7 @@ paths:
           in: path
           required: true
           schema: { type: string }
-          description: SocialAccount ID (metaads, googleads, linkedinads, tiktokads, openaiads, or pinterestads).
+          description: SocialAccount ID (metaads, googleads, linkedinads, tiktokads, openaiads, pinterestads, or redditads).
       responses:
         '409': { $ref: '#/components/responses/AccountConnectionRequired' }
         '200':
@@ -69049,7 +69242,7 @@ paths:
               schema:
                 type: object
                 properties:
-                  platform: { type: string, enum: [metaads, googleads, linkedinads, tiktokads, openaiads, pinterestads] }
+                  platform: { type: string, enum: [metaads, googleads, linkedinads, tiktokads, openaiads, pinterestads, redditads] }
                   destinations:
                     type: array
                     items:
@@ -69061,7 +69254,7 @@ paths:
                             Destination identifier. Meta: pixel ID. Google:
                             conversion action resource name. LinkedIn:
                             numeric conversion rule ID. OpenAI Ads: pixel wire
-                            id.
+                            id. Reddit: pixel id (`a2_...`).
                         name: { type: string }
                         type:
                           type: string
@@ -69074,8 +69267,8 @@ paths:
                           type: string
                           description: |
                             Set by adapters whose destinations are scoped to a
-                            specific ad account (LinkedIn). Pass back on
-                            subsequent CRUD calls.
+                            specific ad account (LinkedIn, Reddit). On LinkedIn,
+                            pass it back on subsequent CRUD calls.
                         conversionEvents:
                           type: array
                           description: |
@@ -69120,7 +69313,7 @@ paths:
         LinkedIn (conversion rule) and Google Ads (conversion action). Meta
         and OpenAI Ads pixels are created via their own tracking-tags flow
         instead (`POST /v1/accounts/{accountId}/tracking-tags`); this endpoint
-        returns 405 for both.
+        returns 405 for both, and for Reddit (create Reddit pixels in Reddit Ads Manager).
 
         **LinkedIn:** creation is NOT idempotent. A retry creates a second
         destination. Deduplicate before retrying.
