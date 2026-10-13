@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.265.0"
+  version: "1.265.1"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -55013,8 +55013,10 @@ paths:
         from the synced campaign, which wins over `adAccountId`; when the campaign
         was never synced, send `adAccountId` too. Before deleting, Zernio asks X
         whether the campaign still holds undeleted line items (ads not synced
-        yet); if it does the answer is 409 and nothing is deleted, so sync the ad
-        account and retry. Other platforms answer 501 for an empty campaign.
+        yet); if it does the answer is 409 `invalid_field_value` on `campaignId`
+        and nothing is deleted. Sync the ad account and retry when those line items
+        hold promoted posts; line items without promoted posts never sync, so delete
+        them in X Ads Manager first. Other platforms answer 501 for an empty campaign.
         `accountId` is ignored when the campaign does have ads.
 
         Reddit Ads has no delete: the campaign is archived instead (`configured_status`
@@ -55036,7 +55038,27 @@ paths:
                 accountId: { type: string, description: "Zernio SocialAccount id owning the ad account. Required only to delete an EMPTY campaign (zero ads), which has no local Ad documents to resolve a token from." }
                 adAccountId: { type: string, pattern: '^[0-9a-z]{1,32}$', description: "X only, for an EMPTY campaign that was never synced: the X ad account id the campaign belongs to (lowercase letters and digits). The synced campaign's ad account wins when there is one. Also accepted on the query string." }
       responses:
-        '409': { $ref: '#/components/responses/AccountConnectionRequired' }
+        '409':
+          description: 'Either the ads connection is inactive or needs reconnection (code `ads_connection_required`, param `accountId`): reconnect it, then read GET /v1/accounts for its current account ID before retrying. Or, on X only, the empty campaign still holds line items on X (code `invalid_field_value`, param `campaignId`) and nothing was deleted: sync the ad account when they hold promoted posts, otherwise delete them in X Ads Manager, then retry.'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+              examples:
+                connectionRequired:
+                  summary: Ads connection needs reconnection
+                  value:
+                    error: 'This account needs reconnection. Reconnect the account, then read GET /v1/accounts for its current account ID before retrying.'
+                    type: invalid_request_error
+                    code: ads_connection_required
+                    param: accountId
+                xCampaignHoldsLineItems:
+                  summary: X campaign still holds line items
+                  value:
+                    error: 'This X campaign still holds line items on X that Zernio has not synced, so it is not empty and was not deleted. If they hold promoted posts, sync the ad account (POST /v1/ads/sync), then delete the campaign again so its ads are cancelled with it. Line items without promoted posts never sync into Zernio: delete them in X Ads Manager, then delete the campaign again.'
+                    type: invalid_request_error
+                    code: invalid_field_value
+                    param: campaignId
+                    platform: twitter
         '400': { $ref: '#/components/responses/BadRequest' }
         '200':
           description: Campaign deleted

@@ -6450,8 +6450,8 @@ def register_generated_tools(mcp, _get_client):
         from the synced campaign, which wins over `adAccountId`; when the campaign
         was never synced, send `adAccountId` too. Before deleting, Zernio asks X
         whether the campaign still holds undeleted line items (ads not synced
-        yet); if it does the answer is 409 and nothing is deleted, so sync the ad
-        account and retry. ...
+        yet); if it does the answer is 409 `invalid_field_value` on `campaignId`
+        and nothing is deleted. ...
 
         Platforms: meta, google, tiktok, linkedin, pinterest, x, openai, reddit
 
