@@ -19535,7 +19535,8 @@ def register_generated_tools(mcp, _get_client):
           - `granted_pages_not_listed`: Pages were ticked but Meta listed none the user can manage, and a
             direct read of each ticked Page returned no access token.
 
-        Headless Facebook success (`step=select_page`): `userProfile` is JSON that was
+        Headless Facebook success (`step=select_page`) and headless Instagram `facebook_login` success
+        (`step=select_account`): `userProfile` is JSON that was
         percent-encoded once before being set as a query param, so it is encoded twice on the wire.
         After your framework decodes the query string once, run one more decodeURIComponent (or
         equivalent) and then JSON.parse it. `tempToken` and `connect_token` are plain values.
@@ -19647,7 +19648,7 @@ def register_generated_tools(mcp, _get_client):
 
         `facebook_login`: the Facebook Login dialog, i.e. "Instagram API with Facebook Login". The user authorizes a Facebook Page that has a linked Instagram professional account, and every API call for that account then runs through the Page. Use this when the customer manages Instagram through a Page and expects the Facebook consent screen. Because the user has to pick which Page to connect, the callback continues at the account-selection step, `/v1/connect/instagram/select-account`.
 
-        `facebook_login` supports `headless=true` like the other selection platforms: the callback redirects to your `redirect_url` with `profileId`, `tempToken`, `platform=instagram`, `step=select_account` and `connect_token`, which you pass into the select-account endpoints to finish. The default `instagram_login` has no selection step, so it connects the account directly.
+        `facebook_login` supports `headless=true` like the other selection platforms: the callback redirects to your `redirect_url` with `profileId`, `tempToken`, `platform=instagram`, `step=select_account`, `userProfile` (the Facebook user's profile, same shape and encoding as the Facebook `step=select_page` redirect) and `connect_token`. Pass `profileId`, `tempToken` and `connect_token` into the select-account endpoints to finish. The default `instagram_login` has no selection step, so it connects the account directly.
                 onboarding: WhatsApp only. Ignored for every other platform. Controls which screen Meta's Embedded Signup popup shows.
 
         If omitted, the connection defaults to coexistence (same as `business_app` below), preserving existing behavior for numbers already on the WhatsApp Business app.
