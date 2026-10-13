@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.265.1"
+  version: "1.266.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -51836,7 +51836,7 @@ paths:
         starts a run that answers asynchronously: this returns 202 with a `runId`, and the
         answer arrives through the `support.run.completed` and `support.run.failed` webhooks.
         `GET /v1/support/runs/{runId}` is the fallback. Pass `threadId` to continue an earlier
-        conversation, and `context` to point the assistant at a post, account or profile.
+        conversation, and `context` to point the assistant at a post, account, profile or a failed request (its `X-Request-Id`).
         When the assistant finds a problem on Zernio's side it opens a support ticket with
         the team (see `supportTicket` on the run) and the run ends as `needs_human`.
 
@@ -51874,11 +51874,12 @@ paths:
                 context:
                   type: object
                   additionalProperties: false
-                  description: 'Ids the assistant should look at. Each must belong to your workspace.'
+                  description: 'Ids the assistant should look at. postId, accountId and profileId must belong to your workspace (404 otherwise).'
                   properties:
                     postId: { type: string }
                     accountId: { type: string }
                     profileId: { type: string }
+                    requestId: { type: string, maxLength: 128, pattern: '^[\w.-]{1,128}$', description: 'The X-Request-Id of a call you want explained. The assistant reads that request''s logged record. Not checked up front.' }
                 maxCostUsd: { type: number, minimum: 0.5, maximum: 3, default: 3, description: 'Cost cap for this run, in USD. The run stops at the cap and bills at most this amount.' }
             example:
               message: Why did my Instagram post fail to publish?

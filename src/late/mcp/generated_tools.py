@@ -33128,7 +33128,7 @@ def register_generated_tools(mcp, _get_client):
         starts a run that answers asynchronously: this returns 202 with a `runId`, and the
         answer arrives through the `support.run.completed` and `support.run.failed` webhooks.
         `GET /v1/support/runs/{runId}` is the fallback. Pass `threadId` to continue an earlier
-        conversation, and `context` to point the assistant at a post, account or profile.
+        conversation, and `context` to point the assistant at a post, account, profile or a failed request (its `X-Request-Id`).
         When the assistant finds a problem on Zernio's side it opens a support ticket with
         the team (see `supportTicket` on the run) and the run ends as `needs_human`.
 
@@ -33141,12 +33141,12 @@ def register_generated_tools(mcp, _get_client):
         | Most one question can cost | Its `maxCostUsd`: $0.50 to $3, $3 by default |
         | Handed to the Zernio team (`needs_human`) | Charged like an answered question |
         | Failed or expired | $0 |
-        | All questions in a UTC month | At most $100 per ...
+        | All ...
 
         Args:
             message: The question. Leading and trailing whitespace is trimmed. (required)
             thread_id: Continue this thread. The thread must have a run started by your team, and no run in progress.
-            context: Ids the assistant should look at. Each must belong to your workspace. Object with keys: postId (string); accountId (string); profileId (string)
+            context: Ids the assistant should look at. postId, accountId and profileId must belong to your workspace (404 otherwise). Object with keys: postId (string); accountId (string); profileId (string); requestId (string) - The X-Request-Id of a call you want explained. The assistant reads that request's logged record. Not checked up front.
             max_cost_usd: Cost cap for this run, in USD. The run stops at the cap and bills at most this amount."""
         client = _get_client()
         try:
