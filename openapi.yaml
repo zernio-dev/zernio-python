@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.266.1"
+  version: "1.267.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -9237,6 +9237,10 @@ components:
           type: boolean
           default: false
           description: AI-generated content disclosure. Set true if the video contains synthetic content that could be mistaken for real. YouTube may add a label.
+        notifySubscribers:
+          type: boolean
+          default: true
+          description: "Set false to skip notifying subscribers about this upload (YouTube's notifySubscribers). Defaults to true."
         categoryId:
           type: string
           default: '22'
