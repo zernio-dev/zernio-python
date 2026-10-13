@@ -626,6 +626,60 @@ The search returns contextual content with section titles and relevant snippets.
     ],
 )
 
+SUPPORT_ASK = ToolDef(
+    name="support_ask",
+    summary="Ask Zernio's Support Assistant to diagnose a problem (paid).",
+    description="""Ask Zernio's Support Assistant to diagnose a problem with the user's Zernio workspace.
+
+PAID: typically $0.10 to $0.50 per question, never more than max_cost_usd. Failed questions are free.
+
+Use this once per unexplained Zernio API error, after docs_search did not explain it. Never loop or retry: identical arguments return the same run, not a new one. For a follow-up, pass thread_id from the previous answer.
+
+Requires an unrestricted Zernio API key. OAuth connectors (claude.ai, ChatGPT) and restricted or profile-scoped keys cannot use it.
+
+If the answer is not ready within wait_seconds, the result carries the runId; fetch it later with support_assistant_get_support_answer.""",
+    params=[
+        ParamDef(
+            name="question",
+            type="str",
+            description="The problem to diagnose, with the error message and what was attempted",
+            required=True,
+        ),
+        ParamDef(
+            name="thread_id",
+            type="str",
+            description="Continue an earlier conversation (threadId from a previous answer)",
+        ),
+        ParamDef(
+            name="post_id",
+            type="str",
+            description="Post the assistant should look at",
+        ),
+        ParamDef(
+            name="account_id",
+            type="str",
+            description="Account the assistant should look at",
+        ),
+        ParamDef(
+            name="profile_id",
+            type="str",
+            description="Profile the assistant should look at",
+        ),
+        ParamDef(
+            name="max_cost_usd",
+            type="float",
+            description="Cost cap in USD for this question (0.5 to 3)",
+            default=1.0,
+        ),
+        ParamDef(
+            name="wait_seconds",
+            type="int",
+            description="How long to wait for the answer before returning the run id (0 to 120)",
+            default=45,
+        ),
+    ],
+)
+
 # =============================================================================
 # MEDIA TOOLS
 # =============================================================================
@@ -693,6 +747,8 @@ TOOL_DEFINITIONS: dict[str, ToolDef] = {
     "media_check_upload_status": MEDIA_CHECK_UPLOAD_STATUS,
     # Docs
     "docs_search": DOCS_SEARCH,
+    # Support
+    "support_ask": SUPPORT_ASK,
 }
 
 
@@ -734,6 +790,7 @@ def generate_mdx_tools_reference() -> str:
         ],
         "Media": ["media_generate_upload_link", "media_check_upload_status"],
         "Docs": ["docs_search"],
+        "Support": ["support_ask"],
     }
 
     for category, tool_names in categories.items():

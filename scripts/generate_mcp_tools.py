@@ -70,6 +70,7 @@ SKIP_OPERATIONS = {
     "retryPost",
     "generateMediaUploadToken",
     "checkMediaUploadToken",
+    "askSupportQuestion",
 }
 
 

@@ -23,6 +23,9 @@ Usage:
 
 from __future__ import annotations
 
+import asyncio
+import hashlib
+import json
 import os
 import re
 from contextvars import ContextVar
@@ -36,6 +39,7 @@ from fastmcp.server.transforms.search import BM25SearchTransform
 from mcp.types import ToolAnnotations
 
 from late import Late, MediaType, PostStatus
+from late.client.exceptions import LateAPIError, LateError, LateRateLimitError
 
 from .auth import build_auth_provider
 from .resources import register_resources
@@ -69,6 +73,8 @@ _PINNED_TOOLS = [
     "posts_update", "posts_delete", "posts_retry", "posts_list_failed", "posts_retry_all_failed",
     "media_generate_upload_link", "media_check_upload_status",
     "docs_search", "zernio_overview",
+    # Paid diagnosis and its poll fallback
+    "support_ask", "support_assistant_get_support_answer",
     # Posting operations not covered by the ergonomic set
     "posts_bulk_upload_posts", "posts_unpublish_post", "posts_edit_post",
     # Scheduling queue
@@ -147,6 +153,7 @@ Available tools are prefixed by resource:
 - posts_*    : Create, list, update, delete posts
 - media_*    : Upload images and videos
 - docs_*     : Search Zernio API documentation
+- support_ask : PAID diagnosis of a Zernio API problem
 
 MULTI-ACCOUNT WORKFLOW (agencies, multi-client setups):
 When a user has more than one account on the same platform, you MUST
@@ -1089,6 +1096,72 @@ def docs_search(query: str) -> str:
 
     except Exception as e:
         return f"\u274c Failed to search documentation: {e}"
+
+
+# ============================================================================
+# SUPPORT ASSISTANT (paid)
+# ============================================================================
+
+_SUPPORT_TERMINAL = {"completed", "failed", "needs_human"}
+_SUPPORT_ERROR_HINTS = {
+    "insufficient_permissions": "The Support Assistant needs an unrestricted Zernio API key. OAuth connectors (claude.ai, ChatGPT) and restricted or profile-scoped keys cannot use it: connect this server with an API key in the Authorization header.",
+    "support_run_in_progress": "This thread already has a question running. Wait for it with support_assistant_get_support_answer.",
+    "idempotency_conflict": "This exact question is still being submitted. Call support_ask again with the same arguments in a few seconds.",
+}
+
+
+def _support_idempotency_key(body: dict[str, Any]) -> str:
+    # Same arguments -> same paid run: a re-call after a client timeout replays the run instead of billing a second one.
+    return "mcp-support-" + hashlib.sha256(json.dumps(body, sort_keys=True).encode()).hexdigest()[:40]
+
+
+@tool_def("support_ask")
+async def support_ask(
+    question: str,
+    thread_id: str = "",
+    post_id: str = "",
+    account_id: str = "",
+    profile_id: str = "",
+    max_cost_usd: float = 1.0,
+    wait_seconds: int = 45,
+) -> str:
+    # async on purpose: a sync poll would hold one of anyio's 40 threadpool slots for up to 120 s per call.
+    context = {
+        k: v
+        for k, v in {"postId": post_id, "accountId": account_id, "profileId": profile_id}.items()
+        if v
+    } or None
+    body = {
+        "message": question.strip(),
+        "threadId": thread_id or None,
+        "context": context,
+        "maxCostUsd": max_cost_usd,
+    }
+    client = _get_client()
+    loop = asyncio.get_running_loop()
+    deadline = loop.time() + max(0, min(wait_seconds, 120))
+    try:
+        run = await client.support_assistant.aask_support_question(
+            message=body["message"],
+            idempotency_key=_support_idempotency_key(body),
+            thread_id=body["threadId"],
+            context=context,
+            max_cost_usd=max_cost_usd,
+        )
+        run_id = run["runId"]
+        while run.get("status") not in _SUPPORT_TERMINAL and (remaining := deadline - loop.time()) > 0:
+            await asyncio.sleep(min(run.get("pollAfterSeconds", 5), remaining))
+            run = await client.support_assistant.aget_support_answer(run_id)
+    except LateRateLimitError:
+        return "Error: Support Assistant limit reached (monthly spend cap or rate limit). Do not retry this question now."
+    except LateAPIError as e:
+        hint = _SUPPORT_ERROR_HINTS.get(e.details.get("code", ""))
+        return f"Error: {e}" + (f"\n{hint}" if hint else "")
+    except LateError as e:
+        return f"Error: {e}\nCalling support_ask again with the same arguments returns the same run, never a second charge."
+    if run.get("status") not in _SUPPORT_TERMINAL:
+        run["next"] = "Still running. Call support_assistant_get_support_answer with this runId after pollAfterSeconds. Calling support_ask again with the same arguments returns this same run."
+    return json.dumps(run)
 
 
 # ============================================================================

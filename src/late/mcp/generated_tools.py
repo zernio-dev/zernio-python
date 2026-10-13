@@ -33110,58 +33110,6 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
-            title="Ask a support question",
-            readOnlyHint=False,
-            destructiveHint=True,
-            openWorldHint=True,
-        )
-    )
-    def support_assistant_ask_support_question(
-        message: str,
-        thread_id: str | None = None,
-        context: dict[str, Any] | None = None,
-        max_cost_usd: float = 3,
-    ) -> str:
-        """Ask a support question
-
-        Asks the Zernio Support Assistant a question about your workspace. Each question
-        starts a run that answers asynchronously: this returns 202 with a `runId`, and the
-        answer arrives through the `support.run.completed` and `support.run.failed` webhooks.
-        `GET /v1/support/runs/{runId}` is the fallback. Pass `threadId` to continue an earlier
-        conversation, and `context` to point the assistant at a post, account, profile or a failed request (its `X-Request-Id`).
-        When the assistant finds a problem on Zernio's side it opens a support ticket with
-        the team (see `supportTicket` on the run) and the run ends as `needs_human`.
-
-        **Pricing.** You pay per question, once it finishes. The exact amount charged is the
-        run's `costUsd`.
-
-        | Question | You pay |
-        | --- | --- |
-        | Typical question | $0.10 to $0.50 |
-        | Most one question can cost | Its `maxCostUsd`: $0.50 to $3, $3 by default |
-        | Handed to the Zernio team (`needs_human`) | Charged like an answered question |
-        | Failed or expired | $0 |
-        | All ...
-
-        Args:
-            message: The question. Leading and trailing whitespace is trimmed. (required)
-            thread_id: Continue this thread. The thread must have a run started by your team, and no run in progress.
-            context: Ids the assistant should look at. postId, accountId and profileId must belong to your workspace (404 otherwise). Object with keys: postId (string); accountId (string); profileId (string); requestId (string) - The X-Request-Id of a call you want explained. The assistant reads that request's logged record. Not checked up front.
-            max_cost_usd: Cost cap for this run, in USD. The run stops at the cap and bills at most this amount."""
-        client = _get_client()
-        try:
-            response = client.support_assistant.ask_support_question(
-                message=message,
-                thread_id=thread_id,
-                context=context,
-                max_cost_usd=max_cost_usd,
-            )
-            return _format_response(response)
-        except Exception as e:
-            return f"Error: {e}"
-
-    @mcp.tool(
-        annotations=ToolAnnotations(
             title="Get a support answer",
             readOnlyHint=True,
             destructiveHint=False,
