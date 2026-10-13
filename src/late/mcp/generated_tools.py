@@ -29609,6 +29609,7 @@ def register_generated_tools(mcp, _get_client):
         date_to: str | None = None,
         include_hidden: bool = False,
         search: str | None = None,
+        tags: str | None = None,
         sort_by: Literal[
             "scheduled-desc",
             "scheduled-asc",
@@ -29638,6 +29639,7 @@ def register_generated_tools(mcp, _get_client):
             date_to: Alias of toDate, kept for existing callers
             include_hidden
             search: Search posts by text content.
+            tags: Comma-separated tags (at most 20). Returns only posts carrying every listed tag, matched exactly and case-sensitively against the tags set when the post was created. An empty value means no tag filter. `tag` is accepted as an alias.
             sort_by: Sort order for results.
             account_id: Filter posts to those published via a specific account (24-char hex ObjectId)."""
         client = _get_client()
@@ -29657,6 +29659,7 @@ def register_generated_tools(mcp, _get_client):
                 date_to=date_to,
                 include_hidden=include_hidden,
                 search=search,
+                tags=tags,
                 sort_by=sort_by,
                 account_id=account_id,
             )

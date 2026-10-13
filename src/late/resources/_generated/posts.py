@@ -92,6 +92,7 @@ class PostsResource:
         date_to: str | None = None,
         include_hidden: bool | None = False,
         search: str | None = None,
+        tags: str | None = None,
         sort_by: str | None = "scheduled-desc",
         account_id: str | None = None,
     ) -> dict[str, Any]:
@@ -111,6 +112,7 @@ class PostsResource:
             date_to=date_to,
             include_hidden=include_hidden,
             search=search,
+            tags=tags,
             sort_by=sort_by,
             account_id=account_id,
         )
@@ -314,6 +316,7 @@ class PostsResource:
         date_to: str | None = None,
         include_hidden: bool | None = False,
         search: str | None = None,
+        tags: str | None = None,
         sort_by: str | None = "scheduled-desc",
         account_id: str | None = None,
     ) -> dict[str, Any]:
@@ -333,6 +336,7 @@ class PostsResource:
             date_to=date_to,
             include_hidden=include_hidden,
             search=search,
+            tags=tags,
             sort_by=sort_by,
             account_id=account_id,
         )
