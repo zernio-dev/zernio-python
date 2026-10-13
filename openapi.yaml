@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.273.0"
+  version: "1.274.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -48409,6 +48409,7 @@ paths:
         '400': { description: "Validation error (e.g. address not in-country, file too large)" }
         '409': { description: 'code area_pre_order_available: the country requires the number to cover the registered address and that area has no stock, but the carrier can source one. Nothing was created; details carries { areaCode, areaName, estimatedWeeks: "2-4", billedWhenActive: true }. Show it to the customer and, once they agree, resend the same body with preOrder true (optionally with details.areaCode as areaCode). Otherwise: reuse was requested but no prior approved verification exists for this country; or the requested areaCode (or, in a geographic-match country, the area covering the registered address) has no deliverable inventory and cannot be pre-ordered (code: area_code_unavailable; pick another area, or a registered address in an area with stock); or the whole country and type pool has nothing deliverable and cannot be pre-ordered (code: country_out_of_stock; choose an area with stock or set a stock watch). When the only numbers the carrier lists failed WhatsApp registration recently and are held back, the message names the date the first one clears and details.undeliverableUntil carries it as an ISO timestamp.' }
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '503': { $ref: '#/components/responses/TemporarilyUnavailable' }
 
   /v1/whatsapp/phone-numbers/kyc/upload-document:
     post:
@@ -48733,6 +48734,7 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { description: 'The API key is scoped to profiles that do not include this number.' }
         '404': { description: Number not found }
+        '503': { $ref: '#/components/responses/TemporarilyUnavailable' }
 
   /v1/phone-numbers/{id}/voice:
     post:
