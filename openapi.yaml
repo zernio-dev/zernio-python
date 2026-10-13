@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.270.0"
+  version: "1.271.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -38728,7 +38728,7 @@ paths:
         - name: accountId
           in: query
           schema: { type: string }
-          description: Filter by specific account ID
+          description: "Filter by specific account ID. With `platform=metaads` it takes the Meta Ads account ID, or the Facebook or Instagram account ID the Meta Ads connection belongs to, which returns that Meta Ads connection's ad rows. A Facebook or Instagram account with no Meta Ads connection returns no rows; an account on any other platform returns 400."
       responses:
         '200':
           description: Aggregated posts with comments
@@ -38787,6 +38787,7 @@ paths:
                           properties:
                             accountId: { type: string }
                             platform: { type: string }
+        '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403':
           description: Inbox addon required

@@ -16283,7 +16283,7 @@ def register_generated_tools(mcp, _get_client):
             sort_order: Sort order
             limit
             cursor
-            account_id: Filter by specific account ID"""
+            account_id: Filter by specific account ID. With `platform=metaads` it takes the Meta Ads account ID, or the Facebook or Instagram account ID the Meta Ads connection belongs to, which returns that Meta Ads connection's ad rows. A Facebook or Instagram account with no Meta Ads connection returns no rows; an account on any other platform returns 400."""
         client = _get_client()
         try:
             response = client.comments.list_inbox_comments(
