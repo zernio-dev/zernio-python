@@ -14135,7 +14135,7 @@ def register_generated_tools(mcp, _get_client):
     def broadcasts_schedule_broadcast(broadcast_id: str, scheduled_at: str) -> str:
         """Schedule broadcast for later
 
-        Schedule a draft broadcast to be sent at a future date and time.
+        Schedule a draft broadcast, or move the date of an already scheduled one, to a future date and time.
 
         Args:
             broadcast_id: (required)

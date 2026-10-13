@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.266.0"
+  version: "1.266.1"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -51639,7 +51639,7 @@ paths:
       x-resource-group: "messages"
       operationId: scheduleBroadcast
       summary: Schedule broadcast for later
-      description: Schedule a draft broadcast to be sent at a future date and time.
+      description: 'Schedule a draft broadcast, or move the date of an already scheduled one, to a future date and time.'
       tags: [Broadcasts]
       parameters:
         - { name: broadcastId, in: path, required: true, schema: { type: string } }
