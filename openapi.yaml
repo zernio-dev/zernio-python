@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.269.0"
+  version: "1.270.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -13166,6 +13166,7 @@ components:
           format: date-time
           description: "Earliest `platformCreatedAt` (platform ad creation time; falls back to `createdAt`, Zernio's sync time, for ads synced before that field existed) across this ad set's ads. Not the ad set's own creation time on the platform, but a proxy usable for sorting."
         adCount: { type: integer }
+        isSmartPlus: { type: boolean, description: "TikTok only. true when this ad group belongs to an Upgraded Smart+ campaign. See AdTreeCampaign.isSmartPlus." }
         budget:
           type: [object, "null"]
           description: Effective budget at this level (back-compat). For CBO campaigns this mirrors the parent campaign's budget; for ABO this is the ad-set-specific budget. Use `adSetBudget` / parent `campaignBudget` + `budgetLevel` to disambiguate.
@@ -13275,6 +13276,7 @@ components:
         platformAdAccountName: { type: [string, "null"], description: "Human-readable advertiser/account name from the platform. Refreshed on every sync." }
         accountId: { type: string }
         profileId: { type: string }
+        isSmartPlus: { type: boolean, description: "TikTok only. true when the campaign is an Upgraded Smart+ campaign (TikTok lists it on /smart_plus/campaign/get/), false when it is not. Set by ads sync, so the key is absent on other platforms and on TikTok campaigns not synced since this field shipped. On Smart+ objects Zernio can pause, resume, rename, delete and change the budget of the campaign and ad set, and pause or resume an ad; other edits answer 422 and belong in TikTok Ads Manager." }
         advertisingChannelType:
           type: [string, "null"]
           description: "Google-only. Raw campaign.advertising_channel_type (SEARCH, PERFORMANCE_MAX, LOCAL_SERVICES, VIDEO, DEMAND_GEN, DISPLAY, SHOPPING, ...). Serving surface, distinct from platformObjective (advertiser intent). Null/absent for non-Google platforms."
@@ -13330,7 +13332,7 @@ components:
         nativeSettings:
           type: object
           additionalProperties: true
-          description: "TikTok only, only on GET /v1/ads/campaigns with `live=true` and only on campaigns read live. TikTok's campaign/get record verbatim: operation_status, objective_type, budget_mode (BUDGET_MODE_INFINITE means no campaign budget, so budget lives on the ad groups), budget, and budget_optimize_on when TikTok returns it. Plus advertiser_currency and advertiser_timezone from TikTok's advertiser/info."
+          description: "TikTok only, only on GET /v1/ads/campaigns with `live=true` and only on campaigns read live. A fixed subset of TikTok's campaign/get record, not the whole record: campaign_id, operation_status, objective_type, budget_mode (BUDGET_MODE_INFINITE means no campaign budget, so budget lives on the ad groups), budget, and budget_optimize_on, each with TikTok's own value and present only when TikTok returns it. Plus advertiser_currency and advertiser_timezone from TikTok's advertiser/info. Whether the campaign is Upgraded Smart+ is `isSmartPlus`."
         configReadAt:
           type: [string, "null"]
           format: date-time
@@ -13367,6 +13369,7 @@ components:
         platformAdAccountName: { type: [string, "null"], description: "Human-readable advertiser/account name from the platform. Refreshed on every sync." }
         accountId: { type: string }
         profileId: { type: string }
+        isSmartPlus: { type: boolean, description: "TikTok only. true when the campaign is an Upgraded Smart+ campaign. See AdTreeCampaign.isSmartPlus." }
         advertisingChannelType:
           type: [string, "null"]
           description: "Google-only. Raw campaign.advertising_channel_type. See AdTreeCampaign.advertisingChannelType."
@@ -55734,8 +55737,8 @@ paths:
         The rolled-up `status` is not re-derived by a live read. On TikTok the same live read also
         returns the ad group's applied `optimizationGoal` and `billingEvent`, as TikTok's adgroup/get
         reports them, so you can verify the goal TikTok applied rather than the one you requested.
-        It also returns `nativeSettings`: TikTok's own adgroup/get record for the ad group, verbatim and
-        read in that same call (budget, budget_mode, schedule, placements, locations, ages, gender,
+        It also returns `nativeSettings`: a fixed subset of TikTok's own adgroup/get record for the ad group, with
+        TikTok's own values, read in that same call (budget, budget_mode, schedule, placements, locations, ages, gender,
         languages, interests, actions, audiences and exclusions), plus the advertiser's currency and
         timezone. TikTok's `schedule_start_time` / `schedule_end_time` are UTC wall clocks
         ("YYYY-MM-DD HH:MM:SS", no offset); Ads Manager displays them in `advertiser_timezone`. `configReadAt` says when it was read; it
@@ -55830,7 +55833,7 @@ paths:
                         bidStrategy: { type: [string, "null"], description: "The bid strategy as last synced, in Meta's vocabulary (LOWEST_COST_WITHOUT_CAP, LOWEST_COST_WITH_BID_CAP, COST_CAP, LOWEST_COST_WITH_MIN_ROAS) on every platform that has an equivalent. On Meta under a campaign budget this is the campaign's strategy. TikTok maps bid_type / deep_bid_type, Pinterest AUTOMATIC_BID / MAX_BID / TARGET_AVG, X AUTO / MAX / TARGET, OpenAI Maximize Results / a max bid. Google bids at the campaign, so an ad group carries its campaign's strategy; one without a Meta equivalent (MANUAL_CPC, TARGET_IMPRESSION_SHARE, or a portfolio strategy's type such as TARGET_CPA) keeps Google's own name. Null on LinkedIn." }
                         bidAmount: { type: [number, "null"], description: "Bid cap or cost target in whole units of `currency`, as last synced. Null when the strategy has none (automatic bidding, ROAS targets, a Google portfolio strategy). On Google a campaign target CPA, a Maximize clicks ceiling, the ad group's own target CPA override, or its CPC bid under MANUAL_CPC." }
                         promotedObject: { type: [object, "null"], additionalProperties: true, description: "Meta only. The ad set's `promoted_object` verbatim (snake_case, for example pixel_id + custom_event_type, page_id, application_id), as last synced from its most recent ad. Null on other platforms and on an ad set with no ad yet; GET /v1/ads/accounts/live reads it live for every ad set." }
-                        nativeSettings: { type: object, additionalProperties: true, description: "TikTok only, only with `live=true` and only on rows read live. TikTok's adgroup/get record verbatim (snake_case, TikTok's own names and enums): operation_status, optimization_goal, optimization_event, billing_event, bid_type, bid_price, budget, budget_mode, pacing, schedule_type, schedule_start_time, schedule_end_time, dayparting, placement_type, placements, location_ids, age_groups, gender, languages, interest_category_ids, interest_keyword_ids, actions, audience_ids, excluded_audience_ids, operating_systems, frequency, frequency_schedule, smart_audience_enabled, smart_interest_behavior_enabled. schedule_start_time and schedule_end_time are UTC wall clocks (YYYY-MM-DD HH:MM:SS). location_ids holds TikTok's native location ids (GeoNames ids for countries); GET /v1/ads/targeting/search?dimension=geo returns them as `platformId` on country results. Plus advertiser_currency and advertiser_timezone from TikTok's advertiser/info. A field TikTok does not return is absent." }
+                        nativeSettings: { type: object, additionalProperties: true, description: "TikTok only, only with `live=true` and only on rows read live. A fixed subset of TikTok's adgroup/get record, not the whole record (snake_case, TikTok's own names, enums and values): adgroup_id, campaign_id, operation_status, optimization_goal, optimization_event, billing_event, bid_type, bid_price, budget, budget_mode, pacing, schedule_type, schedule_start_time, schedule_end_time, dayparting, placement_type, placements, location_ids, age_groups, gender, languages, interest_category_ids, interest_keyword_ids, actions, audience_ids, excluded_audience_ids, operating_systems, frequency, frequency_schedule, smart_audience_enabled, smart_interest_behavior_enabled. schedule_start_time and schedule_end_time are UTC wall clocks (YYYY-MM-DD HH:MM:SS). location_ids holds TikTok's native location ids (GeoNames ids for countries); GET /v1/ads/targeting/search?dimension=geo returns them as `platformId` on country results. Plus advertiser_currency and advertiser_timezone from TikTok's advertiser/info. A field TikTok does not return is absent." }
                         configReadAt: { type: [string, "null"], format: date-time, description: "Only with `live=true`. When `nativeSettings` was read from the platform. Null on every row whose native settings were not read now (row past the cap, failed read, or a platform without a native read)." }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
