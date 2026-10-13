@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.271.0"
+  version: "1.272.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -148,6 +148,8 @@ x-documentation:
     - **2,001+ accounts**: 1,200 req/min
 
     Legacy AppSumo lifetime tiers get a flat 600 req/min regardless of tier.
+
+    Reads that integrations tend to poll have an extra cap of 1,800 requests per hour per team, on a sliding window, counted separately for each group: inbox comments (`GET /v1/inbox/comments` and `GET /v1/inbox/comments/{postId}`), ad comments (`GET /v1/ads/{adId}/comments`) and Google Business reviews (`GET /v1/accounts/{accountId}/gmb-reviews` and `POST /v1/accounts/{accountId}/gmb-reviews/batch`). Past it the API answers 429 with `details.scope` naming the group. Subscribe to the `comment.received`, `review.new` and `review.updated` webhooks instead of polling these routes.
 
     Posts themselves are unlimited on every connected account; the rate limit applies only to API request throughput. Zernio also applies per-account daily publish caps as an anti-abuse safeguard (Instagram 100/day, Facebook 100/day, Google Business 100/day, Threads 250/day, X 50/day plus 200 replies for unverified accounts and 2,400 posts a day for verified X accounts, Pinterest 25/day, 50/day for every other platform), plus a 25-posts-per-hour per-account velocity cap.
 
