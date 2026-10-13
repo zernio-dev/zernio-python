@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.272.0"
+  version: "1.273.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -17199,6 +17199,10 @@ paths:
           in: query
           schema: { type: string, enum: [asc, desc], default: desc }
           description: Sort order
+        - name: tags
+          in: query
+          schema: { type: string, example: job }
+          description: 'Comma-separated tags (at most 20). Lists only posts created through Zernio that carry every listed tag, matched exactly and case-sensitively. Up to 200 published posts can match within the date range; more returns 400 asking to narrow fromDate and toDate. Ignored when postId is set.'
       responses:
         '200':
           description: Analytics result

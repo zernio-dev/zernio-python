@@ -11527,6 +11527,7 @@ def register_generated_tools(mcp, _get_client):
             "website_clicks",
         ] = "date",
         order: Literal["asc", "desc"] = "desc",
+        tags: str | None = None,
     ) -> str:
         """Get post analytics
 
@@ -11549,7 +11550,8 @@ def register_generated_tools(mcp, _get_client):
             limit: Page size (default 50)
             page: Page number (default 1)
             sort_by: Sort by date, engagement, or a specific metric. Platform-specific metrics (follows, reposts, reels_skip_rate, ig_reels_*, completion_rate, profile_views, website_clicks) sort a null value as 0.
-            order: Sort order"""
+            order: Sort order
+            tags: Comma-separated tags (at most 20). Lists only posts created through Zernio that carry every listed tag, matched exactly and case-sensitively. Up to 200 published posts can match within the date range; more returns 400 asking to narrow fromDate and toDate. Ignored when postId is set."""
         client = _get_client()
         try:
             response = client.analytics.get_analytics(
@@ -11564,6 +11566,7 @@ def register_generated_tools(mcp, _get_client):
                 page=page,
                 sort_by=sort_by,
                 order=order,
+                tags=tags,
             )
             return _format_response(response)
         except Exception as e:
