@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.274.0"
+  version: "1.275.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -10535,7 +10535,7 @@ components:
         igReelsVideoViewTotalTime: { type: integer, example: 0, description: 'Total watch time including replays, in milliseconds, for Instagram Reels, Facebook Reels and TikTok videos (business accounts). 0 for other media and platforms, including regular Facebook videos.' }
         reelsSkipRate: { type: number, example: 48.8, description: 'Instagram Reels only: percentage (0-100) of initial views that skipped the reel within its first 3 seconds, as reported by Meta. Meta labels the metric estimated and in development, so it can move between syncs. 0 for non-Reels media and other platforms. When a post is published to several accounts, the aggregate is weighted by views.' }
         completionRate: { type: number, example: 0, description: 'TikTok accounts connected through the TikTok for Business app only: share of viewers who watched the video to the end, 0 to 1, as TikTok reports it (T+24-48h, only for posts active in the last 7 days). 0 for other platforms. When a post is published to several accounts, the aggregate is weighted by views.' }
-        profileViews: { type: integer, example: 0, description: 'TikTok accounts connected through the TikTok for Business app only: profile views from users who reached the profile through this post (T+24-48h). 0 for other platforms.' }
+        profileViews: { type: integer, example: 0, description: 'Instagram feed posts (images and carousels; 0 on Reels and Stories) and TikTok accounts connected through the TikTok for Business app: profile views from users who reached the profile through this post (TikTok T+24-48h). 0 for other platforms.' }
         websiteClicks: { type: integer, example: 0, description: 'TikTok accounts connected through the TikTok for Business app only: clicks on the profile website link attributed to this post (T+24-48h). Also counted inside `clicks`, which sums every profile-link type (website, phone, email, address, app download). 0 for other platforms.' }
         impressionSources:
           type: object
@@ -10780,7 +10780,7 @@ components:
             reposts: { type: integer }
             reelsSkipRate: { type: number, description: 'Instagram Reels skip rate, 0 to 1' }
             completionRate: { type: number, description: 'TikTok business lane: share of viewers who watched to the end, 0 to 1' }
-            profileViews: { type: integer, description: 'TikTok business lane: profile views attributed to the post' }
+            profileViews: { type: integer, description: 'Instagram feed posts (images and carousels; 0 on Reels and Stories) and TikTok business lane: profile views attributed to the post' }
             websiteClicks: { type: integer, description: 'TikTok business lane: website-link clicks attributed to the post (also inside clicks)' }
             impressionSources: { type: object, additionalProperties: { type: number }, description: 'TikTok business lane: share of views by surface (forYou, follow, search, personalProfile, sound, directMessage, other), fractions 0 to 1. Empty object elsewhere.' }
             audienceTypes: { type: object, additionalProperties: { type: number }, description: 'TikTok business lane: follower / nonFollower and newViewer / returnViewer shares, fractions 0 to 1. Empty object elsewhere.' }
@@ -19687,7 +19687,7 @@ paths:
                         views: { type: integer, description: "Total views on this date" }
                         follows: { type: [integer, "null"], description: 'Follows attributed to the post on this date (Instagram feed and stories, Facebook Reels, TikTok business lane). Null on Instagram Reels and video and on Facebook posts that are not Reels, where Meta has no follows metric; 0 on other platforms.' }
                         completionRate: { type: number, description: "TikTok business lane: share of viewers who watched to the end on this date, 0 to 1; 0 elsewhere" }
-                        profileViews: { type: integer, description: "TikTok business lane: profile views attributed to the post on this date; 0 elsewhere" }
+                        profileViews: { type: integer, description: 'Instagram feed posts (images and carousels; 0 on Reels and Stories) and TikTok business lane: profile views attributed to the post on this date; 0 elsewhere' }
                         websiteClicks: { type: integer, description: "TikTok business lane: website-link clicks attributed to the post on this date (also inside clicks); 0 elsewhere" }
                         impressionSources: { type: object, additionalProperties: { type: number }, description: "TikTok business lane: share of views by surface on this date (forYou, follow, search, personalProfile, sound, directMessage, other), fractions 0 to 1; empty object elsewhere" }
                         audienceTypes: { type: object, additionalProperties: { type: number }, description: "TikTok business lane: follower / nonFollower and newViewer / returnViewer shares on this date, fractions 0 to 1; empty object elsewhere" }
