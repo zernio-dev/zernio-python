@@ -2170,9 +2170,9 @@ def register_generated_tools(mcp, _get_client):
         identifiers are read from the ad record (persisted during sync) with a Marketing-API
         fallback for ads that predate the field.
 
-        For Instagram-placed comments, the Instagram account that runs the ad must be connected
-        to Zernio, because those comments are read through that account's token. If no connected
-        Instagram ...
+        Comments can land on extra posts Meta creates for placement variants, which the creative
+        does not report. On Instagram, every media a `comment.received` for this ad arrived on is
+        read ...
 
         Platforms: meta, tiktok
 
@@ -7495,7 +7495,7 @@ def register_generated_tools(mcp, _get_client):
            - the creative's `effective_object_story_id` (`{pageId}_{postId}` shape, Facebook side)
            - the creative's `effective_instagram_media_id` (Instagram side)
 
-           Any of the four resolve to the same ad. Caller doesn't need a translation ...
+           - an Instagram media id an ad comment arrived on (`comment.platformPostId` ...
 
            Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit
 
