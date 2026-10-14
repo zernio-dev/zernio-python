@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.276.0"
+  version: "1.277.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -10559,7 +10559,7 @@ components:
           example: { "0": 0.9923, "1": 0.9937, "4": 0.8637, "8": 0.5313, "12": 0.3605 }
           description: 'Facebook Reels and TikTok business lane: share still watching at each second of playback, fractions 0 to 1. Keys are whole seconds from the start of a play ("3" is the share still watching at 3 s). Facebook Reels (Meta post_video_retention_graph): the base is a subset of plays that Meta selects and does not expose, on small Reels it can be far below views (6 of 51 measured), so a value is a share of that subset, not of all plays; loops count as continued playback, so a short Reels curve runs past its length (an 8 s Reel has keys "0" to "12"); Meta returns at most 41 points, so a long Reel covers only its first 40 s. TikTok accounts connected through the TikTok for Business app (TikTok video_view_retention): one point per whole second, at most 61 points, thinned evenly on videos longer than 60 s. Empty object for other media and platforms. On a cross-posted post this is the curve of the account with the most views among those reporting one, never a blend: curves from different platforms and accounts measure different audiences and different seconds. Each platformAnalytics entry keeps its own curve.'
         reposts: { type: integer, example: 0, description: 'Instagram accounts connected with Facebook Login only: reposts of the media by other users, minus deleted reposts, on feed posts, reels and stories. Meta does not expose this metric for accounts connected with Instagram Login, so those always report 0. 0 for other platforms, including Threads, where reposts are counted in shares instead.' }
-        videoDurationSeconds: { type: [integer, "null"], example: 30, description: 'Video length in seconds. Currently Instagram Reels only; combine with igReelsAvgWatchTime (ms) to estimate retention. Null when unknown (other platforms, non-video media, or when Instagram does not expose the media URL, e.g. reels with copyrighted audio).' }
+        videoDurationSeconds: { type: [integer, "null"], example: 30, description: 'Video length in seconds. Filled for public YouTube videos once their analytics next refresh (from the Data API; live streams may report null). The YouTube Data API has no Shorts flag: a video over 180 seconds cannot be a Short, but a shorter one may be a regular upload. Also filled for Instagram Reels (combine with igReelsAvgWatchTime (ms) to estimate retention). Null when unknown: platforms that do not report a length, non-video media, or when Instagram does not expose the media URL, e.g. reels with copyrighted audio.' }
         engagementRate: { type: number, example: 6.59, description: 'Percentage, rounded to 2 decimals: (likes + comments + shares + saves) / (impressions or reach or views) * 100. Clicks and follows are never counted. The denominator is the FIRST of impressions, reach, views that is non-zero, so it is not the same basis on every post: a post with impressions divides by impressions, one without falls back to reach, then to views. If you need a single consistent basis (e.g. interactions / reach), compute it from the raw fields above. When this object is the post-level roll-up of a cross-posted post, the denominator is the SUM of the denominators resolved per platform entry: an entry reporting none of impressions, reach or views is excluded from both sides of the ratio. Each platformAnalytics entry below keeps its own single denominator. The engagementRate on the LinkedIn account endpoints is a different formula.' }
         lastUpdated: { type: string, format: date-time }
     PlatformAnalytics:
@@ -31107,7 +31107,7 @@ paths:
       operationId: getLinkedInAggregateAnalytics
       tags: [Analytics]
       summary: Get LinkedIn aggregate stats
-      description: Returns aggregate analytics across all posts for a LinkedIn personal account. Only includes posts published through Zernio (LinkedIn API limitation). Org accounts should use /v1/analytics instead. Requires r_member_postAnalytics scope. Saves (POST_SAVE) and sends (POST_SEND) are available for personal accounts; organization pages always return 0 for these two metrics because LinkedIn does not expose them on the organization analytics endpoint.
+      description: Returns aggregate analytics across all posts for a LinkedIn personal account. Covers every post authored by the member, whether or not it was published through Zernio (LinkedIn aggregates by member, not by post). Org accounts should use /v1/analytics instead. Requires r_member_postAnalytics scope. Saves (POST_SAVE) and sends (POST_SEND) are available for personal accounts; organization pages always return 0 for these two metrics because LinkedIn does not expose them on the organization analytics endpoint.
       parameters:
         - name: accountId
           in: path
