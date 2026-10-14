@@ -25721,6 +25721,8 @@ def register_generated_tools(mcp, _get_client):
 
         `likeCount` is null when the owner hides like counts.
 
+        Media URLs are temporary, and fields Meta does not return come back as null, never omitted.
+
         Args:
             account_id: The ID of a connected Instagram account (Facebook Login). (required)
             username: Instagram handle to look up, with or without the leading @. Case-insensitive. (required)

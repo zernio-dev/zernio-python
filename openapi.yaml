@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.277.0"
+  version: "1.278.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -8762,6 +8762,7 @@ components:
           description: 'Most recent media first, up to `limit`.'
           items:
             type: object
+            required: [id, caption, mediaType, mediaProductType, timestamp, permalink, likeCount, commentsCount, mediaUrl, thumbnailUrl, viewCount, children]
             properties:
               id: { type: string }
               caption: { type: [string, "null"] }
@@ -8771,6 +8772,20 @@ components:
               permalink: { type: [string, "null"] }
               likeCount: { type: [integer, "null"], description: Null when the owner hides like counts }
               commentsCount: { type: [integer, "null"] }
+              mediaUrl: { type: [string, "null"], description: 'Temporary CDN URL that expires; download the file rather than storing the link. Null on videos whose audio is licensed music, use thumbnailUrl for the cover.' }
+              thumbnailUrl: { type: [string, "null"], description: 'Video cover frame, VIDEO only. Temporary CDN URL.' }
+              viewCount: { type: [integer, "null"], description: 'Reels only. Null on images and carousels.' }
+              children:
+                type: [array, "null"]
+                description: 'Carousel slides in order. Null unless mediaType is CAROUSEL_ALBUM.'
+                items:
+                  type: object
+                  required: [id, mediaType, mediaUrl, thumbnailUrl]
+                  properties:
+                    id: { type: string }
+                    mediaType: { type: [string, "null"] }
+                    mediaUrl: { type: [string, "null"] }
+                    thumbnailUrl: { type: [string, "null"] }
     InstagramAudioAsset:
       type: object
       description: 'One asset from the Instagram audio catalog. Licensed music carries artist/artwork fields; original sounds carry creator fields instead, so most fields are nullable.'
@@ -32029,6 +32044,8 @@ paths:
         up any public Business or Creator handle.
 
         `likeCount` is null when the owner hides like counts.
+
+        Media URLs are temporary, and fields Meta does not return come back as null, never omitted.
       parameters:
         - name: accountId
           in: path
