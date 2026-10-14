@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.278.0"
+  version: "1.278.1"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -8041,7 +8041,11 @@ components:
         or running; cleared when the target publishes or is retried manually.
         errorMessage stays the human-readable summary; this block is for
         diagnostics and support tickets. Instagram media processing failures
-        carry no code or subcode, only Meta's status text in message.
+        carry no code or subcode, only Meta's status text in message. On an
+        Instagram publish whose outcome is uncertain (for example errorMessage
+        starting "Instagram did not confirm"), carries the last media_publish
+        error Meta returned, when it returned one; errorMessage stays the
+        verdict, so do not read this block as a confirmed failure.
       properties:
         code:
           type: integer
