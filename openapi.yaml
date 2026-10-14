@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.275.1"
+  version: "1.275.2"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -11972,7 +11972,7 @@ components:
           description: "Optional catalog ID. If supplied with productSetId, the set must belong to this catalog (checked by Zernio when the Meta login carries catalog_management, by Meta otherwise). A catalog ID cannot replace productSetId."
         productSetId:
           type: string
-          description: "Meta product SET ID, for example from GET /v1/ads/catalogs/{catalogId}/product-sets. Creating catalog ads needs only ads_management on the Meta login, not catalog_management. Zernio checks before creation that the set is visible to the token, and a set it cannot see returns a 400 naming promotedObject.productSetId (a catalog ID is caught the same way when the login carries catalog_management, and rejected by Meta otherwise). When the login can also read the set's catalog (catalog_management), a mismatch with productCatalogId returns a 400 naming promotedObject.productCatalogId; otherwise Meta judges the catalog match. With validateOnly and a new campaign, Meta cannot dry-run the set inside the ad set, so the adSet result carries a reason; pass existingCampaignId to dry-run it in full."
+          description: "Meta product SET ID, for example from GET /v1/ads/catalogs/{catalogId}/product-sets. Creating catalog ads needs only ads_management on the Meta login, not catalog_management. Zernio reads the set before creation and returns a 400 naming promotedObject.productSetId when Meta rejects the ID outright. When Meta answers that the login lacks the permission to read it (common without catalog_management, even for a set a live ad set already uses), Zernio leaves the check to Meta's own create validation, which rejects an unusable set or a catalog ID with the same 400. When the login can also read the set's catalog (catalog_management), a mismatch with productCatalogId returns a 400 naming promotedObject.productCatalogId; otherwise Meta judges the catalog match. With validateOnly and a new campaign, Meta cannot dry-run the set inside the ad set, so the adSet result carries a reason; pass existingCampaignId to dry-run it in full."
         offlineConversionDataSetId:
           type: string
           description: 'Meta only. Offline event set (dataset) to optimise toward. Post-merger these are datasets: the id is the dataset id (for pixel-backed datasets, the pixel id).'
@@ -67214,7 +67214,9 @@ paths:
       description: |
         Lists the Meta product catalogs a business portfolio owns or has been shared, for catalog and shopping ads.
 
-        The business comes from `businessId`, else the ad account's owner (`adAccountId`), else the WhatsApp Business Account's owner when `accountId` is a WhatsApp connection, else the only business the Meta login can see. Reads work with scopes customers already granted.
+        The business comes from `businessId`, else the ad account's owner (`adAccountId`), else the WhatsApp Business Account's owner when `accountId` is a WhatsApp connection, else the only business the Meta login can see.
+
+        Listing catalogs needs catalog_management on the Meta login. The permission is pending Meta App Review and is not requested on connect yet, so most logins get the 403 below (Meta's code 100 "This application has not been approved to use this api"); pass catalogAccountId naming a facebook, instagram or metaads connection whose Meta login already holds it. Creating a catalog_sales ad from a known product set ID does not need it (see promotedObject.productSetId on POST /v1/ads/create).
       security:
         - bearerAuth: []
       parameters:
