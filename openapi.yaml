@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.275.0"
+  version: "1.275.1"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -64101,6 +64101,7 @@ paths:
             is reused with a different request body, and as `ad_account_unusable`
             when Meta refuses writes on the ad account because its status is
             ineligible to manage ads (see `ErrorResponse.details`).
+        '503': { $ref: '#/components/responses/TemporarilyUnavailable' }
 
   /v1/ads/campaigns/{campaignId}/asset-groups:
     get:
