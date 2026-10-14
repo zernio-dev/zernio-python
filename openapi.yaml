@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.275.3"
+  version: "1.276.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -12883,6 +12883,7 @@ components:
         _id: { type: string }
         name: { type: string }
         platform: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit] }
+        profileId: { type: string, description: 'Profile the row belongs to: the profile of its owning connection (`accountId`); when that connection no longer exists, the requested profile (`profileId` filter) that reaches the row ad account, else the profile of the oldest connection of the row owner that reaches it.' }
         status: { allOf: [{ $ref: '#/components/schemas/AdStatus' }], description: "Delivery status. Derived from the platform `effective_status`, so it inherits ancestor pauses (an ACTIVE ad under a PAUSED campaign reads `paused`). For the ad's own on/off toggle use `configuredStatus`; for the review state use `reviewStatus`." }
         configuredStatus:
           type: [string, "null"]
@@ -13277,7 +13278,7 @@ components:
         platformAdAccountId: { type: string }
         platformAdAccountName: { type: [string, "null"], description: "Human-readable advertiser/account name from the platform. Refreshed on every sync." }
         accountId: { type: string }
-        profileId: { type: string }
+        profileId: { type: string, description: 'Profile the row belongs to: the profile of its owning connection (`accountId`); when that connection no longer exists, the requested profile (`profileId` filter) that reaches the row ad account, else the profile of the oldest connection of the row owner that reaches it.' }
         isSmartPlus: { type: boolean, description: "TikTok only. true when the campaign is an Upgraded Smart+ campaign (TikTok lists it on /smart_plus/campaign/get/), false when it is not. Set by ads sync, so the key is absent on other platforms and on TikTok campaigns not synced since this field shipped. On Smart+ objects Zernio can pause, resume, rename, delete and change the budget of the campaign and ad set, and pause or resume an ad; other edits answer 422 and belong in TikTok Ads Manager." }
         advertisingChannelType:
           type: [string, "null"]
@@ -13370,7 +13371,7 @@ components:
         platformAdAccountId: { type: string }
         platformAdAccountName: { type: [string, "null"], description: "Human-readable advertiser/account name from the platform. Refreshed on every sync." }
         accountId: { type: string }
-        profileId: { type: string }
+        profileId: { type: string, description: 'Profile the row belongs to: the profile of its owning connection (`accountId`); when that connection no longer exists, the requested profile (`profileId` filter) that reaches the row ad account, else the profile of the oldest connection of the row owner that reaches it.' }
         isSmartPlus: { type: boolean, description: "TikTok only. true when the campaign is an Upgraded Smart+ campaign. See AdTreeCampaign.isSmartPlus." }
         advertisingChannelType:
           type: [string, "null"]
@@ -13477,7 +13478,7 @@ components:
         platformCriterionId: { type: string, description: 'Google ad_group_criterion.criterion_id. Unique only within its ad group (`adSetId`), not across the account.' }
         resourceName: { type: string, description: 'Google resource name, customers/{adAccountId}/adGroupCriteria/{adSetId}~{platformCriterionId}.' }
         accountId: { type: string, description: Account ID owning the sync }
-        profileId: { type: string }
+        profileId: { type: string, description: 'Profile the row belongs to: the profile of its owning connection (`accountId`); when that connection no longer exists, the requested profile (`profileId` filter) that reaches the row ad account, else the profile of the oldest connection of the row owner that reaches it.' }
         platform: { type: string, enum: [google] }
         adAccountId: { type: string, description: Google customer ID }
         campaignId: { type: string }
@@ -55783,7 +55784,7 @@ paths:
                         platformCampaignId: { type: [string, "null"] }
                         platformAdAccountId: { type: string }
                         accountId: { type: [string, "null"] }
-                        profileId: { type: string }
+                        profileId: { type: string, description: 'Profile the row belongs to: the profile of its owning connection (`accountId`); when that connection no longer exists, the requested profile (`profileId` filter) that reaches the row ad account, else the profile of the oldest connection of the row owner that reaches it.' }
                         currency: { type: [string, "null"] }
                         budget:
                           type: [object, "null"]
