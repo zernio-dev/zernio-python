@@ -11373,9 +11373,47 @@ components:
                 LinkedIn withholds both below its audience privacy threshold, in which case the
                 keys are ABSENT rather than 0. `audiencePenetration` is available here only: it
                 is not part of the stored metrics series.
+
+                TikTok rows are keyed by TikTok's own dimension name (`country_code` for
+                `country`, `platform` for `publisher_platform`). `placement` rows carry the
+                label TikTok Ads Manager shows (`TikTok`, `TikTok Ad Network`, `News Feed App Series`)
+                in `placement` and TikTok's API value (`PLACEMENT_TIKTOK`, `PLACEMENT_PANGLE`,
+                `PLACEMENT_GLOBAL_APP_BUNDLE`) in `placementRaw`; a value without a known label
+                carries the raw value in both.
+
+                A requested dimension with no data in the range is an empty array.
               additionalProperties:
                 type: array
                 items: { type: object }
+            unsupportedBreakdowns:
+              type: array
+              items: { type: string }
+              description: "Requested breakdowns this platform cannot break down by (e.g. region on TikTok, any breakdown on Google). Absent when every requested breakdown is supported."
+            breakdownHints:
+              type: object
+              additionalProperties: { type: string }
+              description: "Guidance for some names in unsupportedBreakdowns, keyed by that name (e.g. placement on Meta points at publisher_platform and platform_position; platform_position on TikTok points at placement). Absent when no unsupported name has a hint."
+            breakdownErrors:
+              type: array
+              description: "TikTok only: breakdowns the platform failed to return (rate limit, permission, rejected query). Each one is an empty array under breakdowns; summary and daily are unaffected. Absent when every breakdown answered."
+              items:
+                type: object
+                properties:
+                  breakdown: { type: string }
+                  message: { type: string, description: "The platform's error message." }
+            breakdownDroppedMetrics:
+              type: object
+              additionalProperties:
+                type: array
+                items: { type: string }
+              description: "TikTok only: TikTok metric names TikTok refused for a breakdown, keyed by the requested breakdown (e.g. total_purchase and total_purchase_value have no relation to platform, ac or language). Every row value derived from a refused metric is null in that breakdown (purchaseValue and roas, or the matching actions and actionValues entries), never a number computed without it. Absent when no metric was refused."
+              example: { publisher_platform: [total_purchase, total_purchase_value, total_initiate_checkout_value] }
+            breakdownsRange:
+              type: object
+              description: "TikTok only, present when the requested range is longer than the 365 days TikTok serves per breakdown: the window the breakdowns cover (the last 365 days of the range). summary and daily still cover the full range."
+              properties:
+                fromDate: { type: string, format: date }
+                toDate: { type: string, format: date }
     AdAnalyticsResponse:
       type: object
       properties:
@@ -11422,9 +11460,47 @@ components:
                 LinkedIn withholds both below its audience privacy threshold, in which case the
                 keys are ABSENT rather than 0. `audiencePenetration` is available here only: it
                 is not part of the stored metrics series.
+
+                TikTok rows are keyed by TikTok's own dimension name (`country_code` for
+                `country`, `platform` for `publisher_platform`). `placement` rows carry the
+                label TikTok Ads Manager shows (`TikTok`, `TikTok Ad Network`, `News Feed App Series`)
+                in `placement` and TikTok's API value (`PLACEMENT_TIKTOK`, `PLACEMENT_PANGLE`,
+                `PLACEMENT_GLOBAL_APP_BUNDLE`) in `placementRaw`; a value without a known label
+                carries the raw value in both.
+
+                A requested dimension with no data in the range is an empty array.
               additionalProperties:
                 type: array
                 items: { type: object }
+            unsupportedBreakdowns:
+              type: array
+              items: { type: string }
+              description: "Requested breakdowns this platform cannot break down by (e.g. region on TikTok, any breakdown on Google). Absent when every requested breakdown is supported."
+            breakdownHints:
+              type: object
+              additionalProperties: { type: string }
+              description: "Guidance for some names in unsupportedBreakdowns, keyed by that name (e.g. placement on Meta points at publisher_platform and platform_position; platform_position on TikTok points at placement). Absent when no unsupported name has a hint."
+            breakdownErrors:
+              type: array
+              description: "TikTok only: breakdowns the platform failed to return (rate limit, permission, rejected query). Each one is an empty array under breakdowns; summary and daily are unaffected. Absent when every breakdown answered."
+              items:
+                type: object
+                properties:
+                  breakdown: { type: string }
+                  message: { type: string, description: "The platform's error message." }
+            breakdownDroppedMetrics:
+              type: object
+              additionalProperties:
+                type: array
+                items: { type: string }
+              description: "TikTok only: TikTok metric names TikTok refused for a breakdown, keyed by the requested breakdown (e.g. total_purchase and total_purchase_value have no relation to platform, ac or language). Every row value derived from a refused metric is null in that breakdown (purchaseValue and roas, or the matching actions and actionValues entries), never a number computed without it. Absent when no metric was refused."
+              example: { publisher_platform: [total_purchase, total_purchase_value, total_initiate_checkout_value] }
+            breakdownsRange:
+              type: object
+              description: "TikTok only, present when the requested range is longer than the 365 days TikTok serves per breakdown: the window the breakdowns cover (the last 365 days of the range). summary and daily still cover the full range."
+              properties:
+                fromDate: { type: string, format: date }
+                toDate: { type: string, format: date }
     AdMetrics:
       type: object
       properties:
@@ -57880,9 +57956,9 @@ paths:
 
         Returns performance analytics for a whole campaign in one call: summary metrics, a daily
         timeline over the requested date range (summed across the campaign's ads), and optional
-        demographic breakdowns. Breakdowns are fetched live from Meta at the campaign level (one call
-        per dimension, no per-ad fan-out), so an agency dashboard gets campaign-level age/gender/etc.
-        without summing thousands of per-ad reads. `campaignId` is the platform campaign id; pass
+        demographic breakdowns. Breakdowns are fetched live from Meta, TikTok or LinkedIn at the campaign
+        level (one call per dimension, no per-ad fan-out), so an agency dashboard gets campaign-level
+        age/gender/placement/etc. without summing thousands of per-ad reads. `campaignId` is the platform campaign id; pass
         `platform` when a campaign id could be ambiguous across platforms. If no date range is provided,
         defaults to the last 90 days. Date range is capped at 730 days max.
         Google adds searchImpressionShare, searchBudgetLostImpressionShare,
@@ -57906,10 +57982,22 @@ paths:
             **Meta**: age, gender, country, publisher_platform, device_platform, region,
             platform_position, impression_device, video_asset, image_asset, body_asset, title_asset.
 
+            **TikTok**: gender, age, country (or country_code), publisher_platform (or platform),
+            ac, language, placement. TikTok serves at most 365 days per breakdown, so a longer
+            range is read over its last 365 days and `analytics.breakdownsRange` says which window.
+
             **LinkedIn** (firmographics): job_title, job_function, seniority, industry,
             company, company_size, country, region. Rows carry the raw pivot `value`
             plus a resolved `name`. LinkedIn serves these aggregated over the whole
             range, delays the data 12-24h, and omits segments with fewer than 3 events.
+
+            A known dimension the platform cannot break down by is listed in
+            `analytics.unsupportedBreakdowns` instead of being dropped (with guidance in
+            `analytics.breakdownHints` where there is an alternative); the rest of the response
+            is unchanged. An unknown name returns 400. A TikTok dimension that fails is listed
+            in `analytics.breakdownErrors` and the response stays 200.
+            Metrics TikTok refuses for a dimension are listed in `analytics.breakdownDroppedMetrics`,
+            and the row values derived from them are null.
       responses:
         '200':
           description: Campaign analytics
@@ -58406,7 +58494,7 @@ paths:
         - { name: pageToken, in: query, schema: { type: string }, description: "Google only: cursor from paging.nextPageToken of the previous page." }
         - { name: level, in: query, schema: { type: string, enum: [ad, adset, campaign, account] }, description: Row granularity }
         - { name: fields, in: query, schema: { type: string }, description: "Comma-separated Graph insights fields (e.g. spend,impressions,frequency,website_purchase_roas). Omitted = Meta's default set." }
-        - { name: breakdowns, in: query, schema: { type: string }, description: "Comma-separated Graph breakdowns (e.g. age,gender or publisher_platform)." }
+        - { name: breakdowns, in: query, schema: { type: string }, description: "Meta only: comma-separated Graph breakdowns (e.g. age,gender or publisher_platform). Returns 400 on TikTok (add the breakdown to dimensions with reportType=AUDIENCE, e.g. dimensions=campaign_id,placement) and on Google (select segments.* in the query)." }
         - { name: actionBreakdowns, in: query, schema: { type: string }, description: "Comma-separated Graph action breakdowns; segments the actions[] arrays in each row. Pass `none` to clear Meta's default action_type breakdown, required to combine some non-action breakdowns such as instagram_ads_follow_type (otherwise Meta returns a (#100) invalid-combination error)." }
         - { name: actionAttributionWindows, in: query, schema: { type: string }, description: "Comma-separated Meta attribution windows. Action values are returned keyed per window." }
         - { name: actionReportTime, in: query, schema: { type: string }, description: "When actions are counted: impression, conversion or mixed." }
@@ -58582,10 +58670,10 @@ paths:
       x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "reddit"]
       summary: Get ad analytics
       description: |
-        Returns one ad's performance summary and daily timeline, with optional audience breakdowns on Meta and TikTok.
+        Returns one ad's performance summary and daily timeline, with optional audience breakdowns on Meta, TikTok and LinkedIn.
 
         Includes summary metrics, a daily timeline
-        over the requested date range, and optional demographic breakdowns (Meta and TikTok only).
+        over the requested date range, and optional demographic breakdowns (Meta, TikTok and LinkedIn only).
         If no date range is provided, defaults to the last 90 days. Date range is capped at 730 days max.
       security:
         - bearerAuth: []
@@ -58599,14 +58687,25 @@ paths:
           description: |
             Comma-separated breakdown dimensions.
 
-            **Meta**: age, gender, country, publisher_platform, device_platform, region.
+            **Meta**: age, gender, country, publisher_platform, device_platform, region,
+            platform_position, impression_device, video_asset, image_asset, body_asset, title_asset.
 
-            **TikTok**: gender, age, country_code, platform, ac, language.
+            **TikTok**: gender, age, country (or country_code), publisher_platform (or platform),
+            ac, language, placement. TikTok serves at most 365 days per breakdown, so a longer
+            range is read over its last 365 days and `analytics.breakdownsRange` says which window.
 
             **LinkedIn** (firmographics): job_title, job_function, seniority, industry,
             company, company_size, country, region. Rows carry the raw pivot `value`
             plus a resolved `name`. LinkedIn serves these aggregated over the whole
             range, delays the data 12-24h, and omits segments with fewer than 3 events.
+
+            A known dimension the platform cannot break down by is listed in
+            `analytics.unsupportedBreakdowns` instead of being dropped (with guidance in
+            `analytics.breakdownHints` where there is an alternative); the rest of the response
+            is unchanged. An unknown name returns 400. A TikTok dimension that fails is listed
+            in `analytics.breakdownErrors` and the response stays 200.
+            Metrics TikTok refuses for a dimension are listed in `analytics.breakdownDroppedMetrics`,
+            and the row values derived from them are null.
       responses:
         '200':
           description: Ad analytics

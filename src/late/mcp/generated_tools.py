@@ -10528,14 +10528,14 @@ def register_generated_tools(mcp, _get_client):
 
             Returns performance analytics for a whole campaign in one call: summary metrics, a daily
             timeline over the requested date range (summed across the campaign's ads), and optional
-            demographic breakdowns. Breakdowns are fetched live from Meta at the campaign level (one call
-            per dimension, no per-ad fan-out), so an agency dashboard gets campaign-level age/gender/etc.
-            without summing thousands of per-ad reads. `campaignId` is the platform campaign id; pass
+            demographic breakdowns. Breakdowns are fetched live from Meta, TikTok or LinkedIn at the campaign
+            level (one call per dimension, no per-ad fan-out), so an agency dashboard gets campaign-level
+            age/gender/placement/etc. without summing thousands of per-ad reads. `campaignId` is the platform campaign id; pass
             `platform` when a campaign id could be ambiguous across platforms. If no date range is provided,
             defaults to the last 90 days. Date range is capped at 730 days max.
             Google adds searchImpressionShare, searchBudgetLostImpressionShare,
             searchRankLostImpressionShare, searchTopImpressionShare and searchAbsoluteTopImpressionShare
-            under analytics.summary for the requested inclusive range. These ratios are queried ...
+            under analytics.summary for the requested inclusive ...
 
             Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit
 
@@ -10549,10 +10549,22 @@ def register_generated_tools(mcp, _get_client):
         **Meta**: age, gender, country, publisher_platform, device_platform, region,
         platform_position, impression_device, video_asset, image_asset, body_asset, title_asset.
 
+        **TikTok**: gender, age, country (or country_code), publisher_platform (or platform),
+        ac, language, placement. TikTok serves at most 365 days per breakdown, so a longer
+        range is read over its last 365 days and `analytics.breakdownsRange` says which window.
+
         **LinkedIn** (firmographics): job_title, job_function, seniority, industry,
         company, company_size, country, region. Rows carry the raw pivot `value`
         plus a resolved `name`. LinkedIn serves these aggregated over the whole
-        range, delays the data 12-24h, and omits segments with fewer than 3 events."""
+        range, delays the data 12-24h, and omits segments with fewer than 3 events.
+
+        A known dimension the platform cannot break down by is listed in
+        `analytics.unsupportedBreakdowns` instead of being dropped (with guidance in
+        `analytics.breakdownHints` where there is an alternative); the rest of the response
+        is unchanged. An unknown name returns 400. A TikTok dimension that fails is listed
+        in `analytics.breakdownErrors` and the response stays 200.
+        Metrics TikTok refuses for a dimension are listed in `analytics.breakdownDroppedMetrics`,
+        and the row values derived from them are null."""
         client = _get_client()
         try:
             response = client.ad_insights.get_campaign_analytics(
@@ -10763,7 +10775,7 @@ def register_generated_tools(mcp, _get_client):
             page_token: Google only: cursor from paging.nextPageToken of the previous page.
             level: Row granularity
             fields: Comma-separated Graph insights fields (e.g. spend,impressions,frequency,website_purchase_roas). Omitted = Meta's default set.
-            breakdowns: Comma-separated Graph breakdowns (e.g. age,gender or publisher_platform).
+            breakdowns: Meta only: comma-separated Graph breakdowns (e.g. age,gender or publisher_platform). Returns 400 on TikTok (add the breakdown to dimensions with reportType=AUDIENCE, e.g. dimensions=campaign_id,placement) and on Google (select segments.* in the query).
             action_breakdowns: Comma-separated Graph action breakdowns; segments the actions[] arrays in each row. Pass `none` to clear Meta's default action_type breakdown, required to combine some non-action breakdowns such as instagram_ads_follow_type (otherwise Meta returns a (#100) invalid-combination error).
             action_attribution_windows: Comma-separated Meta attribution windows. Action values are returned keyed per window.
             action_report_time: When actions are counted: impression, conversion or mixed.
@@ -10935,10 +10947,10 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Get ad analytics
 
-            Returns one ad's performance summary and daily timeline, with optional audience breakdowns on Meta and TikTok.
+            Returns one ad's performance summary and daily timeline, with optional audience breakdowns on Meta, TikTok and LinkedIn.
 
             Includes summary metrics, a daily timeline
-            over the requested date range, and optional demographic breakdowns (Meta and TikTok only).
+            over the requested date range, and optional demographic breakdowns (Meta, TikTok and LinkedIn only).
             If no date range is provided, defaults to the last 90 days. Date range is capped at 730 days max.
 
             Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit
@@ -10949,14 +10961,25 @@ def register_generated_tools(mcp, _get_client):
                 to_date: End of date range (YYYY-MM-DD). Defaults to today. Max 730-day range.
                 breakdowns: Comma-separated breakdown dimensions.
 
-        **Meta**: age, gender, country, publisher_platform, device_platform, region.
+        **Meta**: age, gender, country, publisher_platform, device_platform, region,
+        platform_position, impression_device, video_asset, image_asset, body_asset, title_asset.
 
-        **TikTok**: gender, age, country_code, platform, ac, language.
+        **TikTok**: gender, age, country (or country_code), publisher_platform (or platform),
+        ac, language, placement. TikTok serves at most 365 days per breakdown, so a longer
+        range is read over its last 365 days and `analytics.breakdownsRange` says which window.
 
         **LinkedIn** (firmographics): job_title, job_function, seniority, industry,
         company, company_size, country, region. Rows carry the raw pivot `value`
         plus a resolved `name`. LinkedIn serves these aggregated over the whole
-        range, delays the data 12-24h, and omits segments with fewer than 3 events."""
+        range, delays the data 12-24h, and omits segments with fewer than 3 events.
+
+        A known dimension the platform cannot break down by is listed in
+        `analytics.unsupportedBreakdowns` instead of being dropped (with guidance in
+        `analytics.breakdownHints` where there is an alternative); the rest of the response
+        is unchanged. An unknown name returns 400. A TikTok dimension that fails is listed
+        in `analytics.breakdownErrors` and the response stays 200.
+        Metrics TikTok refuses for a dimension are listed in `analytics.breakdownDroppedMetrics`,
+        and the row values derived from them are null."""
         client = _get_client()
         try:
             response = client.ad_insights.get_ad_analytics(
