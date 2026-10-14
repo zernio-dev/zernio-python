@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.275.2"
+  version: "1.275.3"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -43410,7 +43410,7 @@ paths:
       summary: Look up carrier + line type
       description: |
         Carrier name and line type (mobile / landline / voip / toll-free) for a
-        number, plus `smsReachable` (landlines can't receive SMS). Use it to
+        number, plus `smsReachable`. Use it to
         validate recipients before sending. Each lookup is billed by the
         carrier-data provider, so call it explicitly (e.g. pre-validating an
         opt-in list), not on every send.
@@ -43429,7 +43429,7 @@ paths:
                   phoneNumber: { type: string }
                   carrierName: { type: [string, "null"] }
                   lineType: { type: string, enum: [mobile, landline, voip, toll-free, unknown] }
-                  smsReachable: { type: boolean, description: True when the line type can receive SMS (not a landline). }
+                  smsReachable: { type: boolean, description: 'False for landlines, toll-free numbers, ambiguous fixed-or-mobile lines and carriers whose numbers are not SMS-routable. True is a best guess, not a delivery guarantee.' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '502': { description: Lookup provider failed }
 
