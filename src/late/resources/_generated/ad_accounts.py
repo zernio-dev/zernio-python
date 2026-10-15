@@ -1041,12 +1041,14 @@ class AdAccountsResource:
         *,
         ad_account_id: str | None = None,
         limit: int | None = None,
+        in_scope_only: bool | None = False,
     ) -> dict[str, Any]:
         """List ad accounts"""
         params = self._build_params(
             account_id=account_id,
             ad_account_id=ad_account_id,
             limit=limit,
+            in_scope_only=in_scope_only,
         )
         return self._client._get("/v1/ads/accounts", params=params)
 
@@ -2124,12 +2126,14 @@ class AdAccountsResource:
         *,
         ad_account_id: str | None = None,
         limit: int | None = None,
+        in_scope_only: bool | None = False,
     ) -> dict[str, Any]:
         """List ad accounts (async)"""
         params = self._build_params(
             account_id=account_id,
             ad_account_id=ad_account_id,
             limit=limit,
+            in_scope_only=in_scope_only,
         )
         return await self._client._aget("/v1/ads/accounts", params=params)
 

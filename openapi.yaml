@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.279.3"
+  version: "1.280.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -63440,6 +63440,7 @@ paths:
         - { name: accountId, in: query, required: true, schema: { type: string }, description: Account ID }
         - { name: adAccountId, in: query, required: false, schema: { type: string }, description: "Filter response to a single platform ad account ID (e.g. `act_123` for Meta, advertiser_id for TikTok). Returns at most one item." }
         - { name: limit, in: query, required: false, schema: { type: integer, minimum: 1, maximum: 1000 }, description: "Clamp the returned `accounts[]` length. Useful for typeahead pickers on agency tokens with hundreds of advertisers." }
+        - { name: inScopeOnly, in: query, required: false, schema: { type: boolean, default: false }, description: "Google Ads only. `true` returns only the customers this connection accepts as `adAccountId` (or `customerId`) on the other /v1/ads endpoints, i.e. those inside its ad-account selection. Without it every customer the Google login can reach is listed, including ones selected on another connection of the same login, which those endpoints answer with a 400. Ignored on other platforms." }
       responses:
         '409': { $ref: '#/components/responses/AccountConnectionRequired' }
         '404': { $ref: '#/components/responses/AccountUnavailable' }
