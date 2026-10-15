@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.284.0"
+  version: "1.285.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -37567,7 +37567,7 @@ paths:
                               fbtraceId: { type: string, description: "Meta fbtrace_id, quote this in a Meta bug report" }
                               type: { type: string, description: "Meta error type (e.g. OAuthException)" }
         '400':
-          description: 'Bad request (e.g., attachment not supported for platform, validation error, category combined with a template or attachment, category used on a non-WhatsApp account, or the WhatsApp Business Account is not eligible for Direct Send). Meta rejections (e.g. sending outside the messaging window) arrive with code platform_api_error, type platform_error, and platform + platformError set.'
+          description: 'Bad request (e.g., attachment not supported for platform, validation error, category combined with a template or attachment, category used on a non-WhatsApp account, or the WhatsApp Business Account is not eligible for Direct Send). Meta rejections (e.g. sending outside the messaging window) and TikTok business-account rejections arrive with code platform_api_error, type platform_error, and platform + platformError set.'
           content:
             application/json:
               schema:
@@ -37576,23 +37576,25 @@ paths:
                   error: { type: string }
                   type:
                     type: string
-                    description: "Present on Meta pass-through rejections: platform_error when Meta rejected the send (see platform/platformError below), invalid_request_error for validation failures."
+                    description: "Present on Meta and TikTok pass-through rejections: platform_error when the platform rejected the send (see platform/platformError below), invalid_request_error for validation failures."
                     enum: [platform_error, invalid_request_error]
                   code:
                     type: string
-                    description: "Stable machine-readable reason. PLATFORM_LIMITATION covers a capability the platform does not offer (e.g. Bluesky and Reddit DMs reject media); MISSING_PARTICIPANT means the stored conversation has no recipient to send to; DIRECT_SEND_NOT_ELIGIBLE and DIRECT_SEND_BLOCKED mean the WhatsApp Business Account needs Meta to grant or restore Direct Send access; DIRECT_SEND_LIMITED is temporary, Meta lifts it on its own; platform_api_error means Meta itself rejected the send (see platformError)."
+                    description: "Stable machine-readable reason. PLATFORM_LIMITATION covers a capability the platform does not offer (e.g. Bluesky and Reddit DMs reject media); MISSING_PARTICIPANT means the stored conversation has no recipient to send to; DIRECT_SEND_NOT_ELIGIBLE and DIRECT_SEND_BLOCKED mean the WhatsApp Business Account needs Meta to grant or restore Direct Send access; DIRECT_SEND_LIMITED is temporary, Meta lifts it on its own; platform_api_error means the platform itself rejected the send (see platformError)."
                     enum: [PLATFORM_LIMITATION, MISSING_PARTICIPANT, INVALID_TEMPLATE_HEADER, DIRECT_SEND_NOT_ELIGIBLE, DIRECT_SEND_LIMITED, DIRECT_SEND_BLOCKED, platform_api_error]
                   platform:
                     type: string
-                    description: "Present alongside code platform_api_error. The platform that rejected the send (e.g. instagram, facebook, whatsapp)."
+                    description: "Present alongside code platform_api_error. The platform that rejected the send (e.g. instagram, facebook, whatsapp, tiktok)."
                   platformError:
                     type: object
-                    description: "Instagram, Facebook, or WhatsApp. Meta's diagnostic fields for the rejected send or template lookup. WhatsApp lookup errors retain only code, message, and error_data.details. Absent when the failure did not come from Meta."
+                    description: "Instagram, Facebook, WhatsApp, or TikTok. The platform's diagnostic fields for the rejected send or template lookup. WhatsApp lookup errors retain only code, message, and error_data.details. On TikTok only code, message, and request_id are set. Absent when the failure did not come from the platform."
                     properties:
-                      code: { type: integer, description: "Meta error code" }
+                      code: { type: integer, description: "Meta or TikTok error code" }
                       subcode: { type: integer, description: "Meta error_subcode" }
                       fbtraceId: { type: string, description: "Meta fbtrace_id, quote this in a Meta bug report" }
                       type: { type: string, description: "Meta error type (e.g. OAuthException)" }
+                      message: { type: string, description: "TikTok error message" }
+                      request_id: { type: string, description: "TikTok request_id, quote this in a TikTok support ticket" }
         '500':
           description: >-
             The platform rejected or failed the send. Zernio does NOT retry a
@@ -37619,7 +37621,7 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/ErrorResponse' }
         '429':
-          description: 'Rate limited. Either the connected account''s upstream platform quota is exhausted (code rate_limited, see Retry-After; Reddit allows 1000 requests per 10 minutes per connected user), or Meta rejected the WhatsApp template-definition lookup (code platform_api_error). No message was sent.'
+          description: 'Rate limited. Either the connected account''s upstream platform quota is exhausted (code rate_limited, see Retry-After; Reddit allows 1000 requests per 10 minutes per connected user; TikTok code 40100 also lands here with platform and platformError set), or Meta rejected the WhatsApp template-definition lookup (code platform_api_error). No message was sent.'
           headers:
             Retry-After:
               description: 'Seconds until the upstream quota resets, when the platform reported it.'
