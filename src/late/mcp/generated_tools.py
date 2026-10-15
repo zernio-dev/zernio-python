@@ -7148,7 +7148,7 @@ def register_generated_tools(mcp, _get_client):
                 platform: (required)
                 budget: Omit if not updating budget Object with keys: amount (number); type (one of: daily, lifetime)
                 status: Writes the ad set's own on/off switch (Meta: `configured_status`; X: the line item's `entity_status` ACTIVE / PAUSED), whatever delivery status its ads report. Omit if not toggling delivery state.
-                name: Rename the ad set (on X, the line item `name`). Platforms without a rename return 501. At least one of budget/status/bidStrategy/name is required.
+                name: Rename the ad set on any supported platform: Meta, Google (the ad group), TikTok, LinkedIn (the campaign), Pinterest, X (the line item `name`), OpenAI and Reddit; platforms without a rename return 501. The new name is stored right away, so GET /v1/ads/ad-sets and GET /v1/ads/tree return it without a sync. At least one of budget/status/bidStrategy/name is required.
                 bid_strategy: Ad-set-level bid strategy. Overrides the campaign-level default.
         Supported on Meta (facebook, instagram), TikTok, and OpenAI. On TikTok the
         Meta-style enum is mapped to bid_type / bid_price / deep_bid_type
