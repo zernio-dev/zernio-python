@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.281.0"
+  version: "1.282.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -26727,6 +26727,7 @@ paths:
                             id: { type: string, description: Instagram Business Account ID }
                             username: { type: string }
                             profile_picture_url: { type: string }
+                            followers_count: { type: integer, description: Followers of the Instagram account when Meta returns it }
               example:
                 pages:
                   - id: "811889972008357"
