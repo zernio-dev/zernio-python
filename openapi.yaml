@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.279.2"
+  version: "1.279.3"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -969,6 +969,10 @@ components:
         `x-business-use-case-usage` estimate when Meta sends one, otherwise it
         is Meta's documented 60-second minimum (30 seconds for the one-write-per-30-seconds
         limit on a single object).
+
+        Pinterest ads: Pinterest rate-limits per user and app, per category
+        (ads_read, ads_write, ads_analytics). `Retry-After` comes from
+        Pinterest's `x-ratelimit-reset` when it sends one, otherwise 60 seconds.
       headers:
         Retry-After:
           description: 'Seconds remaining until the upstream quota resets.'
@@ -72261,6 +72265,7 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { description: 'Ads access required (Ads add-on on legacy plans, included on usage-based plans), or the Meta token lacks ads permissions (reconnect required).' }
         '404': { $ref: '#/components/responses/AccountUnavailable' }
+        '429': { $ref: '#/components/responses/RateLimited' }
 
         '501': { description: 'The platform does not offer this operation (code `platform_not_supported`); the message names the reason and the alternative.' }
         '502': { description: 'Meta was unreachable or returned an unclassified error (type: platform_error; the raw Meta payload is in platformError). Retryable.' }
@@ -72370,6 +72375,7 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { description: 'Ads access required (Ads add-on on legacy plans, included on usage-based plans), or the Meta token lacks ads permissions (reconnect required).' }
         '404': { $ref: '#/components/responses/AccountUnavailable' }
+        '429': { $ref: '#/components/responses/RateLimited' }
 
         '501': { description: 'The platform does not offer this operation (code `platform_not_supported`); the message names the reason and the alternative.' }
         '422': { description: 'OpenAI Ads only: the ad account is not enabled for pixel management. Contact your OpenAI partner representative.' }
@@ -72437,6 +72443,7 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { description: 'Ads access required (Ads add-on on legacy plans, included on usage-based plans), or the Meta token lacks ads permissions (reconnect required).' }
         '404': { $ref: '#/components/responses/AccountUnavailable' }
+        '429': { $ref: '#/components/responses/RateLimited' }
 
         '501': { description: 'The platform does not offer this operation (code `platform_not_supported`); the message names the reason and the alternative.' }
         '502': { description: 'Meta was unreachable or returned an unclassified error (type: platform_error; the raw Meta payload is in platformError). Retryable.' }
@@ -72817,6 +72824,7 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { description: 'Ads access required (Ads add-on on legacy plans, included on usage-based plans), or the Meta token lacks ads permissions (reconnect required).' }
         '404': { $ref: '#/components/responses/AccountUnavailable' }
+        '429': { $ref: '#/components/responses/RateLimited' }
         '501': { description: 'The platform does not offer this operation (code `platform_not_supported`); the message names the reason and the alternative.' }
         '409': { $ref: '#/components/responses/StoreReconnectRequired' }
         '422':
@@ -72891,6 +72899,7 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { description: 'Ads access required (Ads add-on on legacy plans, included on usage-based plans).' }
         '404': { $ref: '#/components/responses/AccountUnavailable' }
+        '429': { $ref: '#/components/responses/RateLimited' }
         '501': { description: 'The platform does not offer this operation (code `platform_not_supported`); the message names the reason and the alternative.' }
         '409': { $ref: '#/components/responses/StoreReconnectRequired' }
     delete:
@@ -73011,6 +73020,7 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { description: 'Ads access required, or the platform token lacks the permission (reconnect required).' }
         '404': { $ref: '#/components/responses/AccountUnavailable' }
+        '429': { $ref: '#/components/responses/RateLimited' }
         '409': { $ref: '#/components/responses/AccountConnectionRequired' }
         '501': { description: 'The platform has no conversion-event objects (code `platform_not_supported`); the message names the alternative.' }
     post:
@@ -73119,6 +73129,7 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { description: 'Ads access required, or the platform token lacks the permission (reconnect required).' }
         '404': { $ref: '#/components/responses/AccountUnavailable' }
+        '429': { $ref: '#/components/responses/RateLimited' }
         '409': { $ref: '#/components/responses/AccountConnectionRequired' }
         '501': { description: 'The platform cannot create conversion events through its API (code `platform_not_supported`).' }
   /v1/accounts/{accountId}/tracking-tags/{tagId}/events/{eventId}:
@@ -73182,6 +73193,7 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { description: 'Ads access required, or the platform token lacks the permission (reconnect required).' }
         '404': { $ref: '#/components/responses/AccountUnavailable' }
+        '429': { $ref: '#/components/responses/RateLimited' }
         '409': { $ref: '#/components/responses/AccountConnectionRequired' }
         '501': { description: 'The platform cannot update conversion events through its API (code `platform_not_supported`).' }
     delete:
@@ -73242,6 +73254,7 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { description: 'Ads access required, or the platform token lacks the permission (reconnect required).' }
         '404': { $ref: '#/components/responses/AccountUnavailable' }
+        '429': { $ref: '#/components/responses/RateLimited' }
         '409': { $ref: '#/components/responses/AccountConnectionRequired' }
         '501': { description: 'The platform cannot remove conversion events through its API (code `platform_not_supported`).' }
 
@@ -73551,6 +73564,7 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { description: 'Ads access required (Ads add-on on legacy plans, included on usage-based plans), or the Meta token lacks ads permissions (reconnect required).' }
         '404': { $ref: '#/components/responses/AccountUnavailable' }
+        '429': { $ref: '#/components/responses/RateLimited' }
 
         '501': { description: 'The platform does not offer this operation (code `platform_not_supported`); the message names the reason and the alternative.' }
         '502': { description: 'Meta was unreachable or returned an unclassified error (type: platform_error; the raw Meta payload is in platformError). Retryable.' }
