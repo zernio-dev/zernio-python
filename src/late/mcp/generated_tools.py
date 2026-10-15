@@ -7172,6 +7172,8 @@ def register_generated_tools(mcp, _get_client):
         from the campaign and is left untouched).
                 roas_average_floor: Minimum ROAS as a decimal multiplier (2.0 = 2.0x). Required when bidStrategy is
         LOWEST_COST_WITH_MIN_ROAS. Sent to Meta as `bid_constraints.roas_average_floor` × 10000.
+        Meta only: may be sent alone, WITHOUT bidStrategy, to update the floor on an ad set
+        whose strategy (its own, or the campaign's under CBO) is LOWEST_COST_WITH_MIN_ROAS.
         Not supported on OpenAI (422).
                 value_rule_set_id: Meta only (other platforms return 501). Value rule set to attach to this ad
         set, from `/v1/ads/value-rule-sets`. Sending a different id replaces the

@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.280.0"
+  version: "1.281.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -13861,7 +13861,7 @@ components:
         warnings:
           type: array
           items: { type: string }
-          description: 'Present when Meta created the ad set differently from the request. Today: Meta kept the ad set without the requested `whatsappPhoneNumber` in its promoted_object (the ads still carry it on their WhatsApp button).'
+          description: 'Present when Meta created the ad set differently from the request: Meta kept the ad set without the requested `whatsappPhoneNumber` in its promoted_object (the ads still carry it on their WhatsApp button), or the ad set joined a CBO campaign (`existingCampaignId`) whose own bid strategy applies, so a different `bidStrategy` or a `roasAverageFloor` that strategy cannot take was not applied.'
 
     CtwaMultiResponse:
       type: object
@@ -13885,7 +13885,7 @@ components:
         warnings:
           type: array
           items: { type: string }
-          description: 'Present when Meta created the ad set differently from the request. Today: Meta kept the ad set without the requested `whatsappPhoneNumber` in its promoted_object (the ads still carry it on their WhatsApp button).'
+          description: 'Present when Meta created the ad set differently from the request: Meta kept the ad set without the requested `whatsappPhoneNumber` in its promoted_object (the ads still carry it on their WhatsApp button), or the ad set joined a CBO campaign (`existingCampaignId`) whose own bid strategy applies, so a different `bidStrategy` or a `roasAverageFloor` that strategy cannot take was not applied.'
 
     CustomConversion:
       type: object
@@ -56237,9 +56237,14 @@ paths:
         - `LOWEST_COST_WITH_BID_CAP` / `COST_CAP`: `bidAmount` REQUIRED (whole currency units).
         - `LOWEST_COST_WITH_MIN_ROAS`: `roasAverageFloor` REQUIRED (decimal multiplier, e.g. 2.0 = 2.0x ROAS).
         - Meta only: send `bidAmount` WITHOUT `bidStrategy` to change the cap amount on an ad set
-          under a COST_CAP / LOWEST_COST_WITH_BID_CAP parent campaign, leaving the strategy itself
-          (inherited from the campaign) untouched. `roasAverageFloor` without `bidStrategy` is
-          rejected (it has no meaning outside LOWEST_COST_WITH_MIN_ROAS).
+          whose strategy (its own, or the campaign's under CBO) is COST_CAP / LOWEST_COST_WITH_BID_CAP,
+          leaving the strategy untouched. Send `roasAverageFloor` WITHOUT `bidStrategy` the same way
+          to change the floor of a LOWEST_COST_WITH_MIN_ROAS ad set. Either field against an
+          incompatible current strategy is a 400.
+        - Meta CBO (the campaign holds the budget): the campaign also holds the bid strategy, so only
+          `bidAmount` or `roasAverageFloor` is written on the ad set. A `bidStrategy` equal to the
+          campaign's is accepted; a different one is a 409 (change it with
+          PUT /v1/ads/campaigns/{campaignId}).
 
         Delivery settings are validated by Meta against the campaign objective;
         incompatible combinations (e.g. a billingEvent the optimization goal
@@ -56326,6 +56331,8 @@ paths:
                   description: |
                     Minimum ROAS as a decimal multiplier (2.0 = 2.0x). Required when bidStrategy is
                     LOWEST_COST_WITH_MIN_ROAS. Sent to Meta as `bid_constraints.roas_average_floor` × 10000.
+                    Meta only: may be sent alone, WITHOUT bidStrategy, to update the floor on an ad set
+                    whose strategy (its own, or the campaign's under CBO) is LOWEST_COST_WITH_MIN_ROAS.
                     Not supported on OpenAI (422).
                 valueRuleSetId:
                   type: string
@@ -56414,7 +56421,7 @@ paths:
         '403':
           description: 'Returned with code `ads_allowance_exceeded` when the team has no payment method on file and has reached the 500 free live ads: add a card to resume.'
         '404': { description: Ad set not found }
-        '409': { description: "Campaign is CBO. Route to /v1/ads/campaigns/{campaignId} instead" }
+        '409': { description: "Campaign is CBO: a budget, or a bidStrategy other than the campaign's (Meta), belongs on /v1/ads/campaigns/{campaignId}" }
         '422': { description: "bidStrategy is LOWEST_COST_WITH_MIN_ROAS on OpenAI or Reddit (unsupported: no ROAS-based bidding), or a Reddit budget that the ad group cannot take (campaign budget, or a daily/lifetime switch)" }
         '501': { description: "bidStrategy not supported on the platform (Meta, TikTok, OpenAI and Reddit only)" }
     delete:
