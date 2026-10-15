@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.279.1"
+  version: "1.279.2"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -24360,7 +24360,7 @@ paths:
                   description: 'Meta locale code for the verification message, e.g. en_US.'
       responses:
         '200':
-          description: 'Code requested, or the number was already CONNECTED and no code was needed.'
+          description: 'Code requested, or the number was already CONNECTED with a current verification and no code was needed.'
           content:
             application/json:
               schema:
