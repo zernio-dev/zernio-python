@@ -181,6 +181,17 @@ class MessagesResource:
             f"/v1/inbox/conversations/{conversation_id}", data=payload
         )
 
+    def delete_inbox_conversation(
+        self, conversation_id: str, account_id: str
+    ) -> dict[str, Any]:
+        """Delete conversation"""
+        params = self._build_params(
+            account_id=account_id,
+        )
+        return self._client._delete(
+            f"/v1/inbox/conversations/{conversation_id}", params=params
+        )
+
     def get_inbox_conversation_messages(
         self,
         conversation_id: str,
@@ -505,6 +516,17 @@ class MessagesResource:
         )
         return await self._client._aput(
             f"/v1/inbox/conversations/{conversation_id}", data=payload
+        )
+
+    async def adelete_inbox_conversation(
+        self, conversation_id: str, account_id: str
+    ) -> dict[str, Any]:
+        """Delete conversation (async)"""
+        params = self._build_params(
+            account_id=account_id,
+        )
+        return await self._client._adelete(
+            f"/v1/inbox/conversations/{conversation_id}", params=params
         )
 
     async def aget_inbox_conversation_messages(

@@ -1057,6 +1057,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `messages.get_inbox_conversation_messages()` | List messages |
 | `messages.get_message_attachment()` | Resolve message attachment |
 | `messages.update_inbox_conversation()` | Update conversation status |
+| `messages.delete_inbox_conversation()` | Delete conversation |
 | `messages.delete_inbox_message()` | Delete message |
 | `messages.accept_conversation_request()` | Accept a message request |
 | `messages.add_message_reaction()` | Add reaction |
