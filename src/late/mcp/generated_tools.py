@@ -16373,7 +16373,7 @@ def register_generated_tools(mcp, _get_client):
         `comment.received` webhook, which ...
 
         Args:
-            post_id: Zernio post ID or platform-specific post ID. Zernio IDs are auto-resolved. LinkedIn third-party posts accept full activity URN or numeric ID. On Facebook, a comment ID is also accepted here and returns that comment's replies, kept for backwards compatibility; prefer the `commentId` query parameter, which also works on Instagram. (required)
+            post_id: Zernio post ID or platform-specific post ID. Zernio IDs are auto-resolved. On LinkedIn, pass the post id exactly as the feed returns it (urn:li:share:<id> or urn:li:ugcPost:<id>). A bare number is read as an activity id (urn:li:activity:<n>, the number in a linkedin.com/feed/update URL); a share or ugcPost number passed bare returns an empty list. On Facebook, a comment ID is also accepted here and returns that comment's replies, kept for backwards compatibility; prefer the `commentId` query parameter, which also works on Instagram. (required)
             account_id: (required)
             subreddit: (Reddit only) Subreddit name
             limit: Maximum number of comments to return
@@ -16432,7 +16432,7 @@ def register_generated_tools(mcp, _get_client):
         inconclusive rather than as proof ...
 
         Args:
-            post_id: Zernio post ID or platform-specific post ID. LinkedIn third-party posts accept full activity URN or numeric ID. (required)
+            post_id: Zernio post ID or platform-specific post ID. On LinkedIn, pass the post id exactly as the feed returns it (urn:li:share:<id> or urn:li:ugcPost:<id>); a bare number is read as an activity id (urn:li:activity:<n>). (required)
             account_id: (required)
             message: (required)
             attachment_url: (Facebook only) URL of an image to attach, publishing a photo comment alongside the text. The URL must be publicly accessible so Meta can fetch it. Returns 400 for other platforms.
@@ -16473,7 +16473,7 @@ def register_generated_tools(mcp, _get_client):
         Requires accountId and commentId query parameters.
 
         Args:
-            post_id: Zernio post ID or platform-specific post ID. LinkedIn third-party posts accept full activity URN or numeric ID. (required)
+            post_id: Zernio post ID or platform-specific post ID. On LinkedIn, pass the post id exactly as the feed returns it (urn:li:share:<id> or urn:li:ugcPost:<id>); a bare number is read as an activity id (urn:li:activity:<n>). (required)
             account_id: (required)
             comment_id: For LinkedIn, accepts either the numeric comment ID or the composite comment URN returned by the comments listing (e.g. urn:li:comment:(threadUrn,id)) (required)"""
         client = _get_client()

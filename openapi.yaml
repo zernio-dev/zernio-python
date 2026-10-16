@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.286.1"
+  version: "1.286.2"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -38993,7 +38993,7 @@ paths:
         - name: postId
           in: path
           required: true
-          description: Zernio post ID or platform-specific post ID. Zernio IDs are auto-resolved. LinkedIn third-party posts accept full activity URN or numeric ID. On Facebook, a comment ID is also accepted here and returns that comment's replies, kept for backwards compatibility; prefer the `commentId` query parameter, which also works on Instagram.
+          description: 'Zernio post ID or platform-specific post ID. Zernio IDs are auto-resolved. On LinkedIn, pass the post id exactly as the feed returns it (urn:li:share:<id> or urn:li:ugcPost:<id>). A bare number is read as an activity id (urn:li:activity:<n>, the number in a linkedin.com/feed/update URL); a share or ugcPost number passed bare returns an empty list. On Facebook, a comment ID is also accepted here and returns that comment''s replies, kept for backwards compatibility; prefer the `commentId` query parameter, which also works on Instagram.'
           schema: { type: string }
         - name: accountId
           in: query
@@ -39131,6 +39131,7 @@ paths:
                       postId: { type: string }
                       accountId: { type: string }
                       subreddit: { type: [string, "null"], description: (Reddit only) Subreddit name }
+                      postUrn: { type: string, description: '(LinkedIn only) The post URN that was queried, after a bare number is read as urn:li:activity:<n>' }
                       lastUpdated: { type: string, format: date-time }
                       adComments:
                         type: [object, "null"]
@@ -39179,7 +39180,7 @@ paths:
         - name: postId
           in: path
           required: true
-          description: Zernio post ID or platform-specific post ID. LinkedIn third-party posts accept full activity URN or numeric ID.
+          description: 'Zernio post ID or platform-specific post ID. On LinkedIn, pass the post id exactly as the feed returns it (urn:li:share:<id> or urn:li:ugcPost:<id>); a bare number is read as an activity id (urn:li:activity:<n>).'
           schema: { type: string }
         - $ref: '#/components/parameters/IdempotencyKeyHeader'
       requestBody:
@@ -39239,7 +39240,7 @@ paths:
         - name: postId
           in: path
           required: true
-          description: Zernio post ID or platform-specific post ID. LinkedIn third-party posts accept full activity URN or numeric ID.
+          description: 'Zernio post ID or platform-specific post ID. On LinkedIn, pass the post id exactly as the feed returns it (urn:li:share:<id> or urn:li:ugcPost:<id>); a bare number is read as an activity id (urn:li:activity:<n>).'
           schema: { type: string }
         - name: accountId
           in: query
