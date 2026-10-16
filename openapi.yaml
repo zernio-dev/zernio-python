@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.289.0"
+  version: "1.289.1"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -5548,7 +5548,7 @@ components:
                 **Nullable during the BSUID rollout (April 2026+).** WhatsApp users
                 who adopt a username can message businesses without exposing a phone
                 number, so this field is omitted for them. Match by `businessScopedUserId`
-                instead. See `docs/whatsapp-bsuid-migration.md`.
+                instead. See `libs/whatsapp/docs/whatsapp-bsuid-migration.md`.
             businessScopedUserId:
               type: string
               description: |
@@ -5929,7 +5929,7 @@ components:
                     users who adopt a username can message businesses without
                     exposing a phone number, so this field is omitted for them.
                     Match by `businessScopedUserId` instead. See
-                    `docs/whatsapp-bsuid-migration.md`.
+                    `libs/whatsapp/docs/whatsapp-bsuid-migration.md`.
                 businessScopedUserId:
                   type: string
                   description: |
