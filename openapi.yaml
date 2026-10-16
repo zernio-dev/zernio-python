@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.286.2"
+  version: "1.287.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -65980,8 +65980,8 @@ paths:
                       type: object
                       properties:
                         node: { type: string, enum: [campaign, adSet, creative, ad, performanceMaxCampaign] }
-                        status: { type: string, enum: [validated, skipped] }
-                        reason: { type: string, description: "Why the node could not be validated (on skipped), or what the dry run could not check and what the request would do as sent (on validated). A Performance Max validation with no location targeting reports here that the campaign would run worldwide." }
+                        status: { type: string, enum: [validated, skipped, unverified] }
+                        reason: { type: string, description: "Why the node could not be validated (on skipped), why Meta could not dry-run it although the other nodes passed (on unverified), or what the dry run could not check and what the request would do as sent (on validated). A Performance Max validation with no location targeting reports here that the campaign would run worldwide." }
                   message: { type: string }
         '201':
           description: Ad(s) created
@@ -70613,8 +70613,8 @@ paths:
                       required: [node, status]
                       properties:
                         node: { type: string, enum: [campaign, adSet, creative, ad] }
-                        status: { type: string, enum: [validated, skipped] }
-                        reason: { type: string }
+                        status: { type: string, enum: [validated, skipped, unverified] }
+                        reason: { type: string, description: 'On unverified: why Meta could not dry-run this node although the other nodes passed.' }
                   message: { type: string }
         '201':
           description: |
