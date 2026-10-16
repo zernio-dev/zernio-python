@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.285.1"
+  version: "1.286.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -23417,7 +23417,7 @@ paths:
                 thumbnailUrl:
                   type: string
                   format: uri
-                  description: "Public URL of a custom thumbnail image (JPEG, PNG, or GIF, max 50 MB, recommended 1280x720). Works on any video you own, including existing videos not published through Zernio. The channel must be verified (phone verification) to set custom thumbnails. If the thumbnail cannot be set (YouTube refuses it, for example a channel without the custom-thumbnail permission or a video not owned by the connected channel, or the image URL cannot be fetched or is not a supported format or size), the request answers 400 with the reason and no field is updated. A temporary YouTube or network failure answers 500 and can be retried."
+                  description: "Public URL of a custom thumbnail image (JPEG, PNG, or GIF, max 50 MB, recommended 1280x720). Works on any video you own, including existing videos not published through Zernio. The channel must be verified (phone verification) to set custom thumbnails. If the thumbnail cannot be set (YouTube refuses it, for example a channel without the custom-thumbnail permission or a video not owned by the connected channel, or the image URL cannot be fetched or is not a supported format or size), the request answers 400 with the reason and no field is updated. A YouTube thumbnail rate limit (uploadRateLimitExceeded) answers 429; retry later, not immediately, because retries keep the channel over its limit. Any other temporary YouTube or network failure answers 500 and can be retried."
                 madeForKids:
                   type: boolean
                   description: "COPPA compliance flag. Set true for child-directed content (restricts comments, notifications, ad targeting)."
@@ -23482,6 +23482,11 @@ paths:
         '404': { $ref: '#/components/responses/NotFound' }
         '409':
           description: "The post was published to several accounts on this platform and no accountId was sent (ambiguous_account)."
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+        '429':
+          description: "YouTube rate-limited the thumbnail upload for the channel (uploadRateLimitExceeded). Retry later, not immediately."
           content:
             application/json:
               schema: { $ref: '#/components/schemas/ErrorResponse' }
