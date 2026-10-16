@@ -19527,6 +19527,9 @@ def register_generated_tools(mcp, _get_client):
         signup: Literal["hosted"] | None = None,
         brand_name: str | None = None,
         primary_color: str | None = None,
+        welcome: bool = False,
+        welcome_theme: str | None = None,
+        logo_url: str | None = None,
         language: Literal["en", "es", "pt-BR"] | None = None,
     ) -> str:
         """Get OAuth connect URL
@@ -19727,8 +19730,11 @@ def register_generated_tools(mcp, _get_client):
         called out by name ("choose it in Meta's list, no code will be asked"), coexistence and standard signups
         get their explainer video, and a step-by-step follow-along checklist stays visible while Meta's popup is
         open. Skin it with `brandName`, `primaryColor` and `language` below.
-                brand_name: Hosted signup page only (`signup=hosted`, WhatsApp): name shown in the page title ("Connect your WhatsApp number to <brandName>") instead of Zernio. The Zernio logo stays: the page is co-branded, not white-label. Trimmed; 1 to 60 characters. Rejected with 400 `INVALID_FIELD_VALUE` without `signup=hosted`. Stored on the signup session at issue time, so the page URL cannot change it.
-                primary_color: Hosted signup page only (`signup=hosted`, WhatsApp): hex colour (`#RRGGBB`) for the primary button and step accents. Validated server-side; anything else is a 400 `INVALID_FIELD_VALUE`. Rejected without `signup=hosted`.
+                brand_name: Your product name, for the two branded pages. With `signup=hosted` (WhatsApp) it replaces Zernio in the page title ("Connect your WhatsApp number to <brandName>"). With `welcome=true` it fills the heading ("<brandName> wants to connect to your <platform>"); without it the screen shows Zernio and the Zernio mark. Both pages keep a Zernio mark: they are co-branded, not white-label. Trimmed; 1 to 60 characters. Rejected with 400 `INVALID_FIELD_VALUE` without `signup=hosted` or `welcome=true`. Sealed into the page link at issue time, so editing the URL cannot change it.
+                primary_color: Hex colour (`#RRGGBB`) for the primary button on the hosted WhatsApp signup page (`signup=hosted`) or the welcome screen (`welcome=true`). Validated server-side; anything else is a 400 `INVALID_FIELD_VALUE`. Rejected without one of the two.
+                welcome: Any platform. When `true`, `authUrl` points to a Zernio-hosted welcome screen that shows your brand next to the platform ("<brandName> wants to connect to your <platform>") with a Continue button; Continue sends the user to the platform's own authorization screen and the rest of the flow is unchanged. `brandName`, `logoUrl`, `primaryColor` and `welcomeTheme` are optional and default to Zernio's own name, mark and look. The link is valid for 30 minutes, after which the page asks the user to start again. The brand also carries to the account and channel pickers Zernio shows after authorization, and when you pass no `redirect_url` the flow ends on a branded Zernio-hosted page saying whether the account connected, instead of the Zernio dashboard. Cannot be combined with `headless=true` or `signup=hosted` (400 `INVALID_FIELD_VALUE`). The platform's authorization screen still names the Zernio app.
+                welcome_theme: Welcome screen only (`welcome=true`): a URL-encoded JSON object that restyles and rewords the screen. All keys are optional. Copy: `heading` (up to 120 characters), `trustLine` and `consentLine` (up to 200 each), `buttonLabel` (up to 30); each may contain the placeholders `{brand}` and `{platform}`. Style: `primaryColor`, `pageColor`, `cardColor` and `textColor` as `#RRGGBB`, `cornerRadius` as an integer from 0 to 24 (pixels), `font` as `sans`, `serif` or `mono`. A `primaryColor` here wins over the `primaryColor` parameter. Unknown keys, invalid JSON or an invalid value are a 400 `INVALID_FIELD_VALUE`. Rejected without `welcome=true`. Example: `{"heading":"Link your {platform} to {brand}","cardColor":"#FFF7ED","cornerRadius":12}`.
+                logo_url: Welcome screen only (`welcome=true`): https URL of your logo, shown in a square tile, so use a square image. Without it the tile shows the first letter of `brandName`, or the Zernio mark when there is no `brandName` either. Rejected with 400 `INVALID_FIELD_VALUE` without `welcome=true`.
                 language: Hosted signup page only (`signup=hosted`, WhatsApp): language of the page and its follow-along guide. Explainer videos stay in English. Default `en`. Rejected without `signup=hosted`."""
         client = _get_client()
         try:
@@ -19747,6 +19753,9 @@ def register_generated_tools(mcp, _get_client):
                 signup=signup,
                 brand_name=brand_name,
                 primary_color=primary_color,
+                welcome=welcome,
+                welcome_theme=welcome_theme,
+                logo_url=logo_url,
                 language=language,
             )
             return _format_response(response)
@@ -26196,6 +26205,7 @@ def register_generated_tools(mcp, _get_client):
         to: str | None = None,
         status_code: int | None = None,
         api_key_id: str | None = None,
+        profile_id: str | None = None,
         include_read_receipts: bool = False,
     ) -> str:
         """List activity logs
@@ -26222,6 +26232,7 @@ def register_generated_tools(mcp, _get_client):
                 to: Precise end instant (ISO 8601)
                 status_code: Filter by exact HTTP status code (api_request logs)
                 api_key_id: Filter by the API key that made the request (api_request logs)
+                profile_id: Filter by profile: every log type carries the profile it belongs to, and an API request log carries the profileId the call named
                 include_read_receipts: Include message.read / message.delivered events (hidden by default for messaging logs)"""
         client = _get_client()
         try:
@@ -26241,6 +26252,7 @@ def register_generated_tools(mcp, _get_client):
                 to=to,
                 status_code=status_code,
                 api_key_id=api_key_id,
+                profile_id=profile_id,
                 include_read_receipts=include_read_receipts,
             )
             return _format_response(response)

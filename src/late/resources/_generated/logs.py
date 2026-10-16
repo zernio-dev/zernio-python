@@ -93,6 +93,7 @@ class LogsResource:
         to: datetime | str | None = None,
         status_code: int | None = None,
         api_key_id: str | None = None,
+        profile_id: str | None = None,
         include_read_receipts: bool | None = False,
     ) -> dict[str, Any]:
         """List activity logs"""
@@ -112,6 +113,7 @@ class LogsResource:
             to=to,
             status_code=status_code,
             api_key_id=api_key_id,
+            profile_id=profile_id,
             include_read_receipts=include_read_receipts,
         )
         return self._client._get("/v1/logs", params=params)
@@ -134,6 +136,7 @@ class LogsResource:
         to: datetime | str | None = None,
         status_code: int | None = None,
         api_key_id: str | None = None,
+        profile_id: str | None = None,
         include_read_receipts: bool | None = False,
     ) -> dict[str, Any]:
         """List activity logs (async)"""
@@ -153,6 +156,7 @@ class LogsResource:
             to=to,
             status_code=status_code,
             api_key_id=api_key_id,
+            profile_id=profile_id,
             include_read_receipts=include_read_receipts,
         )
         return await self._client._aget("/v1/logs", params=params)

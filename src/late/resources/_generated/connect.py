@@ -90,6 +90,9 @@ class ConnectResource:
         signup: str | None = None,
         brand_name: str | None = None,
         primary_color: str | None = None,
+        welcome: bool | None = False,
+        welcome_theme: str | None = None,
+        logo_url: str | None = None,
         language: str | None = None,
     ) -> dict[str, Any]:
         """Get OAuth connect URL"""
@@ -107,6 +110,9 @@ class ConnectResource:
             signup=signup,
             brand_name=brand_name,
             primary_color=primary_color,
+            welcome=welcome,
+            welcome_theme=welcome_theme,
+            logo_url=logo_url,
             language=language,
         )
         return self._client._get(f"/v1/connect/{platform}", params=params)
@@ -967,6 +973,9 @@ class ConnectResource:
         signup: str | None = None,
         brand_name: str | None = None,
         primary_color: str | None = None,
+        welcome: bool | None = False,
+        welcome_theme: str | None = None,
+        logo_url: str | None = None,
         language: str | None = None,
     ) -> dict[str, Any]:
         """Get OAuth connect URL (async)"""
@@ -984,6 +993,9 @@ class ConnectResource:
             signup=signup,
             brand_name=brand_name,
             primary_color=primary_color,
+            welcome=welcome,
+            welcome_theme=welcome_theme,
+            logo_url=logo_url,
             language=language,
         )
         return await self._client._aget(f"/v1/connect/{platform}", params=params)
