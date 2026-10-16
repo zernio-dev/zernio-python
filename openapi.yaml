@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.288.1"
+  version: "1.288.2"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -40071,7 +40071,7 @@ paths:
                     param: "message"
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403':
-          description: Inbox addon required
+          description: 'Inbox addon required, or code `message_allowance_exceeded` when the team has no payment method on file and has used its free monthly messages.'
         '404':
           description: Account not found
         '502':
