@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.288.0"
+  version: "1.288.1"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -8748,7 +8748,7 @@ components:
           pattern: '^[0-9]+$'
           description: 'Tags the post with a location. The ID of a Facebook Page that has location data (digits only); it is sent to Instagram as location_id. Applies to feed posts, Reels, and the carousel as a whole; Stories and individual carousel slides are unsupported (a Story with locationId is rejected with a 400). A Page without location data or that does not exist fails the post with a user error at publish time.'
           example: '105890561436614'
-      description: Feed aspect ratio 0.5625-1.91, carousels up to 10 items, stories require media (no captions). User tag coordinates 0.0-1.0 from top-left. Images over 8 MB and videos over platform limits are auto-compressed.
+      description: Feed aspect ratio 0.5625-1.91, carousels up to 20 items, stories require media (no captions). User tag coordinates 0.0-1.0 from top-left. Images over 8 MB and videos over platform limits are auto-compressed.
 
     InstagramBusinessDiscovery:
       type: object
