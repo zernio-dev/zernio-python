@@ -6442,9 +6442,11 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Delete a campaign
 
-        Deletes a campaign along with all of its ad sets and ads, including a campaign that never got any ads.
+        Deletes a campaign on its platform, including a campaign that never got any ads.
 
-        Locally, all Ad documents for this campaign are marked
+        Only the campaign itself is sent to the platform. Meta, Google, TikTok, LinkedIn
+        and X delete it; OpenAI, Reddit and Pinterest have no campaign delete and archive
+        it instead (see below). Locally, all Ad documents for this campaign are marked
         `status: cancelled`.
 
         **Empty campaigns.** A campaign with zero ads has no local Ad documents
@@ -6452,13 +6454,10 @@ def register_generated_tools(mcp, _get_client):
         404. That state is produced by the two-step create flow (campaign, then
         ads via `existingCampaignId`) whenever Meta rejects the ad step. To
         delete such a shell, send `accountId` in the body or the query string:
-        we skip the local lookup entirely and forward the delete to Meta, or to
-        X when `accountId` is an X or X Ads connection. On X the ad account comes
-        from the synced campaign, which wins over `adAccountId`; when the campaign
-        was never synced, send `adAccountId` too. Before deleting, Zernio asks X
-        whether the campaign still holds undeleted line items (ads not synced
-        yet); if it does the answer is 409 `invalid_field_value` on `campaignId`
-        and nothing is deleted. ...
+        we skip the local lookup entirely and forward the delete to the platform
+        of that connection. Google, TikTok, LinkedIn, Pinterest and Reddit take the
+        ad account from the synced campaign (OpenAI needs none); when the campaign
+        was never synced (or is synced under several ad accounts) the answer is ...
 
         Platforms: meta, google, tiktok, linkedin, pinterest, x, openai, reddit
 

@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.289.1"
+  version: "1.289.2"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -55272,9 +55272,11 @@ paths:
       x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "openai", "reddit"]
       summary: Delete a campaign
       description: |
-        Deletes a campaign along with all of its ad sets and ads, including a campaign that never got any ads.
+        Deletes a campaign on its platform, including a campaign that never got any ads.
 
-        Locally, all Ad documents for this campaign are marked
+        Only the campaign itself is sent to the platform. Meta, Google, TikTok, LinkedIn
+        and X delete it; OpenAI, Reddit and Pinterest have no campaign delete and archive
+        it instead (see below). Locally, all Ad documents for this campaign are marked
         `status: cancelled`.
 
         **Empty campaigns.** A campaign with zero ads has no local Ad documents
@@ -55282,20 +55284,33 @@ paths:
         404. That state is produced by the two-step create flow (campaign, then
         ads via `existingCampaignId`) whenever Meta rejects the ad step. To
         delete such a shell, send `accountId` in the body or the query string:
-        we skip the local lookup entirely and forward the delete to Meta, or to
-        X when `accountId` is an X or X Ads connection. On X the ad account comes
+        we skip the local lookup entirely and forward the delete to the platform
+        of that connection. Google, TikTok, LinkedIn, Pinterest and Reddit take the
+        ad account from the synced campaign (OpenAI needs none); when the campaign
+        was never synced (or is synced under several ad accounts) the answer is 409
+        `invalid_resource_state` on `campaignId` and nothing is deleted: sync the ad
+        account and retry. Before deleting on Google, TikTok, LinkedIn, Pinterest,
+        OpenAI or Reddit, Zernio asks the platform whether the campaign still holds
+        ad groups or ads (Google asset groups count; on LinkedIn, campaigns inside
+        the campaign group). If it does, or the platform cannot confirm it has none
+        (a TikTok Smart+ campaign), the answer is 409 `invalid_resource_state` on
+        `campaignId` and nothing is deleted: sync the ad account and delete the
+        campaign again so its ads are cancelled with it, or delete them on the
+        platform first. On X the ad account comes
         from the synced campaign, which wins over `adAccountId`; when the campaign
         was never synced, send `adAccountId` too. Before deleting, Zernio asks X
         whether the campaign still holds undeleted line items (ads not synced
         yet); if it does the answer is 409 `invalid_field_value` on `campaignId`
         and nothing is deleted. Sync the ad account and retry when those line items
         hold promoted posts; line items without promoted posts never sync, so delete
-        them in X Ads Manager first. Other platforms answer 501 for an empty campaign.
-        `accountId` is ignored when the campaign does have ads.
+        them in X Ads Manager first. `accountId` is ignored when the campaign does have ads.
 
         Reddit Ads has no delete: the campaign is archived instead (`configured_status`
         ARCHIVED), which stops delivery for good. Its ad groups and ads keep their own
         switches but cannot deliver under an archived campaign.
+
+        OpenAI Ads has no delete either: the campaign is archived (state `archive`).
+        Its ad groups and ads are not touched on OpenAI.
       security:
         - bearerAuth: []
       parameters:
@@ -55313,7 +55328,7 @@ paths:
                 adAccountId: { type: string, pattern: '^[0-9a-z]{1,32}$', description: "X only, for an EMPTY campaign that was never synced: the X ad account id the campaign belongs to (lowercase letters and digits). The synced campaign's ad account wins when there is one. Also accepted on the query string." }
       responses:
         '409':
-          description: 'Either the ads connection is inactive or needs reconnection (code `ads_connection_required`, param `accountId`): reconnect it, then read GET /v1/accounts for its current account ID before retrying. Or, on X only, the empty campaign still holds line items on X (code `invalid_field_value`, param `campaignId`) and nothing was deleted: sync the ad account when they hold promoted posts, otherwise delete them in X Ads Manager, then retry.'
+          description: 'Either the ads connection is inactive or needs reconnection (code `ads_connection_required`, param `accountId`): reconnect it, then read GET /v1/accounts for its current account ID before retrying. Or, on X only, the empty campaign still holds line items on X (code `invalid_field_value`, param `campaignId`) and nothing was deleted: sync the ad account when they hold promoted posts, otherwise delete them in X Ads Manager, then retry. Or, on Google, TikTok, LinkedIn, Pinterest, OpenAI or Reddit, the empty campaign has no synced record naming its ad account, or the platform still lists ad groups or ads under it (code `invalid_resource_state`, param `campaignId`) and nothing was deleted: sync the ad account, then retry.'
           content:
             application/json:
               schema: { $ref: '#/components/schemas/ErrorResponse' }
@@ -55333,6 +55348,22 @@ paths:
                     code: invalid_field_value
                     param: campaignId
                     platform: twitter
+                emptyCampaignNotSynced:
+                  summary: Empty campaign with no synced ad account
+                  value:
+                    error: 'This Google Ads campaign has no ads and no synced record naming its ad account, so it was not deleted. Sync the ad account (POST /v1/ads/sync), then delete the campaign again.'
+                    type: invalid_request_error
+                    code: invalid_resource_state
+                    param: campaignId
+                    platform: google
+                emptyCampaignHoldsChildren:
+                  summary: Platform still lists ad groups or ads under the campaign
+                  value:
+                    error: 'This OpenAI Ads campaign has no ads on Zernio but OpenAI Ads still lists ad groups or ads under it (or Zernio cannot confirm it has none), so it was not deleted. Sync the ad account (POST /v1/ads/sync) and delete the campaign again so its ads are cancelled with it, or delete its ad groups and ads in OpenAI Ads first.'
+                    type: invalid_request_error
+                    code: invalid_resource_state
+                    param: campaignId
+                    platform: openai
         '400': { $ref: '#/components/responses/BadRequest' }
         '200':
           description: Campaign deleted
