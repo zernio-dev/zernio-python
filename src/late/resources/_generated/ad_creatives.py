@@ -254,6 +254,7 @@ class AdCreativesResource:
         video_url: str | None = None,
         video_base64: str | None = None,
         filename: str | None = None,
+        name: str | None = None,
         async_: bool | None = False,
     ) -> dict[str, Any]:
         """Upload an ad video"""
@@ -263,6 +264,7 @@ class AdCreativesResource:
             video_url=video_url,
             video_base64=video_base64,
             filename=filename,
+            name=name,
             async_=async_,
         )
         return self._client._post("/v1/ads/videos", data=payload)
@@ -533,6 +535,7 @@ class AdCreativesResource:
         video_url: str | None = None,
         video_base64: str | None = None,
         filename: str | None = None,
+        name: str | None = None,
         async_: bool | None = False,
     ) -> dict[str, Any]:
         """Upload an ad video (async)"""
@@ -542,6 +545,7 @@ class AdCreativesResource:
             video_url=video_url,
             video_base64=video_base64,
             filename=filename,
+            name=name,
             async_=async_,
         )
         return await self._client._apost("/v1/ads/videos", data=payload)

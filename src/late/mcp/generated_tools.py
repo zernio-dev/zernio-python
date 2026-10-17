@@ -10080,6 +10080,7 @@ def register_generated_tools(mcp, _get_client):
         video_url: str | None = None,
         video_base64: str | None = None,
         filename: str | None = None,
+        name: str | None = None,
         async_: bool = False,
     ) -> str:
         """Upload an ad video
@@ -10109,7 +10110,8 @@ def register_generated_tools(mcp, _get_client):
             ad_account_id: Platform ad account id (Meta act_<n>, Google customer id, LinkedIn account id, ...). (required)
             video_url: Public https URL of the video; downloaded server-side (SSRF-guarded) before chunked upload. Provide exactly one of videoUrl or videoBase64.
             video_base64: Raw base64 video bytes, or a full data URL (the data:video/...;base64, prefix is stripped). Capped by Vercel's body limit (~4.5 MB payload). Provide exactly one of videoUrl or videoBase64.
-            filename: Optional filename shown alongside the upload session. Applied only when uploading via videoBase64.
+            filename: Optional file name, sent to Meta as the video's name and title so it shows and is searchable in the Ads Manager media library. Applies to both videoUrl and videoBase64. Without it (and without name), a videoUrl upload is named after the last path segment of the URL.
+            name: Optional video name shown in the Ads Manager media library. Takes precedence over filename.
             async_: true: answer 202 once Meta accepts the upload instead of waiting for processing. Poll GET /v1/ads/videos/{videoId} or subscribe to ad.video.processed."""
         client = _get_client()
         try:
@@ -10119,6 +10121,7 @@ def register_generated_tools(mcp, _get_client):
                 video_url=video_url,
                 video_base64=video_base64,
                 filename=filename,
+                name=name,
                 async_=async_,
             )
             return _format_response(response)
