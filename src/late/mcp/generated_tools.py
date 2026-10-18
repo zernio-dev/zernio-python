@@ -40133,6 +40133,7 @@ def register_generated_tools(mcp, _get_client):
             "twitter",
             "bluesky",
             "reddit",
+            "tiktok",
         ] = "whatsapp",
         description: str | None = None,
         nodes: list[dict[str, Any]] | None = None,
@@ -40218,7 +40219,7 @@ def register_generated_tools(mcp, _get_client):
             nodes: Each item is an object with keys: id (string, required) - Stable node id referenced by edges; type (one of: trigger, send_message, wait_for_reply, condition, set_variable, delay, webhook, ai, handoff, start_call, a_b_split, set_field, enroll_sequence, add_tag, remove_tag, end; required) - Node kind. The 16 supported types break into four groups: messaging (send_message), control flow (trigger, condition, delay, wait_for_reply, a_b_split, end), ...; config (object) - Type-specific settings. All string fields support `{{variable}}` interpolation against the run's variable bag (resolved at execution time). **trigger**: `{ ...; position (object with keys x, y) - Canvas coordinates (ignored by the executor; used by the visual builder).; label (string) - Optional display name shown on the builder canvas and inspector, falling back to the node type when absent. The nodes array is replaced wholesale on update, ...
             edges: Each item is an object with keys: id (string, required); source (string, required) - Source node id; target (string, required) - Target node id; sourceHandle (string or null) - Selects a branch output of a multi-output node. Null (or omitted) = the node's single/default output. Known handles per node type: - **condition**: a rule's ...
             entry_node_id
-            account_id: Reassign the workflow to a different `SocialAccount`. `platform` and `profileId` are derived server-side from the new account (the client never sends them directly). The account must belong to the caller's team and be on a workflow-supported platform (whatsapp, instagram, facebook, telegram, twitter, bluesky, reddit). Changing this triggers a graph revalidation against the new platform."""
+            account_id: Reassign the workflow to a different `SocialAccount`. `platform` and `profileId` are derived server-side from the new account (the client never sends them directly). The account must belong to the caller's team and be on a workflow-supported platform (whatsapp, instagram, facebook, telegram, twitter, bluesky, reddit, tiktok). Changing this triggers a graph revalidation against the new platform."""
         client = _get_client()
         try:
             response = client.workflows.update_workflow(

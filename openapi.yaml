@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.290.1"
+  version: "1.291.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -52284,7 +52284,7 @@ paths:
               properties:
                 profileId: { type: string }
                 accountId: { type: string }
-                platform: { type: string, enum: [whatsapp, instagram, facebook, telegram, twitter, bluesky, reddit], default: whatsapp }
+                platform: { type: string, enum: [whatsapp, instagram, facebook, telegram, twitter, bluesky, reddit, tiktok], default: whatsapp }
                 name: { type: string }
                 description: { type: string }
                 nodes: { type: array, items: { $ref: '#/components/schemas/WorkflowNode' } }
@@ -52385,7 +52385,7 @@ paths:
                     are derived server-side from the new account (the client never sends them
                     directly). The account must belong to the caller's team and be on a
                     workflow-supported platform (whatsapp, instagram, facebook, telegram, twitter,
-                    bluesky, reddit). Changing this triggers a graph revalidation against the new
+                    bluesky, reddit, tiktok). Changing this triggers a graph revalidation against the new
                     platform.
       responses:
         '200':
