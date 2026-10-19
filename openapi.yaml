@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.297.0"
+  version: "1.297.1"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -22742,7 +22742,7 @@ paths:
         '503': { $ref: '#/components/responses/TemporarilyUnavailable' }
         '502': { $ref: '#/components/responses/UpstreamFailure' }
         '401': { description: 'The platform authorization has expired. Reconnect the account.' }
-        '403': { description: 'The API key lacks access to this account or the platform denied access.' }
+        '403': { description: 'The API key lacks access to this account or the platform denied access. For X accounts it returns X_ANALYTICS_NOT_ENABLED when X analytics is not enabled for the account, or PAYMENT_REQUIRED when X access is paused for failed billing.' }
         '409':
           description: 'The account is inactive or needs reconnection. Stop scheduled retries until it is reconnected.'
           content:
