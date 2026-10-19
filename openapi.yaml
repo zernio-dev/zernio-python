@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.294.0"
+  version: "1.295.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -56408,6 +56408,17 @@ paths:
         describes: only the ad set's own switch is written, its ads keep
         theirs, and `statusUpdated` / `statusSkipped` report whether that switch
         was written or a live read showed it already in place.
+
+        Placements and targeting (Meta only): `placements` and `targeting` take the same shapes
+        as POST /v1/ads/create. Meta replaces an ad set's targeting wholesale, so Zernio reads
+        the live targeting first, changes only what the request names and writes the merged
+        spec back: custom audiences, geo, age, interest groups and `targeting_automation` you do
+        not send are kept. `placements` replaces the whole placement set, `placements: null`
+        returns the ad set to automatic placements, and omitting it leaves placements as they
+        are. Other platforms return 400 for either field before anything in the request is
+        written (use PUT /v1/ads/{adId} with `targeting` where that platform supports it). The
+        live read and the `incomeTier` lookup run before any other field is written, so a 502
+        or 422 from them leaves the ad set unchanged.
       security:
         - bearerAuth: []
       parameters:
@@ -56459,6 +56470,58 @@ paths:
                   properties:
                     audience: { type: boolean, description: "TikTok smart_audience_enabled." }
                     interestsBehaviors: { type: boolean, description: "TikTok smart_interest_behavior_enabled." }
+                placements:
+                  type: [object, "null"]
+                  description: |
+                    Meta only (400 elsewhere). Manual placements, same object and enums as `placements` on
+                    POST /v1/ads/create. Sending an object REPLACES the ad set's current placement set
+                    (`publisher_platforms`, every `*_positions` list and `device_platforms`); a position
+                    list you leave out is removed. `null` removes every placement key so Meta returns to
+                    automatic (Advantage+) placements. Omit to leave placements untouched. Meta enforces
+                    co-selection rules (e.g. a position needs its publisher platform) and its error is
+                    returned as is. Meta may also reject `null` or a narrower set when an ad's creative
+                    uses per-placement asset customization (`placementAssets`). An object with no
+                    non-empty list is a 400 (send `null` instead). Cannot be combined with
+                    `targeting.placements` (400).
+                  properties:
+                    publisherPlatforms:
+                      type: array
+                      items: { type: string, enum: [facebook, instagram, threads, messenger, audience_network, whatsapp] }
+                    facebookPositions:
+                      type: array
+                      items: { type: string, enum: [feed, right_hand_column, marketplace, video_feeds, story, search, instream_video, facebook_reels, facebook_reels_overlay, profile_feed, notification] }
+                    instagramPositions:
+                      type: array
+                      items: { type: string, enum: [stream, story, explore, explore_home, reels, profile_feed, ig_search, profile_reels] }
+                    messengerPositions:
+                      type: array
+                      items: { type: string, enum: [messenger_home, sponsored_messages, story] }
+                    audienceNetworkPositions:
+                      type: array
+                      items: { type: string, enum: [classic, rewarded_video] }
+                    threadsPositions:
+                      type: array
+                      items: { type: string, enum: [threads_stream] }
+                    whatsappPositions:
+                      type: array
+                      items: { type: string, enum: [status] }
+                    devicePlatforms:
+                      type: array
+                      items: { type: string, enum: [mobile, desktop] }
+                targeting:
+                  allOf: [{ $ref: '#/components/schemas/TargetingSpec' }]
+                  description: |
+                    Meta only (400 elsewhere). Targeting fields to change, same shape as the `targeting`
+                    object on POST /v1/ads/create. Only the keys you send change: Zernio reads the ad set's
+                    live targeting from Meta, merges these keys over it and writes the full spec back, so
+                    everything you do not send (custom audiences, geo, age, interest groups,
+                    `targeting_automation`) is kept. Setting any location replaces every location list.
+                    An empty list or `gender: all` clears that key. `incomeTier` is resolved to Meta's
+                    income segment first (422 when Meta has none). Fields Meta cannot target (LinkedIn
+                    B2B, Google `devices`, Reddit communities and keywords) return 400 with
+                    `param: targeting.<field>`. An empty object is a 400, and so is a
+                    `targeting.placements` object with no non-empty list (`param: targeting.placements`). When the live targeting cannot be
+                    read the request returns 502 and nothing is written.
                 bidAmount:
                   type: number
                   description: |
@@ -56558,13 +56621,15 @@ paths:
                   bidAmount: { type: [number, "null"] }
                   roasAverageFloor: { type: [number, "null"] }
                   platformSpecificData: { type: object }
-        '400': { description: Invalid input }
+                  targeting: { type: object, description: "Present when `placements` or `targeting` was sent. The ad set's full Meta targeting as written (Meta snake_case). The same snake_case object is stored as the ad set's and its ads' `targeting`." }
+        '400': { description: "Invalid input, including `placements` or `targeting` on a platform other than Meta, a targeting field Meta cannot honour, or `placements` sent both at the top level and inside `targeting`" }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403':
           description: 'Returned with code `ads_allowance_exceeded` when the team has no payment method on file and has reached the 500 free live ads: add a card to resume.'
         '404': { description: Ad set not found }
         '409': { description: "Campaign is CBO: a budget, or a bidStrategy other than the campaign's (Meta), belongs on /v1/ads/campaigns/{campaignId}" }
-        '422': { description: "bidStrategy is LOWEST_COST_WITH_MIN_ROAS on OpenAI or Reddit (unsupported: no ROAS-based bidding), or a Reddit budget that the ad group cannot take (campaign budget, or a daily/lifetime switch)" }
+        '422': { description: "bidStrategy is LOWEST_COST_WITH_MIN_ROAS on OpenAI or Reddit (unsupported: no ROAS-based bidding), a Reddit budget that the ad group cannot take (campaign budget, or a daily/lifetime switch), or a `targeting.incomeTier` Meta has no income segment for" }
+        '502': { description: "Meta: the ad set's live targeting could not be read, so the placements or targeting update was not written" }
         '501': { description: "bidStrategy not supported on the platform (Meta, TikTok, OpenAI and Reddit only)" }
     delete:
       x-resource-group: "ads"
