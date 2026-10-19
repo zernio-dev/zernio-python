@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.295.0"
+  version: "1.296.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -65471,10 +65471,16 @@ paths:
                   type: string
                   description: |
                     Meta only. Override the Instagram account the ad is delivered as. Pass an Instagram
-                    Business Account ID (e.g. 17841...), mapped to the creative's `instagram_user_id`.
-                    When omitted we use the Instagram actor Meta already runs the Page's other ads as,
-                    falling back to the Page's page-backed Instagram account. Useful when a Page has more
-                    than one eligible IG account.
+                    Business Account ID (e.g. 17841...), mapped to the creative's `instagram_user_id`; it
+                    is sent as-is and never replaced. When omitted we use the Instagram account linked to
+                    the Page; formats that need an Instagram actor without one use the actor the Page's
+                    other ads already run as, then the Page's page-backed Instagram account. If Meta
+                    refuses that default because the ad account has no access to it (200/1815199), the
+                    creative is retried once with an Instagram account the ad account is authorized for;
+                    with none, the request fails with a 422 on `instagramAccountId` (list the usable
+                    accounts with GET /v1/ads/instagram-accounts). A creative replaced later through
+                    /v1/ads/{adId} follows the same rule. Useful when a Page has more than one eligible IG
+                    account.
                 dynamicCreative:
                   type: object
                   description: |
