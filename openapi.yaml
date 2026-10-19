@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.293.0"
+  version: "1.294.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -66930,6 +66930,15 @@ paths:
 
         - `geo`: locations, further scoped by `geoType`
         - `interest`
+        - `interestSuggestion`: Meta only. Interests related to the interest names in `q`, from Meta's
+          interest suggestions. `q` lists interest names, case sensitive, names and not ids: either
+          comma-separated (`NBA,Michael Jordan`) or, for names that contain a comma, a JSON array of
+          strings (`["Earth, Wind & Fire","Yoga"]`, URL-encoded). A `q` starting with `[` is always read as
+          JSON. A `q` with no name or malformed JSON returns 400 naming `q`. Meta also suggests behaviors
+          and demographics; Zernio keeps only interests (entries whose `path` starts with `Interests`), so
+          every id goes in `TargetingSpec.interests`, like `interest` results. Zernio asks Meta for three
+          times `limit` (at most 100) before filtering, so fewer than `limit` results can come back. Meta
+          weights the first name heavily: a multi-name `q` mostly returns suggestions for the first one
         - `behavior`: Meta, TikTok and LinkedIn, matched by name; ids feed `TargetingSpec.behaviors`.
           Meta: its fixed behaviors catalog (e.g. `Small business owners`, `Frequent Travelers`).
           TikTok: video and creator interaction categories (e.g. `Software & Apps`), with ids like
@@ -67057,8 +67066,8 @@ paths:
         - bearerAuth: []
       parameters:
         - { name: accountId, in: query, required: true, schema: { type: string }, description: "Account ID (a connected account on the target ad platform)." }
-        - { name: q, in: query, required: true, schema: { type: string }, description: "Search query. For geo, the locality name only (no region/country suffix)." }
-        - { name: dimension, in: query, required: false, schema: { type: string, enum: [geo, interest, interestKeyword, behavior, hashtag, income, language, workPosition, workEmployer, workIndustry, industry, jobFunction, seniority, companySize, community, conversationKeyword], default: interest }, description: "What to search. `geo` resolves locations (scope further with `geoType`), `interest`/`behavior` resolve audience entities (`behavior` on Meta, TikTok and LinkedIn), `interestKeyword`/`hashtag` resolve TikTok additional interests and hashtags (TikTok only), `income` resolves the normalized income tiers, `language` resolves Google's targetable language_constant table (Google only), `workPosition`/`workEmployer`/`workIndustry` resolve Meta work demographics, `industry`/`jobFunction`/`seniority`/`companySize` resolve LinkedIn B2B facets (LinkedIn only). Defaults to `interest` for backward compatibility with the deprecated /v1/ads/interests alias." }
+        - { name: q, in: query, required: true, schema: { type: string }, description: "Search query. For geo, the locality name only (no region/country suffix). For `interestSuggestion`, the interest names: comma-separated, or a JSON array of strings when a name contains a comma (a `q` starting with `[` is read as JSON)." }
+        - { name: dimension, in: query, required: false, schema: { type: string, enum: [geo, interest, interestSuggestion, interestKeyword, behavior, hashtag, income, language, workPosition, workEmployer, workIndustry, industry, jobFunction, seniority, companySize, community, conversationKeyword], default: interest }, description: "What to search. `geo` resolves locations (scope further with `geoType`), `interest`/`behavior` resolve audience entities (`behavior` on Meta, TikTok and LinkedIn), `interestSuggestion` suggests interests related to the names in `q` (Meta only), `interestKeyword`/`hashtag` resolve TikTok additional interests and hashtags (TikTok only), `income` resolves the normalized income tiers, `language` resolves Google's targetable language_constant table (Google only), `workPosition`/`workEmployer`/`workIndustry` resolve Meta work demographics, `industry`/`jobFunction`/`seniority`/`companySize` resolve LinkedIn B2B facets (LinkedIn only). Defaults to `interest` for backward compatibility with the deprecated /v1/ads/interests alias." }
         - { name: geoType, in: query, required: false, schema: { type: string, enum: [all, country, country_group, region, city, subcity, neighborhood, place, zip, metro_area, geo_market], default: city }, description: "Only used when `dimension=geo`. The kind of location to resolve. `all` searches every type in one relevance-ranked call. Defaults to `city`." }
         - { name: countryCode, in: query, required: false, schema: { type: string, minLength: 2, maxLength: 2 }, description: "ISO 3166-1 alpha-2 country code (e.g. NL) to scope a geo search." }
         - { name: adAccountId, in: query, required: false, schema: { type: string }, description: "TikTok only: the advertiser to search as, when the connection holds several. Each TikTok advertiser has its own targetable regions and catalogs. Defaults to the connection's first advertiser; an advertiser the connection does not hold returns 400." }
@@ -67080,7 +67089,7 @@ paths:
                       properties:
                         id: { type: string, description: "The platform's opaque id. Use as a geo `key` (regions/cities/zips/metros) or an entity `id` (interests/behaviors) in TargetingSpec. A `country` result is the exception on every platform: its id is the ISO 3166-1 alpha-2 code, which is what `targeting.countries` takes." }
                         name: { type: string, description: "Human-readable label." }
-                        type: { type: string, description: "What the result is. Equals the requested dimension (interest, interestKeyword, behavior, hashtag, income, language, workPosition, workEmployer, workIndustry, industry, jobFunction, seniority, companySize, community, conversationKeyword), or the location level for geo (country, region, city, zip, metro, ...)." }
+                        type: { type: string, description: "What the result is. Equals the requested dimension (interest, interestSuggestion, interestKeyword, behavior, hashtag, income, language, workPosition, workEmployer, workIndustry, industry, jobFunction, seniority, companySize, community, conversationKeyword), or the location level for geo (country, region, city, zip, metro, ...)." }
                         path: { type: array, items: { type: string }, description: "Optional breadcrumb of parent labels (e.g. ['United States', 'California', 'Los Angeles']). Disambiguates same-named results." }
                         audienceSize: { type: [integer, "null"], description: "Optional estimated reachable users for this option, when the platform returns it." }
                         status: { type: string, description: "TikTok `interestKeyword` and `hashtag` results only: TikTok's availability status. `EFFECTIVE` / `INEFFECTIVE` for additional interests, `ONLINE` / `OFFLINE` for hashtags. Only `EFFECTIVE` and `ONLINE` ids can be targeted." }

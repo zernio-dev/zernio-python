@@ -11207,6 +11207,7 @@ def register_generated_tools(mcp, _get_client):
         dimension: Literal[
             "geo",
             "interest",
+            "interestSuggestion",
             "interestKeyword",
             "behavior",
             "hashtag",
@@ -11252,18 +11253,18 @@ def register_generated_tools(mcp, _get_client):
 
         - `geo`: locations, further scoped by `geoType`
         - `interest`
-        - `behavior`: Meta, TikTok and LinkedIn, matched by name; ids feed `TargetingSpec.behaviors`.
-          Meta: its fixed behaviors catalog (e.g. `Small business owners`, `Frequent Travelers`).
-          TikTok: video and creator interaction categories (e.g. `Software & Apps`), with ids like
-          `video:1913101` or `creator:24001` and `path` starting with `Video interactions` or
-          `Creator interactions` (hashtags are their own `hashtag` dimension). LinkedIn: member behaviors (e.g. ...
+        - `interestSuggestion`: Meta only. Interests related to the interest names in `q`, from Meta's
+          interest suggestions. `q` lists interest names, case sensitive, names and not ids: either
+          comma-separated (`NBA,Michael Jordan`) or, for names that contain a comma, a JSON array of
+          strings (`[\"Earth, Wind & Fire\",\"Yoga\"]`, URL-encoded). A `q` starting with `[` is always read as
+          JSON. A `q` with no name or malformed JSON returns 400 naming `q`. Meta also suggests ...
 
         Platforms: meta, google, tiktok, linkedin, pinterest, reddit
 
         Args:
             account_id: Account ID (a connected account on the target ad platform). (required)
-            q: Search query. For geo, the locality name only (no region/country suffix). (required)
-            dimension: What to search. `geo` resolves locations (scope further with `geoType`), `interest`/`behavior` resolve audience entities (`behavior` on Meta, TikTok and LinkedIn), `interestKeyword`/`hashtag` resolve TikTok additional interests and hashtags (TikTok only), `income` resolves the normalized income tiers, `language` resolves Google's targetable language_constant table (Google only), `workPosition`/`workEmployer`/`workIndustry` resolve Meta work demographics, `industry`/`jobFunction`/`seniority`/`companySize` resolve LinkedIn B2B facets (LinkedIn only). Defaults to `interest` for backward compatibility with the deprecated /v1/ads/interests alias.
+            q: Search query. For geo, the locality name only (no region/country suffix). For `interestSuggestion`, the interest names: comma-separated, or a JSON array of strings when a name contains a comma (a `q` starting with `[` is read as JSON). (required)
+            dimension: What to search. `geo` resolves locations (scope further with `geoType`), `interest`/`behavior` resolve audience entities (`behavior` on Meta, TikTok and LinkedIn), `interestSuggestion` suggests interests related to the names in `q` (Meta only), `interestKeyword`/`hashtag` resolve TikTok additional interests and hashtags (TikTok only), `income` resolves the normalized income tiers, `language` resolves Google's targetable language_constant table (Google only), `workPosition`/`workEmployer`/`workIndustry` resolve Meta work demographics, `industry`/`jobFunction`/`seniority`/`companySize` resolve LinkedIn B2B facets (LinkedIn only). Defaults to `interest` for backward compatibility with the deprecated /v1/ads/interests alias.
             geo_type: Only used when `dimension=geo`. The kind of location to resolve. `all` searches every type in one relevance-ranked call. Defaults to `city`.
             country_code: ISO 3166-1 alpha-2 country code (e.g. NL) to scope a geo search.
             ad_account_id: TikTok only: the advertiser to search as, when the connection holds several. Each TikTok advertiser has its own targetable regions and catalogs. Defaults to the connection's first advertiser; an advertiser the connection does not hold returns 400.
