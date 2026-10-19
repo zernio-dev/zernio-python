@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.297.1"
+  version: "1.297.2"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -4251,7 +4251,9 @@ components:
             delivered to an account-scoped subscription. A subscription with
             both lists must be satisfied on both. Applied when the event
             is emitted; a redelivery replays a delivery already made to this
-            endpoint and a test fire ignores the list.
+            endpoint and a test fire ignores the list. The shared WhatsApp
+            sandbox account id (listed by `GET /v1/accounts?includeSandbox=true`)
+            is accepted so a subscription can receive sandbox traffic only.
     WebhookLog:
       type: object
       description: A single webhook delivery attempt recorded by Zernio (30-day retention).
