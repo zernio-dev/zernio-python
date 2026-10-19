@@ -37301,6 +37301,8 @@ def register_generated_tools(mcp, _get_client):
 
         Fetch the current WhatsApp Business username and its approval status.
         Username status can be `approved` (active), `reserved` (pending activation), or `none` (no username set).
+        If Meta has not granted username management for the WhatsApp Business Account, the API returns the
+        standard error envelope with code `insufficient_permissions`.
 
         Args:
             account_id: WhatsApp account ID (required)"""
@@ -37336,8 +37338,9 @@ def register_generated_tools(mcp, _get_client):
            If the desired username is currently held by another account, pass `transferAction: \"force_transfer\"` to
            request a transfer. On failure the API returns a standard error envelope with one of these codes:
            `whatsapp_username_unavailable` (already taken and transfer not requested),
-           `whatsapp_username_ineligible` (account not eligible to claim a username), or
-           `whatsapp_username_transfer_required` (username is held elsewhere; retry with `force_transfer`).
+           `whatsapp_username_ineligible` (account not eligible to claim a username),
+           `whatsapp_username_transfer_required` (username is held elsewhere; retry with `force_transfer`), or
+           `insufficient_permissions` (Meta has not granted username management for this WhatsApp Business Account).
 
            Args:
                account_id: WhatsApp account ID (required)

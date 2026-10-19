@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.296.0"
+  version: "1.296.1"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -45579,6 +45579,8 @@ paths:
       description: |
         Fetch the current WhatsApp Business username and its approval status.
         Username status can be `approved` (active), `reserved` (pending activation), or `none` (no username set).
+        If Meta has not granted username management for the WhatsApp Business Account, the API returns the
+        standard error envelope with code `insufficient_permissions`.
       security:
         - bearerAuth: []
       parameters:
@@ -45605,6 +45607,7 @@ paths:
                     enum: [approved, reserved, none]
                     description: Approval state of the username
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: "Meta has not granted username management for this WhatsApp Business Account (code insufficient_permissions)" }
         '404': { description: WhatsApp account not found }
     post:
       x-resource-group: "accounts"
@@ -45620,8 +45623,9 @@ paths:
         If the desired username is currently held by another account, pass `transferAction: "force_transfer"` to
         request a transfer. On failure the API returns a standard error envelope with one of these codes:
         `whatsapp_username_unavailable` (already taken and transfer not requested),
-        `whatsapp_username_ineligible` (account not eligible to claim a username), or
-        `whatsapp_username_transfer_required` (username is held elsewhere; retry with `force_transfer`).
+        `whatsapp_username_ineligible` (account not eligible to claim a username),
+        `whatsapp_username_transfer_required` (username is held elsewhere; retry with `force_transfer`), or
+        `insufficient_permissions` (Meta has not granted username management for this WhatsApp Business Account).
       security:
         - bearerAuth: []
       requestBody:
@@ -45671,6 +45675,7 @@ paths:
                 status: "approved"
         '400': { description: "Validation error or username unavailable (see error code in response)" }
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: "Meta has not granted username management for this WhatsApp Business Account (code insufficient_permissions)" }
         '404': { description: WhatsApp account not found }
     delete:
       x-resource-group: "accounts"
@@ -45707,6 +45712,7 @@ paths:
               example:
                 success: true
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: "Meta has not granted username management for this WhatsApp Business Account (code insufficient_permissions)" }
         '404': { description: WhatsApp account not found }
 
   /v1/whatsapp/business-profile/username/suggestions:
