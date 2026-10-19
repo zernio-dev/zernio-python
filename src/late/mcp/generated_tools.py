@@ -17024,6 +17024,76 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="List orders",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def commerce_list_commerce_orders(
+        account_id: str,
+        limit: int = 20,
+        cursor: str | None = None,
+        created_after: str | None = None,
+        created_before: str | None = None,
+        updated_after: str | None = None,
+    ) -> str:
+        """List orders
+
+        The store's orders in one format for every platform, with what an invoice needs: line items with unit prices, discounts and tax per line, shipping and fee lines, billing details, payment status and refunds. Newest order first; with `updatedAfter`, oldest change first, so a sync can page forward from its last seen `updatedAt`. Start each sync a few minutes before the last `updatedAt` you saw and drop duplicates by `id`, since an order edited while you page can shift the list. Shopify returns at most 25 orders per page and, unless the store was granted access to all orders, only the last 60 days. Buyer fields (`customer` and addresses) are null when the store's approval does not cover buyer data. Needs orders.read.
+
+        Platforms: shopify, woocommerce
+
+        Args:
+            account_id: Connected store SocialAccount id. (required)
+            limit
+            cursor
+            created_after
+            created_before
+            updated_after: Only orders changed after this time, oldest change first."""
+        client = _get_client()
+        try:
+            response = client.commerce.list_commerce_orders(
+                account_id=account_id,
+                limit=limit,
+                cursor=cursor,
+                created_after=created_after,
+                created_before=created_before,
+                updated_after=updated_after,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get an order",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def commerce_get_commerce_order(order_id: str, account_id: str) -> str:
+        """Get an order
+
+        One order with every line item, tax line and refund. Needs orders.read.
+
+        Platforms: shopify, woocommerce
+
+        Args:
+            order_id: Platform-native order id. (required)
+            account_id: Connected store SocialAccount id. (required)"""
+        client = _get_client()
+        try:
+            response = client.commerce.get_commerce_order(
+                order_id=order_id, account_id=account_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="List products",
             readOnlyHint=True,
             destructiveHint=False,
@@ -36012,6 +36082,9 @@ def register_generated_tools(mcp, _get_client):
                 "commerce.product.created",
                 "commerce.product.updated",
                 "commerce.product.deleted",
+                "commerce.order.created",
+                "commerce.order.updated",
+                "commerce.order.refunded",
                 "contact.tag_added",
                 "contact.tag_removed",
                 "contact.field_changed",
@@ -36176,6 +36249,9 @@ def register_generated_tools(mcp, _get_client):
                 "commerce.product.created",
                 "commerce.product.updated",
                 "commerce.product.deleted",
+                "commerce.order.created",
+                "commerce.order.updated",
+                "commerce.order.refunded",
                 "contact.tag_added",
                 "contact.tag_removed",
                 "contact.field_changed",
@@ -36458,6 +36534,9 @@ def register_generated_tools(mcp, _get_client):
             "commerce.product.created",
             "commerce.product.updated",
             "commerce.product.deleted",
+            "commerce.order.created",
+            "commerce.order.updated",
+            "commerce.order.refunded",
             "api.changelog.published",
         ]
         | None = None,

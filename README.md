@@ -789,6 +789,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `commerce.list_commerce_menus()` | List navigation menus |
 | `commerce.list_commerce_metaobject_definitions()` | List metaobject definitions |
 | `commerce.list_commerce_metaobjects()` | List metaobjects of a type |
+| `commerce.list_commerce_orders()` | List orders |
 | `commerce.list_commerce_pages()` | List pages |
 | `commerce.list_commerce_price_lists()` | List price lists |
 | `commerce.list_commerce_product_metafields()` | List product metafields |
@@ -809,6 +810,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `commerce.get_commerce_discount()` | Get a discount |
 | `commerce.get_commerce_menu()` | Get a navigation menu |
 | `commerce.get_commerce_metaobject()` | Get a metaobject |
+| `commerce.get_commerce_order()` | Get an order |
 | `commerce.get_commerce_page()` | Get a page |
 | `commerce.get_commerce_product()` | Get a product |
 | `commerce.get_commerce_store()` | Get a store |

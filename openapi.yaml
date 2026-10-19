@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.297.2"
+  version: "1.298.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -223,6 +223,9 @@ x-documentation:
     - `commerce.product.created` - A product was created on a connected store
     - `commerce.product.updated` - A product on a connected store changed (fields, status, variants or prices)
     - `commerce.product.deleted` - A product was deleted from a connected store
+    - `commerce.order.created` - An order was placed on a connected store
+    - `commerce.order.updated` - An order on a connected store changed (payment, fulfilment, cancellation or edits)
+    - `commerce.order.refunded` - A refund was issued on an order of a connected store
     - `sms.registration.action_required` - An SMS registration (10DLC or toll-free) is waiting on you: we need answers to some points (before submission, or to fix a carrier rejection), a sole-prop brand needs the code texted to its mobile, or the toll-free carrier asked for more information. Branch on `reason`; `message` says what to do
     - `sms.registration.status_updated` - An SMS registration changed status: changes_requested, requested, pending (with the carriers), approved (ready to send), rejected (we handle the fix) or deactivated
     - `branded_calling.identity.status_updated` - A caller identity changed status: requested (back in our review), changes_requested, rejected, pending_email_verification (filed; the authorizer must enter the code), in_review (carrier vetting), verified, suspended (infringement claim), expired or permanently_rejected
@@ -590,7 +593,7 @@ tags:
   - name: Webhooks
     description: |
       Configure webhooks for real-time notifications. Webhooks can be created from the dashboard (Settings → Webhooks) or via this API.
-      Events: post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.ads.initial_sync_completed, account.ads.sync_failed, account.ads.sync_recovered, analytics.synced, message.received, conversation.started, conversation.control_changed, call.received, call.ended, call.failed, call.permission_request, message.sent, message.edited, message.deleted, message.delivered, message.read, message.played, message.failed, reaction.received, referral.received, comment.received, review.new, review.updated, lead.received, ad.status_changed, ad.video.processed, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.account.quality_updated, whatsapp.account.status_updated, whatsapp.account.alert_received, whatsapp.contact.identity_changed, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, phone_number.stock_available, verification.approved, verification.failed, api.changelog.published, sms.registration.action_required, sms.registration.status_updated, branded_calling.identity.status_updated, branded_calling.identity.action_required, branded_calling.number.status_updated, rcs.agent.status_updated, commerce.product.created, commerce.product.updated, commerce.product.deleted, contact.tag_added, contact.tag_removed, contact.field_changed, sequence.enrolled, sequence.exited, workflow.run.started, workflow.run.completed, workflow.run.failed, support.run.completed, support.run.failed, webhook.test.
+      Events: post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.ads.initial_sync_completed, account.ads.sync_failed, account.ads.sync_recovered, analytics.synced, message.received, conversation.started, conversation.control_changed, call.received, call.ended, call.failed, call.permission_request, message.sent, message.edited, message.deleted, message.delivered, message.read, message.played, message.failed, reaction.received, referral.received, comment.received, review.new, review.updated, lead.received, ad.status_changed, ad.video.processed, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.account.quality_updated, whatsapp.account.status_updated, whatsapp.account.alert_received, whatsapp.contact.identity_changed, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, phone_number.stock_available, verification.approved, verification.failed, api.changelog.published, sms.registration.action_required, sms.registration.status_updated, branded_calling.identity.status_updated, branded_calling.identity.action_required, branded_calling.number.status_updated, rcs.agent.status_updated, commerce.product.created, commerce.product.updated, commerce.product.deleted, commerce.order.created, commerce.order.updated, commerce.order.refunded, contact.tag_added, contact.tag_removed, contact.field_changed, sequence.enrolled, sequence.exited, workflow.run.started, workflow.run.completed, workflow.run.failed, support.run.completed, support.run.failed, webhook.test.
       Headers: every delivery carries X-Zernio-Event (event name) and X-Zernio-Event-Id (the payload `id`, a UUID minted once per event and identical across every subscribed endpoint, every automatic retry and every redelivery, so dedupe on it). Security: optional HMAC-SHA256 signature in X-Zernio-Signature header. Configure a secret key to enable verification. Custom headers supported. Legacy X-Late-Event, X-Late-Event-Id and X-Late-Signature duplicates are still sent and will be removed in a future major version.
 
       Resource groups. Every event belongs to one group: post.* to publishing, message.*, reaction.*, conversation.*, call.* and whatsapp.automatic_event to messages, comment.* and review.* to engagement, lead.* and contact.* to contacts, sequence.* and workflow.run.* to messages, ad.* to ads, account.*, whatsapp.template.* and whatsapp.account.* to accounts, analytics.* to analytics, whatsapp.number.*, verification.* and sms.registration.* to telephony, api.changelog.published and webhook.test to webhooks. Support Assistant events (support.run.*) belong to no single group: they need every resource group enabled and a first-party full-scope caller (a session or a full-scope key, never an OAuth token or a profile-scoped key). Two independent controls use that mapping. (1) A restricted (zrk_) API key can only subscribe to, test-fire, redeliver, or read delivery logs for events in the groups it holds, so it can never create a subscription broader than itself. (2) Each subscription carries its own `disabledResourceGroups` denylist: events in a disabled group are dropped before delivery to that endpoint, on live delivery and on every replay path, no matter which key or session created the subscription. Changing that denylist applies to every event emitted after the change; events already queued when it landed can still be delivered for up to five minutes after they were enqueued, because the delivery worker trusts a five-minute enqueue-time snapshot before re-checking. Absent or empty on a subscription means it receives everything it subscribes to, which is the behavior of every subscription created before the field existed.
@@ -4181,7 +4184,7 @@ components:
           type: array
           items:
             type: string
-            enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.ads.initial_sync_completed, account.ads.sync_failed, account.ads.sync_recovered, analytics.synced, message.received, conversation.started, conversation.control_changed, call.received, call.ended, call.failed, call.permission_request, message.sent, message.edited, message.deleted, message.delivered, message.read, message.played, message.failed, reaction.received, referral.received, comment.received, review.new, review.updated, lead.received, ad.status_changed, ad.video.processed, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.account.quality_updated, whatsapp.account.status_updated, whatsapp.account.alert_received, whatsapp.contact.identity_changed, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, phone_number.stock_available, verification.approved, verification.failed, api.changelog.published, sms.registration.action_required, sms.registration.status_updated, branded_calling.identity.status_updated, branded_calling.identity.action_required, branded_calling.number.status_updated, rcs.agent.status_updated, commerce.product.created, commerce.product.updated, commerce.product.deleted, contact.tag_added, contact.tag_removed, contact.field_changed, sequence.enrolled, sequence.exited, workflow.run.started, workflow.run.completed, workflow.run.failed, support.run.completed, support.run.failed]
+            enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.ads.initial_sync_completed, account.ads.sync_failed, account.ads.sync_recovered, analytics.synced, message.received, conversation.started, conversation.control_changed, call.received, call.ended, call.failed, call.permission_request, message.sent, message.edited, message.deleted, message.delivered, message.read, message.played, message.failed, reaction.received, referral.received, comment.received, review.new, review.updated, lead.received, ad.status_changed, ad.video.processed, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.account.quality_updated, whatsapp.account.status_updated, whatsapp.account.alert_received, whatsapp.contact.identity_changed, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, phone_number.stock_available, verification.approved, verification.failed, api.changelog.published, sms.registration.action_required, sms.registration.status_updated, branded_calling.identity.status_updated, branded_calling.identity.action_required, branded_calling.number.status_updated, rcs.agent.status_updated, commerce.product.created, commerce.product.updated, commerce.product.deleted, commerce.order.created, commerce.order.updated, commerce.order.refunded, contact.tag_added, contact.tag_removed, contact.field_changed, sequence.enrolled, sequence.exited, workflow.run.started, workflow.run.completed, workflow.run.failed, support.run.completed, support.run.failed]
           description: Events subscribed to
         isActive:
           type: boolean
@@ -14051,7 +14054,7 @@ components:
     CommerceCapability:
       type: string
       description: 'An operation a store supports. Calling an operation outside this list answers 400 platform_not_supported.'
-      enum: [products.read, products.create, products.update, products.status, products.price, products.variants, products.images, products.images_remove, collections.read, collections.write, collections.metafields, metafields.read, metafields.write, pages.read, pages.write, inventory.read, inventory.write, channels.read, channels.write, discounts.read, discounts.write, discounts.codes, navigation.read, navigation.write, metaobjects.read, metaobjects.write, markets.read, markets.write, marketing.write]
+      enum: [products.read, products.create, products.update, products.status, products.price, products.variants, products.images, products.images_remove, collections.read, collections.write, collections.metafields, metafields.read, metafields.write, pages.read, pages.write, inventory.read, inventory.write, channels.read, channels.write, discounts.read, discounts.write, discounts.codes, navigation.read, navigation.write, metaobjects.read, metaobjects.write, markets.read, markets.write, marketing.write, orders.read]
     CommerceImage:
       type: object
       properties:
@@ -14118,6 +14121,134 @@ components:
       properties:
         id: { type: string }
         name: { type: string }
+    CommerceOrderStatus:
+      type: string
+      description: 'Where the order stands. The raw platform value is returned next to it as platformStatus.'
+      enum: [pending_payment, on_hold, awaiting_fulfillment, partially_fulfilled, in_transit, delivered, completed, cancelled]
+    CommerceTaxLine:
+      type: object
+      properties:
+        title: { type: string, example: 'TVA 20%' }
+        ratePercent: { type: [number, "null"], description: 'Percent, e.g. 20 for 20%. Null when the platform does not say.' }
+        amount: { $ref: '#/components/schemas/CommerceMoney' }
+    CommerceAddress:
+      type: object
+      properties:
+        firstName: { type: [string, "null"] }
+        lastName: { type: [string, "null"] }
+        company: { type: [string, "null"] }
+        phone: { type: [string, "null"] }
+        line1: { type: [string, "null"] }
+        line2: { type: [string, "null"] }
+        city: { type: [string, "null"] }
+        region: { type: [string, "null"] }
+        postalCode: { type: [string, "null"] }
+        countryCode: { type: [string, "null"], description: 'ISO 3166-1 alpha-2.' }
+    CommerceOrderChargeLine:
+      type: object
+      description: 'A shipping or fee line.'
+      properties:
+        id: { type: string }
+        title: { type: string }
+        amount: { $ref: '#/components/schemas/CommerceMoney', description: 'Before discounts.' }
+        discountTotal: { $ref: '#/components/schemas/CommerceMoney' }
+        taxLines: { type: array, items: { $ref: '#/components/schemas/CommerceTaxLine' } }
+    CommerceOrder:
+      type: object
+      description: 'An order with what an invoice needs. Every amount is in `currency`, the store currency.'
+      properties:
+        id: { type: string }
+        accountId: { type: string }
+        platform: { type: string, enum: [shopify, woocommerce] }
+        number: { type: string, description: 'The number the merchant and buyer see.', example: '#1001' }
+        status: { $ref: '#/components/schemas/CommerceOrderStatus' }
+        platformStatus: { type: string, description: 'Shopify fulfilment status (e.g. UNFULFILLED) or WooCommerce order status (e.g. processing).' }
+        paymentStatus:
+          oneOf:
+            - type: string
+              enum: [pending, authorized, partially_paid, paid, partially_refunded, refunded, voided, failed]
+            - type: "null"
+        platformPaymentStatus: { type: [string, "null"], description: 'Shopify financial status. Null on WooCommerce, where payment is read from the order status.' }
+        currency: { type: string, example: EUR }
+        taxesIncluded:
+          type: boolean
+          description: 'Whether line item and shipping amounts include tax. Always false on WooCommerce, whose API returns amounts before tax whatever the store displays (platformData.pricesIncludeTax).'
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+        paidAt: { type: [string, "null"], format: date-time, description: 'WooCommerce only; null on Shopify.' }
+        cancelledAt: { type: [string, "null"], format: date-time, description: 'Shopify only; null on WooCommerce.' }
+        cancelReason: { type: [string, "null"] }
+        subtotal: { $ref: '#/components/schemas/CommerceMoney', description: 'Line items before order discounts and shipping.' }
+        discountTotal: { $ref: '#/components/schemas/CommerceMoney' }
+        shippingTotal: { $ref: '#/components/schemas/CommerceMoney' }
+        taxTotal: { $ref: '#/components/schemas/CommerceMoney' }
+        total: { $ref: '#/components/schemas/CommerceMoney' }
+        refundedTotal: { $ref: '#/components/schemas/CommerceMoney' }
+        discountCodes: { type: array, items: { type: string } }
+        paymentMethods: { type: array, items: { type: string } }
+        customer:
+          type: [object, "null"]
+          properties:
+            id: { type: [string, "null"], description: 'Null for guest checkouts.' }
+            email: { type: [string, "null"] }
+            phone: { type: [string, "null"] }
+            firstName: { type: [string, "null"] }
+            lastName: { type: [string, "null"] }
+        billingAddress:
+          oneOf:
+            - $ref: '#/components/schemas/CommerceAddress'
+            - type: "null"
+        shippingAddress:
+          oneOf:
+            - $ref: '#/components/schemas/CommerceAddress'
+            - type: "null"
+        buyerNote: { type: [string, "null"] }
+        lineItems:
+          type: array
+          items:
+            type: object
+            properties:
+              id: { type: string }
+              productId: { type: [string, "null"], description: 'Null when the product was deleted.' }
+              variantId: { type: [string, "null"] }
+              sku: { type: [string, "null"] }
+              title: { type: string }
+              variantTitle: { type: [string, "null"] }
+              quantity: { type: integer, description: 'As ordered; refunded units are listed under refunds.' }
+              unitPrice: { $ref: '#/components/schemas/CommerceMoney', description: 'Before discounts.' }
+              subtotal: { $ref: '#/components/schemas/CommerceMoney', description: 'unitPrice x quantity.' }
+              discountTotal: { $ref: '#/components/schemas/CommerceMoney' }
+              total: { $ref: '#/components/schemas/CommerceMoney', description: 'subtotal minus discountTotal.' }
+              taxLines: { type: array, items: { $ref: '#/components/schemas/CommerceTaxLine' } }
+        shippingLines: { type: array, items: { $ref: '#/components/schemas/CommerceOrderChargeLine' } }
+        feeLines: { type: array, description: 'WooCommerce fees. Always empty on Shopify.', items: { $ref: '#/components/schemas/CommerceOrderChargeLine' } }
+        taxLines: { type: array, description: 'Order tax by rate, line items and shipping together.', items: { $ref: '#/components/schemas/CommerceTaxLine' } }
+        refunds:
+          type: array
+          items:
+            type: object
+            properties:
+              id: { type: string }
+              createdAt: { type: [string, "null"], format: date-time }
+              note: { type: [string, "null"] }
+              amount: { $ref: '#/components/schemas/CommerceMoney' }
+              lineItems:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    lineItemId: { type: string }
+                    quantity: { type: integer }
+                    amount: { $ref: '#/components/schemas/CommerceMoney', description: 'Before tax.' }
+        fulfillments:
+          type: array
+          items:
+            type: object
+            properties:
+              carrierName: { type: [string, "null"] }
+              trackingNumber: { type: [string, "null"] }
+              trackingUrl: { type: [string, "null"] }
+        platformData: { type: [object, "null"], additionalProperties: true, description: 'Platform-only fields. Null when the platform has none.' }
     CommerceDiscount:
       type: object
       properties:
@@ -14362,6 +14493,36 @@ components:
                 - $ref: '#/components/schemas/CommerceProductStatus'
                 - type: "null"
             platformStatus: { type: [string, "null"], description: 'Raw platform status, e.g. ACTIVE; null on delete.' }
+    WebhookPayloadCommerceOrder:
+      type: object
+      properties:
+        test:
+          type: boolean
+          description: 'Always true when present: only a sample sent by POST /v1/webhooks/test with an event carries it. Real deliveries never do.'
+        id: { type: string }
+        event: { type: string, enum: [commerce.order.created, commerce.order.updated, commerce.order.refunded] }
+        timestamp:
+          type: string
+          format: date-time
+          description: 'UTC time at which Zernio generated this event (set once when the event payload is built, before delivery is queued). Retries and redeliveries keep the original value, so it reflects the event, not the delivery attempt.'
+        store:
+          type: object
+          properties:
+            accountId: { type: string, description: 'Zernio SocialAccount id of the store.' }
+            platform: { type: string, enum: [shopify, woocommerce] }
+            shopId: { type: [string, "null"], description: 'The platform id of the shop.' }
+        resource:
+          type: object
+          description: 'Identifiers only, never buyer data: read the order with GET /v1/commerce/orders/{orderId}.'
+          properties:
+            type: { type: string, enum: [order] }
+            id: { type: string, description: 'Platform-native order id.' }
+            status:
+              description: 'Zernio order status at the time of the change. Null on commerce.order.refunded from Shopify, and on WooCommerce refunds.'
+              oneOf:
+                - $ref: '#/components/schemas/CommerceOrderStatus'
+                - type: "null"
+            platformStatus: { type: [string, "null"], description: 'Raw platform status, e.g. UNFULFILLED on Shopify or processing on WooCommerce.' }
     WebhookPayloadContactTag:
       type: object
       required: [id, event, timestamp, contact, tag, source]
@@ -16584,6 +16745,60 @@ webhooks:
           application/json:
             schema:
               $ref: '#/components/schemas/WebhookPayloadCommerceProduct'
+      responses:
+        '200':
+          description: Webhook received successfully
+  commerce.order.created:
+    post:
+      operationId: onCommerceOrderCreated
+      summary: Commerce order created event
+      description: |
+        Fired when an order is placed on a connected store. The payload carries identifiers only; read the order with
+        `GET /v1/commerce/orders/{orderId}?accountId=...`. Fired once per
+        Zernio account connected to the store.
+      tags: [Webhook Events]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebhookPayloadCommerceOrder'
+      responses:
+        '200':
+          description: Webhook received successfully
+  commerce.order.updated:
+    post:
+      operationId: onCommerceOrderUpdated
+      summary: Commerce order updated event
+      description: |
+        Fired when an order on a connected store changes: payment, fulfilment, cancellation, edits, and refunds too. The payload carries identifiers only; read the order with
+        `GET /v1/commerce/orders/{orderId}?accountId=...`. Fired once per
+        Zernio account connected to the store.
+      tags: [Webhook Events]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebhookPayloadCommerceOrder'
+      responses:
+        '200':
+          description: Webhook received successfully
+  commerce.order.refunded:
+    post:
+      operationId: onCommerceOrderRefunded
+      summary: Commerce order refunded event
+      description: |
+        Fired when a refund is issued on an order of a connected store. A commerce.order.updated usually follows for the same change. The payload carries identifiers only; read the order with
+        `GET /v1/commerce/orders/{orderId}?accountId=...`. Fired once per
+        Zernio account connected to the store.
+      tags: [Webhook Events]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebhookPayloadCommerceOrder'
       responses:
         '200':
           description: Webhook received successfully
@@ -34973,7 +35188,7 @@ paths:
                   minItems: 1
                   items:
                     type: string
-                    enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.ads.initial_sync_completed, account.ads.sync_failed, account.ads.sync_recovered, analytics.synced, message.received, conversation.started, conversation.control_changed, call.received, call.ended, call.failed, call.permission_request, message.sent, message.edited, message.deleted, message.delivered, message.read, message.played, message.failed, reaction.received, referral.received, comment.received, review.new, review.updated, lead.received, ad.status_changed, ad.video.processed, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.account.quality_updated, whatsapp.account.status_updated, whatsapp.account.alert_received, whatsapp.contact.identity_changed, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, phone_number.stock_available, verification.approved, verification.failed, api.changelog.published, sms.registration.action_required, sms.registration.status_updated, branded_calling.identity.status_updated, branded_calling.identity.action_required, branded_calling.number.status_updated, rcs.agent.status_updated, commerce.product.created, commerce.product.updated, commerce.product.deleted, contact.tag_added, contact.tag_removed, contact.field_changed, sequence.enrolled, sequence.exited, workflow.run.started, workflow.run.completed, workflow.run.failed, support.run.completed, support.run.failed]
+                    enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.ads.initial_sync_completed, account.ads.sync_failed, account.ads.sync_recovered, analytics.synced, message.received, conversation.started, conversation.control_changed, call.received, call.ended, call.failed, call.permission_request, message.sent, message.edited, message.deleted, message.delivered, message.read, message.played, message.failed, reaction.received, referral.received, comment.received, review.new, review.updated, lead.received, ad.status_changed, ad.video.processed, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.account.quality_updated, whatsapp.account.status_updated, whatsapp.account.alert_received, whatsapp.contact.identity_changed, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, phone_number.stock_available, verification.approved, verification.failed, api.changelog.published, sms.registration.action_required, sms.registration.status_updated, branded_calling.identity.status_updated, branded_calling.identity.action_required, branded_calling.number.status_updated, rcs.agent.status_updated, commerce.product.created, commerce.product.updated, commerce.product.deleted, commerce.order.created, commerce.order.updated, commerce.order.refunded, contact.tag_added, contact.tag_removed, contact.field_changed, sequence.enrolled, sequence.exited, workflow.run.started, workflow.run.completed, workflow.run.failed, support.run.completed, support.run.failed]
                   description: Events to subscribe to (at least one required)
                 isActive:
                   type: boolean
@@ -35130,7 +35345,7 @@ paths:
                   minItems: 1
                   items:
                     type: string
-                    enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.ads.initial_sync_completed, account.ads.sync_failed, account.ads.sync_recovered, analytics.synced, message.received, conversation.started, conversation.control_changed, call.received, call.ended, call.failed, call.permission_request, message.sent, message.edited, message.deleted, message.delivered, message.read, message.played, message.failed, reaction.received, referral.received, comment.received, review.new, review.updated, lead.received, ad.status_changed, ad.video.processed, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.account.quality_updated, whatsapp.account.status_updated, whatsapp.account.alert_received, whatsapp.contact.identity_changed, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, phone_number.stock_available, verification.approved, verification.failed, api.changelog.published, sms.registration.action_required, sms.registration.status_updated, branded_calling.identity.status_updated, branded_calling.identity.action_required, branded_calling.number.status_updated, rcs.agent.status_updated, commerce.product.created, commerce.product.updated, commerce.product.deleted, contact.tag_added, contact.tag_removed, contact.field_changed, sequence.enrolled, sequence.exited, workflow.run.started, workflow.run.completed, workflow.run.failed, support.run.completed, support.run.failed]
+                    enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.ads.initial_sync_completed, account.ads.sync_failed, account.ads.sync_recovered, analytics.synced, message.received, conversation.started, conversation.control_changed, call.received, call.ended, call.failed, call.permission_request, message.sent, message.edited, message.deleted, message.delivered, message.read, message.played, message.failed, reaction.received, referral.received, comment.received, review.new, review.updated, lead.received, ad.status_changed, ad.video.processed, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.account.quality_updated, whatsapp.account.status_updated, whatsapp.account.alert_received, whatsapp.contact.identity_changed, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, phone_number.stock_available, verification.approved, verification.failed, api.changelog.published, sms.registration.action_required, sms.registration.status_updated, branded_calling.identity.status_updated, branded_calling.identity.action_required, branded_calling.number.status_updated, rcs.agent.status_updated, commerce.product.created, commerce.product.updated, commerce.product.deleted, commerce.order.created, commerce.order.updated, commerce.order.refunded, contact.tag_added, contact.tag_removed, contact.field_changed, sequence.enrolled, sequence.exited, workflow.run.started, workflow.run.completed, workflow.run.failed, support.run.completed, support.run.failed]
                   description: Events to subscribe to. Must contain at least one event if provided.
                 isActive:
                   type: boolean
@@ -35537,6 +35752,9 @@ paths:
                     - commerce.product.created
                     - commerce.product.updated
                     - commerce.product.deleted
+                    - commerce.order.created
+                    - commerce.order.updated
+                    - commerce.order.refunded
                     - api.changelog.published
             examples:
               generic:
@@ -74551,6 +74769,141 @@ paths:
         '404': { description: 'Account not found or not accessible (code account_not_found).' }
         '429': { description: 'Rate limited, either by Zernio or by the platform. Retry later.' }
 
+  /v1/commerce/orders:
+    get:
+      x-resource-group: commerce
+      operationId: listCommerceOrders
+      tags:
+        - Commerce
+      x-platforms:
+        - shopify
+        - woocommerce
+      summary: List orders
+      description: >-
+        The store's orders in one format for every platform, with what an invoice needs: line items with unit prices,
+        discounts and tax per line, shipping and fee lines, billing details, payment status and refunds. Newest order
+        first; with `updatedAfter`, oldest change first, so a sync can page forward from its last seen `updatedAt`.
+        Start each sync a few minutes before the last `updatedAt` you saw and drop duplicates by `id`, since an order
+        edited while you page can shift the list. Shopify returns at most 25 orders per page and, unless the store was
+        granted access to all orders, only the last 60 days. Buyer fields (`customer` and addresses) are null when the
+        store's approval does not cover buyer data. Needs orders.read.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: accountId
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Connected store SocialAccount id.
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: cursor
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: createdAfter
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+        - name: createdBefore
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+        - name: updatedAfter
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+          description: Only orders changed after this time, oldest change first.
+      responses:
+        '200':
+          description: Orders listed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  orders:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/CommerceOrder'
+                  nextCursor:
+                    type:
+                      - string
+                      - 'null'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: >-
+            The store has not granted orders.read (code insufficient_permissions). GET /v1/commerce/store returns
+            grantPermissionsUrl for the store owner to approve it.
+        '404':
+          description: Account not found (code account_not_found).
+        '429':
+          description: Rate limited, either by Zernio or by the platform. Retry later.
+  /v1/commerce/orders/{orderId}:
+    get:
+      x-resource-group: commerce
+      operationId: getCommerceOrder
+      tags:
+        - Commerce
+      x-platforms:
+        - shopify
+        - woocommerce
+      summary: Get an order
+      description: One order with every line item, tax line and refund. Needs orders.read.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Platform-native order id.
+        - name: accountId
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Connected store SocialAccount id.
+      responses:
+        '200':
+          description: The order
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  order:
+                    $ref: '#/components/schemas/CommerceOrder'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: >-
+            The store has not granted orders.read (code insufficient_permissions). GET /v1/commerce/store returns
+            grantPermissionsUrl for the store owner to approve it.
+        '404':
+          description: Account not found (code account_not_found) or order not found (code resource_not_found).
+        '429':
+          description: Rate limited, either by Zernio or by the platform. Retry later.
   /v1/commerce/products:
     get:
       x-resource-group: "commerce"

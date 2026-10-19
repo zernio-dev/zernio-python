@@ -82,6 +82,34 @@ class CommerceResource:
         )
         return self._client._get("/v1/commerce/store", params=params)
 
+    def list_commerce_orders(
+        self,
+        account_id: str,
+        *,
+        limit: int | None = 20,
+        cursor: str | None = None,
+        created_after: datetime | str | None = None,
+        created_before: datetime | str | None = None,
+        updated_after: datetime | str | None = None,
+    ) -> dict[str, Any]:
+        """List orders"""
+        params = self._build_params(
+            account_id=account_id,
+            limit=limit,
+            cursor=cursor,
+            created_after=created_after,
+            created_before=created_before,
+            updated_after=updated_after,
+        )
+        return self._client._get("/v1/commerce/orders", params=params)
+
+    def get_commerce_order(self, order_id: str, account_id: str) -> dict[str, Any]:
+        """Get an order"""
+        params = self._build_params(
+            account_id=account_id,
+        )
+        return self._client._get(f"/v1/commerce/orders/{order_id}", params=params)
+
     def list_commerce_products(
         self,
         account_id: str,
@@ -1134,6 +1162,38 @@ class CommerceResource:
             account_id=account_id,
         )
         return await self._client._aget("/v1/commerce/store", params=params)
+
+    async def alist_commerce_orders(
+        self,
+        account_id: str,
+        *,
+        limit: int | None = 20,
+        cursor: str | None = None,
+        created_after: datetime | str | None = None,
+        created_before: datetime | str | None = None,
+        updated_after: datetime | str | None = None,
+    ) -> dict[str, Any]:
+        """List orders (async)"""
+        params = self._build_params(
+            account_id=account_id,
+            limit=limit,
+            cursor=cursor,
+            created_after=created_after,
+            created_before=created_before,
+            updated_after=updated_after,
+        )
+        return await self._client._aget("/v1/commerce/orders", params=params)
+
+    async def aget_commerce_order(
+        self, order_id: str, account_id: str
+    ) -> dict[str, Any]:
+        """Get an order (async)"""
+        params = self._build_params(
+            account_id=account_id,
+        )
+        return await self._client._aget(
+            f"/v1/commerce/orders/{order_id}", params=params
+        )
 
     async def alist_commerce_products(
         self,
