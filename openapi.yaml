@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.296.1"
+  version: "1.297.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -18911,6 +18911,96 @@ paths:
                   code: { type: string, example: "analytics_addon_required" }
         '404':
           $ref: '#/components/responses/NotFound'
+
+  /v1/analytics/linkedin/demographics:
+    get:
+      x-resource-group: "analytics"
+      operationId: getLinkedInDemographics
+      tags: [Analytics]
+      summary: Get LinkedIn organization follower demographics
+      description: |
+        Returns the lifetime follower breakdown of a connected LinkedIn organization page by job function, seniority, industry and company size.
+        Function, seniority and industry are labelled with LinkedIn's standardized names (English) and keep the LinkedIn URN in `id`. Company size is labelled as a range such as `2-10` or `10001+`.
+        LinkedIn returns at most the top 100 values per breakdown and leaves out followers whose profile lacks that field, so a breakdown does not add up to the follower count.
+        Organization accounts only: a personal LinkedIn account answers 400 `personal_account_not_supported`. Requires the r_organization_social, r_organization_followers and r_organization_admin scopes (412 otherwise) and the Analytics add-on.
+      parameters:
+        - name: accountId
+          in: query
+          required: true
+          schema: { type: string }
+          description: The Zernio SocialAccount ID of the LinkedIn organization account
+        - name: breakdown
+          in: query
+          schema: { type: string }
+          description: |
+            Comma-separated list of demographic dimensions: function, seniority, industry, company_size.
+            Defaults to all four if omitted.
+      responses:
+        '200':
+          description: Follower demographics for the organization page
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  accountId: { type: string }
+                  platform: { type: string, enum: [linkedin] }
+                  metric: { type: string, enum: [follower_demographics] }
+                  demographics:
+                    type: object
+                    description: Only the requested breakdowns are present. Entries are sorted by value, largest first.
+                    additionalProperties:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          dimension: { type: string, description: 'Readable label, or the LinkedIn URN when LinkedIn returns no name for it' }
+                          id: { type: string, description: 'LinkedIn URN (urn:li:function:8) or staff count range (SIZE_2_TO_10)' }
+                          value: { type: integer, description: 'Followers (organic plus paid)' }
+                  note: { type: string }
+              examples:
+                allBreakdowns:
+                  summary: Every breakdown
+                  value:
+                    success: true
+                    accountId: "64e1a2b3c4d5e6f7a8b9c0d1"
+                    platform: "linkedin"
+                    metric: "follower_demographics"
+                    demographics:
+                      function:
+                        - { dimension: "Engineering", id: "urn:li:function:8", value: 670 }
+                        - { dimension: "Business Development", id: "urn:li:function:4", value: 550 }
+                      seniority:
+                        - { dimension: "Entry", id: "urn:li:seniority:3", value: 1010 }
+                      industry:
+                        - { dimension: "Software Development", id: "urn:li:industry:4", value: 590 }
+                      company_size:
+                        - { dimension: "2-10", id: "SIZE_2_TO_10", value: 690 }
+                    note: "Lifetime breakdown of the organization page followers. LinkedIn returns at most the top 100 values per breakdown and leaves out followers whose profile lacks that field, so a breakdown does not add up to the follower count."
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '402':
+          description: Analytics access required. Legacy plans need the Analytics add-on; included by default on usage-based plans.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error: { type: string, example: "Analytics add-on required" }
+                  code: { type: string, example: "analytics_addon_required" }
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '412':
+          description: 'The LinkedIn connection is missing the organization analytics scopes. Reconnect the account to grant them.'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error: { type: string }
+                  code: { type: string, example: "linkedin_org_analytics_scope_missing" }
 
   /v1/analytics/instagram/demographics:
     get:

@@ -12311,6 +12311,37 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="Get LinkedIn organization follower demographics",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def analytics_get_linked_in_demographics(
+        account_id: str, breakdown: str | None = None
+    ) -> str:
+        """Get LinkedIn organization follower demographics
+
+            Returns the lifetime follower breakdown of a connected LinkedIn organization page by job function, seniority, industry and company size.
+            Function, seniority and industry are labelled with LinkedIn's standardized names (English) and keep the LinkedIn URN in `id`. Company size is labelled as a range such as `2-10` or `10001+`.
+            LinkedIn returns at most the top 100 values per breakdown and leaves out followers whose profile lacks that field, so a breakdown does not add up to the follower count.
+            Organization accounts only: a personal LinkedIn account answers 400 `personal_account_not_supported`. Requires the r_organization_social, r_organization_followers and r_organization_admin scopes (412 otherwise) and the Analytics add-on.
+
+            Args:
+                account_id: The Zernio SocialAccount ID of the LinkedIn organization account (required)
+                breakdown: Comma-separated list of demographic dimensions: function, seniority, industry, company_size.
+        Defaults to all four if omitted."""
+        client = _get_client()
+        try:
+            response = client.analytics.get_linked_in_demographics(
+                account_id=account_id, breakdown=breakdown
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="Get Instagram demographics",
             readOnlyHint=True,
             destructiveHint=False,

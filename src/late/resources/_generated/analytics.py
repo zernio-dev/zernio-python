@@ -336,6 +336,16 @@ class AnalyticsResource:
         )
         return self._client._get("/v1/analytics/facebook/demographics", params=params)
 
+    def get_linked_in_demographics(
+        self, account_id: str, *, breakdown: str | None = None
+    ) -> dict[str, Any]:
+        """Get LinkedIn organization follower demographics"""
+        params = self._build_params(
+            account_id=account_id,
+            breakdown=breakdown,
+        )
+        return self._client._get("/v1/analytics/linkedin/demographics", params=params)
+
     def get_instagram_demographics(
         self,
         account_id: str,
@@ -881,6 +891,18 @@ class AnalyticsResource:
         )
         return await self._client._aget(
             "/v1/analytics/facebook/demographics", params=params
+        )
+
+    async def aget_linked_in_demographics(
+        self, account_id: str, *, breakdown: str | None = None
+    ) -> dict[str, Any]:
+        """Get LinkedIn organization follower demographics (async)"""
+        params = self._build_params(
+            account_id=account_id,
+            breakdown=breakdown,
+        )
+        return await self._client._aget(
+            "/v1/analytics/linkedin/demographics", params=params
         )
 
     async def aget_instagram_demographics(
