@@ -29902,6 +29902,8 @@ def register_generated_tools(mcp, _get_client):
         page: int = 1,
         limit: int = 10,
         offset: int | None = None,
+        cursor: str | None = None,
+        fields: str | None = None,
         source: Literal["zernio", "external"] = "zernio",
         status: Literal[
             "draft",
@@ -29941,6 +29943,8 @@ def register_generated_tools(mcp, _get_client):
             page: Page number
             limit: Page size. Values above the maximum return 400 rather than being clamped.
             offset: Row offset. Takes precedence over page when both are sent; the response pagination.page is derived from it.
+            cursor: Opaque cursor from a previous response's `pagination.nextCursor`. Returns the page that follows it in the same `sortBy` order, and takes precedence over `page` and `offset`. Each cursor page costs the same however deep it is, unlike `page`/`offset`, which get slower the further you go; prefer it to walk a long history. Send the same filters and `sortBy` as the request that issued it: a cursor from another `sortBy` returns 400. Not available with `sortBy=status` or `sortBy=platform`, or with `source=external`.
+            fields: Comma-separated list of post fields to return. Each post then carries `_id` plus only these fields, which makes large pages much cheaper: leave out `platforms`, `content`, `mediaItems` or `metadata` when you do not need them. Accepted: `userId`, `title`, `content`, `mediaItems`, `platforms`, `scheduledFor`, `timezone`, `status`, `tags`, `hashtags`, `mentions`, `visibility`, `metadata`, `recycling`, `recycledFromPostId`, `queuedFromProfile`, `queueId`, `createdAt`, `updatedAt`. An unknown field returns 400 naming it. `fields=_id` returns ids only. Omit it (or send it empty) for the full post. Not available with `source=external`.
             source: Which collection to read. `zernio` (default) returns posts authored through Zernio. `external` returns posts synced from the platform (existing/historical posts that were published outside Zernio). Combine with `accountId` and paginate via `page`/`limit` to walk the full synced history (we keep up to the last ~12 months per account).
             status
             platform
@@ -29961,6 +29965,8 @@ def register_generated_tools(mcp, _get_client):
                 page=page,
                 limit=limit,
                 offset=offset,
+                cursor=cursor,
+                fields=fields,
                 source=source,
                 status=status,
                 platform=platform,
