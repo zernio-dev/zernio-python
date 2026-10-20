@@ -113,6 +113,14 @@ class InstagramResource:
             f"/v1/accounts/{account_id}/instagram/business-discovery", params=params
         )
 
+    def list_instagram_media_collaborators(
+        self, account_id: str, media_id: str
+    ) -> dict[str, Any]:
+        """List the collaborators of an Instagram post"""
+        return self._client._get(
+            f"/v1/accounts/{account_id}/instagram/media/{media_id}/collaborators"
+        )
+
     def get_instagram_story_insights(
         self, account_id: str, story_id: str
     ) -> dict[str, Any]:
@@ -161,6 +169,14 @@ class InstagramResource:
         )
         return await self._client._aget(
             f"/v1/accounts/{account_id}/instagram/business-discovery", params=params
+        )
+
+    async def alist_instagram_media_collaborators(
+        self, account_id: str, media_id: str
+    ) -> dict[str, Any]:
+        """List the collaborators of an Instagram post (async)"""
+        return await self._client._aget(
+            f"/v1/accounts/{account_id}/instagram/media/{media_id}/collaborators"
         )
 
     async def aget_instagram_story_insights(

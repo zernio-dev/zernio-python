@@ -26003,6 +26003,45 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="List the collaborators of an Instagram post",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def instagram_list_instagram_media_collaborators(
+        account_id: str, media_id: str
+    ) -> str:
+        """List the collaborators of an Instagram post
+
+        Returns the accounts invited as collaborators on one of the connected
+        account's own posts (feed image, Reel or carousel), with whether each
+        invitation was accepted or is still pending. Use it to check who
+        accepted a collab post after publishing it.
+
+        Requires an Instagram account connected via **Facebook Login**. Meta
+        serves this edge on graph.facebook.com only, so accounts connected with
+        classic Instagram Login receive a 400
+        (`instagram_collaborators_require_facebook_login`) and must be
+        reconnected choosing the Facebook option.
+
+        Meta returns at most 5 collaborators and only those who allow
+        collaborator tagging. A post without collaborators returns an empty list.
+
+        Args:
+            account_id: The ID of a connected Instagram account (Facebook Login). (required)
+            media_id: Instagram media ID of a post published by this account (digits only, e.g. the platformPostId of a published post). (required)"""
+        client = _get_client()
+        try:
+            response = client.instagram.list_instagram_media_collaborators(
+                account_id=account_id, media_id=media_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="Get Instagram story insights",
             readOnlyHint=True,
             destructiveHint=False,

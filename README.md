@@ -1030,6 +1030,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 ### Instagram
 | Method | Description |
 |--------|-------------|
+| `instagram.list_instagram_media_collaborators()` | List the collaborators of an Instagram post |
 | `instagram.list_instagram_stories()` | List active Instagram stories |
 | `instagram.get_instagram_audio()` | Get Instagram audio metadata |
 | `instagram.get_instagram_business_discovery()` | Look up a public Instagram Business account |

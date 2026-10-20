@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.309.1"
+  version: "1.309.2"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -8838,6 +8838,17 @@ components:
           description: 'Tags the post with a location. The ID of a Facebook Page that has location data (digits only); it is sent to Instagram as location_id. Applies to feed posts, Reels, and the carousel as a whole; Stories and individual carousel slides are unsupported (a Story with locationId is rejected with a 400). A Page without location data or that does not exist fails the post with a user error at publish time.'
           example: '105890561436614'
       description: Feed aspect ratio 0.5625-1.91, carousels up to 20 items, stories require media (no captions). User tag coordinates 0.0-1.0 from top-left. Images over 8 MB and videos over platform limits are auto-compressed.
+
+    InstagramMediaCollaborator:
+      type: object
+      required: [id, username, inviteStatus]
+      properties:
+        id: { type: string, description: App-scoped ID of the collaborator's Instagram account. }
+        username: { type: [string, "null"], description: Instagram handle of the collaborator. }
+        inviteStatus:
+          type: [string, "null"]
+          description: 'accepted or pending. Any other value Meta adds later is passed through in lowercase.'
+          example: accepted
 
     InstagramBusinessDiscovery:
       type: object
@@ -32762,6 +32773,70 @@ paths:
               schema: { $ref: '#/components/schemas/ErrorResponse' }
         '409': { $ref: '#/components/responses/AccountConnectionRequired' }
 
+  /v1/accounts/{accountId}/instagram/media/{mediaId}/collaborators:
+    get:
+      x-resource-group: publishing
+      operationId: listInstagramMediaCollaborators
+      tags:
+        - Instagram
+      summary: List the collaborators of an Instagram post
+      description: |
+        Returns the accounts invited as collaborators on one of the connected
+        account's own posts (feed image, Reel or carousel), with whether each
+        invitation was accepted or is still pending. Use it to check who
+        accepted a collab post after publishing it.
+
+        Requires an Instagram account connected via **Facebook Login**. Meta
+        serves this edge on graph.facebook.com only, so accounts connected with
+        classic Instagram Login receive a 400
+        (`instagram_collaborators_require_facebook_login`) and must be
+        reconnected choosing the Facebook option.
+
+        Meta returns at most 5 collaborators and only those who allow
+        collaborator tagging. A post without collaborators returns an empty list.
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          description: The ID of a connected Instagram account (Facebook Login).
+          schema:
+            type: string
+        - name: mediaId
+          in: path
+          required: true
+          description: 'Instagram media ID of a post published by this account (digits only, e.g. the platformPostId of a published post).'
+          schema:
+            type: string
+            pattern: '^[0-9]+$'
+            example: '18063237463112345'
+      responses:
+        '200':
+          description: Collaborators of the post
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: array
+                    maxItems: 5
+                    items:
+                      $ref: '#/components/schemas/InstagramMediaCollaborator'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: >-
+            The account is not reachable by the caller (`account_not_found`), or the media does not exist or does not
+            belong to this account (`resource_not_found`).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          $ref: '#/components/responses/AccountConnectionRequired'
   /v1/accounts/{accountId}/instagram/stories/{storyId}/insights:
     get:
       x-resource-group: "analytics"
