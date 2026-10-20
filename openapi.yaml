@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.308.1"
+  version: "1.309.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -9965,6 +9965,40 @@ components:
           type: integer
           description: 'In the profile list. Connected accounts on the profile, including ones that need reconnecting; phone and SMS number internals and posting accounts hidden by an ads connect are not counted.'
         createdAt: { type: string, format: date-time }
+    HubSpotSettings:
+      type: object
+      required:
+        - _id
+        - platform
+        - hubId
+        - hubDomain
+        - scopes
+        - syncContacts
+        - logMessages
+      properties:
+        _id:
+          type: string
+          description: Zernio account ID of the HubSpot connection.
+        platform:
+          type: string
+          enum: [hubspot]
+        hubId:
+          type: string
+          description: HubSpot portal (hub) ID.
+        hubDomain:
+          type: [string, "null"]
+          description: HubSpot portal domain, when HubSpot reports one.
+        scopes:
+          type: array
+          items:
+            type: string
+          description: OAuth scopes the portal granted.
+        syncContacts:
+          type: boolean
+          description: Whether Zernio creates or updates HubSpot contacts for inbox contacts.
+        logMessages:
+          type: boolean
+          description: Whether Zernio logs inbox messages on HubSpot contact timelines.
     SocialAccount:
       type: object
       required: [_id, platform, profileId, isActive]
@@ -9972,7 +10006,7 @@ components:
         _id: { type: string }
         platform:
           type: string
-          enum: [tiktok, instagram, facebook, youtube, linkedin, twitter, threads, pinterest, reddit, bluesky, googlebusiness, telegram, snapchat, discord, slack, whatsapp, shopify, wordpress, wix, linkedinads, metaads, pinterestads, tiktokads, xads, googleads, openaiads, redditads, sms, phone, rcs, whopads]
+          enum: [tiktok, instagram, facebook, youtube, linkedin, twitter, threads, pinterest, reddit, bluesky, googlebusiness, telegram, snapchat, discord, slack, whatsapp, shopify, wordpress, wix, linkedinads, metaads, pinterestads, tiktokads, xads, googleads, openaiads, redditads, sms, phone, rcs, whopads, hubspot]
         profileId:
           oneOf:
             - type: string
@@ -24304,8 +24338,8 @@ paths:
           in: query
           schema:
             type: string
-            enum: [social, ads, communication, blogs]
-          description: 'Only accounts of this kind. ads = ad accounts (Meta, Google, LinkedIn, Pinterest, TikTok, X, OpenAI, Reddit), communication = WhatsApp, Telegram, Discord, Slack and iMessage, blogs = Shopify and WordPress, social = every other platform.'
+            enum: [social, ads, communication, blogs, crm]
+          description: 'Only accounts of this kind. ads = ad accounts (Meta, Google, LinkedIn, Pinterest, TikTok, X, OpenAI, Reddit), communication = WhatsApp, Telegram, Discord, Slack and iMessage, blogs = Shopify and WordPress, crm = HubSpot, social = every other platform.'
         - name: sort
           in: query
           schema:
@@ -24647,7 +24681,7 @@ paths:
           description: Filter by platform
           schema:
             type: string
-            enum: [facebook, instagram, linkedin, twitter, tiktok, youtube, threads, pinterest, reddit, bluesky, googlebusiness, telegram, snapchat, discord, slack, whatsapp, shopify, wordpress, wix, linkedinads, metaads, pinterestads, tiktokads, xads, googleads, openaiads, redditads, whopads]
+            enum: [facebook, instagram, linkedin, twitter, tiktok, youtube, threads, pinterest, reddit, bluesky, googlebusiness, telegram, snapchat, discord, slack, whatsapp, shopify, wordpress, wix, linkedinads, metaads, pinterestads, tiktokads, xads, googleads, openaiads, redditads, whopads, hubspot]
         - name: status
           in: query
           description: Filter by health status
@@ -26721,6 +26755,74 @@ paths:
         '403':
           description: 'API key does not have access to this profile.'
 
+  /v1/connect/hubspot:
+    get:
+      x-resource-group: accounts
+      operationId: getHubSpotConnectUrl
+      tags:
+        - Connect
+      summary: Get HubSpot OAuth connect URL
+      description: |
+        Initiates OAuth for a HubSpot portal. HubSpot is a connect-only CRM
+        platform: the connected account does not post, read analytics or run
+        ads. One HubSpot portal can be connected per profile; connecting a
+        different portal to a profile that already has one redirects with
+        `error=hubspot_profile_has_portal`.
+        Redirect the user to `authUrl`; after authorization, HubSpot returns
+        the browser to Zernio's internal callback and Zernio redirects to
+        `redirect_url` (or the dashboard when omitted). On success the redirect
+        carries `connected=hubspot`, `profileId`, `accountId` and `username`
+        (the portal domain); on failure it carries `error`, `platform=hubspot`
+        and `error_message`. Reconnecting the same portal and profile updates
+        the stored connection in place and keeps its settings.
+        Requested scopes: `crm.objects.contacts.read`, `crm.objects.contacts.write`.
+      security:
+        - bearerAuth: []
+        - connectToken: []
+      parameters:
+        - name: profileId
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Your Zernio profile ID (get from /v1/profiles).
+        - name: redirect_url
+          in: query
+          schema:
+            type: string
+          description: >-
+            Custom redirect after connection. Must be an absolute http(s) URL or custom app scheme such as
+            `myapp://callback`; relative and unsafe URLs return 400.
+      responses:
+        '200':
+          description: OAuth authorization URL and authenticated state
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - authUrl
+                  - state
+                properties:
+                  authUrl:
+                    type: string
+                    format: uri
+                    description: HubSpot URL to open in the user agent.
+                  state:
+                    type: string
+                    description: Authenticated, expiring OAuth state handled by the callback.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '402':
+          $ref: '#/components/responses/PaymentRequired'
+        '403':
+          description: API key does not have access to this profile, or the key is read-only.
+        '404':
+          description: Profile not found or access denied.
+        '503':
+          description: HubSpot OAuth is not configured.
   /v1/connect/wordpress:
     get:
       x-resource-group: "accounts"
@@ -33711,6 +33813,82 @@ paths:
         '502': { description: "Reddit was unreachable or returned an unclassified error. Reddit 4xx statuses (e.g. subreddit does not allow user flair selection) are forwarded as-is." }
         '503': { description: "Organic Reddit is temporarily unavailable while Reddit blocks third-party API access (`PLATFORM_DISABLED`)." }
 
+  /v1/accounts/{accountId}/hubspot-settings:
+    get:
+      x-resource-group: accounts
+      operationId: getHubSpotSettings
+      tags:
+        - Accounts
+      summary: Get HubSpot account settings
+      description: Read a connected HubSpot portal and what Zernio syncs to it.
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: HubSpot settings
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  account:
+                    $ref: '#/components/schemas/HubSpotSettings'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: Account not found
+    patch:
+      x-resource-group: accounts
+      operationId: updateHubSpotSettings
+      tags:
+        - Accounts
+      summary: Update HubSpot account settings
+      description: >-
+        Turn contact sync or message logging on or off for a connected HubSpot portal. Send at least one
+        field; omitted fields keep their value. Settings survive reconnecting the same portal.
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                syncContacts:
+                  type: boolean
+                  description: Create or update a HubSpot contact for each inbox contact.
+                logMessages:
+                  type: boolean
+                  description: Log inbound and outbound inbox messages on the contact's HubSpot timeline.
+      responses:
+        '200':
+          description: Updated settings
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  account:
+                    $ref: '#/components/schemas/HubSpotSettings'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: Account not found
   /v1/accounts/{accountId}/slack-settings:
     get:
       x-resource-group: "accounts"

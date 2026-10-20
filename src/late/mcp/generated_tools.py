@@ -646,7 +646,8 @@ def register_generated_tools(mcp, _get_client):
         platform: str | None = None,
         status: Literal["connected", "disconnected"] | None = None,
         search: str | None = None,
-        category: Literal["social", "ads", "communication", "blogs"] | None = None,
+        category: Literal["social", "ads", "communication", "blogs", "crm"]
+        | None = None,
         sort: Literal["account", "platform", "profile", "status", "connected"]
         | None = None,
         order: Literal["asc", "desc"] = "asc",
@@ -670,7 +671,7 @@ def register_generated_tools(mcp, _get_client):
                 platform: Filter accounts by platform (e.g. "instagram", "twitter").
                 status: Filter accounts by connection status. `connected` returns healthy accounts; `disconnected` returns accounts that need reconnection (per the same reconnection check surfaced in the dashboard). Omit to return accounts in any status. When combined with page/limit, pagination totals reflect the filtered result set.
                 search: Case-insensitive match on the account username, display name or platform user id, or an exact account id. Combine with page/limit to paginate the matches.
-                category: Only accounts of this kind. ads = ad accounts (Meta, Google, LinkedIn, Pinterest, TikTok, X, OpenAI, Reddit), communication = WhatsApp, Telegram, Discord, Slack and iMessage, blogs = Shopify and WordPress, social = every other platform.
+                category: Only accounts of this kind. ads = ad accounts (Meta, Google, LinkedIn, Pinterest, TikTok, X, OpenAI, Reddit), communication = WhatsApp, Telegram, Discord, Slack and iMessage, blogs = Shopify and WordPress, crm = HubSpot, social = every other platform.
                 sort: Sort a paginated listing (page/limit) by account name, platform, profile name, status (accounts needing a reconnect first when ascending) or connection date. Ties keep the default order: platform, then newest first.
                 order: Direction for `sort`.
                 include_over_limit: When true, includes accounts from over-limit profiles.
@@ -886,6 +887,7 @@ def register_generated_tools(mcp, _get_client):
             "openaiads",
             "redditads",
             "whopads",
+            "hubspot",
         ]
         | None = None,
         status: Literal["healthy", "warning", "error"] | None = None,
@@ -2031,6 +2033,60 @@ def register_generated_tools(mcp, _get_client):
         try:
             response = client.accounts.get_linked_in_mentions(
                 account_id=account_id, url=url, display_name=display_name
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get HubSpot account settings",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def accounts_get_hub_spot_settings(account_id: str) -> str:
+        """Get HubSpot account settings
+
+        Read a connected HubSpot portal and what Zernio syncs to it.
+
+        Args:
+            account_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.accounts.get_hub_spot_settings(account_id=account_id)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Update HubSpot account settings",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def accounts_update_hub_spot_settings(
+        account_id: str,
+        sync_contacts: bool | None = None,
+        log_messages: bool | None = None,
+    ) -> str:
+        """Update HubSpot account settings
+
+        Turn contact sync or message logging on or off for a connected HubSpot portal. Send at least one field; omitted fields keep their value. Settings survive reconnecting the same portal.
+
+        Args:
+            account_id: (required)
+            sync_contacts: Create or update a HubSpot contact for each inbox contact.
+            log_messages: Log inbound and outbound inbox messages on the contact's HubSpot timeline."""
+        client = _get_client()
+        try:
+            response = client.accounts.update_hub_spot_settings(
+                account_id=account_id,
+                sync_contacts=sync_contacts,
+                log_messages=log_messages,
             )
             return _format_response(response)
         except Exception as e:
@@ -20217,6 +20273,45 @@ def register_generated_tools(mcp, _get_client):
         try:
             response = client.connect.connect_shopify_with_token(
                 profile_id=profile_id, shop=shop, access_token=access_token
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get HubSpot OAuth connect URL",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def connect_get_hub_spot_connect_url(
+        profile_id: str, redirect_url: str | None = None
+    ) -> str:
+        """Get HubSpot OAuth connect URL
+
+        Initiates OAuth for a HubSpot portal. HubSpot is a connect-only CRM
+        platform: the connected account does not post, read analytics or run
+        ads. One HubSpot portal can be connected per profile; connecting a
+        different portal to a profile that already has one redirects with
+        `error=hubspot_profile_has_portal`.
+        Redirect the user to `authUrl`; after authorization, HubSpot returns
+        the browser to Zernio's internal callback and Zernio redirects to
+        `redirect_url` (or the dashboard when omitted). On success the redirect
+        carries `connected=hubspot`, `profileId`, `accountId` and `username`
+        (the portal domain); on failure it carries `error`, `platform=hubspot`
+        and `error_message`. Reconnecting the same portal and profile updates
+        the stored connection in place and keeps its settings.
+        Requested scopes: `crm.objects.contacts.read`, `crm.objects.contacts.write`.
+
+        Args:
+            profile_id: Your Zernio profile ID (get from /v1/profiles). (required)
+            redirect_url: Custom redirect after connection. Must be an absolute http(s) URL or custom app scheme such as `myapp://callback`; relative and unsafe URLs return 400."""
+        client = _get_client()
+        try:
+            response = client.connect.get_hub_spot_connect_url(
+                profile_id=profile_id, redirect_url=redirect_url
             )
             return _format_response(response)
         except Exception as e:

@@ -614,6 +614,26 @@ class AccountsResource:
             f"/v1/accounts/{account_id}/linkedin-mentions", params=params
         )
 
+    def get_hub_spot_settings(self, account_id: str) -> dict[str, Any]:
+        """Get HubSpot account settings"""
+        return self._client._get(f"/v1/accounts/{account_id}/hubspot-settings")
+
+    def update_hub_spot_settings(
+        self,
+        account_id: str,
+        *,
+        sync_contacts: bool | None = None,
+        log_messages: bool | None = None,
+    ) -> dict[str, Any]:
+        """Update HubSpot account settings"""
+        payload = self._build_payload(
+            sync_contacts=sync_contacts,
+            log_messages=log_messages,
+        )
+        return self._client._patch(
+            f"/v1/accounts/{account_id}/hubspot-settings", data=payload
+        )
+
     def get_slack_settings(self, account_id: str) -> dict[str, Any]:
         """Get Slack account settings"""
         return self._client._get(f"/v1/accounts/{account_id}/slack-settings")
@@ -1192,6 +1212,26 @@ class AccountsResource:
         )
         return await self._client._aget(
             f"/v1/accounts/{account_id}/linkedin-mentions", params=params
+        )
+
+    async def aget_hub_spot_settings(self, account_id: str) -> dict[str, Any]:
+        """Get HubSpot account settings (async)"""
+        return await self._client._aget(f"/v1/accounts/{account_id}/hubspot-settings")
+
+    async def aupdate_hub_spot_settings(
+        self,
+        account_id: str,
+        *,
+        sync_contacts: bool | None = None,
+        log_messages: bool | None = None,
+    ) -> dict[str, Any]:
+        """Update HubSpot account settings (async)"""
+        payload = self._build_payload(
+            sync_contacts=sync_contacts,
+            log_messages=log_messages,
+        )
+        return await self._client._apatch(
+            f"/v1/accounts/{account_id}/hubspot-settings", data=payload
         )
 
     async def aget_slack_settings(self, account_id: str) -> dict[str, Any]:

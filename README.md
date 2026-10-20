@@ -206,12 +206,14 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `accounts.get_follower_stats()` | Get follower stats |
 | `accounts.get_google_business_review()` | Get a review |
 | `accounts.get_google_business_reviews()` | Get reviews |
+| `accounts.get_hub_spot_settings()` | Get HubSpot account settings |
 | `accounts.get_instagram_follow_status()` | Check whether an Instagram user follows the account |
 | `accounts.get_linked_in_mentions()` | Resolve LinkedIn mention |
 | `accounts.get_slack_settings()` | Get Slack account settings |
 | `accounts.get_tik_tok_creator_info()` | Get TikTok creator info |
 | `accounts.update_account()` | Update account |
 | `accounts.update_bluesky_settings()` | Update Bluesky account settings |
+| `accounts.update_hub_spot_settings()` | Update HubSpot account settings |
 | `accounts.update_slack_settings()` | Update Slack account settings |
 | `accounts.delete_account()` | Disconnect account |
 | `accounts.delete_google_business_review_reply()` | Delete a review reply |
@@ -353,6 +355,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `connect.get_connect_url()` | Get OAuth connect URL |
 | `connect.get_facebook_pages()` | List Facebook pages |
 | `connect.get_gmb_locations()` | List Google Business Profile locations |
+| `connect.get_hub_spot_connect_url()` | Get HubSpot OAuth connect URL |
 | `connect.get_linked_in_organizations()` | List LinkedIn orgs |
 | `connect.get_page_webhook_subscription()` | Read a Facebook Page's webhook subscription |
 | `connect.get_pending_o_auth_data()` | Get pending OAuth data |

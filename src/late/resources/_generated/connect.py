@@ -191,6 +191,16 @@ class ConnectResource:
         )
         return self._client._post("/v1/connect/shopify/token", data=payload)
 
+    def get_hub_spot_connect_url(
+        self, profile_id: str, *, redirect_url: str | None = None
+    ) -> dict[str, Any]:
+        """Get HubSpot OAuth connect URL"""
+        params = self._build_params(
+            profile_id=profile_id,
+            redirect_url=redirect_url,
+        )
+        return self._client._get("/v1/connect/hubspot", params=params)
+
     def get_word_press_auth_url(
         self, profile_id: str, *, redirect_url: str | None = None
     ) -> dict[str, Any]:
@@ -1083,6 +1093,16 @@ class ConnectResource:
             access_token=access_token,
         )
         return await self._client._apost("/v1/connect/shopify/token", data=payload)
+
+    async def aget_hub_spot_connect_url(
+        self, profile_id: str, *, redirect_url: str | None = None
+    ) -> dict[str, Any]:
+        """Get HubSpot OAuth connect URL (async)"""
+        params = self._build_params(
+            profile_id=profile_id,
+            redirect_url=redirect_url,
+        )
+        return await self._client._aget("/v1/connect/hubspot", params=params)
 
     async def aget_word_press_auth_url(
         self, profile_id: str, *, redirect_url: str | None = None
