@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.299.0"
+  version: "1.299.1"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -74851,8 +74851,9 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           description: >-
-            The store has not granted orders.read (code insufficient_permissions). GET /v1/commerce/store returns
-            grantPermissionsUrl for the store owner to approve it.
+            The store has not granted orders.read, or the platform has not yet approved Zernio's access to order and
+            customer data (code insufficient_permissions; the message says which). GET /v1/commerce/store returns
+            grantPermissionsUrl for the store owner to approve orders.read.
         '404':
           description: Account not found (code account_not_found).
         '429':
@@ -74899,8 +74900,9 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           description: >-
-            The store has not granted orders.read (code insufficient_permissions). GET /v1/commerce/store returns
-            grantPermissionsUrl for the store owner to approve it.
+            The store has not granted orders.read, or the platform has not yet approved Zernio's access to order and
+            customer data (code insufficient_permissions; the message says which). GET /v1/commerce/store returns
+            grantPermissionsUrl for the store owner to approve orders.read.
         '404':
           description: Account not found (code account_not_found) or order not found (code resource_not_found).
         '429':
