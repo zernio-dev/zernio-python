@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.309.0"
+  version: "1.309.1"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -8060,7 +8060,7 @@ components:
         status:
           type: string
           example: pending
-          description: "Platform-specific status: pending, processing, uploading, published, failed, cancelled (removed from the platform via DELETE /v1/posts/{postId}/unpublish)"
+          description: "Platform-specific status: pending, processing, uploading, published, failed, cancelled (removed from the platform via POST /v1/posts/{postId}/unpublish)"
         platformPostId:
           type: string
           description: The native post ID on the platform (populated after successful publish)
@@ -8167,7 +8167,7 @@ components:
         status:
           type: string
           enum: [draft, scheduled, publishing, published, partial, failed, cancelled]
-          description: '`cancelled` is set by DELETE /v1/posts/{postId}/unpublish once every platform entry has been removed from its platform (a post with published entries left becomes `partial`); cancelled posts can be edited and rescheduled like drafts.'
+          description: '`cancelled` is set by POST /v1/posts/{postId}/unpublish once every platform entry has been removed from its platform (a post with published entries left becomes `partial`); cancelled posts can be edited and rescheduled like drafts.'
         tags:
           type: array
           description: "YouTube constraints: each tag max 100 chars, combined max 500 chars, duplicates removed."
@@ -33651,7 +33651,7 @@ paths:
         Returns a subreddit's posting rules plus Reddit's site-wide rules, so you can check
         them before submitting and avoid a removal.
 
-        Use this alongside `POST /v1/tools/validate/subreddit`, which only confirms that a
+        Use this alongside `GET /v1/tools/validate/subreddit`, which only confirms that a
         subreddit exists and reports its basic posting settings.
       parameters:
         - name: accountId
@@ -44929,7 +44929,7 @@ paths:
                 references: { $ref: '#/components/schemas/BrandedCallingReferences' }
                 reviewAnswers:
                   type: object
-                  description: 'One entry per point id of the open reviewRequest. A text point takes text; a link point takes url; file and link_or_file points take url set to the URL of a file you uploaded first (POST /v1/media/upload). A point id that is not on the open request is a 422.'
+                  description: 'One entry per point id of the open reviewRequest. A text point takes text; a link point takes url; file and link_or_file points take url set to the URL of a file you uploaded first (POST /v1/media/presign). A point id that is not on the open request is a 422.'
                   additionalProperties:
                     type: object
                     properties:
@@ -50842,7 +50842,7 @@ paths:
         List active WhatsApp group chats for a business phone number.
         These are actual WhatsApp group conversations on the platform.
 
-        Not available on [Coexistence](/platforms/whatsapp/connection#whatsapp-business-app-coexistence) numbers. Requires a Cloud API-only number.
+        Not available on [Coexistence](/platforms/whatsapp/connect#whatsapp-business-app-coexistence) numbers. Requires a Cloud API-only number.
       security:
         - bearerAuth: []
       parameters:
@@ -50883,7 +50883,7 @@ paths:
       description: |
         Create a new WhatsApp group chat. Returns the group ID and optionally an invite link.
 
-        Not available on [Coexistence](/platforms/whatsapp/connection#whatsapp-business-app-coexistence) numbers. Requires a Cloud API-only number.
+        Not available on [Coexistence](/platforms/whatsapp/connect#whatsapp-business-app-coexistence) numbers. Requires a Cloud API-only number.
       security:
         - bearerAuth: []
       requestBody:
@@ -50928,7 +50928,7 @@ paths:
         Retrieve metadata about a WhatsApp group including subject, description,
         participants, and settings.
 
-        Not available on [Coexistence](/platforms/whatsapp/connection#whatsapp-business-app-coexistence) numbers. Requires a Cloud API-only number.
+        Not available on [Coexistence](/platforms/whatsapp/connect#whatsapp-business-app-coexistence) numbers. Requires a Cloud API-only number.
       security:
         - bearerAuth: []
       parameters:
@@ -50971,7 +50971,7 @@ paths:
       description: |
         Update the subject, description, or join approval mode of a WhatsApp group.
 
-        Not available on [Coexistence](/platforms/whatsapp/connection#whatsapp-business-app-coexistence) numbers. Requires a Cloud API-only number.
+        Not available on [Coexistence](/platforms/whatsapp/connect#whatsapp-business-app-coexistence) numbers. Requires a Cloud API-only number.
       security:
         - bearerAuth: []
       parameters:
@@ -51008,7 +51008,7 @@ paths:
       description: |
         Delete a WhatsApp group and remove all participants.
 
-        Not available on [Coexistence](/platforms/whatsapp/connection#whatsapp-business-app-coexistence) numbers. Requires a Cloud API-only number.
+        Not available on [Coexistence](/platforms/whatsapp/connect#whatsapp-business-app-coexistence) numbers. Requires a Cloud API-only number.
       security:
         - bearerAuth: []
       parameters:
@@ -51037,7 +51037,7 @@ paths:
       description: |
         Add participants to a WhatsApp group. Maximum 8 participants per request. A group holds at most 8 participants in total (a Meta limit), so later requests cannot grow a group past 8. Meta documents groups as invite-only, so people normally join through the group's invite link.
 
-        Not available on [Coexistence](/platforms/whatsapp/connection#whatsapp-business-app-coexistence) numbers. Requires a Cloud API-only number.
+        Not available on [Coexistence](/platforms/whatsapp/connect#whatsapp-business-app-coexistence) numbers. Requires a Cloud API-only number.
       security:
         - bearerAuth: []
       parameters:
@@ -51076,7 +51076,7 @@ paths:
       description: |
         Remove participants from a WhatsApp group.
 
-        Not available on [Coexistence](/platforms/whatsapp/connection#whatsapp-business-app-coexistence) numbers. Requires a Cloud API-only number.
+        Not available on [Coexistence](/platforms/whatsapp/connect#whatsapp-business-app-coexistence) numbers. Requires a Cloud API-only number.
       security:
         - bearerAuth: []
       parameters:
@@ -51116,7 +51116,7 @@ paths:
       description: |
         Create a new invite link for a WhatsApp group. The previous link is revoked.
 
-        Not available on [Coexistence](/platforms/whatsapp/connection#whatsapp-business-app-coexistence) numbers. Requires a Cloud API-only number.
+        Not available on [Coexistence](/platforms/whatsapp/connect#whatsapp-business-app-coexistence) numbers. Requires a Cloud API-only number.
       security:
         - bearerAuth: []
       parameters:
@@ -51144,7 +51144,7 @@ paths:
       description: |
         List pending join requests for a WhatsApp group (only for groups with approval_required mode).
 
-        Not available on [Coexistence](/platforms/whatsapp/connection#whatsapp-business-app-coexistence) numbers. Requires a Cloud API-only number.
+        Not available on [Coexistence](/platforms/whatsapp/connect#whatsapp-business-app-coexistence) numbers. Requires a Cloud API-only number.
       security:
         - bearerAuth: []
       parameters:
@@ -51176,7 +51176,7 @@ paths:
       description: |
         Approve pending join requests for a WhatsApp group.
 
-        Not available on [Coexistence](/platforms/whatsapp/connection#whatsapp-business-app-coexistence) numbers. Requires a Cloud API-only number.
+        Not available on [Coexistence](/platforms/whatsapp/connect#whatsapp-business-app-coexistence) numbers. Requires a Cloud API-only number.
       security:
         - bearerAuth: []
       parameters:
@@ -51214,7 +51214,7 @@ paths:
       description: |
         Reject pending join requests for a WhatsApp group.
 
-        Not available on [Coexistence](/platforms/whatsapp/connection#whatsapp-business-app-coexistence) numbers. Requires a Cloud API-only number.
+        Not available on [Coexistence](/platforms/whatsapp/connect#whatsapp-business-app-coexistence) numbers. Requires a Cloud API-only number.
       security:
         - bearerAuth: []
       parameters:
@@ -57161,8 +57161,8 @@ paths:
         incompatible combinations (e.g. a billingEvent the optimization goal
         doesn't allow) surface as 400s from Meta.
 
-        When updating `budget` on an ABO campaign: if the parent campaign is
-        CBO, the response is 409 with code BUDGET_LEVEL_MISMATCH. Route to
+        When updating `budget` on an ad set whose campaign holds the budget
+        (CBO), the response is 409 with code `invalid_field_value`. Send it to
         PUT /v1/ads/campaigns/{campaignId} instead.
 
         Reddit Ads: `budget` changes the ad group's amount; an ad group that spends its

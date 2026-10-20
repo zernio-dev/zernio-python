@@ -13878,7 +13878,7 @@ def register_generated_tools(mcp, _get_client):
             logo_url: HTTPS URL of a PNG, JPEG, WebP or SVG logo. Zernio converts it to the 256x256 BMP the carriers require and hosts it.
             authorizer: Object with keys: name (string, required) - A real person at the business who authorizes the registration.; email (string, required) - The carrier emails a 6-digit code here once the identity passes review.
             references: Object with keys: business (list of objects with keys fullName, jobTitle, organization, relationshipToRegistrant, phoneNumber, email, timezone, required); financial (object with keys fullName, jobTitle, organization, relationshipToRegistrant, phoneNumber, email, timezone, required)
-            review_answers: One entry per point id of the open reviewRequest. A text point takes text; a link point takes url; file and link_or_file points take url set to the URL of a file you uploaded first (POST /v1/media/upload). A point id that is not on the open request is a 422.
+            review_answers: One entry per point id of the open reviewRequest. A text point takes text; a link point takes url; file and link_or_file points take url set to the URL of a file you uploaded first (POST /v1/media/presign). A point id that is not on the open request is a 422.
             review_note"""
         client = _get_client()
         try:
@@ -21955,7 +21955,7 @@ def register_generated_tools(mcp, _get_client):
         Returns a subreddit's posting rules plus Reddit's site-wide rules, so you can check
         them before submitting and avoid a removal.
 
-        Use this alongside `POST /v1/tools/validate/subreddit`, which only confirms that a
+        Use this alongside `GET /v1/tools/validate/subreddit`, which only confirms that a
         subreddit exists and reports its basic posting settings.
 
         Args:
@@ -37879,7 +37879,7 @@ def register_generated_tools(mcp, _get_client):
         List active WhatsApp group chats for a business phone number.
         These are actual WhatsApp group conversations on the platform.
 
-        Not available on [Coexistence](/platforms/whatsapp/connection#whatsapp-business-app-coexistence) numbers. Requires a Cloud API-only number.
+        Not available on [Coexistence](/platforms/whatsapp/connect#whatsapp-business-app-coexistence) numbers. Requires a Cloud API-only number.
 
         Args:
             account_id: WhatsApp account ID (required)
@@ -37912,7 +37912,7 @@ def register_generated_tools(mcp, _get_client):
 
         Create a new WhatsApp group chat. Returns the group ID and optionally an invite link.
 
-        Not available on [Coexistence](/platforms/whatsapp/connection#whatsapp-business-app-coexistence) numbers. Requires a Cloud API-only number.
+        Not available on [Coexistence](/platforms/whatsapp/connect#whatsapp-business-app-coexistence) numbers. Requires a Cloud API-only number.
 
         Args:
             account_id: WhatsApp account ID (required)
@@ -37945,7 +37945,7 @@ def register_generated_tools(mcp, _get_client):
         Retrieve metadata about a WhatsApp group including subject, description,
         participants, and settings.
 
-        Not available on [Coexistence](/platforms/whatsapp/connection#whatsapp-business-app-coexistence) numbers. Requires a Cloud API-only number.
+        Not available on [Coexistence](/platforms/whatsapp/connect#whatsapp-business-app-coexistence) numbers. Requires a Cloud API-only number.
 
         Args:
             group_id: Group ID (required)
@@ -37978,7 +37978,7 @@ def register_generated_tools(mcp, _get_client):
 
         Update the subject, description, or join approval mode of a WhatsApp group.
 
-        Not available on [Coexistence](/platforms/whatsapp/connection#whatsapp-business-app-coexistence) numbers. Requires a Cloud API-only number.
+        Not available on [Coexistence](/platforms/whatsapp/connect#whatsapp-business-app-coexistence) numbers. Requires a Cloud API-only number.
 
         Args:
             group_id: Group ID (required)
@@ -38012,7 +38012,7 @@ def register_generated_tools(mcp, _get_client):
 
         Delete a WhatsApp group and remove all participants.
 
-        Not available on [Coexistence](/platforms/whatsapp/connection#whatsapp-business-app-coexistence) numbers. Requires a Cloud API-only number.
+        Not available on [Coexistence](/platforms/whatsapp/connect#whatsapp-business-app-coexistence) numbers. Requires a Cloud API-only number.
 
         Args:
             group_id: Group ID (required)
@@ -38041,7 +38041,7 @@ def register_generated_tools(mcp, _get_client):
 
         Add participants to a WhatsApp group. Maximum 8 participants per request. A group holds at most 8 participants in total (a Meta limit), so later requests cannot grow a group past 8. Meta documents groups as invite-only, so people normally join through the group's invite link.
 
-        Not available on [Coexistence](/platforms/whatsapp/connection#whatsapp-business-app-coexistence) numbers. Requires a Cloud API-only number.
+        Not available on [Coexistence](/platforms/whatsapp/connect#whatsapp-business-app-coexistence) numbers. Requires a Cloud API-only number.
 
         Args:
             group_id: Group ID (required)
@@ -38071,7 +38071,7 @@ def register_generated_tools(mcp, _get_client):
 
         Remove participants from a WhatsApp group.
 
-        Not available on [Coexistence](/platforms/whatsapp/connection#whatsapp-business-app-coexistence) numbers. Requires a Cloud API-only number.
+        Not available on [Coexistence](/platforms/whatsapp/connect#whatsapp-business-app-coexistence) numbers. Requires a Cloud API-only number.
 
         Args:
             group_id: Group ID (required)
@@ -38101,7 +38101,7 @@ def register_generated_tools(mcp, _get_client):
 
         Create a new invite link for a WhatsApp group. The previous link is revoked.
 
-        Not available on [Coexistence](/platforms/whatsapp/connection#whatsapp-business-app-coexistence) numbers. Requires a Cloud API-only number.
+        Not available on [Coexistence](/platforms/whatsapp/connect#whatsapp-business-app-coexistence) numbers. Requires a Cloud API-only number.
 
         Args:
             group_id: Group ID (required)
@@ -38130,7 +38130,7 @@ def register_generated_tools(mcp, _get_client):
 
         List pending join requests for a WhatsApp group (only for groups with approval_required mode).
 
-        Not available on [Coexistence](/platforms/whatsapp/connection#whatsapp-business-app-coexistence) numbers. Requires a Cloud API-only number.
+        Not available on [Coexistence](/platforms/whatsapp/connect#whatsapp-business-app-coexistence) numbers. Requires a Cloud API-only number.
 
         Args:
             group_id: Group ID (required)
@@ -38159,7 +38159,7 @@ def register_generated_tools(mcp, _get_client):
 
         Approve pending join requests for a WhatsApp group.
 
-        Not available on [Coexistence](/platforms/whatsapp/connection#whatsapp-business-app-coexistence) numbers. Requires a Cloud API-only number.
+        Not available on [Coexistence](/platforms/whatsapp/connect#whatsapp-business-app-coexistence) numbers. Requires a Cloud API-only number.
 
         Args:
             group_id: Group ID (required)
@@ -38189,7 +38189,7 @@ def register_generated_tools(mcp, _get_client):
 
         Reject pending join requests for a WhatsApp group.
 
-        Not available on [Coexistence](/platforms/whatsapp/connection#whatsapp-business-app-coexistence) numbers. Requires a Cloud API-only number.
+        Not available on [Coexistence](/platforms/whatsapp/connect#whatsapp-business-app-coexistence) numbers. Requires a Cloud API-only number.
 
         Args:
             group_id: Group ID (required)
