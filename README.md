@@ -454,7 +454,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `ad_accounts.list_page_users()` | Page users of a business |
 | `ad_accounts.list_tik_tok_ad_pixels()` | List TikTok ad pixels |
 | `ad_accounts.list_value_rule_sets()` | List value rule sets |
-| `ad_accounts.create_ad_account()` | Create Meta ad account |
+| `ad_accounts.create_ad_account()` | Create ad account |
 | `ad_accounts.create_ad_label()` | Create a Google Ads label |
 | `ad_accounts.create_ad_negative_keyword_list()` | Create a negative keyword list |
 | `ad_accounts.create_custom_conversion()` | Create custom conversion |

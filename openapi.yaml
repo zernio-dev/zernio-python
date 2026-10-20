@@ -3084,6 +3084,62 @@ components:
         name: { type: string }
         email: { type: string }
         role: { type: string, description: "Meta role in the portfolio, e.g. ADMIN or EMPLOYEE." }
+    CreateMetaAdAccountRequest:
+      type: object
+      additionalProperties: false
+      required: [accountId, businessId, name, currency, timezoneId]
+      properties:
+        platform: { type: string, enum: [meta], description: "Optional. Omit it or send meta for a Meta ad account." }
+        accountId: { type: string, pattern: '^[a-fA-F0-9]{24}$', description: "Zernio metaads SocialAccount ID." }
+        businessId: { type: string, pattern: '^[1-9][0-9]*$', description: "Business portfolio that will own the account." }
+        name: { type: string, minLength: 1, maxLength: 255, description: "Ad account name. Whitespace is trimmed." }
+        currency: { type: string, pattern: '^[A-Z]{3}$', description: "Uppercase ISO 4217 currency supported by Meta." }
+        timezoneId: { type: integer, minimum: 0, maximum: 4294967295, description: "Numeric Meta timezone ID from the linked timezone list. For example 1 is America/Los_Angeles." }
+        endAdvertiser: { type: string, pattern: '^(NONE|[1-9][0-9]*)$', default: NONE, description: "End advertiser business or page ID. NONE uses the owning business." }
+        mediaAgency: { type: string, pattern: '^(NONE|[1-9][0-9]*)$', default: NONE, description: "Media agency business or page ID. NONE for self-serve customers." }
+        partner: { type: string, pattern: '^(NONE|[1-9][0-9]*)$', default: NONE, description: "Partner business or page ID. NONE for self-serve customers." }
+        invoice: { type: boolean, description: "Request Meta invoicing. Eligibility is determined by Meta." }
+        invoiceGroupId: { type: string, pattern: '^[1-9][0-9]*$', description: "Existing Meta invoice group ID." }
+        invoicingEmails: { type: array, minItems: 1, maxItems: 100, items: { type: string, format: email }, description: "Addresses for Meta invoices." }
+        io: { type: boolean, description: "Meta insertion-order invoicing option." }
+        poNumber: { type: string, minLength: 1, maxLength: 255, description: "Purchase order number." }
+        fundingId: { type: string, pattern: '^[1-9][0-9]*$', description: "Existing Meta funding reference. Does not add a payment method." }
+        adAccountCreatedFromBmFlag: { type: boolean, description: "Meta Business Manager creation flag." }
+    CreateGoogleAdAccountRequest:
+      type: object
+      additionalProperties: false
+      required: [platform, accountId, managerCustomerId, name, currency, timeZone]
+      properties:
+        platform: { type: string, enum: [google] }
+        accountId: { type: string, pattern: '^[a-fA-F0-9]{24}$', description: "Zernio googleads SocialAccount ID whose Google user reaches the manager." }
+        managerCustomerId: { type: string, pattern: '^[0-9]+$', description: "Manager (MCC) customer id without dashes. The new account is created under it. List reachable managers with GET /v1/ads/accounts/hierarchy." }
+        name: { type: string, minLength: 1, maxLength: 255, description: "Account name. Whitespace is trimmed." }
+        currency: { type: string, pattern: '^[A-Z]{3}$', description: "Uppercase ISO 4217 currency. Cannot be changed after creation." }
+        timeZone: { type: string, description: "IANA time zone name, for example Europe/Madrid. Cannot be changed after creation." }
+        validateOnly: { type: boolean, default: false, description: "Ask Google to validate the request without creating the account." }
+    CreatedMetaAdAccount:
+      type: object
+      required: [adAccountId, businessId, connectionUpdated, paymentMethodRequired, adsManagerUrl, nextSteps, warnings]
+      properties:
+        adAccountId: { type: string, pattern: '^act_[0-9]+$', description: "New Meta ad account ID for subsequent ads calls." }
+        businessId: { type: string, description: "Owning business portfolio ID." }
+        connectionUpdated: { type: boolean, description: "Whether the connection scope and discovery schedule were updated." }
+        paymentMethodRequired: { type: boolean, description: "Always true as a delivery prerequisite. This is not a live funding-source check. Confirm payment or invoicing in Ads Manager." }
+        adsManagerUrl: { type: string, format: uri, description: "Open the created account in Ads Manager." }
+        nextSteps: { type: string, description: "Payment setup instructions for the user." }
+        warnings: { type: array, items: { type: string }, description: "Recovery instructions if the account could not be attached to the connection." }
+    CreatedGoogleAdAccount:
+      type: object
+      required: [platform, adAccountId, managerCustomerId, connectionUpdated, warnings, paymentMethodRequired, nextSteps, validateOnly]
+      properties:
+        platform: { type: string, enum: [google] }
+        adAccountId: { type: string, pattern: '^[0-9]+$', description: "New Google Ads customer id for subsequent ads calls." }
+        managerCustomerId: { type: string, description: "Manager the account was created under." }
+        connectionUpdated: { type: boolean, description: "Whether the customer was added to the connection and discovery was scheduled. When false the account exists: reconnect Google Ads instead of creating it again." }
+        warnings: { type: array, items: { type: string }, description: "Recovery instructions if the account could not be attached to the connection." }
+        paymentMethodRequired: { type: boolean, description: "Always true. The account has no billing until it is set up in Google Ads." }
+        nextSteps: { type: string, description: "Billing setup instructions for the user." }
+        validateOnly: { type: boolean, description: "Always false on a 201." }
     ErrorResponse:
       type: object
       description: |
@@ -64260,11 +64316,13 @@ paths:
     post:
       x-resource-group: "ads"
       operationId: createAdAccount
-      summary: Create Meta ad account
+      summary: Create ad account
       tags: ["Ad Accounts"]
-      x-platforms: ["meta"]
+      x-platforms: ["meta", "google"]
       description: |
-        Creates a new Meta ad account in the user's own business portfolio (a payment method must then be added in Ads Manager).
+        Creates a new Meta ad account in the user's own business portfolio, or a Google Ads client account under a manager (MCC) account the connection reaches. Billing must then be set up on the platform.
+
+        **Meta** (omit `platform` or send `meta`).
 
         Creates a durable Meta ad account in the end user's own business portfolio using
         their connected Meta Ads token. Requires an active metaads accountId, Ads access,
@@ -64289,11 +64347,30 @@ paths:
         immediately. Use the returned adAccountId with the existing ads endpoints.
 
         This operation is not idempotent and Zernio never automatically retries it.
-        Unknown body fields are rejected. No validateOnly or dry-run option is supported.
+        Unknown body fields are rejected. The Meta flow has no validateOnly or dry-run option.
         After a timeout or a 502 with details.creationStatus=unknown, check the business
         in Ads Manager before attempting another creation. A 201 with connectionUpdated=false
         means the account exists but needs reconnecting with adAccountIds containing the returned ID and the previous
         scoped IDs via GET /v1/connect/facebook/ads. Do not repeat the create call.
+
+        **Google** (send `platform: google`).
+
+        Google only creates accounts through a manager account, so the new client account
+        is created under `managerCustomerId`, which must be a manager the Google user behind
+        the googleads `accountId` reaches (directly or as a sub-manager). List them with
+        GET /v1/ads/accounts/hierarchy. Whose manager it is (the integrator's or the end
+        user's) is the caller's choice: pass the connection that reaches it.
+
+        `currency` (ISO 4217) and `timeZone` (IANA name, for example Europe/Madrid) cannot be
+        changed after creation. The account starts without billing: set it up in Google Ads
+        before ads can serve. Google caps how many accounts a manager can create and how
+        many active client accounts it can hold.
+
+        The new customer is added to the connection (and to a scoped connection's allowlist),
+        discovery is nudged immediately, and the returned adAccountId works with every other
+        ads endpoint. `validateOnly: true` asks Google to validate the request without creating
+        anything and returns 200. A real create is not idempotent: after a 502 with
+        details.creationStatus=unknown, check the manager in Google Ads before trying again.
       security:
         - bearerAuth: []
       requestBody:
@@ -64301,58 +64378,70 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              additionalProperties: false
-              required: [accountId, businessId, name, currency, timezoneId]
-              properties:
-                accountId: { type: string, pattern: '^[a-fA-F0-9]{24}$', description: "Zernio metaads SocialAccount ID." }
-                businessId: { type: string, pattern: '^[1-9][0-9]*$', description: "Business portfolio that will own the account." }
-                name: { type: string, minLength: 1, maxLength: 255, description: "Ad account name. Whitespace is trimmed." }
-                currency: { type: string, pattern: '^[A-Z]{3}$', description: "Uppercase ISO 4217 currency supported by Meta." }
-                timezoneId: { type: integer, minimum: 0, maximum: 4294967295, description: "Numeric Meta timezone ID from the linked timezone list. For example 1 is America/Los_Angeles." }
-                endAdvertiser: { type: string, pattern: '^(NONE|[1-9][0-9]*)$', default: NONE, description: "End advertiser business or page ID. NONE uses the owning business." }
-                mediaAgency: { type: string, pattern: '^(NONE|[1-9][0-9]*)$', default: NONE, description: "Media agency business or page ID. NONE for self-serve customers." }
-                partner: { type: string, pattern: '^(NONE|[1-9][0-9]*)$', default: NONE, description: "Partner business or page ID. NONE for self-serve customers." }
-                invoice: { type: boolean, description: "Request Meta invoicing. Eligibility is determined by Meta." }
-                invoiceGroupId: { type: string, pattern: '^[1-9][0-9]*$', description: "Existing Meta invoice group ID." }
-                invoicingEmails: { type: array, minItems: 1, maxItems: 100, items: { type: string, format: email }, description: "Addresses for Meta invoices." }
-                io: { type: boolean, description: "Meta insertion-order invoicing option." }
-                poNumber: { type: string, minLength: 1, maxLength: 255, description: "Purchase order number." }
-                fundingId: { type: string, pattern: '^[1-9][0-9]*$', description: "Existing Meta funding reference. Does not add a payment method." }
-                adAccountCreatedFromBmFlag: { type: boolean, description: "Meta Business Manager creation flag." }
-            example:
-              accountId: "69fc524892b3d8e85f893e73"
-              businessId: "123456789012345"
-              name: "Customer advertising"
-              currency: "EUR"
-              timezoneId: 1
+              oneOf:
+                - $ref: '#/components/schemas/CreateMetaAdAccountRequest'
+                - $ref: '#/components/schemas/CreateGoogleAdAccountRequest'
+            examples:
+              meta:
+                summary: Meta ad account in a business portfolio
+                value:
+                  accountId: "69fc524892b3d8e85f893e73"
+                  businessId: "123456789012345"
+                  name: "Customer advertising"
+                  currency: "EUR"
+                  timezoneId: 1
+              google:
+                summary: Google Ads client account under a manager
+                value:
+                  platform: "google"
+                  accountId: "69fc524892b3d8e85f893e73"
+                  managerCustomerId: "4234071052"
+                  name: "Customer advertising"
+                  currency: "EUR"
+                  timeZone: "Europe/Madrid"
       responses:
         '409': { $ref: '#/components/responses/AccountConnectionRequired' }
-        '201':
-          description: "Ad account created. Check connectionUpdated and payment instructions."
+        '200':
+          description: "Google validateOnly request accepted by Google. Nothing was created."
           content:
             application/json:
               schema:
                 type: object
-                required: [adAccountId, businessId, connectionUpdated, paymentMethodRequired, adsManagerUrl, nextSteps, warnings]
+                required: [platform, managerCustomerId, validateOnly]
                 properties:
-                  adAccountId: { type: string, pattern: '^act_[0-9]+$', description: "New Meta ad account ID for subsequent ads calls." }
-                  businessId: { type: string, description: "Owning business portfolio ID." }
-                  connectionUpdated: { type: boolean, description: "Whether the connection scope and discovery schedule were updated." }
-                  paymentMethodRequired: { type: boolean, description: "Always true as a delivery prerequisite. This is not a live funding-source check. Confirm payment or invoicing in Ads Manager." }
-                  adsManagerUrl: { type: string, format: uri, description: "Open the created account in Ads Manager." }
-                  nextSteps: { type: string, description: "Payment setup instructions for the user." }
-                  warnings: { type: array, items: { type: string }, description: "Recovery instructions if the account could not be attached to the connection." }
-              example:
-                adAccountId: "act_123456789012345"
-                businessId: "123456789012345"
-                connectionUpdated: true
-                paymentMethodRequired: true
-                adsManagerUrl: "https://adsmanager.facebook.com/adsmanager/manage/accounts?act=123456789012345"
-                nextSteps: "The user must configure payment in Meta Ads Manager before ads can deliver. Add a payment method there, or confirm an existing funding or invoicing arrangement. Zernio cannot add payment methods through the API."
-                warnings: []
+                  platform: { type: string, enum: [google] }
+                  managerCustomerId: { type: string }
+                  validateOnly: { type: boolean, description: "Always true on a 200." }
+        '201':
+          description: "Ad account created. Check connectionUpdated and the billing instructions."
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/CreatedMetaAdAccount'
+                  - $ref: '#/components/schemas/CreatedGoogleAdAccount'
+              examples:
+                meta:
+                  value:
+                    adAccountId: "act_123456789012345"
+                    businessId: "123456789012345"
+                    connectionUpdated: true
+                    paymentMethodRequired: true
+                    adsManagerUrl: "https://adsmanager.facebook.com/adsmanager/manage/accounts?act=123456789012345"
+                    nextSteps: "The user must configure payment in Meta Ads Manager before ads can deliver. Add a payment method there, or confirm an existing funding or invoicing arrangement. Zernio cannot add payment methods through the API."
+                    warnings: []
+                google:
+                  value:
+                    platform: "google"
+                    adAccountId: "5551234567"
+                    managerCustomerId: "4234071052"
+                    connectionUpdated: true
+                    warnings: []
+                    paymentMethodRequired: true
+                    nextSteps: "The account has no billing yet. Set up billing in Google Ads (Billing > Settings) before ads can serve, or add it to an existing monthly invoicing setup. Zernio cannot add payment methods through the API."
+                    validateOnly: false
         '400':
-          description: "Invalid input or Meta rejection. details.reason identifies creation_limit, business_verification_required, unsupported_currency, unsupported_timezone or business_unavailable when recognized."
+          description: "Invalid input, a managerCustomerId the connection does not reach, or a Meta or Google rejection. For Meta, details.reason identifies creation_limit, business_verification_required, unsupported_currency, unsupported_timezone or business_unavailable when recognized."
           content:
             application/json:
               schema: { $ref: '#/components/schemas/ErrorResponse' }
@@ -64365,14 +64454,23 @@ paths:
                 details: { reason: "creation_limit" }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403':
-          description: "Ads access denied or Meta permission missing. details.reason may be business_management_required, business_admin_required or business_access_required."
+          description: "Ads access denied, Meta permission missing (details.reason may be business_management_required, business_admin_required or business_access_required), or Google denied the connection's user permission on managerCustomerId."
           content:
             application/json:
               schema: { $ref: '#/components/schemas/ErrorResponse' }
         '404': { $ref: '#/components/responses/AccountUnavailable' }
-
+        '429':
+          description: "Google Ads rate limit or quota reached before the account was created. Retry later."
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+        '501':
+          description: "platform google was sent with an accountId that is not a googleads connection."
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
         '502':
-          description: "Creation outcome unknown. Check Ads Manager before repeating this non-idempotent request."
+          description: "Creation outcome unknown (details.creationStatus=unknown). Check Ads Manager or the Google Ads manager account before repeating this non-idempotent request. A Google validateOnly request answers 502 without creationStatus when Google did not respond; that is safe to retry."
           content:
             application/json:
               schema: { $ref: '#/components/schemas/ErrorResponse' }
