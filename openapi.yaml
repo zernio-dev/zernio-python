@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.301.0"
+  version: "1.301.1"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -44945,6 +44945,7 @@ paths:
                   awaitingOtp: { type: boolean, description: "True for sole-prop 10DLC: an OTP was texted to the brand's mobile; submit it via /verify-otp." }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'The caller is a team member limited to specific profiles; registrations cover the whole account.' }
         '422': { description: Carrier registry rejected a field; `param` names it when known. }
         '409': { description: 'The brand already exists at the carrier and failed identity verification (a rejected registration of yours with the same EIN or legal name); the fix is applied to that brand on reply, a new registration would file and bill a second one.' }
     get:
@@ -45006,6 +45007,7 @@ paths:
                             smsPerDay: { type: number }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'The caller is a team member limited to specific profiles; registrations cover the whole account.' }
 
   /v1/sms/registrations/preflight:
     post:
@@ -45091,6 +45093,7 @@ paths:
                   status: { type: string, enum: [deactivated] }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'The caller is a team member limited to specific profiles; registrations cover the whole account.' }
         '404': { description: Registration not found }
     get:
       x-resource-group: "telephony"
@@ -45136,6 +45139,7 @@ paths:
                       sample2: { type: string }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'The caller is a team member limited to specific profiles; registrations cover the whole account.' }
         '404': { description: Registration not found }
 
   /v1/sms/registrations/{id}/verify-otp:
@@ -45172,6 +45176,7 @@ paths:
                   verified: { type: boolean }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'The caller is a team member limited to specific profiles; registrations cover the whole account.' }
         '404': { description: Registration not found }
 
   /v1/sms/registrations/{id}/resend-otp:
@@ -45200,6 +45205,7 @@ paths:
                   sent: { type: boolean }
         '400': { description: 'Malformed `id`, or the registration is not awaiting a verification code.' }
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'The caller is a team member limited to specific profiles; registrations cover the whole account.' }
         '404': { description: Registration not found }
         '429': { description: A code was sent recently. Wait a minute before requesting another }
 
@@ -45248,6 +45254,7 @@ paths:
                   status: { type: string, enum: [pending] }
         '400': { description: 'Malformed `id`, or the registration has no campaign to appeal (fix the brand and re-verify instead).' }
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'The caller is a team member limited to specific profiles; registrations cover the whole account.' }
         '404': { description: Registration not found }
 
   /v1/sms/registrations/{id}/respond:
@@ -45312,6 +45319,7 @@ paths:
                   status: { type: string, enum: [requested, rejected], description: 'requested = back in our review; rejected = a registration the carriers rejected, where we asked for these answers to fix it (it stays rejected while we do).' }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'The caller is a team member limited to specific profiles; registrations cover the whole account.' }
         '404': { description: Registration not found }
         '409': { description: 'The registration is not waiting on changes, or `requestId` is no longer the open request (reload it).' }
 
