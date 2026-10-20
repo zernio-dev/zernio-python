@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.309.2"
+  version: "1.310.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -13960,8 +13960,23 @@ components:
           description: URL where the conversion originated (used by Meta).
         actionSource:
           type: string
-          enum: [web, app, offline, crm, phone_call, system_generated]
-          description: 'Where the conversion happened. Used by Meta. Google also requires an event source internally; omitting this field sends OTHER to Google. Send an explicit value for accurate origin reporting.'
+          enum: [web, app, offline, crm, phone_call, system_generated, business_messaging]
+          description: 'Where the conversion happened. Used by Meta. Google also requires an event source internally; omitting this field sends OTHER to Google. Send an explicit value for accurate origin reporting. `business_messaging` (Meta) marks an event from a WhatsApp, Messenger or Instagram Direct conversation and needs `messaging`.'
+        messaging:
+          type: object
+          description: |
+            Meta only, read when `actionSource` is `business_messaging` (Conversions API
+            for Business Messaging). `channel` is sent as the event's `messaging_channel`
+            (`instagram_direct` goes out as `instagram`). Each id lands in Meta's
+            `user_data` unhashed, and an id that does not belong to `channel` is ignored.
+          required: [channel]
+          properties:
+            channel: { type: string, enum: [whatsapp, messenger, instagram_direct] }
+            wabaId: { type: string, description: 'WhatsApp only. WhatsApp Business Account id, sent as `whatsapp_business_account_id`.' }
+            ctwaClid: { type: string, description: 'WhatsApp only. Click-to-WhatsApp click id from the first inbound message referral, sent as `ctwa_clid`.' }
+            pageId: { type: string, description: 'Messenger and Instagram Direct. Facebook Page id, sent as `page_id`.' }
+            pageScopedUserId: { type: string, description: 'Messenger only. The page-scoped user id (PSID) your Messenger webhook gives for the person, sent as `page_scoped_user_id` next to `page_id`.' }
+            instagramScopedUserId: { type: string, description: 'Instagram Direct only. The Instagram-scoped user id (IGSID) your Instagram messaging webhook gives for the person, sent as `ig_sid`.' }
         platformData:
           type: object
           additionalProperties: true
