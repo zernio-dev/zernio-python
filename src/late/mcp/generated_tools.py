@@ -21840,6 +21840,8 @@ def register_generated_tools(mcp, _get_client):
     def connect_get_reddit_subreddits(account_id: str) -> str:
         """List Reddit subreddits
 
+        Temporarily unavailable: Reddit has blocked third-party apps from its API, so this endpoint returns 503 `PLATFORM_DISABLED` until Reddit restores access. Reddit Ads is not affected.
+
         Returns the subreddits the connected Reddit account can post to. Use this to get a subreddit name when creating a Reddit post.
 
         Args:
@@ -21863,6 +21865,8 @@ def register_generated_tools(mcp, _get_client):
         account_id: str, default_subreddit: str
     ) -> str:
         """Set default subreddit
+
+        Temporarily unavailable: Reddit has blocked third-party apps from its API, so this endpoint returns 503 `PLATFORM_DISABLED` until Reddit restores access. Reddit Ads is not affected.
 
         Sets the default subreddit used when publishing posts for this Reddit account.
 
@@ -21888,6 +21892,8 @@ def register_generated_tools(mcp, _get_client):
     )
     def connect_get_subreddit_rules(account_id: str, subreddit: str) -> str:
         """Get subreddit rules
+
+        Temporarily unavailable: Reddit has blocked third-party apps from its API, so this endpoint returns 503 `PLATFORM_DISABLED` until Reddit restores access. Reddit Ads is not affected.
 
         Returns a subreddit's posting rules plus Reddit's site-wide rules, so you can check
         them before submitting and avoid a removal.
@@ -21919,6 +21925,8 @@ def register_generated_tools(mcp, _get_client):
         account_id: str, thing_id: str, direction: int
     ) -> str:
         """Vote on a Reddit post or comment
+
+           Temporarily unavailable: Reddit has blocked third-party apps from its API, so this endpoint returns 503 `PLATFORM_DISABLED` until Reddit restores access. Reddit Ads is not affected.
 
            Cast, change, or clear the connected account's vote on a Reddit post or comment.
 
@@ -21953,6 +21961,8 @@ def register_generated_tools(mcp, _get_client):
     def connect_get_reddit_flairs(account_id: str, subreddit: str) -> str:
         """List subreddit flairs
 
+        Temporarily unavailable: Reddit has blocked third-party apps from its API, so this endpoint returns 503 `PLATFORM_DISABLED` until Reddit restores access. Reddit Ads is not affected.
+
         Returns available post flairs for a subreddit. Some subreddits require a flair when posting.
 
         Args:
@@ -21983,6 +21993,8 @@ def register_generated_tools(mcp, _get_client):
         text: str | None = None,
     ) -> str:
         """Set Reddit post flair
+
+        Temporarily unavailable: Reddit has blocked third-party apps from its API, so this endpoint returns 503 `PLATFORM_DISABLED` until Reddit restores access. Reddit Ads is not affected.
 
         Applies a flair to a post the connected account already published. Use the GET on this
         path to list the available `flairTemplateId` values for the subreddit.
@@ -32113,6 +32125,8 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Search posts
 
+        Temporarily unavailable: Reddit has blocked third-party apps from its API, so this endpoint returns 503 `PLATFORM_DISABLED` until Reddit restores access. Reddit Ads is not affected.
+
         Search Reddit posts using a connected account. Optionally scope to a specific subreddit.
 
         Args:
@@ -32156,6 +32170,8 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Get subreddit feed
 
+        Temporarily unavailable: Reddit has blocked third-party apps from its API, so this endpoint returns 503 `PLATFORM_DISABLED` until Reddit restores access. Reddit Ads is not affected.
+
         Fetch posts from a subreddit feed. Supports sorting, time filtering, and cursor-based pagination.
 
         Args:
@@ -32195,6 +32211,8 @@ def register_generated_tools(mcp, _get_client):
         comment_id: str | None = None,
     ) -> str:
         """Get the comments of a Reddit post
+
+        Temporarily unavailable: Reddit has blocked third-party apps from its API, so this endpoint returns 503 `PLATFORM_DISABLED` until Reddit restores access. Reddit Ads is not affected.
 
         Reads the comments of any Reddit post the connected account can see, for example one found
         through `/v1/reddit/feed` or `/v1/reddit/search`, straight from Reddit on every call. The tree
@@ -35283,6 +35301,8 @@ def register_generated_tools(mcp, _get_client):
     )
     def validate_subreddit(name: str, account_id: str | None = None) -> str:
         """Check subreddit existence
+
+        Temporarily unavailable: Reddit has blocked third-party apps from its API, so this endpoint returns 503 `PLATFORM_DISABLED` until Reddit restores access. Reddit Ads is not affected.
 
         Check if a subreddit exists and return basic info (title, subscriber count, NSFW status, post types allowed).
 

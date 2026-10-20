@@ -27,18 +27,18 @@ info:
   x-logo:
     url: https://zernio.com/icon.png?v=3
   x-long-description: |
-    Zernio is the social media API that replaces 28 integrations. Schedule posts, retrieve analytics,
+    Zernio is the social media API that replaces 27 integrations. Schedule posts, retrieve analytics,
     manage DMs, comments, and reviews across X, Instagram, WhatsApp, TikTok, LinkedIn,
-    Facebook, YouTube, Threads, Reddit, Pinterest, Bluesky, Telegram, Google Business Profile, Snapchat,
+    Facebook, YouTube, Threads, Pinterest, Bluesky, Telegram, Google Business Profile, Snapchat,
     Discord, Slack, and iMessage, all from a single REST API. Run paid ads on Meta (Facebook + Instagram), Google,
     TikTok, LinkedIn, Pinterest, X, OpenAI, and Reddit from the same account.
 
     Connect Shopify, WordPress and Wix as blog accounts to list sites and manage
     articles, drafts, featured images, tags, authors, and native scheduling.
 
-    Key features: Unified posting to 17 platforms, ads management on 8 ad networks (via /v1/ads), aggregated analytics, unified inbox (DMs, comments, reviews), webhooks, OAuth connect, queue scheduling, and white-label support for agencies managing unlimited accounts.
+    Key features: Unified posting to 16 platforms, ads management on 8 ad networks (via /v1/ads), aggregated analytics, unified inbox (DMs, comments, reviews), webhooks, OAuth connect, queue scheduling, and white-label support for agencies managing unlimited accounts.
 
-    Supported posting platforms: X, Instagram, WhatsApp, Facebook, LinkedIn, TikTok, YouTube, Pinterest, Reddit, Bluesky, Threads, Google Business Profile, Telegram, Snapchat, Discord, Slack. Supported ad platforms: Meta Ads, Google Ads, TikTok Ads, LinkedIn Ads, Pinterest Ads, X Ads, OpenAI Ads, Reddit Ads. Snapchat is a closed beta with no public release date: connections are gated behind approval and return 403 `PLATFORM_BETA_RESTRICTED` until then.
+    Supported posting platforms: X, Instagram, WhatsApp, Facebook, LinkedIn, TikTok, YouTube, Pinterest, Bluesky, Threads, Google Business Profile, Telegram, Snapchat, Discord, Slack. Supported ad platforms: Meta Ads, Google Ads, TikTok Ads, LinkedIn Ads, Pinterest Ads, X Ads, OpenAI Ads, Reddit Ads. Snapchat is a closed beta with no public release date: connections are gated behind approval and return 403 `PLATFORM_BETA_RESTRICTED` until then. Organic Reddit is temporarily unavailable: Reddit has blocked third-party apps from its API, so Reddit posting, messages, analytics and the Reddit endpoints return 503 `PLATFORM_DISABLED` until Reddit restores access. Your Reddit accounts stay connected. Reddit Ads is not affected.
   x-category: Social
   x-website: https://zernio.com
   x-thumbnail: https://rapidapi-prod-apis.s3.amazonaws.com/b24d3df5-563c-4a50-9e1e-1ad3eb1fce69.png
@@ -70,7 +70,7 @@ x-documentation:
   readme: |
     # Zernio API
 
-    The social media API that replaces 28 integrations. Build social media and blog publishing features into your app in minutes, not months.
+    The social media API that replaces 27 integrations. Build social media and blog publishing features into your app in minutes, not months.
 
     ## Quick Start
 
@@ -124,7 +124,7 @@ x-documentation:
     | TikTok | Yes | - | Yes | Comments |
     | YouTube | Yes | Shorts | Yes | Yes |
     | Pinterest | Yes | - | Yes | - |
-    | Reddit | Yes | - | Partial | Yes |
+    | Reddit (temporarily unavailable) | - | - | - | - |
     | Bluesky | Yes | - | Partial | Yes |
     | Threads | Yes | - | Yes | Yes |
     | Google Business Profile | Yes | - | - | Yes |
@@ -362,6 +362,8 @@ tags:
   - name: Reddit Search
     description: |
       Search Reddit posts and browse subreddit feeds.
+
+      Organic Reddit is temporarily unavailable: Reddit has blocked third-party apps from its API, so Reddit posting, messages, analytics and the Reddit endpoints return 503 `PLATFORM_DISABLED` until Reddit restores access. Your Reddit accounts stay connected. Reddit Ads is not affected.
   - name: GMB Reviews
     description: |
       Google Business Profile reviews: list reviews and reply to them.
@@ -17444,6 +17446,8 @@ paths:
       tags: [Validate]
       summary: Check subreddit existence
       description: |
+        Temporarily unavailable: Reddit has blocked third-party apps from its API, so this endpoint returns 503 `PLATFORM_DISABLED` until Reddit restores access. Reddit Ads is not affected.
+
         Check if a subreddit exists and return basic info (title, subscriber count, NSFW status, post types allowed).
 
         When accountId is provided, uses authenticated Reddit OAuth API with automatic token refresh (recommended). Falls back to Reddit's public JSON API, which may be unreliable from server IPs. Returns exists: false for private, banned, or nonexistent subreddits.
@@ -17490,6 +17494,7 @@ paths:
                       exists: { type: boolean }
                       error: { type: string }
         "401": { $ref: "#/components/responses/Unauthorized" }
+        '503': { description: "Organic Reddit is temporarily unavailable while Reddit blocks third-party API access (`PLATFORM_DISABLED`)." }
 
   # ============================================
   # Analytics
@@ -21353,7 +21358,10 @@ paths:
       operationId: searchReddit
       tags: [Reddit Search]
       summary: Search posts
-      description: Search Reddit posts using a connected account. Optionally scope to a specific subreddit.
+      description: |
+        Temporarily unavailable: Reddit has blocked third-party apps from its API, so this endpoint returns 503 `PLATFORM_DISABLED` until Reddit restores access. Reddit Ads is not affected.
+
+        Search Reddit posts using a connected account. Optionally scope to a specific subreddit.
       parameters:
         - name: accountId
           in: query
@@ -21423,13 +21431,17 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/ErrorResponse' }
         '429': { $ref: '#/components/responses/RateLimited' }
+        '503': { description: "Organic Reddit is temporarily unavailable while Reddit blocks third-party API access (`PLATFORM_DISABLED`)." }
   /v1/reddit/feed:
     get:
       x-resource-group: "engagement"
       operationId: getRedditFeed
       tags: [Reddit Search]
       summary: Get subreddit feed
-      description: Fetch posts from a subreddit feed. Supports sorting, time filtering, and cursor-based pagination.
+      description: |
+        Temporarily unavailable: Reddit has blocked third-party apps from its API, so this endpoint returns 503 `PLATFORM_DISABLED` until Reddit restores access. Reddit Ads is not affected.
+
+        Fetch posts from a subreddit feed. Supports sorting, time filtering, and cursor-based pagination.
       parameters:
         - name: accountId
           in: query
@@ -21511,6 +21523,7 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/ErrorResponse' }
         '429': { $ref: '#/components/responses/RateLimited' }
+        '503': { description: "Organic Reddit is temporarily unavailable while Reddit blocks third-party API access (`PLATFORM_DISABLED`)." }
   /v1/reddit/comments/{postId}:
     get:
       x-resource-group: "engagement"
@@ -21518,6 +21531,8 @@ paths:
       tags: [Reddit Search]
       summary: Get the comments of a Reddit post
       description: |
+        Temporarily unavailable: Reddit has blocked third-party apps from its API, so this endpoint returns 503 `PLATFORM_DISABLED` until Reddit restores access. Reddit Ads is not affected.
+
         Reads the comments of any Reddit post the connected account can see, for example one found
         through `/v1/reddit/feed` or `/v1/reddit/search`, straight from Reddit on every call. The tree
         comes flattened in thread order (a reply follows its parent); rebuild it from `parentId`, which
@@ -21633,6 +21648,7 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/ErrorResponse' }
         '429': { $ref: '#/components/responses/RateLimited' }
+        '503': { description: "Organic Reddit is temporarily unavailable while Reddit blocks third-party API access (`PLATFORM_DISABLED`)." }
   /v1/billing:
     get:
       x-resource-group: "billing"
@@ -33282,7 +33298,10 @@ paths:
       operationId: getRedditSubreddits
       tags: [Connect]
       summary: List Reddit subreddits
-      description: Returns the subreddits the connected Reddit account can post to. Use this to get a subreddit name when creating a Reddit post.
+      description: |
+        Temporarily unavailable: Reddit has blocked third-party apps from its API, so this endpoint returns 503 `PLATFORM_DISABLED` until Reddit restores access. Reddit Ads is not affected.
+
+        Returns the subreddits the connected Reddit account can post to. Use this to get a subreddit name when creating a Reddit post.
       parameters:
         - name: accountId
           in: path
@@ -33325,13 +33344,17 @@ paths:
         '400': { description: Not a Reddit account }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { description: Account not found }
+        '503': { description: "Organic Reddit is temporarily unavailable while Reddit blocks third-party API access (`PLATFORM_DISABLED`)." }
 
     put:
       x-resource-group: "accounts"
       operationId: updateRedditSubreddits
       tags: [Connect]
       summary: Set default subreddit
-      description: Sets the default subreddit used when publishing posts for this Reddit account.
+      description: |
+        Temporarily unavailable: Reddit has blocked third-party apps from its API, so this endpoint returns 503 `PLATFORM_DISABLED` until Reddit restores access. Reddit Ads is not affected.
+
+        Sets the default subreddit used when publishing posts for this Reddit account.
       parameters:
         - name: accountId
           in: path
@@ -33362,6 +33385,7 @@ paths:
         '400': { description: Invalid request }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { description: Account not found }
+        '503': { description: "Organic Reddit is temporarily unavailable while Reddit blocks third-party API access (`PLATFORM_DISABLED`)." }
 
   /v1/accounts/{accountId}/reddit-subreddits/{subreddit}/rules:
     get:
@@ -33370,6 +33394,8 @@ paths:
       tags: [Connect]
       summary: Get subreddit rules
       description: |
+        Temporarily unavailable: Reddit has blocked third-party apps from its API, so this endpoint returns 503 `PLATFORM_DISABLED` until Reddit restores access. Reddit Ads is not affected.
+
         Returns a subreddit's posting rules plus Reddit's site-wide rules, so you can check
         them before submitting and avoid a removal.
 
@@ -33425,6 +33451,7 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { description: Account or subreddit not found }
         '502': { description: Reddit was unreachable or returned an unclassified error. Reddit 4xx statuses are forwarded as-is. }
+        '503': { description: "Organic Reddit is temporarily unavailable while Reddit blocks third-party API access (`PLATFORM_DISABLED`)." }
 
   /v1/accounts/{accountId}/reddit-vote:
     post:
@@ -33433,6 +33460,8 @@ paths:
       tags: [Connect]
       summary: Vote on a Reddit post or comment
       description: |
+        Temporarily unavailable: Reddit has blocked third-party apps from its API, so this endpoint returns 503 `PLATFORM_DISABLED` until Reddit restores access. Reddit Ads is not affected.
+
         Cast, change, or clear the connected account's vote on a Reddit post or comment.
 
         **Reddit requires that votes be cast by humans.** Reddit's API terms permit a client
@@ -33481,6 +33510,7 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { description: Account not found }
         '502': { description: Reddit was unreachable or returned an unclassified error. Reddit 4xx statuses are forwarded as-is. }
+        '503': { description: "Organic Reddit is temporarily unavailable while Reddit blocks third-party API access (`PLATFORM_DISABLED`)." }
 
   /v1/accounts/{accountId}/reddit-flairs:
     get:
@@ -33488,7 +33518,10 @@ paths:
       operationId: getRedditFlairs
       tags: [Connect]
       summary: List subreddit flairs
-      description: Returns available post flairs for a subreddit. Some subreddits require a flair when posting.
+      description: |
+        Temporarily unavailable: Reddit has blocked third-party apps from its API, so this endpoint returns 503 `PLATFORM_DISABLED` until Reddit restores access. Reddit Ads is not affected.
+
+        Returns available post flairs for a subreddit. Some subreddits require a flair when posting.
       parameters:
         - name: accountId
           in: path
@@ -33529,12 +33562,15 @@ paths:
         '400': { description: Not a Reddit account or missing subreddit parameter }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { description: Account not found }
+        '503': { description: "Organic Reddit is temporarily unavailable while Reddit blocks third-party API access (`PLATFORM_DISABLED`)." }
     post:
       x-resource-group: "accounts"
       operationId: setRedditPostFlair
       tags: [Connect]
       summary: Set Reddit post flair
       description: |
+        Temporarily unavailable: Reddit has blocked third-party apps from its API, so this endpoint returns 503 `PLATFORM_DISABLED` until Reddit restores access. Reddit Ads is not affected.
+
         Applies a flair to a post the connected account already published. Use the GET on this
         path to list the available `flairTemplateId` values for the subreddit.
 
@@ -33579,6 +33615,7 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { description: Account not found }
         '502': { description: "Reddit was unreachable or returned an unclassified error. Reddit 4xx statuses (e.g. subreddit does not allow user flair selection) are forwarded as-is." }
+        '503': { description: "Organic Reddit is temporarily unavailable while Reddit blocks third-party API access (`PLATFORM_DISABLED`)." }
 
   /v1/accounts/{accountId}/slack-settings:
     get:
