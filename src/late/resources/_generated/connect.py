@@ -201,6 +201,16 @@ class ConnectResource:
         )
         return self._client._get("/v1/connect/wordpress", params=params)
 
+    def get_wix_connect_url(
+        self, profile_id: str, *, redirect_url: str | None = None
+    ) -> dict[str, Any]:
+        """Get Wix site install URL"""
+        params = self._build_params(
+            profile_id=profile_id,
+            redirect_url=redirect_url,
+        )
+        return self._client._get("/v1/connect/wix", params=params)
+
     def connect_word_press_with_application_password(
         self, profile_id: str, site_url: str, username: str, application_password: str
     ) -> dict[str, Any]:
@@ -1083,6 +1093,16 @@ class ConnectResource:
             redirect_url=redirect_url,
         )
         return await self._client._aget("/v1/connect/wordpress", params=params)
+
+    async def aget_wix_connect_url(
+        self, profile_id: str, *, redirect_url: str | None = None
+    ) -> dict[str, Any]:
+        """Get Wix site install URL (async)"""
+        params = self._build_params(
+            profile_id=profile_id,
+            redirect_url=redirect_url,
+        )
+        return await self._client._aget("/v1/connect/wix", params=params)
 
     async def aconnect_word_press_with_application_password(
         self, profile_id: str, site_url: str, username: str, application_password: str

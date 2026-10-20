@@ -363,6 +363,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `connect.get_subreddit_rules()` | Get subreddit rules |
 | `connect.get_telegram_connect_status()` | Generate Telegram code |
 | `connect.get_whats_app_sdk_config()` | Get Embedded Signup SDK config |
+| `connect.get_wix_connect_url()` | Get Wix site install URL |
 | `connect.get_word_press_auth_url()` | Get WordPress.com OAuth connect URL |
 | `connect.get_youtube_captions()` | Get a YouTube video transcript |
 | `connect.get_youtube_playlists()` | List YouTube playlists |

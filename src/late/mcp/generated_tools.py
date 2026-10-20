@@ -876,6 +876,7 @@ def register_generated_tools(mcp, _get_client):
             "whatsapp",
             "shopify",
             "wordpress",
+            "wix",
             "linkedinads",
             "metaads",
             "pinterestads",
@@ -13083,17 +13084,17 @@ def register_generated_tools(mcp, _get_client):
         """List blogs
 
         Lists blogs on the connected account. Shopify returns its store blogs
-        with cursor pagination. A WordPress account represents one site and
-        always returns exactly that one blog with `nextCursor: null`.
+        with cursor pagination. A WordPress or Wix account represents one site
+        and always returns exactly that one blog with `nextCursor: null`.
 
         `limit` is 1-50 (default 20). Treat `nextCursor` as opaque; pass it
-        unchanged on the next request. Supported on Shopify (`shopify`) and
-        WordPress (`wordpress`).
+        unchanged on the next request. Supported on Shopify (`shopify`),
+        WordPress (`wordpress`) and Wix (`wix`).
 
-        Platforms: shopify, wordpress
+        Platforms: shopify, wordpress, wix
 
         Args:
-            account_id: Connected Shopify or WordPress account id. (required)
+            account_id: Connected Shopify, WordPress or Wix account id. (required)
             limit: Page size (1-50).
             cursor: Opaque cursor from a previous response. Omit for the first page."""
         client = _get_client()
@@ -13121,8 +13122,8 @@ def register_generated_tools(mcp, _get_client):
         Creates a blog on the connected store. The platform generates the URL
         `handle` from the title when omitted.
 
-        Supported on Shopify (platform `shopify`). A WordPress connection is
-        its existing site, so WordPress returns 405 for blog creation.
+        Supported on Shopify (platform `shopify`). A WordPress or Wix
+        connection is its existing site, so both return 405 for blog creation.
 
         Platforms: shopify
 
@@ -13152,14 +13153,14 @@ def register_generated_tools(mcp, _get_client):
 
         Fetches a single blog. Use the platform-native `blogId` returned by
         `GET /v1/accounts/{accountId}/blogs`: a Shopify numeric blog id, the
-        WordPress.com numeric site id, or `1` for a self-hosted WordPress site.
-        The self-hosted id is scoped to its connected account.
+        WordPress.com numeric site id, or `1` for a self-hosted WordPress or a
+        Wix site. That `1` is scoped to its connected account.
 
-        Platforms: shopify, wordpress
+        Platforms: shopify, wordpress, wix
 
         Args:
-            account_id: Connected Shopify or WordPress account id. (required)
-            blog_id: Platform-native numeric blog/site id returned by the list operation. (required)"""
+            account_id: Connected Shopify, WordPress or Wix account id. (required)
+            blog_id: Platform-native blog/site id returned by the list operation. (required)"""
         client = _get_client()
         try:
             response = client.blogs.get_blog(account_id=account_id, blog_id=blog_id)
@@ -13186,14 +13187,14 @@ def register_generated_tools(mcp, _get_client):
         Partial-updates a blog. Send any subset of `title` and `handle`; at
         least one field is required (an empty body returns 400).
 
-        Supported on Shopify (platform `shopify`). WordPress site settings are
-        not writable through this API, so WordPress returns 405.
+        Supported on Shopify (platform `shopify`). WordPress and Wix site
+        settings are not writable through this API, so both return 405.
 
         Platforms: shopify
 
         Args:
             account_id: Connected Shopify SocialAccount id. (required)
-            blog_id: Platform-native numeric blog id. Non-numeric values return 400. (required)
+            blog_id: Platform-native blog id. Shopify blog ids are numeric; other values return 400. (required)
             title
             handle: URL slug. Changing it changes the blog URL on the store."""
         client = _get_client()
@@ -13219,14 +13220,14 @@ def register_generated_tools(mcp, _get_client):
         Deletes the blog AND every article in it. The delete happens on the
         platform and is permanent; Zernio stores nothing to restore it from.
 
-        Supported on Shopify (platform `shopify`). Disconnect a WordPress
-        account instead of deleting its site; WordPress returns 405 here.
+        Supported on Shopify (platform `shopify`). Disconnect a WordPress or
+        Wix account instead of deleting its site; both return 405 here.
 
         Platforms: shopify
 
         Args:
             account_id: Connected Shopify SocialAccount id. (required)
-            blog_id: Platform-native numeric blog id. Non-numeric values return 400. (required)"""
+            blog_id: Platform-native blog id. Shopify blog ids are numeric; other values return 400. (required)"""
         client = _get_client()
         try:
             response = client.blogs.delete_blog(account_id=account_id, blog_id=blog_id)
@@ -13250,15 +13251,17 @@ def register_generated_tools(mcp, _get_client):
         Lists the articles of a blog. Cursor-paginated: pass `limit` (1-50,
         default 20) and the `cursor` from a previous response's `nextCursor`;
         `nextCursor` is null when there are no more pages. Treat cursors as
-        opaque and pass them unchanged. Supported on Shopify (`shopify`) and
-        WordPress (`wordpress`). WordPress results include native `status` and
-        include `publishDate` only for scheduled (`future`) posts.
+        opaque and pass them unchanged. Supported on Shopify (`shopify`),
+        WordPress (`wordpress`) and Wix (`wix`). WordPress and Wix results
+        include `status` and include `publishDate` only for scheduled
+        (`future`) posts. Wix lists return `bodyHtml: null`; get the article
+        for its body.
 
-        Platforms: shopify, wordpress
+        Platforms: shopify, wordpress, wix
 
         Args:
-            account_id: Connected Shopify or WordPress account id. (required)
-            blog_id: Platform-native numeric blog/site id returned by the list operation. (required)
+            account_id: Connected Shopify, WordPress or Wix account id. (required)
+            blog_id: Platform-native blog/site id returned by the list operation. (required)
             limit: Page size (1-50).
             cursor: Opaque cursor from a previous response. Omit for the first page."""
         client = _get_client()
@@ -13296,7 +13299,8 @@ def register_generated_tools(mcp, _get_client):
 
         Creates an article on the blog. Publishing behavior:
 
-        - WordPress defaults to a draft when both publishing fields are omitted.
+        - WordPress and Wix default to a draft when both publishing fields are
+          omitted.
         - `isPublished: false` keeps the article as a draft and takes priority
           over a future `publishDate`.
         - A future `publishDate` schedules publication natively on the
@@ -13306,26 +13310,29 @@ def register_generated_tools(mcp, _get_client):
           `publishDate`.
         - `seo.title` / `seo.description` map to Shopify's global `title_tag`
           and `description_tag` metafields (the fields Shopify themes read for
-          the page title and meta description). WordPress rejects `seo`; SEO
-          plugin and custom-field writes are not supported.
+          the page title and meta description), and on Wix to the post's SEO
+          title and meta description. WordPress rejects `seo`; SEO plugin and
+          custom-field writes are not supported.
+        - Wix stores rich content: `bodyHtml` is converted on write (each
+          top-level HTML element must fit 30,000 characters), and images in
+          the body are imported into the site's Media Manager.
 
-        Supported on Shopify (`shopify`) and WordPress (`wordpress`). WordPress
-        native scheduling depends on the site's scheduler/WP-Cron.
+        Supported on ...
 
-        Platforms: shopify, wordpress
+        Platforms: shopify, wordpress, wix
 
         Args:
-            account_id: Connected Shopify or WordPress account id. (required)
-            blog_id: Platform-native numeric blog/site id returned by the list operation. (required)
+            account_id: Connected Shopify, WordPress or Wix account id. (required)
+            blog_id: Platform-native blog/site id returned by the list operation. (required)
             title: (required)
             body_html: Article body as HTML.
             handle: URL slug. Generated from the title when omitted.
-            tags: Tag names. WordPress resolves existing names case-insensitively and creates missing tags.
-            author: Shopify author display name, or numeric WordPress user id serialized as a string. Assigning another WordPress user may require elevated capability.
+            tags: Tag names. WordPress and Wix resolve existing names case-insensitively and create missing tags (Wix allows up to 30).
+            author: Shopify author display name, numeric WordPress user id serialized as a string, or Wix site member id. Assigning another WordPress user may require elevated capability. Wix posts without one go to the site's default author.
             excerpt: Short summary shown in blog listings.
-            image: Featured image from a public URL. WordPress downloads it into the media library; JPEG, PNG, GIF and WebP are accepted up to 10 MB. Object with keys: url (string, required); altText (string)
-            seo: Shopify only. Search-engine overrides mapped to global title_tag and description_tag metafields. WordPress rejects this field. Object with keys: title (string); description (string)
-            is_published: Set false for a draft or true to publish. On WordPress false takes priority over a future publishDate; omission with no date defaults to draft.
+            image: Featured image from a public URL. WordPress downloads it into the media library and Wix imports it into the Media Manager; JPEG, PNG, GIF and WebP are accepted up to 10 MB. Object with keys: url (string, required); altText (string)
+            seo: Shopify and Wix. Search-engine overrides: Shopify global title_tag and description_tag metafields, Wix post SEO title and meta description. WordPress rejects this field. Object with keys: title (string); description (string)
+            is_published: Set false for a draft or true to publish. On WordPress and Wix false takes priority over a future publishDate; omission with no date defaults to draft.
             publish_date: ISO 8601 datetime with offset (or Z). A future date schedules publication natively on the platform."""
         client = _get_client()
         try:
@@ -13361,16 +13368,16 @@ def register_generated_tools(mcp, _get_client):
         Fetches a single article. An article addressed through a blog it does
         not belong to is a 404 (code blog_article_not_found).
 
-        Supported on Shopify (`shopify`) and WordPress (`wordpress`). WordPress
+        Supported on Shopify (`shopify`), WordPress (`wordpress`) and Wix (`wix`). WordPress
         returns its native `status`; `publishedAt` is present only for a
         published post and `publishDate` only for a scheduled post.
 
-        Platforms: shopify, wordpress
+        Platforms: shopify, wordpress, wix
 
         Args:
-            account_id: Connected Shopify or WordPress account id. (required)
-            blog_id: Platform-native numeric blog/site id returned by the list operation. (required)
-            article_id: Platform-native numeric article id. Non-numeric values return 400. (required)"""
+            account_id: Connected Shopify, WordPress or Wix account id. (required)
+            blog_id: Platform-native blog/site id returned by the list operation. (required)
+            article_id: Platform-native article id: numeric on Shopify and WordPress, a GUID on Wix. Other formats return 400. (required)"""
         client = _get_client()
         try:
             response = client.blogs.get_blog_article(
@@ -13411,28 +13418,28 @@ def register_generated_tools(mcp, _get_client):
         (an empty body returns 400). `isPublished` and `publishDate` behave as
         on create: `isPublished: false` unpublishes back to a draft and a
         future `publishDate` schedules publication natively on the platform.
-        Omitting both fields preserves the current WordPress status. Omitting
+        Omitting both fields preserves the current WordPress or Wix status. Omitting
         `image` preserves the current featured image; removal is not supported.
         WordPress rejects `seo` and does not support SEO-plugin/custom-field,
         category, or custom-post-type writes.
 
-        Supported on Shopify (`shopify`) and WordPress (`wordpress`).
+        Supported on Shopify (`shopify`), WordPress (`wordpress`) and Wix (`wix`).
 
-        Platforms: shopify, wordpress
+        Platforms: shopify, wordpress, wix
 
         Args:
-            account_id: Connected Shopify or WordPress account id. (required)
-            blog_id: Platform-native numeric blog/site id returned by the list operation. (required)
-            article_id: Platform-native numeric article id. Non-numeric values return 400. (required)
+            account_id: Connected Shopify, WordPress or Wix account id. (required)
+            blog_id: Platform-native blog/site id returned by the list operation. (required)
+            article_id: Platform-native article id: numeric on Shopify and WordPress, a GUID on Wix. Other formats return 400. (required)
             title
             body_html: Article body as HTML.
             handle: URL slug of the article.
-            tags: Replaces the full tag-name list. WordPress resolves existing names case-insensitively and creates missing tags.
-            author: Shopify author display name, or numeric WordPress user id serialized as a string. Assigning another WordPress user may require elevated capability.
+            tags: Replaces the full tag-name list. WordPress and Wix resolve existing names case-insensitively and create missing tags (Wix allows up to 30).
+            author: Shopify author display name, numeric WordPress user id serialized as a string, or Wix site member id. Assigning another WordPress user may require elevated capability. Wix posts without one go to the site's default author.
             excerpt: Short summary shown in blog listings.
-            image: Featured image from a public URL. WordPress downloads it into the media library; JPEG, PNG, GIF and WebP are accepted up to 10 MB. Omit to preserve it; null removal is not supported. Object with keys: url (string, required); altText (string)
-            seo: Shopify only. Search-engine overrides mapped to global title_tag and description_tag metafields. WordPress rejects this field. Object with keys: title (string); description (string)
-            is_published: Set false to move to draft or true to publish. On WordPress false takes priority over a future publishDate; omission preserves status unless publishDate is sent.
+            image: Featured image from a public URL. WordPress downloads it into the media library and Wix imports it into the Media Manager; JPEG, PNG, GIF and WebP are accepted up to 10 MB. Omit to preserve it; null removal is not supported. Object with keys: url (string, required); altText (string)
+            seo: Shopify and Wix. Search-engine overrides: Shopify global title_tag and description_tag metafields, Wix post SEO title and meta description. WordPress rejects this field. Object with keys: title (string); description (string)
+            is_published: Set false to move to draft or true to publish. On WordPress and Wix false takes priority over a future publishDate; omission preserves status unless publishDate is sent (edits to a published Wix post go live).
             publish_date: ISO 8601 datetime with offset (or Z). A future date schedules publication natively on the platform."""
         client = _get_client()
         try:
@@ -13473,14 +13480,14 @@ def register_generated_tools(mcp, _get_client):
         post is force-deleted, while uploaded attachments and tags remain in
         the site's media library and taxonomy.
 
-        Supported on Shopify (`shopify`) and WordPress (`wordpress`).
+        Supported on Shopify (`shopify`), WordPress (`wordpress`) and Wix (`wix`).
 
-        Platforms: shopify, wordpress
+        Platforms: shopify, wordpress, wix
 
         Args:
-            account_id: Connected Shopify or WordPress account id. (required)
-            blog_id: Platform-native numeric blog/site id returned by the list operation. (required)
-            article_id: Platform-native numeric article id. Non-numeric values return 400. (required)"""
+            account_id: Connected Shopify, WordPress or Wix account id. (required)
+            blog_id: Platform-native blog/site id returned by the list operation. (required)
+            article_id: Platform-native article id: numeric on Shopify and WordPress, a GUID on Wix. Other formats return 400. (required)"""
         client = _get_client()
         try:
             response = client.blogs.delete_blog_article(
@@ -20239,6 +20246,41 @@ def register_generated_tools(mcp, _get_client):
         client = _get_client()
         try:
             response = client.connect.get_word_press_auth_url(
+                profile_id=profile_id, redirect_url=redirect_url
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get Wix site install URL",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def connect_get_wix_connect_url(
+        profile_id: str, redirect_url: str | None = None
+    ) -> str:
+        """Get Wix site install URL
+
+        Returns the Wix installer link for the Zernio app. The user picks one
+        of their Wix sites there and approves the app; Wix then returns the
+        browser to Zernio's internal callback, which connects that site and
+        redirects to `redirect_url` (or the dashboard when omitted). Wix is a
+        connect-only blog platform: the connected account powers the Blogs
+        API (`/v1/accounts/{accountId}/blogs`) and does not support social
+        posts, inbox, analytics or ads. The site needs the Wix Blog app.
+        Access tokens renew by themselves; removing the Zernio app from the
+        site in Wix disconnects the account.
+
+        Args:
+            profile_id: Your Zernio profile ID (get from /v1/profiles). (required)
+            redirect_url: Custom redirect after connection. Must be an absolute http(s) URL or custom app scheme such as `myapp://callback`; relative and unsafe URLs return 400."""
+        client = _get_client()
+        try:
+            response = client.connect.get_wix_connect_url(
                 profile_id=profile_id, redirect_url=redirect_url
             )
             return _format_response(response)
