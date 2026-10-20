@@ -26624,6 +26624,7 @@ def register_generated_tools(mcp, _get_client):
             "telegram",
             "whatsapp",
             "imessage",
+            "sms",
         ]
         | None = None,
         status: Literal["active", "archived"] | None = None,
@@ -26637,13 +26638,11 @@ def register_generated_tools(mcp, _get_client):
 
         Fetch conversations (DMs) from all connected messaging accounts in a single API call. Supports filtering by profile and platform. Results are aggregated and deduplicated.
 
-        Supported platforms: Facebook, Instagram, X, Bluesky, Reddit, Telegram.
+        Supported platforms: Facebook, Instagram, X, Bluesky, Reddit, Telegram, WhatsApp, iMessage and SMS.
 
         **X limitation.** X has replaced traditional DMs with encrypted \"X Chat\" for many accounts. Messages sent or received through encrypted X Chat are not accessible via X's API (the /2/dm_events endpoint only returns legacy unencrypted DMs). This means some X conversations may show only outgoing messages or appear empty. This is an X platform limitation that affects all third-party applications. See X's docs on encrypted messaging for more details.
 
-        **Instagram and Facebook pre-connect history.** When one of these accounts is connected, Zernio replays the DM history the account already holds on Meta, so conversations that began before the account was connected appear here. Up to 500 conversations per account are replayed.
-
-        - The replay runs in ...
+        **Instagram and Facebook pre-connect history.** When one of these accounts is connected, Zernio replays the DM history the account already holds on Meta, so conversations that began before the account was connected appear here. Up to 500 conversations per account are ...
 
         Args:
             profile_id: Filter by profile ID

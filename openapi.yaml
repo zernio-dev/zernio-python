@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.306.0"
+  version: "1.307.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -36190,7 +36190,7 @@ paths:
       description: |
         Fetch conversations (DMs) from all connected messaging accounts in a single API call. Supports filtering by profile and platform. Results are aggregated and deduplicated.
 
-        Supported platforms: Facebook, Instagram, X, Bluesky, Reddit, Telegram.
+        Supported platforms: Facebook, Instagram, X, Bluesky, Reddit, Telegram, WhatsApp, iMessage and SMS.
 
         **X limitation.** X has replaced traditional DMs with encrypted "X Chat" for many accounts. Messages sent or received through encrypted X Chat are not accessible via X's API (the /2/dm_events endpoint only returns legacy unencrypted DMs). This means some X conversations may show only outgoing messages or appear empty. This is an X platform limitation that affects all third-party applications. See X's docs on encrypted messaging for more details.
 
@@ -36208,7 +36208,7 @@ paths:
           description: Filter by profile ID
         - name: platform
           in: query
-          schema: { type: string, enum: [facebook, instagram, twitter, bluesky, reddit, telegram, whatsapp, imessage] }
+          schema: { type: string, enum: [facebook, instagram, twitter, bluesky, reddit, telegram, whatsapp, imessage, sms] }
           description: Filter by platform
         - name: status
           in: query
