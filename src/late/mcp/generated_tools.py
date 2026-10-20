@@ -2079,7 +2079,7 @@ def register_generated_tools(mcp, _get_client):
 
         Args:
             account_id: (required)
-            sync_contacts: Create or update a HubSpot contact for each inbox contact.
+            sync_contacts: Create a HubSpot contact for an inbox contact that matches none by email or phone. A match is linked as it is and never updated.
             log_messages: Log inbound and outbound inbox messages on the contact's HubSpot timeline."""
         client = _get_client()
         try:
@@ -20257,7 +20257,7 @@ def register_generated_tools(mcp, _get_client):
         (the portal domain); on failure it carries `error`, `platform=hubspot`
         and `error_message`. Reconnecting the same portal and profile updates
         the stored connection in place and keeps its settings.
-        Requested scopes: `crm.objects.contacts.read`, `crm.objects.contacts.write`.
+        Requested scopes: `oauth`, `crm.objects.contacts.read`, `crm.objects.contacts.write`.
 
         Args:
             profile_id: Your Zernio profile ID (get from /v1/profiles). (required)

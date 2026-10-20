@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.310.0"
+  version: "1.311.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -10062,7 +10062,7 @@ components:
           description: OAuth scopes the portal granted.
         syncContacts:
           type: boolean
-          description: Whether Zernio creates or updates HubSpot contacts for inbox contacts.
+          description: Whether Zernio creates HubSpot contacts for inbox contacts that match none.
         logMessages:
           type: boolean
           description: Whether Zernio logs inbox messages on HubSpot contact timelines.
@@ -26857,7 +26857,7 @@ paths:
         (the portal domain); on failure it carries `error`, `platform=hubspot`
         and `error_message`. Reconnecting the same portal and profile updates
         the stored connection in place and keeps its settings.
-        Requested scopes: `crm.objects.contacts.read`, `crm.objects.contacts.write`.
+        Requested scopes: `oauth`, `crm.objects.contacts.read`, `crm.objects.contacts.write`.
       security:
         - bearerAuth: []
         - connectToken: []
@@ -34013,7 +34013,9 @@ paths:
               properties:
                 syncContacts:
                   type: boolean
-                  description: Create or update a HubSpot contact for each inbox contact.
+                  description: >-
+                    Create a HubSpot contact for an inbox contact that matches none by email or phone. A match
+                    is linked as it is and never updated.
                 logMessages:
                   type: boolean
                   description: Log inbound and outbound inbox messages on the contact's HubSpot timeline.
