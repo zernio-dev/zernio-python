@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.298.0"
+  version: "1.299.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -12326,6 +12326,7 @@ components:
         companySizes: { type: array, items: { type: string }, description: "LinkedIn B2B only. Single-letter size codes (A to I), or the full urn:li:staffCountRange:* URN from /v1/ads/targeting/search?dimension=companySize." }
         seniorities: { type: array, items: { type: string }, description: "LinkedIn B2B only. Seniority URN id fragments, or the full urn:li:seniority:* URN from /v1/ads/targeting/search?dimension=seniority." }
         jobFunctions: { type: array, items: { type: string }, description: "LinkedIn B2B only. Function URN id fragments, or the full urn:li:function:* URN from /v1/ads/targeting/search?dimension=jobFunction." }
+        skills: { type: array, items: { type: string }, description: "LinkedIn B2B only. Member skills (e.g. Python, Recruiting): skill URN id fragments, or the full urn:li:skill:* URN from /v1/ads/targeting/search?dimension=skill. Values are ORed; the facet is ANDed with the other facets. On an ad set update an empty list removes the skills." }
         audienceInclude: { type: array, items: { type: string }, description: 'Platform audience IDs to include, as returned by GET /v1/ads/audiences (Meta custom audience ids, TikTok audience ids, Pinterest customer list ids, LinkedIn segment ids (the platformAudienceId from GET /v1/ads/audiences; Zernio resolves it to the targetable LinkedIn ad segment, an unknown id returns 400), Google user list ids, X custom audience ids). On Reddit, the ids of custom audiences built in Reddit Ads Manager (GET /v1/ads/audiences does not list Reddit audiences). Not supported on OpenAI (400).' }
         audienceExclude: { type: array, items: { type: string }, description: 'Platform audience IDs to exclude; same ID formats as audienceInclude. Not supported on OpenAI (400).' }
         communities: { type: array, items: { type: string, minLength: 1 }, description: "Reddit only (400 elsewhere). Subreddits to target, by name, with or without the `r/` prefix (e.g. `['marketing', 'r/startups']`), as returned by /v1/ads/targeting/search?dimension=community." }
@@ -67350,8 +67351,8 @@ paths:
         - `language`: Google-only
         - `workPosition`, `workEmployer`, `workIndustry`: the Meta-only work demographics, whose
           ids feed `TargetingSpec.workPositions`/`workEmployers`/`workIndustries`
-        - `industry`, `jobFunction`, `seniority`, `companySize`: the LinkedIn-only B2B facets, whose
-          URNs feed `TargetingSpec.industries`/`jobFunctions`/`seniorities`/`companySizes`
+        - `industry`, `jobFunction`, `seniority`, `companySize`, `skill`: the LinkedIn-only B2B facets, whose
+          URNs feed `TargetingSpec.industries`/`jobFunctions`/`seniorities`/`companySizes`/`skills`
         - `community`: Reddit only. Subreddits matching `q`; the id is the subreddit name for
           `TargetingSpec.communities` / `excludedCommunities`, `platformId` Reddit's own id and
           `audienceSize` its subscriber count when Reddit reports it
@@ -67397,10 +67398,10 @@ paths:
         `POST /v1/ads/targeting/reach-estimate` (LinkedIn puts countries and
         regions in the same `locations` facet, so both target the same way).
 
-        LinkedIn B2B searches (`industry`, `jobFunction`, `seniority`, `companySize`) return the
+        LinkedIn B2B searches (`industry`, `jobFunction`, `seniority`, `companySize`, `skill`) return the
         full URN to pass straight back, so no URN id fragment has to be assembled by hand:
         `urn:li:industry:4`, `urn:li:function:8`, `urn:li:seniority:6`,
-        `urn:li:staffCountRange:(51,200)`. Only `industry` is a server-side name search
+        `urn:li:staffCountRange:(51,200)`, `urn:li:skill:1346`. Only `industry` and `skill` are server-side name searches
         (LinkedIn's typeahead finder). LinkedIn exposes no typeahead for job functions,
         seniorities and company sizes, so Zernio fetches each whole table (26, 10 and 9 entries),
         caches it, and does the matching, ranking and `limit` cutoff itself. Those three never
@@ -67454,7 +67455,7 @@ paths:
       parameters:
         - { name: accountId, in: query, required: true, schema: { type: string }, description: "Account ID (a connected account on the target ad platform)." }
         - { name: q, in: query, required: true, schema: { type: string }, description: "Search query. For geo, the locality name only (no region/country suffix). For `interestSuggestion`, the interest names: comma-separated, or a JSON array of strings when a name contains a comma (a `q` starting with `[` is read as JSON)." }
-        - { name: dimension, in: query, required: false, schema: { type: string, enum: [geo, interest, interestSuggestion, interestKeyword, behavior, hashtag, income, language, workPosition, workEmployer, workIndustry, industry, jobFunction, seniority, companySize, community, conversationKeyword], default: interest }, description: "What to search. `geo` resolves locations (scope further with `geoType`), `interest`/`behavior` resolve audience entities (`behavior` on Meta, TikTok and LinkedIn), `interestSuggestion` suggests interests related to the names in `q` (Meta only), `interestKeyword`/`hashtag` resolve TikTok additional interests and hashtags (TikTok only), `income` resolves the normalized income tiers, `language` resolves Google's targetable language_constant table (Google only), `workPosition`/`workEmployer`/`workIndustry` resolve Meta work demographics, `industry`/`jobFunction`/`seniority`/`companySize` resolve LinkedIn B2B facets (LinkedIn only). Defaults to `interest` for backward compatibility with the deprecated /v1/ads/interests alias." }
+        - { name: dimension, in: query, required: false, schema: { type: string, enum: [geo, interest, interestSuggestion, interestKeyword, behavior, hashtag, income, language, workPosition, workEmployer, workIndustry, industry, jobFunction, seniority, companySize, skill, community, conversationKeyword], default: interest }, description: "What to search. `geo` resolves locations (scope further with `geoType`), `interest`/`behavior` resolve audience entities (`behavior` on Meta, TikTok and LinkedIn), `interestSuggestion` suggests interests related to the names in `q` (Meta only), `interestKeyword`/`hashtag` resolve TikTok additional interests and hashtags (TikTok only), `income` resolves the normalized income tiers, `language` resolves Google's targetable language_constant table (Google only), `workPosition`/`workEmployer`/`workIndustry` resolve Meta work demographics, `industry`/`jobFunction`/`seniority`/`companySize`/`skill` resolve LinkedIn B2B facets (LinkedIn only). Defaults to `interest` for backward compatibility with the deprecated /v1/ads/interests alias." }
         - { name: geoType, in: query, required: false, schema: { type: string, enum: [all, country, country_group, region, city, subcity, neighborhood, place, zip, metro_area, geo_market], default: city }, description: "Only used when `dimension=geo`. The kind of location to resolve. `all` searches every type in one relevance-ranked call. Defaults to `city`." }
         - { name: countryCode, in: query, required: false, schema: { type: string, minLength: 2, maxLength: 2 }, description: "ISO 3166-1 alpha-2 country code (e.g. NL) to scope a geo search." }
         - { name: adAccountId, in: query, required: false, schema: { type: string }, description: "TikTok only: the advertiser to search as, when the connection holds several. Each TikTok advertiser has its own targetable regions and catalogs. Defaults to the connection's first advertiser; an advertiser the connection does not hold returns 400." }
@@ -67476,7 +67477,7 @@ paths:
                       properties:
                         id: { type: string, description: "The platform's opaque id. Use as a geo `key` (regions/cities/zips/metros) or an entity `id` (interests/behaviors) in TargetingSpec. A `country` result is the exception on every platform: its id is the ISO 3166-1 alpha-2 code, which is what `targeting.countries` takes." }
                         name: { type: string, description: "Human-readable label." }
-                        type: { type: string, description: "What the result is. Equals the requested dimension (interest, interestSuggestion, interestKeyword, behavior, hashtag, income, language, workPosition, workEmployer, workIndustry, industry, jobFunction, seniority, companySize, community, conversationKeyword), or the location level for geo (country, region, city, zip, metro, ...)." }
+                        type: { type: string, description: "What the result is. Equals the requested dimension (interest, interestSuggestion, interestKeyword, behavior, hashtag, income, language, workPosition, workEmployer, workIndustry, industry, jobFunction, seniority, companySize, skill, community, conversationKeyword), or the location level for geo (country, region, city, zip, metro, ...)." }
                         path: { type: array, items: { type: string }, description: "Optional breadcrumb of parent labels (e.g. ['United States', 'California', 'Los Angeles']). Disambiguates same-named results." }
                         audienceSize: { type: [integer, "null"], description: "Optional estimated reachable users for this option, when the platform returns it." }
                         status: { type: string, description: "TikTok `interestKeyword` and `hashtag` results only: TikTok's availability status. `EFFECTIVE` / `INEFFECTIVE` for additional interests, `ONLINE` / `OFFLINE` for hashtags. Only `EFFECTIVE` and `ONLINE` ids can be targeted." }
