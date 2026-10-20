@@ -27285,6 +27285,10 @@ def register_generated_tools(mcp, _get_client):
         For iMessage, this also marks the conversation read with the contact
         (1:1 conversations only). Best-effort.
 
+        For Instagram (Instagram Login and Facebook Login) and Facebook Messenger,
+        this also sends a `mark_seen` read receipt to the contact, so they see the
+        conversation as seen. Best-effort: a Meta failure never fails the request.
+
         This is the explicit, human-driven counterpart to `GET .../messages`,
         which is side-effect-free and does NOT mark anything read. Call this when
         a user actually views the conversation.
