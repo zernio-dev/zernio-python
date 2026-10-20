@@ -12761,22 +12761,30 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def analytics_get_google_business_search_keywords(
-        account_id: str, start_month: str | None = None, end_month: str | None = None
+        account_id: str,
+        start_month: str | None = None,
+        end_month: str | None = None,
+        page_token: str | None = None,
     ) -> str:
         """Get Google Business Profile search keywords
 
         Returns search keywords that triggered impressions for a Google Business Profile location.
-        Data is aggregated monthly. Keywords below a minimum impression threshold set by Google are excluded.
+        Data is aggregated monthly. Keywords Google reports only as below a threshold have `impressions` 0 and `impressionsThreshold` set to that threshold.
+        Returns up to 100 keywords per page. When `nextPageToken` is not null, pass it as `pageToken` with the same `startMonth` and `endMonth` to get the next page.
         Max 18 months of historical data. Requires the Analytics add-on.
 
         Args:
             account_id: The Zernio SocialAccount ID for the Google Business Profile account. (required)
             start_month: Start month (YYYY-MM). Defaults to 3 months ago.
-            end_month: End month (YYYY-MM). Defaults to current month."""
+            end_month: End month (YYYY-MM). Defaults to current month.
+            page_token: The nextPageToken from the previous page. Valid only with the same startMonth and endMonth as the request that returned it."""
         client = _get_client()
         try:
             response = client.analytics.get_google_business_search_keywords(
-                account_id=account_id, start_month=start_month, end_month=end_month
+                account_id=account_id,
+                start_month=start_month,
+                end_month=end_month,
+                page_token=page_token,
             )
             return _format_response(response)
         except Exception as e:

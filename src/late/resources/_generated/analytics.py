@@ -536,12 +536,14 @@ class AnalyticsResource:
         *,
         start_month: str | None = None,
         end_month: str | None = None,
+        page_token: str | None = None,
     ) -> dict[str, Any]:
         """Get Google Business Profile search keywords"""
         params = self._build_params(
             account_id=account_id,
             start_month=start_month,
             end_month=end_month,
+            page_token=page_token,
         )
         return self._client._get(
             "/v1/analytics/googlebusiness/search-keywords", params=params
@@ -1101,12 +1103,14 @@ class AnalyticsResource:
         *,
         start_month: str | None = None,
         end_month: str | None = None,
+        page_token: str | None = None,
     ) -> dict[str, Any]:
         """Get Google Business Profile search keywords (async)"""
         params = self._build_params(
             account_id=account_id,
             start_month=start_month,
             end_month=end_month,
+            page_token=page_token,
         )
         return await self._client._aget(
             "/v1/analytics/googlebusiness/search-keywords", params=params

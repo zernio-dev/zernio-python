@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.305.0"
+  version: "1.306.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -20456,7 +20456,8 @@ paths:
       summary: Get Google Business Profile search keywords
       description: |
         Returns search keywords that triggered impressions for a Google Business Profile location.
-        Data is aggregated monthly. Keywords below a minimum impression threshold set by Google are excluded.
+        Data is aggregated monthly. Keywords Google reports only as below a threshold have `impressions` 0 and `impressionsThreshold` set to that threshold.
+        Returns up to 100 keywords per page. When `nextPageToken` is not null, pass it as `pageToken` with the same `startMonth` and `endMonth` to get the next page.
         Max 18 months of historical data. Requires the Analytics add-on.
       parameters:
         - name: accountId
@@ -20472,6 +20473,10 @@ paths:
           in: query
           schema: { type: string, pattern: "^\\d{4}-\\d{2}$" }
           description: End month (YYYY-MM). Defaults to current month.
+        - name: pageToken
+          in: query
+          schema: { type: string }
+          description: 'The nextPageToken from the previous page. Valid only with the same startMonth and endMonth as the request that returned it.'
       responses:
         '200':
           description: Search keywords with impression counts
@@ -20494,8 +20499,10 @@ paths:
                       type: object
                       properties:
                         keyword: { type: string, example: "restaurant near me" }
-                        impressions: { type: integer, example: 245 }
-                  note: { type: string, example: "Keywords below a minimum impression threshold are excluded by Google" }
+                        impressions: { type: integer, example: 245, description: "Impressions for the range. 0 when Google reports only a threshold." }
+                        impressionsThreshold: { type: [integer, "null"], example: null, description: "Set when Google reports only that impressions were below this value. null when impressions is exact." }
+                  nextPageToken: { type: [string, "null"], description: "Pass as pageToken to fetch the next page. null on the last page." }
+                  note: { type: string, example: "Keywords Google reports only as below a threshold have impressions 0 and impressionsThreshold set" }
               examples:
                 keywords_data:
                   summary: Search keywords for a location
@@ -20509,11 +20516,18 @@ paths:
                     keywords:
                       - keyword: "restaurant near me"
                         impressions: 245
+                        impressionsThreshold: null
                       - keyword: "best tapas barcelona"
                         impressions: 89
+                        impressionsThreshold: null
                       - keyword: "zernio"
                         impressions: 34
-                    note: "Keywords below a minimum impression threshold are excluded by Google"
+                        impressionsThreshold: null
+                      - keyword: "tapas delivery"
+                        impressions: 0
+                        impressionsThreshold: 15
+                    nextPageToken: null
+                    note: "Keywords Google reports only as below a threshold have impressions 0 and impressionsThreshold set"
         '400':
           description: Invalid parameters
           content:
