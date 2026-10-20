@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.302.0"
+  version: "1.302.1"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -57771,7 +57771,7 @@ paths:
                   ad: { $ref: '#/components/schemas/Ad' }
                   message: { type: string }
         '400':
-          description: 'Invalid status transition, budget below minimum, a LinkedIn creative update without imageUrl or videoUrl, a LinkedIn targeting update without countries or regions, or a Google targeting update that is unsupported, empty, mixes locations with the top-level geo fields, or names an unknown country or language code'
+          description: 'Invalid status transition, budget below minimum, a LinkedIn creative update without imageUrl or videoUrl, a LinkedIn targeting update without countries or regions, or a Google targeting update that is unsupported, empty, mixes locations with the top-level geo fields, or names an unknown country or language code. Also returned with code `missing_required_field` when the body has none of the updatable fields (status, budget, targeting, name, creative, headlines, descriptions, finalUrls, assetGroup, demandGen), for example `{}` or only misspelled keys: unknown keys are ignored, so such a body would otherwise change nothing.'
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403':
           description: |
