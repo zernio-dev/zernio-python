@@ -438,6 +438,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `ad_accounts.list_account_callouts()` | List account callouts |
 | `ad_accounts.list_account_sitelinks()` | List account sitelinks |
 | `ad_accounts.list_account_structured_snippets()` | List account snippets |
+| `ad_accounts.list_ad_account_user_invitations()` | List user access invitations |
 | `ad_accounts.list_ad_account_users()` | Ad account users |
 | `ad_accounts.list_ad_accounts()` | List ad accounts |
 | `ad_accounts.list_ad_labels()` | List ad labels |
@@ -490,6 +491,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `ad_accounts.detach_ad_label()` | Detach a Google Ads label |
 | `ad_accounts.hide_ad_comment()` | Hide or unhide an ad comment |
 | `ad_accounts.invite_ad_account_to_manager()` | Invite a client account to a manager |
+| `ad_accounts.invite_ad_account_user()` | Invite a user to an ad account by email |
 | `ad_accounts.remove_account_callout()` | Remove account callout |
 | `ad_accounts.remove_account_sitelink()` | Remove account sitelink |
 | `ad_accounts.remove_account_structured_snippet()` | Remove account snippet |
@@ -498,6 +500,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `ad_accounts.remove_page_user()` | Remove a user from a Page |
 | `ad_accounts.replace_ad_negative_keyword_list_keywords()` | Replace negative list keywords |
 | `ad_accounts.reply_to_ad_comment()` | Reply to an ad comment |
+| `ad_accounts.revoke_ad_account_user_invitation()` | Revoke a user access invitation |
 
 ### Ad Audiences
 | Method | Description |

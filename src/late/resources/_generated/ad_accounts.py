@@ -931,6 +931,46 @@ class AdAccountsResource:
         )
         return self._client._patch("/v1/ads/accounts/manager-links", data=payload)
 
+    def list_ad_account_user_invitations(
+        self, account_id: str, *, ad_account_id: str | None = None
+    ) -> dict[str, Any]:
+        """List user access invitations"""
+        params = self._build_params(
+            account_id=account_id,
+            ad_account_id=ad_account_id,
+        )
+        return self._client._get("/v1/ads/accounts/user-invitations", params=params)
+
+    def invite_ad_account_user(
+        self,
+        account_id: str,
+        ad_account_id: str,
+        email_address: str,
+        access_role: Any,
+        *,
+        validate_only: bool | None = False,
+    ) -> dict[str, Any]:
+        """Invite a user to an ad account by email"""
+        payload = self._build_payload(
+            account_id=account_id,
+            ad_account_id=ad_account_id,
+            email_address=email_address,
+            access_role=access_role,
+            validate_only=validate_only,
+        )
+        return self._client._post("/v1/ads/accounts/user-invitations", data=payload)
+
+    def revoke_ad_account_user_invitation(
+        self, account_id: str, ad_account_id: str, invitation_id: str
+    ) -> dict[str, Any]:
+        """Revoke a user access invitation"""
+        params = self._build_params(
+            account_id=account_id,
+            ad_account_id=ad_account_id,
+            invitation_id=invitation_id,
+        )
+        return self._client._delete("/v1/ads/accounts/user-invitations", params=params)
+
     def list_ad_account_users(
         self, account_id: str, ad_account_id: str, business_id: str
     ) -> dict[str, Any]:
@@ -1979,6 +2019,52 @@ class AdAccountsResource:
         )
         return await self._client._apatch(
             "/v1/ads/accounts/manager-links", data=payload
+        )
+
+    async def alist_ad_account_user_invitations(
+        self, account_id: str, *, ad_account_id: str | None = None
+    ) -> dict[str, Any]:
+        """List user access invitations (async)"""
+        params = self._build_params(
+            account_id=account_id,
+            ad_account_id=ad_account_id,
+        )
+        return await self._client._aget(
+            "/v1/ads/accounts/user-invitations", params=params
+        )
+
+    async def ainvite_ad_account_user(
+        self,
+        account_id: str,
+        ad_account_id: str,
+        email_address: str,
+        access_role: Any,
+        *,
+        validate_only: bool | None = False,
+    ) -> dict[str, Any]:
+        """Invite a user to an ad account by email (async)"""
+        payload = self._build_payload(
+            account_id=account_id,
+            ad_account_id=ad_account_id,
+            email_address=email_address,
+            access_role=access_role,
+            validate_only=validate_only,
+        )
+        return await self._client._apost(
+            "/v1/ads/accounts/user-invitations", data=payload
+        )
+
+    async def arevoke_ad_account_user_invitation(
+        self, account_id: str, ad_account_id: str, invitation_id: str
+    ) -> dict[str, Any]:
+        """Revoke a user access invitation (async)"""
+        params = self._build_params(
+            account_id=account_id,
+            ad_account_id=ad_account_id,
+            invitation_id=invitation_id,
+        )
+        return await self._client._adelete(
+            "/v1/ads/accounts/user-invitations", params=params
         )
 
     async def alist_ad_account_users(

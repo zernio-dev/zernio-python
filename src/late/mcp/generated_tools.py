@@ -4378,6 +4378,113 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="List user access invitations",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def ad_accounts_list_ad_account_user_invitations(
+        account_id: str, ad_account_id: str | None = None
+    ) -> str:
+        """List user access invitations
+
+        Lists the email invitations to a Google Ads account, with their role and status.
+
+        Reads Google's `customer_user_access_invitation` resource for one customer: invitations that are `PENDING`, `DECLINED` or `EXPIRED` (Google expires them 20 days after sending). An accepted invitation becomes a user of the account and leaves this list, which can take Google up to 24 hours. An invitation still waiting for multi-party approval is not listed until a second admin approves it. Results are cached for 10 minutes and dropped on every invite or revoke through Zernio.
+
+        Platforms: google
+
+        Args:
+            account_id: Google ads SocialAccount id. (required)
+            ad_account_id: Google Ads customer id, digits only. Defaults to the connection's selected customer."""
+        client = _get_client()
+        try:
+            response = client.ad_accounts.list_ad_account_user_invitations(
+                account_id=account_id, ad_account_id=ad_account_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Invite a user to an ad account by email",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def ad_accounts_invite_ad_account_user(
+        account_id: str,
+        ad_account_id: str,
+        email_address: str,
+        access_role: Literal["ADMIN", "STANDARD", "READ_ONLY", "EMAIL_ONLY"],
+        validate_only: bool = False,
+    ) -> str:
+        """Invite a user to an ad account by email
+
+        Emails someone an invitation to a Google Ads account with the access role you choose, for example to hand a client account you created under your manager to its owner.
+
+        Creates a user access invitation (Google's CustomerUserAccessInvitationService) on `adAccountId`. The connection's Google user needs admin access to that account, directly or through a manager above it, which is the case for an account created with POST /v1/ads/accounts. The recipient accepts from the email, possibly with another Google account. When Google requires multi-party approval, nothing is sent until a second admin of the account approves the request in Google Ads: the response then has `status: PENDING_APPROVAL` and a `multiPartyAuthReviewId` instead of an `invitationId`. Not idempotent: Google refuses a second invitation while the email has one pending or awaiting approval. Google has no server-side check for this call, so `validateOnly: true` reads the account's invitations with the same credentials ...
+
+        Platforms: google
+
+        Args:
+            account_id: Google ads SocialAccount id. (required)
+            ad_account_id: Google Ads customer id to invite the user to, digits only. (required)
+            email_address: (required)
+            access_role: (required)
+            validate_only"""
+        client = _get_client()
+        try:
+            response = client.ad_accounts.invite_ad_account_user(
+                account_id=account_id,
+                ad_account_id=ad_account_id,
+                email_address=email_address,
+                access_role=access_role,
+                validate_only=validate_only,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Revoke a user access invitation",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def ad_accounts_revoke_ad_account_user_invitation(
+        account_id: str, ad_account_id: str, invitation_id: str
+    ) -> str:
+        """Revoke a user access invitation
+
+        Withdraws an email invitation to a Google Ads account that has not been accepted yet.
+
+        Removes the invitation `invitationId` (from GET on this path) from `adAccountId`. It no longer works from the email, and the address can be invited again.
+
+        Platforms: google
+
+        Args:
+            account_id: Google ads SocialAccount id. (required)
+            ad_account_id: Google Ads customer id, digits only. (required)
+            invitation_id: Numeric invitation id from GET /v1/ads/accounts/user-invitations. (required)"""
+        client = _get_client()
+        try:
+            response = client.ad_accounts.revoke_ad_account_user_invitation(
+                account_id=account_id,
+                ad_account_id=ad_account_id,
+                invitation_id=invitation_id,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="Ad account users",
             readOnlyHint=True,
             destructiveHint=False,

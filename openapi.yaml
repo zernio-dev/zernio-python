@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.311.0"
+  version: "1.312.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -12014,6 +12014,28 @@ components:
         clientCustomerId: { type: string }
         managerLinkId: { type: [string, "null"], description: "Null on a validateOnly invitation, where Google creates nothing." }
         status: { type: string, enum: [PENDING, ACTIVE, REFUSED, CANCELED, INACTIVE], description: "Status the link has after this call." }
+        validateOnly: { type: boolean }
+    GoogleAdsAccessRole:
+      type: string
+      enum: [ADMIN, STANDARD, READ_ONLY, EMAIL_ONLY]
+      description: "ADMIN manages the account and its users, STANDARD edits campaigns, READ_ONLY views them, EMAIL_ONLY only receives the account's emails."
+    GoogleAdsUserAccessInvitation:
+      type: object
+      properties:
+        invitationId: { type: string }
+        emailAddress: { type: string }
+        accessRole: { type: string, enum: [ADMIN, STANDARD, READ_ONLY, EMAIL_ONLY, UNKNOWN] }
+        status: { type: string, enum: [PENDING, DECLINED, EXPIRED, UNKNOWN] }
+        createdAt: { type: [string, "null"], description: "Google's creation time, yyyy-MM-dd HH:mm:ss.ssssss in the account's time zone." }
+    GoogleAdsUserAccessInvitationResult:
+      type: object
+      properties:
+        customerId: { type: string }
+        emailAddress: { type: string }
+        accessRole: { $ref: '#/components/schemas/GoogleAdsAccessRole' }
+        status: { type: string, enum: [PENDING, PENDING_APPROVAL], description: "PENDING once the email is sent; PENDING_APPROVAL while Google waits for a second admin's multi-party approval." }
+        invitationId: { type: [string, "null"], description: "Null on validateOnly and while the invitation awaits multi-party approval." }
+        multiPartyAuthReviewId: { type: [string, "null"], description: "Google's multi-party approval review id when status is PENDING_APPROVAL." }
         validateOnly: { type: boolean }
     GoogleTargetImpressionShare:
       type: object
@@ -64077,6 +64099,143 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/GoogleAdsManagerLink' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/AdAccountNotSelected' }
+        '404': { $ref: '#/components/responses/AccountUnavailable' }
+        '409': { $ref: '#/components/responses/AccountConnectionRequired' }
+        '429': { description: "Google Ads operations budget or quota exhausted; retry later." }
+        '501': { description: Only available on Google Ads accounts }
+
+  /v1/ads/accounts/user-invitations:
+    get:
+      x-resource-group: "ads"
+      operationId: listAdAccountUserInvitations
+      tags: ["Ad Accounts"]
+      x-platforms: ["google"]
+      summary: 'List user access invitations'
+      description: >-
+        Lists the email invitations to a Google Ads account, with their role and status.
+
+
+        Reads Google's `customer_user_access_invitation` resource for one customer:
+        invitations that are `PENDING`, `DECLINED` or `EXPIRED` (Google expires them 20
+        days after sending). An accepted invitation becomes a user of the account and
+        leaves this list, which can take Google up to 24 hours. An invitation still
+        waiting for multi-party approval is not listed until a second admin approves it.
+        Results are cached for 10 minutes and dropped on every invite or revoke through
+        Zernio.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: accountId, in: query, required: true, schema: { type: string }, description: "Google ads SocialAccount id." }
+        - { name: adAccountId, in: query, required: false, schema: { type: string }, description: "Google Ads customer id, digits only. Defaults to the connection's selected customer." }
+      responses:
+        '200':
+          description: Invitations of the customer
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  customerId: { type: string }
+                  invitations:
+                    type: array
+                    items: { $ref: '#/components/schemas/GoogleAdsUserAccessInvitation' }
+                  cachedAt: { type: [string, "null"], format: date-time, description: "When this data was fetched from Google. Null on a live read." }
+                  stale: { type: boolean, description: "True when Google's quota was exhausted and this is the last successful fetch." }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/AdAccountNotSelected' }
+        '404': { $ref: '#/components/responses/AccountUnavailable' }
+        '409': { $ref: '#/components/responses/AccountConnectionRequired' }
+        '429': { description: "Google Ads operations budget or quota exhausted; retry later." }
+        '501': { description: Only available on Google Ads accounts }
+    post:
+      x-resource-group: "ads"
+      operationId: inviteAdAccountUser
+      tags: ["Ad Accounts"]
+      x-platforms: ["google"]
+      summary: 'Invite a user to an ad account by email'
+      description: >-
+        Emails someone an invitation to a Google Ads account with the access role you choose, for example to hand a client account you created under your manager to its owner.
+
+
+        Creates a user access invitation (Google's CustomerUserAccessInvitationService) on
+        `adAccountId`. The connection's Google user needs admin access to that account,
+        directly or through a manager above it, which is the case for an account created
+        with POST /v1/ads/accounts. The recipient accepts from the email, possibly with
+        another Google account. When Google requires multi-party approval, nothing is
+        sent until a second admin of the account approves the request in Google Ads: the
+        response then has `status: PENDING_APPROVAL` and a `multiPartyAuthReviewId`
+        instead of an `invitationId`. Not idempotent: Google refuses a second invitation
+        while the email has one pending or awaiting approval. Google has no server-side
+        check for this call, so `validateOnly: true` reads the account's invitations with
+        the same credentials (proving the account is reachable) and fails if the email
+        already has a pending one, without sending anything.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [accountId, adAccountId, emailAddress, accessRole]
+              properties:
+                accountId: { type: string, description: "Google ads SocialAccount id." }
+                adAccountId: { type: string, description: "Google Ads customer id to invite the user to, digits only." }
+                emailAddress: { type: string, format: email }
+                accessRole: { $ref: '#/components/schemas/GoogleAdsAccessRole' }
+                validateOnly: { type: boolean, default: false }
+      responses:
+        '201':
+          description: Invitation sent, or held for multi-party approval
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/GoogleAdsUserAccessInvitationResult' }
+        '200':
+          description: Validated only (validateOnly true), nothing sent
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/GoogleAdsUserAccessInvitationResult' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/AdAccountNotSelected' }
+        '404': { $ref: '#/components/responses/AccountUnavailable' }
+        '409': { $ref: '#/components/responses/AccountConnectionRequired' }
+        '429': { description: "Google Ads operations budget or quota exhausted; retry later." }
+        '501': { description: Only available on Google Ads accounts }
+    delete:
+      x-resource-group: "ads"
+      operationId: revokeAdAccountUserInvitation
+      tags: ["Ad Accounts"]
+      x-platforms: ["google"]
+      summary: 'Revoke a user access invitation'
+      description: >-
+        Withdraws an email invitation to a Google Ads account that has not been accepted yet.
+
+
+        Removes the invitation `invitationId` (from GET on this path) from `adAccountId`.
+        It no longer works from the email, and the address can be invited again.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: accountId, in: query, required: true, schema: { type: string }, description: "Google ads SocialAccount id." }
+        - { name: adAccountId, in: query, required: true, schema: { type: string }, description: "Google Ads customer id, digits only." }
+        - { name: invitationId, in: query, required: true, schema: { type: string }, description: "Numeric invitation id from GET /v1/ads/accounts/user-invitations." }
+      responses:
+        '200':
+          description: Invitation revoked
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  customerId: { type: string }
+                  invitationId: { type: string }
+                  revoked: { type: boolean, description: "Always true." }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { $ref: '#/components/responses/AdAccountNotSelected' }
