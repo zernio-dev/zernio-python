@@ -12197,9 +12197,9 @@ def register_generated_tools(mcp, _get_client):
                 account_id: The Zernio SocialAccount ID for the Instagram account (required)
                 metrics: Comma-separated list of metrics. Defaults to "reach,views,accounts_engaged,total_interactions".
         Valid metrics: reach, views, accounts_engaged, total_interactions, comments, likes, saves, shares,
-        replies, reposts, follows_and_unfollows, profile_links_taps.
+        replies, reposts, follows_and_unfollows, profile_links_taps, profile_views, website_clicks.
         Note: only "reach" supports metricType=time_series. All other metrics (including
-        follows_and_unfollows) are total_value only. This is an Instagram Graph API limitation,
+        follows_and_unfollows, profile_views and website_clicks) are total_value only. This is an Instagram Graph API limitation,
         not a Zernio limitation - the IG API does not return time-series data for these metrics.
         For a daily running follower count, use /v1/analytics/instagram/follower-history instead.
                 from_date: Start date (YYYY-MM-DD). Defaults to 30 days ago.
@@ -25961,8 +25961,10 @@ def register_generated_tools(mcp, _get_client):
         - `live`: fetched from Meta in real time (story is still active)
         - `cached`: fetched from a persisted `story_insights` webhook payload
           (story has expired but we received its final-state metrics from Meta)
-        - `unavailable`: story has expired and we never received its webhook
-          payload (for example, the account connected after the story expired)
+        - `unavailable`: story has expired and Meta sent no `story_insights` webhook for it.
+          Meta sends it most reliably for accounts connected with Facebook Login or with their
+          linked Facebook Page connected, so read insights while the story is live if you need
+          final numbers.
 
         Meta can report an expired story as an empty successful result rather
         than an error, so an expired story resolves to `cached` or `unavailable`

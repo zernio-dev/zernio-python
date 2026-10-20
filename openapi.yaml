@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.303.0"
+  version: "1.304.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -18873,9 +18873,9 @@ paths:
           description: |
             Comma-separated list of metrics. Defaults to "reach,views,accounts_engaged,total_interactions".
             Valid metrics: reach, views, accounts_engaged, total_interactions, comments, likes, saves, shares,
-            replies, reposts, follows_and_unfollows, profile_links_taps.
+            replies, reposts, follows_and_unfollows, profile_links_taps, profile_views, website_clicks.
             Note: only "reach" supports metricType=time_series. All other metrics (including
-            follows_and_unfollows) are total_value only. This is an Instagram Graph API limitation,
+            follows_and_unfollows, profile_views and website_clicks) are total_value only. This is an Instagram Graph API limitation,
             not a Zernio limitation - the IG API does not return time-series data for these metrics.
             For a daily running follower count, use /v1/analytics/instagram/follower-history instead.
         - name: fromDate
@@ -18977,7 +18977,7 @@ paths:
                 invalidMetric:
                   value:
                     error: "Invalid metrics: impressions"
-                    validMetrics: ["accounts_engaged", "comments", "follows_and_unfollows", "likes", "profile_links_taps", "reach", "replies", "reposts", "saves", "shares", "total_interactions", "views"]
+                    validMetrics: ["accounts_engaged", "comments", "follows_and_unfollows", "likes", "profile_links_taps", "profile_views", "reach", "replies", "reposts", "saves", "shares", "total_interactions", "views", "website_clicks"]
                 breakdownWithTimeSeries:
                   value:
                     error: "Breakdowns are only supported with metricType=total_value"
@@ -32562,8 +32562,10 @@ paths:
         - `live`: fetched from Meta in real time (story is still active)
         - `cached`: fetched from a persisted `story_insights` webhook payload
           (story has expired but we received its final-state metrics from Meta)
-        - `unavailable`: story has expired and we never received its webhook
-          payload (for example, the account connected after the story expired)
+        - `unavailable`: story has expired and Meta sent no `story_insights` webhook for it.
+          Meta sends it most reliably for accounts connected with Facebook Login or with their
+          linked Facebook Page connected, so read insights while the story is live if you need
+          final numbers.
 
         Meta can report an expired story as an empty successful result rather
         than an error, so an expired story resolves to `cached` or `unavailable`
