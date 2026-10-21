@@ -931,6 +931,39 @@ class AdAccountsResource:
         )
         return self._client._patch("/v1/ads/accounts/manager-links", data=payload)
 
+    def get_ad_account_billing(
+        self, account_id: str, *, ad_account_id: str | None = None
+    ) -> dict[str, Any]:
+        """Get ad account billing"""
+        params = self._build_params(
+            account_id=account_id,
+            ad_account_id=ad_account_id,
+        )
+        return self._client._get("/v1/ads/accounts/billing", params=params)
+
+    def set_up_ad_account_billing(
+        self,
+        account_id: str,
+        ad_account_id: str,
+        payments_account_id: str,
+        *,
+        spending_limit: float | None = None,
+        budget_name: str | None = "Zernio account budget",
+        purchase_order_number: str | None = None,
+        validate_only: bool | None = False,
+    ) -> dict[str, Any]:
+        """Set up ad account billing (monthly invoicing)"""
+        payload = self._build_payload(
+            account_id=account_id,
+            ad_account_id=ad_account_id,
+            payments_account_id=payments_account_id,
+            spending_limit=spending_limit,
+            budget_name=budget_name,
+            purchase_order_number=purchase_order_number,
+            validate_only=validate_only,
+        )
+        return self._client._post("/v1/ads/accounts/billing", data=payload)
+
     def list_ad_account_user_invitations(
         self, account_id: str, *, ad_account_id: str | None = None
     ) -> dict[str, Any]:
@@ -2045,6 +2078,39 @@ class AdAccountsResource:
         return await self._client._apatch(
             "/v1/ads/accounts/manager-links", data=payload
         )
+
+    async def aget_ad_account_billing(
+        self, account_id: str, *, ad_account_id: str | None = None
+    ) -> dict[str, Any]:
+        """Get ad account billing (async)"""
+        params = self._build_params(
+            account_id=account_id,
+            ad_account_id=ad_account_id,
+        )
+        return await self._client._aget("/v1/ads/accounts/billing", params=params)
+
+    async def aset_up_ad_account_billing(
+        self,
+        account_id: str,
+        ad_account_id: str,
+        payments_account_id: str,
+        *,
+        spending_limit: float | None = None,
+        budget_name: str | None = "Zernio account budget",
+        purchase_order_number: str | None = None,
+        validate_only: bool | None = False,
+    ) -> dict[str, Any]:
+        """Set up ad account billing (monthly invoicing) (async)"""
+        payload = self._build_payload(
+            account_id=account_id,
+            ad_account_id=ad_account_id,
+            payments_account_id=payments_account_id,
+            spending_limit=spending_limit,
+            budget_name=budget_name,
+            purchase_order_number=purchase_order_number,
+            validate_only=validate_only,
+        )
+        return await self._client._apost("/v1/ads/accounts/billing", data=payload)
 
     async def alist_ad_account_user_invitations(
         self, account_id: str, *, ad_account_id: str | None = None

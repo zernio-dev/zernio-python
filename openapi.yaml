@@ -64573,6 +64573,190 @@ paths:
         '429': { description: "Google Ads operations budget or quota exhausted; retry later." }
         '501': { description: Only available on Google Ads accounts }
 
+  /v1/ads/accounts/billing:
+    get:
+      x-resource-group: "ads"
+      operationId: getAdAccountBilling
+      tags: ["Ad Accounts"]
+      x-platforms: ["google"]
+      summary: 'Get ad account billing'
+      description: >-
+        Reads the payments accounts a Google Ads account can be billed to, plus its billing setups and account budgets.
+
+
+        Payments accounts come from Google's PaymentsAccountService, read as the manager
+        above the customer: they are the monthly invoicing (consolidated billing) accounts
+        of that manager. An empty `paymentsAccounts` means the manager has no monthly
+        invoicing, so billing cannot be set up through the API and has to be added in
+        Google Ads. Billing setups and account budgets are read live from Google with their
+        status. Results are cached for 10 minutes and dropped on every setup through Zernio.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: accountId, in: query, required: true, schema: { type: string }, description: "Google ads SocialAccount id." }
+        - { name: adAccountId, in: query, required: false, schema: { type: string }, description: "Google Ads customer id, digits only. Defaults to the connection's selected customer." }
+      responses:
+        '200':
+          description: Billing state of the customer
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  customerId: { type: string }
+                  paymentsAccounts:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        paymentsAccountId: { type: string, description: "Format 1234-5678-9012-3456. Pass it to POST /v1/ads/accounts/billing." }
+                        name: { type: [string, "null"] }
+                        currency: { type: [string, "null"] }
+                        paymentsProfileId: { type: [string, "null"] }
+                        payingManagerCustomerId: { type: [string, "null"], description: "Manager whose monthly invoice pays this account." }
+                  billingSetups:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        billingSetupId: { type: string }
+                        status: { type: string, enum: [PENDING, APPROVED_HELD, APPROVED, CANCELLED, UNKNOWN], description: "APPROVED_HELD means approved but waiting for its first account budget to be approved." }
+                        paymentsAccountId: { type: [string, "null"] }
+                        startDateTime: { type: [string, "null"], description: "In the account time zone, as Google returns it." }
+                        endDateTime: { type: [string, "null"] }
+                  accountBudgets:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        accountBudgetId: { type: string }
+                        status: { type: string, enum: [PENDING, APPROVED, CANCELLED, UNKNOWN] }
+                        billingSetupId: { type: [string, "null"] }
+                        approvedSpendingLimitMicros: { type: [string, "null"] }
+                        approvedSpendingLimitType: { type: [string, "null"], description: "INFINITE for an unlimited budget." }
+                        pendingProposalId: { type: [string, "null"], description: "Account budget proposal still waiting for Google's review." }
+                  pendingBudgetProposals:
+                    type: array
+                    description: "New account budgets proposed but not yet approved by Google. A setup with one is not reused by the POST."
+                    items:
+                      type: object
+                      properties:
+                        accountBudgetProposalId: { type: string }
+                        billingSetupId: { type: [string, "null"] }
+                  cachedAt: { type: [string, "null"], format: date-time, description: "When this data was fetched from Google. Null when the cache is unavailable." }
+                  stale: { type: boolean, description: "True when Google's quota was exhausted and this is the last successful fetch." }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/AdAccountNotSelected' }
+        '404': { $ref: '#/components/responses/AccountUnavailable' }
+        '409': { $ref: '#/components/responses/AccountConnectionRequired' }
+        '429': { description: "Google Ads operations budget or quota exhausted; retry later." }
+        '501': { description: Only available on Google Ads accounts }
+    post:
+      x-resource-group: "ads"
+      operationId: setUpAdAccountBilling
+      tags: ["Ad Accounts"]
+      x-platforms: ["google"]
+      summary: 'Set up ad account billing (monthly invoicing)'
+      description: >-
+        Bills a Google Ads account to a monthly invoicing payments account of a manager above it, and proposes its account budget, so the account can serve without anyone opening Google Ads.
+
+
+        Monthly invoicing only. Google's API cannot add a card or other payment method,
+        so `paymentsAccountId` must be one of the manager's monthly invoicing (consolidated
+        billing) payments accounts listed by GET /v1/ads/accounts/billing. A manager without
+        monthly invoicing has none, and billing has to be added in Google Ads instead.
+
+
+        Creates a billing setup (Google's BillingSetupService) that starts now on that
+        payments account, then an account budget proposal that starts now and never ends:
+        unlimited by default, or capped at `spendingLimit` in the account currency. Google
+        reviews the budget offline, usually within an hour; until then the setup reads
+        `APPROVED_HELD` and ads do not serve. A customer whose current billing setup
+        already has a budget is refused with 409, and so is one billed to another payments
+        account: this call never replaces existing billing. A current setup on the same
+        payments account without a budget (for example after a budget rejection) is
+        reused, so resending the same request finishes it.
+
+
+        Not idempotent and never retried: after a 502 with details.creationStatus=unknown,
+        read GET /v1/ads/accounts/billing before retrying. Google has no dry run for
+        billing setups, so `validateOnly: true` checks the payments account and the
+        existing billing without creating anything (and asks Google to validate the budget
+        when a setup would be reused).
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [accountId, adAccountId, paymentsAccountId]
+              properties:
+                accountId: { type: string, pattern: '^[a-fA-F0-9]{24}$', description: "Google ads SocialAccount id." }
+                adAccountId: { type: string, pattern: '^[0-9]+$', description: "Google Ads customer id to bill, digits only." }
+                paymentsAccountId: { type: string, pattern: '^\d{4}-\d{4}-\d{4}-\d{4}$', description: "Monthly invoicing payments account from GET /v1/ads/accounts/billing." }
+                spendingLimit: { type: number, exclusiveMinimum: 0, description: "Account budget cap in the account currency. Omit for an unlimited budget." }
+                budgetName: { type: string, minLength: 1, maxLength: 255, default: "Zernio account budget" }
+                purchaseOrderNumber: { type: string, minLength: 1, maxLength: 64, description: "Printed on the invoice. No effect on delivery." }
+                validateOnly: { type: boolean, default: false }
+            example:
+              accountId: "69ce75d483e990e1c01ccfe4"
+              adAccountId: "5551234567"
+              paymentsAccountId: "1234-5678-9012-3456"
+              spendingLimit: 5000
+      responses:
+        '201':
+          description: "Billing setup created (or reused) and account budget proposed."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  customerId: { type: string }
+                  paymentsAccountId: { type: string }
+                  paymentsAccountName: { type: [string, "null"] }
+                  billingSetupId: { type: string }
+                  reusedBillingSetup: { type: boolean, description: "True when an existing setup on the same payments account without a budget was completed." }
+                  accountBudgetProposalId: { type: [string, "null"] }
+                  validateOnly: { type: boolean }
+                  nextSteps: { type: string }
+        '200':
+          description: "validateOnly: checks passed, nothing created. billingSetupId is set when an existing setup would be reused."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  customerId: { type: string }
+                  paymentsAccountId: { type: string }
+                  paymentsAccountName: { type: [string, "null"] }
+                  billingSetupId: { type: [string, "null"] }
+                  reusedBillingSetup: { type: boolean }
+                  accountBudgetProposalId: { type: [string, "null"], description: "Always null for validateOnly." }
+                  validateOnly: { type: boolean }
+        '400':
+          description: "Invalid input, a payments account the customer cannot use (the message lists the available ones), or a Google rejection. A rejected budget after a created setup carries details.billingSetupId: resend the same request to finish."
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/AdAccountNotSelected' }
+        '404': { $ref: '#/components/responses/AccountUnavailable' }
+        '409':
+          description: "The customer already has billing: a current billing setup with a budget, or one on another payments account. Nothing is changed."
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+        '429': { description: "Google Ads operations budget or quota exhausted; retry later." }
+        '501': { description: Only available on Google Ads accounts }
+        '502':
+          description: "Google did not confirm the billing setup (details.creationStatus=unknown) or the budget proposal. Read GET /v1/ads/accounts/billing before retrying."
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
   /v1/ads/accounts/user-invitations:
     get:
       x-resource-group: "ads"
@@ -65242,7 +65426,7 @@ paths:
                     connectionUpdated: true
                     warnings: []
                     paymentMethodRequired: true
-                    nextSteps: "The account has no billing yet. Set up billing in Google Ads (Billing > Settings) before ads can serve, or add it to an existing monthly invoicing setup. Zernio cannot add payment methods through the API."
+                    nextSteps: "The account has no billing yet. If the manager has monthly invoicing, set it up with POST /v1/ads/accounts/billing; otherwise add billing in Google Ads (Billing > Settings). Ads do not serve until billing is set up. Zernio cannot add payment methods through the API."
                     validateOnly: false
         '400':
           description: "Invalid input, a managerCustomerId the connection does not reach, or a Meta or Google rejection. For Meta, details.reason identifies creation_limit, business_verification_required, unsupported_currency, unsupported_timezone or business_unavailable when recognized."

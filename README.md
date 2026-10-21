@@ -465,6 +465,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `ad_accounts.create_custom_conversion()` | Create custom conversion |
 | `ad_accounts.create_high_demand_period()` | Schedule a budget increase |
 | `ad_accounts.create_value_rule_set()` | Create a value rule set |
+| `ad_accounts.get_ad_account_billing()` | Get ad account billing |
 | `ad_accounts.get_ad_account_finance()` | Ad account finances |
 | `ad_accounts.get_ad_account_hierarchy()` | Get manager account hierarchy |
 | `ad_accounts.get_ad_account_live_entities()` | Read an ad account's campaigns and ad sets live |
@@ -505,6 +506,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `ad_accounts.replace_ad_negative_keyword_list_keywords()` | Replace negative list keywords |
 | `ad_accounts.reply_to_ad_comment()` | Reply to an ad comment |
 | `ad_accounts.revoke_ad_account_user_invitation()` | Revoke a user access invitation |
+| `ad_accounts.set_up_ad_account_billing()` | Set up ad account billing (monthly invoicing) |
 | `ad_accounts.withdraw_ad_account_user_invitation_approval()` | Withdraw an invitation awaiting multi-party approval |
 
 ### Ad Audiences

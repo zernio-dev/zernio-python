@@ -4379,6 +4379,87 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="Get ad account billing",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def ad_accounts_get_ad_account_billing(
+        account_id: str, ad_account_id: str | None = None
+    ) -> str:
+        """Get ad account billing
+
+        Reads the payments accounts a Google Ads account can be billed to, plus its billing setups and account budgets.
+
+        Payments accounts come from Google's PaymentsAccountService, read as the manager above the customer: they are the monthly invoicing (consolidated billing) accounts of that manager. An empty `paymentsAccounts` means the manager has no monthly invoicing, so billing cannot be set up through the API and has to be added in Google Ads. Billing setups and account budgets are read live from Google with their status. Results are cached for 10 minutes and dropped on every setup through Zernio.
+
+        Platforms: google
+
+        Args:
+            account_id: Google ads SocialAccount id. (required)
+            ad_account_id: Google Ads customer id, digits only. Defaults to the connection's selected customer."""
+        client = _get_client()
+        try:
+            response = client.ad_accounts.get_ad_account_billing(
+                account_id=account_id, ad_account_id=ad_account_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Set up ad account billing (monthly invoicing)",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def ad_accounts_set_up_ad_account_billing(
+        account_id: str,
+        ad_account_id: str,
+        payments_account_id: str,
+        spending_limit: float | None = None,
+        budget_name: str = "Zernio account budget",
+        purchase_order_number: str | None = None,
+        validate_only: bool = False,
+    ) -> str:
+        """Set up ad account billing (monthly invoicing)
+
+        Bills a Google Ads account to a monthly invoicing payments account of a manager above it, and proposes its account budget, so the account can serve without anyone opening Google Ads.
+
+        Monthly invoicing only. Google's API cannot add a card or other payment method, so `paymentsAccountId` must be one of the manager's monthly invoicing (consolidated billing) payments accounts listed by GET /v1/ads/accounts/billing. A manager without monthly invoicing has none, and billing has to be added in Google Ads instead.
+
+        Creates a billing setup (Google's BillingSetupService) that starts now on that payments account, then an account budget proposal that starts now and never ends: unlimited by default, or capped at `spendingLimit` in the account currency. Google reviews the budget offline, usually within an hour; until then the setup reads `APPROVED_HELD` and ads do not serve. A customer whose current billing setup already has a budget is refused with 409, and so is one billed to another payments ...
+
+        Platforms: google
+
+        Args:
+            account_id: Google ads SocialAccount id. (required)
+            ad_account_id: Google Ads customer id to bill, digits only. (required)
+            payments_account_id: Monthly invoicing payments account from GET /v1/ads/accounts/billing. (required)
+            spending_limit: Account budget cap in the account currency. Omit for an unlimited budget.
+            budget_name
+            purchase_order_number: Printed on the invoice. No effect on delivery.
+            validate_only"""
+        client = _get_client()
+        try:
+            response = client.ad_accounts.set_up_ad_account_billing(
+                account_id=account_id,
+                ad_account_id=ad_account_id,
+                payments_account_id=payments_account_id,
+                spending_limit=spending_limit,
+                budget_name=budget_name,
+                purchase_order_number=purchase_order_number,
+                validate_only=validate_only,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="List user access invitations",
             readOnlyHint=True,
             destructiveHint=False,
