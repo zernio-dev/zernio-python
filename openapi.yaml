@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.315.2"
+  version: "1.316.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -14045,7 +14045,8 @@ components:
             channel: { type: string, enum: [whatsapp, messenger, instagram_direct] }
             wabaId: { type: string, description: 'WhatsApp only. WhatsApp Business Account id, sent as `whatsapp_business_account_id`.' }
             ctwaClid: { type: string, description: 'WhatsApp only. Click-to-WhatsApp click id from the first inbound message referral, sent as `ctwa_clid`.' }
-            pageId: { type: string, description: 'Messenger and Instagram Direct. Facebook Page id, sent as `page_id`.' }
+            pageId: { type: string, description: 'Messenger: Facebook Page id, sent as `page_id`. Instagram Direct: when `instagramBusinessAccountId` is absent, Zernio reads the Instagram professional account linked to this Page and sends its id as `instagram_business_account_id`; if none is linked or the lookup fails, `page_id` is sent instead.' }
+            instagramBusinessAccountId: { type: string, description: 'Instagram Direct only. Instagram professional account id (`instagram_business_account` on the Page), sent as `instagram_business_account_id` next to `ig_sid`.' }
             pageScopedUserId: { type: string, description: 'Messenger only. The page-scoped user id (PSID) your Messenger webhook gives for the person, sent as `page_scoped_user_id` next to `page_id`.' }
             instagramScopedUserId: { type: string, description: 'Instagram Direct only. The Instagram-scoped user id (IGSID) your Instagram messaging webhook gives for the person, sent as `ig_sid`.' }
         platformData:
@@ -70480,6 +70481,14 @@ paths:
                         eventId: { type: string, description: Echoes back the eventId of the failed event. }
                         message: { type: string }
                         code: { oneOf: [{ type: string }, { type: integer }] }
+                        platformError:
+                          type: object
+                          additionalProperties: true
+                          description: |
+                            Meta only. Meta's own error for the rejected chunk, with credentials
+                            redacted: `message`, `type`, `code`, `error_subcode`, `error_user_title`,
+                            `error_user_msg` and `fbtrace_id` when Meta sends them. `message` above
+                            already ends with `error_user_msg`. Absent when Meta returned no error body.
                   traceId:
                     type: string
                     description: |
@@ -72127,6 +72136,14 @@ paths:
                           oneOf:
                             - { type: string }
                             - { type: integer }
+                        platformError:
+                          type: object
+                          additionalProperties: true
+                          description: |
+                            Meta's own error for the rejected event, with credentials redacted:
+                            `message`, `type`, `code`, `error_subcode`, `error_user_title`,
+                            `error_user_msg` and `fbtrace_id` when Meta sends them. `message` above
+                            already ends with `error_user_msg`. Absent when Meta returned no error body.
                   traceId:
                     type: string
                     description: |
