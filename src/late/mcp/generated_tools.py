@@ -19795,7 +19795,7 @@ def register_generated_tools(mcp, _get_client):
         signup: Literal["hosted"] | None = None,
         brand_name: str | None = None,
         primary_color: str | None = None,
-        welcome: bool = False,
+        welcome: bool | None = None,
         welcome_theme: str | None = None,
         logo_url: str | None = None,
         language: Literal["en", "es", "pt-BR"] | None = None,
@@ -20000,9 +20000,9 @@ def register_generated_tools(mcp, _get_client):
         open. Skin it with `brandName`, `primaryColor` and `language` below.
                 brand_name: Your product name, for the two branded pages. With `signup=hosted` (WhatsApp) it replaces Zernio in the page title ("Connect your WhatsApp number to <brandName>"). With `welcome=true` it fills the heading ("<brandName> wants to connect to your <platform>"); without it the screen shows Zernio and the Zernio mark. Both pages keep a Zernio mark: they are co-branded, not white-label. Trimmed; 1 to 60 characters. Rejected with 400 `INVALID_FIELD_VALUE` without `signup=hosted` or `welcome=true`. Sealed into the page link at issue time, so editing the URL cannot change it.
                 primary_color: Hex colour (`#RRGGBB`) for the primary button on the hosted WhatsApp signup page (`signup=hosted`) or the welcome screen (`welcome=true`). Validated server-side; anything else is a 400 `INVALID_FIELD_VALUE`. Rejected without one of the two.
-                welcome: Any platform. When `true`, `authUrl` points to a Zernio-hosted welcome screen that shows your brand next to the platform ("<brandName> wants to connect to your <platform>") with a Continue button; Continue sends the user to the platform's own authorization screen and the rest of the flow is unchanged. `brandName`, `logoUrl`, `primaryColor` and `welcomeTheme` are optional and default to Zernio's own name, mark and look. The link is valid for 30 minutes, after which the page asks the user to start again. The brand also carries to the account and channel pickers Zernio shows after authorization, and when you pass no `redirect_url` the flow ends on a branded Zernio-hosted page saying whether the account connected, instead of the Zernio dashboard. Cannot be combined with `headless=true` or `signup=hosted` (400 `INVALID_FIELD_VALUE`). The platform's authorization screen still names the Zernio app.
-                welcome_theme: Welcome screen only (`welcome=true`): a URL-encoded JSON object that restyles and rewords the screen. All keys are optional. Copy: `heading` (up to 120 characters), `trustLine` and `consentLine` (up to 200 each), `buttonLabel` (up to 30); each may contain the placeholders `{brand}` and `{platform}`. Style: `primaryColor`, `pageColor`, `cardColor` and `textColor` as `#RRGGBB`, `cornerRadius` as an integer from 0 to 24 (pixels), `font` as `sans`, `serif` or `mono`. A `primaryColor` here wins over the `primaryColor` parameter. Unknown keys, invalid JSON or an invalid value are a 400 `INVALID_FIELD_VALUE`. Rejected without `welcome=true`. Example: `{"heading":"Link your {platform} to {brand}","cardColor":"#FFF7ED","cornerRadius":12}`.
-                logo_url: Welcome screen only (`welcome=true`): https URL of your logo, shown in a square tile, so use a square image. Without it the tile shows the first letter of `brandName`, or the Zernio mark when there is no `brandName` either. Rejected with 400 `INVALID_FIELD_VALUE` without `welcome=true`.
+                welcome: Any platform. When `true`, `authUrl` points to a Zernio-hosted welcome screen that shows your brand next to the platform ("<brandName> wants to connect to your <platform>") whose button fills for about a second and then sends the user on to the platform's own authorization screen, with no click; the rest of the flow is unchanged. `brandName`, `logoUrl`, `primaryColor` and `welcomeTheme` are optional and default to Zernio's own name, mark and look. The link is valid for 30 minutes, after which the page asks the user to start again. The brand also carries to the account and channel pickers Zernio shows after authorization, and when you pass no `redirect_url` the flow ends on a branded Zernio-hosted page saying whether the account connected, instead of the Zernio dashboard. Cannot be combined with `headless=true` or `signup=hosted` (400 `INVALID_FIELD_VALUE`). The platform's authorization screen still names the Zernio app. Recommended. When left out, the screen is shown if the workspace saved it as on by default (`PUT /v1/connect/welcome-screen`), except with `headless=true` or `signup=hosted`; pass `false` to skip it. Branding you leave out of the call comes from those saved settings, and a `welcomeTheme` you send is merged key by key over the saved theme.
+                welcome_theme: Welcome screen only (`welcome=true`): a URL-encoded JSON object that restyles and rewords the screen. All keys are optional. Copy: `heading` (up to 120 characters), `trustLine` and `consentLine` (up to 200 each), `buttonLabel` (up to 30, the label on that button); each may contain the placeholders `{brand}` and `{platform}`. Style: `primaryColor`, `pageColor`, `cardColor` and `textColor` as `#RRGGBB`, `cornerRadius` as an integer from 0 to 24 (pixels), `font` as `sans`, `serif` or `mono`. A `primaryColor` here wins over the `primaryColor` parameter. Unknown keys, invalid JSON or an invalid value are a 400 `INVALID_FIELD_VALUE`. Rejected when the welcome screen is not shown. Example: `{"heading":"Link your {platform} to {brand}","cardColor":"#FFF7ED","cornerRadius":12}`.
+                logo_url: Welcome screen only (`welcome=true`): https URL of your logo, shown in a square tile, so use a square image. Without it the tile shows the first letter of `brandName`, or the Zernio mark when there is no `brandName` either. Rejected with 400 `INVALID_FIELD_VALUE` when the welcome screen is not shown.
                 language: Hosted signup page only (`signup=hosted`, WhatsApp): language of the page and its follow-along guide. Explainer videos stay in English. Default `en`. Rejected without `signup=hosted`."""
         client = _get_client()
         try:
@@ -20748,6 +20748,60 @@ def register_generated_tools(mcp, _get_client):
                 account_id=account_id,
                 pending_data_token=pending_data_token,
                 redirect_url=redirect_url,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get the saved welcome screen",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def connect_get_connect_welcome_screen() -> str:
+        """Get the saved welcome screen
+
+        The workspace's saved welcome screen settings, shared by the whole team. With `showByDefault` on, every `GET /v1/connect/{platform}` made with your API key shows the welcome screen before the platform's authorization screen, without `welcome=true` or any branding parameter. Connects started from the Zernio dashboard always show it, with this branding when saved."""
+        client = _get_client()
+        try:
+            response = client.connect.get_connect_welcome_screen()
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Save the welcome screen",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def connect_update_connect_welcome_screen(
+        show_by_default: bool,
+        brand_name: str | None = None,
+        logo_url: str | None = None,
+        theme: dict[str, Any] | None = None,
+    ) -> str:
+        """Save the welcome screen
+
+        Replaces the workspace's welcome screen settings: a field left out is cleared. Only the account owner or a full-access team member can save, and not with a profile-scoped API key. Parameters sent on a connect call still win over these values for that call.
+
+        Args:
+            show_by_default: Show the welcome screen on connect calls that do not pass `welcome`. (required)
+            brand_name
+            logo_url: https URL of a square logo.
+            theme: Same keys as the `welcomeTheme` parameter of `GET /v1/connect/{platform}`, as a JSON object."""
+        client = _get_client()
+        try:
+            response = client.connect.update_connect_welcome_screen(
+                show_by_default=show_by_default,
+                brand_name=brand_name,
+                logo_url=logo_url,
+                theme=theme,
             )
             return _format_response(response)
         except Exception as e:

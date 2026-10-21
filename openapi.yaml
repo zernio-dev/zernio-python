@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.313.0"
+  version: "1.314.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -1180,6 +1180,18 @@ components:
                   effective_account_limit: 2000
                   current_account_count: 2000
   schemas:
+    ConnectWelcomeScreen:
+      type: object
+      properties:
+        showByDefault: { type: boolean }
+        brandName: { type: [string, "null"] }
+        logoUrl: { type: [string, "null"] }
+        theme: { type: [object, "null"], description: 'Same keys as the `welcomeTheme` parameter of `GET /v1/connect/{platform}`.' }
+      example:
+        showByDefault: true
+        brandName: Acme
+        logoUrl: https://acme.com/logo.png
+        theme: { primaryColor: '#1D4ED8', cornerRadius: 12 }
     AnalyticsDashboardTotals:
       type: object
       properties:
@@ -26326,16 +26338,16 @@ paths:
           description: 'Hex colour (`#RRGGBB`) for the primary button on the hosted WhatsApp signup page (`signup=hosted`) or the welcome screen (`welcome=true`). Validated server-side; anything else is a 400 `INVALID_FIELD_VALUE`. Rejected without one of the two.'
         - name: welcome
           in: query
-          schema: { type: boolean, default: false }
-          description: 'Any platform. When `true`, `authUrl` points to a Zernio-hosted welcome screen that shows your brand next to the platform ("<brandName> wants to connect to your <platform>") with a Continue button; Continue sends the user to the platform''s own authorization screen and the rest of the flow is unchanged. `brandName`, `logoUrl`, `primaryColor` and `welcomeTheme` are optional and default to Zernio''s own name, mark and look. The link is valid for 30 minutes, after which the page asks the user to start again. The brand also carries to the account and channel pickers Zernio shows after authorization, and when you pass no `redirect_url` the flow ends on a branded Zernio-hosted page saying whether the account connected, instead of the Zernio dashboard. Cannot be combined with `headless=true` or `signup=hosted` (400 `INVALID_FIELD_VALUE`). The platform''s authorization screen still names the Zernio app.'
+          schema: { type: boolean }
+          description: 'Any platform. When `true`, `authUrl` points to a Zernio-hosted welcome screen that shows your brand next to the platform ("<brandName> wants to connect to your <platform>") whose button fills for about a second and then sends the user on to the platform''s own authorization screen, with no click; the rest of the flow is unchanged. `brandName`, `logoUrl`, `primaryColor` and `welcomeTheme` are optional and default to Zernio''s own name, mark and look. The link is valid for 30 minutes, after which the page asks the user to start again. The brand also carries to the account and channel pickers Zernio shows after authorization, and when you pass no `redirect_url` the flow ends on a branded Zernio-hosted page saying whether the account connected, instead of the Zernio dashboard. Cannot be combined with `headless=true` or `signup=hosted` (400 `INVALID_FIELD_VALUE`). The platform''s authorization screen still names the Zernio app. Recommended. When left out, the screen is shown if the workspace saved it as on by default (`PUT /v1/connect/welcome-screen`), except with `headless=true` or `signup=hosted`; pass `false` to skip it. Branding you leave out of the call comes from those saved settings, and a `welcomeTheme` you send is merged key by key over the saved theme.'
         - name: welcomeTheme
           in: query
           schema: { type: string, maxLength: 4000 }
-          description: 'Welcome screen only (`welcome=true`): a URL-encoded JSON object that restyles and rewords the screen. All keys are optional. Copy: `heading` (up to 120 characters), `trustLine` and `consentLine` (up to 200 each), `buttonLabel` (up to 30); each may contain the placeholders `{brand}` and `{platform}`. Style: `primaryColor`, `pageColor`, `cardColor` and `textColor` as `#RRGGBB`, `cornerRadius` as an integer from 0 to 24 (pixels), `font` as `sans`, `serif` or `mono`. A `primaryColor` here wins over the `primaryColor` parameter. Unknown keys, invalid JSON or an invalid value are a 400 `INVALID_FIELD_VALUE`. Rejected without `welcome=true`. Example: `{"heading":"Link your {platform} to {brand}","cardColor":"#FFF7ED","cornerRadius":12}`.'
+          description: 'Welcome screen only (`welcome=true`): a URL-encoded JSON object that restyles and rewords the screen. All keys are optional. Copy: `heading` (up to 120 characters), `trustLine` and `consentLine` (up to 200 each), `buttonLabel` (up to 30, the label on that button); each may contain the placeholders `{brand}` and `{platform}`. Style: `primaryColor`, `pageColor`, `cardColor` and `textColor` as `#RRGGBB`, `cornerRadius` as an integer from 0 to 24 (pixels), `font` as `sans`, `serif` or `mono`. A `primaryColor` here wins over the `primaryColor` parameter. Unknown keys, invalid JSON or an invalid value are a 400 `INVALID_FIELD_VALUE`. Rejected when the welcome screen is not shown. Example: `{"heading":"Link your {platform} to {brand}","cardColor":"#FFF7ED","cornerRadius":12}`.'
         - name: logoUrl
           in: query
           schema: { type: string, format: uri, maxLength: 2048 }
-          description: 'Welcome screen only (`welcome=true`): https URL of your logo, shown in a square tile, so use a square image. Without it the tile shows the first letter of `brandName`, or the Zernio mark when there is no `brandName` either. Rejected with 400 `INVALID_FIELD_VALUE` without `welcome=true`.'
+          description: 'Welcome screen only (`welcome=true`): https URL of your logo, shown in a square tile, so use a square image. Without it the tile shows the first letter of `brandName`, or the Zernio mark when there is no `brandName` either. Rejected with 400 `INVALID_FIELD_VALUE` when the welcome screen is not shown.'
         - name: language
           in: query
           schema: { type: string, enum: [en, es, pt-BR] }
@@ -29982,6 +29994,61 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/ErrorResponse' }
 
+  /v1/connect/welcome-screen:
+    get:
+      x-resource-group: accounts
+      operationId: getConnectWelcomeScreen
+      tags: [Connect]
+      summary: Get the saved welcome screen
+      description: 'The workspace''s saved welcome screen settings, shared by the whole team. With `showByDefault` on, every `GET /v1/connect/{platform}` made with your API key shows the welcome screen before the platform''s authorization screen, without `welcome=true` or any branding parameter. Connects started from the Zernio dashboard always show it, with this branding when saved.'
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: The saved settings. A workspace that never saved any gets `showByDefault` false and null fields.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ConnectWelcomeScreen' }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    put:
+      x-resource-group: accounts
+      operationId: updateConnectWelcomeScreen
+      tags: [Connect]
+      summary: Save the welcome screen
+      description: 'Replaces the workspace''s welcome screen settings: a field left out is cleared. Only the account owner or a full-access team member can save, and not with a profile-scoped API key. Parameters sent on a connect call still win over these values for that call.'
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [showByDefault]
+              properties:
+                showByDefault: { type: boolean, description: 'Show the welcome screen on connect calls that do not pass `welcome`.' }
+                brandName: { type: string, minLength: 1, maxLength: 60 }
+                logoUrl: { type: string, format: uri, maxLength: 2048, description: 'https URL of a square logo.' }
+                theme: { type: object, description: 'Same keys as the `welcomeTheme` parameter of `GET /v1/connect/{platform}`, as a JSON object.' }
+            example:
+              showByDefault: true
+              brandName: Acme
+              logoUrl: https://acme.com/logo.png
+              theme: { primaryColor: '#1D4ED8', cornerRadius: 12 }
+      responses:
+        '200':
+          description: The saved settings.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ConnectWelcomeScreen' }
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: The caller cannot change workspace settings (code INSUFFICIENT_PERMISSIONS).
   /v1/connect/pending-data:
     get:
       x-resource-group: "public"

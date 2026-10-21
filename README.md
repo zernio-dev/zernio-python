@@ -353,6 +353,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `connect.create_pinterest_board()` | Create Pinterest board |
 | `connect.create_youtube_playlist()` | Create YouTube playlist |
 | `connect.get_connect_url()` | Get OAuth connect URL |
+| `connect.get_connect_welcome_screen()` | Get the saved welcome screen |
 | `connect.get_facebook_pages()` | List Facebook pages |
 | `connect.get_gmb_locations()` | List Google Business Profile locations |
 | `connect.get_hub_spot_connect_url()` | Get HubSpot OAuth connect URL |
@@ -370,6 +371,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `connect.get_word_press_auth_url()` | Get WordPress.com OAuth connect URL |
 | `connect.get_youtube_captions()` | Get a YouTube video transcript |
 | `connect.get_youtube_playlists()` | List YouTube playlists |
+| `connect.update_connect_welcome_screen()` | Save the welcome screen |
 | `connect.update_facebook_page()` | Update Facebook page |
 | `connect.update_gmb_location()` | Update Google Business Profile location |
 | `connect.update_linked_in_organization()` | Switch LinkedIn account type |
