@@ -21,7 +21,7 @@ from pathlib import Path
 from typing import Any
 
 import yaml
-from openapi_body import flatten_request_body_schema
+from openapi_body import flatten_request_body_schema, resolve_parameter_ref
 
 # Map OpenAPI tags to SDK resource names
 TAG_TO_RESOURCE: dict[str, str] = {
@@ -372,7 +372,8 @@ def extract_parameters(
     """Extract parameters from operation.
 
     `spec` is threaded through so `get_python_type` can dereference
-    `$ref`/`allOf` schemas to read the underlying type.
+    `$ref`/`allOf` schemas to read the underlying type. A `$ref` parameter
+    without `spec` raises ValueError.
 
     Dedupes by Python name: when the same parameter appears in both the path
     and the request body (e.g. `accountId` as a path param and also in the
@@ -390,27 +391,7 @@ def extract_parameters(
         params.append(entry)
 
     for param in operation.get("parameters", []):
-        if "$ref" in param:
-            ref = param["$ref"]
-            if "PageParam" in ref:
-                add_param({
-                    "name": "page",
-                    "type": "int",
-                    "required": False,
-                    "default": "1",
-                    "description": "Page number",
-                    "sdk_name": "page",
-                })
-            elif "LimitParam" in ref:
-                add_param({
-                    "name": "limit",
-                    "type": "int",
-                    "required": False,
-                    "default": "10",
-                    "description": "Results per page",
-                    "sdk_name": "limit",
-                })
-            continue
+        param = resolve_parameter_ref(param, spec)
 
         if "name" not in param:
             continue

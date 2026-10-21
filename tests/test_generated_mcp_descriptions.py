@@ -4,6 +4,7 @@ import asyncio
 import importlib
 from pathlib import Path
 from typing import Any, Literal
+from unittest.mock import Mock
 
 import pytest
 from fastmcp import FastMCP
@@ -15,13 +16,19 @@ def generator(monkeypatch):
     return importlib.import_module("generate_mcp_tools")
 
 
-def _register_probe(generator, operation: dict[str, Any]):
+def _register_probe(
+    generator,
+    operation: dict[str, Any],
+    *,
+    spec: dict[str, Any] | None = None,
+    client: Mock | None = None,
+):
     handler = generator.generate_tool_handler(
         "probe_tool",
         "probe",
         "probe",
         operation["summary"],
-        generator.extract_parameters(operation),
+        generator.extract_parameters(operation, spec),
         True,
         operation["summary"],
         operation.get("description", ""),
@@ -35,10 +42,11 @@ def _register_probe(generator, operation: dict[str, Any]):
         "Any": Any,
         "Literal": Literal,
         "ToolAnnotations": __import__("mcp.types").types.ToolAnnotations,
+        "_format_response": lambda _response: "ok",
     }
     exec(compile(source, "<generated-probe>", "exec"), namespace)
     mcp = FastMCP("probe")
-    namespace["register"](mcp, lambda: None)
+    namespace["register"](mcp, lambda: client)
     return mcp
 
 
@@ -160,3 +168,31 @@ def test_nested_field_summary_is_empty_for_scalars_and_scalar_lists(generator):
 def test_object_params_name_their_fields(generator):
     schema = {"type": "object", "properties": {"amount": {"type": "number"}}}
     assert generator.describe_nested_fields(schema, {}) == "Object with keys: amount (number)"
+
+
+def test_referenced_path_parameter_reaches_the_tool_and_the_sdk_call(generator):
+    spec = {
+        "components": {
+            "parameters": {
+                "AccountId": {
+                    "name": "accountId",
+                    "in": "path",
+                    "required": True,
+                    "schema": {"type": "string"},
+                }
+            }
+        }
+    }
+    operation = {
+        "summary": "Read the probe status",
+        "parameters": [{"$ref": "#/components/parameters/AccountId"}],
+    }
+    client = Mock()
+    mcp = _register_probe(generator, operation, spec=spec, client=client)
+    tool = asyncio.run(mcp.list_tools())[0]
+
+    assert tool.parameters["required"] == ["account_id"]
+
+    asyncio.run(mcp.call_tool("probe_tool", {"account_id": "acc_1"}))
+
+    client.probe.probe.assert_called_once_with(account_id="acc_1")
