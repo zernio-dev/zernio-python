@@ -4391,7 +4391,7 @@ def register_generated_tools(mcp, _get_client):
 
         Lists the email invitations to a Google Ads account, with their role and status.
 
-        Reads Google's `customer_user_access_invitation` resource for one customer: invitations that are `PENDING`, `DECLINED` or `EXPIRED` (Google expires them 20 days after sending). An accepted invitation becomes a user of the account and leaves this list, which can take Google up to 24 hours. An invitation still waiting for multi-party approval is not listed until a second admin approves it. Results are cached for 10 minutes and dropped on every invite or revoke through Zernio.
+        Reads Google's `customer_user_access_invitation` resource for one customer: invitations that are `PENDING`, `DECLINED` or `EXPIRED` (Google expires them 20 days after sending). An accepted invitation becomes a user of the account and leaves this list, which can take Google up to 24 hours. An invitation still waiting for multi-party approval is not listed until a second admin approves it; GET /v1/ads/accounts/user-invitations/pending-approvals lists those. Results are cached for 10 minutes and dropped on every invite or revoke through Zernio.
 
         Platforms: google
 
@@ -4426,7 +4426,7 @@ def register_generated_tools(mcp, _get_client):
 
         Emails someone an invitation to a Google Ads account with the access role you choose, for example to hand a client account you created under your manager to its owner.
 
-        Creates a user access invitation (Google's CustomerUserAccessInvitationService) on `adAccountId`. The connection's Google user needs admin access to that account, directly or through a manager above it, which is the case for an account created with POST /v1/ads/accounts. The recipient accepts from the email, possibly with another Google account. When Google requires multi-party approval, nothing is sent until a second admin of the account approves the request in Google Ads: the response then has `status: PENDING_APPROVAL` and a `multiPartyAuthReviewId` instead of an `invitationId`. Not idempotent: Google refuses a second invitation while the email has one pending or awaiting approval. Google has no server-side check for this call, so `validateOnly: true` reads the account's invitations with the same credentials ...
+        Creates a user access invitation (Google's CustomerUserAccessInvitationService) on `adAccountId`. The connection's Google user needs admin access to that account, directly or through a manager above it, which is the case for an account created with POST /v1/ads/accounts. The recipient accepts from the email, possibly with another Google account. When Google requires multi-party approval, nothing is sent until a second admin of the account approves the request in Google Ads: the response then has `status: PENDING_APPROVAL` and a `multiPartyAuthReviewId` instead of an `invitationId`, which DELETE /v1/ads/accounts/user-invitations/pending-approvals withdraws. Not idempotent: Google refuses a second invitation while the email has one pending or awaiting approval. Google has no server-side check for this call, so ...
 
         Platforms: google
 
@@ -4478,6 +4478,71 @@ def register_generated_tools(mcp, _get_client):
                 account_id=account_id,
                 ad_account_id=ad_account_id,
                 invitation_id=invitation_id,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List invitations awaiting multi-party approval",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def ad_accounts_list_ad_account_user_invitation_approvals(
+        account_id: str, ad_account_id: str | None = None
+    ) -> str:
+        """List invitations awaiting multi-party approval
+
+        Lists the email invitations to a Google Ads account that Google is holding until a second admin approves them.
+
+        When Google requires multi-party approval, POST /v1/ads/accounts/user-invitations answers `status: PENDING_APPROVAL` and sends nothing. Those requests are not in GET /v1/ads/accounts/user-invitations; this reads Google's `multi_party_auth_review` resource for the ones still `PENDING` that target an invitation. Approved, rejected, revoked and expired reviews are not listed. Results are cached for 10 minutes and dropped on every invite or withdrawal through Zernio, but an approval or rejection made in Google Ads can take that long to show.
+
+        Platforms: google
+
+        Args:
+            account_id: Google ads SocialAccount id. (required)
+            ad_account_id: Google Ads customer id, digits only. Defaults to the connection's selected customer."""
+        client = _get_client()
+        try:
+            response = client.ad_accounts.list_ad_account_user_invitation_approvals(
+                account_id=account_id, ad_account_id=ad_account_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Withdraw an invitation awaiting multi-party approval",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def ad_accounts_withdraw_ad_account_user_invitation_approval(
+        account_id: str, ad_account_id: str, multi_party_auth_review_id: str
+    ) -> str:
+        """Withdraw an invitation awaiting multi-party approval
+
+        Cancels an email invitation that Google is still holding for a second admin's approval, so the same address can be invited again right away.
+
+        Resolves the review `multiPartyAuthReviewId` (from POST /v1/ads/accounts/user-invitations or GET on this path) to `REVOKED` through Google's MultiPartyAuthReviewService. Only the Google user who sent the invitation can withdraw it, and only while no admin has approved or rejected it; otherwise Google refuses and this returns a 400. Without a withdrawal, Google refuses a new invitation to the address until the review is resolved or expires.
+
+        Platforms: google
+
+        Args:
+            account_id: Google ads SocialAccount id. (required)
+            ad_account_id: Google Ads customer id, digits only. (required)
+            multi_party_auth_review_id: Numeric review id from POST /v1/ads/accounts/user-invitations or GET /v1/ads/accounts/user-invitations/pending-approvals. (required)"""
+        client = _get_client()
+        try:
+            response = client.ad_accounts.withdraw_ad_account_user_invitation_approval(
+                account_id=account_id,
+                ad_account_id=ad_account_id,
+                multi_party_auth_review_id=multi_party_auth_review_id,
             )
             return _format_response(response)
         except Exception as e:

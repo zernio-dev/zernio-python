@@ -440,6 +440,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `ad_accounts.list_account_callouts()` | List account callouts |
 | `ad_accounts.list_account_sitelinks()` | List account sitelinks |
 | `ad_accounts.list_account_structured_snippets()` | List account snippets |
+| `ad_accounts.list_ad_account_user_invitation_approvals()` | List invitations awaiting multi-party approval |
 | `ad_accounts.list_ad_account_user_invitations()` | List user access invitations |
 | `ad_accounts.list_ad_account_users()` | Ad account users |
 | `ad_accounts.list_ad_accounts()` | List ad accounts |
@@ -503,6 +504,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `ad_accounts.replace_ad_negative_keyword_list_keywords()` | Replace negative list keywords |
 | `ad_accounts.reply_to_ad_comment()` | Reply to an ad comment |
 | `ad_accounts.revoke_ad_account_user_invitation()` | Revoke a user access invitation |
+| `ad_accounts.withdraw_ad_account_user_invitation_approval()` | Withdraw an invitation awaiting multi-party approval |
 
 ### Ad Audiences
 | Method | Description |

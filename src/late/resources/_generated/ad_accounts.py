@@ -971,6 +971,31 @@ class AdAccountsResource:
         )
         return self._client._delete("/v1/ads/accounts/user-invitations", params=params)
 
+    def list_ad_account_user_invitation_approvals(
+        self, account_id: str, *, ad_account_id: str | None = None
+    ) -> dict[str, Any]:
+        """List invitations awaiting multi-party approval"""
+        params = self._build_params(
+            account_id=account_id,
+            ad_account_id=ad_account_id,
+        )
+        return self._client._get(
+            "/v1/ads/accounts/user-invitations/pending-approvals", params=params
+        )
+
+    def withdraw_ad_account_user_invitation_approval(
+        self, account_id: str, ad_account_id: str, multi_party_auth_review_id: str
+    ) -> dict[str, Any]:
+        """Withdraw an invitation awaiting multi-party approval"""
+        params = self._build_params(
+            account_id=account_id,
+            ad_account_id=ad_account_id,
+            multi_party_auth_review_id=multi_party_auth_review_id,
+        )
+        return self._client._delete(
+            "/v1/ads/accounts/user-invitations/pending-approvals", params=params
+        )
+
     def list_ad_account_users(
         self, account_id: str, ad_account_id: str, business_id: str
     ) -> dict[str, Any]:
@@ -2065,6 +2090,31 @@ class AdAccountsResource:
         )
         return await self._client._adelete(
             "/v1/ads/accounts/user-invitations", params=params
+        )
+
+    async def alist_ad_account_user_invitation_approvals(
+        self, account_id: str, *, ad_account_id: str | None = None
+    ) -> dict[str, Any]:
+        """List invitations awaiting multi-party approval (async)"""
+        params = self._build_params(
+            account_id=account_id,
+            ad_account_id=ad_account_id,
+        )
+        return await self._client._aget(
+            "/v1/ads/accounts/user-invitations/pending-approvals", params=params
+        )
+
+    async def awithdraw_ad_account_user_invitation_approval(
+        self, account_id: str, ad_account_id: str, multi_party_auth_review_id: str
+    ) -> dict[str, Any]:
+        """Withdraw an invitation awaiting multi-party approval (async)"""
+        params = self._build_params(
+            account_id=account_id,
+            ad_account_id=ad_account_id,
+            multi_party_auth_review_id=multi_party_auth_review_id,
+        )
+        return await self._client._adelete(
+            "/v1/ads/accounts/user-invitations/pending-approvals", params=params
         )
 
     async def alist_ad_account_users(
