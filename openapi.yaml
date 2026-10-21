@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.318.1"
+  version: "1.319.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -58016,7 +58016,7 @@ paths:
       security:
         - bearerAuth: []
       parameters:
-        - { name: accountId, in: query, required: true, schema: { type: string }, description: Account ID. Sibling-expanded to its linked posting↔ads pair. }
+        - { name: accountId, in: query, required: true, schema: { type: string }, description: 'Account ID. Sibling-expanded to its linked posting↔ads pair. An id that does not exist or sits on a profile the API key cannot reach answers 404 (code: account_not_found).' }
         - { name: adAccountId, in: query, schema: { type: string }, description: "Optional platform-native ad account ID (e.g. Meta `act_…`, TikTok advertiser ID). Use when the connection wraps multiple platform ad accounts and the chart should show one only. Note: rows ingested before 2026-05-13 don't carry this column; the recurring 7-day re-sync repopulates them naturally." }
         - { name: fromDate, in: query, schema: { type: string, format: date }, description: "Inclusive start of metrics range (YYYY-MM-DD). Defaults to 90 days ago." }
         - { name: toDate, in: query, schema: { type: string, format: date }, description: "Inclusive end of metrics range (YYYY-MM-DD). Defaults to today. Max 730-day range." }
@@ -58045,6 +58045,7 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403':
           description: Ads access required. Legacy plans need the Ads add-on; included by default on usage-based plans.
+        '404': { $ref: '#/components/responses/AccountUnavailable' }
 
   /v1/ads/{adId}:
     get:

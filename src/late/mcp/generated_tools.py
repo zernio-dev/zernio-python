@@ -7661,7 +7661,7 @@ def register_generated_tools(mcp, _get_client):
         Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit
 
         Args:
-            account_id: Account ID. Sibling-expanded to its linked posting↔ads pair. (required)
+            account_id: Account ID. Sibling-expanded to its linked posting↔ads pair. An id that does not exist or sits on a profile the API key cannot reach answers 404 (code: account_not_found). (required)
             ad_account_id: Optional platform-native ad account ID (e.g. Meta `act_…`, TikTok advertiser ID). Use when the connection wraps multiple platform ad accounts and the chart should show one only. Note: rows ingested before 2026-05-13 don't carry this column; the recurring 7-day re-sync repopulates them naturally.
             from_date: Inclusive start of metrics range (YYYY-MM-DD). Defaults to 90 days ago.
             to_date: Inclusive end of metrics range (YYYY-MM-DD). Defaults to today. Max 730-day range.
