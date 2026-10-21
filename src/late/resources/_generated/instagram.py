@@ -125,6 +125,18 @@ class InstagramResource:
         """List the live broadcasts of an Instagram account"""
         return self._client._get(f"/v1/accounts/{account_id}/instagram/live-media")
 
+    def list_instagram_tagged_media(
+        self, account_id: str, *, limit: int | None = 25, cursor: str | None = None
+    ) -> dict[str, Any]:
+        """List the posts an Instagram account is tagged in"""
+        params = self._build_params(
+            limit=limit,
+            cursor=cursor,
+        )
+        return self._client._get(
+            f"/v1/accounts/{account_id}/instagram/tags", params=params
+        )
+
     def get_instagram_story_insights(
         self, account_id: str, story_id: str
     ) -> dict[str, Any]:
@@ -187,6 +199,18 @@ class InstagramResource:
         """List the live broadcasts of an Instagram account (async)"""
         return await self._client._aget(
             f"/v1/accounts/{account_id}/instagram/live-media"
+        )
+
+    async def alist_instagram_tagged_media(
+        self, account_id: str, *, limit: int | None = 25, cursor: str | None = None
+    ) -> dict[str, Any]:
+        """List the posts an Instagram account is tagged in (async)"""
+        params = self._build_params(
+            limit=limit,
+            cursor=cursor,
+        )
+        return await self._client._aget(
+            f"/v1/accounts/{account_id}/instagram/tags", params=params
         )
 
     async def aget_instagram_story_insights(

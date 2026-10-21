@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.316.0"
+  version: "1.317.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -2653,23 +2653,29 @@ components:
             a default payor.
         regionalRegulatedCategories:
           type: array
-          description: 'Meta only. Regional regulation categories required when the ad set targets certain countries (e.g. BRAZIL_REGULATION, SINGAPORE_UNIVERSAL, TAIWAN_UNIVERSAL, THAILAND_UNIVERSAL, AUSTRALIA_FINSERV, INDIA_FINSERV, TAIWAN_FINSERV). Forwarded to the ad set.'
+          description: 'Meta only. Regional regulation categories required when the ad set targets certain countries (e.g. AUSTRALIA_FINSERV, AUSTRALIA_UNIVERSAL, BRAZIL_REGULATION, INDIA_FINSERV, MALAYSIA_UNIVERSAL, SINGAPORE_UNIVERSAL, TAIWAN_FINSERV, TAIWAN_UNIVERSAL, THAILAND_UNIVERSAL). Forwarded to the ad set.'
           items: { type: string }
         regionalRegulationIdentities:
           type: object
           additionalProperties: { type: integer }
           description: |
-            Meta only. Beneficiary/payer entity IDs required alongside regionalRegulatedCategories.
-            Values are numeric IDs from the advertiser's Meta verification/authorization setup.
-            Keys depend on the declared category: BRAZIL_REGULATION and THAILAND_UNIVERSAL use
-            universal_beneficiary / universal_payer; SINGAPORE_UNIVERSAL uses
-            singapore_universal_beneficiary / singapore_universal_payer; TAIWAN_UNIVERSAL uses
-            taiwan_universal_beneficiary / taiwan_universal_payer; TAIWAN_FINSERV uses
-            taiwan_finserv_beneficiary / taiwan_finserv_payer; AUSTRALIA_FINSERV uses
-            australia_finserv_beneficiary / australia_finserv_payer; INDIA_FINSERV uses
-            india_finserv_beneficiary / india_finserv_payer.
-            Both beneficiary and payer must be included. If omitted and the advertiser has
-            set defaults in Meta Ads Manager advertising settings, Meta auto-fills them.
+            Meta only. Verified identity IDs of the beneficiary and payer for each declared
+            regionalRegulatedCategories value. Meta may require them on ad sets created through
+            the API even when a default beneficiary and payer are set in Ads Manager advertising
+            settings (seen on AUSTRALIA_FINSERV), so sending them explicitly is the reliable path.
+            The value is the Verified identity ID (Meta Business Settings > Verified identities),
+            not a Page or Business ID, and beneficiary and payer may be the same ID.
+            Keys by category: AUSTRALIA_FINSERV uses australia_finserv_beneficiary /
+            australia_finserv_payer; TAIWAN_FINSERV uses taiwan_finserv_beneficiary /
+            taiwan_finserv_payer; INDIA_FINSERV uses india_finserv_beneficiary / india_finserv_payer;
+            TAIWAN_UNIVERSAL uses taiwan_universal_beneficiary / taiwan_universal_payer;
+            SINGAPORE_UNIVERSAL uses singapore_universal_beneficiary / singapore_universal_payer;
+            AUSTRALIA_UNIVERSAL, BRAZIL_REGULATION, MALAYSIA_UNIVERSAL and THAILAND_UNIVERSAL use
+            universal_beneficiary / universal_payer. When Meta rejects the ad set for a missing verified
+            advertiser, the error carries param regionalRegulationIdentities, details.expectedIdentityKeys
+            (the keys the declared categories expect), details.suggestedCategories (the markets Meta
+            ties to that subcode) and Meta's metaCode, metaSubcode and fbtraceId.
+            Ignored when adSetId adds the ad to an existing ad set.
     WorkflowNode:
       type: object
       required: [id, type]
@@ -8884,6 +8890,22 @@ components:
         mediaProductType: { type: [string, "null"], description: LIVE for a live video., example: LIVE }
         username: { type: [string, "null"], description: Instagram handle of the broadcasting account. }
         timestamp: { type: [string, "null"], description: 'Creation time of the broadcast media as Meta returns it (ISO 8601).' }
+
+    InstagramTaggedMedia:
+      type: object
+      required: [id, caption, mediaType, mediaProductType, mediaUrl, thumbnailUrl, permalink, timestamp, username, likeCount, commentsCount]
+      properties:
+        id: { type: string, description: Instagram media ID of the post the account is tagged in. }
+        caption: { type: [string, "null"] }
+        mediaType: { type: [string, "null"], description: 'IMAGE, VIDEO or CAROUSEL_ALBUM.', example: IMAGE }
+        mediaProductType: { type: [string, "null"], description: 'FEED or REELS.', example: FEED }
+        mediaUrl: { type: [string, "null"], description: 'Temporary CDN URL. Meta omits it for videos with copyrighted audio, flagged videos and reels whose owner disabled downloads.' }
+        thumbnailUrl: { type: [string, "null"], description: Cover image of a video or reel. }
+        permalink: { type: [string, "null"], description: Public Instagram URL of the post. }
+        timestamp: { type: [string, "null"], description: 'Publication time as Meta returns it (ISO 8601).' }
+        username: { type: [string, "null"], description: Instagram handle of the account that posted the media and tagged yours. }
+        likeCount: { type: [integer, "null"], description: Null when the owner hides like counts. }
+        commentsCount: { type: [integer, "null"] }
 
     InstagramBusinessDiscovery:
       type: object
@@ -33019,6 +33041,78 @@ paths:
                       $ref: '#/components/schemas/InstagramLiveMedia'
         '400':
           description: 'Invalid accountId, an account on another platform (`platform_not_supported`) or an account connected with Instagram Login (`instagram_live_media_requires_facebook_login`).'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: 'The API key is not scoped to this account, or Meta refused the request (`platform_api_error`, for example a missing permission).'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+        '404':
+          description: The account is not reachable by the caller (`account_not_found`).
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+        '409':
+          $ref: '#/components/responses/AccountConnectionRequired'
+  /v1/accounts/{accountId}/instagram/tags:
+    get:
+      x-resource-group: analytics
+      operationId: listInstagramTaggedMedia
+      tags: [Instagram]
+      summary: List the posts an Instagram account is tagged in
+      description: |
+        Returns the media where other Instagram users photo-tagged the connected
+        account, newest first. Private media is never returned.
+
+        Cursor-paginated: pass `nextCursor` from the previous response as
+        `cursor` to read the next page. `nextCursor` is null when there are no
+        more pages. Meta does not say whether a page is the last one, so the
+        final page can come back empty with `nextCursor` null.
+
+        Requires an Instagram account connected via **Facebook Login**. Meta
+        does not give Instagram Login access to tagging, so accounts connected
+        with classic Instagram Login receive a 400
+        (`instagram_tagged_media_requires_facebook_login`) and must be
+        reconnected choosing the Facebook option.
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          description: The ID of a connected Instagram account (Facebook Login).
+          schema:
+            type: string
+        - name: limit
+          in: query
+          required: false
+          description: Page size.
+          schema: { type: integer, minimum: 1, maximum: 50, default: 25 }
+        - name: cursor
+          in: query
+          required: false
+          description: The `nextCursor` of the previous page.
+          schema: { type: string, minLength: 1, maxLength: 1000 }
+      responses:
+        '200':
+          description: One page of tagged media
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, nextCursor]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/InstagramTaggedMedia'
+                  nextCursor:
+                    type: [string, "null"]
+                    description: Pass as `cursor` to read the next page. Null when there are no more pages.
+        '400':
+          description: 'Invalid accountId, limit or cursor, an account on another platform (`platform_not_supported`) or an account connected with Instagram Login (`instagram_tagged_media_requires_facebook_login`).'
           content:
             application/json:
               schema: { $ref: '#/components/schemas/ErrorResponse' }
@@ -65628,12 +65722,29 @@ paths:
                   items: { type: string }
                 regionalRegulatedCategories:
                   type: array
-                  description: 'Meta only. Regional regulation categories required when the ad set targets certain countries (e.g. BRAZIL_REGULATION, SINGAPORE_UNIVERSAL, TAIWAN_UNIVERSAL, THAILAND_UNIVERSAL, AUSTRALIA_FINSERV, INDIA_FINSERV, TAIWAN_FINSERV). Forwarded to the ad set.'
+                  description: 'Meta only. Regional regulation categories required when the ad set targets certain countries (e.g. AUSTRALIA_FINSERV, AUSTRALIA_UNIVERSAL, BRAZIL_REGULATION, INDIA_FINSERV, MALAYSIA_UNIVERSAL, SINGAPORE_UNIVERSAL, TAIWAN_FINSERV, TAIWAN_UNIVERSAL, THAILAND_UNIVERSAL). Forwarded to the ad set.'
                   items: { type: string }
                 regionalRegulationIdentities:
                   type: object
                   additionalProperties: { type: integer }
-                  description: 'Meta only. Beneficiary/payer entity IDs for regionalRegulatedCategories. Values are numeric IDs from Meta verification. Keys vary by category (e.g. universal_beneficiary / universal_payer for BRAZIL_REGULATION and THAILAND_UNIVERSAL). If omitted, Meta uses Ads Manager defaults when configured.'
+                  description: |
+                    Meta only. Verified identity IDs of the beneficiary and payer for each declared
+                    regionalRegulatedCategories value. Meta may require them on ad sets created through
+                    the API even when a default beneficiary and payer are set in Ads Manager advertising
+                    settings (seen on AUSTRALIA_FINSERV), so sending them explicitly is the reliable path.
+                    The value is the Verified identity ID (Meta Business Settings > Verified identities),
+                    not a Page or Business ID, and beneficiary and payer may be the same ID.
+                    Keys by category: AUSTRALIA_FINSERV uses australia_finserv_beneficiary /
+                    australia_finserv_payer; TAIWAN_FINSERV uses taiwan_finserv_beneficiary /
+                    taiwan_finserv_payer; INDIA_FINSERV uses india_finserv_beneficiary / india_finserv_payer;
+                    TAIWAN_UNIVERSAL uses taiwan_universal_beneficiary / taiwan_universal_payer;
+                    SINGAPORE_UNIVERSAL uses singapore_universal_beneficiary / singapore_universal_payer;
+                    AUSTRALIA_UNIVERSAL, BRAZIL_REGULATION, MALAYSIA_UNIVERSAL and THAILAND_UNIVERSAL use
+                    universal_beneficiary / universal_payer. When Meta rejects the ad set for a missing verified
+                    advertiser, the error carries param regionalRegulationIdentities, details.expectedIdentityKeys
+                    (the keys the declared categories expect), details.suggestedCategories (the markets Meta
+                    ties to that subcode) and Meta's metaCode, metaSubcode and fbtraceId.
+                    Ignored when adSetId adds the ad to an existing ad set.
                 linkUrl:
                   type: string
                   format: uri
@@ -66841,18 +66952,31 @@ paths:
                   type: array
                   description: |
                     Meta only. Regional regulation categories required when the ad set targets certain countries.
-                    Known values: BRAZIL_REGULATION, SINGAPORE_UNIVERSAL, TAIWAN_UNIVERSAL, THAILAND_UNIVERSAL,
-                    AUSTRALIA_FINSERV, INDIA_FINSERV, TAIWAN_FINSERV. Meta rejects the ad set without this when
+                    Known values: AUSTRALIA_FINSERV, AUSTRALIA_UNIVERSAL, BRAZIL_REGULATION, INDIA_FINSERV,
+                    MALAYSIA_UNIVERSAL, SINGAPORE_UNIVERSAL, TAIWAN_FINSERV, TAIWAN_UNIVERSAL, THAILAND_UNIVERSAL. Meta rejects the ad set without this when
                     the targeting geo includes the corresponding country.
                   items: { type: string }
                 regionalRegulationIdentities:
                   type: object
                   additionalProperties: { type: integer }
                   description: |
-                    Meta only. Beneficiary/payer entity IDs for regionalRegulatedCategories. Values are
-                    numeric IDs from Meta verification. Keys vary by category (e.g. universal_beneficiary /
-                    universal_payer for BRAZIL_REGULATION and THAILAND_UNIVERSAL). If omitted, Meta uses
-                    Ads Manager defaults when configured.
+                    Meta only. Verified identity IDs of the beneficiary and payer for each declared
+                    regionalRegulatedCategories value. Meta may require them on ad sets created through
+                    the API even when a default beneficiary and payer are set in Ads Manager advertising
+                    settings (seen on AUSTRALIA_FINSERV), so sending them explicitly is the reliable path.
+                    The value is the Verified identity ID (Meta Business Settings > Verified identities),
+                    not a Page or Business ID, and beneficiary and payer may be the same ID.
+                    Keys by category: AUSTRALIA_FINSERV uses australia_finserv_beneficiary /
+                    australia_finserv_payer; TAIWAN_FINSERV uses taiwan_finserv_beneficiary /
+                    taiwan_finserv_payer; INDIA_FINSERV uses india_finserv_beneficiary / india_finserv_payer;
+                    TAIWAN_UNIVERSAL uses taiwan_universal_beneficiary / taiwan_universal_payer;
+                    SINGAPORE_UNIVERSAL uses singapore_universal_beneficiary / singapore_universal_payer;
+                    AUSTRALIA_UNIVERSAL, BRAZIL_REGULATION, MALAYSIA_UNIVERSAL and THAILAND_UNIVERSAL use
+                    universal_beneficiary / universal_payer. When Meta rejects the ad set for a missing verified
+                    advertiser, the error carries param regionalRegulationIdentities, details.expectedIdentityKeys
+                    (the keys the declared categories expect), details.suggestedCategories (the markets Meta
+                    ties to that subcode) and Meta's metaCode, metaSubcode and fbtraceId.
+                    Ignored when adSetId adds the ad to an existing ad set.
                 endDate: { type: string, format: date-time, description: 'Required for lifetime budgets. Read like `startDate` (account timezone on Meta, TikTok, X, Pinterest, OpenAI and Reddit; whole account-local days on Google; UTC on LinkedIn), and a date-only end runs to 23:59:59 local.' }
                 startDate:
                   type: string

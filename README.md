@@ -1040,6 +1040,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `instagram.list_instagram_live_media()` | List the live broadcasts of an Instagram account |
 | `instagram.list_instagram_media_collaborators()` | List the collaborators of an Instagram post |
 | `instagram.list_instagram_stories()` | List active Instagram stories |
+| `instagram.list_instagram_tagged_media()` | List the posts an Instagram account is tagged in |
 | `instagram.get_instagram_audio()` | Get Instagram audio metadata |
 | `instagram.get_instagram_business_discovery()` | Look up a public Instagram Business account |
 | `instagram.get_instagram_publishing_limit()` | Get Instagram publishing limit |
