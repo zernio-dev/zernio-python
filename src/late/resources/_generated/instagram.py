@@ -121,6 +121,10 @@ class InstagramResource:
             f"/v1/accounts/{account_id}/instagram/media/{media_id}/collaborators"
         )
 
+    def list_instagram_live_media(self, account_id: str) -> dict[str, Any]:
+        """List the live broadcasts of an Instagram account"""
+        return self._client._get(f"/v1/accounts/{account_id}/instagram/live-media")
+
     def get_instagram_story_insights(
         self, account_id: str, story_id: str
     ) -> dict[str, Any]:
@@ -177,6 +181,12 @@ class InstagramResource:
         """List the collaborators of an Instagram post (async)"""
         return await self._client._aget(
             f"/v1/accounts/{account_id}/instagram/media/{media_id}/collaborators"
+        )
+
+    async def alist_instagram_live_media(self, account_id: str) -> dict[str, Any]:
+        """List the live broadcasts of an Instagram account (async)"""
+        return await self._client._aget(
+            f"/v1/accounts/{account_id}/instagram/live-media"
         )
 
     async def aget_instagram_story_insights(
