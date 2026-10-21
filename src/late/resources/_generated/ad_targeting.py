@@ -90,6 +90,7 @@ class AdTargetingResource:
         geo_type: str | None = "city",
         country_code: str | None = None,
         ad_account_id: str | None = None,
+        locale: str | None = None,
         limit: int | None = 25,
     ) -> dict[str, Any]:
         """Search targeting options"""
@@ -100,6 +101,7 @@ class AdTargetingResource:
             geo_type=geo_type,
             country_code=country_code,
             ad_account_id=ad_account_id,
+            locale=locale,
             limit=limit,
         )
         return self._client._get("/v1/ads/targeting/search", params=params)
@@ -225,6 +227,7 @@ class AdTargetingResource:
         geo_type: str | None = "city",
         country_code: str | None = None,
         ad_account_id: str | None = None,
+        locale: str | None = None,
         limit: int | None = 25,
     ) -> dict[str, Any]:
         """Search targeting options (async)"""
@@ -235,6 +238,7 @@ class AdTargetingResource:
             geo_type=geo_type,
             country_code=country_code,
             ad_account_id=ad_account_id,
+            locale=locale,
             limit=limit,
         )
         return await self._client._aget("/v1/ads/targeting/search", params=params)

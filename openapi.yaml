@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.320.0"
+  version: "1.321.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -68835,6 +68835,18 @@ paths:
 
         For geo queries, `q` should contain only the locality name (e.g. `"Amsterdam"`,
         not `"Amsterdam, NL"`). Use `countryCode` to disambiguate.
+
+        Meta language: Meta matches `q` against names in one language and returns names and `path` in
+        that language. Pass `locale` (e.g. `pl_PL`) to choose it. Without `locale`, the `behavior` and
+        `workIndustry` catalogs are in `en_US`, and `interest`, `interestSuggestion`, `geo`, `workPosition`
+        and `workEmployer` follow the language of the Facebook user who connected the account (so a
+        Russian-language Facebook user gets Russian paths, and Polish names need `locale=pl_PL`).
+        A non-English `behavior` or `workIndustry` query without `locale` never matches, so pass the
+        locale of the names you search. Meta's `interest` search matches its own interest names and has no fuzzy or
+        synonym mode, so a phrase Meta does not use as an interest name (e.g. `dental implants`) can
+        return nothing while a shorter word (`dentistry`) does. If Meta returns an empty `behavior`,
+        `workIndustry` or `income` catalog the request fails with a 502 `platform_api_error` instead of
+        an empty `results` list.
       security:
         - bearerAuth: []
       parameters:
@@ -68844,6 +68856,7 @@ paths:
         - { name: geoType, in: query, required: false, schema: { type: string, enum: [all, country, country_group, region, city, subcity, neighborhood, place, zip, metro_area, geo_market], default: city }, description: "Only used when `dimension=geo`. The kind of location to resolve. `all` searches every type in one relevance-ranked call. Defaults to `city`." }
         - { name: countryCode, in: query, required: false, schema: { type: string, minLength: 2, maxLength: 2 }, description: "ISO 3166-1 alpha-2 country code (e.g. NL) to scope a geo search." }
         - { name: adAccountId, in: query, required: false, schema: { type: string }, description: "TikTok only: the advertiser to search as, when the connection holds several. Each TikTok advertiser has its own targetable regions and catalogs. Defaults to the connection's first advertiser; an advertiser the connection does not hold returns 400." }
+        - { name: locale, in: query, required: false, schema: { type: string, pattern: '^[a-z]{2,3}_[A-Z]{2}$', examples: [pl_PL] }, description: "Meta only: the language Meta matches `q` against and names results and `path` in, as language_TERRITORY (e.g. `pl_PL`, `en_US`). Applies to `geo`, `interest`, `interestSuggestion`, `behavior`, `workPosition`, `workEmployer` and `workIndustry`. Without it, `behavior` and `workIndustry` use `en_US` and the other searches use the language of the Facebook user who connected the account. `income` always uses `en_US`. Ignored on other platforms." }
         - { name: limit, in: query, required: false, schema: { type: integer, minimum: 1, maximum: 100, default: 25 }, description: "Maximum results to return." }
       responses:
         '409': { $ref: '#/components/responses/AccountConnectionRequired' }

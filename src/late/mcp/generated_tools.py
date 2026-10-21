@@ -11521,6 +11521,7 @@ def register_generated_tools(mcp, _get_client):
         ] = "city",
         country_code: str | None = None,
         ad_account_id: str | None = None,
+        locale: str | None = None,
         limit: int = 25,
     ) -> str:
         """Search targeting options
@@ -11551,6 +11552,7 @@ def register_generated_tools(mcp, _get_client):
             geo_type: Only used when `dimension=geo`. The kind of location to resolve. `all` searches every type in one relevance-ranked call. Defaults to `city`.
             country_code: ISO 3166-1 alpha-2 country code (e.g. NL) to scope a geo search.
             ad_account_id: TikTok only: the advertiser to search as, when the connection holds several. Each TikTok advertiser has its own targetable regions and catalogs. Defaults to the connection's first advertiser; an advertiser the connection does not hold returns 400.
+            locale: Meta only: the language Meta matches `q` against and names results and `path` in, as language_TERRITORY (e.g. `pl_PL`, `en_US`). Applies to `geo`, `interest`, `interestSuggestion`, `behavior`, `workPosition`, `workEmployer` and `workIndustry`. Without it, `behavior` and `workIndustry` use `en_US` and the other searches use the language of the Facebook user who connected the account. `income` always uses `en_US`. Ignored on other platforms.
             limit: Maximum results to return."""
         client = _get_client()
         try:
@@ -11561,6 +11563,7 @@ def register_generated_tools(mcp, _get_client):
                 geo_type=geo_type,
                 country_code=country_code,
                 ad_account_id=ad_account_id,
+                locale=locale,
                 limit=limit,
             )
             return _format_response(response)
