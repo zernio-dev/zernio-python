@@ -5366,11 +5366,15 @@ def register_generated_tools(mcp, _get_client):
         Use source=all to include externally-synced ads from platform ad managers.
         If no date range is provided, defaults to the last 90 days. Date range is capped at 730 days max.
 
+        History: when an ad account connects, Zernio imports its last 90 days of metrics, so the
+        metrics hold no data for days before that. When `accountId` or `adAccountId` resolves to a
+        Meta ad account, a range reaching further back answers `202` with `backfillPending: true` and the
+        covered part while the older days (up to 730 days back) are imported in the background;
+        repeat the request until it returns 200.
+        A request scoped to no Meta account never returns `202`.
+
         To find the Zernio ad behind a comment you see in Meta Business Manager, filter by
-        platformAdId (the Meta ad ID), effectiveObjectStoryId (Facebook), or
-        effectiveInstagramMediaId (Instagram). Those are the post/media the ad's engagement
-        lives on, and are also returned on each ad's `creative` object. Then call
-        GET /v1/ads/{adId}/comments with the returned ad id.
+        platformAdId (the Meta ad ID), effectiveObjectStoryId (Facebook), or ...
 
         Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit
 
@@ -7487,13 +7491,12 @@ def register_generated_tools(mcp, _get_client):
         ID are grouped into synthetic \"Ungrouped\" buckets.
         If no date range is provided, defaults to the last 90 days. Date range is capped at 730 days max.
 
-        Pass `timeIncrement=1` to also get a daily breakdown: each node gains a `daily[]` array of
-        per-day metrics (same fields as the aggregated `metrics`) in the same call. Use `dailyLevel`
-        (`campaign` default, or `adset` / `ad`) to choose which levels carry the series. This replaces
-        calling the tree once per day for per-campaign daily trends.
-
-        **Deleted objects stay in the tree.** Deleting an ad or a campaign is a soft delete: the Ad
-        documents move to `status: ...
+        History: when an ad account connects, Zernio imports its last 90 days of metrics, so the
+        metrics hold no data for days before that. When `accountId` or `adAccountId` resolves to a
+        Meta ad account, a range reaching further back answers `202` with `backfillPending: true` and the
+        covered part while the older days (up to 730 days back) are imported in the background;
+        repeat the request until it returns 200.
+        A request scoped to no Meta account never returns `202`. ...
 
         Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit
 
@@ -7583,12 +7586,12 @@ def register_generated_tools(mcp, _get_client):
         ID also includes ads under the linked `facebook` / `instagram` posting account
         (and vice-versa), the same convention as `/v1/ads/tree` and `/v1/ads`.
 
-        Date range defaults to the last 90 days. Capped at 730 days. Ranges older
-        than the ingested history return a `202` immediately with the covered part
-        and `backfillPending: true` while the rest is backfilled in the background;
-        repeat the request shortly until it returns 200 with full data.
+        Date range defaults to the last 90 days. Capped at 730 days.
 
-        With adAccountId set to a Google customer id this is the customer-level performance report (clicks, ...
+        History: when an ad account connects, Zernio imports its last 90 days of metrics, so `rows`
+        hold no data for days before that. When `accountId` or `adAccountId` resolves to a Meta ad
+        account, a range reaching further back answers `202` with `backfillPending: true` and the
+        covered part while the older days (up to 730 days back) ...
 
         Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit
 
@@ -10693,9 +10696,10 @@ def register_generated_tools(mcp, _get_client):
             age/gender/placement/etc. without summing thousands of per-ad reads. `campaignId` is the platform campaign id; pass
             `platform` when a campaign id could be ambiguous across platforms. If no date range is provided,
             defaults to the last 90 days. Date range is capped at 730 days max.
-            Google adds searchImpressionShare, searchBudgetLostImpressionShare,
-            searchRankLostImpressionShare, searchTopImpressionShare and searchAbsoluteTopImpressionShare
-            under analytics.summary for the requested inclusive ...
+
+            History: when an ad account connects, Zernio imports its last 90 days of metrics. `summary`
+            and `daily` come from those synced metrics, so they hold no data for days before that.
+            Breakdowns and Google's impression ...
 
             Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit
 
@@ -11112,6 +11116,15 @@ def register_generated_tools(mcp, _get_client):
             Includes summary metrics, a daily timeline
             over the requested date range, and optional demographic breakdowns (Meta, TikTok and LinkedIn only).
             If no date range is provided, defaults to the last 90 days. Date range is capped at 730 days max.
+
+            History: when an ad account connects, Zernio imports its last 90 days of metrics. `summary`
+            and `daily` come from those synced metrics, so they hold no data for days before that.
+            Breakdowns are read live from the platform over the requested range, so they are not limited
+            by the import.
+            When the ad belongs to a Meta ad account, a range reaching further back answers `202` with `backfillPending: true` and the
+            covered part while the older days (up to 730 days back) are imported in the background;
+            repeat the request until it returns 200.
+            Other platforms never return `202`.
 
             Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit
 
