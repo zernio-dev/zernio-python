@@ -1266,8 +1266,8 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `tracking_tags.delete_tracking_tag_event()` | Delete a conversion event |
 | `tracking_tags.add_tracking_tag_shared_account()` | Share with an ad account |
 | `tracking_tags.assign_tracking_tag_user()` | Assign a user to a tag |
-| `tracking_tags.install_tracking_tag_on_store()` | Install on a Shopify store or WordPress site |
-| `tracking_tags.remove_tracking_tag_from_store()` | Remove from a Shopify store or WordPress site |
+| `tracking_tags.install_tracking_tag_on_store()` | Install on a Shopify store, WordPress site or Wix site |
+| `tracking_tags.remove_tracking_tag_from_store()` | Remove from a Shopify store, WordPress site or Wix site |
 | `tracking_tags.remove_tracking_tag_shared_account()` | Stop sharing with an account |
 | `tracking_tags.remove_tracking_tag_user()` | Remove a user from a tag |
 
