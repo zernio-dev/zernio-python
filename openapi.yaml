@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.318.0"
+  version: "1.318.1"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -3233,7 +3233,7 @@ components:
             `POST /v1/ads/ctwa`) carries `stage`, `adAccountId` and `createdObjects`: where
             it failed, on which ad account, and every object this request had already
             created with what cleanup did to it. `left_behind` objects still exist on the
-            ad account (Meta refused the delete, typically on a held account), so delete
+            ad account (Meta refused the delete, typically on a held account, or the delete hit a network error), so delete
             them yourself or reuse them. `unconfirmedWrite` is set when Meta answered a
             create with a 5xx or dropped the connection and Zernio could not confirm
             whether the object exists: check that parent before creating it again.
@@ -3266,7 +3266,7 @@ components:
                   cleanup:
                     type: string
                     enum: [deleted, left_behind, kept]
-                    description: "`deleted`: Zernio deleted it. `left_behind`: Meta refused the delete, so it still exists. `kept`: deliberately not deleted (image hashes are shared by every upload of the same file)."
+                    description: "`deleted`: Zernio deleted it. `left_behind`: cleanup could not delete it (Meta refused the delete, or the delete hit a network error), so it still exists. `kept`: deliberately not deleted (image hashes are shared by every upload of the same file)."
             unconfirmedWrite:
               type: object
               description: 'Meta ad create failures only, when Meta answered a create with a 5xx or dropped the connection and the object could not be looked up. Zernio did not retry it.'
@@ -67759,7 +67759,36 @@ paths:
             `adAccountId` and every created object with its cleanup result
             (see `ErrorResponse.details`); an `unconfirmedWrite` there means
             Meta did not confirm a create and Zernio did not retry it.
-        '503': { $ref: '#/components/responses/TemporarilyUnavailable' }
+        '503':
+          description: |
+            An upstream service is temporarily unavailable (most often the connection to Meta
+            dropped mid-request). Retry after the indicated delay. On Meta, `details` carries the
+            same `stage`, `adAccountId` and `createdObjects` as a 502, and the message names every
+            `left_behind` object. In `createdObjects`, `deleted` means Zernio deleted the object.
+            `left_behind` entries still exist on the ad account because cleanup could not delete
+            them (Meta refused the delete, or the delete hit a network error): delete a left-behind video with `DELETE /v1/ads/videos/{id}` and the other objects in
+            Meta Ads Manager. `kept` images are never deleted, because an image hash is shared by
+            every upload of the same file. An empty `left_behind` list is not a guarantee: when
+            Meta created media but its answer never arrived (a dropped connection or a 5xx on the
+            first step of a video upload), Zernio never learned the id and cannot list or delete it.
+          headers:
+            Retry-After:
+              schema: { type: integer, example: 5 }
+              description: 'Minimum delay in seconds before retrying.'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+              example:
+                error: 'Temporary connection issue while reaching an upstream service. Please retry the request. Zernio could not delete what this request created before failing (video 1234567890123456), so it is still on Meta: delete the video with DELETE /v1/ads/videos/1234567890123456.'
+                type: api_error
+                code: temporarily_unavailable
+                details:
+                  stage: media
+                  adAccountId: act_123
+                  createdObjects:
+                    - { type: campaign, id: '120210000000000001', cleanup: deleted }
+                    - { type: video, id: '1234567890123456', cleanup: left_behind }
+                    - { type: image, id: 4f1c2e9b0a7d3e6f8b2c1d0e9f8a7b6c, cleanup: kept }
 
   /v1/ads/leads:
     get:
