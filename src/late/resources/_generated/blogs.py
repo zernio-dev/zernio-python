@@ -152,6 +152,7 @@ class BlogsResource:
         seo: dict[str, Any] | None = None,
         is_published: bool | None = None,
         publish_date: datetime | str | None = None,
+        field_data: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Create a blog article"""
         payload = self._build_payload(
@@ -165,6 +166,7 @@ class BlogsResource:
             seo=seo,
             is_published=is_published,
             publish_date=publish_date,
+            field_data=field_data,
         )
         return self._client._post(
             f"/v1/accounts/{account_id}/blogs/{blog_id}/articles", data=payload
@@ -194,6 +196,7 @@ class BlogsResource:
         seo: dict[str, Any] | None = None,
         is_published: bool | None = None,
         publish_date: datetime | str | None = None,
+        field_data: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Update a blog article"""
         payload = self._build_payload(
@@ -207,6 +210,7 @@ class BlogsResource:
             seo=seo,
             is_published=is_published,
             publish_date=publish_date,
+            field_data=field_data,
         )
         return self._client._patch(
             f"/v1/accounts/{account_id}/blogs/{blog_id}/articles/{article_id}",
@@ -302,6 +306,7 @@ class BlogsResource:
         seo: dict[str, Any] | None = None,
         is_published: bool | None = None,
         publish_date: datetime | str | None = None,
+        field_data: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Create a blog article (async)"""
         payload = self._build_payload(
@@ -315,6 +320,7 @@ class BlogsResource:
             seo=seo,
             is_published=is_published,
             publish_date=publish_date,
+            field_data=field_data,
         )
         return await self._client._apost(
             f"/v1/accounts/{account_id}/blogs/{blog_id}/articles", data=payload
@@ -344,6 +350,7 @@ class BlogsResource:
         seo: dict[str, Any] | None = None,
         is_published: bool | None = None,
         publish_date: datetime | str | None = None,
+        field_data: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Update a blog article (async)"""
         payload = self._build_payload(
@@ -357,6 +364,7 @@ class BlogsResource:
             seo=seo,
             is_published=is_published,
             publish_date=publish_date,
+            field_data=field_data,
         )
         return await self._client._apatch(
             f"/v1/accounts/{account_id}/blogs/{blog_id}/articles/{article_id}",

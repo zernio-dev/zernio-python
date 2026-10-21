@@ -389,6 +389,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `connect.connect_open_ai_ads_credentials()` | Connect an OpenAI Ads account |
 | `connect.connect_shopify_with_token()` | Connect a Shopify store with a custom-app Admin token |
 | `connect.connect_slack_channel()` | Connect a Slack channel |
+| `connect.connect_webflow_with_site_token()` | Connect Webflow with a site API token |
 | `connect.connect_whats_app_credentials()` | Connect WhatsApp via credentials |
 | `connect.connect_whats_app_embedded_signup()` | Connect WhatsApp from Embedded Signup |
 | `connect.connect_whop_ads_credentials()` | Connect a Whop account |
