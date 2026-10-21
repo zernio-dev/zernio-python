@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.312.0"
+  version: "1.313.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -2667,11 +2667,11 @@ components:
         type:
           type: string
           description: >
-            Node kind. The 16 supported types break into four groups:
+            Node kind. The 17 supported types break into four groups:
               messaging (send_message),
               control flow (trigger, condition, delay, wait_for_reply, a_b_split, end),
               data ops (set_variable, set_field, add_tag, remove_tag, enroll_sequence),
-              integrations (webhook, ai, handoff, start_call).
+              integrations (webhook, hubspot_upsert_contact, ai, handoff, start_call).
           enum:
             - trigger
             - send_message
@@ -2680,6 +2680,7 @@ components:
             - set_variable
             - delay
             - webhook
+            - hubspot_upsert_contact
             - ai
             - handoff
             - start_call
@@ -2787,6 +2788,17 @@ components:
             `{ status, ok, body }` to `vars[saveAs]`. Edge: `'success'` on 2xx, `'error'` otherwise.
 
 
+            **hubspot_upsert_contact**: `{ email, phone, firstName, lastName, properties, saveAs }`.
+            Creates or updates the run contact in the profile's connected HubSpot portal: the contact
+            already linked by inbox sync, else one matching by email, then phone, is updated; otherwise
+            one is created. An existing contact gets only the fields the node sets (a value that resolves
+            to an empty string is skipped); a new one also takes the Zernio contact's name, email and
+            phone for anything left out. `properties` maps HubSpot internal property names to values
+            (at most 50). Saves `{ id, created }` (or `{ error }`) to `vars[saveAs]` (default
+            `hubspotContact`). Edges: `'success'` | `'error'` (HubSpot not connected, or HubSpot refused
+            the write).
+
+
             **ai**: `{ provider: anthropic|openai|google|mistral|groq|openrouter, model, preset:
             smart|tools|cheap, systemPrompt, userPromptTemplate, saveAs, temperature, maxTokens,
             outputType: text|json, tools:[{ name, description, parameters }] }`. Set `provider` +
@@ -2849,6 +2861,7 @@ components:
               - **condition**: a rule's `id`, or `'default'` (no rule matched)
               - **wait_for_reply**: `'reply'` (contact replied) | `'timeout'` (no reply in window)
               - **webhook**: `'success'` (2xx) | `'error'` (non-2xx / fetch failed)
+              - **hubspot_upsert_contact**: `'success'` | `'error'` (not connected / HubSpot refused)
               - **ai**: `'success'` (text/JSON response) | `'tool:<toolName>'` (model invoked
                 that tool) | `'error'` (upstream failure / non-JSON in JSON mode)
               - **start_call**: `'success'` | `'permission_required'` | `'failed'`
