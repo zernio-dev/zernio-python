@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.319.0"
+  version: "1.319.1"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -14067,8 +14067,8 @@ components:
             channel: { type: string, enum: [whatsapp, messenger, instagram_direct] }
             wabaId: { type: string, description: 'WhatsApp only. WhatsApp Business Account id, sent as `whatsapp_business_account_id`.' }
             ctwaClid: { type: string, description: 'WhatsApp only. Click-to-WhatsApp click id from the first inbound message referral, sent as `ctwa_clid`.' }
-            pageId: { type: string, description: 'Messenger: Facebook Page id, sent as `page_id`. Instagram Direct: when `instagramBusinessAccountId` is absent, Zernio reads the Instagram professional account linked to this Page and sends its id as `instagram_business_account_id`; if none is linked or the lookup fails, `page_id` is sent instead.' }
-            instagramBusinessAccountId: { type: string, description: 'Instagram Direct only. Instagram professional account id (`instagram_business_account` on the Page), sent as `instagram_business_account_id` next to `ig_sid`.' }
+            pageId: { type: string, description: 'Messenger: Facebook Page id, sent as `page_id`. Instagram Direct: when `instagramBusinessAccountId` is absent, Zernio reads the Instagram professional account linked to this Page and sends its id as `ig_account_id`; if none is linked or the lookup fails, `page_id` is sent instead.' }
+            instagramBusinessAccountId: { type: string, description: 'Instagram Direct only. Instagram professional account id (`instagram_business_account` on the Page), sent as `ig_account_id` next to `ig_sid`.' }
             pageScopedUserId: { type: string, description: 'Messenger only. The page-scoped user id (PSID) your Messenger webhook gives for the person, sent as `page_scoped_user_id` next to `page_id`.' }
             instagramScopedUserId: { type: string, description: 'Instagram Direct only. The Instagram-scoped user id (IGSID) your Instagram messaging webhook gives for the person, sent as `ig_sid`.' }
         platformData:
