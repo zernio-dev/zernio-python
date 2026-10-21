@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.321.0"
+  version: "1.321.1"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -23490,7 +23490,7 @@ paths:
                       scheduledFor:
                         type: string
                         format: date-time
-                        description: Optional per-platform scheduled time override.
+                        description: Optional per-platform scheduled time override. It is kept when a top-level scheduledFor is also sent, except a date sent back unchanged that matched the post scheduled time or is already past, which follows the new top-level scheduledFor.
                       platformSpecificData:
                         type: object
                         additionalProperties: true
