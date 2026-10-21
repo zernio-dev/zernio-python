@@ -8254,6 +8254,42 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="Review status of each creative in a TikTok Smart+ ad",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def ad_campaigns_get_tik_tok_smart_plus_ad_review(ad_id: str) -> str:
+        """Review status of each creative in a TikTok Smart+ ad
+
+        Shows which Spark post, video or carousel of an Upgraded Smart+ ad TikTok approved or rejected, with every rejection reason, keyed by the TikTok post id for a Spark post.
+
+        Reads TikTok's `/smart_plus/ad/review_info/` live (read-only, works on a paused ad) for the
+        Smart+ ad that holds `adId`, and returns the ad-level verdict plus one entry per creative.
+        `adId` may be the Smart+ ad itself or any creative of it synced as its own ad: Zernio finds
+        the Smart+ ad in the ad's ad group through `/smart_plus/ad/get/`, and uses the ad group's only
+        Smart+ ad when no creative list names the ad.
+
+        `materialType`, `tiktokItemId`, `videoId`, `name` and `operationStatus` come from the Smart+
+        ad's `creative_list`. TikTok leaves out of that list the creatives it added on its own
+        (creator content, authorized TikTok posts, Creative Library content) and lists each image of a
+        carousel under its own material id, so those entries come back with the review verdict and
+        null descriptive fields. TikTok returns no ...
+
+        Platforms: tiktok
+
+        Args:
+            ad_id: Zernio ad id (24-char hex) or the TikTok ad id: the Smart+ ad id or the ad id of one of its creatives. (required)"""
+        client = _get_client()
+        try:
+            response = client.ad_campaigns.get_tik_tok_smart_plus_ad_review(ad_id=ad_id)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="List campaign negative lists",
             readOnlyHint=True,
             destructiveHint=False,

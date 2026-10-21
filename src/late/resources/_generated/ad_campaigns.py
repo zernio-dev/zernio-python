@@ -1106,6 +1106,10 @@ class AdCampaignsResource:
         """Read the platform's review verdict for an ad"""
         return self._client._get(f"/v1/ads/{ad_id}/review")
 
+    def get_tik_tok_smart_plus_ad_review(self, ad_id: str) -> dict[str, Any]:
+        """Review status of each creative in a TikTok Smart+ ad"""
+        return self._client._get(f"/v1/ads/{ad_id}/tiktok-smart-plus-review")
+
     def list_campaign_negative_keyword_lists(
         self, campaign_id: str, *, platform: str | None = None
     ) -> dict[str, Any]:
@@ -2703,6 +2707,10 @@ class AdCampaignsResource:
     async def aget_ad_review(self, ad_id: str) -> dict[str, Any]:
         """Read the platform's review verdict for an ad (async)"""
         return await self._client._aget(f"/v1/ads/{ad_id}/review")
+
+    async def aget_tik_tok_smart_plus_ad_review(self, ad_id: str) -> dict[str, Any]:
+        """Review status of each creative in a TikTok Smart+ ad (async)"""
+        return await self._client._aget(f"/v1/ads/{ad_id}/tiktok-smart-plus-review")
 
     async def alist_campaign_negative_keyword_lists(
         self, campaign_id: str, *, platform: str | None = None

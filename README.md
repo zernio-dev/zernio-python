@@ -550,6 +550,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `ad_campaigns.get_campaign_conversion_goals()` | Get campaign conversion goals |
 | `ad_campaigns.get_campaign_targeting()` | Read a Google campaign's device, location, excluded location, and language targeting |
 | `ad_campaigns.get_google_asset_group()` | Get a Performance Max asset group |
+| `ad_campaigns.get_tik_tok_smart_plus_ad_review()` | Review status of each creative in a TikTok Smart+ ad |
 | `ad_campaigns.update_ad()` | Update ad |
 | `ad_campaigns.update_ad_campaign()` | Update a campaign |
 | `ad_campaigns.update_ad_campaign_status()` | Pause or resume a campaign |

@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.319.2"
+  version: "1.320.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -11165,6 +11165,28 @@ components:
       properties:
         post:
           $ref: '#/components/schemas/Post'
+    TikTokSmartPlusReviewStatus:
+      type: string
+      enum: [approved, partially_approved, rejected, unknown]
+      description: "TikTok `review_status` normalized: ALL_AVAILABLE -> approved, PART_AVAILABLE -> partially_approved (delivers in part of the targeted locations), UNAVAILABLE -> rejected, anything else or missing -> unknown (see `rawReviewStatus`)."
+    TikTokReviewRejection:
+      type: object
+      description: "One TikTok `reject_info` entry."
+      properties:
+        reasons: { type: array, items: { type: string } }
+        suggestion: { type: [string, "null"], description: "TikTok's advice for fixing the rejection." }
+        forbiddenPlacements: { type: array, items: { type: string } }
+        forbiddenAges: { type: array, items: { type: string } }
+        forbiddenLocations: { type: array, items: { type: string } }
+        content:
+          type: [object, "null"]
+          description: "The content TikTok rejected."
+          properties:
+            type: { type: [string, "null"], description: "TikTok `content_type`, verbatim (ModeString, ModeImage, ModeVideo, ModeMusic, LandingPage, ...)." }
+            text: { type: [string, "null"] }
+            imageId: { type: [string, "null"] }
+            videoId: { type: [string, "null"] }
+            musicId: { type: [string, "null"] }
     TikTokDryRunVerdict:
       type: object
       required: [dryRun, canPublish, tiktok]
@@ -59728,6 +59750,79 @@ paths:
         '404': { description: "Ad not found, it has no platform ad id yet, or the platform has no review record for it" }
         '429': { $ref: '#/components/responses/RateLimited' }
         '501': { description: "Only supported on TikTok, Google and Meta (Facebook and Instagram ads)" }
+
+  /v1/ads/{adId}/tiktok-smart-plus-review:
+    get:
+      x-resource-group: "ads"
+      operationId: getTikTokSmartPlusAdReview
+      tags: ["Ad Campaigns"]
+      x-platforms: ["tiktok"]
+      summary: Review status of each creative in a TikTok Smart+ ad
+      description: |-
+        Shows which Spark post, video or carousel of an Upgraded Smart+ ad TikTok approved or rejected, with every rejection reason, keyed by the TikTok post id for a Spark post.
+
+        Reads TikTok's `/smart_plus/ad/review_info/` live (read-only, works on a paused ad) for the
+        Smart+ ad that holds `adId`, and returns the ad-level verdict plus one entry per creative.
+        `adId` may be the Smart+ ad itself or any creative of it synced as its own ad: Zernio finds
+        the Smart+ ad in the ad's ad group through `/smart_plus/ad/get/`, and uses the ad group's only
+        Smart+ ad when no creative list names the ad.
+
+        `materialType`, `tiktokItemId`, `videoId`, `name` and `operationStatus` come from the Smart+
+        ad's `creative_list`. TikTok leaves out of that list the creatives it added on its own
+        (creator content, authorized TikTok posts, Creative Library content) and lists each image of a
+        carousel under its own material id, so those entries come back with the review verdict and
+        null descriptive fields. TikTok returns no review timestamp; `readAt` is when Zernio read it.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: adId, in: path, required: true, schema: { type: string }, description: "Zernio ad id (24-char hex) or the TikTok ad id: the Smart+ ad id or the ad id of one of its creatives." }
+      responses:
+        '200':
+          description: The Smart+ ad's review verdict per creative
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  adId: { type: string }
+                  platform: { type: string, enum: [tiktok] }
+                  platformAdId: { type: string }
+                  smartPlusAdId: { type: string, description: "The TikTok Smart+ ad whose review this is." }
+                  review:
+                    type: [object, "null"]
+                    description: "The ad-level verdict (`smart_plus_ad_review_infos`). Null when TikTok returned none."
+                    properties:
+                      reviewStatus: { $ref: '#/components/schemas/TikTokSmartPlusReviewStatus' }
+                      rawReviewStatus: { type: [string, "null"], description: "TikTok `review_status`, verbatim." }
+                      rejectReasons: { type: array, items: { type: string }, description: "Every distinct reason across `rejections`." }
+                      passedLocations: { type: array, items: { type: string }, description: "Location codes that passed the review." }
+                      appealStatus: { type: [string, "null"], description: "TikTok `appeal_status`, verbatim: NOT_APPEALED, APPEALING, APPEAL_SUCCESSFUL, APPEAL_FAILED, APPEAL_DONE." }
+                      appealRejectReasons: { type: array, items: { type: string } }
+                      rejections: { type: array, items: { $ref: '#/components/schemas/TikTokReviewRejection' } }
+                  materials:
+                    type: array
+                    description: "One entry per creative TikTok reviewed (`material_review_infos`)."
+                    items:
+                      type: object
+                      properties:
+                        adMaterialId: { type: string, description: "TikTok `ad_material_id` of the creative inside this ad." }
+                        materialType: { type: [string, "null"], enum: [spark_post, video, carousel, catalog_carousel, null], description: "Null for a creative TikTok added on its own or a carousel image." }
+                        tiktokItemId: { type: [string, "null"], description: "The TikTok post id when the creative is a Spark post." }
+                        videoId: { type: [string, "null"] }
+                        name: { type: [string, "null"] }
+                        operationStatus: { type: [string, "null"], description: "TikTok `material_operation_status`: ENABLE or DISABLE." }
+                        reviewStatus: { $ref: '#/components/schemas/TikTokSmartPlusReviewStatus' }
+                        rawReviewStatus: { type: [string, "null"], description: "TikTok `review_status`, verbatim." }
+                        rejectReasons: { type: array, items: { type: string }, description: "Every distinct reason across `rejections`. Empty when approved." }
+                        passedLocations: { type: array, items: { type: string } }
+                        rejections: { type: array, items: { $ref: '#/components/schemas/TikTokReviewRejection' } }
+                  readAt: { type: string, format: date-time, description: "When the verdict was read from TikTok." }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: "Ad not found, it has no TikTok ad or ad group id yet, or no Smart+ ad of its ad group holds it" }
+        '422': { description: "The TikTok ad is not an Upgraded Smart+ ad (read it with GET /v1/ads/{adId}/review)" }
+        '429': { $ref: '#/components/responses/RateLimited' }
+        '501': { description: "Only supported on TikTok" }
 
   /v1/ads/{adId}/media:
     get:
