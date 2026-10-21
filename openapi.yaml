@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.317.0"
+  version: "1.318.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -38166,6 +38166,28 @@ paths:
                   type: string
                   enum: [imessage, sms, rcs, whatsapp]
                   description: 'iMessage only (JSON body only). Overrides the delivery channel for this one send; the provider otherwise picks it automatically. The sender must carry the matching add-on (SMS, RCS or WhatsApp), or the send fails. Not a default to set on every request. Rejected with 400 on other platforms.'
+                sharedMediaId:
+                  type: string
+                  pattern: '^\d+$'
+                  example: '17895695668004550'
+                  description: >-
+                    Instagram only (JSON body only). Shares one of the account's own
+                    published posts in the DM, by its Instagram media id (the `id`
+                    returned by the media endpoints, not a permalink). Meta only
+                    accepts media the account owns. Sent on its own: cannot be
+                    combined with `message`, attachments, `quickReplies`, `buttons`,
+                    `template` or `sticker` (400). `messageTag: HUMAN_AGENT` is
+                    allowed. Rejected with 400 on other platforms. Works on accounts
+                    connected with Instagram Login and with Facebook Login.
+                sticker:
+                  type: string
+                  enum: [like_heart]
+                  description: >-
+                    Instagram only (JSON body only). Sends a sticker instead of text;
+                    `like_heart` is the heart sticker. Sent on its own: cannot be
+                    combined with `message`, attachments, `quickReplies`, `buttons`,
+                    `template` or `sharedMediaId` (400). `messageTag: HUMAN_AGENT`
+                    is allowed. Rejected with 400 on other platforms.
                 quickReplies:
                   type: array
                   maxItems: 13
