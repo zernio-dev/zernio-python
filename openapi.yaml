@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.330.0"
+  version: "1.330.1"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -8944,6 +8944,34 @@ components:
         username: { type: [string, "null"], description: Instagram handle of the account that posted the media and tagged yours. }
         likeCount: { type: [integer, "null"], description: Null when the owner hides like counts. }
         commentsCount: { type: [integer, "null"] }
+
+    InstagramMentionedMedia:
+      type: object
+      required: [id, caption, mediaType, mediaUrl, timestamp, username, likeCount, commentsCount]
+      properties:
+        id: { type: string, description: Instagram media ID of the post whose caption mentions the account. }
+        caption: { type: [string, "null"] }
+        mediaType: { type: [string, "null"], description: 'IMAGE, VIDEO or CAROUSEL_ALBUM.', example: IMAGE }
+        mediaUrl: { type: [string, "null"], description: 'Temporary CDN URL. Meta omits it for videos with copyrighted or licensed audio and reels whose owner disabled downloads.' }
+        timestamp: { type: [string, "null"], description: 'Publication time as Meta returns it (ISO 8601).' }
+        username: { type: [string, "null"], description: Instagram handle of the account that posted the media and mentioned yours. }
+        likeCount: { type: [integer, "null"], description: Null when the owner hides like counts. }
+        commentsCount: { type: [integer, "null"] }
+
+    InstagramMentionedComment:
+      type: object
+      required: [id, text, timestamp, likeCount, media]
+      properties:
+        id: { type: string, description: Instagram comment ID of the comment that mentions the account. }
+        text: { type: [string, "null"] }
+        timestamp: { type: [string, "null"], description: 'Creation time as Meta returns it (ISO 8601).' }
+        likeCount: { type: [integer, "null"] }
+        media:
+          type: [object, "null"]
+          description: The post the comment was left on.
+          required: [id]
+          properties:
+            id: { type: string, description: Instagram media ID of the post. }
 
     InstagramBusinessDiscovery:
       type: object
@@ -33344,6 +33372,113 @@ paths:
               schema: { $ref: '#/components/schemas/ErrorResponse' }
         '404':
           description: The account is not reachable by the caller (`account_not_found`).
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+        '409':
+          $ref: '#/components/responses/AccountConnectionRequired'
+  /v1/accounts/{accountId}/instagram/mentions/media/{mediaId}:
+    get:
+      x-resource-group: "engagement"
+      operationId: getInstagramMentionedMedia
+      tags: [Instagram]
+      summary: Get a post that mentions an Instagram account in its caption
+      description: |
+        Returns a post in which another Instagram user @mentioned the
+        connected account in the caption. Meta sends the media ID in its
+        mention notification and offers no list of mentions, so this reads one
+        mention by ID. Mentions in Stories are not supported by Meta.
+
+        Requires an Instagram account connected via **Facebook Login**. Meta
+        serves mentions on graph.facebook.com only, so accounts connected with
+        classic Instagram Login receive a 400
+        (`instagram_mentions_require_facebook_login`) and must be reconnected
+        choosing the Facebook option.
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          description: The ID of a connected Instagram account (Facebook Login).
+          schema: { type: string }
+        - name: mediaId
+          in: path
+          required: true
+          description: Instagram media ID of the post that mentions the account (digits only).
+          schema: { type: string, pattern: '^[0-9]+$', maxLength: 32, example: '18027939643230671' }
+      responses:
+        '200':
+          description: Get a post that mentions an Instagram account in its caption
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/InstagramMentionedMedia' }
+        '400':
+          description: 'Invalid accountId or mediaId, an account on another platform (`platform_not_supported`), an account connected with Instagram Login (`instagram_mentions_require_facebook_login`), or a Meta rejection (`platform_api_error`).'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: 'The API key is not scoped to this account, or Meta refused the request (`platform_api_error`, for example a missing permission).'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+        '404':
+          description: 'The account is not reachable by the caller (`account_not_found`), or the media does not exist or does not mention the account in its caption (`resource_not_found`).'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+        '409':
+          $ref: '#/components/responses/AccountConnectionRequired'
+  /v1/accounts/{accountId}/instagram/mentions/comments/{commentId}:
+    get:
+      x-resource-group: "engagement"
+      operationId: getInstagramMentionedComment
+      tags: [Instagram]
+      summary: Get a comment that mentions an Instagram account
+      description: |
+        Returns a comment in which another Instagram user @mentioned the
+        connected account, with the post it was left on. Meta sends the
+        comment ID in its mention notification and offers no list of mentions,
+        so this reads one mention by ID. Meta answers an error when comments
+        are disabled on that post.
+
+        Requires an Instagram account connected via **Facebook Login**. Meta
+        serves mentions on graph.facebook.com only, so accounts connected with
+        classic Instagram Login receive a 400
+        (`instagram_mentions_require_facebook_login`) and must be reconnected
+        choosing the Facebook option.
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          description: The ID of a connected Instagram account (Facebook Login).
+          schema: { type: string }
+        - name: commentId
+          in: path
+          required: true
+          description: Instagram comment ID of the comment that mentions the account (digits only).
+          schema: { type: string, pattern: '^[0-9]+$', maxLength: 32, example: '17894227972186120' }
+      responses:
+        '200':
+          description: Get a comment that mentions an Instagram account
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/InstagramMentionedComment' }
+        '400':
+          description: 'Invalid accountId or commentId, an account on another platform (`platform_not_supported`), an account connected with Instagram Login (`instagram_mentions_require_facebook_login`), or a Meta rejection (`platform_api_error`).'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: 'The API key is not scoped to this account, or Meta refused the request (`platform_api_error`, for example a missing permission).'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+        '404':
+          description: 'The account is not reachable by the caller (`account_not_found`), or the comment does not exist or does not mention the account (`resource_not_found`).'
           content:
             application/json:
               schema: { $ref: '#/components/schemas/ErrorResponse' }

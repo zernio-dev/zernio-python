@@ -137,6 +137,22 @@ class InstagramResource:
             f"/v1/accounts/{account_id}/instagram/tags", params=params
         )
 
+    def get_instagram_mentioned_media(
+        self, account_id: str, media_id: str
+    ) -> dict[str, Any]:
+        """Get a post that mentions an Instagram account in its caption"""
+        return self._client._get(
+            f"/v1/accounts/{account_id}/instagram/mentions/media/{media_id}"
+        )
+
+    def get_instagram_mentioned_comment(
+        self, account_id: str, comment_id: str
+    ) -> dict[str, Any]:
+        """Get a comment that mentions an Instagram account"""
+        return self._client._get(
+            f"/v1/accounts/{account_id}/instagram/mentions/comments/{comment_id}"
+        )
+
     def get_instagram_story_insights(
         self, account_id: str, story_id: str
     ) -> dict[str, Any]:
@@ -211,6 +227,22 @@ class InstagramResource:
         )
         return await self._client._aget(
             f"/v1/accounts/{account_id}/instagram/tags", params=params
+        )
+
+    async def aget_instagram_mentioned_media(
+        self, account_id: str, media_id: str
+    ) -> dict[str, Any]:
+        """Get a post that mentions an Instagram account in its caption (async)"""
+        return await self._client._aget(
+            f"/v1/accounts/{account_id}/instagram/mentions/media/{media_id}"
+        )
+
+    async def aget_instagram_mentioned_comment(
+        self, account_id: str, comment_id: str
+    ) -> dict[str, Any]:
+        """Get a comment that mentions an Instagram account (async)"""
+        return await self._client._aget(
+            f"/v1/accounts/{account_id}/instagram/mentions/comments/{comment_id}"
         )
 
     async def aget_instagram_story_insights(

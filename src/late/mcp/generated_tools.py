@@ -26581,6 +26581,77 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="Get a post that mentions an Instagram account in its caption",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def instagram_get_instagram_mentioned_media(account_id: str, media_id: str) -> str:
+        """Get a post that mentions an Instagram account in its caption
+
+        Returns a post in which another Instagram user @mentioned the
+        connected account in the caption. Meta sends the media ID in its
+        mention notification and offers no list of mentions, so this reads one
+        mention by ID. Mentions in Stories are not supported by Meta.
+
+        Requires an Instagram account connected via **Facebook Login**. Meta
+        serves mentions on graph.facebook.com only, so accounts connected with
+        classic Instagram Login receive a 400
+        (`instagram_mentions_require_facebook_login`) and must be reconnected
+        choosing the Facebook option.
+
+        Args:
+            account_id: The ID of a connected Instagram account (Facebook Login). (required)
+            media_id: Instagram media ID of the post that mentions the account (digits only). (required)"""
+        client = _get_client()
+        try:
+            response = client.instagram.get_instagram_mentioned_media(
+                account_id=account_id, media_id=media_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get a comment that mentions an Instagram account",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def instagram_get_instagram_mentioned_comment(
+        account_id: str, comment_id: str
+    ) -> str:
+        """Get a comment that mentions an Instagram account
+
+        Returns a comment in which another Instagram user @mentioned the
+        connected account, with the post it was left on. Meta sends the
+        comment ID in its mention notification and offers no list of mentions,
+        so this reads one mention by ID. Meta answers an error when comments
+        are disabled on that post.
+
+        Requires an Instagram account connected via **Facebook Login**. Meta
+        serves mentions on graph.facebook.com only, so accounts connected with
+        classic Instagram Login receive a 400
+        (`instagram_mentions_require_facebook_login`) and must be reconnected
+        choosing the Facebook option.
+
+        Args:
+            account_id: The ID of a connected Instagram account (Facebook Login). (required)
+            comment_id: Instagram comment ID of the comment that mentions the account (digits only). (required)"""
+        client = _get_client()
+        try:
+            response = client.instagram.get_instagram_mentioned_comment(
+                account_id=account_id, comment_id=comment_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="Get Instagram story insights",
             readOnlyHint=True,
             destructiveHint=False,

@@ -1050,6 +1050,8 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `instagram.list_instagram_tagged_media()` | List the posts an Instagram account is tagged in |
 | `instagram.get_instagram_audio()` | Get Instagram audio metadata |
 | `instagram.get_instagram_business_discovery()` | Look up a public Instagram Business account |
+| `instagram.get_instagram_mentioned_comment()` | Get a comment that mentions an Instagram account |
+| `instagram.get_instagram_mentioned_media()` | Get a post that mentions an Instagram account in its caption |
 | `instagram.get_instagram_publishing_limit()` | Get Instagram publishing limit |
 | `instagram.get_instagram_story_insights()` | Get Instagram story insights |
 | `instagram.search_instagram_audio()` | Search Instagram audio |
