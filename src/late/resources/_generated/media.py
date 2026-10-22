@@ -84,6 +84,14 @@ class MediaResource:
         )
         return self._client._post("/v1/media/presign", data=payload)
 
+    def prepare_media(self, url: str, target: str) -> dict[str, Any]:
+        """Prepare media for a platform"""
+        payload = self._build_payload(
+            url=url,
+            target=target,
+        )
+        return self._client._post("/v1/media/prepare", data=payload)
+
     async def aget_media_presigned_url(
         self, filename: str, content_type: Any, *, size: int | None = None
     ) -> dict[str, Any]:
@@ -94,3 +102,11 @@ class MediaResource:
             size=size,
         )
         return await self._client._apost("/v1/media/presign", data=payload)
+
+    async def aprepare_media(self, url: str, target: str) -> dict[str, Any]:
+        """Prepare media for a platform (async)"""
+        payload = self._build_payload(
+            url=url,
+            target=target,
+        )
+        return await self._client._apost("/v1/media/prepare", data=payload)

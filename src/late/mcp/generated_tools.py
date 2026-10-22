@@ -27187,6 +27187,51 @@ def register_generated_tools(mcp, _get_client):
         except Exception as e:
             return f"Error: {e}"
 
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Prepare media for a platform",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def media_prepare_media(
+        url: str,
+        target: Literal[
+            "instagram",
+            "instagram_story",
+            "facebook",
+            "facebook_reel",
+            "facebook_story",
+            "threads",
+            "tiktok",
+            "linkedin",
+            "twitter",
+            "bluesky",
+            "pinterest",
+            "reddit",
+            "snapchat",
+            "telegram",
+            "googlebusiness",
+            "youtube_thumbnail",
+        ],
+    ) -> str:
+        """Prepare media for a platform
+
+        Turn any image or video into a version the target platform accepts, using the same per-platform processing Zernio runs before publishing. Each team can prepare up to 60 files per hour; past that the endpoint answers 429 with `retryAfterSeconds`.
+
+        What each target does to a video: `instagram`, `facebook_reel` re-encode to H.264 Main 4.1, 30 fps, 1080 wide (HDR sources only get the size step, so they are not flattened to SDR). `instagram_story` re-encodes a video over 100MB to fit 60 seconds and 100MB. `facebook_story` reframes anything wider than 9:16 onto a 1080x1920 canvas with a blurred background (Facebook otherwise publishes such stories with 0 seconds of video and no error). `threads` re-encodes to the conservative H.264 Baseline profile Threads processes reliably. `bluesky` re-encodes to 1080 wide and at most 180 seconds, then compresses under 50MB if the result is still larger. `telegram` compresses to 50MB and moves the index to the start of the file. The other targets ...
+
+        Args:
+            url: Public http(s) URL of the image or video. (required)
+            target: Where the media will be published. `twitter`, `googlebusiness` and `youtube_thumbnail` take images only; `facebook_reel` takes videos only. (required)"""
+        client = _get_client()
+        try:
+            response = client.media.prepare_media(url=url, target=target)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
     # MENTIONS
 
     @mcp.tool(

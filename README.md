@@ -308,6 +308,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | Method | Description |
 |--------|-------------|
 | `media.get_media_presigned_url()` | Get upload URL |
+| `media.prepare_media()` | Prepare media for a platform |
 | `media.upload()` | Upload a file from path |
 | `media.upload_bytes()` | Upload file from bytes |
 | `media.upload_large()` | Upload large file with multipart |

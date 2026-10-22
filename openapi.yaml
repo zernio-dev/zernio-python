@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.329.0"
+  version: "1.330.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -80033,6 +80033,69 @@ paths:
         '429': { $ref: '#/components/responses/RateLimited' }
         '502': { $ref: '#/components/responses/UpstreamFailure' }
         '503': { $ref: '#/components/responses/TemporarilyUnavailable' }
+
+  /v1/media/prepare:
+    post:
+      x-resource-group: "publishing"
+      operationId: prepareMedia
+      tags: [Media]
+      summary: Prepare media for a platform
+      description: |
+        Turn any image or video into a version the target platform accepts, using the same per-platform processing Zernio runs before publishing. Each team can prepare up to 60 files per hour; past that the endpoint answers 429 with `retryAfterSeconds`.
+
+        What each target does to a video: `instagram`, `facebook_reel` re-encode to H.264 Main 4.1, 30 fps, 1080 wide (HDR sources only get the size step, so they are not flattened to SDR). `instagram_story` re-encodes a video over 100MB to fit 60 seconds and 100MB. `facebook_story` reframes anything wider than 9:16 onto a 1080x1920 canvas with a blurred background (Facebook otherwise publishes such stories with 0 seconds of video and no error). `threads` re-encodes to the conservative H.264 Baseline profile Threads processes reliably. `bluesky` re-encodes to 1080 wide and at most 180 seconds, then compresses under 50MB if the result is still larger. `telegram` compresses to 50MB and moves the index to the start of the file. The other targets compress only when the file is over the platform limit.
+
+        Images are converted to a format the platform ingests (Instagram takes only JPEG, LinkedIn and Google Business reject WebP and AVIF) and compressed under its size limit; `telegram` also fits the width plus height limit and `googlebusiness` enlarges images under its minimum size.
+
+        When the file already complies, `changed` is false and `url` is the input URL (after redirects). Otherwise `url` points to the prepared file in Zernio storage, kept under the same retention as uploaded media. The request is synchronous: a long video can take a few minutes. Videos over 200MB are refused with 413, and a video URL whose host sends no Content-Length is refused with 400.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [url, target]
+              properties:
+                url:
+                  type: string
+                  format: uri
+                  description: 'Public http(s) URL of the image or video.'
+                  example: "https://example.com/clip.mov"
+                target:
+                  type: string
+                  enum: [instagram, instagram_story, facebook, facebook_reel, facebook_story, threads, tiktok, linkedin, twitter, bluesky, pinterest, reddit, snapchat, telegram, googlebusiness, youtube_thumbnail]
+                  description: 'Where the media will be published. `twitter`, `googlebusiness` and `youtube_thumbnail` take images only; `facebook_reel` takes videos only.'
+                  example: facebook_story
+      responses:
+        "200":
+          description: Prepared media
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [target, url, changed, mediaType, originalSize, outputSize]
+                properties:
+                  target: { type: string }
+                  url: { type: string, format: uri, description: 'URL to publish: the prepared file, or the input URL when nothing needed to change.' }
+                  changed: { type: boolean, description: 'Whether the media was processed.' }
+                  mediaType: { type: string, enum: [image, video] }
+                  originalSize: { type: [integer, "null"], description: 'Input size in bytes, null when the host does not report it.' }
+                  outputSize: { type: [integer, "null"], description: 'Size of the returned file in bytes.' }
+              example:
+                target: facebook_story
+                url: "https://media.zernio.com/media/1761100000000_ab12cd_clip_story.mp4"
+                changed: true
+                mediaType: video
+                originalSize: 48211337
+                outputSize: 31877210
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/ResourceGroupForbidden" }
+        "413": { description: 'The video is over the 200MB this endpoint prepares.' }
+        "422": { description: 'The media could not be processed (for example a corrupt file).' }
+        "429": { $ref: "#/components/responses/RateLimited" }
 
   # ============================================
   # Changelog
