@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.331.0"
+  version: "1.331.1"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -998,6 +998,12 @@ components:
         Pinterest ads: Pinterest rate-limits per user and app, per category
         (ads_read, ads_write, ads_analytics). `Retry-After` comes from
         Pinterest's `x-ratelimit-reset` when it sends one, otherwise 60 seconds.
+
+        TikTok ads: TikTok caps requests per second for the whole app, across
+        every advertiser, and answers overage with code 40100 or with code
+        40002 `OVER_QPS_LIMIT`. Both return 429 `rate_limited` with
+        `platform: tiktok` and `Retry-After: 10`. Space out bulk reads (for
+        example one ad at a time per advertiser) instead of retrying at once.
       headers:
         Retry-After:
           description: 'Seconds remaining until the upstream quota resets.'
@@ -60166,7 +60172,7 @@ paths:
                   readAt: { type: string, format: date-time, description: "When the verdict was read from TikTok." }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '404': { description: "Ad not found, it has no TikTok ad or ad group id yet, or no Smart+ ad of its ad group holds it" }
+        '404': { description: "Ad not found, it has no TikTok ad or ad group id yet, or no Smart+ ad of its ad group holds it. In the last case `details.listedSmartPlusAds` is how many Smart+ ads TikTok lists in the ad group, deleted ones included: 0 means the ad group lists none." }
         '422': { description: "The TikTok ad is not an Upgraded Smart+ ad (read it with GET /v1/ads/{adId}/review)" }
         '429': { $ref: '#/components/responses/RateLimited' }
         '501': { description: "Only supported on TikTok" }
