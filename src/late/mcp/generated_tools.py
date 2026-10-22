@@ -4903,7 +4903,7 @@ def register_generated_tools(mcp, _get_client):
             account_id: Account ID (required)
             ad_account_id: Filter response to a single platform ad account ID (e.g. `act_123` for Meta, advertiser_id for TikTok). Returns at most one item.
             limit: Clamp the returned `accounts[]` length. Useful for typeahead pickers on agency tokens with hundreds of advertisers.
-            in_scope_only: Google Ads only. `true` returns only the customers this connection accepts as `adAccountId` (or `customerId`) on the other /v1/ads endpoints, i.e. those inside its ad-account selection. Without it every customer the Google login can reach is listed, including ones selected on another connection of the same login, which those endpoints answer with a 400. Ignored on other platforms. On every platform, each item's `selected` flags selection membership without narrowing the list."""
+            in_scope_only: `true` returns only the ad accounts this connection accepts as `adAccountId` on the other /v1/ads endpoints, i.e. those inside its ad-account selection (every item then has `selected: true`). Without it, every ad account the login can reach is listed and `selected` flags selection membership. On Meta, LinkedIn, X and Reddit it drops the ad accounts with `selected: false`; a connection without a selection keeps them all. On Google Ads it also drops customers the login reaches that are not on this connection (for example ones selected on another connection of the same login), which those endpoints answer with a 400. TikTok and Pinterest have no selection, so the list is unchanged."""
         client = _get_client()
         try:
             response = client.ad_accounts.list_ad_accounts(

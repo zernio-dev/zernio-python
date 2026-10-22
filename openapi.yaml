@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.333.2"
+  version: "1.334.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -66097,16 +66097,17 @@ paths:
         Every listed ad account carries `selected`: whether it is in the connection's ad-account
         selection (the ad accounts picked at connect time or in the dashboard picker, the ones
         Zernio syncs). On a connection without a selection every ad account is `selected: true`.
-        Writes through /v1/ads endpoints to an ad account with `selected: false` are being
-        restricted and will answer `403 ad_account_not_selected`; add it to the selection first
-        (dashboard picker, or `GET /v1/connect/{platform}/ads` with `adAccountIds`).
+        Writes through /v1/ads endpoints to an ad account with `selected: false` answer
+        `403 ad_account_not_selected`; add it to the selection first (dashboard picker, or
+        `GET /v1/connect/{platform}/ads` with `adAccountIds`). The list includes unselected ad
+        accounts by default; pass `inScopeOnly=true` to get only the ones this connection can use.
       security:
         - bearerAuth: []
       parameters:
         - { name: accountId, in: query, required: true, schema: { type: string }, description: Account ID }
         - { name: adAccountId, in: query, required: false, schema: { type: string }, description: "Filter response to a single platform ad account ID (e.g. `act_123` for Meta, advertiser_id for TikTok). Returns at most one item." }
         - { name: limit, in: query, required: false, schema: { type: integer, minimum: 1, maximum: 1000 }, description: "Clamp the returned `accounts[]` length. Useful for typeahead pickers on agency tokens with hundreds of advertisers." }
-        - { name: inScopeOnly, in: query, required: false, schema: { type: boolean, default: false }, description: "Google Ads only. `true` returns only the customers this connection accepts as `adAccountId` (or `customerId`) on the other /v1/ads endpoints, i.e. those inside its ad-account selection. Without it every customer the Google login can reach is listed, including ones selected on another connection of the same login, which those endpoints answer with a 400. Ignored on other platforms. On every platform, each item's `selected` flags selection membership without narrowing the list." }
+        - { name: inScopeOnly, in: query, required: false, schema: { type: boolean, default: false }, description: "`true` returns only the ad accounts this connection accepts as `adAccountId` on the other /v1/ads endpoints, i.e. those inside its ad-account selection (every item then has `selected: true`). Without it, every ad account the login can reach is listed and `selected` flags selection membership. On Meta, LinkedIn, X and Reddit it drops the ad accounts with `selected: false`; a connection without a selection keeps them all. On Google Ads it also drops customers the login reaches that are not on this connection (for example ones selected on another connection of the same login), which those endpoints answer with a 400. TikTok and Pinterest have no selection, so the list is unchanged." }
       responses:
         '409': { $ref: '#/components/responses/AccountConnectionRequired' }
         '404': { $ref: '#/components/responses/AccountUnavailable' }
@@ -66191,7 +66192,7 @@ paths:
                               the token cannot read the billing fields.
                         selectable: { type: boolean, description: "Meta and X only. Whether the account can create/run ads now. Always present on every Meta and X account. Absent (treat as true) on other platforms." }
                         unusableReason: { type: [string, "null"], description: "Meta and X only. Always present on every Meta and X account. Human-readable reason when selectable is false; null when selectable." }
-                        selected: { type: boolean, description: "Always present. True when the ad account is in this connection's ad-account selection, or when the connection has no selection (then every ad account is usable). For a posting account (e.g. facebook, twitter) the selection of its ads connection applies. Unrelated to `selectable`, which is the platform's own status. Writes to an ad account with `selected: false` will answer 403 `ad_account_not_selected`." }
+                        selected: { type: boolean, description: "Always present. True when the ad account is in this connection's ad-account selection, or when the connection has no selection (then every ad account is usable). For a posting account (e.g. facebook, twitter) the selection of its ads connection applies. Unrelated to `selectable`, which is the platform's own status. Writes to an ad account with `selected: false` answer 403 `ad_account_not_selected`; `inScopeOnly=true` lists only the selected ones." }
                   cachedAt: { type: [string, "null"], format: date-time, description: "Google only. When this list was fetched from Google. Null when it was never served from cache. Absent on other platforms." }
                   stale: { type: boolean, description: "Google only. True when Google's daily API quota was exhausted and this is the last successful fetch, not a live read. Absent on other platforms." }
         '401': { $ref: '#/components/responses/Unauthorized' }
