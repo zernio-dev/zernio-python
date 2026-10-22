@@ -26673,6 +26673,50 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="Update a lead's status",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def lead_gen_update_lead(
+        id: str,
+        status: Literal[
+            "new", "contacted", "unreachable", "qualified", "converted", "disqualified"
+        ],
+        value: float | None = None,
+        currency: str | None = None,
+        account_id: str | None = None,
+    ) -> str:
+        """Update a lead's status
+
+        Sets the status of a Meta lead (and optionally its value) so you can track it from lead to sale.
+
+        `{id}` is the Zernio lead id (`id` on `GET /v1/ads/leads`, `leadId` on `GET /v1/ads/lead-forms/{formId}/leads`) or the Meta `leadgenId` together with `accountId` in the body. Requires the Ads add-on.
+
+        Platforms: meta
+
+        Args:
+            id: Zernio lead id, or the Meta leadgenId (then accountId is required). (required)
+            status: (required)
+            value: Deal value; requires currency.
+            currency: ISO 4217 code.
+            account_id: Required when `{id}` is a Meta leadgenId: the facebook or metaads account that received the lead."""
+        client = _get_client()
+        try:
+            response = client.lead_gen.update_lead(
+                id=id,
+                status=status,
+                value=value,
+                currency=currency,
+                account_id=account_id,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="List lead forms",
             readOnlyHint=True,
             destructiveHint=False,
@@ -26756,7 +26800,7 @@ def register_generated_tools(mcp, _get_client):
             thank_you_button_type: Deprecated: use platformSpecificData.thankYouButtonType.
             thank_you_website_url: Deprecated: use platformSpecificData.thankYouWebsiteUrl.
             is_optimized_for_quality: Deprecated: use platformSpecificData.isOptimizedForQuality.
-            platform_specific_data: Form content; the shape is selected by the accountId's platform. Unknown fields are a 400 (strict-parsed). Object with keys: questions (list of objects with keys type, key, label, options, inline_context, required); privacyPolicyLinkText (string); followUpActionUrl (string); locale (string); thankYouTitle (string); thankYouBody (string); thankYouButtonText (string); thankYouButtonType (string); thankYouWebsiteUrl (string); thankYouEnableMessenger (boolean) - Adds a 'Continue in Messenger' option to the thank-you page (Meta thank_you_page.enable_messenger), so the lead can carry on chatting with the Page. Set ...; isOptimizedForQuality (boolean) - Set true for a higher-intent form (adds a review step before submit).; isPhoneSmsVerifyEnabled (boolean) - Requires the lead to verify their phone number over SMS before the form submits (Meta is_phone_sms_verify_enabled). Only meaningful on a form with a PHONE ...; blockDisplayForNonTargetedViewer (boolean); questionPageCustomHeadline (string); contextCard (object with keys title, content, style, buttonText, coverPhoto)"""
+            platform_specific_data: Form content; the shape is selected by the accountId's platform. Unknown fields are a 400 (strict-parsed). Object with keys: questions (list of objects with keys type, key, label, options, inline_context, required); privacyPolicyLinkText (string); followUpActionUrl (string); locale (string); thankYouTitle (string); thankYouBody (string); thankYouButtonText (string); thankYouButtonType (string); thankYouWebsiteUrl (string); thankYouEnableMessenger (boolean) - Adds a 'Continue in Messenger' option to the thank-you page (Meta thank_you_page.enable_messenger), so the lead can carry on chatting with the Page. Set ...; isOptimizedForQuality (boolean) - Set true for a higher-intent form (adds a review step before submit).; isPhoneSmsVerifyEnabled (boolean) - Requires the lead to verify their phone number over SMS before the form submits (Meta is_phone_sms_verify_enabled). Only meaningful on a form with a PHONE ...; blockDisplayForNonTargetedViewer (boolean); questionPageCustomHeadline (string); contextCard (object with keys title, content, style, buttonText, coverPhoto); customDisclaimer (object with keys title, body, checkboxes) - Consent section with checkboxes (Meta custom_disclaimer). Each lead's answers come back on the lead, and a lead_received workflow only messages leads that ..."""
         client = _get_client()
         try:
             response = client.lead_gen.create_lead_form(

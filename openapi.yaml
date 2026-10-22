@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.324.0"
+  version: "1.325.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -1180,6 +1180,27 @@ components:
                   effective_account_limit: 2000
                   current_account_count: 2000
   schemas:
+    AdLead:
+      type: object
+      properties:
+        id: { type: string, description: Zernio lead id. }
+        leadgenId: { type: string, description: 'Meta lead id. On LinkedIn, the leadFormResponse id.' }
+        formId: { type: string }
+        formName: { type: [string, "null"] }
+        accountId: { type: string }
+        adId: { type: [string, "null"] }
+        adsetId: { type: [string, "null"] }
+        campaignId: { type: [string, "null"], description: 'On LinkedIn, this is the LinkedIn Campaign id, which corresponds to platformAdSetId on GET /v1/ads (LinkedIn''s Campaign Group is Zernio''s campaign).' }
+        isOrganic: { type: boolean }
+        createdTime: { type: [string, "null"], description: ISO 8601. }
+        fields: { type: object, additionalProperties: { type: string }, description: 'Question key → answer. On LinkedIn, the key is the lowercased predefinedField, else the question name, else the numeric questionId; multiple-choice values are option labels (unlike Meta, which returns the option key).' }
+        fieldData: { type: array, items: { type: object }, description: "Raw Meta field_data." }
+        status: { type: string, enum: [new, contacted, unreachable, qualified, converted, disqualified], description: 'Meta leads only. `contacted` is set when the first WhatsApp message of a lead_received workflow is delivered, `unreachable` when it fails or the phone number is not valid.' }
+        statusChangedAt: { type: [string, "null"], format: date-time }
+        value: { type: [number, "null"] }
+        currency: { type: [string, "null"] }
+        contactId: { type: [string, "null"], description: 'The contact a lead_received workflow created or matched for this lead.' }
+        firstContactedAt: { type: [string, "null"], format: date-time, description: 'When the first WhatsApp message to the lead was delivered.' }
     ConnectWelcomeScreen:
       type: object
       properties:
@@ -2717,11 +2738,13 @@ components:
 
 
             **trigger**: `{ triggerType:
-            inbound_message|api_call|whatsapp_event|referral|story_mention|comment|reaction,
+            inbound_message|api_call|whatsapp_event|referral|story_mention|comment|reaction|lead_received,
             keywords:[string], matchType: any|contains|exact|regex, onlyFirstMessage:boolean,
             eventType: message_sent|message_delivered|message_read|message_failed|reaction,
             referral:{ ref, matchType: exact|prefix|any }, reaction:{ emojis:[string] },
             comment:{ keywords:[string], matchType: any|contains|exact|regex, platformPostId },
+            leadReceived:{ formIds:[string], pageAccountIds:[string], consentCheckboxKey,
+            defaultCountry, allowCrossProfile:boolean },
             cooldownHours:int (1-720) }`. Default `triggerType` is `inbound_message` for legacy
             nodes. A workflow starts only on events of its own trigger type: `inbound_message` on a
             message, `referral` on an ig.me / m.me / click-to-message ad referral (standalone, or the
@@ -2736,10 +2759,20 @@ components:
             the run then continues in the conversation that reply opens; when an active comment
             automation's keywords match the comment, the automation answers and the workflow does
             not start), `whatsapp_event` on a WhatsApp status of a message we sent (filtered by
-            `eventType`), `api_call` only via `POST /v1/workflows/{workflowId}/trigger`.
+            `eventType`), `api_call` only via `POST /v1/workflows/{workflowId}/trigger`, and
+            `lead_received` (WhatsApp workflows only) when a Meta lead ad form is submitted.
+            A `lead_received` trigger needs `leadReceived.consentCheckboxKey` and at least one of
+            `formIds` or `pageAccountIds`; a form scope wins over a Page scope, then the earliest
+            activated workflow. It starts only for leads submitted in the last hour and after the
+            workflow was activated, whose consent checkbox (the form's custom disclaimer, see
+            `POST /v1/ads/lead-forms`) is ticked, and whose phone number parses to a valid
+            international number (`defaultCountry`, ISO 3166 alpha-2, defaults to the country of
+            the workflow's WhatsApp number); otherwise the lead is marked `unreachable`. The Page
+            and the WhatsApp number must be in the same profile unless `allowCrossProfile` is true.
+            Every send or call reached first from the trigger must be a WhatsApp template (checked on save).
             `referral.matchType` defaults to `any`. `cooldownHours` (inbound_message, referral,
-            story_mention, reaction and whatsapp_event) stops the same contact from starting the
-            workflow again inside the window. A `whatsapp_event` workflow never starts on the
+            story_mention, reaction, whatsapp_event and lead_received, where it defaults to 24) stops
+            the same contact from starting the workflow again inside the window. A `whatsapp_event` workflow never starts on the
             status of a message a workflow, sequence or comment automation sent. A redelivered platform event never starts the same workflow twice.
 
 
@@ -2752,7 +2785,10 @@ components:
             `postback.payload`, `postback.title`, `quickReply.payload`, `quickReply.title`, `story.id`,
             `story.url`, `comment.id`, `comment.text`, `comment.platformPostId`, `reaction.emoji`,
             `reaction.action` (added|removed). `api_call` runs also get the request's `variables`,
-            merged over these. An array or object interpolated into text renders as JSON.
+            merged over these. `lead_received` runs also get `lead.id`, `lead.leadgenId`,
+            `lead.formId`, `lead.formName`, `lead.adId`, `lead.adsetId`, `lead.campaignId` and every
+            form answer by its key (`lead.full_name`, `lead.email`, `lead.phone_number`). Template
+            `variableMapping` entries with `field: custom` interpolate `{{...}}` in `customValue`. An array or object interpolated into text renders as JSON.
 
 
             **send_message**: `{ messageType: text|template|media|interactive|cards, text,
@@ -68163,21 +68199,7 @@ paths:
                   status: { type: string, example: success }
                   leads:
                     type: array
-                    items:
-                      type: object
-                      properties:
-                        id: { type: string, description: Zernio lead id. }
-                        leadgenId: { type: string, description: 'Meta lead id. On LinkedIn, the leadFormResponse id.' }
-                        formId: { type: string }
-                        formName: { type: [string, "null"] }
-                        accountId: { type: string }
-                        adId: { type: [string, "null"] }
-                        adsetId: { type: [string, "null"] }
-                        campaignId: { type: [string, "null"], description: 'On LinkedIn, this is the LinkedIn Campaign id, which corresponds to platformAdSetId on GET /v1/ads (LinkedIn''s Campaign Group is Zernio''s campaign).' }
-                        isOrganic: { type: boolean }
-                        createdTime: { type: [string, "null"], description: ISO 8601. }
-                        fields: { type: object, additionalProperties: { type: string }, description: 'Question key → answer. On LinkedIn, the key is the lowercased predefinedField, else the question name, else the numeric questionId; multiple-choice values are option labels (unlike Meta, which returns the option key).' }
-                        fieldData: { type: array, items: { type: object }, description: "Raw Meta field_data." }
+                    items: { $ref: '#/components/schemas/AdLead' }
                   pagination:
                     type: object
                     properties:
@@ -68193,6 +68215,46 @@ paths:
         '403': { description: Ads add-on required. }
         '503': { $ref: '#/components/responses/TemporarilyUnavailable' }
         '502': { $ref: '#/components/responses/UpstreamFailure' }
+
+  /v1/ads/leads/{id}:
+    patch:
+      x-resource-group: "contacts"
+      operationId: updateLead
+      tags: ["Lead Gen"]
+      x-platforms: ["meta"]
+      summary: Update a lead's status
+      description: |
+        Sets the status of a Meta lead (and optionally its value) so you can track it from lead to sale.
+
+        `{id}` is the Zernio lead id (`id` on `GET /v1/ads/leads`, `leadId` on `GET /v1/ads/lead-forms/{formId}/leads`) or the Meta `leadgenId` together with `accountId` in the body. Requires the Ads add-on.
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string }, description: 'Zernio lead id, or the Meta leadgenId (then accountId is required).' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              properties:
+                status: { type: string, enum: [new, contacted, unreachable, qualified, converted, disqualified] }
+                value: { type: number, minimum: 0, description: 'Deal value; requires currency.' }
+                currency: { type: string, example: EUR, description: ISO 4217 code. }
+                accountId: { type: string, description: 'Required when `{id}` is a Meta leadgenId: the facebook or metaads account that received the lead.' }
+      responses:
+        '200':
+          description: The updated lead.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, example: success }
+                  lead: { $ref: '#/components/schemas/AdLead' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: Ads add-on required. }
+        '404': { description: Lead not found or not accessible. }
 
   /v1/ads/lead-forms:
     get:
@@ -68308,6 +68370,24 @@ paths:
                             style: { type: string, enum: [LIST_STYLE, PARAGRAPH_STYLE] }
                             buttonText: { type: string }
                             coverPhoto: { type: string, format: uri, description: "Direct public JPEG or PNG image URL, up to 5 MB. Uploaded as an unpublished Page photo and attached to the form. Redirects, Ad Image hashes and IDs are not supported." }
+                        customDisclaimer:
+                          type: object
+                          required: [title, body, checkboxes]
+                          description: "Consent section with checkboxes (Meta custom_disclaimer). Each lead's answers come back on the lead, and a lead_received workflow only messages leads that ticked its consentCheckboxKey."
+                          properties:
+                            title: { type: string, example: WhatsApp }
+                            body: { type: string, example: "Acme can contact you on WhatsApp about your request." }
+                            checkboxes:
+                              type: array
+                              minItems: 1
+                              items:
+                                type: object
+                                required: [key, text]
+                                properties:
+                                  key: { type: string, example: whatsapp_optin }
+                                  text: { type: string, example: "I agree to receive WhatsApp messages from Acme" }
+                                  isRequired: { type: boolean, default: false }
+                                  isCheckedByDefault: { type: boolean, default: false }
                     - type: object
                       title: LinkedInLeadFormPlatformData
                       required: [adAccountId, headline, description, questions]
@@ -68476,7 +68556,9 @@ paths:
                     items:
                       type: object
                       properties:
-                        id: { type: string }
+                        id: { type: string, description: Meta leadgenId. }
+                        leadId: { type: string, description: 'Zernio lead id, for PATCH /v1/ads/leads/{id}. Only on persisted leads.' }
+                        status: { type: string, description: 'Lead status (see PATCH /v1/ads/leads/{id}). Only on persisted leads.' }
                         createdTime: { type: [string, "null"] }
                         adId: { type: [string, "null"] }
                         formId: { type: string }

@@ -94,6 +94,24 @@ class LeadGenResource:
         )
         return self._client._get("/v1/ads/leads", params=params)
 
+    def update_lead(
+        self,
+        id: str,
+        status: str,
+        *,
+        value: float | None = None,
+        currency: str | None = None,
+        account_id: str | None = None,
+    ) -> dict[str, Any]:
+        """Update a lead's status"""
+        payload = self._build_payload(
+            status=status,
+            value=value,
+            currency=currency,
+            account_id=account_id,
+        )
+        return self._client._patch(f"/v1/ads/leads/{id}", data=payload)
+
     def list_lead_forms(
         self,
         account_id: str,
@@ -227,6 +245,24 @@ class LeadGenResource:
             cursor=cursor,
         )
         return await self._client._aget("/v1/ads/leads", params=params)
+
+    async def aupdate_lead(
+        self,
+        id: str,
+        status: str,
+        *,
+        value: float | None = None,
+        currency: str | None = None,
+        account_id: str | None = None,
+    ) -> dict[str, Any]:
+        """Update a lead's status (async)"""
+        payload = self._build_payload(
+            status=status,
+            value=value,
+            currency=currency,
+            account_id=account_id,
+        )
+        return await self._client._apatch(f"/v1/ads/leads/{id}", data=payload)
 
     async def alist_lead_forms(
         self,
