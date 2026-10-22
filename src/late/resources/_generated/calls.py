@@ -23,7 +23,7 @@ class CallsResource:
     def __init__(self, client: BaseClient) -> None:
         self._client = client
 
-    def _build_params(self, **kwargs: Any) -> dict[str, Any]:
+    def _wire_params(self, fields: dict[str, Any]) -> dict[str, Any]:
         """Build query parameters, filtering None and empty-string values.
 
         Empty strings are filtered because MCP tool wrappers pass ``""`` as the
@@ -38,20 +38,16 @@ class CallsResource:
         """
         from enum import Enum
 
-        def to_camel(s: str) -> str:
-            parts = s.split("_")
-            return parts[0] + "".join(p.title() for p in parts[1:])
-
         result: dict[str, Any] = {}
-        for k, v in kwargs.items():
+        for k, v in fields.items():
             if isinstance(v, Enum):
                 v = v.value
             if v is None or v == "":
                 continue
-            result[to_camel(k)] = v
+            result[k] = v
         return result
 
-    def _build_payload(self, **kwargs: Any) -> dict[str, Any]:
+    def _wire_payload(self, fields: dict[str, Any]) -> dict[str, Any]:
         """Build request payload, filtering None values. Enum members are
         unwrapped to their value so JSON bodies carry e.g. "failed" rather
         than a raw Enum member (plain Enum members are not JSON-serializable).
@@ -59,20 +55,16 @@ class CallsResource:
         from datetime import datetime
         from enum import Enum
 
-        def to_camel(s: str) -> str:
-            parts = s.split("_")
-            return parts[0] + "".join(p.title() for p in parts[1:])
-
         result: dict[str, Any] = {}
-        for k, v in kwargs.items():
+        for k, v in fields.items():
             if isinstance(v, Enum):
                 v = v.value
             if v is None:
                 continue
             if isinstance(v, datetime):
-                result[to_camel(k)] = v.isoformat()
+                result[k] = v.isoformat()
             else:
-                result[to_camel(k)] = v
+                result[k] = v
         return result
 
     def list_calls(
@@ -87,14 +79,16 @@ class CallsResource:
         limit: int | None = 50,
     ) -> dict[str, Any]:
         """List all calls (unified history)"""
-        params = self._build_params(
-            channel=channel,
-            status=status,
-            direction=direction,
-            number=number,
-            search=search,
-            before=before,
-            limit=limit,
+        params = self._wire_params(
+            {
+                "channel": channel,
+                "status": status,
+                "direction": direction,
+                "number": number,
+                "search": search,
+                "before": before,
+                "limit": limit,
+            }
         )
         return self._client._get("/v1/calls", params=params)
 
@@ -104,8 +98,10 @@ class CallsResource:
 
     def get_call_recording(self, id: str, *, as_: str | None = None) -> dict[str, Any]:
         """Get a call recording"""
-        params = self._build_params(
-            as_=as_,
+        params = self._wire_params(
+            {
+                "as": as_,
+            }
         )
         return self._client._get(f"/v1/calls/{id}/recording", params=params)
 
@@ -121,14 +117,16 @@ class CallsResource:
         limit: int | None = 50,
     ) -> dict[str, Any]:
         """List all calls (unified history) (async)"""
-        params = self._build_params(
-            channel=channel,
-            status=status,
-            direction=direction,
-            number=number,
-            search=search,
-            before=before,
-            limit=limit,
+        params = self._wire_params(
+            {
+                "channel": channel,
+                "status": status,
+                "direction": direction,
+                "number": number,
+                "search": search,
+                "before": before,
+                "limit": limit,
+            }
         )
         return await self._client._aget("/v1/calls", params=params)
 
@@ -140,7 +138,9 @@ class CallsResource:
         self, id: str, *, as_: str | None = None
     ) -> dict[str, Any]:
         """Get a call recording (async)"""
-        params = self._build_params(
-            as_=as_,
+        params = self._wire_params(
+            {
+                "as": as_,
+            }
         )
         return await self._client._aget(f"/v1/calls/{id}/recording", params=params)

@@ -23,7 +23,7 @@ class BroadcastsResource:
     def __init__(self, client: BaseClient) -> None:
         self._client = client
 
-    def _build_params(self, **kwargs: Any) -> dict[str, Any]:
+    def _wire_params(self, fields: dict[str, Any]) -> dict[str, Any]:
         """Build query parameters, filtering None and empty-string values.
 
         Empty strings are filtered because MCP tool wrappers pass ``""`` as the
@@ -38,20 +38,16 @@ class BroadcastsResource:
         """
         from enum import Enum
 
-        def to_camel(s: str) -> str:
-            parts = s.split("_")
-            return parts[0] + "".join(p.title() for p in parts[1:])
-
         result: dict[str, Any] = {}
-        for k, v in kwargs.items():
+        for k, v in fields.items():
             if isinstance(v, Enum):
                 v = v.value
             if v is None or v == "":
                 continue
-            result[to_camel(k)] = v
+            result[k] = v
         return result
 
-    def _build_payload(self, **kwargs: Any) -> dict[str, Any]:
+    def _wire_payload(self, fields: dict[str, Any]) -> dict[str, Any]:
         """Build request payload, filtering None values. Enum members are
         unwrapped to their value so JSON bodies carry e.g. "failed" rather
         than a raw Enum member (plain Enum members are not JSON-serializable).
@@ -59,20 +55,16 @@ class BroadcastsResource:
         from datetime import datetime
         from enum import Enum
 
-        def to_camel(s: str) -> str:
-            parts = s.split("_")
-            return parts[0] + "".join(p.title() for p in parts[1:])
-
         result: dict[str, Any] = {}
-        for k, v in kwargs.items():
+        for k, v in fields.items():
             if isinstance(v, Enum):
                 v = v.value
             if v is None:
                 continue
             if isinstance(v, datetime):
-                result[to_camel(k)] = v.isoformat()
+                result[k] = v.isoformat()
             else:
-                result[to_camel(k)] = v
+                result[k] = v
         return result
 
     def list_broadcasts(
@@ -85,12 +77,14 @@ class BroadcastsResource:
         skip: int | None = 0,
     ) -> dict[str, Any]:
         """List broadcasts"""
-        params = self._build_params(
-            profile_id=profile_id,
-            status=status,
-            platform=platform,
-            limit=limit,
-            skip=skip,
+        params = self._wire_params(
+            {
+                "profileId": profile_id,
+                "status": status,
+                "platform": platform,
+                "limit": limit,
+                "skip": skip,
+            }
         )
         return self._client._get("/v1/broadcasts", params=params)
 
@@ -107,15 +101,17 @@ class BroadcastsResource:
         segment_filters: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Create broadcast draft"""
-        payload = self._build_payload(
-            profile_id=profile_id,
-            account_id=account_id,
-            platform=platform,
-            name=name,
-            description=description,
-            message=message,
-            template=template,
-            segment_filters=segment_filters,
+        payload = self._wire_payload(
+            {
+                "profileId": profile_id,
+                "accountId": account_id,
+                "platform": platform,
+                "name": name,
+                "description": description,
+                "message": message,
+                "template": template,
+                "segmentFilters": segment_filters,
+            }
         )
         return self._client._post("/v1/broadcasts", data=payload)
 
@@ -134,12 +130,14 @@ class BroadcastsResource:
         segment_filters: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Update broadcast"""
-        payload = self._build_payload(
-            name=name,
-            description=description,
-            message=message,
-            template=template,
-            segment_filters=segment_filters,
+        payload = self._wire_payload(
+            {
+                "name": name,
+                "description": description,
+                "message": message,
+                "template": template,
+                "segmentFilters": segment_filters,
+            }
         )
         return self._client._patch(f"/v1/broadcasts/{broadcast_id}", data=payload)
 
@@ -155,8 +153,10 @@ class BroadcastsResource:
         self, broadcast_id: str, scheduled_at: datetime | str
     ) -> dict[str, Any]:
         """Schedule broadcast for later"""
-        payload = self._build_payload(
-            scheduled_at=scheduled_at,
+        payload = self._wire_payload(
+            {
+                "scheduledAt": scheduled_at,
+            }
         )
         return self._client._post(
             f"/v1/broadcasts/{broadcast_id}/schedule", data=payload
@@ -175,10 +175,12 @@ class BroadcastsResource:
         skip: int | None = 0,
     ) -> dict[str, Any]:
         """List broadcast recipients"""
-        params = self._build_params(
-            status=status,
-            limit=limit,
-            skip=skip,
+        params = self._wire_params(
+            {
+                "status": status,
+                "limit": limit,
+                "skip": skip,
+            }
         )
         return self._client._get(
             f"/v1/broadcasts/{broadcast_id}/recipients", params=params
@@ -193,10 +195,12 @@ class BroadcastsResource:
         use_segment: bool | None = None,
     ) -> dict[str, Any]:
         """Add recipients to a broadcast"""
-        payload = self._build_payload(
-            contact_ids=contact_ids,
-            phones=phones,
-            use_segment=use_segment,
+        payload = self._wire_payload(
+            {
+                "contactIds": contact_ids,
+                "phones": phones,
+                "useSegment": use_segment,
+            }
         )
         return self._client._post(
             f"/v1/broadcasts/{broadcast_id}/recipients", data=payload
@@ -212,12 +216,14 @@ class BroadcastsResource:
         skip: int | None = 0,
     ) -> dict[str, Any]:
         """List broadcasts (async)"""
-        params = self._build_params(
-            profile_id=profile_id,
-            status=status,
-            platform=platform,
-            limit=limit,
-            skip=skip,
+        params = self._wire_params(
+            {
+                "profileId": profile_id,
+                "status": status,
+                "platform": platform,
+                "limit": limit,
+                "skip": skip,
+            }
         )
         return await self._client._aget("/v1/broadcasts", params=params)
 
@@ -234,15 +240,17 @@ class BroadcastsResource:
         segment_filters: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Create broadcast draft (async)"""
-        payload = self._build_payload(
-            profile_id=profile_id,
-            account_id=account_id,
-            platform=platform,
-            name=name,
-            description=description,
-            message=message,
-            template=template,
-            segment_filters=segment_filters,
+        payload = self._wire_payload(
+            {
+                "profileId": profile_id,
+                "accountId": account_id,
+                "platform": platform,
+                "name": name,
+                "description": description,
+                "message": message,
+                "template": template,
+                "segmentFilters": segment_filters,
+            }
         )
         return await self._client._apost("/v1/broadcasts", data=payload)
 
@@ -261,12 +269,14 @@ class BroadcastsResource:
         segment_filters: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Update broadcast (async)"""
-        payload = self._build_payload(
-            name=name,
-            description=description,
-            message=message,
-            template=template,
-            segment_filters=segment_filters,
+        payload = self._wire_payload(
+            {
+                "name": name,
+                "description": description,
+                "message": message,
+                "template": template,
+                "segmentFilters": segment_filters,
+            }
         )
         return await self._client._apatch(
             f"/v1/broadcasts/{broadcast_id}", data=payload
@@ -284,8 +294,10 @@ class BroadcastsResource:
         self, broadcast_id: str, scheduled_at: datetime | str
     ) -> dict[str, Any]:
         """Schedule broadcast for later (async)"""
-        payload = self._build_payload(
-            scheduled_at=scheduled_at,
+        payload = self._wire_payload(
+            {
+                "scheduledAt": scheduled_at,
+            }
         )
         return await self._client._apost(
             f"/v1/broadcasts/{broadcast_id}/schedule", data=payload
@@ -304,10 +316,12 @@ class BroadcastsResource:
         skip: int | None = 0,
     ) -> dict[str, Any]:
         """List broadcast recipients (async)"""
-        params = self._build_params(
-            status=status,
-            limit=limit,
-            skip=skip,
+        params = self._wire_params(
+            {
+                "status": status,
+                "limit": limit,
+                "skip": skip,
+            }
         )
         return await self._client._aget(
             f"/v1/broadcasts/{broadcast_id}/recipients", params=params
@@ -322,10 +336,12 @@ class BroadcastsResource:
         use_segment: bool | None = None,
     ) -> dict[str, Any]:
         """Add recipients to a broadcast (async)"""
-        payload = self._build_payload(
-            contact_ids=contact_ids,
-            phones=phones,
-            use_segment=use_segment,
+        payload = self._wire_payload(
+            {
+                "contactIds": contact_ids,
+                "phones": phones,
+                "useSegment": use_segment,
+            }
         )
         return await self._client._apost(
             f"/v1/broadcasts/{broadcast_id}/recipients", data=payload

@@ -21,7 +21,7 @@ class RedditResource:
     def __init__(self, client: BaseClient) -> None:
         self._client = client
 
-    def _build_params(self, **kwargs: Any) -> dict[str, Any]:
+    def _wire_params(self, fields: dict[str, Any]) -> dict[str, Any]:
         """Build query parameters, filtering None and empty-string values.
 
         Empty strings are filtered because MCP tool wrappers pass ``""`` as the
@@ -36,20 +36,16 @@ class RedditResource:
         """
         from enum import Enum
 
-        def to_camel(s: str) -> str:
-            parts = s.split("_")
-            return parts[0] + "".join(p.title() for p in parts[1:])
-
         result: dict[str, Any] = {}
-        for k, v in kwargs.items():
+        for k, v in fields.items():
             if isinstance(v, Enum):
                 v = v.value
             if v is None or v == "":
                 continue
-            result[to_camel(k)] = v
+            result[k] = v
         return result
 
-    def _build_payload(self, **kwargs: Any) -> dict[str, Any]:
+    def _wire_payload(self, fields: dict[str, Any]) -> dict[str, Any]:
         """Build request payload, filtering None values. Enum members are
         unwrapped to their value so JSON bodies carry e.g. "failed" rather
         than a raw Enum member (plain Enum members are not JSON-serializable).
@@ -57,20 +53,16 @@ class RedditResource:
         from datetime import datetime
         from enum import Enum
 
-        def to_camel(s: str) -> str:
-            parts = s.split("_")
-            return parts[0] + "".join(p.title() for p in parts[1:])
-
         result: dict[str, Any] = {}
-        for k, v in kwargs.items():
+        for k, v in fields.items():
             if isinstance(v, Enum):
                 v = v.value
             if v is None:
                 continue
             if isinstance(v, datetime):
-                result[to_camel(k)] = v.isoformat()
+                result[k] = v.isoformat()
             else:
-                result[to_camel(k)] = v
+                result[k] = v
         return result
 
     def search_reddit(
@@ -85,14 +77,16 @@ class RedditResource:
         after: str | None = None,
     ) -> dict[str, Any]:
         """Search posts"""
-        params = self._build_params(
-            account_id=account_id,
-            subreddit=subreddit,
-            q=q,
-            restrict_sr=restrict_sr,
-            sort=sort,
-            limit=limit,
-            after=after,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+                "subreddit": subreddit,
+                "q": q,
+                "restrict_sr": restrict_sr,
+                "sort": sort,
+                "limit": limit,
+                "after": after,
+            }
         )
         return self._client._get("/v1/reddit/search", params=params)
 
@@ -107,13 +101,15 @@ class RedditResource:
         t: str | None = None,
     ) -> dict[str, Any]:
         """Get subreddit feed"""
-        params = self._build_params(
-            account_id=account_id,
-            subreddit=subreddit,
-            sort=sort,
-            limit=limit,
-            after=after,
-            t=t,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+                "subreddit": subreddit,
+                "sort": sort,
+                "limit": limit,
+                "after": after,
+                "t": t,
+            }
         )
         return self._client._get("/v1/reddit/feed", params=params)
 
@@ -127,11 +123,13 @@ class RedditResource:
         comment_id: str | None = None,
     ) -> dict[str, Any]:
         """Get the comments of a Reddit post"""
-        params = self._build_params(
-            account_id=account_id,
-            sort=sort,
-            limit=limit,
-            comment_id=comment_id,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+                "sort": sort,
+                "limit": limit,
+                "commentId": comment_id,
+            }
         )
         return self._client._get(f"/v1/reddit/comments/{post_id}", params=params)
 
@@ -147,14 +145,16 @@ class RedditResource:
         after: str | None = None,
     ) -> dict[str, Any]:
         """Search posts (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            subreddit=subreddit,
-            q=q,
-            restrict_sr=restrict_sr,
-            sort=sort,
-            limit=limit,
-            after=after,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+                "subreddit": subreddit,
+                "q": q,
+                "restrict_sr": restrict_sr,
+                "sort": sort,
+                "limit": limit,
+                "after": after,
+            }
         )
         return await self._client._aget("/v1/reddit/search", params=params)
 
@@ -169,13 +169,15 @@ class RedditResource:
         t: str | None = None,
     ) -> dict[str, Any]:
         """Get subreddit feed (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            subreddit=subreddit,
-            sort=sort,
-            limit=limit,
-            after=after,
-            t=t,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+                "subreddit": subreddit,
+                "sort": sort,
+                "limit": limit,
+                "after": after,
+                "t": t,
+            }
         )
         return await self._client._aget("/v1/reddit/feed", params=params)
 
@@ -189,10 +191,12 @@ class RedditResource:
         comment_id: str | None = None,
     ) -> dict[str, Any]:
         """Get the comments of a Reddit post (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            sort=sort,
-            limit=limit,
-            comment_id=comment_id,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+                "sort": sort,
+                "limit": limit,
+                "commentId": comment_id,
+            }
         )
         return await self._client._aget(f"/v1/reddit/comments/{post_id}", params=params)

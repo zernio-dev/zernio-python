@@ -21,7 +21,7 @@ class AdLibraryResource:
     def __init__(self, client: BaseClient) -> None:
         self._client = client
 
-    def _build_params(self, **kwargs: Any) -> dict[str, Any]:
+    def _wire_params(self, fields: dict[str, Any]) -> dict[str, Any]:
         """Build query parameters, filtering None and empty-string values.
 
         Empty strings are filtered because MCP tool wrappers pass ``""`` as the
@@ -36,20 +36,16 @@ class AdLibraryResource:
         """
         from enum import Enum
 
-        def to_camel(s: str) -> str:
-            parts = s.split("_")
-            return parts[0] + "".join(p.title() for p in parts[1:])
-
         result: dict[str, Any] = {}
-        for k, v in kwargs.items():
+        for k, v in fields.items():
             if isinstance(v, Enum):
                 v = v.value
             if v is None or v == "":
                 continue
-            result[to_camel(k)] = v
+            result[k] = v
         return result
 
-    def _build_payload(self, **kwargs: Any) -> dict[str, Any]:
+    def _wire_payload(self, fields: dict[str, Any]) -> dict[str, Any]:
         """Build request payload, filtering None values. Enum members are
         unwrapped to their value so JSON bodies carry e.g. "failed" rather
         than a raw Enum member (plain Enum members are not JSON-serializable).
@@ -57,20 +53,16 @@ class AdLibraryResource:
         from datetime import datetime
         from enum import Enum
 
-        def to_camel(s: str) -> str:
-            parts = s.split("_")
-            return parts[0] + "".join(p.title() for p in parts[1:])
-
         result: dict[str, Any] = {}
-        for k, v in kwargs.items():
+        for k, v in fields.items():
             if isinstance(v, Enum):
                 v = v.value
             if v is None:
                 continue
             if isinstance(v, datetime):
-                result[to_camel(k)] = v.isoformat()
+                result[k] = v.isoformat()
             else:
-                result[to_camel(k)] = v
+                result[k] = v
         return result
 
     def search_ad_library(
@@ -95,24 +87,26 @@ class AdLibraryResource:
         after: str | None = None,
     ) -> dict[str, Any]:
         """Search the public Ad Library"""
-        params = self._build_params(
-            platform=platform,
-            account_id=account_id,
-            q=q,
-            page_ids=page_ids,
-            advertiser=advertiser,
-            countries=countries,
-            ad_type=ad_type,
-            status=status,
-            platforms=platforms,
-            media_type=media_type,
-            languages=languages,
-            since=since,
-            until=until,
-            search_type=search_type,
-            fields=fields,
-            limit=limit,
-            after=after,
+        params = self._wire_params(
+            {
+                "platform": platform,
+                "accountId": account_id,
+                "q": q,
+                "pageIds": page_ids,
+                "advertiser": advertiser,
+                "countries": countries,
+                "adType": ad_type,
+                "status": status,
+                "platforms": platforms,
+                "mediaType": media_type,
+                "languages": languages,
+                "since": since,
+                "until": until,
+                "searchType": search_type,
+                "fields": fields,
+                "limit": limit,
+                "after": after,
+            }
         )
         return self._client._get("/v1/ads/library", params=params)
 
@@ -138,23 +132,25 @@ class AdLibraryResource:
         after: str | None = None,
     ) -> dict[str, Any]:
         """Search the public Ad Library (async)"""
-        params = self._build_params(
-            platform=platform,
-            account_id=account_id,
-            q=q,
-            page_ids=page_ids,
-            advertiser=advertiser,
-            countries=countries,
-            ad_type=ad_type,
-            status=status,
-            platforms=platforms,
-            media_type=media_type,
-            languages=languages,
-            since=since,
-            until=until,
-            search_type=search_type,
-            fields=fields,
-            limit=limit,
-            after=after,
+        params = self._wire_params(
+            {
+                "platform": platform,
+                "accountId": account_id,
+                "q": q,
+                "pageIds": page_ids,
+                "advertiser": advertiser,
+                "countries": countries,
+                "adType": ad_type,
+                "status": status,
+                "platforms": platforms,
+                "mediaType": media_type,
+                "languages": languages,
+                "since": since,
+                "until": until,
+                "searchType": search_type,
+                "fields": fields,
+                "limit": limit,
+                "after": after,
+            }
         )
         return await self._client._aget("/v1/ads/library", params=params)

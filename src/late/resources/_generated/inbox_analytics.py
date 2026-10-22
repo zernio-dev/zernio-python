@@ -21,7 +21,7 @@ class InboxAnalyticsResource:
     def __init__(self, client: BaseClient) -> None:
         self._client = client
 
-    def _build_params(self, **kwargs: Any) -> dict[str, Any]:
+    def _wire_params(self, fields: dict[str, Any]) -> dict[str, Any]:
         """Build query parameters, filtering None and empty-string values.
 
         Empty strings are filtered because MCP tool wrappers pass ``""`` as the
@@ -36,20 +36,16 @@ class InboxAnalyticsResource:
         """
         from enum import Enum
 
-        def to_camel(s: str) -> str:
-            parts = s.split("_")
-            return parts[0] + "".join(p.title() for p in parts[1:])
-
         result: dict[str, Any] = {}
-        for k, v in kwargs.items():
+        for k, v in fields.items():
             if isinstance(v, Enum):
                 v = v.value
             if v is None or v == "":
                 continue
-            result[to_camel(k)] = v
+            result[k] = v
         return result
 
-    def _build_payload(self, **kwargs: Any) -> dict[str, Any]:
+    def _wire_payload(self, fields: dict[str, Any]) -> dict[str, Any]:
         """Build request payload, filtering None values. Enum members are
         unwrapped to their value so JSON bodies carry e.g. "failed" rather
         than a raw Enum member (plain Enum members are not JSON-serializable).
@@ -57,20 +53,16 @@ class InboxAnalyticsResource:
         from datetime import datetime
         from enum import Enum
 
-        def to_camel(s: str) -> str:
-            parts = s.split("_")
-            return parts[0] + "".join(p.title() for p in parts[1:])
-
         result: dict[str, Any] = {}
-        for k, v in kwargs.items():
+        for k, v in fields.items():
             if isinstance(v, Enum):
                 v = v.value
             if v is None:
                 continue
             if isinstance(v, datetime):
-                result[to_camel(k)] = v.isoformat()
+                result[k] = v.isoformat()
             else:
-                result[to_camel(k)] = v
+                result[k] = v
         return result
 
     def get_inbox_volume(
@@ -84,13 +76,15 @@ class InboxAnalyticsResource:
         source: str | None = None,
     ) -> dict[str, Any]:
         """Get inbox messaging volume"""
-        params = self._build_params(
-            from_date=from_date,
-            to_date=to_date,
-            profile_id=profile_id,
-            platform=platform,
-            account_id=account_id,
-            source=source,
+        params = self._wire_params(
+            {
+                "fromDate": from_date,
+                "toDate": to_date,
+                "profileId": profile_id,
+                "platform": platform,
+                "accountId": account_id,
+                "source": source,
+            }
         )
         return self._client._get("/v1/analytics/inbox/volume", params=params)
 
@@ -106,14 +100,16 @@ class InboxAnalyticsResource:
         action: str | None = None,
     ) -> dict[str, Any]:
         """Get day × hour heatmap"""
-        params = self._build_params(
-            from_date=from_date,
-            to_date=to_date,
-            profile_id=profile_id,
-            platform=platform,
-            account_id=account_id,
-            source=source,
-            action=action,
+        params = self._wire_params(
+            {
+                "fromDate": from_date,
+                "toDate": to_date,
+                "profileId": profile_id,
+                "platform": platform,
+                "accountId": account_id,
+                "source": source,
+                "action": action,
+            }
         )
         return self._client._get("/v1/analytics/inbox/heatmap", params=params)
 
@@ -127,12 +123,14 @@ class InboxAnalyticsResource:
         account_id: str | None = None,
     ) -> dict[str, Any]:
         """Get inbox source breakdown"""
-        params = self._build_params(
-            from_date=from_date,
-            to_date=to_date,
-            profile_id=profile_id,
-            platform=platform,
-            account_id=account_id,
+        params = self._wire_params(
+            {
+                "fromDate": from_date,
+                "toDate": to_date,
+                "profileId": profile_id,
+                "platform": platform,
+                "accountId": account_id,
+            }
         )
         return self._client._get("/v1/analytics/inbox/source-breakdown", params=params)
 
@@ -146,12 +144,14 @@ class InboxAnalyticsResource:
         account_id: str | None = None,
     ) -> dict[str, Any]:
         """Get inbox response-time stats"""
-        params = self._build_params(
-            from_date=from_date,
-            to_date=to_date,
-            profile_id=profile_id,
-            platform=platform,
-            account_id=account_id,
+        params = self._wire_params(
+            {
+                "fromDate": from_date,
+                "toDate": to_date,
+                "profileId": profile_id,
+                "platform": platform,
+                "accountId": account_id,
+            }
         )
         return self._client._get("/v1/analytics/inbox/response-time", params=params)
 
@@ -166,13 +166,15 @@ class InboxAnalyticsResource:
         limit: int | None = 10,
     ) -> dict[str, Any]:
         """Get top accounts by inbox volume"""
-        params = self._build_params(
-            from_date=from_date,
-            to_date=to_date,
-            profile_id=profile_id,
-            platform=platform,
-            source=source,
-            limit=limit,
+        params = self._wire_params(
+            {
+                "fromDate": from_date,
+                "toDate": to_date,
+                "profileId": profile_id,
+                "platform": platform,
+                "source": source,
+                "limit": limit,
+            }
         )
         return self._client._get("/v1/analytics/inbox/top-accounts", params=params)
 
@@ -191,17 +193,19 @@ class InboxAnalyticsResource:
         order: str | None = "desc",
     ) -> dict[str, Any]:
         """List conversation analytics"""
-        params = self._build_params(
-            from_date=from_date,
-            to_date=to_date,
-            profile_id=profile_id,
-            platform=platform,
-            account_id=account_id,
-            source=source,
-            limit=limit,
-            page=page,
-            sort_by=sort_by,
-            order=order,
+        params = self._wire_params(
+            {
+                "fromDate": from_date,
+                "toDate": to_date,
+                "profileId": profile_id,
+                "platform": platform,
+                "accountId": account_id,
+                "source": source,
+                "limit": limit,
+                "page": page,
+                "sortBy": sort_by,
+                "order": order,
+            }
         )
         return self._client._get("/v1/analytics/inbox/conversations", params=params)
 
@@ -209,9 +213,11 @@ class InboxAnalyticsResource:
         self, conversation_id: str, from_date: str, *, to_date: str | None = None
     ) -> dict[str, Any]:
         """Get conversation analytics"""
-        params = self._build_params(
-            from_date=from_date,
-            to_date=to_date,
+        params = self._wire_params(
+            {
+                "fromDate": from_date,
+                "toDate": to_date,
+            }
         )
         return self._client._get(
             f"/v1/analytics/inbox/conversations/{conversation_id}", params=params
@@ -228,13 +234,15 @@ class InboxAnalyticsResource:
         source: str | None = None,
     ) -> dict[str, Any]:
         """Get inbox messaging volume (async)"""
-        params = self._build_params(
-            from_date=from_date,
-            to_date=to_date,
-            profile_id=profile_id,
-            platform=platform,
-            account_id=account_id,
-            source=source,
+        params = self._wire_params(
+            {
+                "fromDate": from_date,
+                "toDate": to_date,
+                "profileId": profile_id,
+                "platform": platform,
+                "accountId": account_id,
+                "source": source,
+            }
         )
         return await self._client._aget("/v1/analytics/inbox/volume", params=params)
 
@@ -250,14 +258,16 @@ class InboxAnalyticsResource:
         action: str | None = None,
     ) -> dict[str, Any]:
         """Get day × hour heatmap (async)"""
-        params = self._build_params(
-            from_date=from_date,
-            to_date=to_date,
-            profile_id=profile_id,
-            platform=platform,
-            account_id=account_id,
-            source=source,
-            action=action,
+        params = self._wire_params(
+            {
+                "fromDate": from_date,
+                "toDate": to_date,
+                "profileId": profile_id,
+                "platform": platform,
+                "accountId": account_id,
+                "source": source,
+                "action": action,
+            }
         )
         return await self._client._aget("/v1/analytics/inbox/heatmap", params=params)
 
@@ -271,12 +281,14 @@ class InboxAnalyticsResource:
         account_id: str | None = None,
     ) -> dict[str, Any]:
         """Get inbox source breakdown (async)"""
-        params = self._build_params(
-            from_date=from_date,
-            to_date=to_date,
-            profile_id=profile_id,
-            platform=platform,
-            account_id=account_id,
+        params = self._wire_params(
+            {
+                "fromDate": from_date,
+                "toDate": to_date,
+                "profileId": profile_id,
+                "platform": platform,
+                "accountId": account_id,
+            }
         )
         return await self._client._aget(
             "/v1/analytics/inbox/source-breakdown", params=params
@@ -292,12 +304,14 @@ class InboxAnalyticsResource:
         account_id: str | None = None,
     ) -> dict[str, Any]:
         """Get inbox response-time stats (async)"""
-        params = self._build_params(
-            from_date=from_date,
-            to_date=to_date,
-            profile_id=profile_id,
-            platform=platform,
-            account_id=account_id,
+        params = self._wire_params(
+            {
+                "fromDate": from_date,
+                "toDate": to_date,
+                "profileId": profile_id,
+                "platform": platform,
+                "accountId": account_id,
+            }
         )
         return await self._client._aget(
             "/v1/analytics/inbox/response-time", params=params
@@ -314,13 +328,15 @@ class InboxAnalyticsResource:
         limit: int | None = 10,
     ) -> dict[str, Any]:
         """Get top accounts by inbox volume (async)"""
-        params = self._build_params(
-            from_date=from_date,
-            to_date=to_date,
-            profile_id=profile_id,
-            platform=platform,
-            source=source,
-            limit=limit,
+        params = self._wire_params(
+            {
+                "fromDate": from_date,
+                "toDate": to_date,
+                "profileId": profile_id,
+                "platform": platform,
+                "source": source,
+                "limit": limit,
+            }
         )
         return await self._client._aget(
             "/v1/analytics/inbox/top-accounts", params=params
@@ -341,17 +357,19 @@ class InboxAnalyticsResource:
         order: str | None = "desc",
     ) -> dict[str, Any]:
         """List conversation analytics (async)"""
-        params = self._build_params(
-            from_date=from_date,
-            to_date=to_date,
-            profile_id=profile_id,
-            platform=platform,
-            account_id=account_id,
-            source=source,
-            limit=limit,
-            page=page,
-            sort_by=sort_by,
-            order=order,
+        params = self._wire_params(
+            {
+                "fromDate": from_date,
+                "toDate": to_date,
+                "profileId": profile_id,
+                "platform": platform,
+                "accountId": account_id,
+                "source": source,
+                "limit": limit,
+                "page": page,
+                "sortBy": sort_by,
+                "order": order,
+            }
         )
         return await self._client._aget(
             "/v1/analytics/inbox/conversations", params=params
@@ -361,9 +379,11 @@ class InboxAnalyticsResource:
         self, conversation_id: str, from_date: str, *, to_date: str | None = None
     ) -> dict[str, Any]:
         """Get conversation analytics (async)"""
-        params = self._build_params(
-            from_date=from_date,
-            to_date=to_date,
+        params = self._wire_params(
+            {
+                "fromDate": from_date,
+                "toDate": to_date,
+            }
         )
         return await self._client._aget(
             f"/v1/analytics/inbox/conversations/{conversation_id}", params=params

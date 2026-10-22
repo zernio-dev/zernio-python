@@ -21,7 +21,7 @@ class AdTargetingResource:
     def __init__(self, client: BaseClient) -> None:
         self._client = client
 
-    def _build_params(self, **kwargs: Any) -> dict[str, Any]:
+    def _wire_params(self, fields: dict[str, Any]) -> dict[str, Any]:
         """Build query parameters, filtering None and empty-string values.
 
         Empty strings are filtered because MCP tool wrappers pass ``""`` as the
@@ -36,20 +36,16 @@ class AdTargetingResource:
         """
         from enum import Enum
 
-        def to_camel(s: str) -> str:
-            parts = s.split("_")
-            return parts[0] + "".join(p.title() for p in parts[1:])
-
         result: dict[str, Any] = {}
-        for k, v in kwargs.items():
+        for k, v in fields.items():
             if isinstance(v, Enum):
                 v = v.value
             if v is None or v == "":
                 continue
-            result[to_camel(k)] = v
+            result[k] = v
         return result
 
-    def _build_payload(self, **kwargs: Any) -> dict[str, Any]:
+    def _wire_payload(self, fields: dict[str, Any]) -> dict[str, Any]:
         """Build request payload, filtering None values. Enum members are
         unwrapped to their value so JSON bodies carry e.g. "failed" rather
         than a raw Enum member (plain Enum members are not JSON-serializable).
@@ -57,27 +53,25 @@ class AdTargetingResource:
         from datetime import datetime
         from enum import Enum
 
-        def to_camel(s: str) -> str:
-            parts = s.split("_")
-            return parts[0] + "".join(p.title() for p in parts[1:])
-
         result: dict[str, Any] = {}
-        for k, v in kwargs.items():
+        for k, v in fields.items():
             if isinstance(v, Enum):
                 v = v.value
             if v is None:
                 continue
             if isinstance(v, datetime):
-                result[to_camel(k)] = v.isoformat()
+                result[k] = v.isoformat()
             else:
-                result[to_camel(k)] = v
+                result[k] = v
         return result
 
     def search_ad_interests(self, q: str, account_id: str) -> dict[str, Any]:
         """Search targeting interests"""
-        params = self._build_params(
-            q=q,
-            account_id=account_id,
+        params = self._wire_params(
+            {
+                "q": q,
+                "accountId": account_id,
+            }
         )
         return self._client._get("/v1/ads/interests", params=params)
 
@@ -94,15 +88,17 @@ class AdTargetingResource:
         limit: int | None = 25,
     ) -> dict[str, Any]:
         """Search targeting options"""
-        params = self._build_params(
-            account_id=account_id,
-            q=q,
-            dimension=dimension,
-            geo_type=geo_type,
-            country_code=country_code,
-            ad_account_id=ad_account_id,
-            locale=locale,
-            limit=limit,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+                "q": q,
+                "dimension": dimension,
+                "geoType": geo_type,
+                "countryCode": country_code,
+                "adAccountId": ad_account_id,
+                "locale": locale,
+                "limit": limit,
+            }
         )
         return self._client._get("/v1/ads/targeting/search", params=params)
 
@@ -116,12 +112,14 @@ class AdTargetingResource:
         selectable: bool | None = None,
     ) -> dict[str, Any]:
         """Browse targeting categories"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            type=type,
-            parent_node_id=parent_node_id,
-            selectable=selectable,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "type": type,
+                "parentNodeId": parent_node_id,
+                "selectable": selectable,
+            }
         )
         return self._client._get("/v1/ads/targeting/browse", params=params)
 
@@ -134,11 +132,13 @@ class AdTargetingResource:
         optimization_goal: str | None = None,
     ) -> dict[str, Any]:
         """Estimate audience reach"""
-        payload = self._build_payload(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            spec=spec,
-            optimization_goal=optimization_goal,
+        payload = self._wire_payload(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "spec": spec,
+                "optimizationGoal": optimization_goal,
+            }
         )
         return self._client._post("/v1/ads/targeting/reach-estimate", data=payload)
 
@@ -157,17 +157,19 @@ class AdTargetingResource:
         daily_budget: float | None = None,
     ) -> dict[str, Any]:
         """Suggested bid and budget bounds"""
-        payload = self._build_payload(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            spec=spec,
-            campaign_type=campaign_type,
-            bid_type=bid_type,
-            match_type=match_type,
-            currency=currency,
-            objective_type=objective_type,
-            optimization_target_type=optimization_target_type,
-            daily_budget=daily_budget,
+        payload = self._wire_payload(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "spec": spec,
+                "campaignType": campaign_type,
+                "bidType": bid_type,
+                "matchType": match_type,
+                "currency": currency,
+                "objectiveType": objective_type,
+                "optimizationTargetType": optimization_target_type,
+                "dailyBudget": daily_budget,
+            }
         )
         return self._client._post("/v1/ads/targeting/bid-pricing", data=payload)
 
@@ -191,30 +193,34 @@ class AdTargetingResource:
         connected_television_only: bool | None = None,
     ) -> dict[str, Any]:
         """Forecast ad delivery"""
-        payload = self._build_payload(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            spec=spec,
-            campaign_type=campaign_type,
-            time_range_start=time_range_start,
-            time_range_end=time_range_end,
-            objective_type=objective_type,
-            optimization_target=optimization_target,
-            daily_budget=daily_budget,
-            total_budget=total_budget,
-            currency=currency,
-            competing_bid=competing_bid,
-            enable_audience_network=enable_audience_network,
-            enable_audience_expansion=enable_audience_expansion,
-            connected_television_only=connected_television_only,
+        payload = self._wire_payload(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "spec": spec,
+                "campaignType": campaign_type,
+                "timeRangeStart": time_range_start,
+                "timeRangeEnd": time_range_end,
+                "objectiveType": objective_type,
+                "optimizationTarget": optimization_target,
+                "dailyBudget": daily_budget,
+                "totalBudget": total_budget,
+                "currency": currency,
+                "competingBid": competing_bid,
+                "enableAudienceNetwork": enable_audience_network,
+                "enableAudienceExpansion": enable_audience_expansion,
+                "connectedTelevisionOnly": connected_television_only,
+            }
         )
         return self._client._post("/v1/ads/targeting/supply-forecast", data=payload)
 
     async def asearch_ad_interests(self, q: str, account_id: str) -> dict[str, Any]:
         """Search targeting interests (async)"""
-        params = self._build_params(
-            q=q,
-            account_id=account_id,
+        params = self._wire_params(
+            {
+                "q": q,
+                "accountId": account_id,
+            }
         )
         return await self._client._aget("/v1/ads/interests", params=params)
 
@@ -231,15 +237,17 @@ class AdTargetingResource:
         limit: int | None = 25,
     ) -> dict[str, Any]:
         """Search targeting options (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            q=q,
-            dimension=dimension,
-            geo_type=geo_type,
-            country_code=country_code,
-            ad_account_id=ad_account_id,
-            locale=locale,
-            limit=limit,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+                "q": q,
+                "dimension": dimension,
+                "geoType": geo_type,
+                "countryCode": country_code,
+                "adAccountId": ad_account_id,
+                "locale": locale,
+                "limit": limit,
+            }
         )
         return await self._client._aget("/v1/ads/targeting/search", params=params)
 
@@ -253,12 +261,14 @@ class AdTargetingResource:
         selectable: bool | None = None,
     ) -> dict[str, Any]:
         """Browse targeting categories (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            type=type,
-            parent_node_id=parent_node_id,
-            selectable=selectable,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "type": type,
+                "parentNodeId": parent_node_id,
+                "selectable": selectable,
+            }
         )
         return await self._client._aget("/v1/ads/targeting/browse", params=params)
 
@@ -271,11 +281,13 @@ class AdTargetingResource:
         optimization_goal: str | None = None,
     ) -> dict[str, Any]:
         """Estimate audience reach (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            spec=spec,
-            optimization_goal=optimization_goal,
+        payload = self._wire_payload(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "spec": spec,
+                "optimizationGoal": optimization_goal,
+            }
         )
         return await self._client._apost(
             "/v1/ads/targeting/reach-estimate", data=payload
@@ -296,17 +308,19 @@ class AdTargetingResource:
         daily_budget: float | None = None,
     ) -> dict[str, Any]:
         """Suggested bid and budget bounds (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            spec=spec,
-            campaign_type=campaign_type,
-            bid_type=bid_type,
-            match_type=match_type,
-            currency=currency,
-            objective_type=objective_type,
-            optimization_target_type=optimization_target_type,
-            daily_budget=daily_budget,
+        payload = self._wire_payload(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "spec": spec,
+                "campaignType": campaign_type,
+                "bidType": bid_type,
+                "matchType": match_type,
+                "currency": currency,
+                "objectiveType": objective_type,
+                "optimizationTargetType": optimization_target_type,
+                "dailyBudget": daily_budget,
+            }
         )
         return await self._client._apost("/v1/ads/targeting/bid-pricing", data=payload)
 
@@ -330,22 +344,24 @@ class AdTargetingResource:
         connected_television_only: bool | None = None,
     ) -> dict[str, Any]:
         """Forecast ad delivery (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            spec=spec,
-            campaign_type=campaign_type,
-            time_range_start=time_range_start,
-            time_range_end=time_range_end,
-            objective_type=objective_type,
-            optimization_target=optimization_target,
-            daily_budget=daily_budget,
-            total_budget=total_budget,
-            currency=currency,
-            competing_bid=competing_bid,
-            enable_audience_network=enable_audience_network,
-            enable_audience_expansion=enable_audience_expansion,
-            connected_television_only=connected_television_only,
+        payload = self._wire_payload(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "spec": spec,
+                "campaignType": campaign_type,
+                "timeRangeStart": time_range_start,
+                "timeRangeEnd": time_range_end,
+                "objectiveType": objective_type,
+                "optimizationTarget": optimization_target,
+                "dailyBudget": daily_budget,
+                "totalBudget": total_budget,
+                "currency": currency,
+                "competingBid": competing_bid,
+                "enableAudienceNetwork": enable_audience_network,
+                "enableAudienceExpansion": enable_audience_expansion,
+                "connectedTelevisionOnly": connected_television_only,
+            }
         )
         return await self._client._apost(
             "/v1/ads/targeting/supply-forecast", data=payload

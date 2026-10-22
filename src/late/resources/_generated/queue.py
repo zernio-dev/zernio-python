@@ -21,7 +21,7 @@ class QueueResource:
     def __init__(self, client: BaseClient) -> None:
         self._client = client
 
-    def _build_params(self, **kwargs: Any) -> dict[str, Any]:
+    def _wire_params(self, fields: dict[str, Any]) -> dict[str, Any]:
         """Build query parameters, filtering None and empty-string values.
 
         Empty strings are filtered because MCP tool wrappers pass ``""`` as the
@@ -36,20 +36,16 @@ class QueueResource:
         """
         from enum import Enum
 
-        def to_camel(s: str) -> str:
-            parts = s.split("_")
-            return parts[0] + "".join(p.title() for p in parts[1:])
-
         result: dict[str, Any] = {}
-        for k, v in kwargs.items():
+        for k, v in fields.items():
             if isinstance(v, Enum):
                 v = v.value
             if v is None or v == "":
                 continue
-            result[to_camel(k)] = v
+            result[k] = v
         return result
 
-    def _build_payload(self, **kwargs: Any) -> dict[str, Any]:
+    def _wire_payload(self, fields: dict[str, Any]) -> dict[str, Any]:
         """Build request payload, filtering None values. Enum members are
         unwrapped to their value so JSON bodies carry e.g. "failed" rather
         than a raw Enum member (plain Enum members are not JSON-serializable).
@@ -57,30 +53,28 @@ class QueueResource:
         from datetime import datetime
         from enum import Enum
 
-        def to_camel(s: str) -> str:
-            parts = s.split("_")
-            return parts[0] + "".join(p.title() for p in parts[1:])
-
         result: dict[str, Any] = {}
-        for k, v in kwargs.items():
+        for k, v in fields.items():
             if isinstance(v, Enum):
                 v = v.value
             if v is None:
                 continue
             if isinstance(v, datetime):
-                result[to_camel(k)] = v.isoformat()
+                result[k] = v.isoformat()
             else:
-                result[to_camel(k)] = v
+                result[k] = v
         return result
 
     def list_queue_slots(
         self, profile_id: str, *, queue_id: str | None = None, all: str | None = None
     ) -> dict[str, Any]:
         """List schedules"""
-        params = self._build_params(
-            profile_id=profile_id,
-            queue_id=queue_id,
-            all=all,
+        params = self._wire_params(
+            {
+                "profileId": profile_id,
+                "queueId": queue_id,
+                "all": all,
+            }
         )
         return self._client._get("/v1/queue/slots", params=params)
 
@@ -94,12 +88,14 @@ class QueueResource:
         active: bool | None = True,
     ) -> dict[str, Any]:
         """Create schedule"""
-        payload = self._build_payload(
-            profile_id=profile_id,
-            name=name,
-            timezone=timezone,
-            slots=slots,
-            active=active,
+        payload = self._wire_payload(
+            {
+                "profileId": profile_id,
+                "name": name,
+                "timezone": timezone,
+                "slots": slots,
+                "active": active,
+            }
         )
         return self._client._post("/v1/queue/slots", data=payload)
 
@@ -116,15 +112,17 @@ class QueueResource:
         reshuffle_existing: bool | None = False,
     ) -> dict[str, Any]:
         """Update schedule"""
-        payload = self._build_payload(
-            profile_id=profile_id,
-            queue_id=queue_id,
-            name=name,
-            timezone=timezone,
-            slots=slots,
-            active=active,
-            set_as_default=set_as_default,
-            reshuffle_existing=reshuffle_existing,
+        payload = self._wire_payload(
+            {
+                "profileId": profile_id,
+                "queueId": queue_id,
+                "name": name,
+                "timezone": timezone,
+                "slots": slots,
+                "active": active,
+                "setAsDefault": set_as_default,
+                "reshuffleExisting": reshuffle_existing,
+            }
         )
         return self._client._put("/v1/queue/slots", data=payload)
 
@@ -132,9 +130,11 @@ class QueueResource:
         self, profile_id: str, *, queue_id: str | None = None
     ) -> dict[str, Any]:
         """Delete schedule"""
-        params = self._build_params(
-            profile_id=profile_id,
-            queue_id=queue_id,
+        params = self._wire_params(
+            {
+                "profileId": profile_id,
+                "queueId": queue_id,
+            }
         )
         return self._client._delete("/v1/queue/slots", params=params)
 
@@ -142,10 +142,12 @@ class QueueResource:
         self, profile_id: str, *, queue_id: str | None = None, count: int | None = 20
     ) -> dict[str, Any]:
         """Preview upcoming slots"""
-        params = self._build_params(
-            profile_id=profile_id,
-            queue_id=queue_id,
-            count=count,
+        params = self._wire_params(
+            {
+                "profileId": profile_id,
+                "queueId": queue_id,
+                "count": count,
+            }
         )
         return self._client._get("/v1/queue/preview", params=params)
 
@@ -153,9 +155,11 @@ class QueueResource:
         self, profile_id: str, *, queue_id: str | None = None
     ) -> dict[str, Any]:
         """Get next available slot"""
-        params = self._build_params(
-            profile_id=profile_id,
-            queue_id=queue_id,
+        params = self._wire_params(
+            {
+                "profileId": profile_id,
+                "queueId": queue_id,
+            }
         )
         return self._client._get("/v1/queue/next-slot", params=params)
 
@@ -163,10 +167,12 @@ class QueueResource:
         self, profile_id: str, *, queue_id: str | None = None, all: str | None = None
     ) -> dict[str, Any]:
         """List schedules (async)"""
-        params = self._build_params(
-            profile_id=profile_id,
-            queue_id=queue_id,
-            all=all,
+        params = self._wire_params(
+            {
+                "profileId": profile_id,
+                "queueId": queue_id,
+                "all": all,
+            }
         )
         return await self._client._aget("/v1/queue/slots", params=params)
 
@@ -180,12 +186,14 @@ class QueueResource:
         active: bool | None = True,
     ) -> dict[str, Any]:
         """Create schedule (async)"""
-        payload = self._build_payload(
-            profile_id=profile_id,
-            name=name,
-            timezone=timezone,
-            slots=slots,
-            active=active,
+        payload = self._wire_payload(
+            {
+                "profileId": profile_id,
+                "name": name,
+                "timezone": timezone,
+                "slots": slots,
+                "active": active,
+            }
         )
         return await self._client._apost("/v1/queue/slots", data=payload)
 
@@ -202,15 +210,17 @@ class QueueResource:
         reshuffle_existing: bool | None = False,
     ) -> dict[str, Any]:
         """Update schedule (async)"""
-        payload = self._build_payload(
-            profile_id=profile_id,
-            queue_id=queue_id,
-            name=name,
-            timezone=timezone,
-            slots=slots,
-            active=active,
-            set_as_default=set_as_default,
-            reshuffle_existing=reshuffle_existing,
+        payload = self._wire_payload(
+            {
+                "profileId": profile_id,
+                "queueId": queue_id,
+                "name": name,
+                "timezone": timezone,
+                "slots": slots,
+                "active": active,
+                "setAsDefault": set_as_default,
+                "reshuffleExisting": reshuffle_existing,
+            }
         )
         return await self._client._aput("/v1/queue/slots", data=payload)
 
@@ -218,9 +228,11 @@ class QueueResource:
         self, profile_id: str, *, queue_id: str | None = None
     ) -> dict[str, Any]:
         """Delete schedule (async)"""
-        params = self._build_params(
-            profile_id=profile_id,
-            queue_id=queue_id,
+        params = self._wire_params(
+            {
+                "profileId": profile_id,
+                "queueId": queue_id,
+            }
         )
         return await self._client._adelete("/v1/queue/slots", params=params)
 
@@ -228,10 +240,12 @@ class QueueResource:
         self, profile_id: str, *, queue_id: str | None = None, count: int | None = 20
     ) -> dict[str, Any]:
         """Preview upcoming slots (async)"""
-        params = self._build_params(
-            profile_id=profile_id,
-            queue_id=queue_id,
-            count=count,
+        params = self._wire_params(
+            {
+                "profileId": profile_id,
+                "queueId": queue_id,
+                "count": count,
+            }
         )
         return await self._client._aget("/v1/queue/preview", params=params)
 
@@ -239,8 +253,10 @@ class QueueResource:
         self, profile_id: str, *, queue_id: str | None = None
     ) -> dict[str, Any]:
         """Get next available slot (async)"""
-        params = self._build_params(
-            profile_id=profile_id,
-            queue_id=queue_id,
+        params = self._wire_params(
+            {
+                "profileId": profile_id,
+                "queueId": queue_id,
+            }
         )
         return await self._client._aget("/v1/queue/next-slot", params=params)

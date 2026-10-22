@@ -21,7 +21,7 @@ class InstagramResource:
     def __init__(self, client: BaseClient) -> None:
         self._client = client
 
-    def _build_params(self, **kwargs: Any) -> dict[str, Any]:
+    def _wire_params(self, fields: dict[str, Any]) -> dict[str, Any]:
         """Build query parameters, filtering None and empty-string values.
 
         Empty strings are filtered because MCP tool wrappers pass ``""`` as the
@@ -36,20 +36,16 @@ class InstagramResource:
         """
         from enum import Enum
 
-        def to_camel(s: str) -> str:
-            parts = s.split("_")
-            return parts[0] + "".join(p.title() for p in parts[1:])
-
         result: dict[str, Any] = {}
-        for k, v in kwargs.items():
+        for k, v in fields.items():
             if isinstance(v, Enum):
                 v = v.value
             if v is None or v == "":
                 continue
-            result[to_camel(k)] = v
+            result[k] = v
         return result
 
-    def _build_payload(self, **kwargs: Any) -> dict[str, Any]:
+    def _wire_payload(self, fields: dict[str, Any]) -> dict[str, Any]:
         """Build request payload, filtering None values. Enum members are
         unwrapped to their value so JSON bodies carry e.g. "failed" rather
         than a raw Enum member (plain Enum members are not JSON-serializable).
@@ -57,20 +53,16 @@ class InstagramResource:
         from datetime import datetime
         from enum import Enum
 
-        def to_camel(s: str) -> str:
-            parts = s.split("_")
-            return parts[0] + "".join(p.title() for p in parts[1:])
-
         result: dict[str, Any] = {}
-        for k, v in kwargs.items():
+        for k, v in fields.items():
             if isinstance(v, Enum):
                 v = v.value
             if v is None:
                 continue
             if isinstance(v, datetime):
-                result[to_camel(k)] = v.isoformat()
+                result[k] = v.isoformat()
             else:
-                result[to_camel(k)] = v
+                result[k] = v
         return result
 
     def list_instagram_stories(self, account_id: str) -> dict[str, Any]:
@@ -87,9 +79,11 @@ class InstagramResource:
         self, account_id: str, audio_type: str, *, q: str | None = None
     ) -> dict[str, Any]:
         """Search Instagram audio"""
-        params = self._build_params(
-            audio_type=audio_type,
-            q=q,
+        params = self._wire_params(
+            {
+                "audioType": audio_type,
+                "q": q,
+            }
         )
         return self._client._get(
             f"/v1/accounts/{account_id}/instagram/audio", params=params
@@ -105,9 +99,11 @@ class InstagramResource:
         self, account_id: str, username: str, *, limit: int | None = 12
     ) -> dict[str, Any]:
         """Look up a public Instagram Business account"""
-        params = self._build_params(
-            username=username,
-            limit=limit,
+        params = self._wire_params(
+            {
+                "username": username,
+                "limit": limit,
+            }
         )
         return self._client._get(
             f"/v1/accounts/{account_id}/instagram/business-discovery", params=params
@@ -129,9 +125,11 @@ class InstagramResource:
         self, account_id: str, *, limit: int | None = 25, cursor: str | None = None
     ) -> dict[str, Any]:
         """List the posts an Instagram account is tagged in"""
-        params = self._build_params(
-            limit=limit,
-            cursor=cursor,
+        params = self._wire_params(
+            {
+                "limit": limit,
+                "cursor": cursor,
+            }
         )
         return self._client._get(
             f"/v1/accounts/{account_id}/instagram/tags", params=params
@@ -175,9 +173,11 @@ class InstagramResource:
         self, account_id: str, audio_type: str, *, q: str | None = None
     ) -> dict[str, Any]:
         """Search Instagram audio (async)"""
-        params = self._build_params(
-            audio_type=audio_type,
-            q=q,
+        params = self._wire_params(
+            {
+                "audioType": audio_type,
+                "q": q,
+            }
         )
         return await self._client._aget(
             f"/v1/accounts/{account_id}/instagram/audio", params=params
@@ -195,9 +195,11 @@ class InstagramResource:
         self, account_id: str, username: str, *, limit: int | None = 12
     ) -> dict[str, Any]:
         """Look up a public Instagram Business account (async)"""
-        params = self._build_params(
-            username=username,
-            limit=limit,
+        params = self._wire_params(
+            {
+                "username": username,
+                "limit": limit,
+            }
         )
         return await self._client._aget(
             f"/v1/accounts/{account_id}/instagram/business-discovery", params=params
@@ -221,9 +223,11 @@ class InstagramResource:
         self, account_id: str, *, limit: int | None = 25, cursor: str | None = None
     ) -> dict[str, Any]:
         """List the posts an Instagram account is tagged in (async)"""
-        params = self._build_params(
-            limit=limit,
-            cursor=cursor,
+        params = self._wire_params(
+            {
+                "limit": limit,
+                "cursor": cursor,
+            }
         )
         return await self._client._aget(
             f"/v1/accounts/{account_id}/instagram/tags", params=params

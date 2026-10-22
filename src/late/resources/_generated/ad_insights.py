@@ -21,7 +21,7 @@ class AdInsightsResource:
     def __init__(self, client: BaseClient) -> None:
         self._client = client
 
-    def _build_params(self, **kwargs: Any) -> dict[str, Any]:
+    def _wire_params(self, fields: dict[str, Any]) -> dict[str, Any]:
         """Build query parameters, filtering None and empty-string values.
 
         Empty strings are filtered because MCP tool wrappers pass ``""`` as the
@@ -36,20 +36,16 @@ class AdInsightsResource:
         """
         from enum import Enum
 
-        def to_camel(s: str) -> str:
-            parts = s.split("_")
-            return parts[0] + "".join(p.title() for p in parts[1:])
-
         result: dict[str, Any] = {}
-        for k, v in kwargs.items():
+        for k, v in fields.items():
             if isinstance(v, Enum):
                 v = v.value
             if v is None or v == "":
                 continue
-            result[to_camel(k)] = v
+            result[k] = v
         return result
 
-    def _build_payload(self, **kwargs: Any) -> dict[str, Any]:
+    def _wire_payload(self, fields: dict[str, Any]) -> dict[str, Any]:
         """Build request payload, filtering None values. Enum members are
         unwrapped to their value so JSON bodies carry e.g. "failed" rather
         than a raw Enum member (plain Enum members are not JSON-serializable).
@@ -57,20 +53,16 @@ class AdInsightsResource:
         from datetime import datetime
         from enum import Enum
 
-        def to_camel(s: str) -> str:
-            parts = s.split("_")
-            return parts[0] + "".join(p.title() for p in parts[1:])
-
         result: dict[str, Any] = {}
-        for k, v in kwargs.items():
+        for k, v in fields.items():
             if isinstance(v, Enum):
                 v = v.value
             if v is None:
                 continue
             if isinstance(v, datetime):
-                result[to_camel(k)] = v.isoformat()
+                result[k] = v.isoformat()
             else:
-                result[to_camel(k)] = v
+                result[k] = v
         return result
 
     def get_ads_search_terms(
@@ -87,16 +79,18 @@ class AdInsightsResource:
         page_token: str | None = None,
     ) -> dict[str, Any]:
         """Google Ads search terms report"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            customer_id=customer_id,
-            from_date=from_date,
-            to_date=to_date,
-            campaign_id=campaign_id,
-            ad_set_id=ad_set_id,
-            ad_group_id=ad_group_id,
-            page_token=page_token,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "customerId": customer_id,
+                "fromDate": from_date,
+                "toDate": to_date,
+                "campaignId": campaign_id,
+                "adSetId": ad_set_id,
+                "adGroupId": ad_group_id,
+                "pageToken": page_token,
+            }
         )
         return self._client._get("/v1/ads/search-terms", params=params)
 
@@ -114,16 +108,18 @@ class AdInsightsResource:
         page_token: str | None = None,
     ) -> dict[str, Any]:
         """Google Local Services Ads leads"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            customer_id=customer_id,
-            from_date=from_date,
-            to_date=to_date,
-            lead_type=lead_type,
-            lead_status=lead_status,
-            charged_only=charged_only,
-            page_token=page_token,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "customerId": customer_id,
+                "fromDate": from_date,
+                "toDate": to_date,
+                "leadType": lead_type,
+                "leadStatus": lead_status,
+                "chargedOnly": charged_only,
+                "pageToken": page_token,
+            }
         )
         return self._client._get("/v1/ads/local-services/leads", params=params)
 
@@ -137,11 +133,13 @@ class AdInsightsResource:
         page_token: str | None = None,
     ) -> dict[str, Any]:
         """List lead conversations"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            customer_id=customer_id,
-            page_token=page_token,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "customerId": customer_id,
+                "pageToken": page_token,
+            }
         )
         return self._client._get(
             f"/v1/ads/local-services/leads/{lead_id}/conversations", params=params
@@ -157,11 +155,13 @@ class AdInsightsResource:
         breakdowns: str | None = None,
     ) -> dict[str, Any]:
         """Get campaign analytics"""
-        params = self._build_params(
-            platform=platform,
-            from_date=from_date,
-            to_date=to_date,
-            breakdowns=breakdowns,
+        params = self._wire_params(
+            {
+                "platform": platform,
+                "fromDate": from_date,
+                "toDate": to_date,
+                "breakdowns": breakdowns,
+            }
         )
         return self._client._get(
             f"/v1/ads/campaigns/{campaign_id}/analytics", params=params
@@ -183,18 +183,20 @@ class AdInsightsResource:
         page_token: str | None = None,
     ) -> dict[str, Any]:
         """Generate keyword ideas"""
-        payload = self._build_payload(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            customer_id=customer_id,
-            seed_keywords=seed_keywords,
-            seed_url=seed_url,
-            countries=countries,
-            language_constant_id=language_constant_id,
-            network=network,
-            include_adult_keywords=include_adult_keywords,
-            page_size=page_size,
-            page_token=page_token,
+        payload = self._wire_payload(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "customerId": customer_id,
+                "seedKeywords": seed_keywords,
+                "seedUrl": seed_url,
+                "countries": countries,
+                "languageConstantId": language_constant_id,
+                "network": network,
+                "includeAdultKeywords": include_adult_keywords,
+                "pageSize": page_size,
+                "pageToken": page_token,
+            }
         )
         return self._client._post("/v1/ads/keywords/ideas", data=payload)
 
@@ -212,16 +214,18 @@ class AdInsightsResource:
         include_average_cpc: bool | None = None,
     ) -> dict[str, Any]:
         """Get historical keyword metrics"""
-        payload = self._build_payload(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            customer_id=customer_id,
-            keywords=keywords,
-            countries=countries,
-            language_constant_id=language_constant_id,
-            network=network,
-            include_adult_keywords=include_adult_keywords,
-            include_average_cpc=include_average_cpc,
+        payload = self._wire_payload(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "customerId": customer_id,
+                "keywords": keywords,
+                "countries": countries,
+                "languageConstantId": language_constant_id,
+                "network": network,
+                "includeAdultKeywords": include_adult_keywords,
+                "includeAverageCpc": include_average_cpc,
+            }
         )
         return self._client._post("/v1/ads/keywords/historical-metrics", data=payload)
 
@@ -256,33 +260,35 @@ class AdInsightsResource:
         after: str | None = None,
     ) -> dict[str, Any]:
         """Flexible live insights query"""
-        params = self._build_params(
-            account_id=account_id,
-            object_id=object_id,
-            query=query,
-            ad_account_id=ad_account_id,
-            report_type=report_type,
-            data_level=data_level,
-            dimensions=dimensions,
-            metrics=metrics,
-            page=page,
-            page_size=page_size,
-            customer_id=customer_id,
-            page_token=page_token,
-            level=level,
-            fields=fields,
-            breakdowns=breakdowns,
-            action_breakdowns=action_breakdowns,
-            action_attribution_windows=action_attribution_windows,
-            action_report_time=action_report_time,
-            use_unified_attribution_setting=use_unified_attribution_setting,
-            filtering=filtering,
-            date_preset=date_preset,
-            from_date=from_date,
-            to_date=to_date,
-            time_increment=time_increment,
-            limit=limit,
-            after=after,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+                "objectId": object_id,
+                "query": query,
+                "adAccountId": ad_account_id,
+                "reportType": report_type,
+                "dataLevel": data_level,
+                "dimensions": dimensions,
+                "metrics": metrics,
+                "page": page,
+                "pageSize": page_size,
+                "customerId": customer_id,
+                "pageToken": page_token,
+                "level": level,
+                "fields": fields,
+                "breakdowns": breakdowns,
+                "actionBreakdowns": action_breakdowns,
+                "actionAttributionWindows": action_attribution_windows,
+                "actionReportTime": action_report_time,
+                "useUnifiedAttributionSetting": use_unified_attribution_setting,
+                "filtering": filtering,
+                "datePreset": date_preset,
+                "fromDate": from_date,
+                "toDate": to_date,
+                "timeIncrement": time_increment,
+                "limit": limit,
+                "after": after,
+            }
         )
         return self._client._get("/v1/ads/insights", params=params)
 
@@ -305,21 +311,23 @@ class AdInsightsResource:
         time_increment: Any | None = None,
     ) -> dict[str, Any]:
         """Submit async insights report"""
-        payload = self._build_payload(
-            account_id=account_id,
-            object_id=object_id,
-            level=level,
-            fields=fields,
-            breakdowns=breakdowns,
-            action_breakdowns=action_breakdowns,
-            action_attribution_windows=action_attribution_windows,
-            action_report_time=action_report_time,
-            use_unified_attribution_setting=use_unified_attribution_setting,
-            filtering=filtering,
-            date_preset=date_preset,
-            from_date=from_date,
-            to_date=to_date,
-            time_increment=time_increment,
+        payload = self._wire_payload(
+            {
+                "accountId": account_id,
+                "objectId": object_id,
+                "level": level,
+                "fields": fields,
+                "breakdowns": breakdowns,
+                "actionBreakdowns": action_breakdowns,
+                "actionAttributionWindows": action_attribution_windows,
+                "actionReportTime": action_report_time,
+                "useUnifiedAttributionSetting": use_unified_attribution_setting,
+                "filtering": filtering,
+                "datePreset": date_preset,
+                "fromDate": from_date,
+                "toDate": to_date,
+                "timeIncrement": time_increment,
+            }
         )
         return self._client._post("/v1/ads/insights/reports", data=payload)
 
@@ -332,10 +340,12 @@ class AdInsightsResource:
         after: str | None = None,
     ) -> dict[str, Any]:
         """Poll an async insights report run"""
-        params = self._build_params(
-            account_id=account_id,
-            limit=limit,
-            after=after,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+                "limit": limit,
+                "after": after,
+            }
         )
         return self._client._get(
             f"/v1/ads/insights/reports/{report_run_id}", params=params
@@ -350,10 +360,12 @@ class AdInsightsResource:
         breakdowns: str | None = None,
     ) -> dict[str, Any]:
         """Get ad analytics"""
-        params = self._build_params(
-            from_date=from_date,
-            to_date=to_date,
-            breakdowns=breakdowns,
+        params = self._wire_params(
+            {
+                "fromDate": from_date,
+                "toDate": to_date,
+                "breakdowns": breakdowns,
+            }
         )
         return self._client._get(f"/v1/ads/{ad_id}/analytics", params=params)
 
@@ -371,16 +383,18 @@ class AdInsightsResource:
         page_size: int | None = 100,
     ) -> dict[str, Any]:
         """Per-creative performance inside TikTok Smart+ ads"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            start_date=start_date,
-            end_date=end_date,
-            level=level,
-            smart_plus_ad_ids=smart_plus_ad_ids,
-            ad_group_ids=ad_group_ids,
-            page=page,
-            page_size=page_size,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "startDate": start_date,
+                "endDate": end_date,
+                "level": level,
+                "smartPlusAdIds": smart_plus_ad_ids,
+                "adGroupIds": ad_group_ids,
+                "page": page,
+                "pageSize": page_size,
+            }
         )
         return self._client._get("/v1/ads/tiktok-smart-plus-materials", params=params)
 
@@ -398,16 +412,18 @@ class AdInsightsResource:
         page_token: str | None = None,
     ) -> dict[str, Any]:
         """Google Ads search terms report (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            customer_id=customer_id,
-            from_date=from_date,
-            to_date=to_date,
-            campaign_id=campaign_id,
-            ad_set_id=ad_set_id,
-            ad_group_id=ad_group_id,
-            page_token=page_token,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "customerId": customer_id,
+                "fromDate": from_date,
+                "toDate": to_date,
+                "campaignId": campaign_id,
+                "adSetId": ad_set_id,
+                "adGroupId": ad_group_id,
+                "pageToken": page_token,
+            }
         )
         return await self._client._aget("/v1/ads/search-terms", params=params)
 
@@ -425,16 +441,18 @@ class AdInsightsResource:
         page_token: str | None = None,
     ) -> dict[str, Any]:
         """Google Local Services Ads leads (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            customer_id=customer_id,
-            from_date=from_date,
-            to_date=to_date,
-            lead_type=lead_type,
-            lead_status=lead_status,
-            charged_only=charged_only,
-            page_token=page_token,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "customerId": customer_id,
+                "fromDate": from_date,
+                "toDate": to_date,
+                "leadType": lead_type,
+                "leadStatus": lead_status,
+                "chargedOnly": charged_only,
+                "pageToken": page_token,
+            }
         )
         return await self._client._aget("/v1/ads/local-services/leads", params=params)
 
@@ -448,11 +466,13 @@ class AdInsightsResource:
         page_token: str | None = None,
     ) -> dict[str, Any]:
         """List lead conversations (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            customer_id=customer_id,
-            page_token=page_token,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "customerId": customer_id,
+                "pageToken": page_token,
+            }
         )
         return await self._client._aget(
             f"/v1/ads/local-services/leads/{lead_id}/conversations", params=params
@@ -468,11 +488,13 @@ class AdInsightsResource:
         breakdowns: str | None = None,
     ) -> dict[str, Any]:
         """Get campaign analytics (async)"""
-        params = self._build_params(
-            platform=platform,
-            from_date=from_date,
-            to_date=to_date,
-            breakdowns=breakdowns,
+        params = self._wire_params(
+            {
+                "platform": platform,
+                "fromDate": from_date,
+                "toDate": to_date,
+                "breakdowns": breakdowns,
+            }
         )
         return await self._client._aget(
             f"/v1/ads/campaigns/{campaign_id}/analytics", params=params
@@ -494,18 +516,20 @@ class AdInsightsResource:
         page_token: str | None = None,
     ) -> dict[str, Any]:
         """Generate keyword ideas (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            customer_id=customer_id,
-            seed_keywords=seed_keywords,
-            seed_url=seed_url,
-            countries=countries,
-            language_constant_id=language_constant_id,
-            network=network,
-            include_adult_keywords=include_adult_keywords,
-            page_size=page_size,
-            page_token=page_token,
+        payload = self._wire_payload(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "customerId": customer_id,
+                "seedKeywords": seed_keywords,
+                "seedUrl": seed_url,
+                "countries": countries,
+                "languageConstantId": language_constant_id,
+                "network": network,
+                "includeAdultKeywords": include_adult_keywords,
+                "pageSize": page_size,
+                "pageToken": page_token,
+            }
         )
         return await self._client._apost("/v1/ads/keywords/ideas", data=payload)
 
@@ -523,16 +547,18 @@ class AdInsightsResource:
         include_average_cpc: bool | None = None,
     ) -> dict[str, Any]:
         """Get historical keyword metrics (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            customer_id=customer_id,
-            keywords=keywords,
-            countries=countries,
-            language_constant_id=language_constant_id,
-            network=network,
-            include_adult_keywords=include_adult_keywords,
-            include_average_cpc=include_average_cpc,
+        payload = self._wire_payload(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "customerId": customer_id,
+                "keywords": keywords,
+                "countries": countries,
+                "languageConstantId": language_constant_id,
+                "network": network,
+                "includeAdultKeywords": include_adult_keywords,
+                "includeAverageCpc": include_average_cpc,
+            }
         )
         return await self._client._apost(
             "/v1/ads/keywords/historical-metrics", data=payload
@@ -569,33 +595,35 @@ class AdInsightsResource:
         after: str | None = None,
     ) -> dict[str, Any]:
         """Flexible live insights query (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            object_id=object_id,
-            query=query,
-            ad_account_id=ad_account_id,
-            report_type=report_type,
-            data_level=data_level,
-            dimensions=dimensions,
-            metrics=metrics,
-            page=page,
-            page_size=page_size,
-            customer_id=customer_id,
-            page_token=page_token,
-            level=level,
-            fields=fields,
-            breakdowns=breakdowns,
-            action_breakdowns=action_breakdowns,
-            action_attribution_windows=action_attribution_windows,
-            action_report_time=action_report_time,
-            use_unified_attribution_setting=use_unified_attribution_setting,
-            filtering=filtering,
-            date_preset=date_preset,
-            from_date=from_date,
-            to_date=to_date,
-            time_increment=time_increment,
-            limit=limit,
-            after=after,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+                "objectId": object_id,
+                "query": query,
+                "adAccountId": ad_account_id,
+                "reportType": report_type,
+                "dataLevel": data_level,
+                "dimensions": dimensions,
+                "metrics": metrics,
+                "page": page,
+                "pageSize": page_size,
+                "customerId": customer_id,
+                "pageToken": page_token,
+                "level": level,
+                "fields": fields,
+                "breakdowns": breakdowns,
+                "actionBreakdowns": action_breakdowns,
+                "actionAttributionWindows": action_attribution_windows,
+                "actionReportTime": action_report_time,
+                "useUnifiedAttributionSetting": use_unified_attribution_setting,
+                "filtering": filtering,
+                "datePreset": date_preset,
+                "fromDate": from_date,
+                "toDate": to_date,
+                "timeIncrement": time_increment,
+                "limit": limit,
+                "after": after,
+            }
         )
         return await self._client._aget("/v1/ads/insights", params=params)
 
@@ -618,21 +646,23 @@ class AdInsightsResource:
         time_increment: Any | None = None,
     ) -> dict[str, Any]:
         """Submit async insights report (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            object_id=object_id,
-            level=level,
-            fields=fields,
-            breakdowns=breakdowns,
-            action_breakdowns=action_breakdowns,
-            action_attribution_windows=action_attribution_windows,
-            action_report_time=action_report_time,
-            use_unified_attribution_setting=use_unified_attribution_setting,
-            filtering=filtering,
-            date_preset=date_preset,
-            from_date=from_date,
-            to_date=to_date,
-            time_increment=time_increment,
+        payload = self._wire_payload(
+            {
+                "accountId": account_id,
+                "objectId": object_id,
+                "level": level,
+                "fields": fields,
+                "breakdowns": breakdowns,
+                "actionBreakdowns": action_breakdowns,
+                "actionAttributionWindows": action_attribution_windows,
+                "actionReportTime": action_report_time,
+                "useUnifiedAttributionSetting": use_unified_attribution_setting,
+                "filtering": filtering,
+                "datePreset": date_preset,
+                "fromDate": from_date,
+                "toDate": to_date,
+                "timeIncrement": time_increment,
+            }
         )
         return await self._client._apost("/v1/ads/insights/reports", data=payload)
 
@@ -645,10 +675,12 @@ class AdInsightsResource:
         after: str | None = None,
     ) -> dict[str, Any]:
         """Poll an async insights report run (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            limit=limit,
-            after=after,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+                "limit": limit,
+                "after": after,
+            }
         )
         return await self._client._aget(
             f"/v1/ads/insights/reports/{report_run_id}", params=params
@@ -663,10 +695,12 @@ class AdInsightsResource:
         breakdowns: str | None = None,
     ) -> dict[str, Any]:
         """Get ad analytics (async)"""
-        params = self._build_params(
-            from_date=from_date,
-            to_date=to_date,
-            breakdowns=breakdowns,
+        params = self._wire_params(
+            {
+                "fromDate": from_date,
+                "toDate": to_date,
+                "breakdowns": breakdowns,
+            }
         )
         return await self._client._aget(f"/v1/ads/{ad_id}/analytics", params=params)
 
@@ -684,16 +718,18 @@ class AdInsightsResource:
         page_size: int | None = 100,
     ) -> dict[str, Any]:
         """Per-creative performance inside TikTok Smart+ ads (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            start_date=start_date,
-            end_date=end_date,
-            level=level,
-            smart_plus_ad_ids=smart_plus_ad_ids,
-            ad_group_ids=ad_group_ids,
-            page=page,
-            page_size=page_size,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "startDate": start_date,
+                "endDate": end_date,
+                "level": level,
+                "smartPlusAdIds": smart_plus_ad_ids,
+                "adGroupIds": ad_group_ids,
+                "page": page,
+                "pageSize": page_size,
+            }
         )
         return await self._client._aget(
             "/v1/ads/tiktok-smart-plus-materials", params=params

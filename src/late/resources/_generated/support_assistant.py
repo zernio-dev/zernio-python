@@ -21,7 +21,7 @@ class SupportAssistantResource:
     def __init__(self, client: BaseClient) -> None:
         self._client = client
 
-    def _build_params(self, **kwargs: Any) -> dict[str, Any]:
+    def _wire_params(self, fields: dict[str, Any]) -> dict[str, Any]:
         """Build query parameters, filtering None and empty-string values.
 
         Empty strings are filtered because MCP tool wrappers pass ``""`` as the
@@ -36,20 +36,16 @@ class SupportAssistantResource:
         """
         from enum import Enum
 
-        def to_camel(s: str) -> str:
-            parts = s.split("_")
-            return parts[0] + "".join(p.title() for p in parts[1:])
-
         result: dict[str, Any] = {}
-        for k, v in kwargs.items():
+        for k, v in fields.items():
             if isinstance(v, Enum):
                 v = v.value
             if v is None or v == "":
                 continue
-            result[to_camel(k)] = v
+            result[k] = v
         return result
 
-    def _build_payload(self, **kwargs: Any) -> dict[str, Any]:
+    def _wire_payload(self, fields: dict[str, Any]) -> dict[str, Any]:
         """Build request payload, filtering None values. Enum members are
         unwrapped to their value so JSON bodies carry e.g. "failed" rather
         than a raw Enum member (plain Enum members are not JSON-serializable).
@@ -57,30 +53,28 @@ class SupportAssistantResource:
         from datetime import datetime
         from enum import Enum
 
-        def to_camel(s: str) -> str:
-            parts = s.split("_")
-            return parts[0] + "".join(p.title() for p in parts[1:])
-
         result: dict[str, Any] = {}
-        for k, v in kwargs.items():
+        for k, v in fields.items():
             if isinstance(v, Enum):
                 v = v.value
             if v is None:
                 continue
             if isinstance(v, datetime):
-                result[to_camel(k)] = v.isoformat()
+                result[k] = v.isoformat()
             else:
-                result[to_camel(k)] = v
+                result[k] = v
         return result
 
     def list_support_answers(
         self, thread_id: str, *, limit: int | None = 20, cursor: str | None = None
     ) -> dict[str, Any]:
         """List a thread's support answers"""
-        params = self._build_params(
-            thread_id=thread_id,
-            limit=limit,
-            cursor=cursor,
+        params = self._wire_params(
+            {
+                "threadId": thread_id,
+                "limit": limit,
+                "cursor": cursor,
+            }
         )
         return self._client._get("/v1/support/runs", params=params)
 
@@ -94,11 +88,13 @@ class SupportAssistantResource:
         max_cost_usd: float | None = 3,
     ) -> dict[str, Any]:
         """Ask a support question"""
-        payload = self._build_payload(
-            message=message,
-            thread_id=thread_id,
-            context=context,
-            max_cost_usd=max_cost_usd,
+        payload = self._wire_payload(
+            {
+                "message": message,
+                "threadId": thread_id,
+                "context": context,
+                "maxCostUsd": max_cost_usd,
+            }
         )
         headers: dict[str, str] = {}
         if idempotency_key is not None:
@@ -113,10 +109,12 @@ class SupportAssistantResource:
         self, thread_id: str, *, limit: int | None = 20, cursor: str | None = None
     ) -> dict[str, Any]:
         """List a thread's support answers (async)"""
-        params = self._build_params(
-            thread_id=thread_id,
-            limit=limit,
-            cursor=cursor,
+        params = self._wire_params(
+            {
+                "threadId": thread_id,
+                "limit": limit,
+                "cursor": cursor,
+            }
         )
         return await self._client._aget("/v1/support/runs", params=params)
 
@@ -130,11 +128,13 @@ class SupportAssistantResource:
         max_cost_usd: float | None = 3,
     ) -> dict[str, Any]:
         """Ask a support question (async)"""
-        payload = self._build_payload(
-            message=message,
-            thread_id=thread_id,
-            context=context,
-            max_cost_usd=max_cost_usd,
+        payload = self._wire_payload(
+            {
+                "message": message,
+                "threadId": thread_id,
+                "context": context,
+                "maxCostUsd": max_cost_usd,
+            }
         )
         headers: dict[str, str] = {}
         if idempotency_key is not None:

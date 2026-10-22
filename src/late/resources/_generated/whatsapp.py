@@ -21,7 +21,7 @@ class WhatsappResource:
     def __init__(self, client: BaseClient) -> None:
         self._client = client
 
-    def _build_params(self, **kwargs: Any) -> dict[str, Any]:
+    def _wire_params(self, fields: dict[str, Any]) -> dict[str, Any]:
         """Build query parameters, filtering None and empty-string values.
 
         Empty strings are filtered because MCP tool wrappers pass ``""`` as the
@@ -36,20 +36,16 @@ class WhatsappResource:
         """
         from enum import Enum
 
-        def to_camel(s: str) -> str:
-            parts = s.split("_")
-            return parts[0] + "".join(p.title() for p in parts[1:])
-
         result: dict[str, Any] = {}
-        for k, v in kwargs.items():
+        for k, v in fields.items():
             if isinstance(v, Enum):
                 v = v.value
             if v is None or v == "":
                 continue
-            result[to_camel(k)] = v
+            result[k] = v
         return result
 
-    def _build_payload(self, **kwargs: Any) -> dict[str, Any]:
+    def _wire_payload(self, fields: dict[str, Any]) -> dict[str, Any]:
         """Build request payload, filtering None values. Enum members are
         unwrapped to their value so JSON bodies carry e.g. "failed" rather
         than a raw Enum member (plain Enum members are not JSON-serializable).
@@ -57,28 +53,26 @@ class WhatsappResource:
         from datetime import datetime
         from enum import Enum
 
-        def to_camel(s: str) -> str:
-            parts = s.split("_")
-            return parts[0] + "".join(p.title() for p in parts[1:])
-
         result: dict[str, Any] = {}
-        for k, v in kwargs.items():
+        for k, v in fields.items():
             if isinstance(v, Enum):
                 v = v.value
             if v is None:
                 continue
             if isinstance(v, datetime):
-                result[to_camel(k)] = v.isoformat()
+                result[k] = v.isoformat()
             else:
-                result[to_camel(k)] = v
+                result[k] = v
         return result
 
     def register_whats_app_number(
         self, account_id: str, *, pin: str | None = None
     ) -> dict[str, Any]:
         """Register a connected WhatsApp number on the Cloud API"""
-        payload = self._build_payload(
-            pin=pin,
+        payload = self._wire_payload(
+            {
+                "pin": pin,
+            }
         )
         return self._client._post(
             f"/v1/accounts/{account_id}/whatsapp/register", data=payload
@@ -92,9 +86,11 @@ class WhatsappResource:
         language: str | None = "en_US",
     ) -> dict[str, Any]:
         """Request a Meta re-verification code for a BYO WhatsApp number"""
-        payload = self._build_payload(
-            method=method,
-            language=language,
+        payload = self._wire_payload(
+            {
+                "method": method,
+                "language": language,
+            }
         )
         return self._client._post(
             f"/v1/accounts/{account_id}/whatsapp/request-code", data=payload
@@ -102,8 +98,10 @@ class WhatsappResource:
 
     def verify_whats_app_number(self, account_id: str, code: str) -> dict[str, Any]:
         """Verify the Meta re-verification code for a BYO WhatsApp number"""
-        payload = self._build_payload(
-            code=code,
+        payload = self._wire_payload(
+            {
+                "code": code,
+            }
         )
         return self._client._post(
             f"/v1/accounts/{account_id}/whatsapp/verify-code", data=payload
@@ -111,8 +109,10 @@ class WhatsappResource:
 
     def get_whats_app_media(self, media_id: str, account_id: str) -> dict[str, Any]:
         """Download WhatsApp media"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+            }
         )
         return self._client._get(f"/v1/whatsapp/media/{media_id}", params=params)
 
@@ -125,11 +125,13 @@ class WhatsappResource:
         status: str | None = None,
     ) -> dict[str, Any]:
         """List templates"""
-        params = self._build_params(
-            account_id=account_id,
-            name=name,
-            language=language,
-            status=status,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+                "name": name,
+                "language": language,
+                "status": status,
+            }
         )
         return self._client._get("/v1/whatsapp/templates", params=params)
 
@@ -148,17 +150,19 @@ class WhatsappResource:
         message_send_ttl_seconds: int | None = None,
     ) -> dict[str, Any]:
         """Create template"""
-        payload = self._build_payload(
-            account_id=account_id,
-            name=name,
-            category=category,
-            language=language,
-            parameter_format=parameter_format,
-            components=components,
-            library_template_name=library_template_name,
-            library_template_body_inputs=library_template_body_inputs,
-            library_template_button_inputs=library_template_button_inputs,
-            message_send_ttl_seconds=message_send_ttl_seconds,
+        payload = self._wire_payload(
+            {
+                "accountId": account_id,
+                "name": name,
+                "category": category,
+                "language": language,
+                "parameter_format": parameter_format,
+                "components": components,
+                "library_template_name": library_template_name,
+                "library_template_body_inputs": library_template_body_inputs,
+                "library_template_button_inputs": library_template_button_inputs,
+                "message_send_ttl_seconds": message_send_ttl_seconds,
+            }
         )
         return self._client._post("/v1/whatsapp/templates", data=payload)
 
@@ -166,9 +170,11 @@ class WhatsappResource:
         self, template_name: str, account_id: str, *, language: str | None = None
     ) -> dict[str, Any]:
         """Get template"""
-        params = self._build_params(
-            account_id=account_id,
-            language=language,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+                "language": language,
+            }
         )
         return self._client._get(
             f"/v1/whatsapp/templates/{template_name}", params=params
@@ -184,11 +190,13 @@ class WhatsappResource:
         message_send_ttl_seconds: int | None = None,
     ) -> dict[str, Any]:
         """Update template"""
-        payload = self._build_payload(
-            account_id=account_id,
-            language=language,
-            components=components,
-            message_send_ttl_seconds=message_send_ttl_seconds,
+        payload = self._wire_payload(
+            {
+                "accountId": account_id,
+                "language": language,
+                "components": components,
+                "message_send_ttl_seconds": message_send_ttl_seconds,
+            }
         )
         return self._client._patch(
             f"/v1/whatsapp/templates/{template_name}", data=payload
@@ -198,9 +206,11 @@ class WhatsappResource:
         self, template_name: str, account_id: str, *, language: str | None = None
     ) -> dict[str, Any]:
         """Delete template"""
-        params = self._build_params(
-            account_id=account_id,
-            language=language,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+                "language": language,
+            }
         )
         return self._client._delete(
             f"/v1/whatsapp/templates/{template_name}", params=params
@@ -210,8 +220,10 @@ class WhatsappResource:
         self, template_id: str, account_id: str
     ) -> dict[str, Any]:
         """Get template by id"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+            }
         )
         return self._client._get(
             f"/v1/whatsapp/templates/id/{template_id}", params=params
@@ -226,10 +238,12 @@ class WhatsappResource:
         message_send_ttl_seconds: int | None = None,
     ) -> dict[str, Any]:
         """Update template by id"""
-        payload = self._build_payload(
-            account_id=account_id,
-            components=components,
-            message_send_ttl_seconds=message_send_ttl_seconds,
+        payload = self._wire_payload(
+            {
+                "accountId": account_id,
+                "components": components,
+                "message_send_ttl_seconds": message_send_ttl_seconds,
+            }
         )
         return self._client._patch(
             f"/v1/whatsapp/templates/id/{template_id}", data=payload
@@ -239,8 +253,10 @@ class WhatsappResource:
         self, template_id: str, account_id: str
     ) -> dict[str, Any]:
         """Delete template by id"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+            }
         )
         return self._client._delete(
             f"/v1/whatsapp/templates/id/{template_id}", params=params
@@ -250,9 +266,11 @@ class WhatsappResource:
         self, account_id: str, *, catalog_account_id: str | None = None
     ) -> dict[str, Any]:
         """List the catalogs linked to a WhatsApp number"""
-        params = self._build_params(
-            account_id=account_id,
-            catalog_account_id=catalog_account_id,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+                "catalogAccountId": catalog_account_id,
+            }
         )
         return self._client._get("/v1/whatsapp/catalogs", params=params)
 
@@ -260,10 +278,12 @@ class WhatsappResource:
         self, account_id: str, catalog_id: str, *, catalog_account_id: str | None = None
     ) -> dict[str, Any]:
         """Link a catalog to a WhatsApp number"""
-        payload = self._build_payload(
-            account_id=account_id,
-            catalog_account_id=catalog_account_id,
-            catalog_id=catalog_id,
+        payload = self._wire_payload(
+            {
+                "accountId": account_id,
+                "catalogAccountId": catalog_account_id,
+                "catalogId": catalog_id,
+            }
         )
         return self._client._post("/v1/whatsapp/catalogs", data=payload)
 
@@ -271,10 +291,12 @@ class WhatsappResource:
         self, account_id: str, catalog_id: str, *, catalog_account_id: str | None = None
     ) -> dict[str, Any]:
         """Unlink a catalog from a WhatsApp number"""
-        params = self._build_params(
-            account_id=account_id,
-            catalog_account_id=catalog_account_id,
-            catalog_id=catalog_id,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+                "catalogAccountId": catalog_account_id,
+                "catalogId": catalog_id,
+            }
         )
         return self._client._delete("/v1/whatsapp/catalogs", params=params)
 
@@ -282,9 +304,11 @@ class WhatsappResource:
         self, account_id: str, *, catalog_account_id: str | None = None
     ) -> dict[str, Any]:
         """Get a number's commerce settings"""
-        params = self._build_params(
-            account_id=account_id,
-            catalog_account_id=catalog_account_id,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+                "catalogAccountId": catalog_account_id,
+            }
         )
         return self._client._get("/v1/whatsapp/commerce-settings", params=params)
 
@@ -297,11 +321,13 @@ class WhatsappResource:
         is_catalog_visible: bool | None = None,
     ) -> dict[str, Any]:
         """Update a number's commerce settings"""
-        payload = self._build_payload(
-            account_id=account_id,
-            catalog_account_id=catalog_account_id,
-            is_cart_enabled=is_cart_enabled,
-            is_catalog_visible=is_catalog_visible,
+        payload = self._wire_payload(
+            {
+                "accountId": account_id,
+                "catalogAccountId": catalog_account_id,
+                "isCartEnabled": is_cart_enabled,
+                "isCatalogVisible": is_catalog_visible,
+            }
         )
         return self._client._put("/v1/whatsapp/commerce-settings", data=payload)
 
@@ -309,8 +335,10 @@ class WhatsappResource:
         self, account_id: str
     ) -> dict[str, Any]:
         """Get ice breakers and commands"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+            }
         )
         return self._client._get(
             "/v1/whatsapp/conversational-automation", params=params
@@ -325,11 +353,13 @@ class WhatsappResource:
         commands: list[dict[str, Any]] | None = None,
     ) -> dict[str, Any]:
         """Set ice breakers and commands"""
-        payload = self._build_payload(
-            account_id=account_id,
-            enable_welcome_message=enable_welcome_message,
-            prompts=prompts,
-            commands=commands,
+        payload = self._wire_payload(
+            {
+                "accountId": account_id,
+                "enable_welcome_message": enable_welcome_message,
+                "prompts": prompts,
+                "commands": commands,
+            }
         )
         return self._client._post(
             "/v1/whatsapp/conversational-automation", data=payload
@@ -339,8 +369,10 @@ class WhatsappResource:
         self, account_id: str
     ) -> dict[str, Any]:
         """Clear ice breakers and commands"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+            }
         )
         return self._client._delete(
             "/v1/whatsapp/conversational-automation", params=params
@@ -348,8 +380,10 @@ class WhatsappResource:
 
     def get_whats_app_business_profile(self, account_id: str) -> dict[str, Any]:
         """Get business profile"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+            }
         )
         return self._client._get("/v1/whatsapp/business-profile", params=params)
 
@@ -366,15 +400,17 @@ class WhatsappResource:
         profile_picture_handle: str | None = None,
     ) -> dict[str, Any]:
         """Update business profile"""
-        payload = self._build_payload(
-            account_id=account_id,
-            about=about,
-            address=address,
-            description=description,
-            email=email,
-            websites=websites,
-            vertical=vertical,
-            profile_picture_handle=profile_picture_handle,
+        payload = self._wire_payload(
+            {
+                "accountId": account_id,
+                "about": about,
+                "address": address,
+                "description": description,
+                "email": email,
+                "websites": websites,
+                "vertical": vertical,
+                "profilePictureHandle": profile_picture_handle,
+            }
         )
         return self._client._post("/v1/whatsapp/business-profile", data=payload)
 
@@ -382,16 +418,20 @@ class WhatsappResource:
         self, account_id: str, url: str
     ) -> dict[str, Any]:
         """Upload profile picture"""
-        payload = self._build_payload(
-            account_id=account_id,
-            url=url,
+        payload = self._wire_payload(
+            {
+                "accountId": account_id,
+                "url": url,
+            }
         )
         return self._client._post("/v1/whatsapp/business-profile/photo", data=payload)
 
     def get_whats_app_display_name(self, account_id: str) -> dict[str, Any]:
         """Get display name status"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+            }
         )
         return self._client._get(
             "/v1/whatsapp/business-profile/display-name", params=params
@@ -401,9 +441,11 @@ class WhatsappResource:
         self, account_id: str, display_name: str
     ) -> dict[str, Any]:
         """Request display name change"""
-        payload = self._build_payload(
-            account_id=account_id,
-            display_name=display_name,
+        payload = self._wire_payload(
+            {
+                "accountId": account_id,
+                "displayName": display_name,
+            }
         )
         return self._client._post(
             "/v1/whatsapp/business-profile/display-name", data=payload
@@ -411,8 +453,10 @@ class WhatsappResource:
 
     def get_whatsapp_business_username(self, account_id: str) -> dict[str, Any]:
         """Get business username"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+            }
         )
         return self._client._get(
             "/v1/whatsapp/business-profile/username", params=params
@@ -422,10 +466,12 @@ class WhatsappResource:
         self, account_id: str, username: str, *, transfer_action: str | None = "none"
     ) -> dict[str, Any]:
         """Set business username"""
-        payload = self._build_payload(
-            account_id=account_id,
-            username=username,
-            transfer_action=transfer_action,
+        payload = self._wire_payload(
+            {
+                "accountId": account_id,
+                "username": username,
+                "transferAction": transfer_action,
+            }
         )
         return self._client._post(
             "/v1/whatsapp/business-profile/username", data=payload
@@ -433,8 +479,10 @@ class WhatsappResource:
 
     def delete_whatsapp_business_username(self, account_id: str) -> dict[str, Any]:
         """Delete business username"""
-        payload = self._build_payload(
-            account_id=account_id,
+        payload = self._wire_payload(
+            {
+                "accountId": account_id,
+            }
         )
         return self._client._delete(
             "/v1/whatsapp/business-profile/username", data=payload
@@ -444,8 +492,10 @@ class WhatsappResource:
         self, account_id: str
     ) -> dict[str, Any]:
         """Get username suggestions"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+            }
         )
         return self._client._get(
             "/v1/whatsapp/business-profile/username/suggestions", params=params
@@ -453,9 +503,11 @@ class WhatsappResource:
 
     def get_whats_app_block_status(self, account_id: str, user: str) -> dict[str, Any]:
         """Check if a user is blocked"""
-        params = self._build_params(
-            account_id=account_id,
-            user=user,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+                "user": user,
+            }
         )
         return self._client._get("/v1/whatsapp/block-users/status", params=params)
 
@@ -463,10 +515,12 @@ class WhatsappResource:
         self, account_id: str, *, limit: int | None = None, after: str | None = None
     ) -> dict[str, Any]:
         """List blocked users"""
-        params = self._build_params(
-            account_id=account_id,
-            limit=limit,
-            after=after,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+                "limit": limit,
+                "after": after,
+            }
         )
         return self._client._get("/v1/whatsapp/block-users", params=params)
 
@@ -474,9 +528,11 @@ class WhatsappResource:
         self, account_id: str, users: list[str]
     ) -> dict[str, Any]:
         """Block users"""
-        payload = self._build_payload(
-            account_id=account_id,
-            users=users,
+        payload = self._wire_payload(
+            {
+                "accountId": account_id,
+                "users": users,
+            }
         )
         return self._client._post("/v1/whatsapp/block-users", data=payload)
 
@@ -484,9 +540,11 @@ class WhatsappResource:
         self, account_id: str, users: list[str]
     ) -> dict[str, Any]:
         """Unblock users"""
-        payload = self._build_payload(
-            account_id=account_id,
-            users=users,
+        payload = self._wire_payload(
+            {
+                "accountId": account_id,
+                "users": users,
+            }
         )
         return self._client._delete("/v1/whatsapp/block-users", data=payload)
 
@@ -494,23 +552,29 @@ class WhatsappResource:
         self, account_id: str, *, limit: int | None = 50
     ) -> dict[str, Any]:
         """List account notifications"""
-        params = self._build_params(
-            account_id=account_id,
-            limit=limit,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+                "limit": limit,
+            }
         )
         return self._client._get("/v1/whatsapp/account-events", params=params)
 
     def get_whats_app_dataset(self, account_id: str) -> dict[str, Any]:
         """Get CTWA conversions dataset"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+            }
         )
         return self._client._get("/v1/whatsapp/dataset", params=params)
 
     def create_whats_app_dataset(self, account_id: str) -> dict[str, Any]:
         """Provision CTWA dataset"""
-        payload = self._build_payload(
-            account_id=account_id,
+        payload = self._wire_payload(
+            {
+                "accountId": account_id,
+            }
         )
         return self._client._post("/v1/whatsapp/dataset", data=payload)
 
@@ -518,10 +582,12 @@ class WhatsappResource:
         self, account_id: str, *, limit: int | None = 25, after: str | None = None
     ) -> dict[str, Any]:
         """List active groups"""
-        params = self._build_params(
-            account_id=account_id,
-            limit=limit,
-            after=after,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+                "limit": limit,
+                "after": after,
+            }
         )
         return self._client._get("/v1/whatsapp/wa-groups", params=params)
 
@@ -534,11 +600,13 @@ class WhatsappResource:
         join_approval_mode: str | None = None,
     ) -> dict[str, Any]:
         """Create group"""
-        payload = self._build_payload(
-            account_id=account_id,
-            subject=subject,
-            description=description,
-            join_approval_mode=join_approval_mode,
+        payload = self._wire_payload(
+            {
+                "accountId": account_id,
+                "subject": subject,
+                "description": description,
+                "joinApprovalMode": join_approval_mode,
+            }
         )
         return self._client._post("/v1/whatsapp/wa-groups", data=payload)
 
@@ -546,8 +614,10 @@ class WhatsappResource:
         self, group_id: str, account_id: str
     ) -> dict[str, Any]:
         """Get group info"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+            }
         )
         return self._client._get(f"/v1/whatsapp/wa-groups/{group_id}", params=params)
 
@@ -561,13 +631,17 @@ class WhatsappResource:
         join_approval_mode: str | None = None,
     ) -> dict[str, Any]:
         """Update group settings"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+            }
         )
-        payload = self._build_payload(
-            subject=subject,
-            description=description,
-            join_approval_mode=join_approval_mode,
+        payload = self._wire_payload(
+            {
+                "subject": subject,
+                "description": description,
+                "joinApprovalMode": join_approval_mode,
+            }
         )
         return self._client._post(
             f"/v1/whatsapp/wa-groups/{group_id}", data=payload, params=params
@@ -577,8 +651,10 @@ class WhatsappResource:
         self, group_id: str, account_id: str
     ) -> dict[str, Any]:
         """Delete group"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+            }
         )
         return self._client._delete(f"/v1/whatsapp/wa-groups/{group_id}", params=params)
 
@@ -586,11 +662,15 @@ class WhatsappResource:
         self, group_id: str, account_id: str, phone_numbers: list[str]
     ) -> dict[str, Any]:
         """Add participants"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+            }
         )
-        payload = self._build_payload(
-            phone_numbers=phone_numbers,
+        payload = self._wire_payload(
+            {
+                "phoneNumbers": phone_numbers,
+            }
         )
         return self._client._post(
             f"/v1/whatsapp/wa-groups/{group_id}/participants",
@@ -602,11 +682,15 @@ class WhatsappResource:
         self, group_id: str, account_id: str, phone_numbers: list[str]
     ) -> dict[str, Any]:
         """Remove participants"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+            }
         )
-        payload = self._build_payload(
-            phone_numbers=phone_numbers,
+        payload = self._wire_payload(
+            {
+                "phoneNumbers": phone_numbers,
+            }
         )
         return self._client._delete(
             f"/v1/whatsapp/wa-groups/{group_id}/participants",
@@ -618,8 +702,10 @@ class WhatsappResource:
         self, group_id: str, account_id: str
     ) -> dict[str, Any]:
         """Create invite link"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+            }
         )
         return self._client._post(
             f"/v1/whatsapp/wa-groups/{group_id}/invite-link", params=params
@@ -629,8 +715,10 @@ class WhatsappResource:
         self, group_id: str, account_id: str
     ) -> dict[str, Any]:
         """List join requests"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+            }
         )
         return self._client._get(
             f"/v1/whatsapp/wa-groups/{group_id}/join-requests", params=params
@@ -640,11 +728,15 @@ class WhatsappResource:
         self, group_id: str, account_id: str, phone_numbers: list[str]
     ) -> dict[str, Any]:
         """Approve join requests"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+            }
         )
-        payload = self._build_payload(
-            phone_numbers=phone_numbers,
+        payload = self._wire_payload(
+            {
+                "phoneNumbers": phone_numbers,
+            }
         )
         return self._client._post(
             f"/v1/whatsapp/wa-groups/{group_id}/join-requests",
@@ -656,11 +748,15 @@ class WhatsappResource:
         self, group_id: str, account_id: str, phone_numbers: list[str]
     ) -> dict[str, Any]:
         """Reject join requests"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+            }
         )
-        payload = self._build_payload(
-            phone_numbers=phone_numbers,
+        payload = self._wire_payload(
+            {
+                "phoneNumbers": phone_numbers,
+            }
         )
         return self._client._delete(
             f"/v1/whatsapp/wa-groups/{group_id}/join-requests",
@@ -672,9 +768,11 @@ class WhatsappResource:
         self, account_id: str, *, limit: int | None = 50
     ) -> dict[str, Any]:
         """List conversion events"""
-        params = self._build_params(
-            account_id=account_id,
-            limit=limit,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+                "limit": limit,
+            }
         )
         return self._client._get("/v1/whatsapp/conversions", params=params)
 
@@ -695,19 +793,21 @@ class WhatsappResource:
         test_code: str | None = None,
     ) -> dict[str, Any]:
         """Send WhatsApp conversion event"""
-        payload = self._build_payload(
-            account_id=account_id,
-            event_name=event_name,
-            event_time=event_time,
-            event_id=event_id,
-            conversation_id=conversation_id,
-            phone_e164=phone_e164,
-            value=value,
-            currency=currency,
-            content_ids=content_ids,
-            email=email,
-            external_id=external_id,
-            test_code=test_code,
+        payload = self._wire_payload(
+            {
+                "accountId": account_id,
+                "eventName": event_name,
+                "eventTime": event_time,
+                "eventId": event_id,
+                "conversationId": conversation_id,
+                "phoneE164": phone_e164,
+                "value": value,
+                "currency": currency,
+                "contentIds": content_ids,
+                "email": email,
+                "externalId": external_id,
+                "testCode": test_code,
+            }
         )
         return self._client._post("/v1/whatsapp/conversions", data=payload)
 
@@ -715,8 +815,10 @@ class WhatsappResource:
         self, account_id: str, *, pin: str | None = None
     ) -> dict[str, Any]:
         """Register a connected WhatsApp number on the Cloud API (async)"""
-        payload = self._build_payload(
-            pin=pin,
+        payload = self._wire_payload(
+            {
+                "pin": pin,
+            }
         )
         return await self._client._apost(
             f"/v1/accounts/{account_id}/whatsapp/register", data=payload
@@ -730,9 +832,11 @@ class WhatsappResource:
         language: str | None = "en_US",
     ) -> dict[str, Any]:
         """Request a Meta re-verification code for a BYO WhatsApp number (async)"""
-        payload = self._build_payload(
-            method=method,
-            language=language,
+        payload = self._wire_payload(
+            {
+                "method": method,
+                "language": language,
+            }
         )
         return await self._client._apost(
             f"/v1/accounts/{account_id}/whatsapp/request-code", data=payload
@@ -742,8 +846,10 @@ class WhatsappResource:
         self, account_id: str, code: str
     ) -> dict[str, Any]:
         """Verify the Meta re-verification code for a BYO WhatsApp number (async)"""
-        payload = self._build_payload(
-            code=code,
+        payload = self._wire_payload(
+            {
+                "code": code,
+            }
         )
         return await self._client._apost(
             f"/v1/accounts/{account_id}/whatsapp/verify-code", data=payload
@@ -753,8 +859,10 @@ class WhatsappResource:
         self, media_id: str, account_id: str
     ) -> dict[str, Any]:
         """Download WhatsApp media (async)"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+            }
         )
         return await self._client._aget(f"/v1/whatsapp/media/{media_id}", params=params)
 
@@ -767,11 +875,13 @@ class WhatsappResource:
         status: str | None = None,
     ) -> dict[str, Any]:
         """List templates (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            name=name,
-            language=language,
-            status=status,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+                "name": name,
+                "language": language,
+                "status": status,
+            }
         )
         return await self._client._aget("/v1/whatsapp/templates", params=params)
 
@@ -790,17 +900,19 @@ class WhatsappResource:
         message_send_ttl_seconds: int | None = None,
     ) -> dict[str, Any]:
         """Create template (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            name=name,
-            category=category,
-            language=language,
-            parameter_format=parameter_format,
-            components=components,
-            library_template_name=library_template_name,
-            library_template_body_inputs=library_template_body_inputs,
-            library_template_button_inputs=library_template_button_inputs,
-            message_send_ttl_seconds=message_send_ttl_seconds,
+        payload = self._wire_payload(
+            {
+                "accountId": account_id,
+                "name": name,
+                "category": category,
+                "language": language,
+                "parameter_format": parameter_format,
+                "components": components,
+                "library_template_name": library_template_name,
+                "library_template_body_inputs": library_template_body_inputs,
+                "library_template_button_inputs": library_template_button_inputs,
+                "message_send_ttl_seconds": message_send_ttl_seconds,
+            }
         )
         return await self._client._apost("/v1/whatsapp/templates", data=payload)
 
@@ -808,9 +920,11 @@ class WhatsappResource:
         self, template_name: str, account_id: str, *, language: str | None = None
     ) -> dict[str, Any]:
         """Get template (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            language=language,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+                "language": language,
+            }
         )
         return await self._client._aget(
             f"/v1/whatsapp/templates/{template_name}", params=params
@@ -826,11 +940,13 @@ class WhatsappResource:
         message_send_ttl_seconds: int | None = None,
     ) -> dict[str, Any]:
         """Update template (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            language=language,
-            components=components,
-            message_send_ttl_seconds=message_send_ttl_seconds,
+        payload = self._wire_payload(
+            {
+                "accountId": account_id,
+                "language": language,
+                "components": components,
+                "message_send_ttl_seconds": message_send_ttl_seconds,
+            }
         )
         return await self._client._apatch(
             f"/v1/whatsapp/templates/{template_name}", data=payload
@@ -840,9 +956,11 @@ class WhatsappResource:
         self, template_name: str, account_id: str, *, language: str | None = None
     ) -> dict[str, Any]:
         """Delete template (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            language=language,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+                "language": language,
+            }
         )
         return await self._client._adelete(
             f"/v1/whatsapp/templates/{template_name}", params=params
@@ -852,8 +970,10 @@ class WhatsappResource:
         self, template_id: str, account_id: str
     ) -> dict[str, Any]:
         """Get template by id (async)"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+            }
         )
         return await self._client._aget(
             f"/v1/whatsapp/templates/id/{template_id}", params=params
@@ -868,10 +988,12 @@ class WhatsappResource:
         message_send_ttl_seconds: int | None = None,
     ) -> dict[str, Any]:
         """Update template by id (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            components=components,
-            message_send_ttl_seconds=message_send_ttl_seconds,
+        payload = self._wire_payload(
+            {
+                "accountId": account_id,
+                "components": components,
+                "message_send_ttl_seconds": message_send_ttl_seconds,
+            }
         )
         return await self._client._apatch(
             f"/v1/whatsapp/templates/id/{template_id}", data=payload
@@ -881,8 +1003,10 @@ class WhatsappResource:
         self, template_id: str, account_id: str
     ) -> dict[str, Any]:
         """Delete template by id (async)"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+            }
         )
         return await self._client._adelete(
             f"/v1/whatsapp/templates/id/{template_id}", params=params
@@ -892,9 +1016,11 @@ class WhatsappResource:
         self, account_id: str, *, catalog_account_id: str | None = None
     ) -> dict[str, Any]:
         """List the catalogs linked to a WhatsApp number (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            catalog_account_id=catalog_account_id,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+                "catalogAccountId": catalog_account_id,
+            }
         )
         return await self._client._aget("/v1/whatsapp/catalogs", params=params)
 
@@ -902,10 +1028,12 @@ class WhatsappResource:
         self, account_id: str, catalog_id: str, *, catalog_account_id: str | None = None
     ) -> dict[str, Any]:
         """Link a catalog to a WhatsApp number (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            catalog_account_id=catalog_account_id,
-            catalog_id=catalog_id,
+        payload = self._wire_payload(
+            {
+                "accountId": account_id,
+                "catalogAccountId": catalog_account_id,
+                "catalogId": catalog_id,
+            }
         )
         return await self._client._apost("/v1/whatsapp/catalogs", data=payload)
 
@@ -913,10 +1041,12 @@ class WhatsappResource:
         self, account_id: str, catalog_id: str, *, catalog_account_id: str | None = None
     ) -> dict[str, Any]:
         """Unlink a catalog from a WhatsApp number (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            catalog_account_id=catalog_account_id,
-            catalog_id=catalog_id,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+                "catalogAccountId": catalog_account_id,
+                "catalogId": catalog_id,
+            }
         )
         return await self._client._adelete("/v1/whatsapp/catalogs", params=params)
 
@@ -924,9 +1054,11 @@ class WhatsappResource:
         self, account_id: str, *, catalog_account_id: str | None = None
     ) -> dict[str, Any]:
         """Get a number's commerce settings (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            catalog_account_id=catalog_account_id,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+                "catalogAccountId": catalog_account_id,
+            }
         )
         return await self._client._aget("/v1/whatsapp/commerce-settings", params=params)
 
@@ -939,11 +1071,13 @@ class WhatsappResource:
         is_catalog_visible: bool | None = None,
     ) -> dict[str, Any]:
         """Update a number's commerce settings (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            catalog_account_id=catalog_account_id,
-            is_cart_enabled=is_cart_enabled,
-            is_catalog_visible=is_catalog_visible,
+        payload = self._wire_payload(
+            {
+                "accountId": account_id,
+                "catalogAccountId": catalog_account_id,
+                "isCartEnabled": is_cart_enabled,
+                "isCatalogVisible": is_catalog_visible,
+            }
         )
         return await self._client._aput("/v1/whatsapp/commerce-settings", data=payload)
 
@@ -951,8 +1085,10 @@ class WhatsappResource:
         self, account_id: str
     ) -> dict[str, Any]:
         """Get ice breakers and commands (async)"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+            }
         )
         return await self._client._aget(
             "/v1/whatsapp/conversational-automation", params=params
@@ -967,11 +1103,13 @@ class WhatsappResource:
         commands: list[dict[str, Any]] | None = None,
     ) -> dict[str, Any]:
         """Set ice breakers and commands (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            enable_welcome_message=enable_welcome_message,
-            prompts=prompts,
-            commands=commands,
+        payload = self._wire_payload(
+            {
+                "accountId": account_id,
+                "enable_welcome_message": enable_welcome_message,
+                "prompts": prompts,
+                "commands": commands,
+            }
         )
         return await self._client._apost(
             "/v1/whatsapp/conversational-automation", data=payload
@@ -981,8 +1119,10 @@ class WhatsappResource:
         self, account_id: str
     ) -> dict[str, Any]:
         """Clear ice breakers and commands (async)"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+            }
         )
         return await self._client._adelete(
             "/v1/whatsapp/conversational-automation", params=params
@@ -990,8 +1130,10 @@ class WhatsappResource:
 
     async def aget_whats_app_business_profile(self, account_id: str) -> dict[str, Any]:
         """Get business profile (async)"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+            }
         )
         return await self._client._aget("/v1/whatsapp/business-profile", params=params)
 
@@ -1008,15 +1150,17 @@ class WhatsappResource:
         profile_picture_handle: str | None = None,
     ) -> dict[str, Any]:
         """Update business profile (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            about=about,
-            address=address,
-            description=description,
-            email=email,
-            websites=websites,
-            vertical=vertical,
-            profile_picture_handle=profile_picture_handle,
+        payload = self._wire_payload(
+            {
+                "accountId": account_id,
+                "about": about,
+                "address": address,
+                "description": description,
+                "email": email,
+                "websites": websites,
+                "vertical": vertical,
+                "profilePictureHandle": profile_picture_handle,
+            }
         )
         return await self._client._apost("/v1/whatsapp/business-profile", data=payload)
 
@@ -1024,9 +1168,11 @@ class WhatsappResource:
         self, account_id: str, url: str
     ) -> dict[str, Any]:
         """Upload profile picture (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            url=url,
+        payload = self._wire_payload(
+            {
+                "accountId": account_id,
+                "url": url,
+            }
         )
         return await self._client._apost(
             "/v1/whatsapp/business-profile/photo", data=payload
@@ -1034,8 +1180,10 @@ class WhatsappResource:
 
     async def aget_whats_app_display_name(self, account_id: str) -> dict[str, Any]:
         """Get display name status (async)"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+            }
         )
         return await self._client._aget(
             "/v1/whatsapp/business-profile/display-name", params=params
@@ -1045,9 +1193,11 @@ class WhatsappResource:
         self, account_id: str, display_name: str
     ) -> dict[str, Any]:
         """Request display name change (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            display_name=display_name,
+        payload = self._wire_payload(
+            {
+                "accountId": account_id,
+                "displayName": display_name,
+            }
         )
         return await self._client._apost(
             "/v1/whatsapp/business-profile/display-name", data=payload
@@ -1055,8 +1205,10 @@ class WhatsappResource:
 
     async def aget_whatsapp_business_username(self, account_id: str) -> dict[str, Any]:
         """Get business username (async)"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+            }
         )
         return await self._client._aget(
             "/v1/whatsapp/business-profile/username", params=params
@@ -1066,10 +1218,12 @@ class WhatsappResource:
         self, account_id: str, username: str, *, transfer_action: str | None = "none"
     ) -> dict[str, Any]:
         """Set business username (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            username=username,
-            transfer_action=transfer_action,
+        payload = self._wire_payload(
+            {
+                "accountId": account_id,
+                "username": username,
+                "transferAction": transfer_action,
+            }
         )
         return await self._client._apost(
             "/v1/whatsapp/business-profile/username", data=payload
@@ -1079,8 +1233,10 @@ class WhatsappResource:
         self, account_id: str
     ) -> dict[str, Any]:
         """Delete business username (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
+        payload = self._wire_payload(
+            {
+                "accountId": account_id,
+            }
         )
         return await self._client._adelete(
             "/v1/whatsapp/business-profile/username", data=payload
@@ -1090,8 +1246,10 @@ class WhatsappResource:
         self, account_id: str
     ) -> dict[str, Any]:
         """Get username suggestions (async)"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+            }
         )
         return await self._client._aget(
             "/v1/whatsapp/business-profile/username/suggestions", params=params
@@ -1101,9 +1259,11 @@ class WhatsappResource:
         self, account_id: str, user: str
     ) -> dict[str, Any]:
         """Check if a user is blocked (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            user=user,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+                "user": user,
+            }
         )
         return await self._client._aget(
             "/v1/whatsapp/block-users/status", params=params
@@ -1113,10 +1273,12 @@ class WhatsappResource:
         self, account_id: str, *, limit: int | None = None, after: str | None = None
     ) -> dict[str, Any]:
         """List blocked users (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            limit=limit,
-            after=after,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+                "limit": limit,
+                "after": after,
+            }
         )
         return await self._client._aget("/v1/whatsapp/block-users", params=params)
 
@@ -1124,9 +1286,11 @@ class WhatsappResource:
         self, account_id: str, users: list[str]
     ) -> dict[str, Any]:
         """Block users (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            users=users,
+        payload = self._wire_payload(
+            {
+                "accountId": account_id,
+                "users": users,
+            }
         )
         return await self._client._apost("/v1/whatsapp/block-users", data=payload)
 
@@ -1134,9 +1298,11 @@ class WhatsappResource:
         self, account_id: str, users: list[str]
     ) -> dict[str, Any]:
         """Unblock users (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            users=users,
+        payload = self._wire_payload(
+            {
+                "accountId": account_id,
+                "users": users,
+            }
         )
         return await self._client._adelete("/v1/whatsapp/block-users", data=payload)
 
@@ -1144,23 +1310,29 @@ class WhatsappResource:
         self, account_id: str, *, limit: int | None = 50
     ) -> dict[str, Any]:
         """List account notifications (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            limit=limit,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+                "limit": limit,
+            }
         )
         return await self._client._aget("/v1/whatsapp/account-events", params=params)
 
     async def aget_whats_app_dataset(self, account_id: str) -> dict[str, Any]:
         """Get CTWA conversions dataset (async)"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+            }
         )
         return await self._client._aget("/v1/whatsapp/dataset", params=params)
 
     async def acreate_whats_app_dataset(self, account_id: str) -> dict[str, Any]:
         """Provision CTWA dataset (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
+        payload = self._wire_payload(
+            {
+                "accountId": account_id,
+            }
         )
         return await self._client._apost("/v1/whatsapp/dataset", data=payload)
 
@@ -1168,10 +1340,12 @@ class WhatsappResource:
         self, account_id: str, *, limit: int | None = 25, after: str | None = None
     ) -> dict[str, Any]:
         """List active groups (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            limit=limit,
-            after=after,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+                "limit": limit,
+                "after": after,
+            }
         )
         return await self._client._aget("/v1/whatsapp/wa-groups", params=params)
 
@@ -1184,11 +1358,13 @@ class WhatsappResource:
         join_approval_mode: str | None = None,
     ) -> dict[str, Any]:
         """Create group (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            subject=subject,
-            description=description,
-            join_approval_mode=join_approval_mode,
+        payload = self._wire_payload(
+            {
+                "accountId": account_id,
+                "subject": subject,
+                "description": description,
+                "joinApprovalMode": join_approval_mode,
+            }
         )
         return await self._client._apost("/v1/whatsapp/wa-groups", data=payload)
 
@@ -1196,8 +1372,10 @@ class WhatsappResource:
         self, group_id: str, account_id: str
     ) -> dict[str, Any]:
         """Get group info (async)"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+            }
         )
         return await self._client._aget(
             f"/v1/whatsapp/wa-groups/{group_id}", params=params
@@ -1213,13 +1391,17 @@ class WhatsappResource:
         join_approval_mode: str | None = None,
     ) -> dict[str, Any]:
         """Update group settings (async)"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+            }
         )
-        payload = self._build_payload(
-            subject=subject,
-            description=description,
-            join_approval_mode=join_approval_mode,
+        payload = self._wire_payload(
+            {
+                "subject": subject,
+                "description": description,
+                "joinApprovalMode": join_approval_mode,
+            }
         )
         return await self._client._apost(
             f"/v1/whatsapp/wa-groups/{group_id}", data=payload, params=params
@@ -1229,8 +1411,10 @@ class WhatsappResource:
         self, group_id: str, account_id: str
     ) -> dict[str, Any]:
         """Delete group (async)"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+            }
         )
         return await self._client._adelete(
             f"/v1/whatsapp/wa-groups/{group_id}", params=params
@@ -1240,11 +1424,15 @@ class WhatsappResource:
         self, group_id: str, account_id: str, phone_numbers: list[str]
     ) -> dict[str, Any]:
         """Add participants (async)"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+            }
         )
-        payload = self._build_payload(
-            phone_numbers=phone_numbers,
+        payload = self._wire_payload(
+            {
+                "phoneNumbers": phone_numbers,
+            }
         )
         return await self._client._apost(
             f"/v1/whatsapp/wa-groups/{group_id}/participants",
@@ -1256,11 +1444,15 @@ class WhatsappResource:
         self, group_id: str, account_id: str, phone_numbers: list[str]
     ) -> dict[str, Any]:
         """Remove participants (async)"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+            }
         )
-        payload = self._build_payload(
-            phone_numbers=phone_numbers,
+        payload = self._wire_payload(
+            {
+                "phoneNumbers": phone_numbers,
+            }
         )
         return await self._client._adelete(
             f"/v1/whatsapp/wa-groups/{group_id}/participants",
@@ -1272,8 +1464,10 @@ class WhatsappResource:
         self, group_id: str, account_id: str
     ) -> dict[str, Any]:
         """Create invite link (async)"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+            }
         )
         return await self._client._apost(
             f"/v1/whatsapp/wa-groups/{group_id}/invite-link", params=params
@@ -1283,8 +1477,10 @@ class WhatsappResource:
         self, group_id: str, account_id: str
     ) -> dict[str, Any]:
         """List join requests (async)"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+            }
         )
         return await self._client._aget(
             f"/v1/whatsapp/wa-groups/{group_id}/join-requests", params=params
@@ -1294,11 +1490,15 @@ class WhatsappResource:
         self, group_id: str, account_id: str, phone_numbers: list[str]
     ) -> dict[str, Any]:
         """Approve join requests (async)"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+            }
         )
-        payload = self._build_payload(
-            phone_numbers=phone_numbers,
+        payload = self._wire_payload(
+            {
+                "phoneNumbers": phone_numbers,
+            }
         )
         return await self._client._apost(
             f"/v1/whatsapp/wa-groups/{group_id}/join-requests",
@@ -1310,11 +1510,15 @@ class WhatsappResource:
         self, group_id: str, account_id: str, phone_numbers: list[str]
     ) -> dict[str, Any]:
         """Reject join requests (async)"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+            }
         )
-        payload = self._build_payload(
-            phone_numbers=phone_numbers,
+        payload = self._wire_payload(
+            {
+                "phoneNumbers": phone_numbers,
+            }
         )
         return await self._client._adelete(
             f"/v1/whatsapp/wa-groups/{group_id}/join-requests",
@@ -1326,9 +1530,11 @@ class WhatsappResource:
         self, account_id: str, *, limit: int | None = 50
     ) -> dict[str, Any]:
         """List conversion events (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            limit=limit,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+                "limit": limit,
+            }
         )
         return await self._client._aget("/v1/whatsapp/conversions", params=params)
 
@@ -1349,18 +1555,20 @@ class WhatsappResource:
         test_code: str | None = None,
     ) -> dict[str, Any]:
         """Send WhatsApp conversion event (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            event_name=event_name,
-            event_time=event_time,
-            event_id=event_id,
-            conversation_id=conversation_id,
-            phone_e164=phone_e164,
-            value=value,
-            currency=currency,
-            content_ids=content_ids,
-            email=email,
-            external_id=external_id,
-            test_code=test_code,
+        payload = self._wire_payload(
+            {
+                "accountId": account_id,
+                "eventName": event_name,
+                "eventTime": event_time,
+                "eventId": event_id,
+                "conversationId": conversation_id,
+                "phoneE164": phone_e164,
+                "value": value,
+                "currency": currency,
+                "contentIds": content_ids,
+                "email": email,
+                "externalId": external_id,
+                "testCode": test_code,
+            }
         )
         return await self._client._apost("/v1/whatsapp/conversions", data=payload)

@@ -21,7 +21,7 @@ class LeadGenResource:
     def __init__(self, client: BaseClient) -> None:
         self._client = client
 
-    def _build_params(self, **kwargs: Any) -> dict[str, Any]:
+    def _wire_params(self, fields: dict[str, Any]) -> dict[str, Any]:
         """Build query parameters, filtering None and empty-string values.
 
         Empty strings are filtered because MCP tool wrappers pass ``""`` as the
@@ -36,20 +36,16 @@ class LeadGenResource:
         """
         from enum import Enum
 
-        def to_camel(s: str) -> str:
-            parts = s.split("_")
-            return parts[0] + "".join(p.title() for p in parts[1:])
-
         result: dict[str, Any] = {}
-        for k, v in kwargs.items():
+        for k, v in fields.items():
             if isinstance(v, Enum):
                 v = v.value
             if v is None or v == "":
                 continue
-            result[to_camel(k)] = v
+            result[k] = v
         return result
 
-    def _build_payload(self, **kwargs: Any) -> dict[str, Any]:
+    def _wire_payload(self, fields: dict[str, Any]) -> dict[str, Any]:
         """Build request payload, filtering None values. Enum members are
         unwrapped to their value so JSON bodies carry e.g. "failed" rather
         than a raw Enum member (plain Enum members are not JSON-serializable).
@@ -57,20 +53,16 @@ class LeadGenResource:
         from datetime import datetime
         from enum import Enum
 
-        def to_camel(s: str) -> str:
-            parts = s.split("_")
-            return parts[0] + "".join(p.title() for p in parts[1:])
-
         result: dict[str, Any] = {}
-        for k, v in kwargs.items():
+        for k, v in fields.items():
             if isinstance(v, Enum):
                 v = v.value
             if v is None:
                 continue
             if isinstance(v, datetime):
-                result[to_camel(k)] = v.isoformat()
+                result[k] = v.isoformat()
             else:
-                result[to_camel(k)] = v
+                result[k] = v
         return result
 
     def list_leads(
@@ -84,13 +76,15 @@ class LeadGenResource:
         cursor: str | None = None,
     ) -> dict[str, Any]:
         """List submitted leads"""
-        params = self._build_params(
-            form_id=form_id,
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            limit=limit,
-            since=since,
-            cursor=cursor,
+        params = self._wire_params(
+            {
+                "formId": form_id,
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "limit": limit,
+                "since": since,
+                "cursor": cursor,
+            }
         )
         return self._client._get("/v1/ads/leads", params=params)
 
@@ -104,11 +98,13 @@ class LeadGenResource:
         account_id: str | None = None,
     ) -> dict[str, Any]:
         """Update a lead's status"""
-        payload = self._build_payload(
-            status=status,
-            value=value,
-            currency=currency,
-            account_id=account_id,
+        payload = self._wire_payload(
+            {
+                "status": status,
+                "value": value,
+                "currency": currency,
+                "accountId": account_id,
+            }
         )
         return self._client._patch(f"/v1/ads/leads/{id}", data=payload)
 
@@ -121,11 +117,13 @@ class LeadGenResource:
         cursor: str | None = None,
     ) -> dict[str, Any]:
         """List lead forms"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            limit=limit,
-            cursor=cursor,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "limit": limit,
+                "cursor": cursor,
+            }
         )
         return self._client._get("/v1/ads/lead-forms", params=params)
 
@@ -148,21 +146,23 @@ class LeadGenResource:
         platform_specific_data: Any | None = None,
     ) -> dict[str, Any]:
         """Create a lead form"""
-        payload = self._build_payload(
-            account_id=account_id,
-            name=name,
-            questions=questions,
-            privacy_policy_url=privacy_policy_url,
-            privacy_policy_link_text=privacy_policy_link_text,
-            follow_up_action_url=follow_up_action_url,
-            locale=locale,
-            thank_you_title=thank_you_title,
-            thank_you_body=thank_you_body,
-            thank_you_button_text=thank_you_button_text,
-            thank_you_button_type=thank_you_button_type,
-            thank_you_website_url=thank_you_website_url,
-            is_optimized_for_quality=is_optimized_for_quality,
-            platform_specific_data=platform_specific_data,
+        payload = self._wire_payload(
+            {
+                "accountId": account_id,
+                "name": name,
+                "questions": questions,
+                "privacyPolicyUrl": privacy_policy_url,
+                "privacyPolicyLinkText": privacy_policy_link_text,
+                "followUpActionUrl": follow_up_action_url,
+                "locale": locale,
+                "thankYouTitle": thank_you_title,
+                "thankYouBody": thank_you_body,
+                "thankYouButtonText": thank_you_button_text,
+                "thankYouButtonType": thank_you_button_type,
+                "thankYouWebsiteUrl": thank_you_website_url,
+                "isOptimizedForQuality": is_optimized_for_quality,
+                "platformSpecificData": platform_specific_data,
+            }
         )
         return self._client._post("/v1/ads/lead-forms", data=payload)
 
@@ -170,16 +170,20 @@ class LeadGenResource:
         self, form_id: str, account_id: str, *, fields: str | None = None
     ) -> dict[str, Any]:
         """Get a lead form"""
-        params = self._build_params(
-            account_id=account_id,
-            fields=fields,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+                "fields": fields,
+            }
         )
         return self._client._get(f"/v1/ads/lead-forms/{form_id}", params=params)
 
     def archive_lead_form(self, form_id: str, account_id: str) -> dict[str, Any]:
         """Archive a lead form"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+            }
         )
         return self._client._delete(f"/v1/ads/lead-forms/{form_id}", params=params)
 
@@ -193,11 +197,13 @@ class LeadGenResource:
         since: int | None = None,
     ) -> dict[str, Any]:
         """List leads for a single form"""
-        params = self._build_params(
-            account_id=account_id,
-            limit=limit,
-            cursor=cursor,
-            since=since,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+                "limit": limit,
+                "cursor": cursor,
+                "since": since,
+            }
         )
         return self._client._get(f"/v1/ads/lead-forms/{form_id}/leads", params=params)
 
@@ -205,9 +211,11 @@ class LeadGenResource:
         self, form_id: str, account_id: str, field_data: list[dict[str, Any]]
     ) -> dict[str, Any]:
         """Create a test lead"""
-        payload = self._build_payload(
-            account_id=account_id,
-            field_data=field_data,
+        payload = self._wire_payload(
+            {
+                "accountId": account_id,
+                "fieldData": field_data,
+            }
         )
         return self._client._post(
             f"/v1/ads/lead-forms/{form_id}/test-leads", data=payload
@@ -217,9 +225,11 @@ class LeadGenResource:
         self, form_id: str, account_id: str, *, lead_id: str | None = None
     ) -> dict[str, Any]:
         """Delete a test lead"""
-        params = self._build_params(
-            account_id=account_id,
-            lead_id=lead_id,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+                "leadId": lead_id,
+            }
         )
         return self._client._delete(
             f"/v1/ads/lead-forms/{form_id}/test-leads", params=params
@@ -236,13 +246,15 @@ class LeadGenResource:
         cursor: str | None = None,
     ) -> dict[str, Any]:
         """List submitted leads (async)"""
-        params = self._build_params(
-            form_id=form_id,
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            limit=limit,
-            since=since,
-            cursor=cursor,
+        params = self._wire_params(
+            {
+                "formId": form_id,
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "limit": limit,
+                "since": since,
+                "cursor": cursor,
+            }
         )
         return await self._client._aget("/v1/ads/leads", params=params)
 
@@ -256,11 +268,13 @@ class LeadGenResource:
         account_id: str | None = None,
     ) -> dict[str, Any]:
         """Update a lead's status (async)"""
-        payload = self._build_payload(
-            status=status,
-            value=value,
-            currency=currency,
-            account_id=account_id,
+        payload = self._wire_payload(
+            {
+                "status": status,
+                "value": value,
+                "currency": currency,
+                "accountId": account_id,
+            }
         )
         return await self._client._apatch(f"/v1/ads/leads/{id}", data=payload)
 
@@ -273,11 +287,13 @@ class LeadGenResource:
         cursor: str | None = None,
     ) -> dict[str, Any]:
         """List lead forms (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            limit=limit,
-            cursor=cursor,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "limit": limit,
+                "cursor": cursor,
+            }
         )
         return await self._client._aget("/v1/ads/lead-forms", params=params)
 
@@ -300,21 +316,23 @@ class LeadGenResource:
         platform_specific_data: Any | None = None,
     ) -> dict[str, Any]:
         """Create a lead form (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            name=name,
-            questions=questions,
-            privacy_policy_url=privacy_policy_url,
-            privacy_policy_link_text=privacy_policy_link_text,
-            follow_up_action_url=follow_up_action_url,
-            locale=locale,
-            thank_you_title=thank_you_title,
-            thank_you_body=thank_you_body,
-            thank_you_button_text=thank_you_button_text,
-            thank_you_button_type=thank_you_button_type,
-            thank_you_website_url=thank_you_website_url,
-            is_optimized_for_quality=is_optimized_for_quality,
-            platform_specific_data=platform_specific_data,
+        payload = self._wire_payload(
+            {
+                "accountId": account_id,
+                "name": name,
+                "questions": questions,
+                "privacyPolicyUrl": privacy_policy_url,
+                "privacyPolicyLinkText": privacy_policy_link_text,
+                "followUpActionUrl": follow_up_action_url,
+                "locale": locale,
+                "thankYouTitle": thank_you_title,
+                "thankYouBody": thank_you_body,
+                "thankYouButtonText": thank_you_button_text,
+                "thankYouButtonType": thank_you_button_type,
+                "thankYouWebsiteUrl": thank_you_website_url,
+                "isOptimizedForQuality": is_optimized_for_quality,
+                "platformSpecificData": platform_specific_data,
+            }
         )
         return await self._client._apost("/v1/ads/lead-forms", data=payload)
 
@@ -322,16 +340,20 @@ class LeadGenResource:
         self, form_id: str, account_id: str, *, fields: str | None = None
     ) -> dict[str, Any]:
         """Get a lead form (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            fields=fields,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+                "fields": fields,
+            }
         )
         return await self._client._aget(f"/v1/ads/lead-forms/{form_id}", params=params)
 
     async def aarchive_lead_form(self, form_id: str, account_id: str) -> dict[str, Any]:
         """Archive a lead form (async)"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+            }
         )
         return await self._client._adelete(
             f"/v1/ads/lead-forms/{form_id}", params=params
@@ -347,11 +369,13 @@ class LeadGenResource:
         since: int | None = None,
     ) -> dict[str, Any]:
         """List leads for a single form (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            limit=limit,
-            cursor=cursor,
-            since=since,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+                "limit": limit,
+                "cursor": cursor,
+                "since": since,
+            }
         )
         return await self._client._aget(
             f"/v1/ads/lead-forms/{form_id}/leads", params=params
@@ -361,9 +385,11 @@ class LeadGenResource:
         self, form_id: str, account_id: str, field_data: list[dict[str, Any]]
     ) -> dict[str, Any]:
         """Create a test lead (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            field_data=field_data,
+        payload = self._wire_payload(
+            {
+                "accountId": account_id,
+                "fieldData": field_data,
+            }
         )
         return await self._client._apost(
             f"/v1/ads/lead-forms/{form_id}/test-leads", data=payload
@@ -373,9 +399,11 @@ class LeadGenResource:
         self, form_id: str, account_id: str, *, lead_id: str | None = None
     ) -> dict[str, Any]:
         """Delete a test lead (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            lead_id=lead_id,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+                "leadId": lead_id,
+            }
         )
         return await self._client._adelete(
             f"/v1/ads/lead-forms/{form_id}/test-leads", params=params

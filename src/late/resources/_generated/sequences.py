@@ -21,7 +21,7 @@ class SequencesResource:
     def __init__(self, client: BaseClient) -> None:
         self._client = client
 
-    def _build_params(self, **kwargs: Any) -> dict[str, Any]:
+    def _wire_params(self, fields: dict[str, Any]) -> dict[str, Any]:
         """Build query parameters, filtering None and empty-string values.
 
         Empty strings are filtered because MCP tool wrappers pass ``""`` as the
@@ -36,20 +36,16 @@ class SequencesResource:
         """
         from enum import Enum
 
-        def to_camel(s: str) -> str:
-            parts = s.split("_")
-            return parts[0] + "".join(p.title() for p in parts[1:])
-
         result: dict[str, Any] = {}
-        for k, v in kwargs.items():
+        for k, v in fields.items():
             if isinstance(v, Enum):
                 v = v.value
             if v is None or v == "":
                 continue
-            result[to_camel(k)] = v
+            result[k] = v
         return result
 
-    def _build_payload(self, **kwargs: Any) -> dict[str, Any]:
+    def _wire_payload(self, fields: dict[str, Any]) -> dict[str, Any]:
         """Build request payload, filtering None values. Enum members are
         unwrapped to their value so JSON bodies carry e.g. "failed" rather
         than a raw Enum member (plain Enum members are not JSON-serializable).
@@ -57,20 +53,16 @@ class SequencesResource:
         from datetime import datetime
         from enum import Enum
 
-        def to_camel(s: str) -> str:
-            parts = s.split("_")
-            return parts[0] + "".join(p.title() for p in parts[1:])
-
         result: dict[str, Any] = {}
-        for k, v in kwargs.items():
+        for k, v in fields.items():
             if isinstance(v, Enum):
                 v = v.value
             if v is None:
                 continue
             if isinstance(v, datetime):
-                result[to_camel(k)] = v.isoformat()
+                result[k] = v.isoformat()
             else:
-                result[to_camel(k)] = v
+                result[k] = v
         return result
 
     def list_sequences(
@@ -82,11 +74,13 @@ class SequencesResource:
         skip: int | None = 0,
     ) -> dict[str, Any]:
         """List sequences"""
-        params = self._build_params(
-            profile_id=profile_id,
-            status=status,
-            limit=limit,
-            skip=skip,
+        params = self._wire_params(
+            {
+                "profileId": profile_id,
+                "status": status,
+                "limit": limit,
+                "skip": skip,
+            }
         )
         return self._client._get("/v1/sequences", params=params)
 
@@ -103,15 +97,17 @@ class SequencesResource:
         exit_on_unsubscribe: bool | None = True,
     ) -> dict[str, Any]:
         """Create sequence"""
-        payload = self._build_payload(
-            profile_id=profile_id,
-            account_id=account_id,
-            platform=platform,
-            name=name,
-            description=description,
-            steps=steps,
-            exit_on_reply=exit_on_reply,
-            exit_on_unsubscribe=exit_on_unsubscribe,
+        payload = self._wire_payload(
+            {
+                "profileId": profile_id,
+                "accountId": account_id,
+                "platform": platform,
+                "name": name,
+                "description": description,
+                "steps": steps,
+                "exitOnReply": exit_on_reply,
+                "exitOnUnsubscribe": exit_on_unsubscribe,
+            }
         )
         return self._client._post("/v1/sequences", data=payload)
 
@@ -130,12 +126,14 @@ class SequencesResource:
         exit_on_unsubscribe: bool | None = None,
     ) -> dict[str, Any]:
         """Update sequence"""
-        payload = self._build_payload(
-            name=name,
-            description=description,
-            steps=steps,
-            exit_on_reply=exit_on_reply,
-            exit_on_unsubscribe=exit_on_unsubscribe,
+        payload = self._wire_payload(
+            {
+                "name": name,
+                "description": description,
+                "steps": steps,
+                "exitOnReply": exit_on_reply,
+                "exitOnUnsubscribe": exit_on_unsubscribe,
+            }
         )
         return self._client._patch(f"/v1/sequences/{sequence_id}", data=payload)
 
@@ -159,9 +157,11 @@ class SequencesResource:
         channel_ids: list[str] | None = None,
     ) -> dict[str, Any]:
         """Enroll contacts in a sequence"""
-        payload = self._build_payload(
-            contact_ids=contact_ids,
-            channel_ids=channel_ids,
+        payload = self._wire_payload(
+            {
+                "contactIds": contact_ids,
+                "channelIds": channel_ids,
+            }
         )
         return self._client._post(f"/v1/sequences/{sequence_id}/enroll", data=payload)
 
@@ -178,10 +178,12 @@ class SequencesResource:
         skip: int | None = 0,
     ) -> dict[str, Any]:
         """List enrollments for a sequence"""
-        params = self._build_params(
-            status=status,
-            limit=limit,
-            skip=skip,
+        params = self._wire_params(
+            {
+                "status": status,
+                "limit": limit,
+                "skip": skip,
+            }
         )
         return self._client._get(
             f"/v1/sequences/{sequence_id}/enrollments", params=params
@@ -196,11 +198,13 @@ class SequencesResource:
         skip: int | None = 0,
     ) -> dict[str, Any]:
         """List sequences (async)"""
-        params = self._build_params(
-            profile_id=profile_id,
-            status=status,
-            limit=limit,
-            skip=skip,
+        params = self._wire_params(
+            {
+                "profileId": profile_id,
+                "status": status,
+                "limit": limit,
+                "skip": skip,
+            }
         )
         return await self._client._aget("/v1/sequences", params=params)
 
@@ -217,15 +221,17 @@ class SequencesResource:
         exit_on_unsubscribe: bool | None = True,
     ) -> dict[str, Any]:
         """Create sequence (async)"""
-        payload = self._build_payload(
-            profile_id=profile_id,
-            account_id=account_id,
-            platform=platform,
-            name=name,
-            description=description,
-            steps=steps,
-            exit_on_reply=exit_on_reply,
-            exit_on_unsubscribe=exit_on_unsubscribe,
+        payload = self._wire_payload(
+            {
+                "profileId": profile_id,
+                "accountId": account_id,
+                "platform": platform,
+                "name": name,
+                "description": description,
+                "steps": steps,
+                "exitOnReply": exit_on_reply,
+                "exitOnUnsubscribe": exit_on_unsubscribe,
+            }
         )
         return await self._client._apost("/v1/sequences", data=payload)
 
@@ -244,12 +250,14 @@ class SequencesResource:
         exit_on_unsubscribe: bool | None = None,
     ) -> dict[str, Any]:
         """Update sequence (async)"""
-        payload = self._build_payload(
-            name=name,
-            description=description,
-            steps=steps,
-            exit_on_reply=exit_on_reply,
-            exit_on_unsubscribe=exit_on_unsubscribe,
+        payload = self._wire_payload(
+            {
+                "name": name,
+                "description": description,
+                "steps": steps,
+                "exitOnReply": exit_on_reply,
+                "exitOnUnsubscribe": exit_on_unsubscribe,
+            }
         )
         return await self._client._apatch(f"/v1/sequences/{sequence_id}", data=payload)
 
@@ -273,9 +281,11 @@ class SequencesResource:
         channel_ids: list[str] | None = None,
     ) -> dict[str, Any]:
         """Enroll contacts in a sequence (async)"""
-        payload = self._build_payload(
-            contact_ids=contact_ids,
-            channel_ids=channel_ids,
+        payload = self._wire_payload(
+            {
+                "contactIds": contact_ids,
+                "channelIds": channel_ids,
+            }
         )
         return await self._client._apost(
             f"/v1/sequences/{sequence_id}/enroll", data=payload
@@ -298,10 +308,12 @@ class SequencesResource:
         skip: int | None = 0,
     ) -> dict[str, Any]:
         """List enrollments for a sequence (async)"""
-        params = self._build_params(
-            status=status,
-            limit=limit,
-            skip=skip,
+        params = self._wire_params(
+            {
+                "status": status,
+                "limit": limit,
+                "skip": skip,
+            }
         )
         return await self._client._aget(
             f"/v1/sequences/{sequence_id}/enrollments", params=params

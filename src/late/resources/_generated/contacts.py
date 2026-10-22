@@ -21,7 +21,7 @@ class ContactsResource:
     def __init__(self, client: BaseClient) -> None:
         self._client = client
 
-    def _build_params(self, **kwargs: Any) -> dict[str, Any]:
+    def _wire_params(self, fields: dict[str, Any]) -> dict[str, Any]:
         """Build query parameters, filtering None and empty-string values.
 
         Empty strings are filtered because MCP tool wrappers pass ``""`` as the
@@ -36,20 +36,16 @@ class ContactsResource:
         """
         from enum import Enum
 
-        def to_camel(s: str) -> str:
-            parts = s.split("_")
-            return parts[0] + "".join(p.title() for p in parts[1:])
-
         result: dict[str, Any] = {}
-        for k, v in kwargs.items():
+        for k, v in fields.items():
             if isinstance(v, Enum):
                 v = v.value
             if v is None or v == "":
                 continue
-            result[to_camel(k)] = v
+            result[k] = v
         return result
 
-    def _build_payload(self, **kwargs: Any) -> dict[str, Any]:
+    def _wire_payload(self, fields: dict[str, Any]) -> dict[str, Any]:
         """Build request payload, filtering None values. Enum members are
         unwrapped to their value so JSON bodies carry e.g. "failed" rather
         than a raw Enum member (plain Enum members are not JSON-serializable).
@@ -57,20 +53,16 @@ class ContactsResource:
         from datetime import datetime
         from enum import Enum
 
-        def to_camel(s: str) -> str:
-            parts = s.split("_")
-            return parts[0] + "".join(p.title() for p in parts[1:])
-
         result: dict[str, Any] = {}
-        for k, v in kwargs.items():
+        for k, v in fields.items():
             if isinstance(v, Enum):
                 v = v.value
             if v is None:
                 continue
             if isinstance(v, datetime):
-                result[to_camel(k)] = v.isoformat()
+                result[k] = v.isoformat()
             else:
-                result[to_camel(k)] = v
+                result[k] = v
         return result
 
     def list_contacts(
@@ -87,16 +79,18 @@ class ContactsResource:
         skip: int | None = 0,
     ) -> dict[str, Any]:
         """List contacts"""
-        params = self._build_params(
-            profile_id=profile_id,
-            account_id=account_id,
-            search=search,
-            tag=tag,
-            tags=tags,
-            platform=platform,
-            is_subscribed=is_subscribed,
-            limit=limit,
-            skip=skip,
+        params = self._wire_params(
+            {
+                "profileId": profile_id,
+                "accountId": account_id,
+                "search": search,
+                "tag": tag,
+                "tags": tags,
+                "platform": platform,
+                "isSubscribed": is_subscribed,
+                "limit": limit,
+                "skip": skip,
+            }
         )
         return self._client._get("/v1/contacts", params=params)
 
@@ -116,18 +110,20 @@ class ContactsResource:
         display_identifier: str | None = None,
     ) -> dict[str, Any]:
         """Create contact"""
-        payload = self._build_payload(
-            profile_id=profile_id,
-            name=name,
-            email=email,
-            company=company,
-            tags=tags,
-            is_subscribed=is_subscribed,
-            notes=notes,
-            account_id=account_id,
-            platform=platform,
-            platform_identifier=platform_identifier,
-            display_identifier=display_identifier,
+        payload = self._wire_payload(
+            {
+                "profileId": profile_id,
+                "name": name,
+                "email": email,
+                "company": company,
+                "tags": tags,
+                "isSubscribed": is_subscribed,
+                "notes": notes,
+                "accountId": account_id,
+                "platform": platform,
+                "platformIdentifier": platform_identifier,
+                "displayIdentifier": display_identifier,
+            }
         )
         return self._client._post("/v1/contacts", data=payload)
 
@@ -149,15 +145,17 @@ class ContactsResource:
         notes: str | None = None,
     ) -> dict[str, Any]:
         """Update contact"""
-        payload = self._build_payload(
-            name=name,
-            email=email,
-            company=company,
-            avatar_url=avatar_url,
-            tags=tags,
-            is_subscribed=is_subscribed,
-            is_blocked=is_blocked,
-            notes=notes,
+        payload = self._wire_payload(
+            {
+                "name": name,
+                "email": email,
+                "company": company,
+                "avatarUrl": avatar_url,
+                "tags": tags,
+                "isSubscribed": is_subscribed,
+                "isBlocked": is_blocked,
+                "notes": notes,
+            }
         )
         return self._client._patch(f"/v1/contacts/{contact_id}", data=payload)
 
@@ -178,11 +176,13 @@ class ContactsResource:
         platform: str | None = None,
     ) -> dict[str, Any]:
         """Bulk create contacts"""
-        payload = self._build_payload(
-            profile_id=profile_id,
-            account_id=account_id,
-            platform=platform,
-            contacts=contacts,
+        payload = self._wire_payload(
+            {
+                "profileId": profile_id,
+                "accountId": account_id,
+                "platform": platform,
+                "contacts": contacts,
+            }
         )
         return self._client._post("/v1/contacts/bulk", data=payload)
 
@@ -200,16 +200,18 @@ class ContactsResource:
         skip: int | None = 0,
     ) -> dict[str, Any]:
         """List contacts (async)"""
-        params = self._build_params(
-            profile_id=profile_id,
-            account_id=account_id,
-            search=search,
-            tag=tag,
-            tags=tags,
-            platform=platform,
-            is_subscribed=is_subscribed,
-            limit=limit,
-            skip=skip,
+        params = self._wire_params(
+            {
+                "profileId": profile_id,
+                "accountId": account_id,
+                "search": search,
+                "tag": tag,
+                "tags": tags,
+                "platform": platform,
+                "isSubscribed": is_subscribed,
+                "limit": limit,
+                "skip": skip,
+            }
         )
         return await self._client._aget("/v1/contacts", params=params)
 
@@ -229,18 +231,20 @@ class ContactsResource:
         display_identifier: str | None = None,
     ) -> dict[str, Any]:
         """Create contact (async)"""
-        payload = self._build_payload(
-            profile_id=profile_id,
-            name=name,
-            email=email,
-            company=company,
-            tags=tags,
-            is_subscribed=is_subscribed,
-            notes=notes,
-            account_id=account_id,
-            platform=platform,
-            platform_identifier=platform_identifier,
-            display_identifier=display_identifier,
+        payload = self._wire_payload(
+            {
+                "profileId": profile_id,
+                "name": name,
+                "email": email,
+                "company": company,
+                "tags": tags,
+                "isSubscribed": is_subscribed,
+                "notes": notes,
+                "accountId": account_id,
+                "platform": platform,
+                "platformIdentifier": platform_identifier,
+                "displayIdentifier": display_identifier,
+            }
         )
         return await self._client._apost("/v1/contacts", data=payload)
 
@@ -262,15 +266,17 @@ class ContactsResource:
         notes: str | None = None,
     ) -> dict[str, Any]:
         """Update contact (async)"""
-        payload = self._build_payload(
-            name=name,
-            email=email,
-            company=company,
-            avatar_url=avatar_url,
-            tags=tags,
-            is_subscribed=is_subscribed,
-            is_blocked=is_blocked,
-            notes=notes,
+        payload = self._wire_payload(
+            {
+                "name": name,
+                "email": email,
+                "company": company,
+                "avatarUrl": avatar_url,
+                "tags": tags,
+                "isSubscribed": is_subscribed,
+                "isBlocked": is_blocked,
+                "notes": notes,
+            }
         )
         return await self._client._apatch(f"/v1/contacts/{contact_id}", data=payload)
 
@@ -291,10 +297,12 @@ class ContactsResource:
         platform: str | None = None,
     ) -> dict[str, Any]:
         """Bulk create contacts (async)"""
-        payload = self._build_payload(
-            profile_id=profile_id,
-            account_id=account_id,
-            platform=platform,
-            contacts=contacts,
+        payload = self._wire_payload(
+            {
+                "profileId": profile_id,
+                "accountId": account_id,
+                "platform": platform,
+                "contacts": contacts,
+            }
         )
         return await self._client._apost("/v1/contacts/bulk", data=payload)

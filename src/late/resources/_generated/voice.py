@@ -23,7 +23,7 @@ class VoiceResource:
     def __init__(self, client: BaseClient) -> None:
         self._client = client
 
-    def _build_params(self, **kwargs: Any) -> dict[str, Any]:
+    def _wire_params(self, fields: dict[str, Any]) -> dict[str, Any]:
         """Build query parameters, filtering None and empty-string values.
 
         Empty strings are filtered because MCP tool wrappers pass ``""`` as the
@@ -38,20 +38,16 @@ class VoiceResource:
         """
         from enum import Enum
 
-        def to_camel(s: str) -> str:
-            parts = s.split("_")
-            return parts[0] + "".join(p.title() for p in parts[1:])
-
         result: dict[str, Any] = {}
-        for k, v in kwargs.items():
+        for k, v in fields.items():
             if isinstance(v, Enum):
                 v = v.value
             if v is None or v == "":
                 continue
-            result[to_camel(k)] = v
+            result[k] = v
         return result
 
-    def _build_payload(self, **kwargs: Any) -> dict[str, Any]:
+    def _wire_payload(self, fields: dict[str, Any]) -> dict[str, Any]:
         """Build request payload, filtering None values. Enum members are
         unwrapped to their value so JSON bodies carry e.g. "failed" rather
         than a raw Enum member (plain Enum members are not JSON-serializable).
@@ -59,20 +55,16 @@ class VoiceResource:
         from datetime import datetime
         from enum import Enum
 
-        def to_camel(s: str) -> str:
-            parts = s.split("_")
-            return parts[0] + "".join(p.title() for p in parts[1:])
-
         result: dict[str, Any] = {}
-        for k, v in kwargs.items():
+        for k, v in fields.items():
             if isinstance(v, Enum):
                 v = v.value
             if v is None:
                 continue
             if isinstance(v, datetime):
-                result[to_camel(k)] = v.isoformat()
+                result[k] = v.isoformat()
             else:
-                result[to_camel(k)] = v
+                result[k] = v
         return result
 
     def create_voice_call(
@@ -91,17 +83,19 @@ class VoiceResource:
         ring_timeout_seconds: int | None = 30,
     ) -> dict[str, Any]:
         """Place an outbound phone call"""
-        payload = self._build_payload(
-            to=to,
-            from_number=from_number,
-            forward_to=forward_to,
-            greeting=greeting,
-            record_override=record_override,
-            transcribe_override=transcribe_override,
-            transcription_language=transcription_language,
-            amd=amd,
-            voicemail_drop_message=voicemail_drop_message,
-            ring_timeout_seconds=ring_timeout_seconds,
+        payload = self._wire_payload(
+            {
+                "to": to,
+                "fromNumber": from_number,
+                "forwardTo": forward_to,
+                "greeting": greeting,
+                "recordOverride": record_override,
+                "transcribeOverride": transcribe_override,
+                "transcriptionLanguage": transcription_language,
+                "amd": amd,
+                "voicemailDropMessage": voicemail_drop_message,
+                "ringTimeoutSeconds": ring_timeout_seconds,
+            }
         )
         headers: dict[str, str] = {}
         if idempotency_key is not None:
@@ -118,12 +112,14 @@ class VoiceResource:
         limit: int | None = 50,
     ) -> dict[str, Any]:
         """List phone calls"""
-        params = self._build_params(
-            status=status,
-            direction=direction,
-            number=number,
-            before=before,
-            limit=limit,
+        params = self._wire_params(
+            {
+                "status": status,
+                "direction": direction,
+                "number": number,
+                "before": before,
+                "limit": limit,
+            }
         )
         return self._client._get("/v1/voice/calls", params=params)
 
@@ -139,15 +135,19 @@ class VoiceResource:
         self, id: str, *, as_: str | None = None
     ) -> dict[str, Any]:
         """Get a call recording"""
-        params = self._build_params(
-            as_=as_,
+        params = self._wire_params(
+            {
+                "as": as_,
+            }
         )
         return self._client._get(f"/v1/voice/calls/{id}/recording", params=params)
 
     def transfer_voice_call(self, id: str, to: str) -> dict[str, Any]:
         """Blind-transfer a live call"""
-        payload = self._build_payload(
-            to=to,
+        payload = self._wire_payload(
+            {
+                "to": to,
+            }
         )
         return self._client._post(f"/v1/voice/calls/{id}/transfer", data=payload)
 
@@ -161,12 +161,14 @@ class VoiceResource:
         transcription: bool | None = None,
     ) -> dict[str, Any]:
         """Estimate call cost"""
-        params = self._build_params(
-            to=to,
-            from_=from_,
-            minutes=minutes,
-            recording=recording,
-            transcription=transcription,
+        params = self._wire_params(
+            {
+                "to": to,
+                "from": from_,
+                "minutes": minutes,
+                "recording": recording,
+                "transcription": transcription,
+            }
         )
         return self._client._get("/v1/voice/calls/estimate", params=params)
 
@@ -184,12 +186,14 @@ class VoiceResource:
         ring_timeout_seconds: int | None = 30,
     ) -> dict[str, Any]:
         """Dial from the browser softphone"""
-        payload = self._build_payload(
-            to=to,
-            credential_id=credential_id,
-            from_number=from_number,
-            record_override=record_override,
-            ring_timeout_seconds=ring_timeout_seconds,
+        payload = self._wire_payload(
+            {
+                "to": to,
+                "credentialId": credential_id,
+                "fromNumber": from_number,
+                "recordOverride": record_override,
+                "ringTimeoutSeconds": ring_timeout_seconds,
+            }
         )
         return self._client._post("/v1/voice/calls/web/dial", data=payload)
 
@@ -213,21 +217,23 @@ class VoiceResource:
         ivr_options: list[dict[str, Any]] | None = None,
     ) -> dict[str, Any]:
         """Enable phone calling on a number"""
-        payload = self._build_payload(
-            forward_to=forward_to,
-            recording_enabled=recording_enabled,
-            transcription_enabled=transcription_enabled,
-            transcription_language=transcription_language,
-            voicemail_enabled=voicemail_enabled,
-            voicemail_greeting=voicemail_greeting,
-            business_hours_enabled=business_hours_enabled,
-            business_hours_timezone=business_hours_timezone,
-            business_hours=business_hours,
-            blocked_callers=blocked_callers,
-            forward_caller_id=forward_caller_id,
-            ivr_enabled=ivr_enabled,
-            ivr_prompt=ivr_prompt,
-            ivr_options=ivr_options,
+        payload = self._wire_payload(
+            {
+                "forwardTo": forward_to,
+                "recordingEnabled": recording_enabled,
+                "transcriptionEnabled": transcription_enabled,
+                "transcriptionLanguage": transcription_language,
+                "voicemailEnabled": voicemail_enabled,
+                "voicemailGreeting": voicemail_greeting,
+                "businessHoursEnabled": business_hours_enabled,
+                "businessHoursTimezone": business_hours_timezone,
+                "businessHours": business_hours,
+                "blockedCallers": blocked_callers,
+                "forwardCallerId": forward_caller_id,
+                "ivrEnabled": ivr_enabled,
+                "ivrPrompt": ivr_prompt,
+                "ivrOptions": ivr_options,
+            }
         )
         return self._client._post(f"/v1/phone-numbers/{id}/voice", data=payload)
 
@@ -244,11 +250,13 @@ class VoiceResource:
         transport: str | None = None,
     ) -> dict[str, Any]:
         """Create a SIP trunk"""
-        payload = self._build_payload(
-            label=label,
-            sip_host=sip_host,
-            sip_port=sip_port,
-            transport=transport,
+        payload = self._wire_payload(
+            {
+                "label": label,
+                "sipHost": sip_host,
+                "sipPort": sip_port,
+                "transport": transport,
+            }
         )
         return self._client._post("/v1/phone-numbers/sip-trunks", data=payload)
 
@@ -272,8 +280,10 @@ class VoiceResource:
 
     def attach_number_to_sip_trunk(self, id: str, trunk_id: str) -> dict[str, Any]:
         """Attach a number to a SIP trunk"""
-        payload = self._build_payload(
-            trunk_id=trunk_id,
+        payload = self._wire_payload(
+            {
+                "trunkId": trunk_id,
+            }
         )
         return self._client._post(f"/v1/phone-numbers/{id}/sip-trunk", data=payload)
 
@@ -297,17 +307,19 @@ class VoiceResource:
         ring_timeout_seconds: int | None = 30,
     ) -> dict[str, Any]:
         """Place an outbound phone call (async)"""
-        payload = self._build_payload(
-            to=to,
-            from_number=from_number,
-            forward_to=forward_to,
-            greeting=greeting,
-            record_override=record_override,
-            transcribe_override=transcribe_override,
-            transcription_language=transcription_language,
-            amd=amd,
-            voicemail_drop_message=voicemail_drop_message,
-            ring_timeout_seconds=ring_timeout_seconds,
+        payload = self._wire_payload(
+            {
+                "to": to,
+                "fromNumber": from_number,
+                "forwardTo": forward_to,
+                "greeting": greeting,
+                "recordOverride": record_override,
+                "transcribeOverride": transcribe_override,
+                "transcriptionLanguage": transcription_language,
+                "amd": amd,
+                "voicemailDropMessage": voicemail_drop_message,
+                "ringTimeoutSeconds": ring_timeout_seconds,
+            }
         )
         headers: dict[str, str] = {}
         if idempotency_key is not None:
@@ -326,12 +338,14 @@ class VoiceResource:
         limit: int | None = 50,
     ) -> dict[str, Any]:
         """List phone calls (async)"""
-        params = self._build_params(
-            status=status,
-            direction=direction,
-            number=number,
-            before=before,
-            limit=limit,
+        params = self._wire_params(
+            {
+                "status": status,
+                "direction": direction,
+                "number": number,
+                "before": before,
+                "limit": limit,
+            }
         )
         return await self._client._aget("/v1/voice/calls", params=params)
 
@@ -347,8 +361,10 @@ class VoiceResource:
         self, id: str, *, as_: str | None = None
     ) -> dict[str, Any]:
         """Get a call recording (async)"""
-        params = self._build_params(
-            as_=as_,
+        params = self._wire_params(
+            {
+                "as": as_,
+            }
         )
         return await self._client._aget(
             f"/v1/voice/calls/{id}/recording", params=params
@@ -356,8 +372,10 @@ class VoiceResource:
 
     async def atransfer_voice_call(self, id: str, to: str) -> dict[str, Any]:
         """Blind-transfer a live call (async)"""
-        payload = self._build_payload(
-            to=to,
+        payload = self._wire_payload(
+            {
+                "to": to,
+            }
         )
         return await self._client._apost(f"/v1/voice/calls/{id}/transfer", data=payload)
 
@@ -371,12 +389,14 @@ class VoiceResource:
         transcription: bool | None = None,
     ) -> dict[str, Any]:
         """Estimate call cost (async)"""
-        params = self._build_params(
-            to=to,
-            from_=from_,
-            minutes=minutes,
-            recording=recording,
-            transcription=transcription,
+        params = self._wire_params(
+            {
+                "to": to,
+                "from": from_,
+                "minutes": minutes,
+                "recording": recording,
+                "transcription": transcription,
+            }
         )
         return await self._client._aget("/v1/voice/calls/estimate", params=params)
 
@@ -394,12 +414,14 @@ class VoiceResource:
         ring_timeout_seconds: int | None = 30,
     ) -> dict[str, Any]:
         """Dial from the browser softphone (async)"""
-        payload = self._build_payload(
-            to=to,
-            credential_id=credential_id,
-            from_number=from_number,
-            record_override=record_override,
-            ring_timeout_seconds=ring_timeout_seconds,
+        payload = self._wire_payload(
+            {
+                "to": to,
+                "credentialId": credential_id,
+                "fromNumber": from_number,
+                "recordOverride": record_override,
+                "ringTimeoutSeconds": ring_timeout_seconds,
+            }
         )
         return await self._client._apost("/v1/voice/calls/web/dial", data=payload)
 
@@ -423,21 +445,23 @@ class VoiceResource:
         ivr_options: list[dict[str, Any]] | None = None,
     ) -> dict[str, Any]:
         """Enable phone calling on a number (async)"""
-        payload = self._build_payload(
-            forward_to=forward_to,
-            recording_enabled=recording_enabled,
-            transcription_enabled=transcription_enabled,
-            transcription_language=transcription_language,
-            voicemail_enabled=voicemail_enabled,
-            voicemail_greeting=voicemail_greeting,
-            business_hours_enabled=business_hours_enabled,
-            business_hours_timezone=business_hours_timezone,
-            business_hours=business_hours,
-            blocked_callers=blocked_callers,
-            forward_caller_id=forward_caller_id,
-            ivr_enabled=ivr_enabled,
-            ivr_prompt=ivr_prompt,
-            ivr_options=ivr_options,
+        payload = self._wire_payload(
+            {
+                "forwardTo": forward_to,
+                "recordingEnabled": recording_enabled,
+                "transcriptionEnabled": transcription_enabled,
+                "transcriptionLanguage": transcription_language,
+                "voicemailEnabled": voicemail_enabled,
+                "voicemailGreeting": voicemail_greeting,
+                "businessHoursEnabled": business_hours_enabled,
+                "businessHoursTimezone": business_hours_timezone,
+                "businessHours": business_hours,
+                "blockedCallers": blocked_callers,
+                "forwardCallerId": forward_caller_id,
+                "ivrEnabled": ivr_enabled,
+                "ivrPrompt": ivr_prompt,
+                "ivrOptions": ivr_options,
+            }
         )
         return await self._client._apost(f"/v1/phone-numbers/{id}/voice", data=payload)
 
@@ -454,11 +478,13 @@ class VoiceResource:
         transport: str | None = None,
     ) -> dict[str, Any]:
         """Create a SIP trunk (async)"""
-        payload = self._build_payload(
-            label=label,
-            sip_host=sip_host,
-            sip_port=sip_port,
-            transport=transport,
+        payload = self._wire_payload(
+            {
+                "label": label,
+                "sipHost": sip_host,
+                "sipPort": sip_port,
+                "transport": transport,
+            }
         )
         return await self._client._apost("/v1/phone-numbers/sip-trunks", data=payload)
 
@@ -484,8 +510,10 @@ class VoiceResource:
         self, id: str, trunk_id: str
     ) -> dict[str, Any]:
         """Attach a number to a SIP trunk (async)"""
-        payload = self._build_payload(
-            trunk_id=trunk_id,
+        payload = self._wire_payload(
+            {
+                "trunkId": trunk_id,
+            }
         )
         return await self._client._apost(
             f"/v1/phone-numbers/{id}/sip-trunk", data=payload

@@ -83,8 +83,7 @@ def camel_to_snake(name: str) -> str:
     name = re.sub(r"([a-z\d])([A-Z])", r"\1_\2", name)
     result = name.lower()
     # Reserved keywords (e.g. `from`) can't be Python identifiers; suffix with
-    # `_` per PEP 8. snake_to_camel / _build_params' to_camel strip the trailing
-    # underscore, so the wire name (`from`) round-trips unchanged.
+    # `_` per PEP 8. The wire name (`from`) is emitted from original_name.
     if keyword.iskeyword(result):
         result += "_"
     return result
@@ -187,8 +186,7 @@ def extract_parameters(
     # Path/query params and body props share one kwarg list; two spec names that
     # snake_case to the same kwarg would emit a "duplicate argument" SyntaxError
     # in the generated file, discovered only at pytest collection. Fail here with
-    # the operation and field names instead (fix is spec-side: rename one field;
-    # a generator-side rename would corrupt the wire key via _build_payload).
+    # the operation and field names instead (fix is spec-side: rename one field).
     seen: dict[str, dict[str, Any]] = {}
     for param in params:
         clash = seen.get(param["name"])
@@ -297,21 +295,20 @@ def generate_method_body(
 
     # Build params dict if needed
     if use_query_params or use_query_on_post:
-        lines.append("        params = self._build_params(")
+        lines.append("        params = self._wire_params({")
         for p in query_params:
-            lines.append(f"            {p['name']}={p['name']},")
-        lines.append("        )")
+            lines.append(f'            "{p["original_name"]}": {p["name"]},')
+        lines.append("        })")
 
     # Build payload dict if needed
     if use_body_params:
-        lines.append("        payload = self._build_payload(")
+        lines.append("        payload = self._wire_payload({")
         for p in body_params:
-            lines.append(f"            {p['name']}={p['name']},")
-        lines.append("        )")
+            lines.append(f'            "{p["original_name"]}": {p["name"]},')
+        lines.append("        })")
 
     # Build headers dict if needed. Keyed on original_name, never the snake_case
-    # param name: the wire name is `x-request-id`, and _build_params would have
-    # camelCased it to `xRequestId`.
+    # param name: the wire name is `x-request-id`.
     if use_headers:
         if all(p["required"] for p in header_params):
             entries = ", ".join(
@@ -420,7 +417,7 @@ def generate_resource_class(
         "    def __init__(self, client: BaseClient) -> None:",
         "        self._client = client",
         "",
-        "    def _build_params(self, **kwargs: Any) -> dict[str, Any]:",
+        "    def _wire_params(self, fields: dict[str, Any]) -> dict[str, Any]:",
         '        """Build query parameters, filtering None and empty-string values.',
         "",
         "        Empty strings are filtered because MCP tool wrappers pass ``\"\"`` as the",
@@ -434,38 +431,32 @@ def generate_resource_class(
         "        ``status=PostStatus.FAILED`` instead of ``status=failed``.",
         '        """',
         "        from enum import Enum",
-        "        def to_camel(s: str) -> str:",
-        '            parts = s.split("_")',
-        '            return parts[0] + "".join(p.title() for p in parts[1:])',
         "        result: dict[str, Any] = {}",
-        "        for k, v in kwargs.items():",
+        "        for k, v in fields.items():",
         "            if isinstance(v, Enum):",
         "                v = v.value",
         '            if v is None or v == "":',
         "                continue",
-        "            result[to_camel(k)] = v",
+        "            result[k] = v",
         "        return result",
         "",
-        "    def _build_payload(self, **kwargs: Any) -> dict[str, Any]:",
+        "    def _wire_payload(self, fields: dict[str, Any]) -> dict[str, Any]:",
         '        """Build request payload, filtering None values. Enum members are',
         '        unwrapped to their value so JSON bodies carry e.g. "failed" rather',
         "        than a raw Enum member (plain Enum members are not JSON-serializable).",
         '        """',
         "        from datetime import datetime",
         "        from enum import Enum",
-        "        def to_camel(s: str) -> str:",
-        '            parts = s.split("_")',
-        '            return parts[0] + "".join(p.title() for p in parts[1:])',
         "        result: dict[str, Any] = {}",
-        "        for k, v in kwargs.items():",
+        "        for k, v in fields.items():",
         "            if isinstance(v, Enum):",
         "                v = v.value",
         "            if v is None:",
         "                continue",
         "            if isinstance(v, datetime):",
-        "                result[to_camel(k)] = v.isoformat()",
+        "                result[k] = v.isoformat()",
         "            else:",
-        "                result[to_camel(k)] = v",
+        "                result[k] = v",
         "        return result",
     ])
 

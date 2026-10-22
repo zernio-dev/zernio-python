@@ -21,7 +21,7 @@ class ReviewsResource:
     def __init__(self, client: BaseClient) -> None:
         self._client = client
 
-    def _build_params(self, **kwargs: Any) -> dict[str, Any]:
+    def _wire_params(self, fields: dict[str, Any]) -> dict[str, Any]:
         """Build query parameters, filtering None and empty-string values.
 
         Empty strings are filtered because MCP tool wrappers pass ``""`` as the
@@ -36,20 +36,16 @@ class ReviewsResource:
         """
         from enum import Enum
 
-        def to_camel(s: str) -> str:
-            parts = s.split("_")
-            return parts[0] + "".join(p.title() for p in parts[1:])
-
         result: dict[str, Any] = {}
-        for k, v in kwargs.items():
+        for k, v in fields.items():
             if isinstance(v, Enum):
                 v = v.value
             if v is None or v == "":
                 continue
-            result[to_camel(k)] = v
+            result[k] = v
         return result
 
-    def _build_payload(self, **kwargs: Any) -> dict[str, Any]:
+    def _wire_payload(self, fields: dict[str, Any]) -> dict[str, Any]:
         """Build request payload, filtering None values. Enum members are
         unwrapped to their value so JSON bodies carry e.g. "failed" rather
         than a raw Enum member (plain Enum members are not JSON-serializable).
@@ -57,20 +53,16 @@ class ReviewsResource:
         from datetime import datetime
         from enum import Enum
 
-        def to_camel(s: str) -> str:
-            parts = s.split("_")
-            return parts[0] + "".join(p.title() for p in parts[1:])
-
         result: dict[str, Any] = {}
-        for k, v in kwargs.items():
+        for k, v in fields.items():
             if isinstance(v, Enum):
                 v = v.value
             if v is None:
                 continue
             if isinstance(v, datetime):
-                result[to_camel(k)] = v.isoformat()
+                result[k] = v.isoformat()
             else:
-                result[to_camel(k)] = v
+                result[k] = v
         return result
 
     def list_inbox_reviews(
@@ -88,17 +80,19 @@ class ReviewsResource:
         account_id: str | None = None,
     ) -> dict[str, Any]:
         """List reviews"""
-        params = self._build_params(
-            profile_id=profile_id,
-            platform=platform,
-            min_rating=min_rating,
-            max_rating=max_rating,
-            has_reply=has_reply,
-            sort_by=sort_by,
-            sort_order=sort_order,
-            limit=limit,
-            cursor=cursor,
-            account_id=account_id,
+        params = self._wire_params(
+            {
+                "profileId": profile_id,
+                "platform": platform,
+                "minRating": min_rating,
+                "maxRating": max_rating,
+                "hasReply": has_reply,
+                "sortBy": sort_by,
+                "sortOrder": sort_order,
+                "limit": limit,
+                "cursor": cursor,
+                "accountId": account_id,
+            }
         )
         return self._client._get("/v1/inbox/reviews", params=params)
 
@@ -111,9 +105,11 @@ class ReviewsResource:
         idempotency_key: str | None = None,
     ) -> dict[str, Any]:
         """Reply to review"""
-        payload = self._build_payload(
-            account_id=account_id,
-            message=message,
+        payload = self._wire_payload(
+            {
+                "accountId": account_id,
+                "message": message,
+            }
         )
         headers: dict[str, str] = {}
         if idempotency_key is not None:
@@ -126,8 +122,10 @@ class ReviewsResource:
         self, review_id: str, account_id: str
     ) -> dict[str, Any]:
         """Delete review reply"""
-        payload = self._build_payload(
-            account_id=account_id,
+        payload = self._wire_payload(
+            {
+                "accountId": account_id,
+            }
         )
         return self._client._delete(
             f"/v1/inbox/reviews/{review_id}/reply", data=payload
@@ -148,17 +146,19 @@ class ReviewsResource:
         account_id: str | None = None,
     ) -> dict[str, Any]:
         """List reviews (async)"""
-        params = self._build_params(
-            profile_id=profile_id,
-            platform=platform,
-            min_rating=min_rating,
-            max_rating=max_rating,
-            has_reply=has_reply,
-            sort_by=sort_by,
-            sort_order=sort_order,
-            limit=limit,
-            cursor=cursor,
-            account_id=account_id,
+        params = self._wire_params(
+            {
+                "profileId": profile_id,
+                "platform": platform,
+                "minRating": min_rating,
+                "maxRating": max_rating,
+                "hasReply": has_reply,
+                "sortBy": sort_by,
+                "sortOrder": sort_order,
+                "limit": limit,
+                "cursor": cursor,
+                "accountId": account_id,
+            }
         )
         return await self._client._aget("/v1/inbox/reviews", params=params)
 
@@ -171,9 +171,11 @@ class ReviewsResource:
         idempotency_key: str | None = None,
     ) -> dict[str, Any]:
         """Reply to review (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            message=message,
+        payload = self._wire_payload(
+            {
+                "accountId": account_id,
+                "message": message,
+            }
         )
         headers: dict[str, str] = {}
         if idempotency_key is not None:
@@ -186,8 +188,10 @@ class ReviewsResource:
         self, review_id: str, account_id: str
     ) -> dict[str, Any]:
         """Delete review reply (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
+        payload = self._wire_payload(
+            {
+                "accountId": account_id,
+            }
         )
         return await self._client._adelete(
             f"/v1/inbox/reviews/{review_id}/reply", data=payload

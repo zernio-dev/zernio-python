@@ -21,7 +21,7 @@ class BusinessAgentResource:
     def __init__(self, client: BaseClient) -> None:
         self._client = client
 
-    def _build_params(self, **kwargs: Any) -> dict[str, Any]:
+    def _wire_params(self, fields: dict[str, Any]) -> dict[str, Any]:
         """Build query parameters, filtering None and empty-string values.
 
         Empty strings are filtered because MCP tool wrappers pass ``""`` as the
@@ -36,20 +36,16 @@ class BusinessAgentResource:
         """
         from enum import Enum
 
-        def to_camel(s: str) -> str:
-            parts = s.split("_")
-            return parts[0] + "".join(p.title() for p in parts[1:])
-
         result: dict[str, Any] = {}
-        for k, v in kwargs.items():
+        for k, v in fields.items():
             if isinstance(v, Enum):
                 v = v.value
             if v is None or v == "":
                 continue
-            result[to_camel(k)] = v
+            result[k] = v
         return result
 
-    def _build_payload(self, **kwargs: Any) -> dict[str, Any]:
+    def _wire_payload(self, fields: dict[str, Any]) -> dict[str, Any]:
         """Build request payload, filtering None values. Enum members are
         unwrapped to their value so JSON bodies carry e.g. "failed" rather
         than a raw Enum member (plain Enum members are not JSON-serializable).
@@ -57,20 +53,16 @@ class BusinessAgentResource:
         from datetime import datetime
         from enum import Enum
 
-        def to_camel(s: str) -> str:
-            parts = s.split("_")
-            return parts[0] + "".join(p.title() for p in parts[1:])
-
         result: dict[str, Any] = {}
-        for k, v in kwargs.items():
+        for k, v in fields.items():
             if isinstance(v, Enum):
                 v = v.value
             if v is None:
                 continue
             if isinstance(v, datetime):
-                result[to_camel(k)] = v.isoformat()
+                result[k] = v.isoformat()
             else:
-                result[to_camel(k)] = v
+                result[k] = v
         return result
 
     def get_business_agent_status(self, account_id: str) -> dict[str, Any]:
@@ -85,8 +77,10 @@ class BusinessAgentResource:
         self, account_id: str, *, agent_id: str | None = None
     ) -> dict[str, Any]:
         """List agent settings"""
-        params = self._build_params(
-            agent_id=agent_id,
+        params = self._wire_params(
+            {
+                "agentId": agent_id,
+            }
         )
         return self._client._get(
             f"/v1/accounts/{account_id}/business-agent/settings", params=params
@@ -104,15 +98,19 @@ class BusinessAgentResource:
         never_say_phrases: list[str] | None = None,
     ) -> dict[str, Any]:
         """Update agent settings"""
-        params = self._build_params(
-            agent_id=agent_id,
+        params = self._wire_params(
+            {
+                "agentId": agent_id,
+            }
         )
-        payload = self._build_payload(
-            rollout=rollout,
-            handoff=handoff,
-            followup=followup,
-            ai_audience=ai_audience,
-            never_say_phrases=never_say_phrases,
+        payload = self._wire_payload(
+            {
+                "rollout": rollout,
+                "handoff": handoff,
+                "followup": followup,
+                "ai_audience": ai_audience,
+                "never_say_phrases": never_say_phrases,
+            }
         )
         return self._client._patch(
             f"/v1/accounts/{account_id}/business-agent/settings",
@@ -128,8 +126,10 @@ class BusinessAgentResource:
         self, account_id: str, consumer_phone_number: str
     ) -> dict[str, Any]:
         """Allowlist a consumer"""
-        payload = self._build_payload(
-            consumer_phone_number=consumer_phone_number,
+        payload = self._wire_payload(
+            {
+                "consumer_phone_number": consumer_phone_number,
+            }
         )
         return self._client._post(
             f"/v1/accounts/{account_id}/business-agent/allowlist", data=payload
@@ -163,13 +163,15 @@ class BusinessAgentResource:
         contact_info: Any | None = None,
     ) -> dict[str, Any]:
         """Replace business information"""
-        payload = self._build_payload(
-            payment_method=payment_method,
-            return_policy=return_policy,
-            purchase_info=purchase_info,
-            delivery_and_shipping=delivery_and_shipping,
-            business_description=business_description,
-            contact_info=contact_info,
+        payload = self._wire_payload(
+            {
+                "payment_method": payment_method,
+                "return_policy": return_policy,
+                "purchase_info": purchase_info,
+                "delivery_and_shipping": delivery_and_shipping,
+                "business_description": business_description,
+                "contact_info": contact_info,
+            }
         )
         return self._client._put(
             f"/v1/accounts/{account_id}/business-agent/business-information",
@@ -197,10 +199,12 @@ class BusinessAgentResource:
         metadata: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Create a FAQ"""
-        payload = self._build_payload(
-            question=question,
-            answer=answer,
-            metadata=metadata,
+        payload = self._wire_payload(
+            {
+                "question": question,
+                "answer": answer,
+                "metadata": metadata,
+            }
         )
         return self._client._post(
             f"/v1/accounts/{account_id}/business-agent/faqs", data=payload
@@ -222,10 +226,12 @@ class BusinessAgentResource:
         metadata: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Update a FAQ"""
-        payload = self._build_payload(
-            question=question,
-            answer=answer,
-            metadata=metadata,
+        payload = self._wire_payload(
+            {
+                "question": question,
+                "answer": answer,
+                "metadata": metadata,
+            }
         )
         return self._client._put(
             f"/v1/accounts/{account_id}/business-agent/faqs/{faq_id}", data=payload
@@ -253,13 +259,15 @@ class BusinessAgentResource:
         single_urls: list[str] | None = None,
     ) -> dict[str, Any]:
         """Add a website to crawl"""
-        payload = self._build_payload(
-            url=url,
-            included_sub_domains=included_sub_domains,
-            included_url_patterns=included_url_patterns,
-            excluded_sub_domains=excluded_sub_domains,
-            excluded_url_patterns=excluded_url_patterns,
-            single_urls=single_urls,
+        payload = self._wire_payload(
+            {
+                "url": url,
+                "included_sub_domains": included_sub_domains,
+                "included_url_patterns": included_url_patterns,
+                "excluded_sub_domains": excluded_sub_domains,
+                "excluded_url_patterns": excluded_url_patterns,
+                "single_urls": single_urls,
+            }
         )
         return self._client._post(
             f"/v1/accounts/{account_id}/business-agent/websites", data=payload
@@ -286,13 +294,15 @@ class BusinessAgentResource:
         single_urls: list[str] | None = None,
     ) -> dict[str, Any]:
         """Update a crawled website"""
-        payload = self._build_payload(
-            url=url,
-            included_sub_domains=included_sub_domains,
-            included_url_patterns=included_url_patterns,
-            excluded_sub_domains=excluded_sub_domains,
-            excluded_url_patterns=excluded_url_patterns,
-            single_urls=single_urls,
+        payload = self._wire_payload(
+            {
+                "url": url,
+                "included_sub_domains": included_sub_domains,
+                "included_url_patterns": included_url_patterns,
+                "excluded_sub_domains": excluded_sub_domains,
+                "excluded_url_patterns": excluded_url_patterns,
+                "single_urls": single_urls,
+            }
         )
         return self._client._put(
             f"/v1/accounts/{account_id}/business-agent/websites/{website_id}",
@@ -315,9 +325,11 @@ class BusinessAgentResource:
         self, account_id: str, url: str, *, file_name: str | None = None
     ) -> dict[str, Any]:
         """Upload a knowledge file"""
-        payload = self._build_payload(
-            url=url,
-            file_name=file_name,
+        payload = self._wire_payload(
+            {
+                "url": url,
+                "fileName": file_name,
+            }
         )
         return self._client._post(
             f"/v1/accounts/{account_id}/business-agent/files", data=payload
@@ -350,10 +362,12 @@ class BusinessAgentResource:
         description: str | None = None,
     ) -> dict[str, Any]:
         """Create a skill"""
-        payload = self._build_payload(
-            title=title,
-            description=description,
-            skill=skill,
+        payload = self._wire_payload(
+            {
+                "title": title,
+                "description": description,
+                "skill": skill,
+            }
         )
         return self._client._post(
             f"/v1/accounts/{account_id}/business-agent/skills", data=payload
@@ -377,10 +391,12 @@ class BusinessAgentResource:
         description: str | None = None,
     ) -> dict[str, Any]:
         """Update a skill"""
-        payload = self._build_payload(
-            title=title,
-            description=description,
-            skill=skill,
+        payload = self._wire_payload(
+            {
+                "title": title,
+                "description": description,
+                "skill": skill,
+            }
         )
         return self._client._put(
             f"/v1/accounts/{account_id}/business-agent/skills/{skill_id}", data=payload
@@ -403,10 +419,12 @@ class BusinessAgentResource:
         limit: int | None = None,
     ) -> dict[str, Any]:
         """List UI skills"""
-        params = self._build_params(
-            before=before,
-            after=after,
-            limit=limit,
+        params = self._wire_params(
+            {
+                "before": before,
+                "after": after,
+                "limit": limit,
+            }
         )
         return self._client._get(
             f"/v1/accounts/{account_id}/business-agent/ui-skills", params=params
@@ -423,12 +441,14 @@ class BusinessAgentResource:
         flow_id: int | None = None,
     ) -> dict[str, Any]:
         """Create a UI skill"""
-        payload = self._build_payload(
-            title=title,
-            component_type=component_type,
-            status=status,
-            instruction=instruction,
-            flow_id=flow_id,
+        payload = self._wire_payload(
+            {
+                "title": title,
+                "component_type": component_type,
+                "status": status,
+                "instruction": instruction,
+                "flow_id": flow_id,
+            }
         )
         return self._client._post(
             f"/v1/accounts/{account_id}/business-agent/ui-skills", data=payload
@@ -454,12 +474,14 @@ class BusinessAgentResource:
         flow_id: int | None = None,
     ) -> dict[str, Any]:
         """Update a UI skill"""
-        payload = self._build_payload(
-            title=title,
-            component_type=component_type,
-            status=status,
-            instruction=instruction,
-            flow_id=flow_id,
+        payload = self._wire_payload(
+            {
+                "title": title,
+                "component_type": component_type,
+                "status": status,
+                "instruction": instruction,
+                "flow_id": flow_id,
+            }
         )
         return self._client._put(
             f"/v1/accounts/{account_id}/business-agent/ui-skills/{ui_skill_id}",
@@ -492,15 +514,17 @@ class BusinessAgentResource:
         requires_certificate: bool | None = None,
     ) -> dict[str, Any]:
         """Create a connector"""
-        payload = self._build_payload(
-            name=name,
-            description=description,
-            base_url=base_url,
-            connector_protocol=connector_protocol,
-            auth_type=auth_type,
-            auth_config=auth_config,
-            user_auth_injection_config=user_auth_injection_config,
-            requires_certificate=requires_certificate,
+        payload = self._wire_payload(
+            {
+                "name": name,
+                "description": description,
+                "base_url": base_url,
+                "connector_protocol": connector_protocol,
+                "auth_type": auth_type,
+                "auth_config": auth_config,
+                "user_auth_injection_config": user_auth_injection_config,
+                "requires_certificate": requires_certificate,
+            }
         )
         return self._client._post(
             f"/v1/accounts/{account_id}/business-agent/connectors", data=payload
@@ -529,15 +553,17 @@ class BusinessAgentResource:
         requires_certificate: bool | None = None,
     ) -> dict[str, Any]:
         """Update a connector"""
-        payload = self._build_payload(
-            name=name,
-            description=description,
-            base_url=base_url,
-            connector_protocol=connector_protocol,
-            auth_type=auth_type,
-            auth_config=auth_config,
-            user_auth_injection_config=user_auth_injection_config,
-            requires_certificate=requires_certificate,
+        payload = self._wire_payload(
+            {
+                "name": name,
+                "description": description,
+                "base_url": base_url,
+                "connector_protocol": connector_protocol,
+                "auth_type": auth_type,
+                "auth_config": auth_config,
+                "user_auth_injection_config": user_auth_injection_config,
+                "requires_certificate": requires_certificate,
+            }
         )
         return self._client._put(
             f"/v1/accounts/{account_id}/business-agent/connectors/{connector_id}",
@@ -583,14 +609,16 @@ class BusinessAgentResource:
         top_n: int | None = None,
     ) -> dict[str, Any]:
         """Get connector failure logs"""
-        params = self._build_params(
-            start_time=start_time,
-            end_time=end_time,
-            limit=limit,
-            tool_id=tool_id,
-            include_stats=include_stats,
-            summary_only=summary_only,
-            top_n=top_n,
+        params = self._wire_params(
+            {
+                "startTime": start_time,
+                "endTime": end_time,
+                "limit": limit,
+                "toolId": tool_id,
+                "includeStats": include_stats,
+                "summaryOnly": summary_only,
+                "topN": top_n,
+            }
         )
         return self._client._get(
             f"/v1/accounts/{account_id}/business-agent/connectors/{connector_id}/logs",
@@ -618,13 +646,15 @@ class BusinessAgentResource:
         transformation_spec: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Create a connector tool"""
-        payload = self._build_payload(
-            name=name,
-            description=description,
-            request_definition=request_definition,
-            user_auth_required=user_auth_required,
-            user_auth_action_config=user_auth_action_config,
-            transformation_spec=transformation_spec,
+        payload = self._wire_payload(
+            {
+                "name": name,
+                "description": description,
+                "request_definition": request_definition,
+                "user_auth_required": user_auth_required,
+                "user_auth_action_config": user_auth_action_config,
+                "transformation_spec": transformation_spec,
+            }
         )
         return self._client._post(
             f"/v1/accounts/{account_id}/business-agent/connectors/{connector_id}/tools",
@@ -653,13 +683,15 @@ class BusinessAgentResource:
         transformation_spec: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Update a connector tool"""
-        payload = self._build_payload(
-            name=name,
-            description=description,
-            request_definition=request_definition,
-            user_auth_required=user_auth_required,
-            user_auth_action_config=user_auth_action_config,
-            transformation_spec=transformation_spec,
+        payload = self._wire_payload(
+            {
+                "name": name,
+                "description": description,
+                "request_definition": request_definition,
+                "user_auth_required": user_auth_required,
+                "user_auth_action_config": user_auth_action_config,
+                "transformation_spec": transformation_spec,
+            }
         )
         return self._client._put(
             f"/v1/accounts/{account_id}/business-agent/connectors/{connector_id}/tools/{tool_id}",
@@ -678,8 +710,10 @@ class BusinessAgentResource:
         self, account_id: str, connector_id: str, tool_id: str, input: str
     ) -> dict[str, Any]:
         """Run a connector tool once"""
-        payload = self._build_payload(
-            input=input,
+        payload = self._wire_payload(
+            {
+                "input": input,
+            }
         )
         return self._client._post(
             f"/v1/accounts/{account_id}/business-agent/connectors/{connector_id}/tools/{tool_id}/run",
@@ -694,8 +728,10 @@ class BusinessAgentResource:
         self, account_id: str, budgets: list[Any]
     ) -> dict[str, Any]:
         """Replace usage budgets"""
-        payload = self._build_payload(
-            budgets=budgets,
+        payload = self._wire_payload(
+            {
+                "budgets": budgets,
+            }
         )
         return self._client._put(
             f"/v1/accounts/{account_id}/business-agent/budget", data=payload
@@ -705,9 +741,11 @@ class BusinessAgentResource:
         self, account_id: str, message: str, *, conversation_id: str | None = None
     ) -> dict[str, Any]:
         """Send a test message"""
-        payload = self._build_payload(
-            message=message,
-            conversation_id=conversation_id,
+        payload = self._wire_payload(
+            {
+                "message": message,
+                "conversationId": conversation_id,
+            }
         )
         return self._client._post(
             f"/v1/accounts/{account_id}/business-agent/test-messages", data=payload
@@ -717,11 +755,13 @@ class BusinessAgentResource:
         self, account_id: str, to: str, type: str, description: str, payload: str
     ) -> dict[str, Any]:
         """Send a business event"""
-        payload = self._build_payload(
-            to=to,
-            type=type,
-            description=description,
-            payload=payload,
+        payload = self._wire_payload(
+            {
+                "to": to,
+                "type": type,
+                "description": description,
+                "payload": payload,
+            }
         )
         return self._client._post(
             f"/v1/accounts/{account_id}/business-agent/events", data=payload
@@ -744,10 +784,12 @@ class BusinessAgentResource:
         eval_ids: str | None = None,
     ) -> dict[str, Any]:
         """Read evaluation data"""
-        params = self._build_params(
-            job_id=job_id,
-            summary_ids=summary_ids,
-            eval_ids=eval_ids,
+        params = self._wire_params(
+            {
+                "jobId": job_id,
+                "summaryIds": summary_ids,
+                "evalIds": eval_ids,
+            }
         )
         return self._client._get(
             f"/v1/accounts/{account_id}/business-agent/evals", params=params
@@ -757,8 +799,10 @@ class BusinessAgentResource:
         self, account_id: str, eval_case_ids: list[str]
     ) -> dict[str, Any]:
         """Start an evaluation run"""
-        payload = self._build_payload(
-            eval_case_ids=eval_case_ids,
+        payload = self._wire_payload(
+            {
+                "evalCaseIds": eval_case_ids,
+            }
         )
         return self._client._post(
             f"/v1/accounts/{account_id}/business-agent/evals", data=payload
@@ -778,8 +822,10 @@ class BusinessAgentResource:
         self, account_id: str, *, agent_id: str | None = None
     ) -> dict[str, Any]:
         """List agent settings (async)"""
-        params = self._build_params(
-            agent_id=agent_id,
+        params = self._wire_params(
+            {
+                "agentId": agent_id,
+            }
         )
         return await self._client._aget(
             f"/v1/accounts/{account_id}/business-agent/settings", params=params
@@ -797,15 +843,19 @@ class BusinessAgentResource:
         never_say_phrases: list[str] | None = None,
     ) -> dict[str, Any]:
         """Update agent settings (async)"""
-        params = self._build_params(
-            agent_id=agent_id,
+        params = self._wire_params(
+            {
+                "agentId": agent_id,
+            }
         )
-        payload = self._build_payload(
-            rollout=rollout,
-            handoff=handoff,
-            followup=followup,
-            ai_audience=ai_audience,
-            never_say_phrases=never_say_phrases,
+        payload = self._wire_payload(
+            {
+                "rollout": rollout,
+                "handoff": handoff,
+                "followup": followup,
+                "ai_audience": ai_audience,
+                "never_say_phrases": never_say_phrases,
+            }
         )
         return await self._client._apatch(
             f"/v1/accounts/{account_id}/business-agent/settings",
@@ -823,8 +873,10 @@ class BusinessAgentResource:
         self, account_id: str, consumer_phone_number: str
     ) -> dict[str, Any]:
         """Allowlist a consumer (async)"""
-        payload = self._build_payload(
-            consumer_phone_number=consumer_phone_number,
+        payload = self._wire_payload(
+            {
+                "consumer_phone_number": consumer_phone_number,
+            }
         )
         return await self._client._apost(
             f"/v1/accounts/{account_id}/business-agent/allowlist", data=payload
@@ -858,13 +910,15 @@ class BusinessAgentResource:
         contact_info: Any | None = None,
     ) -> dict[str, Any]:
         """Replace business information (async)"""
-        payload = self._build_payload(
-            payment_method=payment_method,
-            return_policy=return_policy,
-            purchase_info=purchase_info,
-            delivery_and_shipping=delivery_and_shipping,
-            business_description=business_description,
-            contact_info=contact_info,
+        payload = self._wire_payload(
+            {
+                "payment_method": payment_method,
+                "return_policy": return_policy,
+                "purchase_info": purchase_info,
+                "delivery_and_shipping": delivery_and_shipping,
+                "business_description": business_description,
+                "contact_info": contact_info,
+            }
         )
         return await self._client._aput(
             f"/v1/accounts/{account_id}/business-agent/business-information",
@@ -894,10 +948,12 @@ class BusinessAgentResource:
         metadata: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Create a FAQ (async)"""
-        payload = self._build_payload(
-            question=question,
-            answer=answer,
-            metadata=metadata,
+        payload = self._wire_payload(
+            {
+                "question": question,
+                "answer": answer,
+                "metadata": metadata,
+            }
         )
         return await self._client._apost(
             f"/v1/accounts/{account_id}/business-agent/faqs", data=payload
@@ -921,10 +977,12 @@ class BusinessAgentResource:
         metadata: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Update a FAQ (async)"""
-        payload = self._build_payload(
-            question=question,
-            answer=answer,
-            metadata=metadata,
+        payload = self._wire_payload(
+            {
+                "question": question,
+                "answer": answer,
+                "metadata": metadata,
+            }
         )
         return await self._client._aput(
             f"/v1/accounts/{account_id}/business-agent/faqs/{faq_id}", data=payload
@@ -956,13 +1014,15 @@ class BusinessAgentResource:
         single_urls: list[str] | None = None,
     ) -> dict[str, Any]:
         """Add a website to crawl (async)"""
-        payload = self._build_payload(
-            url=url,
-            included_sub_domains=included_sub_domains,
-            included_url_patterns=included_url_patterns,
-            excluded_sub_domains=excluded_sub_domains,
-            excluded_url_patterns=excluded_url_patterns,
-            single_urls=single_urls,
+        payload = self._wire_payload(
+            {
+                "url": url,
+                "included_sub_domains": included_sub_domains,
+                "included_url_patterns": included_url_patterns,
+                "excluded_sub_domains": excluded_sub_domains,
+                "excluded_url_patterns": excluded_url_patterns,
+                "single_urls": single_urls,
+            }
         )
         return await self._client._apost(
             f"/v1/accounts/{account_id}/business-agent/websites", data=payload
@@ -989,13 +1049,15 @@ class BusinessAgentResource:
         single_urls: list[str] | None = None,
     ) -> dict[str, Any]:
         """Update a crawled website (async)"""
-        payload = self._build_payload(
-            url=url,
-            included_sub_domains=included_sub_domains,
-            included_url_patterns=included_url_patterns,
-            excluded_sub_domains=excluded_sub_domains,
-            excluded_url_patterns=excluded_url_patterns,
-            single_urls=single_urls,
+        payload = self._wire_payload(
+            {
+                "url": url,
+                "included_sub_domains": included_sub_domains,
+                "included_url_patterns": included_url_patterns,
+                "excluded_sub_domains": excluded_sub_domains,
+                "excluded_url_patterns": excluded_url_patterns,
+                "single_urls": single_urls,
+            }
         )
         return await self._client._aput(
             f"/v1/accounts/{account_id}/business-agent/websites/{website_id}",
@@ -1020,9 +1082,11 @@ class BusinessAgentResource:
         self, account_id: str, url: str, *, file_name: str | None = None
     ) -> dict[str, Any]:
         """Upload a knowledge file (async)"""
-        payload = self._build_payload(
-            url=url,
-            file_name=file_name,
+        payload = self._wire_payload(
+            {
+                "url": url,
+                "fileName": file_name,
+            }
         )
         return await self._client._apost(
             f"/v1/accounts/{account_id}/business-agent/files", data=payload
@@ -1059,10 +1123,12 @@ class BusinessAgentResource:
         description: str | None = None,
     ) -> dict[str, Any]:
         """Create a skill (async)"""
-        payload = self._build_payload(
-            title=title,
-            description=description,
-            skill=skill,
+        payload = self._wire_payload(
+            {
+                "title": title,
+                "description": description,
+                "skill": skill,
+            }
         )
         return await self._client._apost(
             f"/v1/accounts/{account_id}/business-agent/skills", data=payload
@@ -1086,10 +1152,12 @@ class BusinessAgentResource:
         description: str | None = None,
     ) -> dict[str, Any]:
         """Update a skill (async)"""
-        payload = self._build_payload(
-            title=title,
-            description=description,
-            skill=skill,
+        payload = self._wire_payload(
+            {
+                "title": title,
+                "description": description,
+                "skill": skill,
+            }
         )
         return await self._client._aput(
             f"/v1/accounts/{account_id}/business-agent/skills/{skill_id}", data=payload
@@ -1112,10 +1180,12 @@ class BusinessAgentResource:
         limit: int | None = None,
     ) -> dict[str, Any]:
         """List UI skills (async)"""
-        params = self._build_params(
-            before=before,
-            after=after,
-            limit=limit,
+        params = self._wire_params(
+            {
+                "before": before,
+                "after": after,
+                "limit": limit,
+            }
         )
         return await self._client._aget(
             f"/v1/accounts/{account_id}/business-agent/ui-skills", params=params
@@ -1132,12 +1202,14 @@ class BusinessAgentResource:
         flow_id: int | None = None,
     ) -> dict[str, Any]:
         """Create a UI skill (async)"""
-        payload = self._build_payload(
-            title=title,
-            component_type=component_type,
-            status=status,
-            instruction=instruction,
-            flow_id=flow_id,
+        payload = self._wire_payload(
+            {
+                "title": title,
+                "component_type": component_type,
+                "status": status,
+                "instruction": instruction,
+                "flow_id": flow_id,
+            }
         )
         return await self._client._apost(
             f"/v1/accounts/{account_id}/business-agent/ui-skills", data=payload
@@ -1163,12 +1235,14 @@ class BusinessAgentResource:
         flow_id: int | None = None,
     ) -> dict[str, Any]:
         """Update a UI skill (async)"""
-        payload = self._build_payload(
-            title=title,
-            component_type=component_type,
-            status=status,
-            instruction=instruction,
-            flow_id=flow_id,
+        payload = self._wire_payload(
+            {
+                "title": title,
+                "component_type": component_type,
+                "status": status,
+                "instruction": instruction,
+                "flow_id": flow_id,
+            }
         )
         return await self._client._aput(
             f"/v1/accounts/{account_id}/business-agent/ui-skills/{ui_skill_id}",
@@ -1203,15 +1277,17 @@ class BusinessAgentResource:
         requires_certificate: bool | None = None,
     ) -> dict[str, Any]:
         """Create a connector (async)"""
-        payload = self._build_payload(
-            name=name,
-            description=description,
-            base_url=base_url,
-            connector_protocol=connector_protocol,
-            auth_type=auth_type,
-            auth_config=auth_config,
-            user_auth_injection_config=user_auth_injection_config,
-            requires_certificate=requires_certificate,
+        payload = self._wire_payload(
+            {
+                "name": name,
+                "description": description,
+                "base_url": base_url,
+                "connector_protocol": connector_protocol,
+                "auth_type": auth_type,
+                "auth_config": auth_config,
+                "user_auth_injection_config": user_auth_injection_config,
+                "requires_certificate": requires_certificate,
+            }
         )
         return await self._client._apost(
             f"/v1/accounts/{account_id}/business-agent/connectors", data=payload
@@ -1240,15 +1316,17 @@ class BusinessAgentResource:
         requires_certificate: bool | None = None,
     ) -> dict[str, Any]:
         """Update a connector (async)"""
-        payload = self._build_payload(
-            name=name,
-            description=description,
-            base_url=base_url,
-            connector_protocol=connector_protocol,
-            auth_type=auth_type,
-            auth_config=auth_config,
-            user_auth_injection_config=user_auth_injection_config,
-            requires_certificate=requires_certificate,
+        payload = self._wire_payload(
+            {
+                "name": name,
+                "description": description,
+                "base_url": base_url,
+                "connector_protocol": connector_protocol,
+                "auth_type": auth_type,
+                "auth_config": auth_config,
+                "user_auth_injection_config": user_auth_injection_config,
+                "requires_certificate": requires_certificate,
+            }
         )
         return await self._client._aput(
             f"/v1/accounts/{account_id}/business-agent/connectors/{connector_id}",
@@ -1294,14 +1372,16 @@ class BusinessAgentResource:
         top_n: int | None = None,
     ) -> dict[str, Any]:
         """Get connector failure logs (async)"""
-        params = self._build_params(
-            start_time=start_time,
-            end_time=end_time,
-            limit=limit,
-            tool_id=tool_id,
-            include_stats=include_stats,
-            summary_only=summary_only,
-            top_n=top_n,
+        params = self._wire_params(
+            {
+                "startTime": start_time,
+                "endTime": end_time,
+                "limit": limit,
+                "toolId": tool_id,
+                "includeStats": include_stats,
+                "summaryOnly": summary_only,
+                "topN": top_n,
+            }
         )
         return await self._client._aget(
             f"/v1/accounts/{account_id}/business-agent/connectors/{connector_id}/logs",
@@ -1329,13 +1409,15 @@ class BusinessAgentResource:
         transformation_spec: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Create a connector tool (async)"""
-        payload = self._build_payload(
-            name=name,
-            description=description,
-            request_definition=request_definition,
-            user_auth_required=user_auth_required,
-            user_auth_action_config=user_auth_action_config,
-            transformation_spec=transformation_spec,
+        payload = self._wire_payload(
+            {
+                "name": name,
+                "description": description,
+                "request_definition": request_definition,
+                "user_auth_required": user_auth_required,
+                "user_auth_action_config": user_auth_action_config,
+                "transformation_spec": transformation_spec,
+            }
         )
         return await self._client._apost(
             f"/v1/accounts/{account_id}/business-agent/connectors/{connector_id}/tools",
@@ -1364,13 +1446,15 @@ class BusinessAgentResource:
         transformation_spec: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Update a connector tool (async)"""
-        payload = self._build_payload(
-            name=name,
-            description=description,
-            request_definition=request_definition,
-            user_auth_required=user_auth_required,
-            user_auth_action_config=user_auth_action_config,
-            transformation_spec=transformation_spec,
+        payload = self._wire_payload(
+            {
+                "name": name,
+                "description": description,
+                "request_definition": request_definition,
+                "user_auth_required": user_auth_required,
+                "user_auth_action_config": user_auth_action_config,
+                "transformation_spec": transformation_spec,
+            }
         )
         return await self._client._aput(
             f"/v1/accounts/{account_id}/business-agent/connectors/{connector_id}/tools/{tool_id}",
@@ -1389,8 +1473,10 @@ class BusinessAgentResource:
         self, account_id: str, connector_id: str, tool_id: str, input: str
     ) -> dict[str, Any]:
         """Run a connector tool once (async)"""
-        payload = self._build_payload(
-            input=input,
+        payload = self._wire_payload(
+            {
+                "input": input,
+            }
         )
         return await self._client._apost(
             f"/v1/accounts/{account_id}/business-agent/connectors/{connector_id}/tools/{tool_id}/run",
@@ -1407,8 +1493,10 @@ class BusinessAgentResource:
         self, account_id: str, budgets: list[Any]
     ) -> dict[str, Any]:
         """Replace usage budgets (async)"""
-        payload = self._build_payload(
-            budgets=budgets,
+        payload = self._wire_payload(
+            {
+                "budgets": budgets,
+            }
         )
         return await self._client._aput(
             f"/v1/accounts/{account_id}/business-agent/budget", data=payload
@@ -1418,9 +1506,11 @@ class BusinessAgentResource:
         self, account_id: str, message: str, *, conversation_id: str | None = None
     ) -> dict[str, Any]:
         """Send a test message (async)"""
-        payload = self._build_payload(
-            message=message,
-            conversation_id=conversation_id,
+        payload = self._wire_payload(
+            {
+                "message": message,
+                "conversationId": conversation_id,
+            }
         )
         return await self._client._apost(
             f"/v1/accounts/{account_id}/business-agent/test-messages", data=payload
@@ -1430,11 +1520,13 @@ class BusinessAgentResource:
         self, account_id: str, to: str, type: str, description: str, payload: str
     ) -> dict[str, Any]:
         """Send a business event (async)"""
-        payload = self._build_payload(
-            to=to,
-            type=type,
-            description=description,
-            payload=payload,
+        payload = self._wire_payload(
+            {
+                "to": to,
+                "type": type,
+                "description": description,
+                "payload": payload,
+            }
         )
         return await self._client._apost(
             f"/v1/accounts/{account_id}/business-agent/events", data=payload
@@ -1457,10 +1549,12 @@ class BusinessAgentResource:
         eval_ids: str | None = None,
     ) -> dict[str, Any]:
         """Read evaluation data (async)"""
-        params = self._build_params(
-            job_id=job_id,
-            summary_ids=summary_ids,
-            eval_ids=eval_ids,
+        params = self._wire_params(
+            {
+                "jobId": job_id,
+                "summaryIds": summary_ids,
+                "evalIds": eval_ids,
+            }
         )
         return await self._client._aget(
             f"/v1/accounts/{account_id}/business-agent/evals", params=params
@@ -1470,8 +1564,10 @@ class BusinessAgentResource:
         self, account_id: str, eval_case_ids: list[str]
     ) -> dict[str, Any]:
         """Start an evaluation run (async)"""
-        payload = self._build_payload(
-            eval_case_ids=eval_case_ids,
+        payload = self._wire_payload(
+            {
+                "evalCaseIds": eval_case_ids,
+            }
         )
         return await self._client._apost(
             f"/v1/accounts/{account_id}/business-agent/evals", data=payload

@@ -23,7 +23,7 @@ class PostsResource:
     def __init__(self, client: BaseClient) -> None:
         self._client = client
 
-    def _build_params(self, **kwargs: Any) -> dict[str, Any]:
+    def _wire_params(self, fields: dict[str, Any]) -> dict[str, Any]:
         """Build query parameters, filtering None and empty-string values.
 
         Empty strings are filtered because MCP tool wrappers pass ``""`` as the
@@ -38,20 +38,16 @@ class PostsResource:
         """
         from enum import Enum
 
-        def to_camel(s: str) -> str:
-            parts = s.split("_")
-            return parts[0] + "".join(p.title() for p in parts[1:])
-
         result: dict[str, Any] = {}
-        for k, v in kwargs.items():
+        for k, v in fields.items():
             if isinstance(v, Enum):
                 v = v.value
             if v is None or v == "":
                 continue
-            result[to_camel(k)] = v
+            result[k] = v
         return result
 
-    def _build_payload(self, **kwargs: Any) -> dict[str, Any]:
+    def _wire_payload(self, fields: dict[str, Any]) -> dict[str, Any]:
         """Build request payload, filtering None values. Enum members are
         unwrapped to their value so JSON bodies carry e.g. "failed" rather
         than a raw Enum member (plain Enum members are not JSON-serializable).
@@ -59,20 +55,16 @@ class PostsResource:
         from datetime import datetime
         from enum import Enum
 
-        def to_camel(s: str) -> str:
-            parts = s.split("_")
-            return parts[0] + "".join(p.title() for p in parts[1:])
-
         result: dict[str, Any] = {}
-        for k, v in kwargs.items():
+        for k, v in fields.items():
             if isinstance(v, Enum):
                 v = v.value
             if v is None:
                 continue
             if isinstance(v, datetime):
-                result[to_camel(k)] = v.isoformat()
+                result[k] = v.isoformat()
             else:
-                result[to_camel(k)] = v
+                result[k] = v
         return result
 
     def list_posts(
@@ -99,26 +91,28 @@ class PostsResource:
         account_id: str | None = None,
     ) -> dict[str, Any]:
         """List posts"""
-        params = self._build_params(
-            page=page,
-            limit=limit,
-            offset=offset,
-            cursor=cursor,
-            fields=fields,
-            source=source,
-            status=status,
-            platform=platform,
-            profile_id=profile_id,
-            created_by=created_by,
-            from_date=from_date,
-            to_date=to_date,
-            date_from=date_from,
-            date_to=date_to,
-            include_hidden=include_hidden,
-            search=search,
-            tags=tags,
-            sort_by=sort_by,
-            account_id=account_id,
+        params = self._wire_params(
+            {
+                "page": page,
+                "limit": limit,
+                "offset": offset,
+                "cursor": cursor,
+                "fields": fields,
+                "source": source,
+                "status": status,
+                "platform": platform,
+                "profileId": profile_id,
+                "createdBy": created_by,
+                "fromDate": from_date,
+                "toDate": to_date,
+                "dateFrom": date_from,
+                "dateTo": date_to,
+                "includeHidden": include_hidden,
+                "search": search,
+                "tags": tags,
+                "sortBy": sort_by,
+                "accountId": account_id,
+            }
         )
         return self._client._get("/v1/posts", params=params)
 
@@ -149,27 +143,29 @@ class PostsResource:
         queue_id: str | None = None,
     ) -> dict[str, Any]:
         """Create post"""
-        payload = self._build_payload(
-            title=title,
-            content=content,
-            media_items=media_items,
-            platforms=platforms,
-            scheduled_for=scheduled_for,
-            publish_now=publish_now,
-            is_draft=is_draft,
-            requires_approval=requires_approval,
-            dry_run=dry_run,
-            timezone=timezone,
-            tags=tags,
-            hashtags=hashtags,
-            mentions=mentions,
-            crossposting_enabled=crossposting_enabled,
-            metadata=metadata,
-            tiktok_settings=tiktok_settings,
-            facebook_settings=facebook_settings,
-            recycling=recycling,
-            queued_from_profile=queued_from_profile,
-            queue_id=queue_id,
+        payload = self._wire_payload(
+            {
+                "title": title,
+                "content": content,
+                "mediaItems": media_items,
+                "platforms": platforms,
+                "scheduledFor": scheduled_for,
+                "publishNow": publish_now,
+                "isDraft": is_draft,
+                "requiresApproval": requires_approval,
+                "dryRun": dry_run,
+                "timezone": timezone,
+                "tags": tags,
+                "hashtags": hashtags,
+                "mentions": mentions,
+                "crosspostingEnabled": crossposting_enabled,
+                "metadata": metadata,
+                "tiktokSettings": tiktok_settings,
+                "facebookSettings": facebook_settings,
+                "recycling": recycling,
+                "queuedFromProfile": queued_from_profile,
+                "queueId": queue_id,
+            }
         )
         headers: dict[str, str] = {}
         if idempotency_key is not None:
@@ -208,27 +204,29 @@ class PostsResource:
         recycling: Any | None = None,
     ) -> dict[str, Any]:
         """Update post"""
-        payload = self._build_payload(
-            title=title,
-            content=content,
-            media_items=media_items,
-            platforms=platforms,
-            scheduled_for=scheduled_for,
-            publish_now=publish_now,
-            is_draft=is_draft,
-            requires_approval=requires_approval,
-            timezone=timezone,
-            visibility=visibility,
-            tags=tags,
-            hashtags=hashtags,
-            mentions=mentions,
-            crossposting_enabled=crossposting_enabled,
-            metadata=metadata,
-            queued_from_profile=queued_from_profile,
-            queue_id=queue_id,
-            tiktok_settings=tiktok_settings,
-            facebook_settings=facebook_settings,
-            recycling=recycling,
+        payload = self._wire_payload(
+            {
+                "title": title,
+                "content": content,
+                "mediaItems": media_items,
+                "platforms": platforms,
+                "scheduledFor": scheduled_for,
+                "publishNow": publish_now,
+                "isDraft": is_draft,
+                "requiresApproval": requires_approval,
+                "timezone": timezone,
+                "visibility": visibility,
+                "tags": tags,
+                "hashtags": hashtags,
+                "mentions": mentions,
+                "crosspostingEnabled": crossposting_enabled,
+                "metadata": metadata,
+                "queuedFromProfile": queued_from_profile,
+                "queueId": queue_id,
+                "tiktokSettings": tiktok_settings,
+                "facebookSettings": facebook_settings,
+                "recycling": recycling,
+            }
         )
         return self._client._put(f"/v1/posts/{post_id}", data=payload)
 
@@ -238,8 +236,10 @@ class PostsResource:
 
     def bulk_upload_posts(self, *, dry_run: bool | None = False) -> dict[str, Any]:
         """Bulk upload from CSV"""
-        params = self._build_params(
-            dry_run=dry_run,
+        params = self._wire_params(
+            {
+                "dryRun": dry_run,
+            }
         )
         return self._client._post("/v1/posts/bulk-upload", params=params)
 
@@ -249,8 +249,10 @@ class PostsResource:
 
     def review_post(self, post_id: str, decision: str) -> dict[str, Any]:
         """Approve or reject a post"""
-        payload = self._build_payload(
-            decision=decision,
+        payload = self._wire_payload(
+            {
+                "decision": decision,
+            }
         )
         return self._client._post(f"/v1/posts/{post_id}/review", data=payload)
 
@@ -258,9 +260,11 @@ class PostsResource:
         self, post_id: str, platform: str, *, account_id: str | None = None
     ) -> dict[str, Any]:
         """Unpublish post"""
-        payload = self._build_payload(
-            platform=platform,
-            account_id=account_id,
+        payload = self._wire_payload(
+            {
+                "platform": platform,
+                "accountId": account_id,
+            }
         )
         return self._client._post(f"/v1/posts/{post_id}/unpublish", data=payload)
 
@@ -273,10 +277,12 @@ class PostsResource:
         account_id: str | None = None,
     ) -> dict[str, Any]:
         """Edit published post"""
-        payload = self._build_payload(
-            platform=platform,
-            content=content,
-            account_id=account_id,
+        payload = self._wire_payload(
+            {
+                "platform": platform,
+                "content": content,
+                "accountId": account_id,
+            }
         )
         return self._client._post(f"/v1/posts/{post_id}/edit", data=payload)
 
@@ -298,19 +304,21 @@ class PostsResource:
         playlist_id: str | None = None,
     ) -> dict[str, Any]:
         """Update post metadata"""
-        payload = self._build_payload(
-            platform=platform,
-            video_id=video_id,
-            account_id=account_id,
-            title=title,
-            description=description,
-            tags=tags,
-            category_id=category_id,
-            privacy_status=privacy_status,
-            thumbnail_url=thumbnail_url,
-            made_for_kids=made_for_kids,
-            contains_synthetic_media=contains_synthetic_media,
-            playlist_id=playlist_id,
+        payload = self._wire_payload(
+            {
+                "platform": platform,
+                "videoId": video_id,
+                "accountId": account_id,
+                "title": title,
+                "description": description,
+                "tags": tags,
+                "categoryId": category_id,
+                "privacyStatus": privacy_status,
+                "thumbnailUrl": thumbnail_url,
+                "madeForKids": made_for_kids,
+                "containsSyntheticMedia": contains_synthetic_media,
+                "playlistId": playlist_id,
+            }
         )
         return self._client._post(f"/v1/posts/{post_id}/update-metadata", data=payload)
 
@@ -338,26 +346,28 @@ class PostsResource:
         account_id: str | None = None,
     ) -> dict[str, Any]:
         """List posts (async)"""
-        params = self._build_params(
-            page=page,
-            limit=limit,
-            offset=offset,
-            cursor=cursor,
-            fields=fields,
-            source=source,
-            status=status,
-            platform=platform,
-            profile_id=profile_id,
-            created_by=created_by,
-            from_date=from_date,
-            to_date=to_date,
-            date_from=date_from,
-            date_to=date_to,
-            include_hidden=include_hidden,
-            search=search,
-            tags=tags,
-            sort_by=sort_by,
-            account_id=account_id,
+        params = self._wire_params(
+            {
+                "page": page,
+                "limit": limit,
+                "offset": offset,
+                "cursor": cursor,
+                "fields": fields,
+                "source": source,
+                "status": status,
+                "platform": platform,
+                "profileId": profile_id,
+                "createdBy": created_by,
+                "fromDate": from_date,
+                "toDate": to_date,
+                "dateFrom": date_from,
+                "dateTo": date_to,
+                "includeHidden": include_hidden,
+                "search": search,
+                "tags": tags,
+                "sortBy": sort_by,
+                "accountId": account_id,
+            }
         )
         return await self._client._aget("/v1/posts", params=params)
 
@@ -388,27 +398,29 @@ class PostsResource:
         queue_id: str | None = None,
     ) -> dict[str, Any]:
         """Create post (async)"""
-        payload = self._build_payload(
-            title=title,
-            content=content,
-            media_items=media_items,
-            platforms=platforms,
-            scheduled_for=scheduled_for,
-            publish_now=publish_now,
-            is_draft=is_draft,
-            requires_approval=requires_approval,
-            dry_run=dry_run,
-            timezone=timezone,
-            tags=tags,
-            hashtags=hashtags,
-            mentions=mentions,
-            crossposting_enabled=crossposting_enabled,
-            metadata=metadata,
-            tiktok_settings=tiktok_settings,
-            facebook_settings=facebook_settings,
-            recycling=recycling,
-            queued_from_profile=queued_from_profile,
-            queue_id=queue_id,
+        payload = self._wire_payload(
+            {
+                "title": title,
+                "content": content,
+                "mediaItems": media_items,
+                "platforms": platforms,
+                "scheduledFor": scheduled_for,
+                "publishNow": publish_now,
+                "isDraft": is_draft,
+                "requiresApproval": requires_approval,
+                "dryRun": dry_run,
+                "timezone": timezone,
+                "tags": tags,
+                "hashtags": hashtags,
+                "mentions": mentions,
+                "crosspostingEnabled": crossposting_enabled,
+                "metadata": metadata,
+                "tiktokSettings": tiktok_settings,
+                "facebookSettings": facebook_settings,
+                "recycling": recycling,
+                "queuedFromProfile": queued_from_profile,
+                "queueId": queue_id,
+            }
         )
         headers: dict[str, str] = {}
         if idempotency_key is not None:
@@ -447,27 +459,29 @@ class PostsResource:
         recycling: Any | None = None,
     ) -> dict[str, Any]:
         """Update post (async)"""
-        payload = self._build_payload(
-            title=title,
-            content=content,
-            media_items=media_items,
-            platforms=platforms,
-            scheduled_for=scheduled_for,
-            publish_now=publish_now,
-            is_draft=is_draft,
-            requires_approval=requires_approval,
-            timezone=timezone,
-            visibility=visibility,
-            tags=tags,
-            hashtags=hashtags,
-            mentions=mentions,
-            crossposting_enabled=crossposting_enabled,
-            metadata=metadata,
-            queued_from_profile=queued_from_profile,
-            queue_id=queue_id,
-            tiktok_settings=tiktok_settings,
-            facebook_settings=facebook_settings,
-            recycling=recycling,
+        payload = self._wire_payload(
+            {
+                "title": title,
+                "content": content,
+                "mediaItems": media_items,
+                "platforms": platforms,
+                "scheduledFor": scheduled_for,
+                "publishNow": publish_now,
+                "isDraft": is_draft,
+                "requiresApproval": requires_approval,
+                "timezone": timezone,
+                "visibility": visibility,
+                "tags": tags,
+                "hashtags": hashtags,
+                "mentions": mentions,
+                "crosspostingEnabled": crossposting_enabled,
+                "metadata": metadata,
+                "queuedFromProfile": queued_from_profile,
+                "queueId": queue_id,
+                "tiktokSettings": tiktok_settings,
+                "facebookSettings": facebook_settings,
+                "recycling": recycling,
+            }
         )
         return await self._client._aput(f"/v1/posts/{post_id}", data=payload)
 
@@ -479,8 +493,10 @@ class PostsResource:
         self, *, dry_run: bool | None = False
     ) -> dict[str, Any]:
         """Bulk upload from CSV (async)"""
-        params = self._build_params(
-            dry_run=dry_run,
+        params = self._wire_params(
+            {
+                "dryRun": dry_run,
+            }
         )
         return await self._client._apost("/v1/posts/bulk-upload", params=params)
 
@@ -490,8 +506,10 @@ class PostsResource:
 
     async def areview_post(self, post_id: str, decision: str) -> dict[str, Any]:
         """Approve or reject a post (async)"""
-        payload = self._build_payload(
-            decision=decision,
+        payload = self._wire_payload(
+            {
+                "decision": decision,
+            }
         )
         return await self._client._apost(f"/v1/posts/{post_id}/review", data=payload)
 
@@ -499,9 +517,11 @@ class PostsResource:
         self, post_id: str, platform: str, *, account_id: str | None = None
     ) -> dict[str, Any]:
         """Unpublish post (async)"""
-        payload = self._build_payload(
-            platform=platform,
-            account_id=account_id,
+        payload = self._wire_payload(
+            {
+                "platform": platform,
+                "accountId": account_id,
+            }
         )
         return await self._client._apost(f"/v1/posts/{post_id}/unpublish", data=payload)
 
@@ -514,10 +534,12 @@ class PostsResource:
         account_id: str | None = None,
     ) -> dict[str, Any]:
         """Edit published post (async)"""
-        payload = self._build_payload(
-            platform=platform,
-            content=content,
-            account_id=account_id,
+        payload = self._wire_payload(
+            {
+                "platform": platform,
+                "content": content,
+                "accountId": account_id,
+            }
         )
         return await self._client._apost(f"/v1/posts/{post_id}/edit", data=payload)
 
@@ -539,19 +561,21 @@ class PostsResource:
         playlist_id: str | None = None,
     ) -> dict[str, Any]:
         """Update post metadata (async)"""
-        payload = self._build_payload(
-            platform=platform,
-            video_id=video_id,
-            account_id=account_id,
-            title=title,
-            description=description,
-            tags=tags,
-            category_id=category_id,
-            privacy_status=privacy_status,
-            thumbnail_url=thumbnail_url,
-            made_for_kids=made_for_kids,
-            contains_synthetic_media=contains_synthetic_media,
-            playlist_id=playlist_id,
+        payload = self._wire_payload(
+            {
+                "platform": platform,
+                "videoId": video_id,
+                "accountId": account_id,
+                "title": title,
+                "description": description,
+                "tags": tags,
+                "categoryId": category_id,
+                "privacyStatus": privacy_status,
+                "thumbnailUrl": thumbnail_url,
+                "madeForKids": made_for_kids,
+                "containsSyntheticMedia": contains_synthetic_media,
+                "playlistId": playlist_id,
+            }
         )
         return await self._client._apost(
             f"/v1/posts/{post_id}/update-metadata", data=payload

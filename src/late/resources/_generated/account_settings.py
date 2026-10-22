@@ -21,7 +21,7 @@ class AccountSettingsResource:
     def __init__(self, client: BaseClient) -> None:
         self._client = client
 
-    def _build_params(self, **kwargs: Any) -> dict[str, Any]:
+    def _wire_params(self, fields: dict[str, Any]) -> dict[str, Any]:
         """Build query parameters, filtering None and empty-string values.
 
         Empty strings are filtered because MCP tool wrappers pass ``""`` as the
@@ -36,20 +36,16 @@ class AccountSettingsResource:
         """
         from enum import Enum
 
-        def to_camel(s: str) -> str:
-            parts = s.split("_")
-            return parts[0] + "".join(p.title() for p in parts[1:])
-
         result: dict[str, Any] = {}
-        for k, v in kwargs.items():
+        for k, v in fields.items():
             if isinstance(v, Enum):
                 v = v.value
             if v is None or v == "":
                 continue
-            result[to_camel(k)] = v
+            result[k] = v
         return result
 
-    def _build_payload(self, **kwargs: Any) -> dict[str, Any]:
+    def _wire_payload(self, fields: dict[str, Any]) -> dict[str, Any]:
         """Build request payload, filtering None values. Enum members are
         unwrapped to their value so JSON bodies carry e.g. "failed" rather
         than a raw Enum member (plain Enum members are not JSON-serializable).
@@ -57,20 +53,16 @@ class AccountSettingsResource:
         from datetime import datetime
         from enum import Enum
 
-        def to_camel(s: str) -> str:
-            parts = s.split("_")
-            return parts[0] + "".join(p.title() for p in parts[1:])
-
         result: dict[str, Any] = {}
-        for k, v in kwargs.items():
+        for k, v in fields.items():
             if isinstance(v, Enum):
                 v = v.value
             if v is None:
                 continue
             if isinstance(v, datetime):
-                result[to_camel(k)] = v.isoformat()
+                result[k] = v.isoformat()
             else:
-                result[to_camel(k)] = v
+                result[k] = v
         return result
 
     def get_messenger_menu(self, account_id: str) -> dict[str, Any]:
@@ -81,8 +73,10 @@ class AccountSettingsResource:
         self, account_id: str, persistent_menu: list[dict[str, Any]]
     ) -> dict[str, Any]:
         """Set persistent menu"""
-        payload = self._build_payload(
-            persistent_menu=persistent_menu,
+        payload = self._wire_payload(
+            {
+                "persistent_menu": persistent_menu,
+            }
         )
         return self._client._put(
             f"/v1/accounts/{account_id}/messenger-menu", data=payload
@@ -100,8 +94,10 @@ class AccountSettingsResource:
         self, account_id: str, payload: str
     ) -> dict[str, Any]:
         """Set FB Get Started button"""
-        payload = self._build_payload(
-            payload=payload,
+        payload = self._wire_payload(
+            {
+                "payload": payload,
+            }
         )
         return self._client._put(
             f"/v1/accounts/{account_id}/messenger-get-started", data=payload
@@ -119,8 +115,10 @@ class AccountSettingsResource:
         self, account_id: str, greeting: list[Any]
     ) -> dict[str, Any]:
         """Set FB greeting text"""
-        payload = self._build_payload(
-            greeting=greeting,
+        payload = self._wire_payload(
+            {
+                "greeting": greeting,
+            }
         )
         return self._client._put(
             f"/v1/accounts/{account_id}/messenger-greeting", data=payload
@@ -138,8 +136,10 @@ class AccountSettingsResource:
         self, account_id: str, ice_breakers: list[Any]
     ) -> dict[str, Any]:
         """Set FB ice breakers"""
-        payload = self._build_payload(
-            ice_breakers=ice_breakers,
+        payload = self._wire_payload(
+            {
+                "ice_breakers": ice_breakers,
+            }
         )
         return self._client._put(
             f"/v1/accounts/{account_id}/messenger-ice-breakers", data=payload
@@ -157,8 +157,10 @@ class AccountSettingsResource:
         self, account_id: str, ice_breakers: list[dict[str, Any]]
     ) -> dict[str, Any]:
         """Set IG ice breakers"""
-        payload = self._build_payload(
-            ice_breakers=ice_breakers,
+        payload = self._wire_payload(
+            {
+                "ice_breakers": ice_breakers,
+            }
         )
         return self._client._put(
             f"/v1/accounts/{account_id}/instagram-ice-breakers", data=payload
@@ -176,8 +178,10 @@ class AccountSettingsResource:
         self, account_id: str, commands: list[dict[str, Any]]
     ) -> dict[str, Any]:
         """Set TG bot commands"""
-        payload = self._build_payload(
-            commands=commands,
+        payload = self._wire_payload(
+            {
+                "commands": commands,
+            }
         )
         return self._client._put(
             f"/v1/accounts/{account_id}/telegram-commands", data=payload
@@ -195,8 +199,10 @@ class AccountSettingsResource:
         self, account_id: str, persistent_menu: list[dict[str, Any]]
     ) -> dict[str, Any]:
         """Set persistent menu (async)"""
-        payload = self._build_payload(
-            persistent_menu=persistent_menu,
+        payload = self._wire_payload(
+            {
+                "persistent_menu": persistent_menu,
+            }
         )
         return await self._client._aput(
             f"/v1/accounts/{account_id}/messenger-menu", data=payload
@@ -216,8 +222,10 @@ class AccountSettingsResource:
         self, account_id: str, payload: str
     ) -> dict[str, Any]:
         """Set FB Get Started button (async)"""
-        payload = self._build_payload(
-            payload=payload,
+        payload = self._wire_payload(
+            {
+                "payload": payload,
+            }
         )
         return await self._client._aput(
             f"/v1/accounts/{account_id}/messenger-get-started", data=payload
@@ -237,8 +245,10 @@ class AccountSettingsResource:
         self, account_id: str, greeting: list[Any]
     ) -> dict[str, Any]:
         """Set FB greeting text (async)"""
-        payload = self._build_payload(
-            greeting=greeting,
+        payload = self._wire_payload(
+            {
+                "greeting": greeting,
+            }
         )
         return await self._client._aput(
             f"/v1/accounts/{account_id}/messenger-greeting", data=payload
@@ -260,8 +270,10 @@ class AccountSettingsResource:
         self, account_id: str, ice_breakers: list[Any]
     ) -> dict[str, Any]:
         """Set FB ice breakers (async)"""
-        payload = self._build_payload(
-            ice_breakers=ice_breakers,
+        payload = self._wire_payload(
+            {
+                "ice_breakers": ice_breakers,
+            }
         )
         return await self._client._aput(
             f"/v1/accounts/{account_id}/messenger-ice-breakers", data=payload
@@ -283,8 +295,10 @@ class AccountSettingsResource:
         self, account_id: str, ice_breakers: list[dict[str, Any]]
     ) -> dict[str, Any]:
         """Set IG ice breakers (async)"""
-        payload = self._build_payload(
-            ice_breakers=ice_breakers,
+        payload = self._wire_payload(
+            {
+                "ice_breakers": ice_breakers,
+            }
         )
         return await self._client._aput(
             f"/v1/accounts/{account_id}/instagram-ice-breakers", data=payload
@@ -304,8 +318,10 @@ class AccountSettingsResource:
         self, account_id: str, commands: list[dict[str, Any]]
     ) -> dict[str, Any]:
         """Set TG bot commands (async)"""
-        payload = self._build_payload(
-            commands=commands,
+        payload = self._wire_payload(
+            {
+                "commands": commands,
+            }
         )
         return await self._client._aput(
             f"/v1/accounts/{account_id}/telegram-commands", data=payload

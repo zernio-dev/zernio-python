@@ -21,7 +21,7 @@ class ValidateResource:
     def __init__(self, client: BaseClient) -> None:
         self._client = client
 
-    def _build_params(self, **kwargs: Any) -> dict[str, Any]:
+    def _wire_params(self, fields: dict[str, Any]) -> dict[str, Any]:
         """Build query parameters, filtering None and empty-string values.
 
         Empty strings are filtered because MCP tool wrappers pass ``""`` as the
@@ -36,20 +36,16 @@ class ValidateResource:
         """
         from enum import Enum
 
-        def to_camel(s: str) -> str:
-            parts = s.split("_")
-            return parts[0] + "".join(p.title() for p in parts[1:])
-
         result: dict[str, Any] = {}
-        for k, v in kwargs.items():
+        for k, v in fields.items():
             if isinstance(v, Enum):
                 v = v.value
             if v is None or v == "":
                 continue
-            result[to_camel(k)] = v
+            result[k] = v
         return result
 
-    def _build_payload(self, **kwargs: Any) -> dict[str, Any]:
+    def _wire_payload(self, fields: dict[str, Any]) -> dict[str, Any]:
         """Build request payload, filtering None values. Enum members are
         unwrapped to their value so JSON bodies carry e.g. "failed" rather
         than a raw Enum member (plain Enum members are not JSON-serializable).
@@ -57,26 +53,24 @@ class ValidateResource:
         from datetime import datetime
         from enum import Enum
 
-        def to_camel(s: str) -> str:
-            parts = s.split("_")
-            return parts[0] + "".join(p.title() for p in parts[1:])
-
         result: dict[str, Any] = {}
-        for k, v in kwargs.items():
+        for k, v in fields.items():
             if isinstance(v, Enum):
                 v = v.value
             if v is None:
                 continue
             if isinstance(v, datetime):
-                result[to_camel(k)] = v.isoformat()
+                result[k] = v.isoformat()
             else:
-                result[to_camel(k)] = v
+                result[k] = v
         return result
 
     def validate_post_length(self, text: str) -> dict[str, Any]:
         """Validate character count"""
-        payload = self._build_payload(
-            text=text,
+        payload = self._wire_payload(
+            {
+                "text": text,
+            }
         )
         return self._client._post("/v1/tools/validate/post-length", data=payload)
 
@@ -88,17 +82,21 @@ class ValidateResource:
         media_items: list[Any] | None = None,
     ) -> dict[str, Any]:
         """Validate post content"""
-        payload = self._build_payload(
-            content=content,
-            platforms=platforms,
-            media_items=media_items,
+        payload = self._wire_payload(
+            {
+                "content": content,
+                "platforms": platforms,
+                "mediaItems": media_items,
+            }
         )
         return self._client._post("/v1/tools/validate/post", data=payload)
 
     def validate_media(self, url: str) -> dict[str, Any]:
         """Validate media URL"""
-        payload = self._build_payload(
-            url=url,
+        payload = self._wire_payload(
+            {
+                "url": url,
+            }
         )
         return self._client._post("/v1/tools/validate/media", data=payload)
 
@@ -106,16 +104,20 @@ class ValidateResource:
         self, name: str, *, account_id: str | None = None
     ) -> dict[str, Any]:
         """Check subreddit existence"""
-        params = self._build_params(
-            name=name,
-            account_id=account_id,
+        params = self._wire_params(
+            {
+                "name": name,
+                "accountId": account_id,
+            }
         )
         return self._client._get("/v1/tools/validate/subreddit", params=params)
 
     async def avalidate_post_length(self, text: str) -> dict[str, Any]:
         """Validate character count (async)"""
-        payload = self._build_payload(
-            text=text,
+        payload = self._wire_payload(
+            {
+                "text": text,
+            }
         )
         return await self._client._apost("/v1/tools/validate/post-length", data=payload)
 
@@ -127,17 +129,21 @@ class ValidateResource:
         media_items: list[Any] | None = None,
     ) -> dict[str, Any]:
         """Validate post content (async)"""
-        payload = self._build_payload(
-            content=content,
-            platforms=platforms,
-            media_items=media_items,
+        payload = self._wire_payload(
+            {
+                "content": content,
+                "platforms": platforms,
+                "mediaItems": media_items,
+            }
         )
         return await self._client._apost("/v1/tools/validate/post", data=payload)
 
     async def avalidate_media(self, url: str) -> dict[str, Any]:
         """Validate media URL (async)"""
-        payload = self._build_payload(
-            url=url,
+        payload = self._wire_payload(
+            {
+                "url": url,
+            }
         )
         return await self._client._apost("/v1/tools/validate/media", data=payload)
 
@@ -145,8 +151,10 @@ class ValidateResource:
         self, name: str, *, account_id: str | None = None
     ) -> dict[str, Any]:
         """Check subreddit existence (async)"""
-        params = self._build_params(
-            name=name,
-            account_id=account_id,
+        params = self._wire_params(
+            {
+                "name": name,
+                "accountId": account_id,
+            }
         )
         return await self._client._aget("/v1/tools/validate/subreddit", params=params)

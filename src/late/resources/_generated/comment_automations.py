@@ -21,7 +21,7 @@ class CommentAutomationsResource:
     def __init__(self, client: BaseClient) -> None:
         self._client = client
 
-    def _build_params(self, **kwargs: Any) -> dict[str, Any]:
+    def _wire_params(self, fields: dict[str, Any]) -> dict[str, Any]:
         """Build query parameters, filtering None and empty-string values.
 
         Empty strings are filtered because MCP tool wrappers pass ``""`` as the
@@ -36,20 +36,16 @@ class CommentAutomationsResource:
         """
         from enum import Enum
 
-        def to_camel(s: str) -> str:
-            parts = s.split("_")
-            return parts[0] + "".join(p.title() for p in parts[1:])
-
         result: dict[str, Any] = {}
-        for k, v in kwargs.items():
+        for k, v in fields.items():
             if isinstance(v, Enum):
                 v = v.value
             if v is None or v == "":
                 continue
-            result[to_camel(k)] = v
+            result[k] = v
         return result
 
-    def _build_payload(self, **kwargs: Any) -> dict[str, Any]:
+    def _wire_payload(self, fields: dict[str, Any]) -> dict[str, Any]:
         """Build request payload, filtering None values. Enum members are
         unwrapped to their value so JSON bodies carry e.g. "failed" rather
         than a raw Enum member (plain Enum members are not JSON-serializable).
@@ -57,28 +53,26 @@ class CommentAutomationsResource:
         from datetime import datetime
         from enum import Enum
 
-        def to_camel(s: str) -> str:
-            parts = s.split("_")
-            return parts[0] + "".join(p.title() for p in parts[1:])
-
         result: dict[str, Any] = {}
-        for k, v in kwargs.items():
+        for k, v in fields.items():
             if isinstance(v, Enum):
                 v = v.value
             if v is None:
                 continue
             if isinstance(v, datetime):
-                result[to_camel(k)] = v.isoformat()
+                result[k] = v.isoformat()
             else:
-                result[to_camel(k)] = v
+                result[k] = v
         return result
 
     def list_comment_automations(
         self, *, profile_id: str | None = None
     ) -> dict[str, Any]:
         """List comment-to-DM automations"""
-        params = self._build_params(
-            profile_id=profile_id,
+        params = self._wire_params(
+            {
+                "profileId": profile_id,
+            }
         )
         return self._client._get("/v1/comment-automations", params=params)
 
@@ -118,38 +112,40 @@ class CommentAutomationsResource:
         is_active: bool | None = True,
     ) -> dict[str, Any]:
         """Create comment-to-DM automation"""
-        payload = self._build_payload(
-            profile_id=profile_id,
-            account_id=account_id,
-            trigger=trigger,
-            platform_post_id=platform_post_id,
-            post_id=post_id,
-            post_title=post_title,
-            name=name,
-            keywords=keywords,
-            match_mode=match_mode,
-            exclude_keywords=exclude_keywords,
-            typo_tolerance=typo_tolerance,
-            dm_message=dm_message,
-            buttons=buttons,
-            template=template,
-            comment_reply=comment_reply,
-            dm_message_variations=dm_message_variations,
-            comment_reply_variations=comment_reply_variations,
-            link_tracking=link_tracking,
-            click_tag=click_tag,
-            dm_delay_seconds=dm_delay_seconds,
-            comment_reply_delay_seconds=comment_reply_delay_seconds,
-            also_match_in_dms=also_match_in_dms,
-            audience=audience,
-            follow_gate=follow_gate,
-            repeat_policy=repeat_policy,
-            dedupe_same_text_hours=dedupe_same_text_hours,
-            public_reply_policy=public_reply_policy,
-            actions=actions,
-            quick_replies=quick_replies,
-            dm_media=dm_media,
-            is_active=is_active,
+        payload = self._wire_payload(
+            {
+                "profileId": profile_id,
+                "accountId": account_id,
+                "trigger": trigger,
+                "platformPostId": platform_post_id,
+                "postId": post_id,
+                "postTitle": post_title,
+                "name": name,
+                "keywords": keywords,
+                "matchMode": match_mode,
+                "excludeKeywords": exclude_keywords,
+                "typoTolerance": typo_tolerance,
+                "dmMessage": dm_message,
+                "buttons": buttons,
+                "template": template,
+                "commentReply": comment_reply,
+                "dmMessageVariations": dm_message_variations,
+                "commentReplyVariations": comment_reply_variations,
+                "linkTracking": link_tracking,
+                "clickTag": click_tag,
+                "dmDelaySeconds": dm_delay_seconds,
+                "commentReplyDelaySeconds": comment_reply_delay_seconds,
+                "alsoMatchInDms": also_match_in_dms,
+                "audience": audience,
+                "followGate": follow_gate,
+                "repeatPolicy": repeat_policy,
+                "dedupeSameTextHours": dedupe_same_text_hours,
+                "publicReplyPolicy": public_reply_policy,
+                "actions": actions,
+                "quickReplies": quick_replies,
+                "dmMedia": dm_media,
+                "isActive": is_active,
+            }
         )
         return self._client._post("/v1/comment-automations", data=payload)
 
@@ -192,36 +188,38 @@ class CommentAutomationsResource:
         dm_media: Any | None = None,
     ) -> dict[str, Any]:
         """Update automation settings"""
-        payload = self._build_payload(
-            name=name,
-            trigger=trigger,
-            keywords=keywords,
-            match_mode=match_mode,
-            exclude_keywords=exclude_keywords,
-            typo_tolerance=typo_tolerance,
-            platform_post_id=platform_post_id,
-            post_id=post_id,
-            post_title=post_title,
-            dm_message=dm_message,
-            buttons=buttons,
-            template=template,
-            comment_reply=comment_reply,
-            dm_message_variations=dm_message_variations,
-            comment_reply_variations=comment_reply_variations,
-            link_tracking=link_tracking,
-            click_tag=click_tag,
-            also_match_in_dms=also_match_in_dms,
-            dm_delay_seconds=dm_delay_seconds,
-            comment_reply_delay_seconds=comment_reply_delay_seconds,
-            audience=audience,
-            follow_gate=follow_gate,
-            is_active=is_active,
-            repeat_policy=repeat_policy,
-            dedupe_same_text_hours=dedupe_same_text_hours,
-            public_reply_policy=public_reply_policy,
-            actions=actions,
-            quick_replies=quick_replies,
-            dm_media=dm_media,
+        payload = self._wire_payload(
+            {
+                "name": name,
+                "trigger": trigger,
+                "keywords": keywords,
+                "matchMode": match_mode,
+                "excludeKeywords": exclude_keywords,
+                "typoTolerance": typo_tolerance,
+                "platformPostId": platform_post_id,
+                "postId": post_id,
+                "postTitle": post_title,
+                "dmMessage": dm_message,
+                "buttons": buttons,
+                "template": template,
+                "commentReply": comment_reply,
+                "dmMessageVariations": dm_message_variations,
+                "commentReplyVariations": comment_reply_variations,
+                "linkTracking": link_tracking,
+                "clickTag": click_tag,
+                "alsoMatchInDms": also_match_in_dms,
+                "dmDelaySeconds": dm_delay_seconds,
+                "commentReplyDelaySeconds": comment_reply_delay_seconds,
+                "audience": audience,
+                "followGate": follow_gate,
+                "isActive": is_active,
+                "repeatPolicy": repeat_policy,
+                "dedupeSameTextHours": dedupe_same_text_hours,
+                "publicReplyPolicy": public_reply_policy,
+                "actions": actions,
+                "quickReplies": quick_replies,
+                "dmMedia": dm_media,
+            }
         )
         return self._client._patch(
             f"/v1/comment-automations/{automation_id}", data=payload
@@ -240,10 +238,12 @@ class CommentAutomationsResource:
         skip: int | None = 0,
     ) -> dict[str, Any]:
         """List automation logs"""
-        params = self._build_params(
-            status=status,
-            limit=limit,
-            skip=skip,
+        params = self._wire_params(
+            {
+                "status": status,
+                "limit": limit,
+                "skip": skip,
+            }
         )
         return self._client._get(
             f"/v1/comment-automations/{automation_id}/logs", params=params
@@ -253,8 +253,10 @@ class CommentAutomationsResource:
         self, *, profile_id: str | None = None
     ) -> dict[str, Any]:
         """List comment-to-DM automations (async)"""
-        params = self._build_params(
-            profile_id=profile_id,
+        params = self._wire_params(
+            {
+                "profileId": profile_id,
+            }
         )
         return await self._client._aget("/v1/comment-automations", params=params)
 
@@ -294,38 +296,40 @@ class CommentAutomationsResource:
         is_active: bool | None = True,
     ) -> dict[str, Any]:
         """Create comment-to-DM automation (async)"""
-        payload = self._build_payload(
-            profile_id=profile_id,
-            account_id=account_id,
-            trigger=trigger,
-            platform_post_id=platform_post_id,
-            post_id=post_id,
-            post_title=post_title,
-            name=name,
-            keywords=keywords,
-            match_mode=match_mode,
-            exclude_keywords=exclude_keywords,
-            typo_tolerance=typo_tolerance,
-            dm_message=dm_message,
-            buttons=buttons,
-            template=template,
-            comment_reply=comment_reply,
-            dm_message_variations=dm_message_variations,
-            comment_reply_variations=comment_reply_variations,
-            link_tracking=link_tracking,
-            click_tag=click_tag,
-            dm_delay_seconds=dm_delay_seconds,
-            comment_reply_delay_seconds=comment_reply_delay_seconds,
-            also_match_in_dms=also_match_in_dms,
-            audience=audience,
-            follow_gate=follow_gate,
-            repeat_policy=repeat_policy,
-            dedupe_same_text_hours=dedupe_same_text_hours,
-            public_reply_policy=public_reply_policy,
-            actions=actions,
-            quick_replies=quick_replies,
-            dm_media=dm_media,
-            is_active=is_active,
+        payload = self._wire_payload(
+            {
+                "profileId": profile_id,
+                "accountId": account_id,
+                "trigger": trigger,
+                "platformPostId": platform_post_id,
+                "postId": post_id,
+                "postTitle": post_title,
+                "name": name,
+                "keywords": keywords,
+                "matchMode": match_mode,
+                "excludeKeywords": exclude_keywords,
+                "typoTolerance": typo_tolerance,
+                "dmMessage": dm_message,
+                "buttons": buttons,
+                "template": template,
+                "commentReply": comment_reply,
+                "dmMessageVariations": dm_message_variations,
+                "commentReplyVariations": comment_reply_variations,
+                "linkTracking": link_tracking,
+                "clickTag": click_tag,
+                "dmDelaySeconds": dm_delay_seconds,
+                "commentReplyDelaySeconds": comment_reply_delay_seconds,
+                "alsoMatchInDms": also_match_in_dms,
+                "audience": audience,
+                "followGate": follow_gate,
+                "repeatPolicy": repeat_policy,
+                "dedupeSameTextHours": dedupe_same_text_hours,
+                "publicReplyPolicy": public_reply_policy,
+                "actions": actions,
+                "quickReplies": quick_replies,
+                "dmMedia": dm_media,
+                "isActive": is_active,
+            }
         )
         return await self._client._apost("/v1/comment-automations", data=payload)
 
@@ -368,36 +372,38 @@ class CommentAutomationsResource:
         dm_media: Any | None = None,
     ) -> dict[str, Any]:
         """Update automation settings (async)"""
-        payload = self._build_payload(
-            name=name,
-            trigger=trigger,
-            keywords=keywords,
-            match_mode=match_mode,
-            exclude_keywords=exclude_keywords,
-            typo_tolerance=typo_tolerance,
-            platform_post_id=platform_post_id,
-            post_id=post_id,
-            post_title=post_title,
-            dm_message=dm_message,
-            buttons=buttons,
-            template=template,
-            comment_reply=comment_reply,
-            dm_message_variations=dm_message_variations,
-            comment_reply_variations=comment_reply_variations,
-            link_tracking=link_tracking,
-            click_tag=click_tag,
-            also_match_in_dms=also_match_in_dms,
-            dm_delay_seconds=dm_delay_seconds,
-            comment_reply_delay_seconds=comment_reply_delay_seconds,
-            audience=audience,
-            follow_gate=follow_gate,
-            is_active=is_active,
-            repeat_policy=repeat_policy,
-            dedupe_same_text_hours=dedupe_same_text_hours,
-            public_reply_policy=public_reply_policy,
-            actions=actions,
-            quick_replies=quick_replies,
-            dm_media=dm_media,
+        payload = self._wire_payload(
+            {
+                "name": name,
+                "trigger": trigger,
+                "keywords": keywords,
+                "matchMode": match_mode,
+                "excludeKeywords": exclude_keywords,
+                "typoTolerance": typo_tolerance,
+                "platformPostId": platform_post_id,
+                "postId": post_id,
+                "postTitle": post_title,
+                "dmMessage": dm_message,
+                "buttons": buttons,
+                "template": template,
+                "commentReply": comment_reply,
+                "dmMessageVariations": dm_message_variations,
+                "commentReplyVariations": comment_reply_variations,
+                "linkTracking": link_tracking,
+                "clickTag": click_tag,
+                "alsoMatchInDms": also_match_in_dms,
+                "dmDelaySeconds": dm_delay_seconds,
+                "commentReplyDelaySeconds": comment_reply_delay_seconds,
+                "audience": audience,
+                "followGate": follow_gate,
+                "isActive": is_active,
+                "repeatPolicy": repeat_policy,
+                "dedupeSameTextHours": dedupe_same_text_hours,
+                "publicReplyPolicy": public_reply_policy,
+                "actions": actions,
+                "quickReplies": quick_replies,
+                "dmMedia": dm_media,
+            }
         )
         return await self._client._apatch(
             f"/v1/comment-automations/{automation_id}", data=payload
@@ -416,10 +422,12 @@ class CommentAutomationsResource:
         skip: int | None = 0,
     ) -> dict[str, Any]:
         """List automation logs (async)"""
-        params = self._build_params(
-            status=status,
-            limit=limit,
-            skip=skip,
+        params = self._wire_params(
+            {
+                "status": status,
+                "limit": limit,
+                "skip": skip,
+            }
         )
         return await self._client._aget(
             f"/v1/comment-automations/{automation_id}/logs", params=params

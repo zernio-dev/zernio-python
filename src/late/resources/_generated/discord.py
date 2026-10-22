@@ -23,7 +23,7 @@ class DiscordResource:
     def __init__(self, client: BaseClient) -> None:
         self._client = client
 
-    def _build_params(self, **kwargs: Any) -> dict[str, Any]:
+    def _wire_params(self, fields: dict[str, Any]) -> dict[str, Any]:
         """Build query parameters, filtering None and empty-string values.
 
         Empty strings are filtered because MCP tool wrappers pass ``""`` as the
@@ -38,20 +38,16 @@ class DiscordResource:
         """
         from enum import Enum
 
-        def to_camel(s: str) -> str:
-            parts = s.split("_")
-            return parts[0] + "".join(p.title() for p in parts[1:])
-
         result: dict[str, Any] = {}
-        for k, v in kwargs.items():
+        for k, v in fields.items():
             if isinstance(v, Enum):
                 v = v.value
             if v is None or v == "":
                 continue
-            result[to_camel(k)] = v
+            result[k] = v
         return result
 
-    def _build_payload(self, **kwargs: Any) -> dict[str, Any]:
+    def _wire_payload(self, fields: dict[str, Any]) -> dict[str, Any]:
         """Build request payload, filtering None values. Enum members are
         unwrapped to their value so JSON bodies carry e.g. "failed" rather
         than a raw Enum member (plain Enum members are not JSON-serializable).
@@ -59,20 +55,16 @@ class DiscordResource:
         from datetime import datetime
         from enum import Enum
 
-        def to_camel(s: str) -> str:
-            parts = s.split("_")
-            return parts[0] + "".join(p.title() for p in parts[1:])
-
         result: dict[str, Any] = {}
-        for k, v in kwargs.items():
+        for k, v in fields.items():
             if isinstance(v, Enum):
                 v = v.value
             if v is None:
                 continue
             if isinstance(v, datetime):
-                result[to_camel(k)] = v.isoformat()
+                result[k] = v.isoformat()
             else:
-                result[to_camel(k)] = v
+                result[k] = v
         return result
 
     def get_discord_settings(self, account_id: str) -> dict[str, Any]:
@@ -88,10 +80,12 @@ class DiscordResource:
         channel_id: str | None = None,
     ) -> dict[str, Any]:
         """Update Discord settings"""
-        payload = self._build_payload(
-            webhook_username=webhook_username,
-            webhook_avatar_url=webhook_avatar_url,
-            channel_id=channel_id,
+        payload = self._wire_payload(
+            {
+                "webhookUsername": webhook_username,
+                "webhookAvatarUrl": webhook_avatar_url,
+                "channelId": channel_id,
+            }
         )
         return self._client._patch(
             f"/v1/accounts/{account_id}/discord-settings", data=payload
@@ -112,13 +106,15 @@ class DiscordResource:
         tts: bool | None = None,
     ) -> dict[str, Any]:
         """Send a Discord Direct Message"""
-        payload = self._build_payload(
-            account_id=account_id,
-            user_id=user_id,
-            content=content,
-            embeds=embeds,
-            attachments=attachments,
-            tts=tts,
+        payload = self._wire_payload(
+            {
+                "accountId": account_id,
+                "userId": user_id,
+                "content": content,
+                "embeds": embeds,
+                "attachments": attachments,
+                "tts": tts,
+            }
         )
         return self._client._post("/v1/discord/dms", data=payload)
 
@@ -126,8 +122,10 @@ class DiscordResource:
         self, guild_id: str, account_id: str
     ) -> dict[str, Any]:
         """List Discord guild roles"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+            }
         )
         return self._client._get(f"/v1/discord/guilds/{guild_id}/roles", params=params)
 
@@ -143,15 +141,19 @@ class DiscordResource:
         permissions: str | None = None,
     ) -> dict[str, Any]:
         """Create a Discord guild role"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+            }
         )
-        payload = self._build_payload(
-            name=name,
-            color=color,
-            hoist=hoist,
-            mentionable=mentionable,
-            permissions=permissions,
+        payload = self._wire_payload(
+            {
+                "name": name,
+                "color": color,
+                "hoist": hoist,
+                "mentionable": mentionable,
+                "permissions": permissions,
+            }
         )
         return self._client._post(
             f"/v1/discord/guilds/{guild_id}/roles", data=payload, params=params
@@ -170,15 +172,19 @@ class DiscordResource:
         permissions: str | None = None,
     ) -> dict[str, Any]:
         """Edit a Discord guild role"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+            }
         )
-        payload = self._build_payload(
-            name=name,
-            color=color,
-            hoist=hoist,
-            mentionable=mentionable,
-            permissions=permissions,
+        payload = self._wire_payload(
+            {
+                "name": name,
+                "color": color,
+                "hoist": hoist,
+                "mentionable": mentionable,
+                "permissions": permissions,
+            }
         )
         return self._client._patch(
             f"/v1/discord/guilds/{guild_id}/roles/{role_id}",
@@ -190,8 +196,10 @@ class DiscordResource:
         self, guild_id: str, role_id: str, account_id: str
     ) -> dict[str, Any]:
         """Delete a Discord guild role"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+            }
         )
         return self._client._delete(
             f"/v1/discord/guilds/{guild_id}/roles/{role_id}", params=params
@@ -206,10 +214,12 @@ class DiscordResource:
         after: str | None = None,
     ) -> dict[str, Any]:
         """List Discord guild members"""
-        params = self._build_params(
-            account_id=account_id,
-            limit=limit,
-            after=after,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+                "limit": limit,
+                "after": after,
+            }
         )
         return self._client._get(
             f"/v1/discord/guilds/{guild_id}/members", params=params
@@ -219,10 +229,12 @@ class DiscordResource:
         self, guild_id: str, account_id: str, query: str, *, limit: int | None = 25
     ) -> dict[str, Any]:
         """Search Discord guild members"""
-        params = self._build_params(
-            account_id=account_id,
-            query=query,
-            limit=limit,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+                "query": query,
+                "limit": limit,
+            }
         )
         return self._client._get(
             f"/v1/discord/guilds/{guild_id}/members/search", params=params
@@ -232,8 +244,10 @@ class DiscordResource:
         self, guild_id: str, user_id: str, account_id: str
     ) -> dict[str, Any]:
         """Get a Discord guild member"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+            }
         )
         return self._client._get(
             f"/v1/discord/guilds/{guild_id}/members/{user_id}", params=params
@@ -243,8 +257,10 @@ class DiscordResource:
         self, guild_id: str, user_id: str, role_id: str, account_id: str
     ) -> dict[str, Any]:
         """Assign a role to a guild member"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+            }
         )
         return self._client._put(
             f"/v1/discord/guilds/{guild_id}/members/{user_id}/roles/{role_id}",
@@ -255,8 +271,10 @@ class DiscordResource:
         self, guild_id: str, user_id: str, role_id: str, account_id: str
     ) -> dict[str, Any]:
         """Remove a role from a guild member"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+            }
         )
         return self._client._delete(
             f"/v1/discord/guilds/{guild_id}/members/{user_id}/roles/{role_id}",
@@ -267,8 +285,10 @@ class DiscordResource:
         self, channel_id: str, message_id: str, account_id: str
     ) -> dict[str, Any]:
         """Delete a Discord channel message"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+            }
         )
         return self._client._delete(
             f"/v1/discord/channels/{channel_id}/messages/{message_id}", params=params
@@ -278,8 +298,10 @@ class DiscordResource:
         self, channel_id: str, message_id: str, account_id: str
     ) -> dict[str, Any]:
         """Crosspost Discord message"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+            }
         )
         return self._client._post(
             f"/v1/discord/channels/{channel_id}/messages/{message_id}/crosspost",
@@ -296,13 +318,17 @@ class DiscordResource:
         auto_archive_duration: int | None = None,
     ) -> dict[str, Any]:
         """Create a Discord public thread"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+            }
         )
-        payload = self._build_payload(
-            name=name,
-            message_id=message_id,
-            auto_archive_duration=auto_archive_duration,
+        payload = self._wire_payload(
+            {
+                "name": name,
+                "messageId": message_id,
+                "autoArchiveDuration": auto_archive_duration,
+            }
         )
         return self._client._post(
             f"/v1/discord/channels/{channel_id}/threads", data=payload, params=params
@@ -312,8 +338,10 @@ class DiscordResource:
         self, channel_id: str, account_id: str
     ) -> dict[str, Any]:
         """List pinned messages"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+            }
         )
         return self._client._get(
             f"/v1/discord/channels/{channel_id}/pins", params=params
@@ -323,8 +351,10 @@ class DiscordResource:
         self, channel_id: str, message_id: str, account_id: str
     ) -> dict[str, Any]:
         """Pin a Discord message"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+            }
         )
         return self._client._put(
             f"/v1/discord/channels/{channel_id}/pins/{message_id}", params=params
@@ -334,8 +364,10 @@ class DiscordResource:
         self, channel_id: str, message_id: str, account_id: str
     ) -> dict[str, Any]:
         """Unpin a Discord message"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+            }
         )
         return self._client._delete(
             f"/v1/discord/channels/{channel_id}/pins/{message_id}", params=params
@@ -345,9 +377,11 @@ class DiscordResource:
         self, guild_id: str, account_id: str, *, with_user_count: bool | None = None
     ) -> dict[str, Any]:
         """List Discord scheduled events"""
-        params = self._build_params(
-            account_id=account_id,
-            with_user_count=with_user_count,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+                "withUserCount": with_user_count,
+            }
         )
         return self._client._get(f"/v1/discord/guilds/{guild_id}/events", params=params)
 
@@ -363,13 +397,15 @@ class DiscordResource:
         image_data_uri: str | None = None,
     ) -> dict[str, Any]:
         """Create a Discord scheduled event"""
-        payload = self._build_payload(
-            account_id=account_id,
-            name=name,
-            description=description,
-            starts_at=starts_at,
-            entity=entity,
-            image_data_uri=image_data_uri,
+        payload = self._wire_payload(
+            {
+                "accountId": account_id,
+                "name": name,
+                "description": description,
+                "startsAt": starts_at,
+                "entity": entity,
+                "imageDataUri": image_data_uri,
+            }
         )
         return self._client._post(f"/v1/discord/guilds/{guild_id}/events", data=payload)
 
@@ -377,8 +413,10 @@ class DiscordResource:
         self, guild_id: str, event_id: str, account_id: str
     ) -> dict[str, Any]:
         """Get a Discord scheduled event"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+            }
         )
         return self._client._get(
             f"/v1/discord/guilds/{guild_id}/events/{event_id}", params=params
@@ -399,15 +437,17 @@ class DiscordResource:
         image_data_uri: str | None = None,
     ) -> dict[str, Any]:
         """Update a Discord scheduled event"""
-        payload = self._build_payload(
-            account_id=account_id,
-            name=name,
-            description=description,
-            starts_at=starts_at,
-            ends_at=ends_at,
-            location=location,
-            status=status,
-            image_data_uri=image_data_uri,
+        payload = self._wire_payload(
+            {
+                "accountId": account_id,
+                "name": name,
+                "description": description,
+                "startsAt": starts_at,
+                "endsAt": ends_at,
+                "location": location,
+                "status": status,
+                "imageDataUri": image_data_uri,
+            }
         )
         return self._client._patch(
             f"/v1/discord/guilds/{guild_id}/events/{event_id}", data=payload
@@ -417,8 +457,10 @@ class DiscordResource:
         self, guild_id: str, event_id: str, account_id: str
     ) -> dict[str, Any]:
         """Delete a Discord scheduled event"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+            }
         )
         return self._client._delete(
             f"/v1/discord/guilds/{guild_id}/events/{event_id}", params=params
@@ -437,10 +479,12 @@ class DiscordResource:
         channel_id: str | None = None,
     ) -> dict[str, Any]:
         """Update Discord settings (async)"""
-        payload = self._build_payload(
-            webhook_username=webhook_username,
-            webhook_avatar_url=webhook_avatar_url,
-            channel_id=channel_id,
+        payload = self._wire_payload(
+            {
+                "webhookUsername": webhook_username,
+                "webhookAvatarUrl": webhook_avatar_url,
+                "channelId": channel_id,
+            }
         )
         return await self._client._apatch(
             f"/v1/accounts/{account_id}/discord-settings", data=payload
@@ -461,13 +505,15 @@ class DiscordResource:
         tts: bool | None = None,
     ) -> dict[str, Any]:
         """Send a Discord Direct Message (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            user_id=user_id,
-            content=content,
-            embeds=embeds,
-            attachments=attachments,
-            tts=tts,
+        payload = self._wire_payload(
+            {
+                "accountId": account_id,
+                "userId": user_id,
+                "content": content,
+                "embeds": embeds,
+                "attachments": attachments,
+                "tts": tts,
+            }
         )
         return await self._client._apost("/v1/discord/dms", data=payload)
 
@@ -475,8 +521,10 @@ class DiscordResource:
         self, guild_id: str, account_id: str
     ) -> dict[str, Any]:
         """List Discord guild roles (async)"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+            }
         )
         return await self._client._aget(
             f"/v1/discord/guilds/{guild_id}/roles", params=params
@@ -494,15 +542,19 @@ class DiscordResource:
         permissions: str | None = None,
     ) -> dict[str, Any]:
         """Create a Discord guild role (async)"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+            }
         )
-        payload = self._build_payload(
-            name=name,
-            color=color,
-            hoist=hoist,
-            mentionable=mentionable,
-            permissions=permissions,
+        payload = self._wire_payload(
+            {
+                "name": name,
+                "color": color,
+                "hoist": hoist,
+                "mentionable": mentionable,
+                "permissions": permissions,
+            }
         )
         return await self._client._apost(
             f"/v1/discord/guilds/{guild_id}/roles", data=payload, params=params
@@ -521,15 +573,19 @@ class DiscordResource:
         permissions: str | None = None,
     ) -> dict[str, Any]:
         """Edit a Discord guild role (async)"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+            }
         )
-        payload = self._build_payload(
-            name=name,
-            color=color,
-            hoist=hoist,
-            mentionable=mentionable,
-            permissions=permissions,
+        payload = self._wire_payload(
+            {
+                "name": name,
+                "color": color,
+                "hoist": hoist,
+                "mentionable": mentionable,
+                "permissions": permissions,
+            }
         )
         return await self._client._apatch(
             f"/v1/discord/guilds/{guild_id}/roles/{role_id}",
@@ -541,8 +597,10 @@ class DiscordResource:
         self, guild_id: str, role_id: str, account_id: str
     ) -> dict[str, Any]:
         """Delete a Discord guild role (async)"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+            }
         )
         return await self._client._adelete(
             f"/v1/discord/guilds/{guild_id}/roles/{role_id}", params=params
@@ -557,10 +615,12 @@ class DiscordResource:
         after: str | None = None,
     ) -> dict[str, Any]:
         """List Discord guild members (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            limit=limit,
-            after=after,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+                "limit": limit,
+                "after": after,
+            }
         )
         return await self._client._aget(
             f"/v1/discord/guilds/{guild_id}/members", params=params
@@ -570,10 +630,12 @@ class DiscordResource:
         self, guild_id: str, account_id: str, query: str, *, limit: int | None = 25
     ) -> dict[str, Any]:
         """Search Discord guild members (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            query=query,
-            limit=limit,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+                "query": query,
+                "limit": limit,
+            }
         )
         return await self._client._aget(
             f"/v1/discord/guilds/{guild_id}/members/search", params=params
@@ -583,8 +645,10 @@ class DiscordResource:
         self, guild_id: str, user_id: str, account_id: str
     ) -> dict[str, Any]:
         """Get a Discord guild member (async)"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+            }
         )
         return await self._client._aget(
             f"/v1/discord/guilds/{guild_id}/members/{user_id}", params=params
@@ -594,8 +658,10 @@ class DiscordResource:
         self, guild_id: str, user_id: str, role_id: str, account_id: str
     ) -> dict[str, Any]:
         """Assign a role to a guild member (async)"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+            }
         )
         return await self._client._aput(
             f"/v1/discord/guilds/{guild_id}/members/{user_id}/roles/{role_id}",
@@ -606,8 +672,10 @@ class DiscordResource:
         self, guild_id: str, user_id: str, role_id: str, account_id: str
     ) -> dict[str, Any]:
         """Remove a role from a guild member (async)"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+            }
         )
         return await self._client._adelete(
             f"/v1/discord/guilds/{guild_id}/members/{user_id}/roles/{role_id}",
@@ -618,8 +686,10 @@ class DiscordResource:
         self, channel_id: str, message_id: str, account_id: str
     ) -> dict[str, Any]:
         """Delete a Discord channel message (async)"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+            }
         )
         return await self._client._adelete(
             f"/v1/discord/channels/{channel_id}/messages/{message_id}", params=params
@@ -629,8 +699,10 @@ class DiscordResource:
         self, channel_id: str, message_id: str, account_id: str
     ) -> dict[str, Any]:
         """Crosspost Discord message (async)"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+            }
         )
         return await self._client._apost(
             f"/v1/discord/channels/{channel_id}/messages/{message_id}/crosspost",
@@ -647,13 +719,17 @@ class DiscordResource:
         auto_archive_duration: int | None = None,
     ) -> dict[str, Any]:
         """Create a Discord public thread (async)"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+            }
         )
-        payload = self._build_payload(
-            name=name,
-            message_id=message_id,
-            auto_archive_duration=auto_archive_duration,
+        payload = self._wire_payload(
+            {
+                "name": name,
+                "messageId": message_id,
+                "autoArchiveDuration": auto_archive_duration,
+            }
         )
         return await self._client._apost(
             f"/v1/discord/channels/{channel_id}/threads", data=payload, params=params
@@ -663,8 +739,10 @@ class DiscordResource:
         self, channel_id: str, account_id: str
     ) -> dict[str, Any]:
         """List pinned messages (async)"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+            }
         )
         return await self._client._aget(
             f"/v1/discord/channels/{channel_id}/pins", params=params
@@ -674,8 +752,10 @@ class DiscordResource:
         self, channel_id: str, message_id: str, account_id: str
     ) -> dict[str, Any]:
         """Pin a Discord message (async)"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+            }
         )
         return await self._client._aput(
             f"/v1/discord/channels/{channel_id}/pins/{message_id}", params=params
@@ -685,8 +765,10 @@ class DiscordResource:
         self, channel_id: str, message_id: str, account_id: str
     ) -> dict[str, Any]:
         """Unpin a Discord message (async)"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+            }
         )
         return await self._client._adelete(
             f"/v1/discord/channels/{channel_id}/pins/{message_id}", params=params
@@ -696,9 +778,11 @@ class DiscordResource:
         self, guild_id: str, account_id: str, *, with_user_count: bool | None = None
     ) -> dict[str, Any]:
         """List Discord scheduled events (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            with_user_count=with_user_count,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+                "withUserCount": with_user_count,
+            }
         )
         return await self._client._aget(
             f"/v1/discord/guilds/{guild_id}/events", params=params
@@ -716,13 +800,15 @@ class DiscordResource:
         image_data_uri: str | None = None,
     ) -> dict[str, Any]:
         """Create a Discord scheduled event (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            name=name,
-            description=description,
-            starts_at=starts_at,
-            entity=entity,
-            image_data_uri=image_data_uri,
+        payload = self._wire_payload(
+            {
+                "accountId": account_id,
+                "name": name,
+                "description": description,
+                "startsAt": starts_at,
+                "entity": entity,
+                "imageDataUri": image_data_uri,
+            }
         )
         return await self._client._apost(
             f"/v1/discord/guilds/{guild_id}/events", data=payload
@@ -732,8 +818,10 @@ class DiscordResource:
         self, guild_id: str, event_id: str, account_id: str
     ) -> dict[str, Any]:
         """Get a Discord scheduled event (async)"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+            }
         )
         return await self._client._aget(
             f"/v1/discord/guilds/{guild_id}/events/{event_id}", params=params
@@ -754,15 +842,17 @@ class DiscordResource:
         image_data_uri: str | None = None,
     ) -> dict[str, Any]:
         """Update a Discord scheduled event (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            name=name,
-            description=description,
-            starts_at=starts_at,
-            ends_at=ends_at,
-            location=location,
-            status=status,
-            image_data_uri=image_data_uri,
+        payload = self._wire_payload(
+            {
+                "accountId": account_id,
+                "name": name,
+                "description": description,
+                "startsAt": starts_at,
+                "endsAt": ends_at,
+                "location": location,
+                "status": status,
+                "imageDataUri": image_data_uri,
+            }
         )
         return await self._client._apatch(
             f"/v1/discord/guilds/{guild_id}/events/{event_id}", data=payload
@@ -772,8 +862,10 @@ class DiscordResource:
         self, guild_id: str, event_id: str, account_id: str
     ) -> dict[str, Any]:
         """Delete a Discord scheduled event (async)"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+            }
         )
         return await self._client._adelete(
             f"/v1/discord/guilds/{guild_id}/events/{event_id}", params=params

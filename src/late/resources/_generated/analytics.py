@@ -23,7 +23,7 @@ class AnalyticsResource:
     def __init__(self, client: BaseClient) -> None:
         self._client = client
 
-    def _build_params(self, **kwargs: Any) -> dict[str, Any]:
+    def _wire_params(self, fields: dict[str, Any]) -> dict[str, Any]:
         """Build query parameters, filtering None and empty-string values.
 
         Empty strings are filtered because MCP tool wrappers pass ``""`` as the
@@ -38,20 +38,16 @@ class AnalyticsResource:
         """
         from enum import Enum
 
-        def to_camel(s: str) -> str:
-            parts = s.split("_")
-            return parts[0] + "".join(p.title() for p in parts[1:])
-
         result: dict[str, Any] = {}
-        for k, v in kwargs.items():
+        for k, v in fields.items():
             if isinstance(v, Enum):
                 v = v.value
             if v is None or v == "":
                 continue
-            result[to_camel(k)] = v
+            result[k] = v
         return result
 
-    def _build_payload(self, **kwargs: Any) -> dict[str, Any]:
+    def _wire_payload(self, fields: dict[str, Any]) -> dict[str, Any]:
         """Build request payload, filtering None values. Enum members are
         unwrapped to their value so JSON bodies carry e.g. "failed" rather
         than a raw Enum member (plain Enum members are not JSON-serializable).
@@ -59,20 +55,16 @@ class AnalyticsResource:
         from datetime import datetime
         from enum import Enum
 
-        def to_camel(s: str) -> str:
-            parts = s.split("_")
-            return parts[0] + "".join(p.title() for p in parts[1:])
-
         result: dict[str, Any] = {}
-        for k, v in kwargs.items():
+        for k, v in fields.items():
             if isinstance(v, Enum):
                 v = v.value
             if v is None:
                 continue
             if isinstance(v, datetime):
-                result[to_camel(k)] = v.isoformat()
+                result[k] = v.isoformat()
             else:
-                result[to_camel(k)] = v
+                result[k] = v
         return result
 
     def get_analytics(
@@ -92,19 +84,21 @@ class AnalyticsResource:
         tags: str | None = None,
     ) -> dict[str, Any]:
         """Get post analytics"""
-        params = self._build_params(
-            post_id=post_id,
-            platform=platform,
-            profile_id=profile_id,
-            account_id=account_id,
-            source=source,
-            from_date=from_date,
-            to_date=to_date,
-            limit=limit,
-            page=page,
-            sort_by=sort_by,
-            order=order,
-            tags=tags,
+        params = self._wire_params(
+            {
+                "postId": post_id,
+                "platform": platform,
+                "profileId": profile_id,
+                "accountId": account_id,
+                "source": source,
+                "fromDate": from_date,
+                "toDate": to_date,
+                "limit": limit,
+                "page": page,
+                "sortBy": sort_by,
+                "order": order,
+                "tags": tags,
+            }
         )
         return self._client._get("/v1/analytics", params=params)
 
@@ -117,11 +111,13 @@ class AnalyticsResource:
         profile_id: str | None = "all",
     ) -> dict[str, Any]:
         """Analytics changed since a cursor"""
-        params = self._build_params(
-            cursor=cursor,
-            limit=limit,
-            platform=platform,
-            profile_id=profile_id,
+        params = self._wire_params(
+            {
+                "cursor": cursor,
+                "limit": limit,
+                "platform": platform,
+                "profileId": profile_id,
+            }
         )
         return self._client._get("/v1/analytics/delta", params=params)
 
@@ -137,14 +133,16 @@ class AnalyticsResource:
         metric_type: str | None = "total_value",
     ) -> dict[str, Any]:
         """Get YouTube channel insights"""
-        params = self._build_params(
-            account_id=account_id,
-            metrics=metrics,
-            from_date=from_date,
-            to_date=to_date,
-            since=since,
-            until=until,
-            metric_type=metric_type,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+                "metrics": metrics,
+                "fromDate": from_date,
+                "toDate": to_date,
+                "since": since,
+                "until": until,
+                "metricType": metric_type,
+            }
         )
         return self._client._get(
             "/v1/analytics/youtube/channel-insights", params=params
@@ -162,14 +160,16 @@ class AnalyticsResource:
         metric_type: str | None = "total_value",
     ) -> dict[str, Any]:
         """Get LinkedIn org analytics"""
-        params = self._build_params(
-            account_id=account_id,
-            metrics=metrics,
-            from_date=from_date,
-            to_date=to_date,
-            since=since,
-            until=until,
-            metric_type=metric_type,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+                "metrics": metrics,
+                "fromDate": from_date,
+                "toDate": to_date,
+                "since": since,
+                "until": until,
+                "metricType": metric_type,
+            }
         )
         return self._client._get(
             "/v1/analytics/linkedin/org-aggregate-analytics", params=params
@@ -187,14 +187,16 @@ class AnalyticsResource:
         metric_type: str | None = "total_value",
     ) -> dict[str, Any]:
         """Get TikTok account-level insights"""
-        params = self._build_params(
-            account_id=account_id,
-            metrics=metrics,
-            from_date=from_date,
-            to_date=to_date,
-            since=since,
-            until=until,
-            metric_type=metric_type,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+                "metrics": metrics,
+                "fromDate": from_date,
+                "toDate": to_date,
+                "since": since,
+                "until": until,
+                "metricType": metric_type,
+            }
         )
         return self._client._get("/v1/analytics/tiktok/account-insights", params=params)
 
@@ -209,13 +211,15 @@ class AnalyticsResource:
         end_date: str | None = None,
     ) -> dict[str, Any]:
         """Get YouTube daily views"""
-        params = self._build_params(
-            video_id=video_id,
-            account_id=account_id,
-            from_date=from_date,
-            to_date=to_date,
-            start_date=start_date,
-            end_date=end_date,
+        params = self._wire_params(
+            {
+                "videoId": video_id,
+                "accountId": account_id,
+                "fromDate": from_date,
+                "toDate": to_date,
+                "startDate": start_date,
+                "endDate": end_date,
+            }
         )
         return self._client._get("/v1/analytics/youtube/daily-views", params=params)
 
@@ -230,13 +234,15 @@ class AnalyticsResource:
         end_date: str | None = None,
     ) -> dict[str, Any]:
         """Get YouTube video retention curve"""
-        params = self._build_params(
-            video_id=video_id,
-            account_id=account_id,
-            from_date=from_date,
-            to_date=to_date,
-            start_date=start_date,
-            end_date=end_date,
+        params = self._wire_params(
+            {
+                "videoId": video_id,
+                "accountId": account_id,
+                "fromDate": from_date,
+                "toDate": to_date,
+                "startDate": start_date,
+                "endDate": end_date,
+            }
         )
         return self._client._get("/v1/analytics/youtube/video-retention", params=params)
 
@@ -252,14 +258,16 @@ class AnalyticsResource:
         metric_type: str | None = "total_value",
     ) -> dict[str, Any]:
         """Get Facebook Page insights"""
-        params = self._build_params(
-            account_id=account_id,
-            metrics=metrics,
-            from_date=from_date,
-            to_date=to_date,
-            since=since,
-            until=until,
-            metric_type=metric_type,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+                "metrics": metrics,
+                "fromDate": from_date,
+                "toDate": to_date,
+                "since": since,
+                "until": until,
+                "metricType": metric_type,
+            }
         )
         return self._client._get("/v1/analytics/facebook/page-insights", params=params)
 
@@ -267,10 +275,12 @@ class AnalyticsResource:
         self, account_id: str, post_id: str, *, metrics: str | None = None
     ) -> dict[str, Any]:
         """Get Facebook post monetization earnings"""
-        params = self._build_params(
-            account_id=account_id,
-            post_id=post_id,
-            metrics=metrics,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+                "postId": post_id,
+                "metrics": metrics,
+            }
         )
         return self._client._get("/v1/analytics/facebook/post-earnings", params=params)
 
@@ -287,15 +297,17 @@ class AnalyticsResource:
         breakdown: str | None = None,
     ) -> dict[str, Any]:
         """Get Instagram insights"""
-        params = self._build_params(
-            account_id=account_id,
-            metrics=metrics,
-            from_date=from_date,
-            to_date=to_date,
-            since=since,
-            until=until,
-            metric_type=metric_type,
-            breakdown=breakdown,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+                "metrics": metrics,
+                "fromDate": from_date,
+                "toDate": to_date,
+                "since": since,
+                "until": until,
+                "metricType": metric_type,
+                "breakdown": breakdown,
+            }
         )
         return self._client._get(
             "/v1/analytics/instagram/account-insights", params=params
@@ -313,14 +325,16 @@ class AnalyticsResource:
         metric_type: str | None = "total_value",
     ) -> dict[str, Any]:
         """Get Instagram follower history"""
-        params = self._build_params(
-            account_id=account_id,
-            metrics=metrics,
-            from_date=from_date,
-            to_date=to_date,
-            since=since,
-            until=until,
-            metric_type=metric_type,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+                "metrics": metrics,
+                "fromDate": from_date,
+                "toDate": to_date,
+                "since": since,
+                "until": until,
+                "metricType": metric_type,
+            }
         )
         return self._client._get(
             "/v1/analytics/instagram/follower-history", params=params
@@ -330,9 +344,11 @@ class AnalyticsResource:
         self, account_id: str, *, breakdown: str | None = None
     ) -> dict[str, Any]:
         """Get Facebook Page demographics"""
-        params = self._build_params(
-            account_id=account_id,
-            breakdown=breakdown,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+                "breakdown": breakdown,
+            }
         )
         return self._client._get("/v1/analytics/facebook/demographics", params=params)
 
@@ -340,9 +356,11 @@ class AnalyticsResource:
         self, account_id: str, *, breakdown: str | None = None
     ) -> dict[str, Any]:
         """Get LinkedIn organization follower demographics"""
-        params = self._build_params(
-            account_id=account_id,
-            breakdown=breakdown,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+                "breakdown": breakdown,
+            }
         )
         return self._client._get("/v1/analytics/linkedin/demographics", params=params)
 
@@ -355,18 +373,22 @@ class AnalyticsResource:
         timeframe: str | None = "this_month",
     ) -> dict[str, Any]:
         """Get Instagram demographics"""
-        params = self._build_params(
-            account_id=account_id,
-            metric=metric,
-            breakdown=breakdown,
-            timeframe=timeframe,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+                "metric": metric,
+                "breakdown": breakdown,
+                "timeframe": timeframe,
+            }
         )
         return self._client._get("/v1/analytics/instagram/demographics", params=params)
 
     def get_instagram_online_followers(self, account_id: str) -> dict[str, Any]:
         """Get Instagram online followers"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+            }
         )
         return self._client._get(
             "/v1/analytics/instagram/online-followers", params=params
@@ -384,14 +406,16 @@ class AnalyticsResource:
         end_date: str | None = None,
     ) -> dict[str, Any]:
         """Get YouTube demographics"""
-        params = self._build_params(
-            account_id=account_id,
-            video_id=video_id,
-            breakdown=breakdown,
-            from_date=from_date,
-            to_date=to_date,
-            start_date=start_date,
-            end_date=end_date,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+                "videoId": video_id,
+                "breakdown": breakdown,
+                "fromDate": from_date,
+                "toDate": to_date,
+                "startDate": start_date,
+                "endDate": end_date,
+            }
         )
         return self._client._get("/v1/analytics/youtube/demographics", params=params)
 
@@ -407,14 +431,16 @@ class AnalyticsResource:
         attribution: str | None = "publish",
     ) -> dict[str, Any]:
         """Get daily aggregated metrics"""
-        params = self._build_params(
-            platform=platform,
-            profile_id=profile_id,
-            account_id=account_id,
-            from_date=from_date,
-            to_date=to_date,
-            source=source,
-            attribution=attribution,
+        params = self._wire_params(
+            {
+                "platform": platform,
+                "profileId": profile_id,
+                "accountId": account_id,
+                "fromDate": from_date,
+                "toDate": to_date,
+                "source": source,
+                "attribution": attribution,
+            }
         )
         return self._client._get("/v1/analytics/daily-metrics", params=params)
 
@@ -430,14 +456,16 @@ class AnalyticsResource:
         recent_posts: int | None = 10,
     ) -> dict[str, Any]:
         """Get an analytics dashboard"""
-        params = self._build_params(
-            profile_id=profile_id,
-            platform=platform,
-            from_date=from_date,
-            to_date=to_date,
-            compare=compare,
-            top_posts=top_posts,
-            recent_posts=recent_posts,
+        params = self._wire_params(
+            {
+                "profileId": profile_id,
+                "platform": platform,
+                "fromDate": from_date,
+                "toDate": to_date,
+                "compare": compare,
+                "topPosts": top_posts,
+                "recentPosts": recent_posts,
+            }
         )
         return self._client._get("/v1/analytics/dashboard", params=params)
 
@@ -450,11 +478,13 @@ class AnalyticsResource:
         source: str | None = "all",
     ) -> dict[str, Any]:
         """Get best times to post"""
-        params = self._build_params(
-            platform=platform,
-            profile_id=profile_id,
-            account_id=account_id,
-            source=source,
+        params = self._wire_params(
+            {
+                "platform": platform,
+                "profileId": profile_id,
+                "accountId": account_id,
+                "source": source,
+            }
         )
         return self._client._get("/v1/analytics/best-time", params=params)
 
@@ -467,11 +497,13 @@ class AnalyticsResource:
         source: str | None = "all",
     ) -> dict[str, Any]:
         """Get content performance decay"""
-        params = self._build_params(
-            platform=platform,
-            profile_id=profile_id,
-            account_id=account_id,
-            source=source,
+        params = self._wire_params(
+            {
+                "platform": platform,
+                "profileId": profile_id,
+                "accountId": account_id,
+                "source": source,
+            }
         )
         return self._client._get("/v1/analytics/content-decay", params=params)
 
@@ -484,11 +516,13 @@ class AnalyticsResource:
         source: str | None = "all",
     ) -> dict[str, Any]:
         """Get frequency vs engagement"""
-        params = self._build_params(
-            platform=platform,
-            profile_id=profile_id,
-            account_id=account_id,
-            source=source,
+        params = self._wire_params(
+            {
+                "platform": platform,
+                "profileId": profile_id,
+                "accountId": account_id,
+                "source": source,
+            }
         )
         return self._client._get("/v1/analytics/posting-frequency", params=params)
 
@@ -500,10 +534,12 @@ class AnalyticsResource:
         to_date: datetime | str | None = None,
     ) -> dict[str, Any]:
         """Get post analytics timeline"""
-        params = self._build_params(
-            post_id=post_id,
-            from_date=from_date,
-            to_date=to_date,
+        params = self._wire_params(
+            {
+                "postId": post_id,
+                "fromDate": from_date,
+                "toDate": to_date,
+            }
         )
         return self._client._get("/v1/analytics/post-timeline", params=params)
 
@@ -518,13 +554,15 @@ class AnalyticsResource:
         end_date: str | None = None,
     ) -> dict[str, Any]:
         """Get Google Business Profile performance metrics"""
-        params = self._build_params(
-            account_id=account_id,
-            metrics=metrics,
-            from_date=from_date,
-            to_date=to_date,
-            start_date=start_date,
-            end_date=end_date,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+                "metrics": metrics,
+                "fromDate": from_date,
+                "toDate": to_date,
+                "startDate": start_date,
+                "endDate": end_date,
+            }
         )
         return self._client._get(
             "/v1/analytics/googlebusiness/performance", params=params
@@ -539,11 +577,13 @@ class AnalyticsResource:
         page_token: str | None = None,
     ) -> dict[str, Any]:
         """Get Google Business Profile search keywords"""
-        params = self._build_params(
-            account_id=account_id,
-            start_month=start_month,
-            end_month=end_month,
-            page_token=page_token,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+                "startMonth": start_month,
+                "endMonth": end_month,
+                "pageToken": page_token,
+            }
         )
         return self._client._get(
             "/v1/analytics/googlebusiness/search-keywords", params=params
@@ -553,10 +593,12 @@ class AnalyticsResource:
         self, account_id: str, *, url: str | None = None, post_id: str | None = None
     ) -> dict[str, Any]:
         """Sync an external post"""
-        payload = self._build_payload(
-            account_id=account_id,
-            url=url,
-            post_id=post_id,
+        payload = self._wire_payload(
+            {
+                "accountId": account_id,
+                "url": url,
+                "postId": post_id,
+            }
         )
         return self._client._post("/v1/posts/sync-external", data=payload)
 
@@ -572,13 +614,15 @@ class AnalyticsResource:
         metrics: str | None = None,
     ) -> dict[str, Any]:
         """Get LinkedIn aggregate stats"""
-        params = self._build_params(
-            aggregation=aggregation,
-            from_date=from_date,
-            to_date=to_date,
-            start_date=start_date,
-            end_date=end_date,
-            metrics=metrics,
+        params = self._wire_params(
+            {
+                "aggregation": aggregation,
+                "fromDate": from_date,
+                "toDate": to_date,
+                "startDate": start_date,
+                "endDate": end_date,
+                "metrics": metrics,
+            }
         )
         return self._client._get(
             f"/v1/accounts/{account_id}/linkedin-aggregate-analytics", params=params
@@ -586,8 +630,10 @@ class AnalyticsResource:
 
     def get_linked_in_post_analytics(self, account_id: str, urn: str) -> dict[str, Any]:
         """Get LinkedIn post stats"""
-        params = self._build_params(
-            urn=urn,
+        params = self._wire_params(
+            {
+                "urn": urn,
+            }
         )
         return self._client._get(
             f"/v1/accounts/{account_id}/linkedin-post-analytics", params=params
@@ -602,10 +648,12 @@ class AnalyticsResource:
         cursor: int | None = 0,
     ) -> dict[str, Any]:
         """Get LinkedIn post reactions"""
-        params = self._build_params(
-            urn=urn,
-            limit=limit,
-            cursor=cursor,
+        params = self._wire_params(
+            {
+                "urn": urn,
+                "limit": limit,
+                "cursor": cursor,
+            }
         )
         return self._client._get(
             f"/v1/accounts/{account_id}/linkedin-post-reactions", params=params
@@ -615,8 +663,10 @@ class AnalyticsResource:
         self, account_id: str, post_id: str
     ) -> dict[str, Any]:
         """Get Facebook post reactions"""
-        params = self._build_params(
-            post_id=post_id,
+        params = self._wire_params(
+            {
+                "postId": post_id,
+            }
         )
         return self._client._get(
             f"/v1/accounts/{account_id}/facebook-post-reactions", params=params
@@ -639,19 +689,21 @@ class AnalyticsResource:
         tags: str | None = None,
     ) -> dict[str, Any]:
         """Get post analytics (async)"""
-        params = self._build_params(
-            post_id=post_id,
-            platform=platform,
-            profile_id=profile_id,
-            account_id=account_id,
-            source=source,
-            from_date=from_date,
-            to_date=to_date,
-            limit=limit,
-            page=page,
-            sort_by=sort_by,
-            order=order,
-            tags=tags,
+        params = self._wire_params(
+            {
+                "postId": post_id,
+                "platform": platform,
+                "profileId": profile_id,
+                "accountId": account_id,
+                "source": source,
+                "fromDate": from_date,
+                "toDate": to_date,
+                "limit": limit,
+                "page": page,
+                "sortBy": sort_by,
+                "order": order,
+                "tags": tags,
+            }
         )
         return await self._client._aget("/v1/analytics", params=params)
 
@@ -664,11 +716,13 @@ class AnalyticsResource:
         profile_id: str | None = "all",
     ) -> dict[str, Any]:
         """Analytics changed since a cursor (async)"""
-        params = self._build_params(
-            cursor=cursor,
-            limit=limit,
-            platform=platform,
-            profile_id=profile_id,
+        params = self._wire_params(
+            {
+                "cursor": cursor,
+                "limit": limit,
+                "platform": platform,
+                "profileId": profile_id,
+            }
         )
         return await self._client._aget("/v1/analytics/delta", params=params)
 
@@ -684,14 +738,16 @@ class AnalyticsResource:
         metric_type: str | None = "total_value",
     ) -> dict[str, Any]:
         """Get YouTube channel insights (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            metrics=metrics,
-            from_date=from_date,
-            to_date=to_date,
-            since=since,
-            until=until,
-            metric_type=metric_type,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+                "metrics": metrics,
+                "fromDate": from_date,
+                "toDate": to_date,
+                "since": since,
+                "until": until,
+                "metricType": metric_type,
+            }
         )
         return await self._client._aget(
             "/v1/analytics/youtube/channel-insights", params=params
@@ -709,14 +765,16 @@ class AnalyticsResource:
         metric_type: str | None = "total_value",
     ) -> dict[str, Any]:
         """Get LinkedIn org analytics (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            metrics=metrics,
-            from_date=from_date,
-            to_date=to_date,
-            since=since,
-            until=until,
-            metric_type=metric_type,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+                "metrics": metrics,
+                "fromDate": from_date,
+                "toDate": to_date,
+                "since": since,
+                "until": until,
+                "metricType": metric_type,
+            }
         )
         return await self._client._aget(
             "/v1/analytics/linkedin/org-aggregate-analytics", params=params
@@ -734,14 +792,16 @@ class AnalyticsResource:
         metric_type: str | None = "total_value",
     ) -> dict[str, Any]:
         """Get TikTok account-level insights (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            metrics=metrics,
-            from_date=from_date,
-            to_date=to_date,
-            since=since,
-            until=until,
-            metric_type=metric_type,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+                "metrics": metrics,
+                "fromDate": from_date,
+                "toDate": to_date,
+                "since": since,
+                "until": until,
+                "metricType": metric_type,
+            }
         )
         return await self._client._aget(
             "/v1/analytics/tiktok/account-insights", params=params
@@ -758,13 +818,15 @@ class AnalyticsResource:
         end_date: str | None = None,
     ) -> dict[str, Any]:
         """Get YouTube daily views (async)"""
-        params = self._build_params(
-            video_id=video_id,
-            account_id=account_id,
-            from_date=from_date,
-            to_date=to_date,
-            start_date=start_date,
-            end_date=end_date,
+        params = self._wire_params(
+            {
+                "videoId": video_id,
+                "accountId": account_id,
+                "fromDate": from_date,
+                "toDate": to_date,
+                "startDate": start_date,
+                "endDate": end_date,
+            }
         )
         return await self._client._aget(
             "/v1/analytics/youtube/daily-views", params=params
@@ -781,13 +843,15 @@ class AnalyticsResource:
         end_date: str | None = None,
     ) -> dict[str, Any]:
         """Get YouTube video retention curve (async)"""
-        params = self._build_params(
-            video_id=video_id,
-            account_id=account_id,
-            from_date=from_date,
-            to_date=to_date,
-            start_date=start_date,
-            end_date=end_date,
+        params = self._wire_params(
+            {
+                "videoId": video_id,
+                "accountId": account_id,
+                "fromDate": from_date,
+                "toDate": to_date,
+                "startDate": start_date,
+                "endDate": end_date,
+            }
         )
         return await self._client._aget(
             "/v1/analytics/youtube/video-retention", params=params
@@ -805,14 +869,16 @@ class AnalyticsResource:
         metric_type: str | None = "total_value",
     ) -> dict[str, Any]:
         """Get Facebook Page insights (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            metrics=metrics,
-            from_date=from_date,
-            to_date=to_date,
-            since=since,
-            until=until,
-            metric_type=metric_type,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+                "metrics": metrics,
+                "fromDate": from_date,
+                "toDate": to_date,
+                "since": since,
+                "until": until,
+                "metricType": metric_type,
+            }
         )
         return await self._client._aget(
             "/v1/analytics/facebook/page-insights", params=params
@@ -822,10 +888,12 @@ class AnalyticsResource:
         self, account_id: str, post_id: str, *, metrics: str | None = None
     ) -> dict[str, Any]:
         """Get Facebook post monetization earnings (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            post_id=post_id,
-            metrics=metrics,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+                "postId": post_id,
+                "metrics": metrics,
+            }
         )
         return await self._client._aget(
             "/v1/analytics/facebook/post-earnings", params=params
@@ -844,15 +912,17 @@ class AnalyticsResource:
         breakdown: str | None = None,
     ) -> dict[str, Any]:
         """Get Instagram insights (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            metrics=metrics,
-            from_date=from_date,
-            to_date=to_date,
-            since=since,
-            until=until,
-            metric_type=metric_type,
-            breakdown=breakdown,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+                "metrics": metrics,
+                "fromDate": from_date,
+                "toDate": to_date,
+                "since": since,
+                "until": until,
+                "metricType": metric_type,
+                "breakdown": breakdown,
+            }
         )
         return await self._client._aget(
             "/v1/analytics/instagram/account-insights", params=params
@@ -870,14 +940,16 @@ class AnalyticsResource:
         metric_type: str | None = "total_value",
     ) -> dict[str, Any]:
         """Get Instagram follower history (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            metrics=metrics,
-            from_date=from_date,
-            to_date=to_date,
-            since=since,
-            until=until,
-            metric_type=metric_type,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+                "metrics": metrics,
+                "fromDate": from_date,
+                "toDate": to_date,
+                "since": since,
+                "until": until,
+                "metricType": metric_type,
+            }
         )
         return await self._client._aget(
             "/v1/analytics/instagram/follower-history", params=params
@@ -887,9 +959,11 @@ class AnalyticsResource:
         self, account_id: str, *, breakdown: str | None = None
     ) -> dict[str, Any]:
         """Get Facebook Page demographics (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            breakdown=breakdown,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+                "breakdown": breakdown,
+            }
         )
         return await self._client._aget(
             "/v1/analytics/facebook/demographics", params=params
@@ -899,9 +973,11 @@ class AnalyticsResource:
         self, account_id: str, *, breakdown: str | None = None
     ) -> dict[str, Any]:
         """Get LinkedIn organization follower demographics (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            breakdown=breakdown,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+                "breakdown": breakdown,
+            }
         )
         return await self._client._aget(
             "/v1/analytics/linkedin/demographics", params=params
@@ -916,11 +992,13 @@ class AnalyticsResource:
         timeframe: str | None = "this_month",
     ) -> dict[str, Any]:
         """Get Instagram demographics (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            metric=metric,
-            breakdown=breakdown,
-            timeframe=timeframe,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+                "metric": metric,
+                "breakdown": breakdown,
+                "timeframe": timeframe,
+            }
         )
         return await self._client._aget(
             "/v1/analytics/instagram/demographics", params=params
@@ -928,8 +1006,10 @@ class AnalyticsResource:
 
     async def aget_instagram_online_followers(self, account_id: str) -> dict[str, Any]:
         """Get Instagram online followers (async)"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+            }
         )
         return await self._client._aget(
             "/v1/analytics/instagram/online-followers", params=params
@@ -947,14 +1027,16 @@ class AnalyticsResource:
         end_date: str | None = None,
     ) -> dict[str, Any]:
         """Get YouTube demographics (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            video_id=video_id,
-            breakdown=breakdown,
-            from_date=from_date,
-            to_date=to_date,
-            start_date=start_date,
-            end_date=end_date,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+                "videoId": video_id,
+                "breakdown": breakdown,
+                "fromDate": from_date,
+                "toDate": to_date,
+                "startDate": start_date,
+                "endDate": end_date,
+            }
         )
         return await self._client._aget(
             "/v1/analytics/youtube/demographics", params=params
@@ -972,14 +1054,16 @@ class AnalyticsResource:
         attribution: str | None = "publish",
     ) -> dict[str, Any]:
         """Get daily aggregated metrics (async)"""
-        params = self._build_params(
-            platform=platform,
-            profile_id=profile_id,
-            account_id=account_id,
-            from_date=from_date,
-            to_date=to_date,
-            source=source,
-            attribution=attribution,
+        params = self._wire_params(
+            {
+                "platform": platform,
+                "profileId": profile_id,
+                "accountId": account_id,
+                "fromDate": from_date,
+                "toDate": to_date,
+                "source": source,
+                "attribution": attribution,
+            }
         )
         return await self._client._aget("/v1/analytics/daily-metrics", params=params)
 
@@ -995,14 +1079,16 @@ class AnalyticsResource:
         recent_posts: int | None = 10,
     ) -> dict[str, Any]:
         """Get an analytics dashboard (async)"""
-        params = self._build_params(
-            profile_id=profile_id,
-            platform=platform,
-            from_date=from_date,
-            to_date=to_date,
-            compare=compare,
-            top_posts=top_posts,
-            recent_posts=recent_posts,
+        params = self._wire_params(
+            {
+                "profileId": profile_id,
+                "platform": platform,
+                "fromDate": from_date,
+                "toDate": to_date,
+                "compare": compare,
+                "topPosts": top_posts,
+                "recentPosts": recent_posts,
+            }
         )
         return await self._client._aget("/v1/analytics/dashboard", params=params)
 
@@ -1015,11 +1101,13 @@ class AnalyticsResource:
         source: str | None = "all",
     ) -> dict[str, Any]:
         """Get best times to post (async)"""
-        params = self._build_params(
-            platform=platform,
-            profile_id=profile_id,
-            account_id=account_id,
-            source=source,
+        params = self._wire_params(
+            {
+                "platform": platform,
+                "profileId": profile_id,
+                "accountId": account_id,
+                "source": source,
+            }
         )
         return await self._client._aget("/v1/analytics/best-time", params=params)
 
@@ -1032,11 +1120,13 @@ class AnalyticsResource:
         source: str | None = "all",
     ) -> dict[str, Any]:
         """Get content performance decay (async)"""
-        params = self._build_params(
-            platform=platform,
-            profile_id=profile_id,
-            account_id=account_id,
-            source=source,
+        params = self._wire_params(
+            {
+                "platform": platform,
+                "profileId": profile_id,
+                "accountId": account_id,
+                "source": source,
+            }
         )
         return await self._client._aget("/v1/analytics/content-decay", params=params)
 
@@ -1049,11 +1139,13 @@ class AnalyticsResource:
         source: str | None = "all",
     ) -> dict[str, Any]:
         """Get frequency vs engagement (async)"""
-        params = self._build_params(
-            platform=platform,
-            profile_id=profile_id,
-            account_id=account_id,
-            source=source,
+        params = self._wire_params(
+            {
+                "platform": platform,
+                "profileId": profile_id,
+                "accountId": account_id,
+                "source": source,
+            }
         )
         return await self._client._aget(
             "/v1/analytics/posting-frequency", params=params
@@ -1067,10 +1159,12 @@ class AnalyticsResource:
         to_date: datetime | str | None = None,
     ) -> dict[str, Any]:
         """Get post analytics timeline (async)"""
-        params = self._build_params(
-            post_id=post_id,
-            from_date=from_date,
-            to_date=to_date,
+        params = self._wire_params(
+            {
+                "postId": post_id,
+                "fromDate": from_date,
+                "toDate": to_date,
+            }
         )
         return await self._client._aget("/v1/analytics/post-timeline", params=params)
 
@@ -1085,13 +1179,15 @@ class AnalyticsResource:
         end_date: str | None = None,
     ) -> dict[str, Any]:
         """Get Google Business Profile performance metrics (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            metrics=metrics,
-            from_date=from_date,
-            to_date=to_date,
-            start_date=start_date,
-            end_date=end_date,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+                "metrics": metrics,
+                "fromDate": from_date,
+                "toDate": to_date,
+                "startDate": start_date,
+                "endDate": end_date,
+            }
         )
         return await self._client._aget(
             "/v1/analytics/googlebusiness/performance", params=params
@@ -1106,11 +1202,13 @@ class AnalyticsResource:
         page_token: str | None = None,
     ) -> dict[str, Any]:
         """Get Google Business Profile search keywords (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            start_month=start_month,
-            end_month=end_month,
-            page_token=page_token,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+                "startMonth": start_month,
+                "endMonth": end_month,
+                "pageToken": page_token,
+            }
         )
         return await self._client._aget(
             "/v1/analytics/googlebusiness/search-keywords", params=params
@@ -1120,10 +1218,12 @@ class AnalyticsResource:
         self, account_id: str, *, url: str | None = None, post_id: str | None = None
     ) -> dict[str, Any]:
         """Sync an external post (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            url=url,
-            post_id=post_id,
+        payload = self._wire_payload(
+            {
+                "accountId": account_id,
+                "url": url,
+                "postId": post_id,
+            }
         )
         return await self._client._apost("/v1/posts/sync-external", data=payload)
 
@@ -1139,13 +1239,15 @@ class AnalyticsResource:
         metrics: str | None = None,
     ) -> dict[str, Any]:
         """Get LinkedIn aggregate stats (async)"""
-        params = self._build_params(
-            aggregation=aggregation,
-            from_date=from_date,
-            to_date=to_date,
-            start_date=start_date,
-            end_date=end_date,
-            metrics=metrics,
+        params = self._wire_params(
+            {
+                "aggregation": aggregation,
+                "fromDate": from_date,
+                "toDate": to_date,
+                "startDate": start_date,
+                "endDate": end_date,
+                "metrics": metrics,
+            }
         )
         return await self._client._aget(
             f"/v1/accounts/{account_id}/linkedin-aggregate-analytics", params=params
@@ -1155,8 +1257,10 @@ class AnalyticsResource:
         self, account_id: str, urn: str
     ) -> dict[str, Any]:
         """Get LinkedIn post stats (async)"""
-        params = self._build_params(
-            urn=urn,
+        params = self._wire_params(
+            {
+                "urn": urn,
+            }
         )
         return await self._client._aget(
             f"/v1/accounts/{account_id}/linkedin-post-analytics", params=params
@@ -1171,10 +1275,12 @@ class AnalyticsResource:
         cursor: int | None = 0,
     ) -> dict[str, Any]:
         """Get LinkedIn post reactions (async)"""
-        params = self._build_params(
-            urn=urn,
-            limit=limit,
-            cursor=cursor,
+        params = self._wire_params(
+            {
+                "urn": urn,
+                "limit": limit,
+                "cursor": cursor,
+            }
         )
         return await self._client._aget(
             f"/v1/accounts/{account_id}/linkedin-post-reactions", params=params
@@ -1184,8 +1290,10 @@ class AnalyticsResource:
         self, account_id: str, post_id: str
     ) -> dict[str, Any]:
         """Get Facebook post reactions (async)"""
-        params = self._build_params(
-            post_id=post_id,
+        params = self._wire_params(
+            {
+                "postId": post_id,
+            }
         )
         return await self._client._aget(
             f"/v1/accounts/{account_id}/facebook-post-reactions", params=params

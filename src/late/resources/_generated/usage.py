@@ -23,7 +23,7 @@ class UsageResource:
     def __init__(self, client: BaseClient) -> None:
         self._client = client
 
-    def _build_params(self, **kwargs: Any) -> dict[str, Any]:
+    def _wire_params(self, fields: dict[str, Any]) -> dict[str, Any]:
         """Build query parameters, filtering None and empty-string values.
 
         Empty strings are filtered because MCP tool wrappers pass ``""`` as the
@@ -38,20 +38,16 @@ class UsageResource:
         """
         from enum import Enum
 
-        def to_camel(s: str) -> str:
-            parts = s.split("_")
-            return parts[0] + "".join(p.title() for p in parts[1:])
-
         result: dict[str, Any] = {}
-        for k, v in kwargs.items():
+        for k, v in fields.items():
             if isinstance(v, Enum):
                 v = v.value
             if v is None or v == "":
                 continue
-            result[to_camel(k)] = v
+            result[k] = v
         return result
 
-    def _build_payload(self, **kwargs: Any) -> dict[str, Any]:
+    def _wire_payload(self, fields: dict[str, Any]) -> dict[str, Any]:
         """Build request payload, filtering None values. Enum members are
         unwrapped to their value so JSON bodies carry e.g. "failed" rather
         than a raw Enum member (plain Enum members are not JSON-serializable).
@@ -59,20 +55,16 @@ class UsageResource:
         from datetime import datetime
         from enum import Enum
 
-        def to_camel(s: str) -> str:
-            parts = s.split("_")
-            return parts[0] + "".join(p.title() for p in parts[1:])
-
         result: dict[str, Any] = {}
-        for k, v in kwargs.items():
+        for k, v in fields.items():
             if isinstance(v, Enum):
                 v = v.value
             if v is None:
                 continue
             if isinstance(v, datetime):
-                result[to_camel(k)] = v.isoformat()
+                result[k] = v.isoformat()
             else:
-                result[to_camel(k)] = v
+                result[k] = v
         return result
 
     def get_billing(self) -> dict[str, Any]:
@@ -96,22 +88,26 @@ class UsageResource:
         account_id: str | None = None,
     ) -> dict[str, Any]:
         """Usage snapshot (default) or billed-spend metering (with params)"""
-        params = self._build_params(
-            reconcile=reconcile,
-            range=range,
-            from_=from_,
-            to=to,
-            granularity=granularity,
-            group_by=group_by,
-            profile_id=profile_id,
-            account_id=account_id,
+        params = self._wire_params(
+            {
+                "reconcile": reconcile,
+                "range": range,
+                "from": from_,
+                "to": to,
+                "granularity": granularity,
+                "groupBy": group_by,
+                "profileId": profile_id,
+                "accountId": account_id,
+            }
         )
         return self._client._get("/v1/usage", params=params)
 
     def get_usage_stats(self, *, reconcile: bool | None = None) -> dict[str, Any]:
         """Get plan and usage snapshot (plan, limits, payment status)"""
-        params = self._build_params(
-            reconcile=reconcile,
+        params = self._wire_params(
+            {
+                "reconcile": reconcile,
+            }
         )
         return self._client._get("/v1/usage-stats", params=params)
 
@@ -125,12 +121,14 @@ class UsageResource:
         group_by: str | None = None,
     ) -> dict[str, Any]:
         """Calling usage and cost"""
-        params = self._build_params(
-            since=since,
-            until=until,
-            channel=channel,
-            number=number,
-            group_by=group_by,
+        params = self._wire_params(
+            {
+                "since": since,
+                "until": until,
+                "channel": channel,
+                "number": number,
+                "groupBy": group_by,
+            }
         )
         return self._client._get("/v1/usage/calls", params=params)
 
@@ -143,11 +141,13 @@ class UsageResource:
         group_by: str | None = None,
     ) -> dict[str, Any]:
         """SMS usage (volumes)"""
-        params = self._build_params(
-            since=since,
-            until=until,
-            number=number,
-            group_by=group_by,
+        params = self._wire_params(
+            {
+                "since": since,
+                "until": until,
+                "number": number,
+                "groupBy": group_by,
+            }
         )
         return self._client._get("/v1/usage/sms", params=params)
 
@@ -172,15 +172,17 @@ class UsageResource:
         account_id: str | None = None,
     ) -> dict[str, Any]:
         """Usage snapshot (default) or billed-spend metering (with params) (async)"""
-        params = self._build_params(
-            reconcile=reconcile,
-            range=range,
-            from_=from_,
-            to=to,
-            granularity=granularity,
-            group_by=group_by,
-            profile_id=profile_id,
-            account_id=account_id,
+        params = self._wire_params(
+            {
+                "reconcile": reconcile,
+                "range": range,
+                "from": from_,
+                "to": to,
+                "granularity": granularity,
+                "groupBy": group_by,
+                "profileId": profile_id,
+                "accountId": account_id,
+            }
         )
         return await self._client._aget("/v1/usage", params=params)
 
@@ -188,8 +190,10 @@ class UsageResource:
         self, *, reconcile: bool | None = None
     ) -> dict[str, Any]:
         """Get plan and usage snapshot (plan, limits, payment status) (async)"""
-        params = self._build_params(
-            reconcile=reconcile,
+        params = self._wire_params(
+            {
+                "reconcile": reconcile,
+            }
         )
         return await self._client._aget("/v1/usage-stats", params=params)
 
@@ -203,12 +207,14 @@ class UsageResource:
         group_by: str | None = None,
     ) -> dict[str, Any]:
         """Calling usage and cost (async)"""
-        params = self._build_params(
-            since=since,
-            until=until,
-            channel=channel,
-            number=number,
-            group_by=group_by,
+        params = self._wire_params(
+            {
+                "since": since,
+                "until": until,
+                "channel": channel,
+                "number": number,
+                "groupBy": group_by,
+            }
         )
         return await self._client._aget("/v1/usage/calls", params=params)
 
@@ -221,10 +227,12 @@ class UsageResource:
         group_by: str | None = None,
     ) -> dict[str, Any]:
         """SMS usage (volumes) (async)"""
-        params = self._build_params(
-            since=since,
-            until=until,
-            number=number,
-            group_by=group_by,
+        params = self._wire_params(
+            {
+                "since": since,
+                "until": until,
+                "number": number,
+                "groupBy": group_by,
+            }
         )
         return await self._client._aget("/v1/usage/sms", params=params)

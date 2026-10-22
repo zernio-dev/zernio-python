@@ -57,7 +57,7 @@ class BaseResource(Generic[T]):
 
     def _build_params(self, **kwargs: Any) -> dict[str, Any]:
         """
-        Build query parameters, filtering out None values.
+        Build query parameters, filtering out None and empty-string values.
         Converts snake_case keys to camelCase.
 
         Args:
@@ -69,7 +69,7 @@ class BaseResource(Generic[T]):
         return {
             _to_camel_case(k): _normalize_value(v)
             for k, v in kwargs.items()
-            if v is not None
+            if v is not None and v != ""
         }
 
     def _build_payload(self, **kwargs: Any) -> dict[str, Any]:

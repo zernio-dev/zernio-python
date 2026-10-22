@@ -23,7 +23,7 @@ class LogsResource:
     def __init__(self, client: BaseClient) -> None:
         self._client = client
 
-    def _build_params(self, **kwargs: Any) -> dict[str, Any]:
+    def _wire_params(self, fields: dict[str, Any]) -> dict[str, Any]:
         """Build query parameters, filtering None and empty-string values.
 
         Empty strings are filtered because MCP tool wrappers pass ``""`` as the
@@ -38,20 +38,16 @@ class LogsResource:
         """
         from enum import Enum
 
-        def to_camel(s: str) -> str:
-            parts = s.split("_")
-            return parts[0] + "".join(p.title() for p in parts[1:])
-
         result: dict[str, Any] = {}
-        for k, v in kwargs.items():
+        for k, v in fields.items():
             if isinstance(v, Enum):
                 v = v.value
             if v is None or v == "":
                 continue
-            result[to_camel(k)] = v
+            result[k] = v
         return result
 
-    def _build_payload(self, **kwargs: Any) -> dict[str, Any]:
+    def _wire_payload(self, fields: dict[str, Any]) -> dict[str, Any]:
         """Build request payload, filtering None values. Enum members are
         unwrapped to their value so JSON bodies carry e.g. "failed" rather
         than a raw Enum member (plain Enum members are not JSON-serializable).
@@ -59,20 +55,16 @@ class LogsResource:
         from datetime import datetime
         from enum import Enum
 
-        def to_camel(s: str) -> str:
-            parts = s.split("_")
-            return parts[0] + "".join(p.title() for p in parts[1:])
-
         result: dict[str, Any] = {}
-        for k, v in kwargs.items():
+        for k, v in fields.items():
             if isinstance(v, Enum):
                 v = v.value
             if v is None:
                 continue
             if isinstance(v, datetime):
-                result[to_camel(k)] = v.isoformat()
+                result[k] = v.isoformat()
             else:
-                result[to_camel(k)] = v
+                result[k] = v
         return result
 
     def list_logs(
@@ -97,24 +89,26 @@ class LogsResource:
         include_read_receipts: bool | None = False,
     ) -> dict[str, Any]:
         """List activity logs"""
-        params = self._build_params(
-            type=type,
-            status=status,
-            platform=platform,
-            action=action,
-            search=search,
-            days=days,
-            limit=limit,
-            skip=skip,
-            account_id=account_id,
-            event=event,
-            request_id=request_id,
-            from_=from_,
-            to=to,
-            status_code=status_code,
-            api_key_id=api_key_id,
-            profile_id=profile_id,
-            include_read_receipts=include_read_receipts,
+        params = self._wire_params(
+            {
+                "type": type,
+                "status": status,
+                "platform": platform,
+                "action": action,
+                "search": search,
+                "days": days,
+                "limit": limit,
+                "skip": skip,
+                "accountId": account_id,
+                "event": event,
+                "requestId": request_id,
+                "from": from_,
+                "to": to,
+                "statusCode": status_code,
+                "apiKeyId": api_key_id,
+                "profileId": profile_id,
+                "includeReadReceipts": include_read_receipts,
+            }
         )
         return self._client._get("/v1/logs", params=params)
 
@@ -140,23 +134,25 @@ class LogsResource:
         include_read_receipts: bool | None = False,
     ) -> dict[str, Any]:
         """List activity logs (async)"""
-        params = self._build_params(
-            type=type,
-            status=status,
-            platform=platform,
-            action=action,
-            search=search,
-            days=days,
-            limit=limit,
-            skip=skip,
-            account_id=account_id,
-            event=event,
-            request_id=request_id,
-            from_=from_,
-            to=to,
-            status_code=status_code,
-            api_key_id=api_key_id,
-            profile_id=profile_id,
-            include_read_receipts=include_read_receipts,
+        params = self._wire_params(
+            {
+                "type": type,
+                "status": status,
+                "platform": platform,
+                "action": action,
+                "search": search,
+                "days": days,
+                "limit": limit,
+                "skip": skip,
+                "accountId": account_id,
+                "event": event,
+                "requestId": request_id,
+                "from": from_,
+                "to": to,
+                "statusCode": status_code,
+                "apiKeyId": api_key_id,
+                "profileId": profile_id,
+                "includeReadReceipts": include_read_receipts,
+            }
         )
         return await self._client._aget("/v1/logs", params=params)

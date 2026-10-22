@@ -23,7 +23,7 @@ class AdCampaignsResource:
     def __init__(self, client: BaseClient) -> None:
         self._client = client
 
-    def _build_params(self, **kwargs: Any) -> dict[str, Any]:
+    def _wire_params(self, fields: dict[str, Any]) -> dict[str, Any]:
         """Build query parameters, filtering None and empty-string values.
 
         Empty strings are filtered because MCP tool wrappers pass ``""`` as the
@@ -38,20 +38,16 @@ class AdCampaignsResource:
         """
         from enum import Enum
 
-        def to_camel(s: str) -> str:
-            parts = s.split("_")
-            return parts[0] + "".join(p.title() for p in parts[1:])
-
         result: dict[str, Any] = {}
-        for k, v in kwargs.items():
+        for k, v in fields.items():
             if isinstance(v, Enum):
                 v = v.value
             if v is None or v == "":
                 continue
-            result[to_camel(k)] = v
+            result[k] = v
         return result
 
-    def _build_payload(self, **kwargs: Any) -> dict[str, Any]:
+    def _wire_payload(self, fields: dict[str, Any]) -> dict[str, Any]:
         """Build request payload, filtering None values. Enum members are
         unwrapped to their value so JSON bodies carry e.g. "failed" rather
         than a raw Enum member (plain Enum members are not JSON-serializable).
@@ -59,20 +55,16 @@ class AdCampaignsResource:
         from datetime import datetime
         from enum import Enum
 
-        def to_camel(s: str) -> str:
-            parts = s.split("_")
-            return parts[0] + "".join(p.title() for p in parts[1:])
-
         result: dict[str, Any] = {}
-        for k, v in kwargs.items():
+        for k, v in fields.items():
             if isinstance(v, Enum):
                 v = v.value
             if v is None:
                 continue
             if isinstance(v, datetime):
-                result[to_camel(k)] = v.isoformat()
+                result[k] = v.isoformat()
             else:
-                result[to_camel(k)] = v
+                result[k] = v
         return result
 
     def list_ads(
@@ -96,23 +88,25 @@ class AdCampaignsResource:
         to_date: str | None = None,
     ) -> dict[str, Any]:
         """List ads"""
-        params = self._build_params(
-            page=page,
-            limit=limit,
-            source=source,
-            status=status,
-            platform=platform,
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            page_id=page_id,
-            profile_id=profile_id,
-            campaign_id=campaign_id,
-            ad_set_id=ad_set_id,
-            platform_ad_id=platform_ad_id,
-            effective_object_story_id=effective_object_story_id,
-            effective_instagram_media_id=effective_instagram_media_id,
-            from_date=from_date,
-            to_date=to_date,
+        params = self._wire_params(
+            {
+                "page": page,
+                "limit": limit,
+                "source": source,
+                "status": status,
+                "platform": platform,
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "pageId": page_id,
+                "profileId": profile_id,
+                "campaignId": campaign_id,
+                "adSetId": ad_set_id,
+                "platformAdId": platform_ad_id,
+                "effectiveObjectStoryId": effective_object_story_id,
+                "effectiveInstagramMediaId": effective_instagram_media_id,
+                "fromDate": from_date,
+                "toDate": to_date,
+            }
         )
         return self._client._get("/v1/ads", params=params)
 
@@ -126,12 +120,14 @@ class AdCampaignsResource:
         types: str | None = None,
     ) -> dict[str, Any]:
         """List Google Ads recommendations"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            customer_id=customer_id,
-            campaign_id=campaign_id,
-            types=types,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "customerId": customer_id,
+                "campaignId": campaign_id,
+                "types": types,
+            }
         )
         return self._client._get("/v1/ads/recommendations", params=params)
 
@@ -143,10 +139,12 @@ class AdCampaignsResource:
         ad_account_id: str | None = None,
     ) -> dict[str, Any]:
         """Apply Google Ads recommendations"""
-        payload = self._build_payload(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            recommendations=recommendations,
+        payload = self._wire_payload(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "recommendations": recommendations,
+            }
         )
         return self._client._post("/v1/ads/recommendations/apply", data=payload)
 
@@ -158,10 +156,12 @@ class AdCampaignsResource:
         ad_account_id: str | None = None,
     ) -> dict[str, Any]:
         """Dismiss Google Ads recommendations"""
-        payload = self._build_payload(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            resource_names=resource_names,
+        payload = self._wire_payload(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "resourceNames": resource_names,
+            }
         )
         return self._client._post("/v1/ads/recommendations/dismiss", data=payload)
 
@@ -175,12 +175,14 @@ class AdCampaignsResource:
         to_date: str | None = None,
     ) -> dict[str, Any]:
         """List portfolio bid strategies"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            customer_id=customer_id,
-            from_date=from_date,
-            to_date=to_date,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "customerId": customer_id,
+                "fromDate": from_date,
+                "toDate": to_date,
+            }
         )
         return self._client._get("/v1/ads/bid-strategies", params=params)
 
@@ -197,15 +199,17 @@ class AdCampaignsResource:
         target_impression_share: Any | None = None,
     ) -> dict[str, Any]:
         """Create portfolio bid strategy"""
-        payload = self._build_payload(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            customer_id=customer_id,
-            name=name,
-            type=type,
-            target_cpa=target_cpa,
-            target_roas=target_roas,
-            target_impression_share=target_impression_share,
+        payload = self._wire_payload(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "customerId": customer_id,
+                "name": name,
+                "type": type,
+                "targetCpa": target_cpa,
+                "targetRoas": target_roas,
+                "targetImpressionShare": target_impression_share,
+            }
         )
         return self._client._post("/v1/ads/bid-strategies", data=payload)
 
@@ -223,15 +227,17 @@ class AdCampaignsResource:
         target_impression_share: Any | None = None,
     ) -> dict[str, Any]:
         """Update portfolio bid strategy"""
-        payload = self._build_payload(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            customer_id=customer_id,
-            name=name,
-            type=type,
-            target_cpa=target_cpa,
-            target_roas=target_roas,
-            target_impression_share=target_impression_share,
+        payload = self._wire_payload(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "customerId": customer_id,
+                "name": name,
+                "type": type,
+                "targetCpa": target_cpa,
+                "targetRoas": target_roas,
+                "targetImpressionShare": target_impression_share,
+            }
         )
         return self._client._patch(
             f"/v1/ads/bid-strategies/{strategy_id}", data=payload
@@ -241,9 +247,11 @@ class AdCampaignsResource:
         self, account_id: str, *, ad_account_id: str | None = None
     ) -> dict[str, Any]:
         """List shared budgets"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+            }
         )
         return self._client._get("/v1/ads/shared-budgets", params=params)
 
@@ -257,12 +265,14 @@ class AdCampaignsResource:
         type: str | None = "daily",
     ) -> dict[str, Any]:
         """Create a shared budget"""
-        payload = self._build_payload(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            name=name,
-            amount=amount,
-            type=type,
+        payload = self._wire_payload(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "name": name,
+                "amount": amount,
+                "type": type,
+            }
         )
         return self._client._post("/v1/ads/shared-budgets", data=payload)
 
@@ -282,18 +292,20 @@ class AdCampaignsResource:
         search: str | None = None,
     ) -> dict[str, Any]:
         """List Search keywords"""
-        params = self._build_params(
-            page=page,
-            limit=limit,
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            profile_id=profile_id,
-            campaign_id=campaign_id,
-            ad_set_id=ad_set_id,
-            status=status,
-            match_type=match_type,
-            negative=negative,
-            search=search,
+        params = self._wire_params(
+            {
+                "page": page,
+                "limit": limit,
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "profileId": profile_id,
+                "campaignId": campaign_id,
+                "adSetId": ad_set_id,
+                "status": status,
+                "matchType": match_type,
+                "negative": negative,
+                "search": search,
+            }
         )
         return self._client._get("/v1/ads/keywords", params=params)
 
@@ -306,18 +318,22 @@ class AdCampaignsResource:
         negative: bool | None = False,
     ) -> dict[str, Any]:
         """Add Search ad-group keywords"""
-        payload = self._build_payload(
-            account_id=account_id,
-            ad_set_id=ad_set_id,
-            keywords=keywords,
-            negative=negative,
+        payload = self._wire_payload(
+            {
+                "accountId": account_id,
+                "adSetId": ad_set_id,
+                "keywords": keywords,
+                "negative": negative,
+            }
         )
         return self._client._post("/v1/ads/keywords", data=payload)
 
     def update_ad_keyword(self, keyword_id: str, status: str) -> dict[str, Any]:
         """Pause or enable a Search keyword"""
-        payload = self._build_payload(
-            status=status,
+        payload = self._wire_payload(
+            {
+                "status": status,
+            }
         )
         return self._client._patch(f"/v1/ads/keywords/{keyword_id}", data=payload)
 
@@ -346,23 +362,25 @@ class AdCampaignsResource:
         live: bool | None = False,
     ) -> dict[str, Any]:
         """List campaigns"""
-        params = self._build_params(
-            include_empty=include_empty,
-            page=page,
-            limit=limit,
-            source=source,
-            platform=platform,
-            status=status,
-            ad_account_id=ad_account_id,
-            campaign_id=campaign_id,
-            page_id=page_id,
-            account_id=account_id,
-            profile_id=profile_id,
-            from_date=from_date,
-            to_date=to_date,
-            has_delivery=has_delivery,
-            min_spend=min_spend,
-            live=live,
+        params = self._wire_params(
+            {
+                "includeEmpty": include_empty,
+                "page": page,
+                "limit": limit,
+                "source": source,
+                "platform": platform,
+                "status": status,
+                "adAccountId": ad_account_id,
+                "campaignId": campaign_id,
+                "pageId": page_id,
+                "accountId": account_id,
+                "profileId": profile_id,
+                "fromDate": from_date,
+                "toDate": to_date,
+                "hasDelivery": has_delivery,
+                "minSpend": min_spend,
+                "live": live,
+            }
         )
         return self._client._get("/v1/ads/campaigns", params=params)
 
@@ -394,29 +412,31 @@ class AdCampaignsResource:
         network_settings: Any | None = None,
     ) -> dict[str, Any]:
         """Create a standalone campaign"""
-        payload = self._build_payload(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            name=name,
-            goal=goal,
-            is_skadnetwork_attribution=is_skadnetwork_attribution,
-            promoted_object=promoted_object,
-            buying_type=buying_type,
-            validate_only=validate_only,
-            special_ad_categories=special_ad_categories,
-            budget_amount=budget_amount,
-            budget_type=budget_type,
-            status=status,
-            start_date=start_date,
-            end_date=end_date,
-            location_targeting_type=location_targeting_type,
-            bid_strategy=bid_strategy,
-            bid_amount=bid_amount,
-            roas_average_floor=roas_average_floor,
-            portfolio_bid_strategy_id=portfolio_bid_strategy_id,
-            target_impression_share=target_impression_share,
-            manual_cpc=manual_cpc,
-            network_settings=network_settings,
+        payload = self._wire_payload(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "name": name,
+                "goal": goal,
+                "isSkadnetworkAttribution": is_skadnetwork_attribution,
+                "promotedObject": promoted_object,
+                "buyingType": buying_type,
+                "validateOnly": validate_only,
+                "specialAdCategories": special_ad_categories,
+                "budgetAmount": budget_amount,
+                "budgetType": budget_type,
+                "status": status,
+                "startDate": start_date,
+                "endDate": end_date,
+                "locationTargetingType": location_targeting_type,
+                "bidStrategy": bid_strategy,
+                "bidAmount": bid_amount,
+                "roasAverageFloor": roas_average_floor,
+                "portfolioBidStrategyId": portfolio_bid_strategy_id,
+                "targetImpressionShare": target_impression_share,
+                "manualCpc": manual_cpc,
+                "networkSettings": network_settings,
+            }
         )
         headers: dict[str, str] = {}
         if idempotency_key is not None:
@@ -427,9 +447,11 @@ class AdCampaignsResource:
         self, campaign_id: str, status: str, platform: str
     ) -> dict[str, Any]:
         """Pause or resume a campaign"""
-        payload = self._build_payload(
-            status=status,
-            platform=platform,
+        payload = self._wire_payload(
+            {
+                "status": status,
+                "platform": platform,
+            }
         )
         return self._client._put(
             f"/v1/ads/campaigns/{campaign_id}/status", data=payload
@@ -446,12 +468,14 @@ class AdCampaignsResource:
         to_date: str | None = None,
     ) -> dict[str, Any]:
         """Read a campaign's ad schedule (dayparting)"""
-        params = self._build_params(
-            platform=platform,
-            include_performance=include_performance,
-            window_days=window_days,
-            from_date=from_date,
-            to_date=to_date,
+        params = self._wire_params(
+            {
+                "platform": platform,
+                "includePerformance": include_performance,
+                "windowDays": window_days,
+                "fromDate": from_date,
+                "toDate": to_date,
+            }
         )
         return self._client._get(
             f"/v1/ads/campaigns/{campaign_id}/ad-schedule", params=params
@@ -461,8 +485,10 @@ class AdCampaignsResource:
         self, campaign_id: str, schedule: list[dict[str, Any]]
     ) -> dict[str, Any]:
         """Replace a campaign's ad schedule (dayparting)"""
-        payload = self._build_payload(
-            schedule=schedule,
+        payload = self._wire_payload(
+            {
+                "schedule": schedule,
+            }
         )
         return self._client._put(
             f"/v1/ads/campaigns/{campaign_id}/ad-schedule", data=payload
@@ -478,11 +504,13 @@ class AdCampaignsResource:
         customer_id: str | None = None,
     ) -> dict[str, Any]:
         """Read a campaign's current bidding"""
-        params = self._build_params(
-            account_id=account_id,
-            platform=platform,
-            ad_account_id=ad_account_id,
-            customer_id=customer_id,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+                "platform": platform,
+                "adAccountId": ad_account_id,
+                "customerId": customer_id,
+            }
         )
         return self._client._get(
             f"/v1/ads/campaigns/{campaign_id}/bidding", params=params
@@ -492,9 +520,11 @@ class AdCampaignsResource:
         self, campaign_id: str, account_id: str, *, fields: str | None = None
     ) -> dict[str, Any]:
         """Get live campaign details"""
-        params = self._build_params(
-            account_id=account_id,
-            fields=fields,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+                "fields": fields,
+            }
         )
         return self._client._get(f"/v1/ads/campaigns/{campaign_id}", params=params)
 
@@ -520,23 +550,25 @@ class AdCampaignsResource:
         platform_specific_data: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Update a campaign"""
-        payload = self._build_payload(
-            platform=platform,
-            account_id=account_id,
-            bid_strategy=bid_strategy,
-            bid_amount=bid_amount,
-            roas_average_floor=roas_average_floor,
-            portfolio_bid_strategy_id=portfolio_bid_strategy_id,
-            allow_shared_budget_update=allow_shared_budget_update,
-            target_impression_share=target_impression_share,
-            manual_cpc=manual_cpc,
-            network_settings=network_settings,
-            tracking_url_template=tracking_url_template,
-            final_url_suffix=final_url_suffix,
-            shared_budget_id=shared_budget_id,
-            budget=budget,
-            name=name,
-            platform_specific_data=platform_specific_data,
+        payload = self._wire_payload(
+            {
+                "platform": platform,
+                "accountId": account_id,
+                "bidStrategy": bid_strategy,
+                "bidAmount": bid_amount,
+                "roasAverageFloor": roas_average_floor,
+                "portfolioBidStrategyId": portfolio_bid_strategy_id,
+                "allowSharedBudgetUpdate": allow_shared_budget_update,
+                "targetImpressionShare": target_impression_share,
+                "manualCpc": manual_cpc,
+                "networkSettings": network_settings,
+                "trackingUrlTemplate": tracking_url_template,
+                "finalUrlSuffix": final_url_suffix,
+                "sharedBudgetId": shared_budget_id,
+                "budget": budget,
+                "name": name,
+                "platformSpecificData": platform_specific_data,
+            }
         )
         return self._client._put(f"/v1/ads/campaigns/{campaign_id}", data=payload)
 
@@ -549,10 +581,12 @@ class AdCampaignsResource:
         ad_account_id: str | None = None,
     ) -> dict[str, Any]:
         """Delete a campaign"""
-        payload = self._build_payload(
-            platform=platform,
-            account_id=account_id,
-            ad_account_id=ad_account_id,
+        payload = self._wire_payload(
+            {
+                "platform": platform,
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+            }
         )
         return self._client._delete(f"/v1/ads/campaigns/{campaign_id}", data=payload)
 
@@ -560,8 +594,10 @@ class AdCampaignsResource:
         self, campaign_id: str, *, platform: str | None = None
     ) -> dict[str, Any]:
         """List campaign-level negative keywords"""
-        params = self._build_params(
-            platform=platform,
+        params = self._wire_params(
+            {
+                "platform": platform,
+            }
         )
         return self._client._get(
             f"/v1/ads/campaigns/{campaign_id}/negative-keywords", params=params
@@ -571,9 +607,11 @@ class AdCampaignsResource:
         self, campaign_id: str, keywords: list[Any], *, platform: str | None = None
     ) -> dict[str, Any]:
         """Replace campaign-level negative keywords"""
-        payload = self._build_payload(
-            platform=platform,
-            keywords=keywords,
+        payload = self._wire_payload(
+            {
+                "platform": platform,
+                "keywords": keywords,
+            }
         )
         return self._client._put(
             f"/v1/ads/campaigns/{campaign_id}/negative-keywords", data=payload
@@ -583,9 +621,11 @@ class AdCampaignsResource:
         self, status: str, campaigns: list[dict[str, Any]]
     ) -> dict[str, Any]:
         """Pause or resume many campaigns"""
-        payload = self._build_payload(
-            status=status,
-            campaigns=campaigns,
+        payload = self._wire_payload(
+            {
+                "status": status,
+                "campaigns": campaigns,
+            }
         )
         return self._client._post("/v1/ads/campaigns/bulk-status", data=payload)
 
@@ -605,16 +645,18 @@ class AdCampaignsResource:
         sync_after: bool | None = True,
     ) -> dict[str, Any]:
         """Duplicate a campaign"""
-        payload = self._build_payload(
-            platform=platform,
-            deep_copy=deep_copy,
-            status_option=status_option,
-            start_time=start_time,
-            end_time=end_time,
-            rename_strategy=rename_strategy,
-            rename_prefix=rename_prefix,
-            rename_suffix=rename_suffix,
-            sync_after=sync_after,
+        payload = self._wire_payload(
+            {
+                "platform": platform,
+                "deepCopy": deep_copy,
+                "statusOption": status_option,
+                "startTime": start_time,
+                "endTime": end_time,
+                "renameStrategy": rename_strategy,
+                "renamePrefix": rename_prefix,
+                "renameSuffix": rename_suffix,
+                "syncAfter": sync_after,
+            }
         )
         headers: dict[str, str] = {}
         if idempotency_key is not None:
@@ -627,8 +669,10 @@ class AdCampaignsResource:
         self, campaign_id: str, *, platform: str | None = None
     ) -> dict[str, Any]:
         """Read a Google campaign's device, location, excluded location, and language targeting"""
-        params = self._build_params(
-            platform=platform,
+        params = self._wire_params(
+            {
+                "platform": platform,
+            }
         )
         return self._client._get(
             f"/v1/ads/campaigns/{campaign_id}/targeting", params=params
@@ -638,9 +682,11 @@ class AdCampaignsResource:
         self, campaign_id: str, platform: str, targeting: dict[str, Any]
     ) -> dict[str, Any]:
         """Edit a Google campaign's device, location, excluded location, or language targeting"""
-        payload = self._build_payload(
-            platform=platform,
-            targeting=targeting,
+        payload = self._wire_payload(
+            {
+                "platform": platform,
+                "targeting": targeting,
+            }
         )
         return self._client._put(
             f"/v1/ads/campaigns/{campaign_id}/targeting", data=payload
@@ -657,13 +703,15 @@ class AdCampaignsResource:
         live: bool | None = False,
     ) -> dict[str, Any]:
         """List ad sets"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            campaign_id=campaign_id,
-            ad_set_id=ad_set_id,
-            platform=platform,
-            live=live,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "campaignId": campaign_id,
+                "adSetId": ad_set_id,
+                "platform": platform,
+                "live": live,
+            }
         )
         return self._client._get("/v1/ads/ad-sets", params=params)
 
@@ -681,15 +729,17 @@ class AdCampaignsResource:
         customer_id: str | None = None,
     ) -> dict[str, Any]:
         """Create a standalone ad group"""
-        payload = self._build_payload(
-            account_id=account_id,
-            platform=platform,
-            campaign_id=campaign_id,
-            name=name,
-            status=status,
-            max_cpc=max_cpc,
-            ad_account_id=ad_account_id,
-            customer_id=customer_id,
+        payload = self._wire_payload(
+            {
+                "accountId": account_id,
+                "platform": platform,
+                "campaignId": campaign_id,
+                "name": name,
+                "status": status,
+                "maxCpc": max_cpc,
+                "adAccountId": ad_account_id,
+                "customerId": customer_id,
+            }
         )
         headers: dict[str, str] = {}
         if idempotency_key is not None:
@@ -713,17 +763,19 @@ class AdCampaignsResource:
         sync_after: bool | None = True,
     ) -> dict[str, Any]:
         """Duplicate an ad set"""
-        payload = self._build_payload(
-            platform=platform,
-            campaign_id=campaign_id,
-            deep_copy=deep_copy,
-            status_option=status_option,
-            start_time=start_time,
-            end_time=end_time,
-            rename_strategy=rename_strategy,
-            rename_prefix=rename_prefix,
-            rename_suffix=rename_suffix,
-            sync_after=sync_after,
+        payload = self._wire_payload(
+            {
+                "platform": platform,
+                "campaignId": campaign_id,
+                "deepCopy": deep_copy,
+                "statusOption": status_option,
+                "startTime": start_time,
+                "endTime": end_time,
+                "renameStrategy": rename_strategy,
+                "renamePrefix": rename_prefix,
+                "renameSuffix": rename_suffix,
+                "syncAfter": sync_after,
+            }
         )
         headers: dict[str, str] = {}
         if idempotency_key is not None:
@@ -746,14 +798,16 @@ class AdCampaignsResource:
         reuse_source_creative: bool | None = False,
     ) -> dict[str, Any]:
         """Duplicate an ad"""
-        payload = self._build_payload(
-            ad_set_id=ad_set_id,
-            status_option=status_option,
-            rename_strategy=rename_strategy,
-            rename_prefix=rename_prefix,
-            rename_suffix=rename_suffix,
-            sync_after=sync_after,
-            reuse_source_creative=reuse_source_creative,
+        payload = self._wire_payload(
+            {
+                "adSetId": ad_set_id,
+                "statusOption": status_option,
+                "renameStrategy": rename_strategy,
+                "renamePrefix": rename_prefix,
+                "renameSuffix": rename_suffix,
+                "syncAfter": sync_after,
+                "reuseSourceCreative": reuse_source_creative,
+            }
         )
         headers: dict[str, str] = {}
         if idempotency_key is not None:
@@ -766,9 +820,11 @@ class AdCampaignsResource:
         self, ad_set_id: str, account_id: str, *, fields: str | None = None
     ) -> dict[str, Any]:
         """Get live ad-set details"""
-        params = self._build_params(
-            account_id=account_id,
-            fields=fields,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+                "fields": fields,
+            }
         )
         return self._client._get(f"/v1/ads/ad-sets/{ad_set_id}", params=params)
 
@@ -791,20 +847,22 @@ class AdCampaignsResource:
         platform_specific_data: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Update an ad set"""
-        payload = self._build_payload(
-            platform=platform,
-            budget=budget,
-            status=status,
-            name=name,
-            bid_strategy=bid_strategy,
-            smart_targeting=smart_targeting,
-            placements=placements,
-            targeting=targeting,
-            bid_amount=bid_amount,
-            roas_average_floor=roas_average_floor,
-            value_rule_set_id=value_rule_set_id,
-            value_rules_applied=value_rules_applied,
-            platform_specific_data=platform_specific_data,
+        payload = self._wire_payload(
+            {
+                "platform": platform,
+                "budget": budget,
+                "status": status,
+                "name": name,
+                "bidStrategy": bid_strategy,
+                "smartTargeting": smart_targeting,
+                "placements": placements,
+                "targeting": targeting,
+                "bidAmount": bid_amount,
+                "roasAverageFloor": roas_average_floor,
+                "valueRuleSetId": value_rule_set_id,
+                "valueRulesApplied": value_rules_applied,
+                "platformSpecificData": platform_specific_data,
+            }
         )
         return self._client._put(f"/v1/ads/ad-sets/{ad_set_id}", data=payload)
 
@@ -816,9 +874,11 @@ class AdCampaignsResource:
         self, ad_set_id: str, status: str, platform: str
     ) -> dict[str, Any]:
         """Pause or resume a single ad set"""
-        payload = self._build_payload(
-            status=status,
-            platform=platform,
+        payload = self._wire_payload(
+            {
+                "status": status,
+                "platform": platform,
+            }
         )
         return self._client._put(f"/v1/ads/ad-sets/{ad_set_id}/status", data=payload)
 
@@ -846,26 +906,28 @@ class AdCampaignsResource:
         daily_level: str | None = "campaign",
     ) -> dict[str, Any]:
         """Get campaign tree"""
-        params = self._build_params(
-            page=page,
-            limit=limit,
-            source=source,
-            platform=platform,
-            status=status,
-            ad_account_id=ad_account_id,
-            page_id=page_id,
-            account_id=account_id,
-            profile_id=profile_id,
-            campaign_id=campaign_id,
-            updated_since=updated_since,
-            search=search,
-            from_date=from_date,
-            to_date=to_date,
-            has_delivery=has_delivery,
-            min_spend=min_spend,
-            sort=sort,
-            time_increment=time_increment,
-            daily_level=daily_level,
+        params = self._wire_params(
+            {
+                "page": page,
+                "limit": limit,
+                "source": source,
+                "platform": platform,
+                "status": status,
+                "adAccountId": ad_account_id,
+                "pageId": page_id,
+                "accountId": account_id,
+                "profileId": profile_id,
+                "campaignId": campaign_id,
+                "updatedSince": updated_since,
+                "search": search,
+                "fromDate": from_date,
+                "toDate": to_date,
+                "hasDelivery": has_delivery,
+                "minSpend": min_spend,
+                "sort": sort,
+                "timeIncrement": time_increment,
+                "dailyLevel": daily_level,
+            }
         )
         return self._client._get("/v1/ads/tree", params=params)
 
@@ -879,19 +941,23 @@ class AdCampaignsResource:
         platform: str | None = None,
     ) -> dict[str, Any]:
         """Get daily account metrics"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            from_date=from_date,
-            to_date=to_date,
-            platform=platform,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "fromDate": from_date,
+                "toDate": to_date,
+                "platform": platform,
+            }
         )
         return self._client._get("/v1/ads/timeline", params=params)
 
     def get_ad(self, ad_id: str, *, live: bool | None = False) -> dict[str, Any]:
         """Get ad details"""
-        params = self._build_params(
-            live=live,
+        params = self._wire_params(
+            {
+                "live": live,
+            }
         )
         return self._client._get(f"/v1/ads/{ad_id}", params=params)
 
@@ -911,17 +977,19 @@ class AdCampaignsResource:
         name: str | None = None,
     ) -> dict[str, Any]:
         """Update ad"""
-        payload = self._build_payload(
-            headlines=headlines,
-            descriptions=descriptions,
-            final_urls=final_urls,
-            asset_group=asset_group,
-            demand_gen=demand_gen,
-            status=status,
-            budget=budget,
-            targeting=targeting,
-            creative=creative,
-            name=name,
+        payload = self._wire_payload(
+            {
+                "headlines": headlines,
+                "descriptions": descriptions,
+                "finalUrls": final_urls,
+                "assetGroup": asset_group,
+                "demandGen": demand_gen,
+                "status": status,
+                "budget": budget,
+                "targeting": targeting,
+                "creative": creative,
+                "name": name,
+            }
         )
         return self._client._put(f"/v1/ads/{ad_id}", data=payload)
 
@@ -931,8 +999,10 @@ class AdCampaignsResource:
 
     def update_ad_status(self, ad_id: str, status: str) -> dict[str, Any]:
         """Pause or resume a single ad"""
-        payload = self._build_payload(
-            status=status,
+        payload = self._wire_payload(
+            {
+                "status": status,
+            }
         )
         return self._client._put(f"/v1/ads/{ad_id}/status", data=payload)
 
@@ -945,10 +1015,12 @@ class AdCampaignsResource:
         customer_id: str | None = None,
     ) -> dict[str, Any]:
         """List campaign assets"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            customer_id=customer_id,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "customerId": customer_id,
+            }
         )
         return self._client._get(
             f"/v1/ads/campaigns/{campaign_id}/assets", params=params
@@ -967,14 +1039,16 @@ class AdCampaignsResource:
         images: list[str] | None = None,
     ) -> dict[str, Any]:
         """Attach campaign assets"""
-        payload = self._build_payload(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            customer_id=customer_id,
-            sitelinks=sitelinks,
-            callouts=callouts,
-            structured_snippets=structured_snippets,
-            images=images,
+        payload = self._wire_payload(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "customerId": customer_id,
+                "sitelinks": sitelinks,
+                "callouts": callouts,
+                "structuredSnippets": structured_snippets,
+                "images": images,
+            }
         )
         return self._client._post(
             f"/v1/ads/campaigns/{campaign_id}/assets", data=payload
@@ -990,11 +1064,13 @@ class AdCampaignsResource:
         customer_id: str | None = None,
     ) -> dict[str, Any]:
         """Update campaign assets"""
-        payload = self._build_payload(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            customer_id=customer_id,
-            updates=updates,
+        payload = self._wire_payload(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "customerId": customer_id,
+                "updates": updates,
+            }
         )
         return self._client._put(
             f"/v1/ads/campaigns/{campaign_id}/assets", data=payload
@@ -1011,12 +1087,14 @@ class AdCampaignsResource:
         customer_id: str | None = None,
     ) -> dict[str, Any]:
         """Remove campaign assets"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            customer_id=customer_id,
-            asset_resource_names=asset_resource_names,
-            campaign_asset_resource_names=campaign_asset_resource_names,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "customerId": customer_id,
+                "assetResourceNames": asset_resource_names,
+                "campaignAssetResourceNames": campaign_asset_resource_names,
+            }
         )
         return self._client._delete(
             f"/v1/ads/campaigns/{campaign_id}/assets", params=params
@@ -1031,10 +1109,12 @@ class AdCampaignsResource:
         customer_id: str | None = None,
     ) -> dict[str, Any]:
         """List ad-group assets"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            customer_id=customer_id,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "customerId": customer_id,
+            }
         )
         return self._client._get(f"/v1/ads/ad-sets/{ad_set_id}/assets", params=params)
 
@@ -1051,14 +1131,16 @@ class AdCampaignsResource:
         images: list[str] | None = None,
     ) -> dict[str, Any]:
         """Attach ad-group assets"""
-        payload = self._build_payload(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            customer_id=customer_id,
-            sitelinks=sitelinks,
-            callouts=callouts,
-            structured_snippets=structured_snippets,
-            images=images,
+        payload = self._wire_payload(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "customerId": customer_id,
+                "sitelinks": sitelinks,
+                "callouts": callouts,
+                "structuredSnippets": structured_snippets,
+                "images": images,
+            }
         )
         return self._client._post(f"/v1/ads/ad-sets/{ad_set_id}/assets", data=payload)
 
@@ -1072,11 +1154,13 @@ class AdCampaignsResource:
         customer_id: str | None = None,
     ) -> dict[str, Any]:
         """Update ad-group assets"""
-        payload = self._build_payload(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            customer_id=customer_id,
-            updates=updates,
+        payload = self._wire_payload(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "customerId": customer_id,
+                "updates": updates,
+            }
         )
         return self._client._put(f"/v1/ads/ad-sets/{ad_set_id}/assets", data=payload)
 
@@ -1091,12 +1175,14 @@ class AdCampaignsResource:
         customer_id: str | None = None,
     ) -> dict[str, Any]:
         """Remove ad-group assets"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            customer_id=customer_id,
-            asset_resource_names=asset_resource_names,
-            ad_group_asset_resource_names=ad_group_asset_resource_names,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "customerId": customer_id,
+                "assetResourceNames": asset_resource_names,
+                "adGroupAssetResourceNames": ad_group_asset_resource_names,
+            }
         )
         return self._client._delete(
             f"/v1/ads/ad-sets/{ad_set_id}/assets", params=params
@@ -1120,12 +1206,14 @@ class AdCampaignsResource:
         page_size: int | None = 500,
     ) -> dict[str, Any]:
         """Review status of every TikTok Smart+ ad of an advertiser"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            include_deleted=include_deleted,
-            page=page,
-            page_size=page_size,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "includeDeleted": include_deleted,
+                "page": page,
+                "pageSize": page_size,
+            }
         )
         return self._client._get("/v1/ads/tiktok-smart-plus-reviews", params=params)
 
@@ -1133,8 +1221,10 @@ class AdCampaignsResource:
         self, campaign_id: str, *, platform: str | None = None
     ) -> dict[str, Any]:
         """List campaign negative lists"""
-        params = self._build_params(
-            platform=platform,
+        params = self._wire_params(
+            {
+                "platform": platform,
+            }
         )
         return self._client._get(
             f"/v1/ads/campaigns/{campaign_id}/negative-keyword-lists", params=params
@@ -1144,9 +1234,11 @@ class AdCampaignsResource:
         self, campaign_id: str, list_ids: list[str], *, platform: str | None = None
     ) -> dict[str, Any]:
         """Replace campaign negative lists"""
-        payload = self._build_payload(
-            platform=platform,
-            list_ids=list_ids,
+        payload = self._wire_payload(
+            {
+                "platform": platform,
+                "listIds": list_ids,
+            }
         )
         return self._client._put(
             f"/v1/ads/campaigns/{campaign_id}/negative-keyword-lists", data=payload
@@ -1214,63 +1306,65 @@ class AdCampaignsResource:
         optimization_goal: str | None = None,
     ) -> dict[str, Any]:
         """Boost post as ad"""
-        payload = self._build_payload(
-            creative_features=creative_features,
-            post_id=post_id,
-            platform_post_id=platform_post_id,
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            name=name,
-            campaign_name=campaign_name,
-            ad_set_name=ad_set_name,
-            goal=goal,
-            ad_set_id=ad_set_id,
-            existing_campaign_id=existing_campaign_id,
-            identity_id=identity_id,
-            identity_type=identity_type,
-            budget_amount=budget_amount,
-            budget_type=budget_type,
-            lifetime_budget_cap=lifetime_budget_cap,
-            budget=budget,
-            instagram_account_id=instagram_account_id,
-            destination_type=destination_type,
-            whatsapp_phone_number=whatsapp_phone_number,
-            workflow_id=workflow_id,
-            currency=currency,
-            start_date=start_date,
-            end_date=end_date,
-            schedule=schedule,
-            targeting=targeting,
-            location_targeting_type=location_targeting_type,
-            raw_targeting=raw_targeting,
-            bid_strategy=bid_strategy,
-            bid_amount=bid_amount,
-            roas_average_floor=roas_average_floor,
-            platform_specific_data=platform_specific_data,
-            tracking=tracking,
-            special_ad_categories=special_ad_categories,
-            special_ad_category_country=special_ad_category_country,
-            regional_regulated_categories=regional_regulated_categories,
-            regional_regulation_identities=regional_regulation_identities,
-            link_url=link_url,
-            call_to_action=call_to_action,
-            spark_auth_code=spark_auth_code,
-            smart_plus=smart_plus,
-            spark_posts=spark_posts,
-            promo_codes=promo_codes,
-            promoted_object=promoted_object,
-            dsa_beneficiary=dsa_beneficiary,
-            dsa_payor=dsa_payor,
-            lead_gen_form_id=lead_gen_form_id,
-            status=status,
-            campaign_status=campaign_status,
-            ad_set_status=ad_set_status,
-            ad_status=ad_status,
-            budget_level=budget_level,
-            attribution_spec=attribution_spec,
-            bodies=bodies,
-            smart_targeting=smart_targeting,
-            optimization_goal=optimization_goal,
+        payload = self._wire_payload(
+            {
+                "creativeFeatures": creative_features,
+                "postId": post_id,
+                "platformPostId": platform_post_id,
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "name": name,
+                "campaignName": campaign_name,
+                "adSetName": ad_set_name,
+                "goal": goal,
+                "adSetId": ad_set_id,
+                "existingCampaignId": existing_campaign_id,
+                "identityId": identity_id,
+                "identityType": identity_type,
+                "budgetAmount": budget_amount,
+                "budgetType": budget_type,
+                "lifetimeBudgetCap": lifetime_budget_cap,
+                "budget": budget,
+                "instagramAccountId": instagram_account_id,
+                "destinationType": destination_type,
+                "whatsappPhoneNumber": whatsapp_phone_number,
+                "workflowId": workflow_id,
+                "currency": currency,
+                "startDate": start_date,
+                "endDate": end_date,
+                "schedule": schedule,
+                "targeting": targeting,
+                "locationTargetingType": location_targeting_type,
+                "rawTargeting": raw_targeting,
+                "bidStrategy": bid_strategy,
+                "bidAmount": bid_amount,
+                "roasAverageFloor": roas_average_floor,
+                "platformSpecificData": platform_specific_data,
+                "tracking": tracking,
+                "specialAdCategories": special_ad_categories,
+                "specialAdCategoryCountry": special_ad_category_country,
+                "regionalRegulatedCategories": regional_regulated_categories,
+                "regionalRegulationIdentities": regional_regulation_identities,
+                "linkUrl": link_url,
+                "callToAction": call_to_action,
+                "sparkAuthCode": spark_auth_code,
+                "smartPlus": smart_plus,
+                "sparkPosts": spark_posts,
+                "promoCodes": promo_codes,
+                "promotedObject": promoted_object,
+                "dsaBeneficiary": dsa_beneficiary,
+                "dsaPayor": dsa_payor,
+                "leadGenFormId": lead_gen_form_id,
+                "status": status,
+                "campaignStatus": campaign_status,
+                "adSetStatus": ad_set_status,
+                "adStatus": ad_status,
+                "budgetLevel": budget_level,
+                "attributionSpec": attribution_spec,
+                "bodies": bodies,
+                "smartTargeting": smart_targeting,
+                "optimizationGoal": optimization_goal,
+            }
         )
         headers: dict[str, str] = {}
         if idempotency_key is not None:
@@ -1296,16 +1390,18 @@ class AdCampaignsResource:
         validate_only: bool | None = False,
     ) -> dict[str, Any]:
         """Create a Performance Max asset group"""
-        payload = self._build_payload(
-            name=name,
-            final_urls=final_urls,
-            final_mobile_urls=final_mobile_urls,
-            path1=path1,
-            path2=path2,
-            status=status,
-            assets=assets,
-            listing_group_filter=listing_group_filter,
-            validate_only=validate_only,
+        payload = self._wire_payload(
+            {
+                "name": name,
+                "finalUrls": final_urls,
+                "finalMobileUrls": final_mobile_urls,
+                "path1": path1,
+                "path2": path2,
+                "status": status,
+                "assets": assets,
+                "listingGroupFilter": listing_group_filter,
+                "validateOnly": validate_only,
+            }
         )
         return self._client._post(
             f"/v1/ads/campaigns/{campaign_id}/asset-groups", data=payload
@@ -1333,14 +1429,16 @@ class AdCampaignsResource:
         validate_only: bool | None = False,
     ) -> dict[str, Any]:
         """Update a Performance Max asset group"""
-        payload = self._build_payload(
-            name=name,
-            status=status,
-            final_urls=final_urls,
-            final_mobile_urls=final_mobile_urls,
-            path1=path1,
-            path2=path2,
-            validate_only=validate_only,
+        payload = self._wire_payload(
+            {
+                "name": name,
+                "status": status,
+                "finalUrls": final_urls,
+                "finalMobileUrls": final_mobile_urls,
+                "path1": path1,
+                "path2": path2,
+                "validateOnly": validate_only,
+            }
         )
         return self._client._patch(
             f"/v1/ads/campaigns/{campaign_id}/asset-groups/{asset_group_id}",
@@ -1355,8 +1453,10 @@ class AdCampaignsResource:
         validate_only: bool | None = False,
     ) -> dict[str, Any]:
         """Remove a Performance Max asset group"""
-        params = self._build_params(
-            validate_only=validate_only,
+        params = self._wire_params(
+            {
+                "validateOnly": validate_only,
+            }
         )
         return self._client._delete(
             f"/v1/ads/campaigns/{campaign_id}/asset-groups/{asset_group_id}",
@@ -1373,10 +1473,12 @@ class AdCampaignsResource:
         validate_only: bool | None = False,
     ) -> dict[str, Any]:
         """Link or unlink asset group assets"""
-        payload = self._build_payload(
-            link=link,
-            unlink=unlink,
-            validate_only=validate_only,
+        payload = self._wire_payload(
+            {
+                "link": link,
+                "unlink": unlink,
+                "validateOnly": validate_only,
+            }
         )
         return self._client._post(
             f"/v1/ads/campaigns/{campaign_id}/asset-groups/{asset_group_id}/assets",
@@ -1392,9 +1494,11 @@ class AdCampaignsResource:
         validate_only: bool | None = False,
     ) -> dict[str, Any]:
         """Replace an asset group's listing-group tree"""
-        payload = self._build_payload(
-            tree=tree,
-            validate_only=validate_only,
+        payload = self._wire_payload(
+            {
+                "tree": tree,
+                "validateOnly": validate_only,
+            }
         )
         return self._client._put(
             f"/v1/ads/campaigns/{campaign_id}/asset-groups/{asset_group_id}/listing-group-filters",
@@ -1526,126 +1630,128 @@ class AdCampaignsResource:
         promoted_object: Any | None = None,
     ) -> dict[str, Any]:
         """Create standalone ad"""
-        payload = self._build_payload(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            name=name,
-            campaign_name=campaign_name,
-            ad_set_name=ad_set_name,
-            ad_name=ad_name,
-            tracking=tracking,
-            goal=goal,
-            smart_targeting=smart_targeting,
-            optimization_goal=optimization_goal,
-            billing_event=billing_event,
-            buying_type=buying_type,
-            rf_prediction_id=rf_prediction_id,
-            promotion=promotion,
-            creative_features=creative_features,
-            catalog_format=catalog_format,
-            multi_advertiser=multi_advertiser,
-            ai_disclosure=ai_disclosure,
-            validate_only=validate_only,
-            budget_amount=budget_amount,
-            budget_type=budget_type,
-            status=status,
-            campaign_status=campaign_status,
-            ad_set_status=ad_set_status,
-            ad_status=ad_status,
-            budget_level=budget_level,
-            currency=currency,
-            headline=headline,
-            long_headline=long_headline,
-            body=body,
-            description=description,
-            bodies=bodies,
-            headlines=headlines,
-            descriptions=descriptions,
-            call_to_action=call_to_action,
-            link_url=link_url,
-            lead_gen_form_id=lead_gen_form_id,
-            image_url=image_url,
-            images=images,
-            video=video,
-            creatives=creatives,
-            ad_set_id=ad_set_id,
-            existing_campaign_id=existing_campaign_id,
-            phone_number=phone_number,
-            existing_creative_id=existing_creative_id,
-            business_name=business_name,
-            board_id=board_id,
-            organization_id=organization_id,
-            targeting=targeting,
-            countries=countries,
-            country_groups=country_groups,
-            cities=cities,
-            regions=regions,
-            age_min=age_min,
-            age_max=age_max,
-            interests=interests,
-            zips=zips,
-            metros=metros,
-            custom_locations=custom_locations,
-            behaviors=behaviors,
-            work_positions=work_positions,
-            work_employers=work_employers,
-            work_industries=work_industries,
-            income_tier=income_tier,
-            languages=languages,
-            placements=placements,
-            saved_targeting_id=saved_targeting_id,
-            raw_targeting=raw_targeting,
-            special_ad_categories=special_ad_categories,
-            special_ad_category_country=special_ad_category_country,
-            regional_regulated_categories=regional_regulated_categories,
-            regional_regulation_identities=regional_regulation_identities,
-            end_date=end_date,
-            start_date=start_date,
-            page_id=page_id,
-            instagram_account_id=instagram_account_id,
-            dynamic_creative=dynamic_creative,
-            carousel_cards=carousel_cards,
-            optimize_card_order=optimize_card_order,
-            default_locale=default_locale,
-            translations=translations,
-            placement_assets=placement_assets,
-            audience_id=audience_id,
-            campaign_type=campaign_type,
-            location_targeting_type=location_targeting_type,
-            asset_group=asset_group,
-            demand_gen=demand_gen,
-            keywords=keywords,
-            negative_keywords=negative_keywords,
-            campaign_negative_keywords=campaign_negative_keywords,
-            additional_headlines=additional_headlines,
-            additional_descriptions=additional_descriptions,
-            sitelinks=sitelinks,
-            callouts=callouts,
-            structured_snippets=structured_snippets,
-            advantage_audience=advantage_audience,
-            attribution_spec=attribution_spec,
-            gender=gender,
-            bid_strategy=bid_strategy,
-            bid_amount=bid_amount,
-            roas_average_floor=roas_average_floor,
-            portfolio_bid_strategy_id=portfolio_bid_strategy_id,
-            target_impression_share=target_impression_share,
-            manual_cpc=manual_cpc,
-            network_settings=network_settings,
-            value_rule_set_id=value_rule_set_id,
-            value_rules_applied=value_rules_applied,
-            platform_specific_data=platform_specific_data,
-            dsa_beneficiary=dsa_beneficiary,
-            dsa_payor=dsa_payor,
-            brand_identity=brand_identity,
-            identity_id=identity_id,
-            identity_type=identity_type,
-            smart_plus=smart_plus,
-            user_os=user_os,
-            user_device=user_device,
-            is_skadnetwork_attribution=is_skadnetwork_attribution,
-            campaign_attribution=campaign_attribution,
-            promoted_object=promoted_object,
+        payload = self._wire_payload(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "name": name,
+                "campaignName": campaign_name,
+                "adSetName": ad_set_name,
+                "adName": ad_name,
+                "tracking": tracking,
+                "goal": goal,
+                "smartTargeting": smart_targeting,
+                "optimizationGoal": optimization_goal,
+                "billingEvent": billing_event,
+                "buyingType": buying_type,
+                "rfPredictionId": rf_prediction_id,
+                "promotion": promotion,
+                "creativeFeatures": creative_features,
+                "catalogFormat": catalog_format,
+                "multiAdvertiser": multi_advertiser,
+                "aiDisclosure": ai_disclosure,
+                "validateOnly": validate_only,
+                "budgetAmount": budget_amount,
+                "budgetType": budget_type,
+                "status": status,
+                "campaignStatus": campaign_status,
+                "adSetStatus": ad_set_status,
+                "adStatus": ad_status,
+                "budgetLevel": budget_level,
+                "currency": currency,
+                "headline": headline,
+                "longHeadline": long_headline,
+                "body": body,
+                "description": description,
+                "bodies": bodies,
+                "headlines": headlines,
+                "descriptions": descriptions,
+                "callToAction": call_to_action,
+                "linkUrl": link_url,
+                "leadGenFormId": lead_gen_form_id,
+                "imageUrl": image_url,
+                "images": images,
+                "video": video,
+                "creatives": creatives,
+                "adSetId": ad_set_id,
+                "existingCampaignId": existing_campaign_id,
+                "phoneNumber": phone_number,
+                "existingCreativeId": existing_creative_id,
+                "businessName": business_name,
+                "boardId": board_id,
+                "organizationId": organization_id,
+                "targeting": targeting,
+                "countries": countries,
+                "countryGroups": country_groups,
+                "cities": cities,
+                "regions": regions,
+                "ageMin": age_min,
+                "ageMax": age_max,
+                "interests": interests,
+                "zips": zips,
+                "metros": metros,
+                "customLocations": custom_locations,
+                "behaviors": behaviors,
+                "workPositions": work_positions,
+                "workEmployers": work_employers,
+                "workIndustries": work_industries,
+                "incomeTier": income_tier,
+                "languages": languages,
+                "placements": placements,
+                "savedTargetingId": saved_targeting_id,
+                "rawTargeting": raw_targeting,
+                "specialAdCategories": special_ad_categories,
+                "specialAdCategoryCountry": special_ad_category_country,
+                "regionalRegulatedCategories": regional_regulated_categories,
+                "regionalRegulationIdentities": regional_regulation_identities,
+                "endDate": end_date,
+                "startDate": start_date,
+                "pageId": page_id,
+                "instagramAccountId": instagram_account_id,
+                "dynamicCreative": dynamic_creative,
+                "carouselCards": carousel_cards,
+                "optimizeCardOrder": optimize_card_order,
+                "defaultLocale": default_locale,
+                "translations": translations,
+                "placementAssets": placement_assets,
+                "audienceId": audience_id,
+                "campaignType": campaign_type,
+                "locationTargetingType": location_targeting_type,
+                "assetGroup": asset_group,
+                "demandGen": demand_gen,
+                "keywords": keywords,
+                "negativeKeywords": negative_keywords,
+                "campaignNegativeKeywords": campaign_negative_keywords,
+                "additionalHeadlines": additional_headlines,
+                "additionalDescriptions": additional_descriptions,
+                "sitelinks": sitelinks,
+                "callouts": callouts,
+                "structuredSnippets": structured_snippets,
+                "advantageAudience": advantage_audience,
+                "attributionSpec": attribution_spec,
+                "gender": gender,
+                "bidStrategy": bid_strategy,
+                "bidAmount": bid_amount,
+                "roasAverageFloor": roas_average_floor,
+                "portfolioBidStrategyId": portfolio_bid_strategy_id,
+                "targetImpressionShare": target_impression_share,
+                "manualCpc": manual_cpc,
+                "networkSettings": network_settings,
+                "valueRuleSetId": value_rule_set_id,
+                "valueRulesApplied": value_rules_applied,
+                "platformSpecificData": platform_specific_data,
+                "dsaBeneficiary": dsa_beneficiary,
+                "dsaPayor": dsa_payor,
+                "brandIdentity": brand_identity,
+                "identityId": identity_id,
+                "identityType": identity_type,
+                "smartPlus": smart_plus,
+                "userOs": user_os,
+                "userDevice": user_device,
+                "isSkadnetworkAttribution": is_skadnetwork_attribution,
+                "campaignAttribution": campaign_attribution,
+                "promotedObject": promoted_object,
+            }
         )
         headers: dict[str, str] = {}
         if idempotency_key is not None:
@@ -1665,10 +1771,12 @@ class AdCampaignsResource:
         custom_conversion_goal_id: Any | None = None,
     ) -> dict[str, Any]:
         """Update campaign conversion goals"""
-        payload = self._build_payload(
-            goals=goals,
-            goal_config_level=goal_config_level,
-            custom_conversion_goal_id=custom_conversion_goal_id,
+        payload = self._wire_payload(
+            {
+                "goals": goals,
+                "goalConfigLevel": goal_config_level,
+                "customConversionGoalId": custom_conversion_goal_id,
+            }
         )
         return self._client._patch(
             f"/v1/ads/campaigns/{campaign_id}/conversion-goals", data=payload
@@ -1695,23 +1803,25 @@ class AdCampaignsResource:
         to_date: str | None = None,
     ) -> dict[str, Any]:
         """List ads (async)"""
-        params = self._build_params(
-            page=page,
-            limit=limit,
-            source=source,
-            status=status,
-            platform=platform,
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            page_id=page_id,
-            profile_id=profile_id,
-            campaign_id=campaign_id,
-            ad_set_id=ad_set_id,
-            platform_ad_id=platform_ad_id,
-            effective_object_story_id=effective_object_story_id,
-            effective_instagram_media_id=effective_instagram_media_id,
-            from_date=from_date,
-            to_date=to_date,
+        params = self._wire_params(
+            {
+                "page": page,
+                "limit": limit,
+                "source": source,
+                "status": status,
+                "platform": platform,
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "pageId": page_id,
+                "profileId": profile_id,
+                "campaignId": campaign_id,
+                "adSetId": ad_set_id,
+                "platformAdId": platform_ad_id,
+                "effectiveObjectStoryId": effective_object_story_id,
+                "effectiveInstagramMediaId": effective_instagram_media_id,
+                "fromDate": from_date,
+                "toDate": to_date,
+            }
         )
         return await self._client._aget("/v1/ads", params=params)
 
@@ -1725,12 +1835,14 @@ class AdCampaignsResource:
         types: str | None = None,
     ) -> dict[str, Any]:
         """List Google Ads recommendations (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            customer_id=customer_id,
-            campaign_id=campaign_id,
-            types=types,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "customerId": customer_id,
+                "campaignId": campaign_id,
+                "types": types,
+            }
         )
         return await self._client._aget("/v1/ads/recommendations", params=params)
 
@@ -1742,10 +1854,12 @@ class AdCampaignsResource:
         ad_account_id: str | None = None,
     ) -> dict[str, Any]:
         """Apply Google Ads recommendations (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            recommendations=recommendations,
+        payload = self._wire_payload(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "recommendations": recommendations,
+            }
         )
         return await self._client._apost("/v1/ads/recommendations/apply", data=payload)
 
@@ -1757,10 +1871,12 @@ class AdCampaignsResource:
         ad_account_id: str | None = None,
     ) -> dict[str, Any]:
         """Dismiss Google Ads recommendations (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            resource_names=resource_names,
+        payload = self._wire_payload(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "resourceNames": resource_names,
+            }
         )
         return await self._client._apost(
             "/v1/ads/recommendations/dismiss", data=payload
@@ -1776,12 +1892,14 @@ class AdCampaignsResource:
         to_date: str | None = None,
     ) -> dict[str, Any]:
         """List portfolio bid strategies (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            customer_id=customer_id,
-            from_date=from_date,
-            to_date=to_date,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "customerId": customer_id,
+                "fromDate": from_date,
+                "toDate": to_date,
+            }
         )
         return await self._client._aget("/v1/ads/bid-strategies", params=params)
 
@@ -1798,15 +1916,17 @@ class AdCampaignsResource:
         target_impression_share: Any | None = None,
     ) -> dict[str, Any]:
         """Create portfolio bid strategy (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            customer_id=customer_id,
-            name=name,
-            type=type,
-            target_cpa=target_cpa,
-            target_roas=target_roas,
-            target_impression_share=target_impression_share,
+        payload = self._wire_payload(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "customerId": customer_id,
+                "name": name,
+                "type": type,
+                "targetCpa": target_cpa,
+                "targetRoas": target_roas,
+                "targetImpressionShare": target_impression_share,
+            }
         )
         return await self._client._apost("/v1/ads/bid-strategies", data=payload)
 
@@ -1824,15 +1944,17 @@ class AdCampaignsResource:
         target_impression_share: Any | None = None,
     ) -> dict[str, Any]:
         """Update portfolio bid strategy (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            customer_id=customer_id,
-            name=name,
-            type=type,
-            target_cpa=target_cpa,
-            target_roas=target_roas,
-            target_impression_share=target_impression_share,
+        payload = self._wire_payload(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "customerId": customer_id,
+                "name": name,
+                "type": type,
+                "targetCpa": target_cpa,
+                "targetRoas": target_roas,
+                "targetImpressionShare": target_impression_share,
+            }
         )
         return await self._client._apatch(
             f"/v1/ads/bid-strategies/{strategy_id}", data=payload
@@ -1842,9 +1964,11 @@ class AdCampaignsResource:
         self, account_id: str, *, ad_account_id: str | None = None
     ) -> dict[str, Any]:
         """List shared budgets (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+            }
         )
         return await self._client._aget("/v1/ads/shared-budgets", params=params)
 
@@ -1858,12 +1982,14 @@ class AdCampaignsResource:
         type: str | None = "daily",
     ) -> dict[str, Any]:
         """Create a shared budget (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            name=name,
-            amount=amount,
-            type=type,
+        payload = self._wire_payload(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "name": name,
+                "amount": amount,
+                "type": type,
+            }
         )
         return await self._client._apost("/v1/ads/shared-budgets", data=payload)
 
@@ -1883,18 +2009,20 @@ class AdCampaignsResource:
         search: str | None = None,
     ) -> dict[str, Any]:
         """List Search keywords (async)"""
-        params = self._build_params(
-            page=page,
-            limit=limit,
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            profile_id=profile_id,
-            campaign_id=campaign_id,
-            ad_set_id=ad_set_id,
-            status=status,
-            match_type=match_type,
-            negative=negative,
-            search=search,
+        params = self._wire_params(
+            {
+                "page": page,
+                "limit": limit,
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "profileId": profile_id,
+                "campaignId": campaign_id,
+                "adSetId": ad_set_id,
+                "status": status,
+                "matchType": match_type,
+                "negative": negative,
+                "search": search,
+            }
         )
         return await self._client._aget("/v1/ads/keywords", params=params)
 
@@ -1907,18 +2035,22 @@ class AdCampaignsResource:
         negative: bool | None = False,
     ) -> dict[str, Any]:
         """Add Search ad-group keywords (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            ad_set_id=ad_set_id,
-            keywords=keywords,
-            negative=negative,
+        payload = self._wire_payload(
+            {
+                "accountId": account_id,
+                "adSetId": ad_set_id,
+                "keywords": keywords,
+                "negative": negative,
+            }
         )
         return await self._client._apost("/v1/ads/keywords", data=payload)
 
     async def aupdate_ad_keyword(self, keyword_id: str, status: str) -> dict[str, Any]:
         """Pause or enable a Search keyword (async)"""
-        payload = self._build_payload(
-            status=status,
+        payload = self._wire_payload(
+            {
+                "status": status,
+            }
         )
         return await self._client._apatch(
             f"/v1/ads/keywords/{keyword_id}", data=payload
@@ -1949,23 +2081,25 @@ class AdCampaignsResource:
         live: bool | None = False,
     ) -> dict[str, Any]:
         """List campaigns (async)"""
-        params = self._build_params(
-            include_empty=include_empty,
-            page=page,
-            limit=limit,
-            source=source,
-            platform=platform,
-            status=status,
-            ad_account_id=ad_account_id,
-            campaign_id=campaign_id,
-            page_id=page_id,
-            account_id=account_id,
-            profile_id=profile_id,
-            from_date=from_date,
-            to_date=to_date,
-            has_delivery=has_delivery,
-            min_spend=min_spend,
-            live=live,
+        params = self._wire_params(
+            {
+                "includeEmpty": include_empty,
+                "page": page,
+                "limit": limit,
+                "source": source,
+                "platform": platform,
+                "status": status,
+                "adAccountId": ad_account_id,
+                "campaignId": campaign_id,
+                "pageId": page_id,
+                "accountId": account_id,
+                "profileId": profile_id,
+                "fromDate": from_date,
+                "toDate": to_date,
+                "hasDelivery": has_delivery,
+                "minSpend": min_spend,
+                "live": live,
+            }
         )
         return await self._client._aget("/v1/ads/campaigns", params=params)
 
@@ -1997,29 +2131,31 @@ class AdCampaignsResource:
         network_settings: Any | None = None,
     ) -> dict[str, Any]:
         """Create a standalone campaign (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            name=name,
-            goal=goal,
-            is_skadnetwork_attribution=is_skadnetwork_attribution,
-            promoted_object=promoted_object,
-            buying_type=buying_type,
-            validate_only=validate_only,
-            special_ad_categories=special_ad_categories,
-            budget_amount=budget_amount,
-            budget_type=budget_type,
-            status=status,
-            start_date=start_date,
-            end_date=end_date,
-            location_targeting_type=location_targeting_type,
-            bid_strategy=bid_strategy,
-            bid_amount=bid_amount,
-            roas_average_floor=roas_average_floor,
-            portfolio_bid_strategy_id=portfolio_bid_strategy_id,
-            target_impression_share=target_impression_share,
-            manual_cpc=manual_cpc,
-            network_settings=network_settings,
+        payload = self._wire_payload(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "name": name,
+                "goal": goal,
+                "isSkadnetworkAttribution": is_skadnetwork_attribution,
+                "promotedObject": promoted_object,
+                "buyingType": buying_type,
+                "validateOnly": validate_only,
+                "specialAdCategories": special_ad_categories,
+                "budgetAmount": budget_amount,
+                "budgetType": budget_type,
+                "status": status,
+                "startDate": start_date,
+                "endDate": end_date,
+                "locationTargetingType": location_targeting_type,
+                "bidStrategy": bid_strategy,
+                "bidAmount": bid_amount,
+                "roasAverageFloor": roas_average_floor,
+                "portfolioBidStrategyId": portfolio_bid_strategy_id,
+                "targetImpressionShare": target_impression_share,
+                "manualCpc": manual_cpc,
+                "networkSettings": network_settings,
+            }
         )
         headers: dict[str, str] = {}
         if idempotency_key is not None:
@@ -2032,9 +2168,11 @@ class AdCampaignsResource:
         self, campaign_id: str, status: str, platform: str
     ) -> dict[str, Any]:
         """Pause or resume a campaign (async)"""
-        payload = self._build_payload(
-            status=status,
-            platform=platform,
+        payload = self._wire_payload(
+            {
+                "status": status,
+                "platform": platform,
+            }
         )
         return await self._client._aput(
             f"/v1/ads/campaigns/{campaign_id}/status", data=payload
@@ -2051,12 +2189,14 @@ class AdCampaignsResource:
         to_date: str | None = None,
     ) -> dict[str, Any]:
         """Read a campaign's ad schedule (dayparting) (async)"""
-        params = self._build_params(
-            platform=platform,
-            include_performance=include_performance,
-            window_days=window_days,
-            from_date=from_date,
-            to_date=to_date,
+        params = self._wire_params(
+            {
+                "platform": platform,
+                "includePerformance": include_performance,
+                "windowDays": window_days,
+                "fromDate": from_date,
+                "toDate": to_date,
+            }
         )
         return await self._client._aget(
             f"/v1/ads/campaigns/{campaign_id}/ad-schedule", params=params
@@ -2066,8 +2206,10 @@ class AdCampaignsResource:
         self, campaign_id: str, schedule: list[dict[str, Any]]
     ) -> dict[str, Any]:
         """Replace a campaign's ad schedule (dayparting) (async)"""
-        payload = self._build_payload(
-            schedule=schedule,
+        payload = self._wire_payload(
+            {
+                "schedule": schedule,
+            }
         )
         return await self._client._aput(
             f"/v1/ads/campaigns/{campaign_id}/ad-schedule", data=payload
@@ -2083,11 +2225,13 @@ class AdCampaignsResource:
         customer_id: str | None = None,
     ) -> dict[str, Any]:
         """Read a campaign's current bidding (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            platform=platform,
-            ad_account_id=ad_account_id,
-            customer_id=customer_id,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+                "platform": platform,
+                "adAccountId": ad_account_id,
+                "customerId": customer_id,
+            }
         )
         return await self._client._aget(
             f"/v1/ads/campaigns/{campaign_id}/bidding", params=params
@@ -2097,9 +2241,11 @@ class AdCampaignsResource:
         self, campaign_id: str, account_id: str, *, fields: str | None = None
     ) -> dict[str, Any]:
         """Get live campaign details (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            fields=fields,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+                "fields": fields,
+            }
         )
         return await self._client._aget(
             f"/v1/ads/campaigns/{campaign_id}", params=params
@@ -2127,23 +2273,25 @@ class AdCampaignsResource:
         platform_specific_data: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Update a campaign (async)"""
-        payload = self._build_payload(
-            platform=platform,
-            account_id=account_id,
-            bid_strategy=bid_strategy,
-            bid_amount=bid_amount,
-            roas_average_floor=roas_average_floor,
-            portfolio_bid_strategy_id=portfolio_bid_strategy_id,
-            allow_shared_budget_update=allow_shared_budget_update,
-            target_impression_share=target_impression_share,
-            manual_cpc=manual_cpc,
-            network_settings=network_settings,
-            tracking_url_template=tracking_url_template,
-            final_url_suffix=final_url_suffix,
-            shared_budget_id=shared_budget_id,
-            budget=budget,
-            name=name,
-            platform_specific_data=platform_specific_data,
+        payload = self._wire_payload(
+            {
+                "platform": platform,
+                "accountId": account_id,
+                "bidStrategy": bid_strategy,
+                "bidAmount": bid_amount,
+                "roasAverageFloor": roas_average_floor,
+                "portfolioBidStrategyId": portfolio_bid_strategy_id,
+                "allowSharedBudgetUpdate": allow_shared_budget_update,
+                "targetImpressionShare": target_impression_share,
+                "manualCpc": manual_cpc,
+                "networkSettings": network_settings,
+                "trackingUrlTemplate": tracking_url_template,
+                "finalUrlSuffix": final_url_suffix,
+                "sharedBudgetId": shared_budget_id,
+                "budget": budget,
+                "name": name,
+                "platformSpecificData": platform_specific_data,
+            }
         )
         return await self._client._aput(
             f"/v1/ads/campaigns/{campaign_id}", data=payload
@@ -2158,10 +2306,12 @@ class AdCampaignsResource:
         ad_account_id: str | None = None,
     ) -> dict[str, Any]:
         """Delete a campaign (async)"""
-        payload = self._build_payload(
-            platform=platform,
-            account_id=account_id,
-            ad_account_id=ad_account_id,
+        payload = self._wire_payload(
+            {
+                "platform": platform,
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+            }
         )
         return await self._client._adelete(
             f"/v1/ads/campaigns/{campaign_id}", data=payload
@@ -2171,8 +2321,10 @@ class AdCampaignsResource:
         self, campaign_id: str, *, platform: str | None = None
     ) -> dict[str, Any]:
         """List campaign-level negative keywords (async)"""
-        params = self._build_params(
-            platform=platform,
+        params = self._wire_params(
+            {
+                "platform": platform,
+            }
         )
         return await self._client._aget(
             f"/v1/ads/campaigns/{campaign_id}/negative-keywords", params=params
@@ -2182,9 +2334,11 @@ class AdCampaignsResource:
         self, campaign_id: str, keywords: list[Any], *, platform: str | None = None
     ) -> dict[str, Any]:
         """Replace campaign-level negative keywords (async)"""
-        payload = self._build_payload(
-            platform=platform,
-            keywords=keywords,
+        payload = self._wire_payload(
+            {
+                "platform": platform,
+                "keywords": keywords,
+            }
         )
         return await self._client._aput(
             f"/v1/ads/campaigns/{campaign_id}/negative-keywords", data=payload
@@ -2194,9 +2348,11 @@ class AdCampaignsResource:
         self, status: str, campaigns: list[dict[str, Any]]
     ) -> dict[str, Any]:
         """Pause or resume many campaigns (async)"""
-        payload = self._build_payload(
-            status=status,
-            campaigns=campaigns,
+        payload = self._wire_payload(
+            {
+                "status": status,
+                "campaigns": campaigns,
+            }
         )
         return await self._client._apost("/v1/ads/campaigns/bulk-status", data=payload)
 
@@ -2216,16 +2372,18 @@ class AdCampaignsResource:
         sync_after: bool | None = True,
     ) -> dict[str, Any]:
         """Duplicate a campaign (async)"""
-        payload = self._build_payload(
-            platform=platform,
-            deep_copy=deep_copy,
-            status_option=status_option,
-            start_time=start_time,
-            end_time=end_time,
-            rename_strategy=rename_strategy,
-            rename_prefix=rename_prefix,
-            rename_suffix=rename_suffix,
-            sync_after=sync_after,
+        payload = self._wire_payload(
+            {
+                "platform": platform,
+                "deepCopy": deep_copy,
+                "statusOption": status_option,
+                "startTime": start_time,
+                "endTime": end_time,
+                "renameStrategy": rename_strategy,
+                "renamePrefix": rename_prefix,
+                "renameSuffix": rename_suffix,
+                "syncAfter": sync_after,
+            }
         )
         headers: dict[str, str] = {}
         if idempotency_key is not None:
@@ -2238,8 +2396,10 @@ class AdCampaignsResource:
         self, campaign_id: str, *, platform: str | None = None
     ) -> dict[str, Any]:
         """Read a Google campaign's device, location, excluded location, and language targeting (async)"""
-        params = self._build_params(
-            platform=platform,
+        params = self._wire_params(
+            {
+                "platform": platform,
+            }
         )
         return await self._client._aget(
             f"/v1/ads/campaigns/{campaign_id}/targeting", params=params
@@ -2249,9 +2409,11 @@ class AdCampaignsResource:
         self, campaign_id: str, platform: str, targeting: dict[str, Any]
     ) -> dict[str, Any]:
         """Edit a Google campaign's device, location, excluded location, or language targeting (async)"""
-        payload = self._build_payload(
-            platform=platform,
-            targeting=targeting,
+        payload = self._wire_payload(
+            {
+                "platform": platform,
+                "targeting": targeting,
+            }
         )
         return await self._client._aput(
             f"/v1/ads/campaigns/{campaign_id}/targeting", data=payload
@@ -2268,13 +2430,15 @@ class AdCampaignsResource:
         live: bool | None = False,
     ) -> dict[str, Any]:
         """List ad sets (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            campaign_id=campaign_id,
-            ad_set_id=ad_set_id,
-            platform=platform,
-            live=live,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "campaignId": campaign_id,
+                "adSetId": ad_set_id,
+                "platform": platform,
+                "live": live,
+            }
         )
         return await self._client._aget("/v1/ads/ad-sets", params=params)
 
@@ -2292,15 +2456,17 @@ class AdCampaignsResource:
         customer_id: str | None = None,
     ) -> dict[str, Any]:
         """Create a standalone ad group (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            platform=platform,
-            campaign_id=campaign_id,
-            name=name,
-            status=status,
-            max_cpc=max_cpc,
-            ad_account_id=ad_account_id,
-            customer_id=customer_id,
+        payload = self._wire_payload(
+            {
+                "accountId": account_id,
+                "platform": platform,
+                "campaignId": campaign_id,
+                "name": name,
+                "status": status,
+                "maxCpc": max_cpc,
+                "adAccountId": ad_account_id,
+                "customerId": customer_id,
+            }
         )
         headers: dict[str, str] = {}
         if idempotency_key is not None:
@@ -2326,17 +2492,19 @@ class AdCampaignsResource:
         sync_after: bool | None = True,
     ) -> dict[str, Any]:
         """Duplicate an ad set (async)"""
-        payload = self._build_payload(
-            platform=platform,
-            campaign_id=campaign_id,
-            deep_copy=deep_copy,
-            status_option=status_option,
-            start_time=start_time,
-            end_time=end_time,
-            rename_strategy=rename_strategy,
-            rename_prefix=rename_prefix,
-            rename_suffix=rename_suffix,
-            sync_after=sync_after,
+        payload = self._wire_payload(
+            {
+                "platform": platform,
+                "campaignId": campaign_id,
+                "deepCopy": deep_copy,
+                "statusOption": status_option,
+                "startTime": start_time,
+                "endTime": end_time,
+                "renameStrategy": rename_strategy,
+                "renamePrefix": rename_prefix,
+                "renameSuffix": rename_suffix,
+                "syncAfter": sync_after,
+            }
         )
         headers: dict[str, str] = {}
         if idempotency_key is not None:
@@ -2359,14 +2527,16 @@ class AdCampaignsResource:
         reuse_source_creative: bool | None = False,
     ) -> dict[str, Any]:
         """Duplicate an ad (async)"""
-        payload = self._build_payload(
-            ad_set_id=ad_set_id,
-            status_option=status_option,
-            rename_strategy=rename_strategy,
-            rename_prefix=rename_prefix,
-            rename_suffix=rename_suffix,
-            sync_after=sync_after,
-            reuse_source_creative=reuse_source_creative,
+        payload = self._wire_payload(
+            {
+                "adSetId": ad_set_id,
+                "statusOption": status_option,
+                "renameStrategy": rename_strategy,
+                "renamePrefix": rename_prefix,
+                "renameSuffix": rename_suffix,
+                "syncAfter": sync_after,
+                "reuseSourceCreative": reuse_source_creative,
+            }
         )
         headers: dict[str, str] = {}
         if idempotency_key is not None:
@@ -2379,9 +2549,11 @@ class AdCampaignsResource:
         self, ad_set_id: str, account_id: str, *, fields: str | None = None
     ) -> dict[str, Any]:
         """Get live ad-set details (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            fields=fields,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+                "fields": fields,
+            }
         )
         return await self._client._aget(f"/v1/ads/ad-sets/{ad_set_id}", params=params)
 
@@ -2404,20 +2576,22 @@ class AdCampaignsResource:
         platform_specific_data: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Update an ad set (async)"""
-        payload = self._build_payload(
-            platform=platform,
-            budget=budget,
-            status=status,
-            name=name,
-            bid_strategy=bid_strategy,
-            smart_targeting=smart_targeting,
-            placements=placements,
-            targeting=targeting,
-            bid_amount=bid_amount,
-            roas_average_floor=roas_average_floor,
-            value_rule_set_id=value_rule_set_id,
-            value_rules_applied=value_rules_applied,
-            platform_specific_data=platform_specific_data,
+        payload = self._wire_payload(
+            {
+                "platform": platform,
+                "budget": budget,
+                "status": status,
+                "name": name,
+                "bidStrategy": bid_strategy,
+                "smartTargeting": smart_targeting,
+                "placements": placements,
+                "targeting": targeting,
+                "bidAmount": bid_amount,
+                "roasAverageFloor": roas_average_floor,
+                "valueRuleSetId": value_rule_set_id,
+                "valueRulesApplied": value_rules_applied,
+                "platformSpecificData": platform_specific_data,
+            }
         )
         return await self._client._aput(f"/v1/ads/ad-sets/{ad_set_id}", data=payload)
 
@@ -2429,9 +2603,11 @@ class AdCampaignsResource:
         self, ad_set_id: str, status: str, platform: str
     ) -> dict[str, Any]:
         """Pause or resume a single ad set (async)"""
-        payload = self._build_payload(
-            status=status,
-            platform=platform,
+        payload = self._wire_payload(
+            {
+                "status": status,
+                "platform": platform,
+            }
         )
         return await self._client._aput(
             f"/v1/ads/ad-sets/{ad_set_id}/status", data=payload
@@ -2461,26 +2637,28 @@ class AdCampaignsResource:
         daily_level: str | None = "campaign",
     ) -> dict[str, Any]:
         """Get campaign tree (async)"""
-        params = self._build_params(
-            page=page,
-            limit=limit,
-            source=source,
-            platform=platform,
-            status=status,
-            ad_account_id=ad_account_id,
-            page_id=page_id,
-            account_id=account_id,
-            profile_id=profile_id,
-            campaign_id=campaign_id,
-            updated_since=updated_since,
-            search=search,
-            from_date=from_date,
-            to_date=to_date,
-            has_delivery=has_delivery,
-            min_spend=min_spend,
-            sort=sort,
-            time_increment=time_increment,
-            daily_level=daily_level,
+        params = self._wire_params(
+            {
+                "page": page,
+                "limit": limit,
+                "source": source,
+                "platform": platform,
+                "status": status,
+                "adAccountId": ad_account_id,
+                "pageId": page_id,
+                "accountId": account_id,
+                "profileId": profile_id,
+                "campaignId": campaign_id,
+                "updatedSince": updated_since,
+                "search": search,
+                "fromDate": from_date,
+                "toDate": to_date,
+                "hasDelivery": has_delivery,
+                "minSpend": min_spend,
+                "sort": sort,
+                "timeIncrement": time_increment,
+                "dailyLevel": daily_level,
+            }
         )
         return await self._client._aget("/v1/ads/tree", params=params)
 
@@ -2494,19 +2672,23 @@ class AdCampaignsResource:
         platform: str | None = None,
     ) -> dict[str, Any]:
         """Get daily account metrics (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            from_date=from_date,
-            to_date=to_date,
-            platform=platform,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "fromDate": from_date,
+                "toDate": to_date,
+                "platform": platform,
+            }
         )
         return await self._client._aget("/v1/ads/timeline", params=params)
 
     async def aget_ad(self, ad_id: str, *, live: bool | None = False) -> dict[str, Any]:
         """Get ad details (async)"""
-        params = self._build_params(
-            live=live,
+        params = self._wire_params(
+            {
+                "live": live,
+            }
         )
         return await self._client._aget(f"/v1/ads/{ad_id}", params=params)
 
@@ -2526,17 +2708,19 @@ class AdCampaignsResource:
         name: str | None = None,
     ) -> dict[str, Any]:
         """Update ad (async)"""
-        payload = self._build_payload(
-            headlines=headlines,
-            descriptions=descriptions,
-            final_urls=final_urls,
-            asset_group=asset_group,
-            demand_gen=demand_gen,
-            status=status,
-            budget=budget,
-            targeting=targeting,
-            creative=creative,
-            name=name,
+        payload = self._wire_payload(
+            {
+                "headlines": headlines,
+                "descriptions": descriptions,
+                "finalUrls": final_urls,
+                "assetGroup": asset_group,
+                "demandGen": demand_gen,
+                "status": status,
+                "budget": budget,
+                "targeting": targeting,
+                "creative": creative,
+                "name": name,
+            }
         )
         return await self._client._aput(f"/v1/ads/{ad_id}", data=payload)
 
@@ -2546,8 +2730,10 @@ class AdCampaignsResource:
 
     async def aupdate_ad_status(self, ad_id: str, status: str) -> dict[str, Any]:
         """Pause or resume a single ad (async)"""
-        payload = self._build_payload(
-            status=status,
+        payload = self._wire_payload(
+            {
+                "status": status,
+            }
         )
         return await self._client._aput(f"/v1/ads/{ad_id}/status", data=payload)
 
@@ -2560,10 +2746,12 @@ class AdCampaignsResource:
         customer_id: str | None = None,
     ) -> dict[str, Any]:
         """List campaign assets (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            customer_id=customer_id,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "customerId": customer_id,
+            }
         )
         return await self._client._aget(
             f"/v1/ads/campaigns/{campaign_id}/assets", params=params
@@ -2582,14 +2770,16 @@ class AdCampaignsResource:
         images: list[str] | None = None,
     ) -> dict[str, Any]:
         """Attach campaign assets (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            customer_id=customer_id,
-            sitelinks=sitelinks,
-            callouts=callouts,
-            structured_snippets=structured_snippets,
-            images=images,
+        payload = self._wire_payload(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "customerId": customer_id,
+                "sitelinks": sitelinks,
+                "callouts": callouts,
+                "structuredSnippets": structured_snippets,
+                "images": images,
+            }
         )
         return await self._client._apost(
             f"/v1/ads/campaigns/{campaign_id}/assets", data=payload
@@ -2605,11 +2795,13 @@ class AdCampaignsResource:
         customer_id: str | None = None,
     ) -> dict[str, Any]:
         """Update campaign assets (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            customer_id=customer_id,
-            updates=updates,
+        payload = self._wire_payload(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "customerId": customer_id,
+                "updates": updates,
+            }
         )
         return await self._client._aput(
             f"/v1/ads/campaigns/{campaign_id}/assets", data=payload
@@ -2626,12 +2818,14 @@ class AdCampaignsResource:
         customer_id: str | None = None,
     ) -> dict[str, Any]:
         """Remove campaign assets (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            customer_id=customer_id,
-            asset_resource_names=asset_resource_names,
-            campaign_asset_resource_names=campaign_asset_resource_names,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "customerId": customer_id,
+                "assetResourceNames": asset_resource_names,
+                "campaignAssetResourceNames": campaign_asset_resource_names,
+            }
         )
         return await self._client._adelete(
             f"/v1/ads/campaigns/{campaign_id}/assets", params=params
@@ -2646,10 +2840,12 @@ class AdCampaignsResource:
         customer_id: str | None = None,
     ) -> dict[str, Any]:
         """List ad-group assets (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            customer_id=customer_id,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "customerId": customer_id,
+            }
         )
         return await self._client._aget(
             f"/v1/ads/ad-sets/{ad_set_id}/assets", params=params
@@ -2668,14 +2864,16 @@ class AdCampaignsResource:
         images: list[str] | None = None,
     ) -> dict[str, Any]:
         """Attach ad-group assets (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            customer_id=customer_id,
-            sitelinks=sitelinks,
-            callouts=callouts,
-            structured_snippets=structured_snippets,
-            images=images,
+        payload = self._wire_payload(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "customerId": customer_id,
+                "sitelinks": sitelinks,
+                "callouts": callouts,
+                "structuredSnippets": structured_snippets,
+                "images": images,
+            }
         )
         return await self._client._apost(
             f"/v1/ads/ad-sets/{ad_set_id}/assets", data=payload
@@ -2691,11 +2889,13 @@ class AdCampaignsResource:
         customer_id: str | None = None,
     ) -> dict[str, Any]:
         """Update ad-group assets (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            customer_id=customer_id,
-            updates=updates,
+        payload = self._wire_payload(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "customerId": customer_id,
+                "updates": updates,
+            }
         )
         return await self._client._aput(
             f"/v1/ads/ad-sets/{ad_set_id}/assets", data=payload
@@ -2712,12 +2912,14 @@ class AdCampaignsResource:
         customer_id: str | None = None,
     ) -> dict[str, Any]:
         """Remove ad-group assets (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            customer_id=customer_id,
-            asset_resource_names=asset_resource_names,
-            ad_group_asset_resource_names=ad_group_asset_resource_names,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "customerId": customer_id,
+                "assetResourceNames": asset_resource_names,
+                "adGroupAssetResourceNames": ad_group_asset_resource_names,
+            }
         )
         return await self._client._adelete(
             f"/v1/ads/ad-sets/{ad_set_id}/assets", params=params
@@ -2741,12 +2943,14 @@ class AdCampaignsResource:
         page_size: int | None = 500,
     ) -> dict[str, Any]:
         """Review status of every TikTok Smart+ ad of an advertiser (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            include_deleted=include_deleted,
-            page=page,
-            page_size=page_size,
+        params = self._wire_params(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "includeDeleted": include_deleted,
+                "page": page,
+                "pageSize": page_size,
+            }
         )
         return await self._client._aget(
             "/v1/ads/tiktok-smart-plus-reviews", params=params
@@ -2756,8 +2960,10 @@ class AdCampaignsResource:
         self, campaign_id: str, *, platform: str | None = None
     ) -> dict[str, Any]:
         """List campaign negative lists (async)"""
-        params = self._build_params(
-            platform=platform,
+        params = self._wire_params(
+            {
+                "platform": platform,
+            }
         )
         return await self._client._aget(
             f"/v1/ads/campaigns/{campaign_id}/negative-keyword-lists", params=params
@@ -2767,9 +2973,11 @@ class AdCampaignsResource:
         self, campaign_id: str, list_ids: list[str], *, platform: str | None = None
     ) -> dict[str, Any]:
         """Replace campaign negative lists (async)"""
-        payload = self._build_payload(
-            platform=platform,
-            list_ids=list_ids,
+        payload = self._wire_payload(
+            {
+                "platform": platform,
+                "listIds": list_ids,
+            }
         )
         return await self._client._aput(
             f"/v1/ads/campaigns/{campaign_id}/negative-keyword-lists", data=payload
@@ -2837,63 +3045,65 @@ class AdCampaignsResource:
         optimization_goal: str | None = None,
     ) -> dict[str, Any]:
         """Boost post as ad (async)"""
-        payload = self._build_payload(
-            creative_features=creative_features,
-            post_id=post_id,
-            platform_post_id=platform_post_id,
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            name=name,
-            campaign_name=campaign_name,
-            ad_set_name=ad_set_name,
-            goal=goal,
-            ad_set_id=ad_set_id,
-            existing_campaign_id=existing_campaign_id,
-            identity_id=identity_id,
-            identity_type=identity_type,
-            budget_amount=budget_amount,
-            budget_type=budget_type,
-            lifetime_budget_cap=lifetime_budget_cap,
-            budget=budget,
-            instagram_account_id=instagram_account_id,
-            destination_type=destination_type,
-            whatsapp_phone_number=whatsapp_phone_number,
-            workflow_id=workflow_id,
-            currency=currency,
-            start_date=start_date,
-            end_date=end_date,
-            schedule=schedule,
-            targeting=targeting,
-            location_targeting_type=location_targeting_type,
-            raw_targeting=raw_targeting,
-            bid_strategy=bid_strategy,
-            bid_amount=bid_amount,
-            roas_average_floor=roas_average_floor,
-            platform_specific_data=platform_specific_data,
-            tracking=tracking,
-            special_ad_categories=special_ad_categories,
-            special_ad_category_country=special_ad_category_country,
-            regional_regulated_categories=regional_regulated_categories,
-            regional_regulation_identities=regional_regulation_identities,
-            link_url=link_url,
-            call_to_action=call_to_action,
-            spark_auth_code=spark_auth_code,
-            smart_plus=smart_plus,
-            spark_posts=spark_posts,
-            promo_codes=promo_codes,
-            promoted_object=promoted_object,
-            dsa_beneficiary=dsa_beneficiary,
-            dsa_payor=dsa_payor,
-            lead_gen_form_id=lead_gen_form_id,
-            status=status,
-            campaign_status=campaign_status,
-            ad_set_status=ad_set_status,
-            ad_status=ad_status,
-            budget_level=budget_level,
-            attribution_spec=attribution_spec,
-            bodies=bodies,
-            smart_targeting=smart_targeting,
-            optimization_goal=optimization_goal,
+        payload = self._wire_payload(
+            {
+                "creativeFeatures": creative_features,
+                "postId": post_id,
+                "platformPostId": platform_post_id,
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "name": name,
+                "campaignName": campaign_name,
+                "adSetName": ad_set_name,
+                "goal": goal,
+                "adSetId": ad_set_id,
+                "existingCampaignId": existing_campaign_id,
+                "identityId": identity_id,
+                "identityType": identity_type,
+                "budgetAmount": budget_amount,
+                "budgetType": budget_type,
+                "lifetimeBudgetCap": lifetime_budget_cap,
+                "budget": budget,
+                "instagramAccountId": instagram_account_id,
+                "destinationType": destination_type,
+                "whatsappPhoneNumber": whatsapp_phone_number,
+                "workflowId": workflow_id,
+                "currency": currency,
+                "startDate": start_date,
+                "endDate": end_date,
+                "schedule": schedule,
+                "targeting": targeting,
+                "locationTargetingType": location_targeting_type,
+                "rawTargeting": raw_targeting,
+                "bidStrategy": bid_strategy,
+                "bidAmount": bid_amount,
+                "roasAverageFloor": roas_average_floor,
+                "platformSpecificData": platform_specific_data,
+                "tracking": tracking,
+                "specialAdCategories": special_ad_categories,
+                "specialAdCategoryCountry": special_ad_category_country,
+                "regionalRegulatedCategories": regional_regulated_categories,
+                "regionalRegulationIdentities": regional_regulation_identities,
+                "linkUrl": link_url,
+                "callToAction": call_to_action,
+                "sparkAuthCode": spark_auth_code,
+                "smartPlus": smart_plus,
+                "sparkPosts": spark_posts,
+                "promoCodes": promo_codes,
+                "promotedObject": promoted_object,
+                "dsaBeneficiary": dsa_beneficiary,
+                "dsaPayor": dsa_payor,
+                "leadGenFormId": lead_gen_form_id,
+                "status": status,
+                "campaignStatus": campaign_status,
+                "adSetStatus": ad_set_status,
+                "adStatus": ad_status,
+                "budgetLevel": budget_level,
+                "attributionSpec": attribution_spec,
+                "bodies": bodies,
+                "smartTargeting": smart_targeting,
+                "optimizationGoal": optimization_goal,
+            }
         )
         headers: dict[str, str] = {}
         if idempotency_key is not None:
@@ -2919,16 +3129,18 @@ class AdCampaignsResource:
         validate_only: bool | None = False,
     ) -> dict[str, Any]:
         """Create a Performance Max asset group (async)"""
-        payload = self._build_payload(
-            name=name,
-            final_urls=final_urls,
-            final_mobile_urls=final_mobile_urls,
-            path1=path1,
-            path2=path2,
-            status=status,
-            assets=assets,
-            listing_group_filter=listing_group_filter,
-            validate_only=validate_only,
+        payload = self._wire_payload(
+            {
+                "name": name,
+                "finalUrls": final_urls,
+                "finalMobileUrls": final_mobile_urls,
+                "path1": path1,
+                "path2": path2,
+                "status": status,
+                "assets": assets,
+                "listingGroupFilter": listing_group_filter,
+                "validateOnly": validate_only,
+            }
         )
         return await self._client._apost(
             f"/v1/ads/campaigns/{campaign_id}/asset-groups", data=payload
@@ -2956,14 +3168,16 @@ class AdCampaignsResource:
         validate_only: bool | None = False,
     ) -> dict[str, Any]:
         """Update a Performance Max asset group (async)"""
-        payload = self._build_payload(
-            name=name,
-            status=status,
-            final_urls=final_urls,
-            final_mobile_urls=final_mobile_urls,
-            path1=path1,
-            path2=path2,
-            validate_only=validate_only,
+        payload = self._wire_payload(
+            {
+                "name": name,
+                "status": status,
+                "finalUrls": final_urls,
+                "finalMobileUrls": final_mobile_urls,
+                "path1": path1,
+                "path2": path2,
+                "validateOnly": validate_only,
+            }
         )
         return await self._client._apatch(
             f"/v1/ads/campaigns/{campaign_id}/asset-groups/{asset_group_id}",
@@ -2978,8 +3192,10 @@ class AdCampaignsResource:
         validate_only: bool | None = False,
     ) -> dict[str, Any]:
         """Remove a Performance Max asset group (async)"""
-        params = self._build_params(
-            validate_only=validate_only,
+        params = self._wire_params(
+            {
+                "validateOnly": validate_only,
+            }
         )
         return await self._client._adelete(
             f"/v1/ads/campaigns/{campaign_id}/asset-groups/{asset_group_id}",
@@ -2996,10 +3212,12 @@ class AdCampaignsResource:
         validate_only: bool | None = False,
     ) -> dict[str, Any]:
         """Link or unlink asset group assets (async)"""
-        payload = self._build_payload(
-            link=link,
-            unlink=unlink,
-            validate_only=validate_only,
+        payload = self._wire_payload(
+            {
+                "link": link,
+                "unlink": unlink,
+                "validateOnly": validate_only,
+            }
         )
         return await self._client._apost(
             f"/v1/ads/campaigns/{campaign_id}/asset-groups/{asset_group_id}/assets",
@@ -3015,9 +3233,11 @@ class AdCampaignsResource:
         validate_only: bool | None = False,
     ) -> dict[str, Any]:
         """Replace an asset group's listing-group tree (async)"""
-        payload = self._build_payload(
-            tree=tree,
-            validate_only=validate_only,
+        payload = self._wire_payload(
+            {
+                "tree": tree,
+                "validateOnly": validate_only,
+            }
         )
         return await self._client._aput(
             f"/v1/ads/campaigns/{campaign_id}/asset-groups/{asset_group_id}/listing-group-filters",
@@ -3149,126 +3369,128 @@ class AdCampaignsResource:
         promoted_object: Any | None = None,
     ) -> dict[str, Any]:
         """Create standalone ad (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            name=name,
-            campaign_name=campaign_name,
-            ad_set_name=ad_set_name,
-            ad_name=ad_name,
-            tracking=tracking,
-            goal=goal,
-            smart_targeting=smart_targeting,
-            optimization_goal=optimization_goal,
-            billing_event=billing_event,
-            buying_type=buying_type,
-            rf_prediction_id=rf_prediction_id,
-            promotion=promotion,
-            creative_features=creative_features,
-            catalog_format=catalog_format,
-            multi_advertiser=multi_advertiser,
-            ai_disclosure=ai_disclosure,
-            validate_only=validate_only,
-            budget_amount=budget_amount,
-            budget_type=budget_type,
-            status=status,
-            campaign_status=campaign_status,
-            ad_set_status=ad_set_status,
-            ad_status=ad_status,
-            budget_level=budget_level,
-            currency=currency,
-            headline=headline,
-            long_headline=long_headline,
-            body=body,
-            description=description,
-            bodies=bodies,
-            headlines=headlines,
-            descriptions=descriptions,
-            call_to_action=call_to_action,
-            link_url=link_url,
-            lead_gen_form_id=lead_gen_form_id,
-            image_url=image_url,
-            images=images,
-            video=video,
-            creatives=creatives,
-            ad_set_id=ad_set_id,
-            existing_campaign_id=existing_campaign_id,
-            phone_number=phone_number,
-            existing_creative_id=existing_creative_id,
-            business_name=business_name,
-            board_id=board_id,
-            organization_id=organization_id,
-            targeting=targeting,
-            countries=countries,
-            country_groups=country_groups,
-            cities=cities,
-            regions=regions,
-            age_min=age_min,
-            age_max=age_max,
-            interests=interests,
-            zips=zips,
-            metros=metros,
-            custom_locations=custom_locations,
-            behaviors=behaviors,
-            work_positions=work_positions,
-            work_employers=work_employers,
-            work_industries=work_industries,
-            income_tier=income_tier,
-            languages=languages,
-            placements=placements,
-            saved_targeting_id=saved_targeting_id,
-            raw_targeting=raw_targeting,
-            special_ad_categories=special_ad_categories,
-            special_ad_category_country=special_ad_category_country,
-            regional_regulated_categories=regional_regulated_categories,
-            regional_regulation_identities=regional_regulation_identities,
-            end_date=end_date,
-            start_date=start_date,
-            page_id=page_id,
-            instagram_account_id=instagram_account_id,
-            dynamic_creative=dynamic_creative,
-            carousel_cards=carousel_cards,
-            optimize_card_order=optimize_card_order,
-            default_locale=default_locale,
-            translations=translations,
-            placement_assets=placement_assets,
-            audience_id=audience_id,
-            campaign_type=campaign_type,
-            location_targeting_type=location_targeting_type,
-            asset_group=asset_group,
-            demand_gen=demand_gen,
-            keywords=keywords,
-            negative_keywords=negative_keywords,
-            campaign_negative_keywords=campaign_negative_keywords,
-            additional_headlines=additional_headlines,
-            additional_descriptions=additional_descriptions,
-            sitelinks=sitelinks,
-            callouts=callouts,
-            structured_snippets=structured_snippets,
-            advantage_audience=advantage_audience,
-            attribution_spec=attribution_spec,
-            gender=gender,
-            bid_strategy=bid_strategy,
-            bid_amount=bid_amount,
-            roas_average_floor=roas_average_floor,
-            portfolio_bid_strategy_id=portfolio_bid_strategy_id,
-            target_impression_share=target_impression_share,
-            manual_cpc=manual_cpc,
-            network_settings=network_settings,
-            value_rule_set_id=value_rule_set_id,
-            value_rules_applied=value_rules_applied,
-            platform_specific_data=platform_specific_data,
-            dsa_beneficiary=dsa_beneficiary,
-            dsa_payor=dsa_payor,
-            brand_identity=brand_identity,
-            identity_id=identity_id,
-            identity_type=identity_type,
-            smart_plus=smart_plus,
-            user_os=user_os,
-            user_device=user_device,
-            is_skadnetwork_attribution=is_skadnetwork_attribution,
-            campaign_attribution=campaign_attribution,
-            promoted_object=promoted_object,
+        payload = self._wire_payload(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "name": name,
+                "campaignName": campaign_name,
+                "adSetName": ad_set_name,
+                "adName": ad_name,
+                "tracking": tracking,
+                "goal": goal,
+                "smartTargeting": smart_targeting,
+                "optimizationGoal": optimization_goal,
+                "billingEvent": billing_event,
+                "buyingType": buying_type,
+                "rfPredictionId": rf_prediction_id,
+                "promotion": promotion,
+                "creativeFeatures": creative_features,
+                "catalogFormat": catalog_format,
+                "multiAdvertiser": multi_advertiser,
+                "aiDisclosure": ai_disclosure,
+                "validateOnly": validate_only,
+                "budgetAmount": budget_amount,
+                "budgetType": budget_type,
+                "status": status,
+                "campaignStatus": campaign_status,
+                "adSetStatus": ad_set_status,
+                "adStatus": ad_status,
+                "budgetLevel": budget_level,
+                "currency": currency,
+                "headline": headline,
+                "longHeadline": long_headline,
+                "body": body,
+                "description": description,
+                "bodies": bodies,
+                "headlines": headlines,
+                "descriptions": descriptions,
+                "callToAction": call_to_action,
+                "linkUrl": link_url,
+                "leadGenFormId": lead_gen_form_id,
+                "imageUrl": image_url,
+                "images": images,
+                "video": video,
+                "creatives": creatives,
+                "adSetId": ad_set_id,
+                "existingCampaignId": existing_campaign_id,
+                "phoneNumber": phone_number,
+                "existingCreativeId": existing_creative_id,
+                "businessName": business_name,
+                "boardId": board_id,
+                "organizationId": organization_id,
+                "targeting": targeting,
+                "countries": countries,
+                "countryGroups": country_groups,
+                "cities": cities,
+                "regions": regions,
+                "ageMin": age_min,
+                "ageMax": age_max,
+                "interests": interests,
+                "zips": zips,
+                "metros": metros,
+                "customLocations": custom_locations,
+                "behaviors": behaviors,
+                "workPositions": work_positions,
+                "workEmployers": work_employers,
+                "workIndustries": work_industries,
+                "incomeTier": income_tier,
+                "languages": languages,
+                "placements": placements,
+                "savedTargetingId": saved_targeting_id,
+                "rawTargeting": raw_targeting,
+                "specialAdCategories": special_ad_categories,
+                "specialAdCategoryCountry": special_ad_category_country,
+                "regionalRegulatedCategories": regional_regulated_categories,
+                "regionalRegulationIdentities": regional_regulation_identities,
+                "endDate": end_date,
+                "startDate": start_date,
+                "pageId": page_id,
+                "instagramAccountId": instagram_account_id,
+                "dynamicCreative": dynamic_creative,
+                "carouselCards": carousel_cards,
+                "optimizeCardOrder": optimize_card_order,
+                "defaultLocale": default_locale,
+                "translations": translations,
+                "placementAssets": placement_assets,
+                "audienceId": audience_id,
+                "campaignType": campaign_type,
+                "locationTargetingType": location_targeting_type,
+                "assetGroup": asset_group,
+                "demandGen": demand_gen,
+                "keywords": keywords,
+                "negativeKeywords": negative_keywords,
+                "campaignNegativeKeywords": campaign_negative_keywords,
+                "additionalHeadlines": additional_headlines,
+                "additionalDescriptions": additional_descriptions,
+                "sitelinks": sitelinks,
+                "callouts": callouts,
+                "structuredSnippets": structured_snippets,
+                "advantageAudience": advantage_audience,
+                "attributionSpec": attribution_spec,
+                "gender": gender,
+                "bidStrategy": bid_strategy,
+                "bidAmount": bid_amount,
+                "roasAverageFloor": roas_average_floor,
+                "portfolioBidStrategyId": portfolio_bid_strategy_id,
+                "targetImpressionShare": target_impression_share,
+                "manualCpc": manual_cpc,
+                "networkSettings": network_settings,
+                "valueRuleSetId": value_rule_set_id,
+                "valueRulesApplied": value_rules_applied,
+                "platformSpecificData": platform_specific_data,
+                "dsaBeneficiary": dsa_beneficiary,
+                "dsaPayor": dsa_payor,
+                "brandIdentity": brand_identity,
+                "identityId": identity_id,
+                "identityType": identity_type,
+                "smartPlus": smart_plus,
+                "userOs": user_os,
+                "userDevice": user_device,
+                "isSkadnetworkAttribution": is_skadnetwork_attribution,
+                "campaignAttribution": campaign_attribution,
+                "promotedObject": promoted_object,
+            }
         )
         headers: dict[str, str] = {}
         if idempotency_key is not None:
@@ -3292,10 +3514,12 @@ class AdCampaignsResource:
         custom_conversion_goal_id: Any | None = None,
     ) -> dict[str, Any]:
         """Update campaign conversion goals (async)"""
-        payload = self._build_payload(
-            goals=goals,
-            goal_config_level=goal_config_level,
-            custom_conversion_goal_id=custom_conversion_goal_id,
+        payload = self._wire_payload(
+            {
+                "goals": goals,
+                "goalConfigLevel": goal_config_level,
+                "customConversionGoalId": custom_conversion_goal_id,
+            }
         )
         return await self._client._apatch(
             f"/v1/ads/campaigns/{campaign_id}/conversion-goals", data=payload

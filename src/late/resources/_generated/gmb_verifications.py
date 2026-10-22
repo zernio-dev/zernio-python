@@ -21,7 +21,7 @@ class GmbVerificationsResource:
     def __init__(self, client: BaseClient) -> None:
         self._client = client
 
-    def _build_params(self, **kwargs: Any) -> dict[str, Any]:
+    def _wire_params(self, fields: dict[str, Any]) -> dict[str, Any]:
         """Build query parameters, filtering None and empty-string values.
 
         Empty strings are filtered because MCP tool wrappers pass ``""`` as the
@@ -36,20 +36,16 @@ class GmbVerificationsResource:
         """
         from enum import Enum
 
-        def to_camel(s: str) -> str:
-            parts = s.split("_")
-            return parts[0] + "".join(p.title() for p in parts[1:])
-
         result: dict[str, Any] = {}
-        for k, v in kwargs.items():
+        for k, v in fields.items():
             if isinstance(v, Enum):
                 v = v.value
             if v is None or v == "":
                 continue
-            result[to_camel(k)] = v
+            result[k] = v
         return result
 
-    def _build_payload(self, **kwargs: Any) -> dict[str, Any]:
+    def _wire_payload(self, fields: dict[str, Any]) -> dict[str, Any]:
         """Build request payload, filtering None values. Enum members are
         unwrapped to their value so JSON bodies carry e.g. "failed" rather
         than a raw Enum member (plain Enum members are not JSON-serializable).
@@ -57,28 +53,26 @@ class GmbVerificationsResource:
         from datetime import datetime
         from enum import Enum
 
-        def to_camel(s: str) -> str:
-            parts = s.split("_")
-            return parts[0] + "".join(p.title() for p in parts[1:])
-
         result: dict[str, Any] = {}
-        for k, v in kwargs.items():
+        for k, v in fields.items():
             if isinstance(v, Enum):
                 v = v.value
             if v is None:
                 continue
             if isinstance(v, datetime):
-                result[to_camel(k)] = v.isoformat()
+                result[k] = v.isoformat()
             else:
-                result[to_camel(k)] = v
+                result[k] = v
         return result
 
     def get_google_business_verifications(
         self, account_id: str, *, location_id: str | None = None
     ) -> dict[str, Any]:
         """Get verification state"""
-        params = self._build_params(
-            location_id=location_id,
+        params = self._wire_params(
+            {
+                "locationId": location_id,
+            }
         )
         return self._client._get(
             f"/v1/accounts/{account_id}/gmb-verifications", params=params
@@ -97,16 +91,20 @@ class GmbVerificationsResource:
         context: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Start a verification"""
-        params = self._build_params(
-            location_id=location_id,
+        params = self._wire_params(
+            {
+                "locationId": location_id,
+            }
         )
-        payload = self._build_payload(
-            method=method,
-            language_code=language_code,
-            phone_number=phone_number,
-            email_address=email_address,
-            mailer_contact=mailer_contact,
-            context=context,
+        payload = self._wire_payload(
+            {
+                "method": method,
+                "languageCode": language_code,
+                "phoneNumber": phone_number,
+                "emailAddress": email_address,
+                "mailerContact": mailer_contact,
+                "context": context,
+            }
         )
         return self._client._post(
             f"/v1/accounts/{account_id}/gmb-verifications", data=payload, params=params
@@ -121,12 +119,16 @@ class GmbVerificationsResource:
         context: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Fetch verification options"""
-        params = self._build_params(
-            location_id=location_id,
+        params = self._wire_params(
+            {
+                "locationId": location_id,
+            }
         )
-        payload = self._build_payload(
-            language_code=language_code,
-            context=context,
+        payload = self._wire_payload(
+            {
+                "languageCode": language_code,
+                "context": context,
+            }
         )
         return self._client._post(
             f"/v1/accounts/{account_id}/gmb-verifications/options",
@@ -143,11 +145,15 @@ class GmbVerificationsResource:
         location_id: str | None = None,
     ) -> dict[str, Any]:
         """Complete a verification"""
-        params = self._build_params(
-            location_id=location_id,
+        params = self._wire_params(
+            {
+                "locationId": location_id,
+            }
         )
-        payload = self._build_payload(
-            pin=pin,
+        payload = self._wire_payload(
+            {
+                "pin": pin,
+            }
         )
         return self._client._post(
             f"/v1/accounts/{account_id}/gmb-verifications/{verification_id}/complete",
@@ -159,8 +165,10 @@ class GmbVerificationsResource:
         self, account_id: str, *, location_id: str | None = None
     ) -> dict[str, Any]:
         """Get verification state (async)"""
-        params = self._build_params(
-            location_id=location_id,
+        params = self._wire_params(
+            {
+                "locationId": location_id,
+            }
         )
         return await self._client._aget(
             f"/v1/accounts/{account_id}/gmb-verifications", params=params
@@ -179,16 +187,20 @@ class GmbVerificationsResource:
         context: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Start a verification (async)"""
-        params = self._build_params(
-            location_id=location_id,
+        params = self._wire_params(
+            {
+                "locationId": location_id,
+            }
         )
-        payload = self._build_payload(
-            method=method,
-            language_code=language_code,
-            phone_number=phone_number,
-            email_address=email_address,
-            mailer_contact=mailer_contact,
-            context=context,
+        payload = self._wire_payload(
+            {
+                "method": method,
+                "languageCode": language_code,
+                "phoneNumber": phone_number,
+                "emailAddress": email_address,
+                "mailerContact": mailer_contact,
+                "context": context,
+            }
         )
         return await self._client._apost(
             f"/v1/accounts/{account_id}/gmb-verifications", data=payload, params=params
@@ -203,12 +215,16 @@ class GmbVerificationsResource:
         context: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Fetch verification options (async)"""
-        params = self._build_params(
-            location_id=location_id,
+        params = self._wire_params(
+            {
+                "locationId": location_id,
+            }
         )
-        payload = self._build_payload(
-            language_code=language_code,
-            context=context,
+        payload = self._wire_payload(
+            {
+                "languageCode": language_code,
+                "context": context,
+            }
         )
         return await self._client._apost(
             f"/v1/accounts/{account_id}/gmb-verifications/options",
@@ -225,11 +241,15 @@ class GmbVerificationsResource:
         location_id: str | None = None,
     ) -> dict[str, Any]:
         """Complete a verification (async)"""
-        params = self._build_params(
-            location_id=location_id,
+        params = self._wire_params(
+            {
+                "locationId": location_id,
+            }
         )
-        payload = self._build_payload(
-            pin=pin,
+        payload = self._wire_payload(
+            {
+                "pin": pin,
+            }
         )
         return await self._client._apost(
             f"/v1/accounts/{account_id}/gmb-verifications/{verification_id}/complete",
