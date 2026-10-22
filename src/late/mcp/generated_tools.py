@@ -5526,7 +5526,7 @@ def register_generated_tools(mcp, _get_client):
         Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit
 
         Args:
-            page: Page number
+            page: Page number (1-based)
             limit
             source: all (default) = Zernio-created + platform-discovered ads. zernio = restrict to Zernio-created only.
             status
@@ -5956,7 +5956,7 @@ def register_generated_tools(mcp, _get_client):
         Platforms: google
 
         Args:
-            page: Page number
+            page: Page number (1-based)
             limit
             account_id: Account ID
             ad_account_id: Platform ad account ID (Google customer ID). Mirrors the same filter on /v1/ads.
@@ -6131,6 +6131,7 @@ def register_generated_tools(mcp, _get_client):
         to_date: str | None = None,
         has_delivery: bool | None = None,
         min_spend: float | None = None,
+        live: bool = False,
     ) -> str:
         """List campaigns
 
@@ -6152,7 +6153,7 @@ def register_generated_tools(mcp, _get_client):
 
         Args:
             include_empty: Meta only. Campaign reads aggregate over ad documents, so a campaign with ZERO ads is normally invisible here, the state the two-step create (campaign, then ads via `existingCampaignId`) leaves behind whenever Meta rejects the ad step. Set true to list those too, with `adCount: 0` and zeroed metrics. Requires `accountId` and `adAccountId`, since an empty campaign has no ad row to resolve a token or ad account from.
-            page: Page number
+            page: Page number (1-based)
             limit
             source: `all` (default) returns both Zernio-created ads and those discovered from the platform's ad manager. Matches the web UI's default view. Pass `zernio` to restrict to isExternal=false only. Status is NOT filtered by default; use the `status` param for that.
             platform
@@ -6165,7 +6166,8 @@ def register_generated_tools(mcp, _get_client):
             from_date: Start of metrics date range (YYYY-MM-DD, inclusive). Defaults to 90 days ago when both date params are omitted.
             to_date: End of metrics date range (YYYY-MM-DD, inclusive). Defaults to today. Max 730-day range.
             has_delivery: Return only campaigns that delivered between `fromDate` and `toDate`: spend above zero, or impressions served at zero spend. Unlike `status`, which reads a campaign's CURRENT state, this filters on what happened inside the window. Filters the campaign set itself, so `pagination.total` counts only matching campaigns. Mirrors the same filter on /v1/ads/tree.
-            min_spend: Return only campaigns whose spend between `fromDate` and `toDate` reaches this amount, in each campaign's OWN currency (the `currency` field on the campaign). Implies `hasDelivery`; `minSpend=0` applies no filter. Mirrors the same filter on /v1/ads/tree."""
+            min_spend: Return only campaigns whose spend between `fromDate` and `toDate` reaches this amount, in each campaign's OWN currency (the `currency` field on the campaign). Implies `hasDelivery`; `minSpend=0` applies no filter. Mirrors the same filter on /v1/ads/tree.
+            live: Read the on/off switches live from the platform instead of returning the synced values. The fresh values are stored (so later reads return them too) and the response carries `statusReadAt`, the time of the read. At most 20 platform objects are read per request. Where a read fails (credentials, platform error, no reader on that platform), the stored values come back with `statusReadAt: null`. See "Status freshness" in the operation description. On X the budget is read live in the same read: on GET /v1/ads/{adId} `budget`, `adSetBudget`, `campaignBudget` and `budgetLevel` are the line item and campaign budgets X holds now (stored like the switches); on the ad set and campaign listings `budget` is the one that line item or campaign holds now (returned, not stored); a row whose budget the other level holds keeps its synced `budget`."""
         client = _get_client()
         try:
             response = client.ad_campaigns.list_ad_campaigns(
@@ -6184,6 +6186,7 @@ def register_generated_tools(mcp, _get_client):
                 to_date=to_date,
                 has_delivery=has_delivery,
                 min_spend=min_spend,
+                live=live,
             )
             return _format_response(response)
         except Exception as e:
@@ -7074,6 +7077,7 @@ def register_generated_tools(mcp, _get_client):
             "reddit",
         ]
         | None = None,
+        live: bool = False,
     ) -> str:
         """List ad sets
 
@@ -7100,7 +7104,8 @@ def register_generated_tools(mcp, _get_client):
             ad_account_id: Platform ad account id (Meta act_<n>). Lists every synced ad set of that ad account; no campaignId needed.
             campaign_id: Platform campaign ID
             ad_set_id: Platform ad set ID
-            platform"""
+            platform
+            live: Read the on/off switches live from the platform instead of returning the synced values. The fresh values are stored (so later reads return them too) and the response carries `statusReadAt`, the time of the read. At most 20 platform objects are read per request. Where a read fails (credentials, platform error, no reader on that platform), the stored values come back with `statusReadAt: null`. See "Status freshness" in the operation description. On X the budget is read live in the same read: on GET /v1/ads/{adId} `budget`, `adSetBudget`, `campaignBudget` and `budgetLevel` are the line item and campaign budgets X holds now (stored like the switches); on the ad set and campaign listings `budget` is the one that line item or campaign holds now (returned, not stored); a row whose budget the other level holds keeps its synced `budget`."""
         client = _get_client()
         try:
             response = client.ad_campaigns.list_ad_sets(
@@ -7109,6 +7114,7 @@ def register_generated_tools(mcp, _get_client):
                 campaign_id=campaign_id,
                 ad_set_id=ad_set_id,
                 platform=platform,
+                live=live,
             )
             return _format_response(response)
         except Exception as e:
@@ -7648,7 +7654,7 @@ def register_generated_tools(mcp, _get_client):
         Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit
 
         Args:
-            page: Page number
+            page: Page number (1-based)
             limit: Campaigns per page
             source: `all` (default) returns both Zernio-created ads and those discovered from the platform's ad manager. Matches the web UI's default view. Pass `zernio` to restrict to isExternal=false only. Status is NOT filtered by default; use the `status` param for that.
             platform
@@ -7769,7 +7775,7 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=False,
         )
     )
-    def ad_campaigns_get_ad(ad_id: str) -> str:
+    def ad_campaigns_get_ad(ad_id: str, live: bool = False) -> str:
         """Get ad details
 
            Shows one ad with its creative, targeting, status and performance metrics.
@@ -7792,10 +7798,11 @@ def register_generated_tools(mcp, _get_client):
 
            Args:
                ad_id: Zernio `_id` (hex), Meta `platformAdId` (numeric), or one of the creative's effective story/media IDs. See description for details.
-        (required)"""
+        (required)
+               live: Read the on/off switches live from the platform instead of returning the synced values. The fresh values are stored (so later reads return them too) and the response carries `statusReadAt`, the time of the read. At most 20 platform objects are read per request. Where a read fails (credentials, platform error, no reader on that platform), the stored values come back with `statusReadAt: null`. See "Status freshness" in the operation description. On X the budget is read live in the same read: on GET /v1/ads/{adId} `budget`, `adSetBudget`, `campaignBudget` and `budgetLevel` are the line item and campaign budgets X holds now (stored like the switches); on the ad set and campaign listings `budget` is the one that line item or campaign holds now (returned, not stored); a row whose budget the other level holds keeps its synced `budget`."""
         client = _get_client()
         try:
-            response = client.ad_campaigns.get_ad(ad_id=ad_id)
+            response = client.ad_campaigns.get_ad(ad_id=ad_id, live=live)
             return _format_response(response)
         except Exception as e:
             return f"Error: {e}"
@@ -14730,17 +14737,22 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=False,
         )
     )
-    def business_agent_get_business_agent_status() -> str:
+    def business_agent_get_business_agent_status(account_id: str) -> str:
         """Get agent setup status
 
         One read that says where the merchant is: whether the number is eligible, whether the
         Meta Business Agent terms are accepted, whether an agent exists, whether it is on, and its
         settings. `manualSteps` lists what Zernio can verify is still pending (accepting the terms
         in WhatsApp Manager); `unverifiedSteps` lists what Meta exposes no state for (the payment
-        method in Billing Hub). Never fails for those pre-setup states; it reports them as flags."""
+        method in Billing Hub). Never fails for those pre-setup states; it reports them as flags.
+
+        Args:
+            account_id: WhatsApp social account id (the number must be managed through the Cloud API). (required)"""
         client = _get_client()
         try:
-            response = client.business_agent.get_business_agent_status()
+            response = client.business_agent.get_business_agent_status(
+                account_id=account_id
+            )
             return _format_response(response)
         except Exception as e:
             return f"Error: {e}"
@@ -14753,7 +14765,7 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=True,
         )
     )
-    def business_agent_onboard_business_agent() -> str:
+    def business_agent_onboard_business_agent(account_id: str) -> str:
         """Create the agent
 
         Creates the Meta Business Agent on the number and schedules Meta's data preparation.
@@ -14761,10 +14773,15 @@ def register_generated_tools(mcp, _get_client):
         number answers 403 `business_agent_not_eligible`. Not idempotent: call it once, then
         configure knowledge and skills, then enable it through the settings. Configuration
         calls made in the first minute can still answer `business_agent_not_found` while Meta
-        prepares the workspace."""
+        prepares the workspace.
+
+        Args:
+            account_id: WhatsApp social account id (the number must be managed through the Cloud API). (required)"""
         client = _get_client()
         try:
-            response = client.business_agent.onboard_business_agent()
+            response = client.business_agent.onboard_business_agent(
+                account_id=account_id
+            )
             return _format_response(response)
         except Exception as e:
             return f"Error: {e}"
@@ -14777,17 +14794,20 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=False,
         )
     )
-    def business_agent_list_business_agent_settings(agent_id: str | None = None) -> str:
+    def business_agent_list_business_agent_settings(
+        account_id: str, agent_id: str | None = None
+    ) -> str:
         """List agent settings
 
         Settings of every agent configured on the number (normally one). Pass `agentId` to read one.
 
         Args:
+            account_id: WhatsApp social account id (the number must be managed through the Cloud API). (required)
             agent_id"""
         client = _get_client()
         try:
             response = client.business_agent.list_business_agent_settings(
-                agent_id=agent_id
+                account_id=account_id, agent_id=agent_id
             )
             return _format_response(response)
         except Exception as e:
@@ -14802,6 +14822,7 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def business_agent_update_business_agent_settings(
+        account_id: str,
         agent_id: str | None = None,
         rollout: dict[str, Any] | None = None,
         handoff: dict[str, Any] | None = None,
@@ -14818,6 +14839,7 @@ def register_generated_tools(mcp, _get_client):
         few numbers before billing. `never_say_phrases` replaces the whole list.
 
         Args:
+            account_id: WhatsApp social account id (the number must be managed through the Cloud API). (required)
             agent_id
             rollout: Object with keys: enabled (boolean, required)
             handoff: Object with keys: enabled (boolean, required); message (string); message_selection (one of: DEFAULT, AGENT, CUSTOM)
@@ -14827,6 +14849,7 @@ def register_generated_tools(mcp, _get_client):
         client = _get_client()
         try:
             response = client.business_agent.update_business_agent_settings(
+                account_id=account_id,
                 agent_id=agent_id,
                 rollout=rollout,
                 handoff=handoff,
@@ -14846,13 +14869,18 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=False,
         )
     )
-    def business_agent_list_business_agent_allowlist() -> str:
+    def business_agent_list_business_agent_allowlist(account_id: str) -> str:
         """List allowlisted consumers
 
-        Consumers the agent answers while `ai_audience` is ALLOWLISTED_ONLY."""
+        Consumers the agent answers while `ai_audience` is ALLOWLISTED_ONLY.
+
+        Args:
+            account_id: WhatsApp social account id (the number must be managed through the Cloud API). (required)"""
         client = _get_client()
         try:
-            response = client.business_agent.list_business_agent_allowlist()
+            response = client.business_agent.list_business_agent_allowlist(
+                account_id=account_id
+            )
             return _format_response(response)
         except Exception as e:
             return f"Error: {e}"
@@ -14866,18 +14894,19 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def business_agent_add_business_agent_allowlist_entry(
-        consumer_phone_number: str,
+        account_id: str, consumer_phone_number: str
     ) -> str:
         """Allowlist a consumer
 
         One E.164 number per call. Not idempotent.
 
         Args:
+            account_id: WhatsApp social account id (the number must be managed through the Cloud API). (required)
             consumer_phone_number: (required)"""
         client = _get_client()
         try:
             response = client.business_agent.add_business_agent_allowlist_entry(
-                consumer_phone_number=consumer_phone_number
+                account_id=account_id, consumer_phone_number=consumer_phone_number
             )
             return _format_response(response)
         except Exception as e:
@@ -14891,15 +14920,18 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=True,
         )
     )
-    def business_agent_remove_business_agent_allowlist_entry(entry_id: str) -> str:
+    def business_agent_remove_business_agent_allowlist_entry(
+        account_id: str, entry_id: str
+    ) -> str:
         """Remove an allowlisted consumer
 
         Args:
+            account_id: WhatsApp social account id (the number must be managed through the Cloud API). (required)
             entry_id: (required)"""
         client = _get_client()
         try:
             response = client.business_agent.remove_business_agent_allowlist_entry(
-                entry_id=entry_id
+                account_id=account_id, entry_id=entry_id
             )
             return _format_response(response)
         except Exception as e:
@@ -14913,13 +14945,18 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=False,
         )
     )
-    def business_agent_get_business_agent_business_information() -> str:
+    def business_agent_get_business_agent_business_information(account_id: str) -> str:
         """Get business information
 
-        Payment methods, return policy, how to buy, shipping, description and contact details the agent answers from. Empty values until configured."""
+        Payment methods, return policy, how to buy, shipping, description and contact details the agent answers from. Empty values until configured.
+
+        Args:
+            account_id: WhatsApp social account id (the number must be managed through the Cloud API). (required)"""
         client = _get_client()
         try:
-            response = client.business_agent.get_business_agent_business_information()
+            response = client.business_agent.get_business_agent_business_information(
+                account_id=account_id
+            )
             return _format_response(response)
         except Exception as e:
             return f"Error: {e}"
@@ -14933,6 +14970,7 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def business_agent_replace_business_agent_business_information(
+        account_id: str,
         payment_method: str | None = None,
         return_policy: str | None = None,
         purchase_info: str | None = None,
@@ -14945,6 +14983,7 @@ def register_generated_tools(mcp, _get_client):
         Full replacement: every field you send overwrites the stored value; fields you omit are cleared.
 
         Args:
+            account_id: WhatsApp social account id (the number must be managed through the Cloud API). (required)
             payment_method
             return_policy
             purchase_info
@@ -14955,6 +14994,7 @@ def register_generated_tools(mcp, _get_client):
         try:
             response = (
                 client.business_agent.replace_business_agent_business_information(
+                    account_id=account_id,
                     payment_method=payment_method,
                     return_policy=return_policy,
                     purchase_info=purchase_info,
@@ -14975,11 +15015,18 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=True,
         )
     )
-    def business_agent_reset_business_agent_business_information() -> str:
-        """Reset business information"""
+    def business_agent_reset_business_agent_business_information(
+        account_id: str,
+    ) -> str:
+        """Reset business information
+
+        Args:
+            account_id: WhatsApp social account id (the number must be managed through the Cloud API). (required)"""
         client = _get_client()
         try:
-            response = client.business_agent.reset_business_agent_business_information()
+            response = client.business_agent.reset_business_agent_business_information(
+                account_id=account_id
+            )
             return _format_response(response)
         except Exception as e:
             return f"Error: {e}"
@@ -14992,11 +15039,16 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=False,
         )
     )
-    def business_agent_list_business_agent_faqs() -> str:
-        """List FAQs"""
+    def business_agent_list_business_agent_faqs(account_id: str) -> str:
+        """List FAQs
+
+        Args:
+            account_id: WhatsApp social account id (the number must be managed through the Cloud API). (required)"""
         client = _get_client()
         try:
-            response = client.business_agent.list_business_agent_faqs()
+            response = client.business_agent.list_business_agent_faqs(
+                account_id=account_id
+            )
             return _format_response(response)
         except Exception as e:
             return f"Error: {e}"
@@ -15010,20 +15062,27 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def business_agent_create_business_agent_faq(
-        question: str, answer: str, metadata: dict[str, Any] | None = None
+        account_id: str,
+        question: str,
+        answer: str,
+        metadata: dict[str, Any] | None = None,
     ) -> str:
         """Create a FAQ
 
         One specific question per entry; beyond a few hundred entries retrieval quality drops. Not idempotent.
 
         Args:
+            account_id: WhatsApp social account id (the number must be managed through the Cloud API). (required)
             question: Phrase it the way a customer would ask it; one topic per entry. (required)
             answer: Self-contained; the agent retrieves entries independently. (required)
             metadata"""
         client = _get_client()
         try:
             response = client.business_agent.create_business_agent_faq(
-                question=question, answer=answer, metadata=metadata
+                account_id=account_id,
+                question=question,
+                answer=answer,
+                metadata=metadata,
             )
             return _format_response(response)
         except Exception as e:
@@ -15037,14 +15096,17 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=False,
         )
     )
-    def business_agent_get_business_agent_faq(faq_id: str) -> str:
+    def business_agent_get_business_agent_faq(account_id: str, faq_id: str) -> str:
         """Get a FAQ
 
         Args:
+            account_id: WhatsApp social account id (the number must be managed through the Cloud API). (required)
             faq_id: (required)"""
         client = _get_client()
         try:
-            response = client.business_agent.get_business_agent_faq(faq_id=faq_id)
+            response = client.business_agent.get_business_agent_faq(
+                account_id=account_id, faq_id=faq_id
+            )
             return _format_response(response)
         except Exception as e:
             return f"Error: {e}"
@@ -15058,11 +15120,16 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def business_agent_update_business_agent_faq(
-        faq_id: str, question: str, answer: str, metadata: dict[str, Any] | None = None
+        account_id: str,
+        faq_id: str,
+        question: str,
+        answer: str,
+        metadata: dict[str, Any] | None = None,
     ) -> str:
         """Update a FAQ
 
         Args:
+            account_id: WhatsApp social account id (the number must be managed through the Cloud API). (required)
             faq_id: (required)
             question: Phrase it the way a customer would ask it; one topic per entry. (required)
             answer: Self-contained; the agent retrieves entries independently. (required)
@@ -15070,7 +15137,11 @@ def register_generated_tools(mcp, _get_client):
         client = _get_client()
         try:
             response = client.business_agent.update_business_agent_faq(
-                faq_id=faq_id, question=question, answer=answer, metadata=metadata
+                account_id=account_id,
+                faq_id=faq_id,
+                question=question,
+                answer=answer,
+                metadata=metadata,
             )
             return _format_response(response)
         except Exception as e:
@@ -15084,14 +15155,17 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=True,
         )
     )
-    def business_agent_delete_business_agent_faq(faq_id: str) -> str:
+    def business_agent_delete_business_agent_faq(account_id: str, faq_id: str) -> str:
         """Delete a FAQ
 
         Args:
+            account_id: WhatsApp social account id (the number must be managed through the Cloud API). (required)
             faq_id: (required)"""
         client = _get_client()
         try:
-            response = client.business_agent.delete_business_agent_faq(faq_id=faq_id)
+            response = client.business_agent.delete_business_agent_faq(
+                account_id=account_id, faq_id=faq_id
+            )
             return _format_response(response)
         except Exception as e:
             return f"Error: {e}"
@@ -15104,11 +15178,16 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=False,
         )
     )
-    def business_agent_list_business_agent_websites() -> str:
-        """List crawled websites"""
+    def business_agent_list_business_agent_websites(account_id: str) -> str:
+        """List crawled websites
+
+        Args:
+            account_id: WhatsApp social account id (the number must be managed through the Cloud API). (required)"""
         client = _get_client()
         try:
-            response = client.business_agent.list_business_agent_websites()
+            response = client.business_agent.list_business_agent_websites(
+                account_id=account_id
+            )
             return _format_response(response)
         except Exception as e:
             return f"Error: {e}"
@@ -15122,6 +15201,7 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def business_agent_add_business_agent_website(
+        account_id: str,
         url: str,
         included_sub_domains: list[str] | None = None,
         included_url_patterns: list[str] | None = None,
@@ -15134,6 +15214,7 @@ def register_generated_tools(mcp, _get_client):
         Meta crawls the site into the agent knowledge and recrawls it periodically; check `crawl_status` and `crawl_error` on read. Not idempotent.
 
         Args:
+            account_id: WhatsApp social account id (the number must be managed through the Cloud API). (required)
             url: (required)
             included_sub_domains
             included_url_patterns: Only URLs containing one of these substrings are ingested.
@@ -15143,6 +15224,7 @@ def register_generated_tools(mcp, _get_client):
         client = _get_client()
         try:
             response = client.business_agent.add_business_agent_website(
+                account_id=account_id,
                 url=url,
                 included_sub_domains=included_sub_domains,
                 included_url_patterns=included_url_patterns,
@@ -15162,15 +15244,18 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=False,
         )
     )
-    def business_agent_get_business_agent_website(website_id: str) -> str:
+    def business_agent_get_business_agent_website(
+        account_id: str, website_id: str
+    ) -> str:
         """Get a crawled website
 
         Args:
+            account_id: WhatsApp social account id (the number must be managed through the Cloud API). (required)
             website_id: (required)"""
         client = _get_client()
         try:
             response = client.business_agent.get_business_agent_website(
-                website_id=website_id
+                account_id=account_id, website_id=website_id
             )
             return _format_response(response)
         except Exception as e:
@@ -15185,6 +15270,7 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def business_agent_update_business_agent_website(
+        account_id: str,
         website_id: str,
         url: str,
         included_sub_domains: list[str] | None = None,
@@ -15196,6 +15282,7 @@ def register_generated_tools(mcp, _get_client):
         """Update a crawled website
 
         Args:
+            account_id: WhatsApp social account id (the number must be managed through the Cloud API). (required)
             website_id: (required)
             url: (required)
             included_sub_domains
@@ -15206,6 +15293,7 @@ def register_generated_tools(mcp, _get_client):
         client = _get_client()
         try:
             response = client.business_agent.update_business_agent_website(
+                account_id=account_id,
                 website_id=website_id,
                 url=url,
                 included_sub_domains=included_sub_domains,
@@ -15226,15 +15314,18 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=True,
         )
     )
-    def business_agent_delete_business_agent_website(website_id: str) -> str:
+    def business_agent_delete_business_agent_website(
+        account_id: str, website_id: str
+    ) -> str:
         """Remove a crawled website
 
         Args:
+            account_id: WhatsApp social account id (the number must be managed through the Cloud API). (required)
             website_id: (required)"""
         client = _get_client()
         try:
             response = client.business_agent.delete_business_agent_website(
-                website_id=website_id
+                account_id=account_id, website_id=website_id
             )
             return _format_response(response)
         except Exception as e:
@@ -15248,11 +15339,16 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=False,
         )
     )
-    def business_agent_list_business_agent_files() -> str:
-        """List knowledge files"""
+    def business_agent_list_business_agent_files(account_id: str) -> str:
+        """List knowledge files
+
+        Args:
+            account_id: WhatsApp social account id (the number must be managed through the Cloud API). (required)"""
         client = _get_client()
         try:
-            response = client.business_agent.list_business_agent_files()
+            response = client.business_agent.list_business_agent_files(
+                account_id=account_id
+            )
             return _format_response(response)
         except Exception as e:
             return f"Error: {e}"
@@ -15266,7 +15362,7 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def business_agent_upload_business_agent_file(
-        url: str, file_name: str | None = None
+        account_id: str, url: str, file_name: str | None = None
     ) -> str:
         """Upload a knowledge file
 
@@ -15279,12 +15375,13 @@ def register_generated_tools(mcp, _get_client):
         Not idempotent.
 
         Args:
+            account_id: WhatsApp social account id (the number must be managed through the Cloud API). (required)
             url: Publicly downloadable file URL. (required)
             file_name: Defaults to the last path segment of the URL."""
         client = _get_client()
         try:
             response = client.business_agent.upload_business_agent_file(
-                url=url, file_name=file_name
+                account_id=account_id, url=url, file_name=file_name
             )
             return _format_response(response)
         except Exception as e:
@@ -15298,14 +15395,17 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=False,
         )
     )
-    def business_agent_get_business_agent_file(file_id: str) -> str:
+    def business_agent_get_business_agent_file(account_id: str, file_id: str) -> str:
         """Get a knowledge file
 
         Args:
+            account_id: WhatsApp social account id (the number must be managed through the Cloud API). (required)
             file_id: (required)"""
         client = _get_client()
         try:
-            response = client.business_agent.get_business_agent_file(file_id=file_id)
+            response = client.business_agent.get_business_agent_file(
+                account_id=account_id, file_id=file_id
+            )
             return _format_response(response)
         except Exception as e:
             return f"Error: {e}"
@@ -15318,14 +15418,17 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=True,
         )
     )
-    def business_agent_delete_business_agent_file(file_id: str) -> str:
+    def business_agent_delete_business_agent_file(account_id: str, file_id: str) -> str:
         """Delete a knowledge file
 
         Args:
+            account_id: WhatsApp social account id (the number must be managed through the Cloud API). (required)
             file_id: (required)"""
         client = _get_client()
         try:
-            response = client.business_agent.delete_business_agent_file(file_id=file_id)
+            response = client.business_agent.delete_business_agent_file(
+                account_id=account_id, file_id=file_id
+            )
             return _format_response(response)
         except Exception as e:
             return f"Error: {e}"
@@ -15338,11 +15441,16 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=False,
         )
     )
-    def business_agent_list_business_agent_skills() -> str:
-        """List skills"""
+    def business_agent_list_business_agent_skills(account_id: str) -> str:
+        """List skills
+
+        Args:
+            account_id: WhatsApp social account id (the number must be managed through the Cloud API). (required)"""
         client = _get_client()
         try:
-            response = client.business_agent.list_business_agent_skills()
+            response = client.business_agent.list_business_agent_skills(
+                account_id=account_id
+            )
             return _format_response(response)
         except Exception as e:
             return f"Error: {e}"
@@ -15356,20 +15464,24 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def business_agent_create_business_agent_skill(
-        skill: str, title: str | None = None, description: str | None = None
+        account_id: str,
+        skill: str,
+        title: str | None = None,
+        description: str | None = None,
     ) -> str:
         """Create a skill
 
         Behavioral instructions in the brand voice. Reads back `pending_review` until Meta content review passes it. Not idempotent.
 
         Args:
+            account_id: WhatsApp social account id (the number must be managed through the Cloud API). (required)
             title: Lowercase letters, digits and hyphens, e.g. greeting-skill.
             description: When the agent should apply the skill.
             skill: The instructions themselves. Avoid two skills that both claim priority for the same situation. (required)"""
         client = _get_client()
         try:
             response = client.business_agent.create_business_agent_skill(
-                title=title, description=description, skill=skill
+                account_id=account_id, title=title, description=description, skill=skill
             )
             return _format_response(response)
         except Exception as e:
@@ -15383,14 +15495,17 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=False,
         )
     )
-    def business_agent_get_business_agent_skill(skill_id: str) -> str:
+    def business_agent_get_business_agent_skill(account_id: str, skill_id: str) -> str:
         """Get a skill
 
         Args:
+            account_id: WhatsApp social account id (the number must be managed through the Cloud API). (required)
             skill_id: (required)"""
         client = _get_client()
         try:
-            response = client.business_agent.get_business_agent_skill(skill_id=skill_id)
+            response = client.business_agent.get_business_agent_skill(
+                account_id=account_id, skill_id=skill_id
+            )
             return _format_response(response)
         except Exception as e:
             return f"Error: {e}"
@@ -15404,6 +15519,7 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def business_agent_update_business_agent_skill(
+        account_id: str,
         skill_id: str,
         skill: str,
         title: str | None = None,
@@ -15412,6 +15528,7 @@ def register_generated_tools(mcp, _get_client):
         """Update a skill
 
         Args:
+            account_id: WhatsApp social account id (the number must be managed through the Cloud API). (required)
             skill_id: (required)
             title: Lowercase letters, digits and hyphens, e.g. greeting-skill.
             description: When the agent should apply the skill.
@@ -15419,7 +15536,11 @@ def register_generated_tools(mcp, _get_client):
         client = _get_client()
         try:
             response = client.business_agent.update_business_agent_skill(
-                skill_id=skill_id, title=title, description=description, skill=skill
+                account_id=account_id,
+                skill_id=skill_id,
+                title=title,
+                description=description,
+                skill=skill,
             )
             return _format_response(response)
         except Exception as e:
@@ -15433,15 +15554,18 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=True,
         )
     )
-    def business_agent_delete_business_agent_skill(skill_id: str) -> str:
+    def business_agent_delete_business_agent_skill(
+        account_id: str, skill_id: str
+    ) -> str:
         """Delete a skill
 
         Args:
+            account_id: WhatsApp social account id (the number must be managed through the Cloud API). (required)
             skill_id: (required)"""
         client = _get_client()
         try:
             response = client.business_agent.delete_business_agent_skill(
-                skill_id=skill_id
+                account_id=account_id, skill_id=skill_id
             )
             return _format_response(response)
         except Exception as e:
@@ -15456,20 +15580,24 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def business_agent_list_business_agent_ui_skills(
-        before: str | None = None, after: str | None = None, limit: int | None = None
+        account_id: str,
+        before: str | None = None,
+        after: str | None = None,
+        limit: int | None = None,
     ) -> str:
         """List UI skills
 
         Cursor paged; follow `paging.cursors.after` until `paging.next` is absent.
 
         Args:
+            account_id: WhatsApp social account id (the number must be managed through the Cloud API). (required)
             before
             after
             limit"""
         client = _get_client()
         try:
             response = client.business_agent.list_business_agent_ui_skills(
-                before=before, after=after, limit=limit
+                account_id=account_id, before=before, after=after, limit=limit
             )
             return _format_response(response)
         except Exception as e:
@@ -15484,6 +15612,7 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def business_agent_create_business_agent_ui_skill(
+        account_id: str,
         component_type: Literal[
             "carousel_quick_reply",
             "carousel_url",
@@ -15505,6 +15634,7 @@ def register_generated_tools(mcp, _get_client):
         Tells the agent when to send a rich component (CTA URL button, image, carousel, list, reply buttons, location, Flow) and what to put in it. Not idempotent.
 
         Args:
+            account_id: WhatsApp social account id (the number must be managed through the Cloud API). (required)
             title
             component_type: (required)
             status: (required)
@@ -15513,6 +15643,7 @@ def register_generated_tools(mcp, _get_client):
         client = _get_client()
         try:
             response = client.business_agent.create_business_agent_ui_skill(
+                account_id=account_id,
                 title=title,
                 component_type=component_type,
                 status=status,
@@ -15531,15 +15662,18 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=False,
         )
     )
-    def business_agent_get_business_agent_ui_skill(ui_skill_id: str) -> str:
+    def business_agent_get_business_agent_ui_skill(
+        account_id: str, ui_skill_id: str
+    ) -> str:
         """Get a UI skill
 
         Args:
+            account_id: WhatsApp social account id (the number must be managed through the Cloud API). (required)
             ui_skill_id: (required)"""
         client = _get_client()
         try:
             response = client.business_agent.get_business_agent_ui_skill(
-                ui_skill_id=ui_skill_id
+                account_id=account_id, ui_skill_id=ui_skill_id
             )
             return _format_response(response)
         except Exception as e:
@@ -15554,6 +15688,7 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def business_agent_update_business_agent_ui_skill(
+        account_id: str,
         ui_skill_id: str,
         component_type: Literal[
             "carousel_quick_reply",
@@ -15574,6 +15709,7 @@ def register_generated_tools(mcp, _get_client):
         """Update a UI skill
 
         Args:
+            account_id: WhatsApp social account id (the number must be managed through the Cloud API). (required)
             ui_skill_id: (required)
             title
             component_type: (required)
@@ -15583,6 +15719,7 @@ def register_generated_tools(mcp, _get_client):
         client = _get_client()
         try:
             response = client.business_agent.update_business_agent_ui_skill(
+                account_id=account_id,
                 ui_skill_id=ui_skill_id,
                 title=title,
                 component_type=component_type,
@@ -15602,15 +15739,18 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=True,
         )
     )
-    def business_agent_delete_business_agent_ui_skill(ui_skill_id: str) -> str:
+    def business_agent_delete_business_agent_ui_skill(
+        account_id: str, ui_skill_id: str
+    ) -> str:
         """Delete a UI skill
 
         Args:
+            account_id: WhatsApp social account id (the number must be managed through the Cloud API). (required)
             ui_skill_id: (required)"""
         client = _get_client()
         try:
             response = client.business_agent.delete_business_agent_ui_skill(
-                ui_skill_id=ui_skill_id
+                account_id=account_id, ui_skill_id=ui_skill_id
             )
             return _format_response(response)
         except Exception as e:
@@ -15624,13 +15764,18 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=False,
         )
     )
-    def business_agent_list_business_agent_connectors() -> str:
+    def business_agent_list_business_agent_connectors(account_id: str) -> str:
         """List connectors
 
-        External APIs the agent may call. `connection_status` says whether Meta can currently reach each one."""
+        External APIs the agent may call. `connection_status` says whether Meta can currently reach each one.
+
+        Args:
+            account_id: WhatsApp social account id (the number must be managed through the Cloud API). (required)"""
         client = _get_client()
         try:
-            response = client.business_agent.list_business_agent_connectors()
+            response = client.business_agent.list_business_agent_connectors(
+                account_id=account_id
+            )
             return _format_response(response)
         except Exception as e:
             return f"Error: {e}"
@@ -15644,6 +15789,7 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def business_agent_create_business_agent_connector(
+        account_id: str,
         name: str,
         base_url: str,
         auth_type: Literal["OAUTH2_CLIENT_CREDENTIALS", "API_KEY", "NONE"],
@@ -15658,6 +15804,7 @@ def register_generated_tools(mcp, _get_client):
         Base URL plus how to authenticate (OAuth client credentials, API key or none). Names are unique per number. Not idempotent.
 
         Args:
+            account_id: WhatsApp social account id (the number must be managed through the Cloud API). (required)
             name: Unique per number. (required)
             description: Tell the agent what the service provides.
             base_url: Public HTTPS URL reachable from Meta. (required)
@@ -15669,6 +15816,7 @@ def register_generated_tools(mcp, _get_client):
         client = _get_client()
         try:
             response = client.business_agent.create_business_agent_connector(
+                account_id=account_id,
                 name=name,
                 description=description,
                 base_url=base_url,
@@ -15690,11 +15838,19 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=False,
         )
     )
-    def business_agent_get_business_agent_connector() -> str:
-        """Get a connector"""
+    def business_agent_get_business_agent_connector(
+        account_id: str, connector_id: str
+    ) -> str:
+        """Get a connector
+
+        Args:
+            account_id: WhatsApp social account id (the number must be managed through the Cloud API). (required)
+            connector_id: (required)"""
         client = _get_client()
         try:
-            response = client.business_agent.get_business_agent_connector()
+            response = client.business_agent.get_business_agent_connector(
+                account_id=account_id, connector_id=connector_id
+            )
             return _format_response(response)
         except Exception as e:
             return f"Error: {e}"
@@ -15708,6 +15864,8 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def business_agent_update_business_agent_connector(
+        account_id: str,
+        connector_id: str,
         name: str,
         base_url: str,
         auth_type: Literal["OAUTH2_CLIENT_CREDENTIALS", "API_KEY", "NONE"],
@@ -15720,6 +15878,8 @@ def register_generated_tools(mcp, _get_client):
         """Update a connector
 
         Args:
+            account_id: WhatsApp social account id (the number must be managed through the Cloud API). (required)
+            connector_id: (required)
             name: Unique per number. (required)
             description: Tell the agent what the service provides.
             base_url: Public HTTPS URL reachable from Meta. (required)
@@ -15731,6 +15891,8 @@ def register_generated_tools(mcp, _get_client):
         client = _get_client()
         try:
             response = client.business_agent.update_business_agent_connector(
+                account_id=account_id,
+                connector_id=connector_id,
                 name=name,
                 description=description,
                 base_url=base_url,
@@ -15752,11 +15914,19 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=True,
         )
     )
-    def business_agent_delete_business_agent_connector() -> str:
-        """Delete a connector"""
+    def business_agent_delete_business_agent_connector(
+        account_id: str, connector_id: str
+    ) -> str:
+        """Delete a connector
+
+        Args:
+            account_id: WhatsApp social account id (the number must be managed through the Cloud API). (required)
+            connector_id: (required)"""
         client = _get_client()
         try:
-            response = client.business_agent.delete_business_agent_connector()
+            response = client.business_agent.delete_business_agent_connector(
+                account_id=account_id, connector_id=connector_id
+            )
             return _format_response(response)
         except Exception as e:
             return f"Error: {e}"
@@ -15770,7 +15940,7 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def business_agent_set_business_agent_connector_credentials(
-        body: dict[str, Any],
+        account_id: str, connector_id: str, body: dict[str, Any]
     ) -> str:
         """Set connector credentials
 
@@ -15779,11 +15949,13 @@ def register_generated_tools(mcp, _get_client):
         that removes a credential layer; change the connector's `auth_type` or delete it instead.
 
         Args:
+            account_id: WhatsApp social account id (the number must be managed through the Cloud API). (required)
+            connector_id: (required)
             body: Full request body as documented in the API reference. (required)"""
         client = _get_client()
         try:
             response = client.business_agent.set_business_agent_connector_credentials(
-                body=body
+                account_id=account_id, connector_id=connector_id, body=body
             )
             return _format_response(response)
         except Exception as e:
@@ -15797,13 +15969,21 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=True,
         )
     )
-    def business_agent_refresh_business_agent_connector_tools() -> str:
+    def business_agent_refresh_business_agent_connector_tools(
+        account_id: str, connector_id: str
+    ) -> str:
         """Refresh MCP connector tools
 
-        Re-discovers the tools of an MCP connector. A failed discovery keeps the previous tool set and reports an ERROR sync status inside a 200."""
+        Re-discovers the tools of an MCP connector. A failed discovery keeps the previous tool set and reports an ERROR sync status inside a 200.
+
+        Args:
+            account_id: WhatsApp social account id (the number must be managed through the Cloud API). (required)
+            connector_id: (required)"""
         client = _get_client()
         try:
-            response = client.business_agent.refresh_business_agent_connector_tools()
+            response = client.business_agent.refresh_business_agent_connector_tools(
+                account_id=account_id, connector_id=connector_id
+            )
             return _format_response(response)
         except Exception as e:
             return f"Error: {e}"
@@ -15817,6 +15997,8 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def business_agent_get_business_agent_connector_logs(
+        account_id: str,
+        connector_id: str,
         start_time: int | None = None,
         end_time: int | None = None,
         limit: int | None = None,
@@ -15830,6 +16012,8 @@ def register_generated_tools(mcp, _get_client):
         Third-party failures over the last 7 days (window at most 7 days, default the last 24 hours). Each entry carries `failure_code_name` and `error_message`.
 
         Args:
+            account_id: WhatsApp social account id (the number must be managed through the Cloud API). (required)
+            connector_id: (required)
             start_time: Unix seconds.
             end_time: Unix seconds.
             limit
@@ -15840,6 +16024,8 @@ def register_generated_tools(mcp, _get_client):
         client = _get_client()
         try:
             response = client.business_agent.get_business_agent_connector_logs(
+                account_id=account_id,
+                connector_id=connector_id,
                 start_time=start_time,
                 end_time=end_time,
                 limit=limit,
@@ -15860,11 +16046,19 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=False,
         )
     )
-    def business_agent_list_business_agent_connector_tools() -> str:
-        """List connector tools"""
+    def business_agent_list_business_agent_connector_tools(
+        account_id: str, connector_id: str
+    ) -> str:
+        """List connector tools
+
+        Args:
+            account_id: WhatsApp social account id (the number must be managed through the Cloud API). (required)
+            connector_id: (required)"""
         client = _get_client()
         try:
-            response = client.business_agent.list_business_agent_connector_tools()
+            response = client.business_agent.list_business_agent_connector_tools(
+                account_id=account_id, connector_id=connector_id
+            )
             return _format_response(response)
         except Exception as e:
             return f"Error: {e}"
@@ -15878,6 +16072,8 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def business_agent_create_business_agent_connector_tool(
+        account_id: str,
+        connector_id: str,
         name: str,
         description: str,
         request_definition: dict[str, Any] | None,
@@ -15890,6 +16086,8 @@ def register_generated_tools(mcp, _get_client):
         One operation on the connector, with the request definition Meta uses to build the outbound call from the conversation. Type the body params explicitly. Not idempotent.
 
         Args:
+            account_id: WhatsApp social account id (the number must be managed through the Cloud API). (required)
+            connector_id: (required)
             name: (required)
             description: When and how the agent should use the operation. (required)
             request_definition: Meta request definition: method, path, path_parameters, query_parameters, headers and a typed body schema (content_type, params, required). (required)
@@ -15899,6 +16097,8 @@ def register_generated_tools(mcp, _get_client):
         client = _get_client()
         try:
             response = client.business_agent.create_business_agent_connector_tool(
+                account_id=account_id,
+                connector_id=connector_id,
                 name=name,
                 description=description,
                 request_definition=request_definition,
@@ -15918,11 +16118,20 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=False,
         )
     )
-    def business_agent_get_business_agent_connector_tool() -> str:
-        """Get a connector tool"""
+    def business_agent_get_business_agent_connector_tool(
+        account_id: str, connector_id: str, tool_id: str
+    ) -> str:
+        """Get a connector tool
+
+        Args:
+            account_id: WhatsApp social account id (the number must be managed through the Cloud API). (required)
+            connector_id: (required)
+            tool_id: (required)"""
         client = _get_client()
         try:
-            response = client.business_agent.get_business_agent_connector_tool()
+            response = client.business_agent.get_business_agent_connector_tool(
+                account_id=account_id, connector_id=connector_id, tool_id=tool_id
+            )
             return _format_response(response)
         except Exception as e:
             return f"Error: {e}"
@@ -15936,6 +16145,9 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def business_agent_update_business_agent_connector_tool(
+        account_id: str,
+        connector_id: str,
+        tool_id: str,
         name: str,
         description: str,
         request_definition: dict[str, Any] | None,
@@ -15946,6 +16158,9 @@ def register_generated_tools(mcp, _get_client):
         """Update a connector tool
 
         Args:
+            account_id: WhatsApp social account id (the number must be managed through the Cloud API). (required)
+            connector_id: (required)
+            tool_id: (required)
             name: (required)
             description: When and how the agent should use the operation. (required)
             request_definition: Meta request definition: method, path, path_parameters, query_parameters, headers and a typed body schema (content_type, params, required). (required)
@@ -15955,6 +16170,9 @@ def register_generated_tools(mcp, _get_client):
         client = _get_client()
         try:
             response = client.business_agent.update_business_agent_connector_tool(
+                account_id=account_id,
+                connector_id=connector_id,
+                tool_id=tool_id,
                 name=name,
                 description=description,
                 request_definition=request_definition,
@@ -15974,11 +16192,20 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=True,
         )
     )
-    def business_agent_delete_business_agent_connector_tool() -> str:
-        """Delete a connector tool"""
+    def business_agent_delete_business_agent_connector_tool(
+        account_id: str, connector_id: str, tool_id: str
+    ) -> str:
+        """Delete a connector tool
+
+        Args:
+            account_id: WhatsApp social account id (the number must be managed through the Cloud API). (required)
+            connector_id: (required)
+            tool_id: (required)"""
         client = _get_client()
         try:
-            response = client.business_agent.delete_business_agent_connector_tool()
+            response = client.business_agent.delete_business_agent_connector_tool(
+                account_id=account_id, connector_id=connector_id, tool_id=tool_id
+            )
             return _format_response(response)
         except Exception as e:
             return f"Error: {e}"
@@ -15991,17 +16218,25 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=True,
         )
     )
-    def business_agent_run_business_agent_connector_tool(input: str) -> str:
+    def business_agent_run_business_agent_connector_tool(
+        account_id: str, connector_id: str, tool_id: str, input: str
+    ) -> str:
         """Run a connector tool once
 
         Executes the tool against the merchant API and returns the raw upstream result, to check a connector before the agent relies on it.
 
         Args:
+            account_id: WhatsApp social account id (the number must be managed through the Cloud API). (required)
+            connector_id: (required)
+            tool_id: (required)
             input: JSON string with the tool arguments. (required)"""
         client = _get_client()
         try:
             response = client.business_agent.run_business_agent_connector_tool(
-                input=input
+                account_id=account_id,
+                connector_id=connector_id,
+                tool_id=tool_id,
+                input=input,
             )
             return _format_response(response)
         except Exception as e:
@@ -16015,13 +16250,18 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=False,
         )
     )
-    def business_agent_get_business_agent_budget() -> str:
+    def business_agent_get_business_agent_budget(account_id: str) -> str:
         """Get usage budgets
 
-        Caps over rolling windows for the Business Manager that owns the number. An empty list means unlimited."""
+        Caps over rolling windows for the Business Manager that owns the number. An empty list means unlimited.
+
+        Args:
+            account_id: WhatsApp social account id (the number must be managed through the Cloud API). (required)"""
         client = _get_client()
         try:
-            response = client.business_agent.get_business_agent_budget()
+            response = client.business_agent.get_business_agent_budget(
+                account_id=account_id
+            )
             return _format_response(response)
         except Exception as e:
             return f"Error: {e}"
@@ -16035,18 +16275,19 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def business_agent_replace_business_agent_budget(
-        budgets: list[dict[str, Any]] | None,
+        account_id: str, budgets: list[dict[str, Any]] | None
     ) -> str:
         """Replace usage budgets
 
         The full desired set: budgets left out are removed, an empty list returns to unlimited. Pass `budget_id` to edit one in place. When a cap is hit the agent finishes its turn, stops answering and hands the thread to a human until the window rolls over.
 
         Args:
+            account_id: WhatsApp social account id (the number must be managed through the Cloud API). (required)
             budgets: Each item is an object with keys: budget_id (string) - Pass it back to edit an existing budget; omit to add one.; unit_type (one of: token, ai_turn; required) - Tokens count across the Business Manager, AI turns per conversation.; time_window (one of: one_day, seven_days, fourteen_days, thirty_days; required) - Rolling window in the WABA timezone.; max_budget (integer, required) (required)"""
         client = _get_client()
         try:
             response = client.business_agent.replace_business_agent_budget(
-                budgets=budgets
+                account_id=account_id, budgets=budgets
             )
             return _format_response(response)
         except Exception as e:
@@ -16061,19 +16302,20 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def business_agent_send_business_agent_test_message(
-        message: str, conversation_id: str | None = None
+        account_id: str, message: str, conversation_id: str | None = None
     ) -> str:
         """Send a test message
 
         Runs the message through the full agent pipeline in Meta sandbox with no WhatsApp user and no token billing. Pass back `conversationId` to continue a thread. Meta rate-limits it per number per hour.
 
         Args:
+            account_id: WhatsApp social account id (the number must be managed through the Cloud API). (required)
             message: (required)
             conversation_id"""
         client = _get_client()
         try:
             response = client.business_agent.send_business_agent_test_message(
-                message=message, conversation_id=conversation_id
+                account_id=account_id, message=message, conversation_id=conversation_id
             )
             return _format_response(response)
         except Exception as e:
@@ -16088,13 +16330,14 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def business_agent_send_business_agent_event(
-        to: str, type: str, description: str, payload: str
+        account_id: str, to: str, type: str, description: str, payload: str
     ) -> str:
         """Send a business event
 
         Tell the agent something happened in your systems (order shipped, document verified) so it messages the consumer about it. The consumer must already have a conversation with the number. Answers 202 with the event id; poll it for the outcome.
 
         Args:
+            account_id: WhatsApp social account id (the number must be managed through the Cloud API). (required)
             to: Consumer E.164 phone number. (required)
             type: (required)
             description: (required)
@@ -16102,7 +16345,11 @@ def register_generated_tools(mcp, _get_client):
         client = _get_client()
         try:
             response = client.business_agent.send_business_agent_event(
-                to=to, type=type, description=description, payload=payload
+                account_id=account_id,
+                to=to,
+                type=type,
+                description=description,
+                payload=payload,
             )
             return _format_response(response)
         except Exception as e:
@@ -16116,14 +16363,17 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=False,
         )
     )
-    def business_agent_get_business_agent_event(event_id: str) -> str:
+    def business_agent_get_business_agent_event(account_id: str, event_id: str) -> str:
         """Get a business event status
 
         Args:
+            account_id: WhatsApp social account id (the number must be managed through the Cloud API). (required)
             event_id: (required)"""
         client = _get_client()
         try:
-            response = client.business_agent.get_business_agent_event(event_id=event_id)
+            response = client.business_agent.get_business_agent_event(
+                account_id=account_id, event_id=event_id
+            )
             return _format_response(response)
         except Exception as e:
             return f"Error: {e}"
@@ -16137,6 +16387,7 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def business_agent_read_business_agent_evals(
+        account_id: str,
         job_id: str | None = None,
         summary_ids: str | None = None,
         eval_ids: str | None = None,
@@ -16148,13 +16399,17 @@ def register_generated_tools(mcp, _get_client):
         With `evalIds`, returns per-conversation evaluation details. One of the three at a time.
 
         Args:
+            account_id: WhatsApp social account id (the number must be managed through the Cloud API). (required)
             job_id
             summary_ids: Comma-separated summary ids.
             eval_ids: Comma-separated evaluation ids."""
         client = _get_client()
         try:
             response = client.business_agent.read_business_agent_evals(
-                job_id=job_id, summary_ids=summary_ids, eval_ids=eval_ids
+                account_id=account_id,
+                job_id=job_id,
+                summary_ids=summary_ids,
+                eval_ids=eval_ids,
             )
             return _format_response(response)
         except Exception as e:
@@ -16169,18 +16424,19 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def business_agent_start_business_agent_eval_run(
-        eval_case_ids: list[str] | None,
+        account_id: str, eval_case_ids: list[str] | None
     ) -> str:
         """Start an evaluation run
 
         Simulates the given scenarios against the agent and scores them. Answers 202 with a `job_id` to poll with GET.
 
         Args:
+            account_id: WhatsApp social account id (the number must be managed through the Cloud API). (required)
             eval_case_ids: (required)"""
         client = _get_client()
         try:
             response = client.business_agent.start_business_agent_eval_run(
-                eval_case_ids=eval_case_ids
+                account_id=account_id, eval_case_ids=eval_case_ids
             )
             return _format_response(response)
         except Exception as e:
@@ -30772,7 +31028,7 @@ def register_generated_tools(mcp, _get_client):
         Returns a paginated list of posts. Published posts include platformPostUrl with the public URL on each platform. A query parameter that is not listed here returns 400 naming it and the accepted parameters, so a misspelled filter never silently returns the unfiltered list.
 
         Args:
-            page: Page number
+            page: Page number (1-based)
             limit: Page size. Values above the maximum return 400 rather than being clamped.
             offset: Row offset. Takes precedence over page when both are sent; the response pagination.page is derived from it.
             cursor: Opaque cursor from a previous response's `pagination.nextCursor`. Returns the page that follows it in the same `sortBy` order, and takes precedence over `page` and `offset`. Each cursor page costs the same however deep it is, unlike `page`/`offset`, which get slower the further you go; prefer it to walk a long history. Send the same filters and `sortBy` as the request that issued it: a cursor from another `sortBy` returns 400. Not available with `sortBy=status` or `sortBy=platform`, or with `source=external`.
@@ -31409,15 +31665,26 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=False,
         )
     )
-    def product_catalogs_get_ad_catalog() -> str:
+    def product_catalogs_get_ad_catalog(
+        catalog_id: str, account_id: str, catalog_account_id: str | None = None
+    ) -> str:
         """Get a product catalog
 
         Shows one Meta product catalog and its details.
 
-        Platforms: meta"""
+        Platforms: meta
+
+        Args:
+            catalog_id: Meta product catalog ID (from GET /v1/ads/catalogs) (required)
+            account_id: A facebook, instagram, metaads or whatsapp account ID (required)
+            catalog_account_id: A facebook, instagram or metaads account whose Meta login carries catalog_management; its token performs the call instead of the account's own"""
         client = _get_client()
         try:
-            response = client.product_catalogs.get_ad_catalog()
+            response = client.product_catalogs.get_ad_catalog(
+                catalog_id=catalog_id,
+                account_id=account_id,
+                catalog_account_id=catalog_account_id,
+            )
             return _format_response(response)
         except Exception as e:
             return f"Error: {e}"
@@ -31430,17 +31697,28 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=True,
         )
     )
-    def product_catalogs_delete_ad_catalog() -> str:
+    def product_catalogs_delete_ad_catalog(
+        catalog_id: str, account_id: str, catalog_account_id: str | None = None
+    ) -> str:
         """Delete a product catalog
 
         Deletes a Meta product catalog and all its products, removing it from any ads or WhatsApp numbers that use it.
 
         Ads and WhatsApp numbers that use it lose their catalog.
 
-        Platforms: meta"""
+        Platforms: meta
+
+        Args:
+            catalog_id: Meta product catalog ID (from GET /v1/ads/catalogs) (required)
+            account_id: A facebook, instagram, metaads or whatsapp account ID (required)
+            catalog_account_id: A facebook, instagram or metaads account whose Meta login carries catalog_management; its token performs the call instead of the account's own"""
         client = _get_client()
         try:
-            response = client.product_catalogs.delete_ad_catalog()
+            response = client.product_catalogs.delete_ad_catalog(
+                catalog_id=catalog_id,
+                account_id=account_id,
+                catalog_account_id=catalog_account_id,
+            )
             return _format_response(response)
         except Exception as e:
             return f"Error: {e}"
@@ -31454,7 +31732,12 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def product_catalogs_list_ad_catalog_products(
-        limit: int = 25, after: str | None = None, retailer_id: str | None = None
+        catalog_id: str,
+        account_id: str,
+        catalog_account_id: str | None = None,
+        limit: int = 25,
+        after: str | None = None,
+        retailer_id: str | None = None,
     ) -> str:
         """List a catalog's products
 
@@ -31465,13 +31748,21 @@ def register_generated_tools(mcp, _get_client):
         Platforms: meta
 
         Args:
+            catalog_id: Meta product catalog ID (from GET /v1/ads/catalogs) (required)
+            account_id: A facebook, instagram, metaads or whatsapp account ID (required)
+            catalog_account_id: A facebook, instagram or metaads account whose Meta login carries catalog_management; its token performs the call instead of the account's own
             limit
             after: Cursor from the previous page's `nextCursor`
             retailer_id: Only the product with this retailer id (your SKU)"""
         client = _get_client()
         try:
             response = client.product_catalogs.list_ad_catalog_products(
-                limit=limit, after=after, retailer_id=retailer_id
+                catalog_id=catalog_id,
+                account_id=account_id,
+                catalog_account_id=catalog_account_id,
+                limit=limit,
+                after=after,
+                retailer_id=retailer_id,
             )
             return _format_response(response)
         except Exception as e:
@@ -31486,6 +31777,7 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def product_catalogs_create_ad_catalog_product(
+        catalog_id: str,
         account_id: str,
         product: dict[str, Any] | None,
         catalog_account_id: str | None = None,
@@ -31499,12 +31791,14 @@ def register_generated_tools(mcp, _get_client):
         Platforms: meta
 
         Args:
+            catalog_id: Meta product catalog ID (from GET /v1/ads/catalogs) (required)
             account_id: (required)
             catalog_account_id
             product: Object with keys: retailerId (string) - Your SKU; unique inside the catalog; name (string); description (string); url (string) - Product page; imageUrl (string); additionalImageUrls (list of string); price (number) - Major units, e.g. 12.99; currency (string) - ISO 4217, e.g. EUR; salePrice (number); salePriceStartDate (string) - ISO 8601; salePriceEndDate (string) - ISO 8601; availability (one of: in stock, out of stock, preorder, available for order, discontinued, pending); condition (one of: new, refurbished, used); brand (string); category (string); googleProductCategory (string); productType (string); gtin (string); mpn (string); inventory (integer); visibility (one of: published, staging); color (string); size (string); gender (one of: female, male, unisex); material (string); pattern (string); customLabel0 (string); customLabel1 (string); customLabel2 (string); customLabel3 (string); customLabel4 (string) (required)"""
         client = _get_client()
         try:
             response = client.product_catalogs.create_ad_catalog_product(
+                catalog_id=catalog_id,
                 account_id=account_id,
                 catalog_account_id=catalog_account_id,
                 product=product,
@@ -31522,6 +31816,7 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def product_catalogs_batch_ad_catalog_products(
+        catalog_id: str,
         account_id: str,
         requests: list[dict[str, Any]] | None,
         catalog_account_id: str | None = None,
@@ -31535,12 +31830,14 @@ def register_generated_tools(mcp, _get_client):
         Platforms: meta
 
         Args:
+            catalog_id: Meta product catalog ID (from GET /v1/ads/catalogs) (required)
             account_id: (required)
             catalog_account_id
             requests: Each item is an object with keys: method (one of: CREATE, UPDATE, DELETE; required); product (object with keys retailerId, name, description, url, imageUrl, additionalImageUrls, price, currency, salePrice, salePriceStartDate, salePriceEndDate, availability, condition, brand, category, googleProductCategory, productType, gtin, mpn, inventory, visibility, color, size, gender, material, pattern, customLabel0, customLabel1, customLabel2, customLabel3, customLabel4, required) (required)"""
         client = _get_client()
         try:
             response = client.product_catalogs.batch_ad_catalog_products(
+                catalog_id=catalog_id,
                 account_id=account_id,
                 catalog_account_id=catalog_account_id,
                 requests=requests,
@@ -31557,7 +31854,12 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=False,
         )
     )
-    def product_catalogs_get_ad_catalog_batch(handle: str) -> str:
+    def product_catalogs_get_ad_catalog_batch(
+        catalog_id: str,
+        handle: str,
+        account_id: str,
+        catalog_account_id: str | None = None,
+    ) -> str:
         """Get a bulk request's status
 
         Shows whether a bulk catalog product request has finished, with any per-product errors.
@@ -31565,10 +31867,18 @@ def register_generated_tools(mcp, _get_client):
         Platforms: meta
 
         Args:
-            handle: Handle returned by the batch call (required)"""
+            catalog_id: Meta product catalog ID (from GET /v1/ads/catalogs) (required)
+            handle: Handle returned by the batch call (required)
+            account_id: A facebook, instagram, metaads or whatsapp account ID (required)
+            catalog_account_id: A facebook, instagram or metaads account whose Meta login carries catalog_management; its token performs the call instead of the account's own"""
         client = _get_client()
         try:
-            response = client.product_catalogs.get_ad_catalog_batch(handle=handle)
+            response = client.product_catalogs.get_ad_catalog_batch(
+                catalog_id=catalog_id,
+                handle=handle,
+                account_id=account_id,
+                catalog_account_id=catalog_account_id,
+            )
             return _format_response(response)
         except Exception as e:
             return f"Error: {e}"
@@ -31581,15 +31891,31 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=False,
         )
     )
-    def product_catalogs_get_ad_catalog_product() -> str:
+    def product_catalogs_get_ad_catalog_product(
+        catalog_id: str,
+        product_id: str,
+        account_id: str,
+        catalog_account_id: str | None = None,
+    ) -> str:
         """Get a product
 
         Shows one product from a Meta catalog.
 
-        Platforms: meta"""
+        Platforms: meta
+
+        Args:
+            catalog_id: Meta product catalog ID (from GET /v1/ads/catalogs) (required)
+            product_id: Meta product item ID (from the products list; not the retailer id) (required)
+            account_id: A facebook, instagram, metaads or whatsapp account ID (required)
+            catalog_account_id: A facebook, instagram or metaads account whose Meta login carries catalog_management; its token performs the call instead of the account's own"""
         client = _get_client()
         try:
-            response = client.product_catalogs.get_ad_catalog_product()
+            response = client.product_catalogs.get_ad_catalog_product(
+                catalog_id=catalog_id,
+                product_id=product_id,
+                account_id=account_id,
+                catalog_account_id=catalog_account_id,
+            )
             return _format_response(response)
         except Exception as e:
             return f"Error: {e}"
@@ -31603,6 +31929,8 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def product_catalogs_update_ad_catalog_product(
+        catalog_id: str,
+        product_id: str,
         account_id: str,
         product: dict[str, Any] | None,
         catalog_account_id: str | None = None,
@@ -31616,12 +31944,16 @@ def register_generated_tools(mcp, _get_client):
         Platforms: meta
 
         Args:
+            catalog_id: Meta product catalog ID (from GET /v1/ads/catalogs) (required)
+            product_id: Meta product item ID (from the products list; not the retailer id) (required)
             account_id: (required)
             catalog_account_id
             product: Object with keys: retailerId (string) - Your SKU; unique inside the catalog; name (string); description (string); url (string) - Product page; imageUrl (string); additionalImageUrls (list of string); price (number) - Major units, e.g. 12.99; currency (string) - ISO 4217, e.g. EUR; salePrice (number); salePriceStartDate (string) - ISO 8601; salePriceEndDate (string) - ISO 8601; availability (one of: in stock, out of stock, preorder, available for order, discontinued, pending); condition (one of: new, refurbished, used); brand (string); category (string); googleProductCategory (string); productType (string); gtin (string); mpn (string); inventory (integer); visibility (one of: published, staging); color (string); size (string); gender (one of: female, male, unisex); material (string); pattern (string); customLabel0 (string); customLabel1 (string); customLabel2 (string); customLabel3 (string); customLabel4 (string) (required)"""
         client = _get_client()
         try:
             response = client.product_catalogs.update_ad_catalog_product(
+                catalog_id=catalog_id,
+                product_id=product_id,
                 account_id=account_id,
                 catalog_account_id=catalog_account_id,
                 product=product,
@@ -31638,15 +31970,31 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=True,
         )
     )
-    def product_catalogs_delete_ad_catalog_product() -> str:
+    def product_catalogs_delete_ad_catalog_product(
+        catalog_id: str,
+        product_id: str,
+        account_id: str,
+        catalog_account_id: str | None = None,
+    ) -> str:
         """Delete a product
 
         Removes one product from a Meta catalog.
 
-        Platforms: meta"""
+        Platforms: meta
+
+        Args:
+            catalog_id: Meta product catalog ID (from GET /v1/ads/catalogs) (required)
+            product_id: Meta product item ID (from the products list; not the retailer id) (required)
+            account_id: A facebook, instagram, metaads or whatsapp account ID (required)
+            catalog_account_id: A facebook, instagram or metaads account whose Meta login carries catalog_management; its token performs the call instead of the account's own"""
         client = _get_client()
         try:
-            response = client.product_catalogs.delete_ad_catalog_product()
+            response = client.product_catalogs.delete_ad_catalog_product(
+                catalog_id=catalog_id,
+                product_id=product_id,
+                account_id=account_id,
+                catalog_account_id=catalog_account_id,
+            )
             return _format_response(response)
         except Exception as e:
             return f"Error: {e}"
@@ -31659,15 +32007,26 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=False,
         )
     )
-    def product_catalogs_list_ad_catalog_feeds() -> str:
+    def product_catalogs_list_ad_catalog_feeds(
+        catalog_id: str, account_id: str, catalog_account_id: str | None = None
+    ) -> str:
         """List a catalog's product feeds
 
         Lists the product feeds that keep a Meta catalog filled from your product files.
 
-        Platforms: meta"""
+        Platforms: meta
+
+        Args:
+            catalog_id: Meta product catalog ID (from GET /v1/ads/catalogs) (required)
+            account_id: A facebook, instagram, metaads or whatsapp account ID (required)
+            catalog_account_id: A facebook, instagram or metaads account whose Meta login carries catalog_management; its token performs the call instead of the account's own"""
         client = _get_client()
         try:
-            response = client.product_catalogs.list_ad_catalog_feeds()
+            response = client.product_catalogs.list_ad_catalog_feeds(
+                catalog_id=catalog_id,
+                account_id=account_id,
+                catalog_account_id=catalog_account_id,
+            )
             return _format_response(response)
         except Exception as e:
             return f"Error: {e}"
@@ -31681,6 +32040,7 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def product_catalogs_create_ad_catalog_feed(
+        catalog_id: str,
         account_id: str,
         name: str,
         catalog_account_id: str | None = None,
@@ -31695,6 +32055,7 @@ def register_generated_tools(mcp, _get_client):
         Platforms: meta
 
         Args:
+            catalog_id: Meta product catalog ID (from GET /v1/ads/catalogs) (required)
             account_id: (required)
             catalog_account_id
             name: (required)
@@ -31702,6 +32063,7 @@ def register_generated_tools(mcp, _get_client):
         client = _get_client()
         try:
             response = client.product_catalogs.create_ad_catalog_feed(
+                catalog_id=catalog_id,
                 account_id=account_id,
                 catalog_account_id=catalog_account_id,
                 name=name,
@@ -31719,7 +32081,12 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=False,
         )
     )
-    def product_catalogs_list_ad_catalog_feed_uploads(feed_id: str) -> str:
+    def product_catalogs_list_ad_catalog_feed_uploads(
+        catalog_id: str,
+        feed_id: str,
+        account_id: str,
+        catalog_account_id: str | None = None,
+    ) -> str:
         """List a feed's uploads
 
         Lists a product feed's past file imports so you can check how each one went.
@@ -31727,11 +32094,17 @@ def register_generated_tools(mcp, _get_client):
         Platforms: meta
 
         Args:
-            feed_id: (required)"""
+            catalog_id: Meta product catalog ID (from GET /v1/ads/catalogs) (required)
+            feed_id: (required)
+            account_id: A facebook, instagram, metaads or whatsapp account ID (required)
+            catalog_account_id: A facebook, instagram or metaads account whose Meta login carries catalog_management; its token performs the call instead of the account's own"""
         client = _get_client()
         try:
             response = client.product_catalogs.list_ad_catalog_feed_uploads(
-                feed_id=feed_id
+                catalog_id=catalog_id,
+                feed_id=feed_id,
+                account_id=account_id,
+                catalog_account_id=catalog_account_id,
             )
             return _format_response(response)
         except Exception as e:
@@ -31746,7 +32119,11 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def product_catalogs_create_ad_catalog_feed_upload(
-        feed_id: str, account_id: str, url: str, catalog_account_id: str | None = None
+        catalog_id: str,
+        feed_id: str,
+        account_id: str,
+        url: str,
+        catalog_account_id: str | None = None,
     ) -> str:
         """Fetch a feed file now
 
@@ -31757,6 +32134,7 @@ def register_generated_tools(mcp, _get_client):
         Platforms: meta
 
         Args:
+            catalog_id: Meta product catalog ID (from GET /v1/ads/catalogs) (required)
             feed_id: (required)
             account_id: (required)
             catalog_account_id
@@ -31764,6 +32142,7 @@ def register_generated_tools(mcp, _get_client):
         client = _get_client()
         try:
             response = client.product_catalogs.create_ad_catalog_feed_upload(
+                catalog_id=catalog_id,
                 feed_id=feed_id,
                 account_id=account_id,
                 catalog_account_id=catalog_account_id,
@@ -31781,17 +32160,28 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=False,
         )
     )
-    def product_catalogs_list_ad_catalog_product_sets() -> str:
+    def product_catalogs_list_ad_catalog_product_sets(
+        catalog_id: str, account_id: str, catalog_account_id: str | None = None
+    ) -> str:
         """List a catalog's product sets
 
         Lists a Meta catalog's product sets, the groups of products a catalog ad promotes.
 
         Pass the chosen set id, not the parent catalog id, as `promotedObject.productSetId` on POST /v1/ads/create with `goal: catalog_sales`.
 
-        Platforms: meta"""
+        Platforms: meta
+
+        Args:
+            catalog_id: Meta product catalog ID (from GET /v1/ads/catalogs) (required)
+            account_id: A facebook, instagram, metaads or whatsapp account ID (required)
+            catalog_account_id: A facebook, instagram or metaads account whose Meta login carries catalog_management; its token performs the call instead of the account's own"""
         client = _get_client()
         try:
-            response = client.product_catalogs.list_ad_catalog_product_sets()
+            response = client.product_catalogs.list_ad_catalog_product_sets(
+                catalog_id=catalog_id,
+                account_id=account_id,
+                catalog_account_id=catalog_account_id,
+            )
             return _format_response(response)
         except Exception as e:
             return f"Error: {e}"
@@ -31805,6 +32195,7 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def product_catalogs_create_ad_catalog_product_set(
+        catalog_id: str,
         account_id: str,
         name: str,
         filter: dict[str, Any] | None,
@@ -31819,6 +32210,7 @@ def register_generated_tools(mcp, _get_client):
         Platforms: meta
 
         Args:
+            catalog_id: Meta product catalog ID (from GET /v1/ads/catalogs) (required)
             account_id: (required)
             catalog_account_id
             name: (required)
@@ -31826,6 +32218,7 @@ def register_generated_tools(mcp, _get_client):
         client = _get_client()
         try:
             response = client.product_catalogs.create_ad_catalog_product_set(
+                catalog_id=catalog_id,
                 account_id=account_id,
                 catalog_account_id=catalog_account_id,
                 name=name,
@@ -31844,6 +32237,7 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def product_catalogs_update_ad_catalog_product_set(
+        catalog_id: str,
         product_set_id: str,
         account_id: str,
         catalog_account_id: str | None = None,
@@ -31857,6 +32251,7 @@ def register_generated_tools(mcp, _get_client):
         Platforms: meta
 
         Args:
+            catalog_id: Meta product catalog ID (from GET /v1/ads/catalogs) (required)
             product_set_id: (required)
             account_id: (required)
             catalog_account_id
@@ -31865,6 +32260,7 @@ def register_generated_tools(mcp, _get_client):
         client = _get_client()
         try:
             response = client.product_catalogs.update_ad_catalog_product_set(
+                catalog_id=catalog_id,
                 product_set_id=product_set_id,
                 account_id=account_id,
                 catalog_account_id=catalog_account_id,
@@ -31883,7 +32279,12 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=True,
         )
     )
-    def product_catalogs_delete_ad_catalog_product_set(product_set_id: str) -> str:
+    def product_catalogs_delete_ad_catalog_product_set(
+        catalog_id: str,
+        product_set_id: str,
+        account_id: str,
+        catalog_account_id: str | None = None,
+    ) -> str:
         """Delete a product set
 
         Deletes a product set from a Meta catalog.
@@ -31891,11 +32292,17 @@ def register_generated_tools(mcp, _get_client):
         Platforms: meta
 
         Args:
-            product_set_id: (required)"""
+            catalog_id: Meta product catalog ID (from GET /v1/ads/catalogs) (required)
+            product_set_id: (required)
+            account_id: A facebook, instagram, metaads or whatsapp account ID (required)
+            catalog_account_id: A facebook, instagram or metaads account whose Meta login carries catalog_management; its token performs the call instead of the account's own"""
         client = _get_client()
         try:
             response = client.product_catalogs.delete_ad_catalog_product_set(
-                product_set_id=product_set_id
+                catalog_id=catalog_id,
+                product_set_id=product_set_id,
+                account_id=account_id,
+                catalog_account_id=catalog_account_id,
             )
             return _format_response(response)
         except Exception as e:
@@ -37970,16 +38377,21 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=False,
         )
     )
-    def whatsapp_list_whats_app_catalogs(account_id: str) -> str:
+    def whatsapp_list_whats_app_catalogs(
+        account_id: str, catalog_account_id: str | None = None
+    ) -> str:
         """List the catalogs linked to a WhatsApp number
 
         The Meta Commerce catalogs connected to the number's WhatsApp Business Account. Pass `catalogAccountId`: the WhatsApp connection's own (embedded signup) token answers an empty list even when a catalog is linked, only a Meta login with catalog_management sees the link. A linked catalog is what product, product_list and catalog_message interactive messages sell from (see POST /v1/inbox/conversations/{conversationId}/messages) and what customers browse in the WhatsApp app. Create and fill catalogs with the /v1/ads/catalogs endpoints.
 
         Args:
-            account_id: WhatsApp account ID (required)"""
+            account_id: WhatsApp account ID (required)
+            catalog_account_id: A facebook, instagram or metaads account whose Meta login carries catalog_management; its token performs the call instead of the account's own"""
         client = _get_client()
         try:
-            response = client.whatsapp.list_whats_app_catalogs(account_id=account_id)
+            response = client.whatsapp.list_whats_app_catalogs(
+                account_id=account_id, catalog_account_id=catalog_account_id
+            )
             return _format_response(response)
         except Exception as e:
             return f"Error: {e}"
@@ -38022,16 +38434,21 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=True,
         )
     )
-    def whatsapp_unlink_whats_app_catalog(account_id: str, catalog_id: str) -> str:
+    def whatsapp_unlink_whats_app_catalog(
+        account_id: str, catalog_id: str, catalog_account_id: str | None = None
+    ) -> str:
         """Unlink a catalog from a WhatsApp number
 
         Args:
             account_id: WhatsApp account ID (required)
+            catalog_account_id: A facebook, instagram or metaads account whose Meta login carries catalog_management; its token performs the call instead of the account's own
             catalog_id: Meta catalog ID (required)"""
         client = _get_client()
         try:
             response = client.whatsapp.unlink_whats_app_catalog(
-                account_id=account_id, catalog_id=catalog_id
+                account_id=account_id,
+                catalog_account_id=catalog_account_id,
+                catalog_id=catalog_id,
             )
             return _format_response(response)
         except Exception as e:
@@ -38045,17 +38462,20 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=False,
         )
     )
-    def whatsapp_get_whats_app_commerce_settings(account_id: str) -> str:
+    def whatsapp_get_whats_app_commerce_settings(
+        account_id: str, catalog_account_id: str | None = None
+    ) -> str:
         """Get a number's commerce settings
 
         Whether the linked catalog is shown on the business profile (`isCatalogVisible`) and whether customers can build a cart (`isCartEnabled`).
 
         Args:
-            account_id: WhatsApp account ID (required)"""
+            account_id: WhatsApp account ID (required)
+            catalog_account_id: A facebook, instagram or metaads account whose Meta login carries catalog_management; its token performs the call instead of the account's own"""
         client = _get_client()
         try:
             response = client.whatsapp.get_whats_app_commerce_settings(
-                account_id=account_id
+                account_id=account_id, catalog_account_id=catalog_account_id
             )
             return _format_response(response)
         except Exception as e:

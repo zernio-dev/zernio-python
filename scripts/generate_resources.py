@@ -22,7 +22,7 @@ from pathlib import Path
 from typing import Any
 
 import yaml
-from openapi_body import flatten_request_body_schema
+from openapi_body import flatten_request_body_schema, resolve_parameter_ref
 
 # Map OpenAPI tags to resource class names
 TAG_TO_RESOURCE: dict[str, str] = {
@@ -136,17 +136,7 @@ def extract_parameters(
 
     # Query/path parameters
     for param in operation.get("parameters", []):
-        # Resolve reusable parameters before extracting their name and location.
-        # Silently dropping a path parameter produces broken URL templates.
-        seen_refs: set[str] = set()
-        while "$ref" in param:
-            ref = param["$ref"]
-            if not ref.startswith("#/") or ref in seen_refs:
-                raise ValueError(f"Unsupported or cyclic parameter reference: {ref}")
-            seen_refs.add(ref)
-            param = spec
-            for part in ref[2:].split("/"):
-                param = param[part.replace("~1", "/").replace("~0", "~")]
+        param = resolve_parameter_ref(param, spec)
 
         if "name" not in param:
             continue

@@ -14,6 +14,23 @@ def resolve_local_ref(ref: str, spec: dict[str, Any]) -> dict[str, Any]:
     return node if isinstance(node, dict) else {}
 
 
+def resolve_parameter_ref(
+    param: dict[str, Any], spec: dict[str, Any] | None
+) -> dict[str, Any]:
+    # Resolve reusable parameters before extracting their name and location.
+    # Silently dropping a path parameter produces broken URL templates.
+    seen_refs: set[str] = set()
+    while "$ref" in param:
+        ref = param["$ref"]
+        if spec is None or not ref.startswith("#/") or ref in seen_refs:
+            raise ValueError(f"Unsupported or cyclic parameter reference: {ref}")
+        seen_refs.add(ref)
+        param = spec
+        for part in ref[2:].split("/"):
+            param = param[part.replace("~1", "/").replace("~0", "~")]
+    return param
+
+
 def flatten_request_body_schema(
     schema: dict[str, Any], spec: dict[str, Any]
 ) -> dict[str, Any] | None:
