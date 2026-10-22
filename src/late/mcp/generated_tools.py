@@ -27627,12 +27627,12 @@ def register_generated_tools(mcp, _get_client):
         Returns mentions of your connected accounts from the last 7 days.
 
         - **LinkedIn**: organization mentions, delivered by webhooks and a background pull.
-        - **Instagram**: comment mentions (someone tags the account in a comment) and caption mentions
-          (someone tags it in their media caption), delivered by Meta webhooks. Accounts connected through
-          Instagram Login receive comment mentions only. Accounts connected through Facebook Login receive
-          both; their text is read from Instagram in the background after the first request, so `content`
-          can be empty on the first read. Pass `mediaId` and `commentId` to `POST /v1/inbox/mentions/reply`
-          to answer one.
+        - **Instagram**: comment mentions (someone tags the account in a comment on their own media) and
+          caption mentions (someone tags it in their media caption), delivered by the Meta `mentions`
+          webhook. Only accounts connected through Facebook Login receive them; comments on the account's
+          own posts are never listed, even when they contain its @handle. Their text is read from Instagram
+          in the background after the first request, so `content` can be empty on the first read. Pass
+          `mediaId` and `commentId` to `POST /v1/inbox/mentions/reply` to answer one.
 
         Requires Inbox addon.
 
