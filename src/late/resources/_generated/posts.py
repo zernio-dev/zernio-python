@@ -134,6 +134,7 @@ class PostsResource:
         scheduled_for: datetime | str | None = None,
         publish_now: bool | None = False,
         is_draft: bool | None = False,
+        requires_approval: bool | None = False,
         dry_run: bool | None = False,
         timezone: str | None = None,
         tags: list[str] | None = None,
@@ -156,6 +157,7 @@ class PostsResource:
             scheduled_for=scheduled_for,
             publish_now=publish_now,
             is_draft=is_draft,
+            requires_approval=requires_approval,
             dry_run=dry_run,
             timezone=timezone,
             tags=tags,
@@ -191,6 +193,7 @@ class PostsResource:
         scheduled_for: datetime | str | None = None,
         publish_now: bool | None = False,
         is_draft: bool | None = None,
+        requires_approval: bool | None = None,
         timezone: str | None = None,
         visibility: str | None = None,
         tags: list[str] | None = None,
@@ -213,6 +216,7 @@ class PostsResource:
             scheduled_for=scheduled_for,
             publish_now=publish_now,
             is_draft=is_draft,
+            requires_approval=requires_approval,
             timezone=timezone,
             visibility=visibility,
             tags=tags,
@@ -242,6 +246,13 @@ class PostsResource:
     def retry_post(self, post_id: str) -> dict[str, Any]:
         """Retry failed post"""
         return self._client._post(f"/v1/posts/{post_id}/retry")
+
+    def review_post(self, post_id: str, decision: str) -> dict[str, Any]:
+        """Approve or reject a post"""
+        payload = self._build_payload(
+            decision=decision,
+        )
+        return self._client._post(f"/v1/posts/{post_id}/review", data=payload)
 
     def unpublish_post(
         self, post_id: str, platform: str, *, account_id: str | None = None
@@ -362,6 +373,7 @@ class PostsResource:
         scheduled_for: datetime | str | None = None,
         publish_now: bool | None = False,
         is_draft: bool | None = False,
+        requires_approval: bool | None = False,
         dry_run: bool | None = False,
         timezone: str | None = None,
         tags: list[str] | None = None,
@@ -384,6 +396,7 @@ class PostsResource:
             scheduled_for=scheduled_for,
             publish_now=publish_now,
             is_draft=is_draft,
+            requires_approval=requires_approval,
             dry_run=dry_run,
             timezone=timezone,
             tags=tags,
@@ -419,6 +432,7 @@ class PostsResource:
         scheduled_for: datetime | str | None = None,
         publish_now: bool | None = False,
         is_draft: bool | None = None,
+        requires_approval: bool | None = None,
         timezone: str | None = None,
         visibility: str | None = None,
         tags: list[str] | None = None,
@@ -441,6 +455,7 @@ class PostsResource:
             scheduled_for=scheduled_for,
             publish_now=publish_now,
             is_draft=is_draft,
+            requires_approval=requires_approval,
             timezone=timezone,
             visibility=visibility,
             tags=tags,
@@ -472,6 +487,13 @@ class PostsResource:
     async def aretry_post(self, post_id: str) -> dict[str, Any]:
         """Retry failed post (async)"""
         return await self._client._apost(f"/v1/posts/{post_id}/retry")
+
+    async def areview_post(self, post_id: str, decision: str) -> dict[str, Any]:
+        """Approve or reject a post (async)"""
+        payload = self._build_payload(
+            decision=decision,
+        )
+        return await self._client._apost(f"/v1/posts/{post_id}/review", data=payload)
 
     async def aunpublish_post(
         self, post_id: str, platform: str, *, account_id: str | None = None

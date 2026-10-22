@@ -191,6 +191,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `posts.delete_post()` | Delete post |
 | `posts.edit_post()` | Edit published post |
 | `posts.retry_post()` | Retry failed post |
+| `posts.review_post()` | Approve or reject a post |
 | `posts.unpublish_post()` | Unpublish post |
 
 ### Accounts

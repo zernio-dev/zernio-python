@@ -30615,6 +30615,7 @@ def register_generated_tools(mcp, _get_client):
         source: Literal["zernio", "external"] = "zernio",
         status: Literal[
             "draft",
+            "pending_approval",
             "scheduled",
             "publishing",
             "published",
@@ -30710,6 +30711,7 @@ def register_generated_tools(mcp, _get_client):
         scheduled_for: str | None = None,
         publish_now: bool = False,
         is_draft: bool = False,
+        requires_approval: bool = False,
         dry_run: bool = False,
         timezone: str | None = None,
         tags: list[str] | None = None,
@@ -30756,6 +30758,7 @@ def register_generated_tools(mcp, _get_client):
                 scheduled_for: When to publish. Required unless `publishNow` is true, `queuedFromProfile` is set, or the post is a draft. An ISO 8601 value with a `Z` or offset (`2026-01-15T10:00:00Z`, `2026-01-15T11:00:00+01:00`) is taken as-is; a value without one (`2026-01-15T10:00:00` or `2026-01-15 10:00`) is read as local time in `timezone`. A value already in the past is published synchronously in the same request. Ignored when `publishNow` is true.
                 publish_now: Publish to every platform synchronously in this request instead of scheduling; the response then carries each platform result and `platformPostUrl`, with HTTP 207 when some platforms failed. Takes precedence over `scheduledFor`; ignored when `isDraft` is true.
                 is_draft: When true, saves the post as a draft. When none of scheduledFor, publishNow, or queuedFromProfile are provided, the post defaults to draft automatically.
+                requires_approval: When true, saves the post as pending_approval instead of scheduled. Needs scheduledFor, at the root or on every platform; cannot be combined with isDraft, publishNow, queuedFromProfile or queueId. The post publishes only after POST /v1/posts/{postId}/review approves it; approving after the scheduled time publishes within a couple of minutes.
                 dry_run: TikTok only. Preview whether each `tiktok` entry in `platforms` could publish right now under the TikTok Direct Post daily limits, without creating, scheduling or publishing anything: no post is persisted and no upload slot is claimed, so it can be repeated freely. The request still goes through auth, the payment gate and body validation, then returns HTTP 200 with `{ dryRun: true, canPublish, tiktok: [...] }` instead of 201. Only `tiktok` entries are evaluated; other platforms in the body are ignored, and a body with no `tiktok` entry is rejected with 400 `invalid_field_value` on `platforms`. An entry with `platformSpecificData.tiktokSettings.draft: true` (Creator Inbox upload) is not subject to the limit and always reports `canPublish: true`. Accounts connected through the TikTok for Business app do not go through these limits at all and also always report `canPublish: true`, so on those accounts a dry run confirms the request is well-formed rather than gating it.
                 timezone: IANA timezone (`Europe/Madrid`, `America/New_York`) used to interpret a `scheduledFor` (root or per-platform) that carries no `Z` or offset, and stored on the post. Has no effect on values that already carry one. When omitted, the post takes its profile's `timezone` (the queue's profile for a queued post, else the profile its accounts share), and UTC when there is none or the accounts sit on profiles with different timezones. An unknown name returns 400 when `scheduledFor` is set.
                 tags: Tags/keywords. YouTube constraints: each tag max 100 chars, combined max 500 chars, duplicates auto-removed.
@@ -30780,6 +30783,7 @@ def register_generated_tools(mcp, _get_client):
                 scheduled_for=scheduled_for,
                 publish_now=publish_now,
                 is_draft=is_draft,
+                requires_approval=requires_approval,
                 dry_run=dry_run,
                 timezone=timezone,
                 tags=tags,
@@ -30836,6 +30840,7 @@ def register_generated_tools(mcp, _get_client):
         scheduled_for: str | None = None,
         publish_now: bool = False,
         is_draft: bool | None = None,
+        requires_approval: bool | None = None,
         timezone: str | None = None,
         visibility: Literal["public", "private", "unlisted"] | None = None,
         tags: list[str] | None = None,
@@ -30870,6 +30875,7 @@ def register_generated_tools(mcp, _get_client):
             scheduled_for
             publish_now
             is_draft: When omitted, the post keeps its current draft status. Send `false` to promote a draft to scheduled (combined with `scheduledFor`, `publishNow`, or a queue).
+            requires_approval: Send true on a draft to submit it for approval: it becomes pending_approval and publishes only after POST /v1/posts/{postId}/review approves it. Cannot be combined with isDraft, publishNow, queuedFromProfile or queueId. Returns 409 when the post is not a draft.
             timezone
             visibility
             tags
@@ -30893,6 +30899,7 @@ def register_generated_tools(mcp, _get_client):
                 scheduled_for=scheduled_for,
                 publish_now=publish_now,
                 is_draft=is_draft,
+                requires_approval=requires_approval,
                 timezone=timezone,
                 visibility=visibility,
                 tags=tags,
@@ -30962,6 +30969,32 @@ def register_generated_tools(mcp, _get_client):
         client = _get_client()
         try:
             response = client.posts.bulk_upload_posts(dry_run=dry_run)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Approve or reject a post",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def posts_review_post(post_id: str, decision: Literal["approve", "reject"]) -> str:
+        """Approve or reject a post
+
+        Approves or rejects a post saved with `requiresApproval: true` (status `pending_approval`).
+        `approve` schedules the post for its `scheduledFor` and fires the `post.scheduled` webhook. When that time has already passed, the post publishes within a couple of minutes.
+        `reject` returns the post to `draft`.
+        Returns 409 when the post is not `pending_approval`.
+
+        Args:
+            post_id: (required)
+            decision: approve schedules the post; reject returns it to draft. (required)"""
+        client = _get_client()
+        try:
+            response = client.posts.review_post(post_id=post_id, decision=decision)
             return _format_response(response)
         except Exception as e:
             return f"Error: {e}"

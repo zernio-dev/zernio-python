@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.327.0"
+  version: "1.328.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -8235,8 +8235,8 @@ components:
         timezone: { type: string }
         status:
           type: string
-          enum: [draft, scheduled, publishing, published, partial, failed, cancelled]
-          description: '`cancelled` is set by POST /v1/posts/{postId}/unpublish once every platform entry has been removed from its platform (a post with published entries left becomes `partial`); cancelled posts can be edited and rescheduled like drafts.'
+          enum: [draft, pending_approval, scheduled, publishing, published, partial, failed, cancelled]
+          description: '`cancelled` is set by POST /v1/posts/{postId}/unpublish once every platform entry has been removed from its platform (a post with published entries left becomes `partial`); cancelled posts can be edited and rescheduled like drafts. `pending_approval` (set by `requiresApproval: true`) never publishes until POST /v1/posts/{postId}/review approves it.'
         tags:
           type: array
           description: "YouTube constraints: each tag max 100 chars, combined max 500 chars, duplicates removed."
@@ -22492,7 +22492,7 @@ paths:
             full synced history (we keep up to the last ~12 months per account).
         - name: status
           in: query
-          schema: { type: string, enum: [draft, scheduled, publishing, published, partial, failed, cancelled] }
+          schema: { type: string, enum: [draft, pending_approval, scheduled, publishing, published, partial, failed, cancelled] }
         - name: platform
           in: query
           schema: { type: string, example: twitter }
@@ -22754,6 +22754,10 @@ paths:
                   type: boolean
                   default: false
                   description: When true, saves the post as a draft. When none of scheduledFor, publishNow, or queuedFromProfile are provided, the post defaults to draft automatically.
+                requiresApproval:
+                  type: boolean
+                  default: false
+                  description: 'When true, saves the post as pending_approval instead of scheduled. Needs scheduledFor, at the root or on every platform; cannot be combined with isDraft, publishNow, queuedFromProfile or queueId. The post publishes only after POST /v1/posts/{postId}/review approves it; approving after the scheduled time publishes within a couple of minutes.'
                 dryRun:
                   type: boolean
                   default: false
@@ -23539,6 +23543,9 @@ paths:
                 isDraft:
                   type: boolean
                   description: When omitted, the post keeps its current draft status. Send `false` to promote a draft to scheduled (combined with `scheduledFor`, `publishNow`, or a queue).
+                requiresApproval:
+                  type: boolean
+                  description: 'Send true on a draft to submit it for approval: it becomes pending_approval and publishes only after POST /v1/posts/{postId}/review approves it. Cannot be combined with isDraft, publishNow, queuedFromProfile or queueId. Returns 409 when the post is not a draft.'
                 timezone: { type: string }
                 visibility: { type: string, enum: [public, private, unlisted] }
                 tags:
@@ -23609,7 +23616,7 @@ paths:
               schema: { $ref: '#/components/schemas/ErrorResponse' }
         '404': { $ref: '#/components/responses/NotFound' }
         '409':
-          description: 'The requested scheduledFor collides with another post already occupying that slot in the same queue (code: queue_slot_conflict). Choose a different time, omit scheduledFor and let the queue assign the next open slot, or send queueId: null to schedule this post outside the queue.'
+          description: 'The requested scheduledFor collides with another post already occupying that slot in the same queue (code: queue_slot_conflict). Choose a different time, omit scheduledFor and let the queue assign the next open slot, or send queueId: null to schedule this post outside the queue. Also returned when requiresApproval is sent on a post that is not a draft (code: invalid_resource_state).'
           content:
             application/json:
               schema: { $ref: '#/components/schemas/ErrorResponse' }
@@ -23853,6 +23860,56 @@ paths:
                   error: { type: string }
                   details:
                     type: object
+  /v1/posts/{postId}/review:
+    post:
+      x-resource-group: "publishing"
+      operationId: reviewPost
+      tags: [Posts]
+      summary: Approve or reject a post
+      description: |
+        Approves or rejects a post saved with `requiresApproval: true` (status `pending_approval`).
+        `approve` schedules the post for its `scheduledFor` and fires the `post.scheduled` webhook. When that time has already passed, the post publishes within a couple of minutes.
+        `reject` returns the post to `draft`.
+        Returns 409 when the post is not `pending_approval`.
+      parameters:
+        - name: postId
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [decision]
+              properties:
+                decision:
+                  type: string
+                  enum: [approve, reject]
+                  description: 'approve schedules the post; reject returns it to draft.'
+            example:
+              decision: "approve"
+      responses:
+        '200':
+          description: The reviewed post
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostGetResponse'
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409':
+          description: 'The post is not pending_approval (code: invalid_resource_state), for example because it was already approved or rejected.'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
   /v1/posts/{postId}/unpublish:
     post:
       x-resource-group: "publishing"
