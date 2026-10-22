@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.325.0"
+  version: "1.326.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -855,7 +855,7 @@ components:
             code: ads_connection_required
             param: accountId
     StoreReconnectRequired:
-      description: 'The store must re-approve the Zernio app (Shopify or Wix) to grant pixel access (code `reconnect_required`). Send the merchant to `details.authUrl`; the account id stays the same. Also returned while the store account itself needs reconnection (code `ads_connection_required`).'
+      description: 'The store must re-approve the Zernio app (Shopify or Wix), or connect a Webflow site with the Zernio Webflow app, to grant pixel access (code `reconnect_required`). Send the merchant to `details.authUrl`; the account id stays the same. Also returned while the store account itself needs reconnection (code `ads_connection_required`).'
       content:
         application/json:
           schema: { $ref: '#/components/schemas/ErrorResponse' }
@@ -15349,18 +15349,18 @@ components:
         updated_at: { type: string, format: date-time }
     StorePixelInstall:
       type: object
-      description: 'A tracking tag''s install on a connected store: a Shopify web pixel, a Custom HTML widget on a WordPress site, or the Zernio embedded script on a Wix site. Fields marked Shopify, WordPress or Wix are present only for that platform.'
+      description: 'A tracking tag''s install on a connected store: a Shopify web pixel, a Custom HTML widget on a WordPress site, the Zernio embedded script on a Wix site, or the Zernio custom code script on a Webflow site. Fields marked with a platform are present only for it.'
       properties:
         storeAccountId: { type: string }
-        platform: { type: string, enum: [shopify, wordpress, wix], description: 'The store platform.' }
+        platform: { type: string, enum: [shopify, wordpress, wix, webflow], description: 'The store platform.' }
         tagPlatform: { type: string, description: 'Platform of the tag this install is about (e.g. `metaads`).' }
         siteTagId: { type: string, description: 'The id the tag carries on the site (see `TrackingTag.siteTagId`).' }
-        installed: { type: boolean, description: 'Shopify and Wix: this tag is the one the store fires for its platform. WordPress: the Zernio widget for this tag is in an active widget area with its script intact.' }
+        installed: { type: boolean, description: 'Shopify, Wix and Webflow: this tag is the one the store fires for its platform. WordPress: the Zernio widget for this tag is in an active widget area with its script intact.' }
         shopDomain: { type: string, example: 'acme.myshopify.com', description: Shopify only. }
-        installedTagId: { type: [string, "null"], description: 'Shopify and Wix only: the tag of the same platform the store fires now (may be a different tag), or null.' }
+        installedTagId: { type: [string, "null"], description: 'Shopify, Wix and Webflow only: the tag of the same platform the store fires now (may be a different tag), or null.' }
         tags:
           type: array
-          description: 'GET only on WordPress, always on Shopify and Wix: every Zernio tag on the store, all platforms.'
+          description: 'GET only on WordPress, always on Shopify, Wix and Webflow: every Zernio tag on the store, all platforms.'
           items:
             type: object
             properties:
@@ -15370,7 +15370,8 @@ components:
               sidebarId: { type: string, description: WordPress only. }
               active: { type: boolean, description: 'WordPress only: false when the widget sits outside an active widget area.' }
         webPixelId: { type: [string, "null"], description: 'Shopify only: web pixel id, or null when nothing is installed.' }
-        siteUrl: { type: [string, "null"], description: 'WordPress and Wix only. Null on a Wix site that was never published.' }
+        siteUrl: { type: [string, "null"], description: 'WordPress, Wix and Webflow only. Null on a Wix site that was never published.' }
+        publishRequired: { type: boolean, description: 'Webflow only, always true: the change reaches the live site on its next publish.' }
         method: { type: string, enum: [wordpress_widget], description: WordPress only. }
         widgetId: { type: [string, "null"], description: 'WordPress only: widget id, e.g. `custom_html-3`.' }
         sidebarId: { type: [string, "null"], description: 'WordPress only: widget area holding the widget.' }
@@ -27154,6 +27155,52 @@ paths:
         '404': { description: 'Profile not found or access denied.' }
         '503': { description: 'The Wix app or state signing is not configured.' }
 
+  /v1/connect/webflow:
+    get:
+      x-resource-group: "accounts"
+      operationId: getWebflowConnectUrl
+      tags: [Connect]
+      summary: Get Webflow OAuth URL
+      description: |
+        Returns Webflow's consent URL for the Zernio Webflow app. The user picks
+        exactly one site there; Webflow then returns the browser to Zernio's
+        internal callback, which connects that site and redirects to
+        `redirect_url` (or the dashboard when omitted). Picking several sites
+        connects none and redirects with `error=webflow_pick_one_site`.
+        Connecting a site already connected with a site token upgrades the same
+        account. Only an OAuth connection can install tracking tags on the site
+        (`installTrackingTagOnStore`); blogs work with either. The token does not
+        expire.
+      security:
+        - bearerAuth: []
+        - connectToken: []
+      parameters:
+        - name: profileId
+          in: query
+          required: true
+          schema: { type: string }
+          description: 'Your Zernio profile ID (get from /v1/profiles).'
+        - name: redirect_url
+          in: query
+          schema: { type: string }
+          description: 'Custom redirect after connection. Must be an absolute http(s) URL or custom app scheme such as `myapp://callback`; relative and unsafe URLs return 400.'
+      responses:
+        '200':
+          description: Webflow consent URL and authenticated state
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [authUrl, state]
+                properties:
+                  authUrl: { type: string, format: uri, description: 'Webflow consent URL to open in the user agent.' }
+                  state: { type: string, description: 'Authenticated, expiring state handled by the callback.' }
+        '400': { description: 'Invalid `profileId` or `redirect_url`.' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '402': { $ref: '#/components/responses/PaymentRequired' }
+        '403': { description: 'API key does not have access to this profile.' }
+        '404': { description: 'Profile not found or access denied.' }
+        '503': { description: 'The Webflow app or state signing is not configured.' }
   /v1/connect/webflow/token:
     post:
       x-resource-group: "accounts"
@@ -75063,10 +75110,10 @@ paths:
       x-resource-group: "ads"
       operationId: installTrackingTagOnStore
       tags: ["Tracking Tags"]
-      x-platforms: ["meta", "tiktok", "google", "x", "openai", "linkedin", "pinterest", "whop", "shopify", "wordpress", "wix"]
-      summary: Install on a Shopify store, WordPress site or Wix site
+      x-platforms: ["meta", "tiktok", "google", "x", "openai", "linkedin", "pinterest", "whop", "shopify", "wordpress", "wix", "webflow"]
+      summary: Install on a Shopify, WordPress, Wix or Webflow site
       description: |
-        Installs a pixel on a connected Shopify store, WordPress site or Wix site, so store visits and purchases are reported without editing the theme.
+        Installs a pixel on a connected Shopify store or WordPress, Wix or Webflow site, so store visits and purchases are reported without editing the theme.
 
         Puts the Meta pixel on a connected Shopify store's storefront and checkout through
         Zernio's Shopify web pixel (a Shopify app pixel, no theme edits). The store then sends
@@ -75157,6 +75204,14 @@ paths:
         connected before pixel support answer 409 `reconnect_required` until the owner approves
         the Zernio app's new permission (`details.authUrl`, or Apps > Manage Apps in the Wix
         dashboard).
+
+        **Webflow** (`storeAccountId` is a Webflow site connected with "Connect with Webflow",
+        `GET /v1/connect/webflow`): Zernio applies one script to the site's custom code that
+        loads each tag's base code, one tag per platform, as on Wix. Webflow publishes custom
+        code only with the site, so the install answers `publishRequired: true` and the tags fire
+        after the site's next publish (Zernio never publishes it). A site connected with a site
+        token answers 409 `reconnect_required` with `details.authUrl` to connect it with the app
+        (the account id stays the same).
       security:
         - bearerAuth: []
       parameters:
@@ -75170,7 +75225,7 @@ paths:
               type: object
               required: [storeAccountId]
               properties:
-                storeAccountId: { type: string, description: 'The connected Shopify (`shopify`), WordPress (`wordpress`) or Wix (`wix`) account id.' }
+                storeAccountId: { type: string, description: 'The connected Shopify (`shopify`), WordPress (`wordpress`), Wix (`wix`) or Webflow (`webflow`) account id.' }
                 adAccountId: { type: string, description: 'Scopes the tag lookup on platforms whose tag ids live inside an ad account. Ignored elsewhere.' }
                 sidebarId: { type: string, description: 'WordPress only: widget area to use (see `install.preflight.sidebars` from GET). Defaults to a footer area.' }
                 verifyHomepage: { type: boolean, default: true, description: 'WordPress only: fetch the homepage afterwards and report `homepageCheck`.' }
@@ -75188,7 +75243,7 @@ paths:
                       - $ref: '#/components/schemas/StorePixelInstall'
                       - type: object
                         properties:
-                          replacedTagId: { type: [string, "null"], description: 'Shopify and Wix only: the pixel this install replaced on the store, if any.' }
+                          replacedTagId: { type: [string, "null"], description: 'Shopify, Wix and Webflow only: the pixel this install replaced on the store, if any.' }
                           sidebarName: { type: string, description: 'WordPress only: name of the widget area used.' }
                           created: { type: boolean, description: 'WordPress only: false when an existing Zernio widget was updated.' }
                           homepageCheck:
@@ -75220,10 +75275,10 @@ paths:
       x-resource-group: "ads"
       operationId: getTrackingTagStoreInstall
       tags: ["Tracking Tags"]
-      x-platforms: ["meta", "tiktok", "google", "x", "openai", "linkedin", "pinterest", "shopify", "wordpress", "wix"]
+      x-platforms: ["meta", "tiktok", "google", "x", "openai", "linkedin", "pinterest", "shopify", "wordpress", "wix", "webflow"]
       summary: Get store install status
       description: |
-        Shows whether a tracking tag is live on your Shopify store, WordPress site or Wix site, and whether a WordPress install would be blocked.
+        Shows whether a tracking tag is installed on your Shopify store or WordPress, Wix or Webflow site, and whether a WordPress install would be blocked.
 
         Whether this tag is the one the Shopify store fires for its platform. `installedTagId`
         names the tag of that platform the store currently fires, which can be a different tag,
@@ -75240,7 +75295,7 @@ paths:
       parameters:
         - { name: accountId, in: path, required: true, schema: { type: string } }
         - { name: tagId, in: path, required: true, schema: { type: string }, description: 'Tag id (`TrackingTag.id`).' }
-        - { name: storeAccountId, in: query, required: true, schema: { type: string }, description: 'The connected Shopify, WordPress or Wix account id.' }
+        - { name: storeAccountId, in: query, required: true, schema: { type: string }, description: 'The connected Shopify, WordPress, Wix or Webflow account id.' }
         - { name: adAccountId, in: query, required: false, schema: { type: string }, description: 'Scopes the tag lookup on platforms whose tag ids live inside an ad account.' }
       responses:
         '200':
@@ -75281,16 +75336,17 @@ paths:
       x-resource-group: "ads"
       operationId: removeTrackingTagFromStore
       tags: ["Tracking Tags"]
-      x-platforms: ["meta", "tiktok", "google", "x", "openai", "linkedin", "pinterest", "shopify", "wordpress", "wix"]
-      summary: Remove from a Shopify store, WordPress site or Wix site
+      x-platforms: ["meta", "tiktok", "google", "x", "openai", "linkedin", "pinterest", "shopify", "wordpress", "wix", "webflow"]
+      summary: Remove from a Shopify, WordPress, Wix or Webflow site
       description: |
-        Removes a tracking tag from your Shopify store, WordPress site or Wix site, leaving other platforms' tags and hand-added pixel code in place.
+        Removes a tracking tag from your Shopify store or WordPress, Wix or Webflow site, leaving other platforms' tags and hand-added pixel code in place.
 
         Idempotent: nothing installed returns 200 with
         `installed: false`. If the store fires a different tag of the same platform, nothing is
         removed and the call answers 409 `invalid_resource_state`. Shopify: other platforms'
         tags stay; the web pixel itself is deleted once no tag remains. Wix works the same way,
-        and the site's Zernio script is disabled once no tag remains.
+        and the site's Zernio script is disabled once no tag remains. Webflow too: the Zernio
+        script leaves the site's custom code once no tag remains, live after the next publish.
 
         WordPress: deletes every widget Zernio created for this pixel and reports how many in
         `removed` (0 when nothing was installed). Pixel code added by hand is left alone.
@@ -75299,7 +75355,7 @@ paths:
       parameters:
         - { name: accountId, in: path, required: true, schema: { type: string } }
         - { name: tagId, in: path, required: true, schema: { type: string }, description: 'Tag id (`TrackingTag.id`).' }
-        - { name: storeAccountId, in: query, required: true, schema: { type: string }, description: 'The connected Shopify, WordPress or Wix account id.' }
+        - { name: storeAccountId, in: query, required: true, schema: { type: string }, description: 'The connected Shopify, WordPress, Wix or Webflow account id.' }
         - { name: adAccountId, in: query, required: false, schema: { type: string }, description: 'Scopes the tag lookup on platforms whose tag ids live inside an ad account.' }
       responses:
         '200':

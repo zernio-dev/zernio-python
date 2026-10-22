@@ -20691,6 +20691,41 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="Get Webflow OAuth URL",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def connect_get_webflow_connect_url(
+        profile_id: str, redirect_url: str | None = None
+    ) -> str:
+        """Get Webflow OAuth URL
+
+        Returns Webflow's consent URL for the Zernio Webflow app. The user picks
+        exactly one site there; Webflow then returns the browser to Zernio's
+        internal callback, which connects that site and redirects to
+        `redirect_url` (or the dashboard when omitted). Picking several sites
+        connects none and redirects with `error=webflow_pick_one_site`.
+        Connecting a site already connected with a site token upgrades the same
+        account. Only an OAuth connection can install tracking tags on the site
+        (`installTrackingTagOnStore`); blogs work with either. The token does not
+        expire.
+
+        Args:
+            profile_id: Your Zernio profile ID (get from /v1/profiles). (required)
+            redirect_url: Custom redirect after connection. Must be an absolute http(s) URL or custom app scheme such as `myapp://callback`; relative and unsafe URLs return 400."""
+        client = _get_client()
+        try:
+            response = client.connect.get_webflow_connect_url(
+                profile_id=profile_id, redirect_url=redirect_url
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="Connect Webflow with a site API token",
             readOnlyHint=False,
             destructiveHint=True,
@@ -34660,7 +34695,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
-            title="Install on a Shopify store, WordPress site or Wix site",
+            title="Install on a Shopify, WordPress, Wix or Webflow site",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
@@ -34674,9 +34709,9 @@ def register_generated_tools(mcp, _get_client):
         sidebar_id: str | None = None,
         verify_homepage: bool = True,
     ) -> str:
-        """Install on a Shopify store, WordPress site or Wix site
+        """Install on a Shopify, WordPress, Wix or Webflow site
 
-        Installs a pixel on a connected Shopify store, WordPress site or Wix site, so store visits and purchases are reported without editing the theme.
+        Installs a pixel on a connected Shopify store or WordPress, Wix or Webflow site, so store visits and purchases are reported without editing the theme.
 
         Puts the Meta pixel on a connected Shopify store's storefront and checkout through
         Zernio's Shopify web pixel (a Shopify app pixel, no theme edits). The store then sends
@@ -34688,16 +34723,14 @@ def register_generated_tools(mcp, _get_client):
         Idempotent: a store runs one Zernio web pixel holding one tag per platform, so calling
         it again updates the install, installing a different tag of the same platform replaces
         the previous one (reported in `replacedTagId`), and other platforms' tags are kept.
-        Events respect the store's customer privacy settings (marketing consent).
+        Events respect the store's customer privacy settings (marketing consent). ...
 
-        `accountId` is ...
-
-        Platforms: meta, tiktok, google, x, openai, linkedin, pinterest, whop, shopify, wordpress, wix
+        Platforms: meta, tiktok, google, x, openai, linkedin, pinterest, whop, shopify, wordpress, wix, webflow
 
         Args:
             account_id: (required)
             tag_id: Tag id (`TrackingTag.id`). (required)
-            store_account_id: The connected Shopify (`shopify`), WordPress (`wordpress`) or Wix (`wix`) account id. (required)
+            store_account_id: The connected Shopify (`shopify`), WordPress (`wordpress`), Wix (`wix`) or Webflow (`webflow`) account id. (required)
             ad_account_id: Scopes the tag lookup on platforms whose tag ids live inside an ad account. Ignored elsewhere.
             sidebar_id: WordPress only: widget area to use (see `install.preflight.sidebars` from GET). Defaults to a footer area.
             verify_homepage: WordPress only: fetch the homepage afterwards and report `homepageCheck`."""
@@ -34731,7 +34764,7 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Get store install status
 
-        Shows whether a tracking tag is live on your Shopify store, WordPress site or Wix site, and whether a WordPress install would be blocked.
+        Shows whether a tracking tag is installed on your Shopify store or WordPress, Wix or Webflow site, and whether a WordPress install would be blocked.
 
         Whether this tag is the one the Shopify store fires for its platform. `installedTagId`
         names the tag of that platform the store currently fires, which can be a different tag,
@@ -34744,12 +34777,12 @@ def register_generated_tools(mcp, _get_client):
         multisite admin who is not a Super Admin still strips the script, which POST detects.
         `tags` lists every Zernio widget on the site (all platforms, with `active`).
 
-        Platforms: meta, tiktok, google, x, openai, linkedin, pinterest, shopify, wordpress, wix
+        Platforms: meta, tiktok, google, x, openai, linkedin, pinterest, shopify, wordpress, wix, webflow
 
         Args:
             account_id: (required)
             tag_id: Tag id (`TrackingTag.id`). (required)
-            store_account_id: The connected Shopify, WordPress or Wix account id. (required)
+            store_account_id: The connected Shopify, WordPress, Wix or Webflow account id. (required)
             ad_account_id: Scopes the tag lookup on platforms whose tag ids live inside an ad account."""
         client = _get_client()
         try:
@@ -34765,7 +34798,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
-            title="Remove from a Shopify store, WordPress site or Wix site",
+            title="Remove from a Shopify, WordPress, Wix or Webflow site",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
@@ -34777,25 +34810,26 @@ def register_generated_tools(mcp, _get_client):
         store_account_id: str,
         ad_account_id: str | None = None,
     ) -> str:
-        """Remove from a Shopify store, WordPress site or Wix site
+        """Remove from a Shopify, WordPress, Wix or Webflow site
 
-        Removes a tracking tag from your Shopify store, WordPress site or Wix site, leaving other platforms' tags and hand-added pixel code in place.
+        Removes a tracking tag from your Shopify store or WordPress, Wix or Webflow site, leaving other platforms' tags and hand-added pixel code in place.
 
         Idempotent: nothing installed returns 200 with
         `installed: false`. If the store fires a different tag of the same platform, nothing is
         removed and the call answers 409 `invalid_resource_state`. Shopify: other platforms'
         tags stay; the web pixel itself is deleted once no tag remains. Wix works the same way,
-        and the site's Zernio script is disabled once no tag remains.
+        and the site's Zernio script is disabled once no tag remains. Webflow too: the Zernio
+        script leaves the site's custom code once no tag remains, live after the next publish.
 
         WordPress: deletes every widget Zernio created for this pixel and reports how many in
         `removed` (0 when nothing was installed). Pixel code added by hand is left alone.
 
-        Platforms: meta, tiktok, google, x, openai, linkedin, pinterest, shopify, wordpress, wix
+        Platforms: meta, tiktok, google, x, openai, linkedin, pinterest, shopify, wordpress, wix, webflow
 
         Args:
             account_id: (required)
             tag_id: Tag id (`TrackingTag.id`). (required)
-            store_account_id: The connected Shopify, WordPress or Wix account id. (required)
+            store_account_id: The connected Shopify, WordPress, Wix or Webflow account id. (required)
             ad_account_id: Scopes the tag lookup on platforms whose tag ids live inside an ad account."""
         client = _get_client()
         try:

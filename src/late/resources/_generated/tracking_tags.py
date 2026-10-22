@@ -212,7 +212,7 @@ class TrackingTagsResource:
         sidebar_id: str | None = None,
         verify_homepage: bool | None = True,
     ) -> dict[str, Any]:
-        """Install on a Shopify store, WordPress site or Wix site"""
+        """Install on a Shopify, WordPress, Wix or Webflow site"""
         payload = self._build_payload(
             store_account_id=store_account_id,
             ad_account_id=ad_account_id,
@@ -248,7 +248,7 @@ class TrackingTagsResource:
         *,
         ad_account_id: str | None = None,
     ) -> dict[str, Any]:
-        """Remove from a Shopify store, WordPress site or Wix site"""
+        """Remove from a Shopify, WordPress, Wix or Webflow site"""
         params = self._build_params(
             store_account_id=store_account_id,
             ad_account_id=ad_account_id,
@@ -557,7 +557,7 @@ class TrackingTagsResource:
         sidebar_id: str | None = None,
         verify_homepage: bool | None = True,
     ) -> dict[str, Any]:
-        """Install on a Shopify store, WordPress site or Wix site (async)"""
+        """Install on a Shopify, WordPress, Wix or Webflow site (async)"""
         payload = self._build_payload(
             store_account_id=store_account_id,
             ad_account_id=ad_account_id,
@@ -593,7 +593,7 @@ class TrackingTagsResource:
         *,
         ad_account_id: str | None = None,
     ) -> dict[str, Any]:
-        """Remove from a Shopify store, WordPress site or Wix site (async)"""
+        """Remove from a Shopify, WordPress, Wix or Webflow site (async)"""
         params = self._build_params(
             store_account_id=store_account_id,
             ad_account_id=ad_account_id,

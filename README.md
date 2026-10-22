@@ -366,6 +366,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `connect.get_shopify_connect_url()` | Get Shopify OAuth connect URL |
 | `connect.get_subreddit_rules()` | Get subreddit rules |
 | `connect.get_telegram_connect_status()` | Generate Telegram code |
+| `connect.get_webflow_connect_url()` | Get Webflow OAuth URL |
 | `connect.get_whats_app_sdk_config()` | Get Embedded Signup SDK config |
 | `connect.get_wix_connect_url()` | Get Wix site install URL |
 | `connect.get_word_press_auth_url()` | Get WordPress.com OAuth connect URL |
@@ -1269,8 +1270,8 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `tracking_tags.delete_tracking_tag_event()` | Delete a conversion event |
 | `tracking_tags.add_tracking_tag_shared_account()` | Share with an ad account |
 | `tracking_tags.assign_tracking_tag_user()` | Assign a user to a tag |
-| `tracking_tags.install_tracking_tag_on_store()` | Install on a Shopify store, WordPress site or Wix site |
-| `tracking_tags.remove_tracking_tag_from_store()` | Remove from a Shopify store, WordPress site or Wix site |
+| `tracking_tags.install_tracking_tag_on_store()` | Install on a Shopify, WordPress, Wix or Webflow site |
+| `tracking_tags.remove_tracking_tag_from_store()` | Remove from a Shopify, WordPress, Wix or Webflow site |
 | `tracking_tags.remove_tracking_tag_shared_account()` | Stop sharing with an account |
 | `tracking_tags.remove_tracking_tag_user()` | Remove a user from a tag |
 

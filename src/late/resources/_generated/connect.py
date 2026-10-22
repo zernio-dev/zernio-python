@@ -221,6 +221,16 @@ class ConnectResource:
         )
         return self._client._get("/v1/connect/wix", params=params)
 
+    def get_webflow_connect_url(
+        self, profile_id: str, *, redirect_url: str | None = None
+    ) -> dict[str, Any]:
+        """Get Webflow OAuth URL"""
+        params = self._build_params(
+            profile_id=profile_id,
+            redirect_url=redirect_url,
+        )
+        return self._client._get("/v1/connect/webflow", params=params)
+
     def connect_webflow_with_site_token(
         self, profile_id: str, site_token: str
     ) -> dict[str, Any]:
@@ -1154,6 +1164,16 @@ class ConnectResource:
             redirect_url=redirect_url,
         )
         return await self._client._aget("/v1/connect/wix", params=params)
+
+    async def aget_webflow_connect_url(
+        self, profile_id: str, *, redirect_url: str | None = None
+    ) -> dict[str, Any]:
+        """Get Webflow OAuth URL (async)"""
+        params = self._build_params(
+            profile_id=profile_id,
+            redirect_url=redirect_url,
+        )
+        return await self._client._aget("/v1/connect/webflow", params=params)
 
     async def aconnect_webflow_with_site_token(
         self, profile_id: str, site_token: str
