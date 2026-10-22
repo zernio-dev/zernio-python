@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.334.0"
+  version: "1.335.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -55615,6 +55615,7 @@ paths:
                         searchTerm: { type: [string, "null"] }
                         status: { type: [string, "null"], description: "ADDED / EXCLUDED / ADDED_EXCLUDED / NONE: whether the term is already a keyword or a negative." }
                         matchType: { type: [string, "null"], description: "How the term matched (BROAD, PHRASE, EXACT, NEAR_PHRASE, NEAR_EXACT)." }
+                        matchSource: { type: [string, "null"], description: "What matched the term: ADVERTISER_PROVIDED_KEYWORD (one of your keywords), AI_MAX_BROAD_MATCH or AI_MAX_KEYWORDLESS (AI Max expansion)." }
                         campaignId: { type: [string, "null"] }
                         campaignName: { type: [string, "null"] }
                         adGroupId: { type: [string, "null"] }
