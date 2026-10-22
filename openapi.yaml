@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.331.1"
+  version: "1.331.2"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -1004,6 +1004,10 @@ components:
         40002 `OVER_QPS_LIMIT`. Both return 429 `rate_limited` with
         `platform: tiktok` and `Retry-After: 10`. Space out bulk reads (for
         example one ad at a time per advertiser) instead of retrying at once.
+        The Smart+ review read (`GET /v1/ads/{adId}/tiktok-smart-plus-review`)
+        has a stricter quota of its own on TikTok: after an overage Zernio
+        answers 429 with `Retry-After: 60` for that advertiser and connection,
+        without calling TikTok, until the minute is over.
       headers:
         Retry-After:
           description: 'Seconds remaining until the upstream quota resets.'
@@ -60125,6 +60129,14 @@ paths:
         (creator content, authorized TikTok posts, Creative Library content) and lists each image of a
         carousel under its own material id, so those entries come back with the review verdict and
         null descriptive fields. TikTok returns no review timestamp; `readAt` is when Zernio read it.
+
+        TikTok's review endpoint has a strict quota of its own. One TikTok call reads the review of
+        every live Smart+ ad of the ad group (up to 100), and each review is cached for 10 minutes per
+        connection, advertiser and Smart+ ad, so sibling ads are answered from the cache and `readAt`
+        can be up to 10 minutes old. Read reviews when you need them instead of sweeping every ad on a
+        loop. When TikTok answers over quota, Zernio returns 429 with `Retry-After: 60` and answers
+        429 for that advertiser and connection without calling TikTok until the minute is over; cached
+        reviews are still served.
       security:
         - bearerAuth: []
       parameters:
@@ -60174,7 +60186,7 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { description: "Ad not found, it has no TikTok ad or ad group id yet, or no Smart+ ad of its ad group holds it. In the last case `details.listedSmartPlusAds` is how many Smart+ ads TikTok lists in the ad group, deleted ones included: 0 means the ad group lists none." }
         '422': { description: "The TikTok ad is not an Upgraded Smart+ ad (read it with GET /v1/ads/{adId}/review)" }
-        '429': { $ref: '#/components/responses/RateLimited' }
+        '429': { description: "Rate limited. TikTok's general limit answers `Retry-After: 10`; its stricter Smart+ review quota answers `Retry-After` of up to 60 seconds, the time left before Zernio calls TikTok's review endpoint again for this advertiser and connection.", $ref: '#/components/responses/RateLimited' }
         '501': { description: "Only supported on TikTok" }
 
   /v1/ads/{adId}/media:
