@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.331.4"
+  version: "1.332.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -1007,7 +1007,9 @@ components:
         The Smart+ review read (`GET /v1/ads/{adId}/tiktok-smart-plus-review`)
         has a stricter quota of its own on TikTok: after an overage Zernio
         answers 429 with `Retry-After: 60` for that advertiser and connection,
-        without calling TikTok, until the minute is over.
+        without calling TikTok, until the minute is over. The advertiser-wide
+        read (`GET /v1/ads/tiktok-smart-plus-reviews`) answers 200 with
+        `incomplete: true` instead.
       headers:
         Retry-After:
           description: 'Seconds remaining until the upstream quota resets.'
@@ -11245,6 +11247,32 @@ components:
       type: string
       enum: [approved, partially_approved, rejected, unknown]
       description: "TikTok `review_status` normalized: ALL_AVAILABLE -> approved, PART_AVAILABLE -> partially_approved (delivers in part of the targeted locations), UNAVAILABLE -> rejected, anything else or missing -> unknown (see `rawReviewStatus`)."
+    TikTokSmartPlusAdLevelReview:
+      type: [object, "null"]
+      description: "The ad-level verdict of a Smart+ ad (`smart_plus_ad_review_infos`). Null when TikTok returned none."
+      properties:
+        reviewStatus: { $ref: '#/components/schemas/TikTokSmartPlusReviewStatus' }
+        rawReviewStatus: { type: [string, "null"], description: "TikTok `review_status`, verbatim." }
+        rejectReasons: { type: array, items: { type: string }, description: "Every distinct reason across `rejections`." }
+        passedLocations: { type: array, items: { type: string }, description: "Location codes that passed the review." }
+        appealStatus: { type: [string, "null"], description: "TikTok `appeal_status`, verbatim: NOT_APPEALED, APPEALING, APPEAL_SUCCESSFUL, APPEAL_FAILED, APPEAL_DONE." }
+        appealRejectReasons: { type: array, items: { type: string } }
+        rejections: { type: array, items: { $ref: '#/components/schemas/TikTokReviewRejection' } }
+    TikTokSmartPlusMaterialReview:
+      type: object
+      description: "The verdict of one creative of a Smart+ ad (`material_review_infos`)."
+      properties:
+        adMaterialId: { type: string, description: "TikTok `ad_material_id` of the creative inside this ad." }
+        materialType: { type: [string, "null"], enum: [spark_post, video, carousel, catalog_carousel, null], description: "Null for a creative TikTok added on its own or a carousel image." }
+        tiktokItemId: { type: [string, "null"], description: "The TikTok post id when the creative is a Spark post." }
+        videoId: { type: [string, "null"] }
+        name: { type: [string, "null"] }
+        operationStatus: { type: [string, "null"], description: "TikTok `material_operation_status`: ENABLE or DISABLE." }
+        reviewStatus: { $ref: '#/components/schemas/TikTokSmartPlusReviewStatus' }
+        rawReviewStatus: { type: [string, "null"], description: "TikTok `review_status`, verbatim." }
+        rejectReasons: { type: array, items: { type: string }, description: "Every distinct reason across `rejections`. Empty when approved." }
+        passedLocations: { type: array, items: { type: string } }
+        rejections: { type: array, items: { $ref: '#/components/schemas/TikTokReviewRejection' } }
     TikTokReviewRejection:
       type: object
       description: "One TikTok `reject_info` entry."
@@ -60156,34 +60184,11 @@ paths:
                   platform: { type: string, enum: [tiktok] }
                   platformAdId: { type: string }
                   smartPlusAdId: { type: string, description: "The TikTok Smart+ ad whose review this is." }
-                  review:
-                    type: [object, "null"]
-                    description: "The ad-level verdict (`smart_plus_ad_review_infos`). Null when TikTok returned none."
-                    properties:
-                      reviewStatus: { $ref: '#/components/schemas/TikTokSmartPlusReviewStatus' }
-                      rawReviewStatus: { type: [string, "null"], description: "TikTok `review_status`, verbatim." }
-                      rejectReasons: { type: array, items: { type: string }, description: "Every distinct reason across `rejections`." }
-                      passedLocations: { type: array, items: { type: string }, description: "Location codes that passed the review." }
-                      appealStatus: { type: [string, "null"], description: "TikTok `appeal_status`, verbatim: NOT_APPEALED, APPEALING, APPEAL_SUCCESSFUL, APPEAL_FAILED, APPEAL_DONE." }
-                      appealRejectReasons: { type: array, items: { type: string } }
-                      rejections: { type: array, items: { $ref: '#/components/schemas/TikTokReviewRejection' } }
+                  review: { $ref: '#/components/schemas/TikTokSmartPlusAdLevelReview' }
                   materials:
                     type: array
                     description: "One entry per creative TikTok reviewed (`material_review_infos`)."
-                    items:
-                      type: object
-                      properties:
-                        adMaterialId: { type: string, description: "TikTok `ad_material_id` of the creative inside this ad." }
-                        materialType: { type: [string, "null"], enum: [spark_post, video, carousel, catalog_carousel, null], description: "Null for a creative TikTok added on its own or a carousel image." }
-                        tiktokItemId: { type: [string, "null"], description: "The TikTok post id when the creative is a Spark post." }
-                        videoId: { type: [string, "null"] }
-                        name: { type: [string, "null"] }
-                        operationStatus: { type: [string, "null"], description: "TikTok `material_operation_status`: ENABLE or DISABLE." }
-                        reviewStatus: { $ref: '#/components/schemas/TikTokSmartPlusReviewStatus' }
-                        rawReviewStatus: { type: [string, "null"], description: "TikTok `review_status`, verbatim." }
-                        rejectReasons: { type: array, items: { type: string }, description: "Every distinct reason across `rejections`. Empty when approved." }
-                        passedLocations: { type: array, items: { type: string } }
-                        rejections: { type: array, items: { $ref: '#/components/schemas/TikTokReviewRejection' } }
+                    items: { $ref: '#/components/schemas/TikTokSmartPlusMaterialReview' }
                   readAt: { type: string, format: date-time, description: "When the verdict was read from TikTok." }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
@@ -61547,9 +61552,92 @@ paths:
                             roas: { type: [number, "null"] }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: "accountId is not a TikTok or TikTok Ads connection (code feature_not_available)." }
         '404': { $ref: '#/components/responses/AccountUnavailable' }
         '409': { $ref: '#/components/responses/AccountConnectionRequired' }
+        '422': { description: "The TikTok connection has no TikTok Ads token: connect TikTok Ads first (code ads_connection_required)." }
         '502': { description: "TikTok's material report slices did not add up to the row count it declared, on two reads. Retry later." }
+  /v1/ads/tiktok-smart-plus-reviews:
+    get:
+      x-resource-group: "ads"
+      operationId: listTikTokSmartPlusReviews
+      tags: ["Ad Campaigns"]
+      x-platforms: ["tiktok"]
+      summary: Review status of every TikTok Smart+ ad of an advertiser
+      description: |-
+        Returns the review verdict of every Upgraded Smart+ ad of one TikTok advertiser, with each creative's verdict, in one paginated read. Use it to refresh reviews periodically: one call (plus its pages) per advertiser per refresh, instead of `GET /v1/ads/{adId}/tiktok-smart-plus-review` per ad.
+
+        Zernio lists the advertiser's Smart+ ads with `/smart_plus/ad/get/` (deleted ones only with `includeDeleted=true`; the listing is cached for 5 minutes) and reads `/smart_plus/ad/review_info/` for up to 100 Smart+ ads per call, across ad groups, one call after another. A full refresh of N Smart+ ads costs about `ceil(N / 100)` listing calls and `ceil(N / 100)` review calls on TikTok. Each review is cached for 10 minutes per connection, advertiser and Smart+ ad, shared with the single-ad read, so cached reviews are served without calling TikTok and `readAt` can be up to 10 minutes old.
+
+        TikTok's review endpoint has a strict quota of its own. When it is over quota (or Zernio is holding review reads for this advertiser and connection after an overage), Zernio stops calling TikTok and answers 200 with the reviews it has: `incomplete: true`, the Smart+ ads still to read in `pendingSmartPlusAdIds`, and `retryAfterSeconds` (also in the `Retry-After` header). Every Smart+ ad of the page is in `items`, `failedSmartPlusAds` or `pendingSmartPlusAdIds`. Wait `retryAfterSeconds` and read the same page again: only the pending ads reach TikTok.
+
+        A Smart+ ad whose review TikTok refuses on its own (for example one deleted on TikTok since the listing was cached) is returned in `failedSmartPlusAds` with TikTok's error, and the rest of the page is still read. Zernio finds it by splitting the refused batch in halves, at most 16 extra TikTok calls per page; ads still unresolved after that come back in `failedSmartPlusAds` with the batch error. A refusal of a single ad is remembered for 10 minutes. When both halves of a refused batch are refused with the same TikTok error (for example a permission error), the whole request fails with that error instead.
+
+        Items are sorted by `adGroupId`, then `smartPlusAdId`, so pages are stable. Read the pages of one advertiser one after another, not in parallel: parallel pages spend the review quota at the same time and come back incomplete.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: accountId, in: query, required: true, schema: { type: string }, description: "A tiktok or tiktokads account ID" }
+        - { name: adAccountId, in: query, required: true, schema: { type: string }, description: "TikTok advertiser ID" }
+        - { name: includeDeleted, in: query, required: false, schema: { type: boolean, default: false }, description: "Also return Smart+ ads deleted on TikTok (listed with `primary_status: STATUS_ALL`)." }
+        - { name: page, in: query, required: false, schema: { type: integer, minimum: 1, default: 1 } }
+        - { name: pageSize, in: query, required: false, schema: { type: integer, minimum: 1, maximum: 1000, default: 500 } }
+      responses:
+        '200':
+          description: "The reviews of one page of the advertiser's Smart+ ads. Check `incomplete`: when true, some reviews are still pending."
+          headers:
+            Retry-After:
+              description: "Present only when `incomplete` is true: seconds until Zernio calls TikTok's review endpoint again for this advertiser and connection."
+              schema: { type: integer }
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  adAccountId: { type: string }
+                  includeDeleted: { type: boolean }
+                  page: { type: integer }
+                  pageSize: { type: integer }
+                  totalPages: { type: integer }
+                  totalSmartPlusAds: { type: integer, description: "Smart+ ads of the advertiser across all pages." }
+                  items:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        smartPlusAdId: { type: string }
+                        adGroupId: { type: [string, "null"] }
+                        campaignId: { type: [string, "null"] }
+                        review: { $ref: '#/components/schemas/TikTokSmartPlusAdLevelReview' }
+                        materials:
+                          type: array
+                          description: "One entry per creative TikTok reviewed (`material_review_infos`)."
+                          items: { $ref: '#/components/schemas/TikTokSmartPlusMaterialReview' }
+                        readAt: { type: string, format: date-time, description: "When the verdict was read from TikTok." }
+                  failedSmartPlusAds:
+                    type: array
+                    description: "Smart+ ads of this page whose review TikTok refused on its own (for example an ad deleted on TikTok since the listing was cached). Zernio splits a refused batch in halves (at most 16 extra calls per page), so the other ads of the batch are still read; ads left unresolved by that cap carry the batch error. Empty when none."
+                    items:
+                      type: object
+                      properties:
+                        smartPlusAdId: { type: string }
+                        adGroupId: { type: [string, "null"] }
+                        campaignId: { type: [string, "null"] }
+                        error:
+                          type: object
+                          properties:
+                            tiktokCode: { type: [integer, "null"], description: "TikTok's error code, verbatim." }
+                            message: { type: string, description: "TikTok's error message, verbatim." }
+                  incomplete: { type: boolean, description: "True when some Smart+ ads of this page could not be read because of TikTok's review quota." }
+                  pendingSmartPlusAdIds: { type: array, items: { type: string }, description: "Smart+ ads of this page still to read. Empty when complete." }
+                  retryAfterSeconds: { type: [integer, "null"], description: "Seconds to wait before reading this page again. Null when complete." }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: "accountId is not a TikTok or TikTok Ads connection (code feature_not_available)." }
+        '404': { $ref: '#/components/responses/AccountUnavailable' }
+        '409': { $ref: '#/components/responses/AccountConnectionRequired' }
+        '422': { description: "The TikTok connection has no TikTok Ads token: connect TikTok Ads first (code ads_connection_required)." }
+        '429': { description: "TikTok's general rate limit hit while listing the Smart+ ads (`Retry-After: 10`).", $ref: '#/components/responses/RateLimited' }
   /v1/ads/instagram-accounts:
     get:
       x-resource-group: "ads"

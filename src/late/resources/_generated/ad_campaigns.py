@@ -1110,6 +1110,25 @@ class AdCampaignsResource:
         """Review status of each creative in a TikTok Smart+ ad"""
         return self._client._get(f"/v1/ads/{ad_id}/tiktok-smart-plus-review")
 
+    def list_tik_tok_smart_plus_reviews(
+        self,
+        account_id: str,
+        ad_account_id: str,
+        *,
+        include_deleted: bool | None = False,
+        page: int | None = 1,
+        page_size: int | None = 500,
+    ) -> dict[str, Any]:
+        """Review status of every TikTok Smart+ ad of an advertiser"""
+        params = self._build_params(
+            account_id=account_id,
+            ad_account_id=ad_account_id,
+            include_deleted=include_deleted,
+            page=page,
+            page_size=page_size,
+        )
+        return self._client._get("/v1/ads/tiktok-smart-plus-reviews", params=params)
+
     def list_campaign_negative_keyword_lists(
         self, campaign_id: str, *, platform: str | None = None
     ) -> dict[str, Any]:
@@ -2711,6 +2730,27 @@ class AdCampaignsResource:
     async def aget_tik_tok_smart_plus_ad_review(self, ad_id: str) -> dict[str, Any]:
         """Review status of each creative in a TikTok Smart+ ad (async)"""
         return await self._client._aget(f"/v1/ads/{ad_id}/tiktok-smart-plus-review")
+
+    async def alist_tik_tok_smart_plus_reviews(
+        self,
+        account_id: str,
+        ad_account_id: str,
+        *,
+        include_deleted: bool | None = False,
+        page: int | None = 1,
+        page_size: int | None = 500,
+    ) -> dict[str, Any]:
+        """Review status of every TikTok Smart+ ad of an advertiser (async)"""
+        params = self._build_params(
+            account_id=account_id,
+            ad_account_id=ad_account_id,
+            include_deleted=include_deleted,
+            page=page,
+            page_size=page_size,
+        )
+        return await self._client._aget(
+            "/v1/ads/tiktok-smart-plus-reviews", params=params
+        )
 
     async def alist_campaign_negative_keyword_lists(
         self, campaign_id: str, *, platform: str | None = None

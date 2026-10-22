@@ -538,6 +538,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `ad_campaigns.list_google_asset_groups()` | List Performance Max asset groups |
 | `ad_campaigns.list_google_recommendations()` | List Google Ads recommendations |
 | `ad_campaigns.list_shared_budgets()` | List shared budgets |
+| `ad_campaigns.list_tik_tok_smart_plus_reviews()` | Review status of every TikTok Smart+ ad of an advertiser |
 | `ad_campaigns.bulk_update_ad_campaign_status()` | Pause or resume many campaigns |
 | `ad_campaigns.create_ad_campaign()` | Create a standalone campaign |
 | `ad_campaigns.create_ad_set()` | Create a standalone ad group |

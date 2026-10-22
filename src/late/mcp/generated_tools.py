@@ -8379,6 +8379,50 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="Review status of every TikTok Smart+ ad of an advertiser",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def ad_campaigns_list_tik_tok_smart_plus_reviews(
+        account_id: str,
+        ad_account_id: str,
+        include_deleted: bool = False,
+        page: int = 1,
+        page_size: int = 500,
+    ) -> str:
+        """Review status of every TikTok Smart+ ad of an advertiser
+
+        Returns the review verdict of every Upgraded Smart+ ad of one TikTok advertiser, with each creative's verdict, in one paginated read. Use it to refresh reviews periodically: one call (plus its pages) per advertiser per refresh, instead of `GET /v1/ads/{adId}/tiktok-smart-plus-review` per ad.
+
+        Zernio lists the advertiser's Smart+ ads with `/smart_plus/ad/get/` (deleted ones only with `includeDeleted=true`; the listing is cached for 5 minutes) and reads `/smart_plus/ad/review_info/` for up to 100 Smart+ ads per call, across ad groups, one call after another. A full refresh of N Smart+ ads costs about `ceil(N / 100)` listing calls and `ceil(N / 100)` review calls on TikTok. Each review is cached for 10 minutes per connection, advertiser and Smart+ ad, shared with the single-ad read, so cached reviews are served without calling TikTok and `readAt` can be up to 10 minutes old.
+
+        TikTok's review endpoint has a strict quota of its own. When it is over quota (or Zernio is holding review reads ...
+
+        Platforms: tiktok
+
+        Args:
+            account_id: A tiktok or tiktokads account ID (required)
+            ad_account_id: TikTok advertiser ID (required)
+            include_deleted: Also return Smart+ ads deleted on TikTok (listed with `primary_status: STATUS_ALL`).
+            page
+            page_size"""
+        client = _get_client()
+        try:
+            response = client.ad_campaigns.list_tik_tok_smart_plus_reviews(
+                account_id=account_id,
+                ad_account_id=ad_account_id,
+                include_deleted=include_deleted,
+                page=page,
+                page_size=page_size,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="List campaign negative lists",
             readOnlyHint=True,
             destructiveHint=False,
