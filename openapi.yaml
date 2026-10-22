@@ -14542,6 +14542,51 @@ components:
         amount: { $ref: '#/components/schemas/CommerceMoney', description: 'Before discounts.' }
         discountTotal: { $ref: '#/components/schemas/CommerceMoney' }
         taxLines: { type: array, items: { $ref: '#/components/schemas/CommerceTaxLine' } }
+    CommerceOrderVisit:
+      type: object
+      description: 'A store session that led to the order.'
+      properties:
+        occurredAt: { type: [string, "null"], format: date-time, description: 'Null on WooCommerce, which records the session start without a timezone.' }
+        landingUrl: { type: [string, "null"], description: 'The first page of the session, with its query string.' }
+        referrerUrl: { type: [string, "null"] }
+        source: { type: [string, "null"], description: 'Where the visit came from, as the platform names it.', example: instagram }
+        sourceType:
+          type: [string, "null"]
+          description: 'Shopify marketing tactic (e.g. SOCIAL, AD, SEARCH) or WooCommerce source type (utm, organic, referral, typein, admin).'
+        utm:
+          type: [object, "null"]
+          description: 'Null when the landing URL carried no UTM parameters.'
+          properties:
+            source: { type: [string, "null"] }
+            medium: { type: [string, "null"] }
+            campaign: { type: [string, "null"] }
+            term: { type: [string, "null"] }
+            content: { type: [string, "null"] }
+    CommerceOrderAttribution:
+      type: object
+      description: 'Where the order came from. Shopify reads it from the customer journey, WooCommerce from its order attribution (WooCommerce 8.5+ with the feature on, orders placed after it was turned on).'
+      properties:
+        ready:
+          type: boolean
+          description: 'False while Shopify is still attributing a new order. No webhook fires when it becomes true, so read the order again later. Always true on WooCommerce.'
+        firstVisit:
+          description: 'The first session before the order. Shopify only; WooCommerce records the last session alone.'
+          oneOf:
+            - $ref: '#/components/schemas/CommerceOrderVisit'
+            - type: "null"
+        lastVisit:
+          description: 'The last session before the order.'
+          oneOf:
+            - $ref: '#/components/schemas/CommerceOrderVisit'
+            - type: "null"
+        customAttributes:
+          type: array
+          description: 'Shopify cart and note attributes, or WooCommerce public order meta.'
+          items:
+            type: object
+            properties:
+              key: { type: string }
+              value: { type: string }
     CommerceOrder:
       type: object
       description: 'An order with what an invoice needs. Every amount is in `currency`, the store currency.'
@@ -14592,6 +14637,7 @@ components:
             - $ref: '#/components/schemas/CommerceAddress'
             - type: "null"
         buyerNote: { type: [string, "null"] }
+        attribution: { $ref: '#/components/schemas/CommerceOrderAttribution' }
         lineItems:
           type: array
           items:
