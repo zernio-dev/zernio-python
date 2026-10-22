@@ -26607,11 +26607,11 @@ paths:
               required: [code, state, profileId]
               properties:
                 code: { type: string }
-                state: { type: string }
+                state: { type: string, description: 'For twitter, the state X returned on the redirect (the same as the state query parameter of authUrl, ending in its -cv_ PKCE verifier suffix), signed and under 1 hour old. The state field of the GET JSON response does not carry the verifier.' }
                 profileId: { type: string }
       responses:
         '200': { description: Account connected }
-        '400': { description: 'Invalid params, or the platform requires choosing a destination (code: platform_requires_destination)' }
+        '400': { description: 'Invalid params, the platform requires choosing a destination (code: platform_requires_destination), or an X state without the verifier or with an invalid or expired signature (code: invalid_field_value, param: state)' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '402': { $ref: '#/components/responses/PaymentRequired' }
         '403': { description: 'No access to the profile, or BYOK required for AppSumo X' }
