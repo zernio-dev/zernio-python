@@ -27322,8 +27322,15 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """List mentions
 
-        Returns mentions of your connected organization accounts, delivered via platform webhooks.
-        Currently supports LinkedIn organization mentions.
+        Returns mentions of your connected accounts from the last 7 days.
+
+        - **LinkedIn**: organization mentions, delivered by webhooks and a background pull.
+        - **Instagram**: comment mentions (someone tags the account in a comment) and caption mentions
+          (someone tags it in their media caption), delivered by Meta webhooks. Accounts connected through
+          Instagram Login receive comment mentions only. Accounts connected through Facebook Login receive
+          both; their text is read from Instagram in the background after the first request, so `content`
+          can be empty on the first read. Pass `mediaId` and `commentId` to `POST /v1/inbox/mentions/reply`
+          to answer one.
 
         Requires Inbox addon.
 
@@ -27370,10 +27377,8 @@ def register_generated_tools(mcp, _get_client):
 
         Story mentions are not supported by Instagram's API.
 
-        `GET /v1/inbox/mentions` currently returns LinkedIn mentions only and does
-        not surface Instagram mentions. Source `mediaId` and `commentId` from Instagram's
-        `comments` webhook, which is where mention notifications are delivered for accounts
-        connected through Instagram Login.
+        `GET /v1/inbox/mentions` returns Instagram mentions with the `mediaId` and `commentId`
+        to pass here.
 
         Args:
             account_id: The Instagram account ID (required)

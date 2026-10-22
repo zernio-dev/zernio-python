@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.330.1"
+  version: "1.331.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -42002,8 +42002,15 @@ paths:
       operationId: listInboxMentions
       summary: List mentions
       description: |
-        Returns mentions of your connected organization accounts, delivered via platform webhooks.
-        Currently supports LinkedIn organization mentions.
+        Returns mentions of your connected accounts from the last 7 days.
+
+        - **LinkedIn**: organization mentions, delivered by webhooks and a background pull.
+        - **Instagram**: comment mentions (someone tags the account in a comment) and caption mentions
+          (someone tags it in their media caption), delivered by Meta webhooks. Accounts connected through
+          Instagram Login receive comment mentions only. Accounts connected through Facebook Login receive
+          both; their text is read from Instagram in the background after the first request, so `content`
+          can be empty on the first read. Pass `mediaId` and `commentId` to `POST /v1/inbox/mentions/reply`
+          to answer one.
 
         Requires Inbox addon.
       tags: [Mentions]
@@ -42046,32 +42053,42 @@ paths:
                           description: Mention document ID
                         platform:
                           type: string
-                          enum: [linkedin]
+                          enum: [linkedin, instagram]
+                        type:
+                          type: [string, "null"]
+                          enum: [caption, comment, null]
+                          description: 'Instagram only: `caption` when the account was tagged in a media caption, `comment` when it was tagged in a comment. Null for LinkedIn.'
+                        mediaId:
+                          type: [string, "null"]
+                          description: 'Instagram only: ID of the media the account was mentioned in (or under). Null for LinkedIn.'
+                        commentId:
+                          type: [string, "null"]
+                          description: 'Instagram only: ID of the comment that mentioned the account. Null for caption mentions and LinkedIn.'
                         accountId:
                           type: string
                         accountUsername:
                           type: string
                         content:
                           type: string
-                          description: Text of the post that mentioned you
+                          description: 'Text that mentioned you: the post text on LinkedIn, the caption or comment text on Instagram. Empty until it has been read.'
                         permalink:
                           type: [string, "null"]
-                          description: URL to the source post on LinkedIn
+                          description: URL to the source post on LinkedIn. Null on Instagram.
                         authorUrn:
                           type: [string, "null"]
-                          description: LinkedIn URN of the person who mentioned you
+                          description: 'LinkedIn URN of the person who mentioned you, or the Instagram-scoped ID of the commenter on an Instagram comment mention.'
                         authorName:
                           type: [string, "null"]
                           description: Display name of the author, resolved from authorUrn. Null when LinkedIn does not allow resolving the profile.
                         authorUsername:
                           type: [string, "null"]
-                          description: LinkedIn vanity name of the author (the slug in their profile URL)
+                          description: 'LinkedIn vanity name of the author (the slug in their profile URL), or the Instagram username of the commenter or media owner.'
                         authorPicture:
                           type: [string, "null"]
                           description: Profile picture URL of the author. LinkedIn CDN URLs expire after some time, so fetch promptly rather than storing long-term.
                         organizationalEntity:
                           type: string
-                          description: URN of the organization that was mentioned
+                          description: 'URN of the LinkedIn organization that was mentioned, or the Instagram user ID of the mentioned account.'
                         publishedAt:
                           type: string
                           format: date-time
@@ -42113,10 +42130,8 @@ paths:
 
         Story mentions are not supported by Instagram's API.
 
-        `GET /v1/inbox/mentions` currently returns LinkedIn mentions only and does
-        not surface Instagram mentions. Source `mediaId` and `commentId` from Instagram's
-        `comments` webhook, which is where mention notifications are delivered for accounts
-        connected through Instagram Login.
+        `GET /v1/inbox/mentions` returns Instagram mentions with the `mediaId` and `commentId`
+        to pass here.
       tags: [Mentions]
       security: [{ bearerAuth: [] }]
       requestBody:
