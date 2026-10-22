@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.331.2"
+  version: "1.331.3"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -61489,7 +61489,7 @@ paths:
       tags: ["Ad Insights"]
       x-platforms: ["tiktok"]
       summary: Per-creative performance inside TikTok Smart+ ads
-      description: "Breaks a Smart+ ad (or ad group) down by creative material, one row per Spark post, video or image, from TikTok's Smart+ material report. For a Spark post `tiktokItemId` is the TikTok post id. Conversion metrics are TikTok web (pixel) events. `purchases`, `purchaseValue` and `roas` come from Complete Payment, or from Place an Order (legacy ON_WEB_ORDER pixels) when that reports more; the two are never summed. TikTok allows two dimensions per report, so rows are keyed by the Smart+ ad (`level=ad`) or by the ad group (`level=adGroup`), not both. Metrics TikTok returns empty come back as null."
+      description: "Breaks a Smart+ ad (or ad group) down by creative material, one row per Spark post, video or image, from TikTok's Smart+ material report. For a Spark post `tiktokItemId` is the TikTok post id. Conversion metrics are TikTok web (pixel) events. `purchases`, `purchaseValue` and `roas` come from Complete Payment, or from Place an Order (legacy ON_WEB_ORDER pixels) when that reports more; the two are never summed. TikTok allows two dimensions per report, so rows are keyed by the Smart+ ad (`level=ad`) or by the ad group (`level=adGroup`), not both. A row is identified by `smartPlusAdId` + `materialId` at `level=ad` and by `adGroupId` + `materialId` at `level=adGroup`; each appears once across all pages. Rows are sorted by `spend` descending, then the Smart+ ad or ad group id, then `materialId`, and the full result is cached for 10 minutes per account, advertiser and query, so pages read within that window are consistent and `totalRows` counts distinct rows. When TikTok's slices do not add up to the row count it declares on two reads, the call answers 502 instead of a short result. Metrics TikTok returns empty come back as null."
       security:
         - bearerAuth: []
       parameters:
@@ -61546,6 +61546,7 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/AccountUnavailable' }
         '409': { $ref: '#/components/responses/AccountConnectionRequired' }
+        '502': { description: "TikTok's material report slices did not add up to the row count it declared, on two reads. Retry later." }
   /v1/ads/instagram-accounts:
     get:
       x-resource-group: "ads"
