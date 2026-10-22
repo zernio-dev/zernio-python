@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.326.0"
+  version: "1.327.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -7833,7 +7833,7 @@ components:
     ApiChangelogEntry:
       type: object
       description: One API changelog entry, as shown on https://docs.zernio.com/changelog.
-      required: [id, type, impact, platforms, message, publishedAt, specVersion, url, changes]
+      required: [id, type, impact, platforms, title, summary, message, publishedAt, specVersion, url, changes]
       properties:
         id: { type: string, description: 'Stable entry id; the same entry is never published twice.' }
         type:
@@ -7849,7 +7849,9 @@ components:
           items: { type: string }
           description: 'Platform and area slugs the entry is about: a platform (`instagram`, `facebook`, `threads`, `tiktok`, `x`, `linkedin`, `youtube`, `pinterest`, `reddit`, `bluesky`, `telegram`, `snapchat`, `whatsapp`, `discord`, `slack`, `google-business`, `imessage`), an ads platform (`meta-ads`, `google-ads`, `tiktok-ads`, `linkedin-ads`, `pinterest-ads`, `x-ads`) or an area (`ads`, `publishing`, `inbox`, `telephony`, `commerce`, `analytics`, `webhooks`, `general`). Filter with the `platform` query parameter.'
           example: [whatsapp, inbox]
-        message: { type: string, description: 'The announcement, in Markdown.' }
+        title: { type: [string, "null"], description: 'The change in a few words, for example `Delete inbox conversations`. Null on older entries.' }
+        summary: { type: [string, "null"], description: 'One or two plain sentences on what changed and why it matters. Null when `title` is.' }
+        message: { type: string, description: 'The details in Markdown: endpoints, fields and how to use them.' }
         publishedAt: { type: string, format: date-time }
         specVersion: { type: [string, "null"], description: 'The `info.version` of the OpenAPI spec the entry describes, when known.' }
         url: { type: string, format: uri, description: 'The entry on the docs changelog.' }
