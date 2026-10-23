@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.346.0"
+  version: "1.347.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -33612,9 +33612,9 @@ paths:
         Important: The mentions array field in POST /v1/posts is stored for reference only and does NOT trigger @mentions on LinkedIn. You must embed the mention format directly in the content text.
 
         Requirements:
-        - Person mentions require the LinkedIn account to be admin of at least one organization: both endpoints that resolve a profile URL to a member URN take an organization you administer. Organization mentions (e.g. @Microsoft) have no such requirement.
+        - Resolving a profile URL to a person mention requires the LinkedIn account to be admin of at least one organization: both endpoints that resolve a profile URL to a member URN take an organization you administer. A resolved person mention publishes from any account. Organization mentions (e.g. @Microsoft) have no such requirement.
         - The two are not scoped alike. peopleTypeahead?q=organizationFollowers only returns that organization's followers; vanityUrl?q=vanityUrlAsOrganization does not, and its resolvable set is opaque. A 404 here does not mean the person is unknown to you or unknown to LinkedIn: a live public profile can 404 with no reason given.
-        - For person mentions to be clickable, the displayName parameter must exactly match the name shown on their LinkedIn profile.
+        - displayName is optional: the endpoint looks up the person's real name itself. LinkedIn renders a person mention as a link when the mention text is the person's first name, last name or full name (case-sensitive).
         - Person mentions DO work when published from personal profiles (the URN only needs to be valid). The limitation is only in the resolution step (URL to URN), not in publishing.
       parameters:
         - name: accountId
@@ -33643,7 +33643,7 @@ paths:
         - name: displayName
           in: query
           required: false
-          description: Exact display name as shown on LinkedIn. Required for person mentions to be clickable. Optional for org mentions.
+          description: Optional override for a person's mention text. When omitted, the real name is resolved from LinkedIn. Ignored for org mentions, which always use the organization's LinkedIn name.
           schema: { type: string }
           examples:
             personName:
@@ -33683,24 +33683,24 @@ paths:
                     example: "microsoft"
                   warning:
                     type: string
-                    description: Warning about clickable mentions (only present for person mentions if displayName was not provided)
-                    example: "For clickable person mentions, provide the displayName parameter with the exact name as shown on their LinkedIn profile."
+                    description: Only present for person mentions when displayName was not provided and the real name could not be resolved from LinkedIn
+                    example: "Could not resolve real name from LinkedIn. Display name was derived from the vanity URL and may not match the profile exactly."
               examples:
                 personWithDisplayName:
-                  summary: Person mention with displayName (recommended)
+                  summary: Person mention with a displayName override (must match the person's first name, last name or full name exactly, or the mention is not a link)
                   value:
                     urn: "urn:li:person:4qj5ox-agD"
                     type: "person"
                     displayName: "Miquel Palet"
                     mentionFormat: "@[Miquel Palet](urn:li:person:4qj5ox-agD)"
                 personWithoutDisplayName:
-                  summary: Person mention without displayName (may not be clickable)
+                  summary: Person mention whose real name could not be resolved (name derived from the vanity URL)
                   value:
                     urn: "urn:li:person:4qj5ox-agD"
                     type: "person"
                     displayName: "Miquelpalet"
                     mentionFormat: "@[Miquelpalet](urn:li:person:4qj5ox-agD)"
-                    warning: "For clickable person mentions, provide the displayName parameter with the exact name as shown on their LinkedIn profile."
+                    warning: "Could not resolve real name from LinkedIn. Display name was derived from the vanity URL and may not match the profile exactly."
                 organization:
                   summary: Org mention
                   value:
@@ -33713,40 +33713,43 @@ paths:
           description: Invalid request or no organization found (for person mentions)
           content:
             application/json:
-              schema:
-                type: object
-                properties:
-                  error: { type: string }
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
               examples:
                 missingUrl:
-                  value: { error: "url parameter is required" }
+                  value: { error: "url parameter is required", type: invalid_request_error, code: missing_required_field, param: url }
                 noOrgForPersonMention:
-                  value: { error: "No organization found. You need to be an admin of a LinkedIn organization to use person mentions. Organization mentions work without this requirement." }
-        '401': { $ref: '#/components/responses/Unauthorized' }
+                  value: { error: "No organization found. You need to be an admin of a LinkedIn organization to use person mentions. Organization mentions work without this requirement.", type: invalid_request_error, code: linkedin_mention_no_organization }
+        '401':
+          description: 'Missing or invalid API key (`missing_credentials` or `invalid_credentials`), or LinkedIn revoked or expired the account''s token (`reconnect_required`, reconnect the account).'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+              examples:
+                missingCredentials:
+                  value: { error: 'Missing API key. Send it as Authorization: Bearer <your API key>.', type: authentication_error, code: missing_credentials, docUrl: https://docs.zernio.com }
+                reconnectRequired:
+                  value: { error: 'Token expired or revoked for LinkedIn. Please reconnect your account.', type: permission_error, code: reconnect_required, platform: linkedin }
         '403':
           description: The account holds no organization role that can resolve person mentions
           content:
             application/json:
-              schema:
-                type: object
-                properties:
-                  error: { type: string }
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
               examples:
                 noPostingRole:
-                  value: { error: "LinkedIn blocked this lookup. Your account has no company page where it can create posts, which LinkedIn requires to resolve a person's profile URL. Ask for an Admin or Content Admin role on one of your pages, or mention a company instead." }
+                  value: { error: "LinkedIn blocked this lookup. Your account has no company page where it can create posts, which LinkedIn requires to resolve a person's profile URL. Ask for an Admin or Content Admin role on one of your pages, or mention a company instead.", type: permission_error, code: linkedin_mention_lookup_forbidden }
         '404':
-          description: Person or organization not found
+          description: Account, person or organization not found
           content:
             application/json:
-              schema:
-                type: object
-                properties:
-                  error: { type: string }
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
               examples:
                 memberNotFound:
-                  value: { error: "LinkedIn couldn't resolve this profile. Not every profile is resolvable through LinkedIn's API, even public ones, and LinkedIn gives no reason. Check the profile address is current (people can change theirs), or mention a company instead." }
+                  value: { error: "LinkedIn couldn't resolve this profile. Not every profile is resolvable through LinkedIn's API, even public ones, and LinkedIn gives no reason. Check the profile address is current (people can change theirs), or mention a company instead.", type: not_found, code: linkedin_person_not_resolvable }
                 orgNotFound:
-                  value: { error: "Organization not found. Check the LinkedIn company URL is correct." }
+                  value: { error: "Organization not found. Check the LinkedIn company URL is correct.", type: not_found, code: linkedin_organization_not_found }
+                accountNotFound:
+                  value: { error: "LinkedIn account not found", type: not_found, code: account_not_found }
+        '429': { $ref: '#/components/responses/RateLimited' }
 
   /v1/accounts/{accountId}/instagram/stories:
     get:

@@ -2034,12 +2034,12 @@ def register_generated_tools(mcp, _get_client):
         Important: The mentions array field in POST /v1/posts is stored for reference only and does NOT trigger @mentions on LinkedIn. You must embed the mention format directly in the content text.
 
         Requirements:
-        - Person mentions require the LinkedIn account to be admin of at least one organization: both endpoints that resolve a profile URL to a member URN take an organization you administer. ...
+        - Resolving a profile URL to a person mention requires the LinkedIn account to be admin of at least one organization: both endpoints that resolve a profile URL to a member URN take an ...
 
         Args:
             account_id: The LinkedIn account ID (required)
             url: LinkedIn profile URL, company URL, or vanity name. (required)
-            display_name: Exact display name as shown on LinkedIn. Required for person mentions to be clickable. Optional for org mentions."""
+            display_name: Optional override for a person's mention text. When omitted, the real name is resolved from LinkedIn. Ignored for org mentions, which always use the organization's LinkedIn name."""
         client = _get_client()
         try:
             response = client.accounts.get_linked_in_mentions(
