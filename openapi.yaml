@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.345.0"
+  version: "1.346.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -62139,7 +62139,7 @@ paths:
       tags: ["Ad Insights"]
       x-platforms: ["tiktok"]
       summary: Per-creative performance inside TikTok Smart+ ads
-      description: "Breaks a Smart+ ad (or ad group) down by creative material, one row per Spark post, video or image, from TikTok's Smart+ material report. For a Spark post `tiktokItemId` is the TikTok post id. Conversion metrics are TikTok web (pixel) events. `purchases`, `purchaseValue` and `roas` come from Complete Payment, or from Place an Order (legacy ON_WEB_ORDER pixels) when that reports more; the two are never summed. TikTok allows two dimensions per report, so rows are keyed by the Smart+ ad (`level=ad`) or by the ad group (`level=adGroup`), not both. A row is identified by `smartPlusAdId` + `materialId` at `level=ad` and by `adGroupId` + `materialId` at `level=adGroup`; each appears once across all pages. Rows are sorted by `spend` descending, then the Smart+ ad or ad group id, then `materialId`, and the full result is cached for 10 minutes per account, advertiser and query, so pages read within that window are consistent and `totalRows` counts distinct rows. The result can hold more rows than TikTok's unfiltered report declares, because the per-ad reads also return listed Smart+ ads that report leaves out. When the slices come back with fewer rows than TikTok declares on two reads, the call answers 502 instead of a short result. Metrics TikTok returns empty come back as null."
+      description: "Breaks a Smart+ ad (or ad group) down by creative material, one row per Spark post, video or image, from TikTok's Smart+ material report. For a Spark post `tiktokItemId` is the TikTok post id. Conversion metrics are TikTok web (pixel) events. `purchases`, `purchaseValue` and `roas` come from Complete Payment, or from Place an Order (legacy ON_WEB_ORDER pixels) when that reports more; the two are never summed. TikTok allows two dimensions per report, so rows are keyed by the Smart+ ad (`level=ad`) or by the ad group (`level=adGroup`), not both. A row is identified by `smartPlusAdId` + `materialId` at `level=ad` and by `adGroupId` + `materialId` at `level=adGroup`; each appears once across all pages. Rows are sorted by `spend` descending, then the Smart+ ad or ad group id, then `materialId`, and the full result is cached for 10 minutes per account, advertiser and query, so pages read within that window are consistent and `totalRows` counts distinct rows. When the result spans more than one TikTok page it is read per Smart+ ad (or ad group) listed on the advertiser, every status included, and those reads can return more rows than TikTok's unfiltered report declares, so `totalRows` can be larger than that count; when the unfiltered report fits one page (100 rows or fewer) it is served as is. Each TikTok read is checked against the row count it declares itself, and a short read is retried once. A shortfall of at most 2 rows (or 1% of the rows, whichever is more) is served with `missingRows` set to that number; a larger one answers 502 instead of a short result. Metrics TikTok returns empty come back as null."
       security:
         - bearerAuth: []
       parameters:
@@ -62168,6 +62168,7 @@ paths:
                   pageSize: { type: integer }
                   totalRows: { type: integer }
                   totalPages: { type: integer }
+                  missingRows: { type: integer, description: "Rows TikTok declared that a read and its retry could not return. 0 when the result is complete." }
                   rows:
                     type: array
                     items:
@@ -62198,7 +62199,7 @@ paths:
         '404': { $ref: '#/components/responses/AccountUnavailable' }
         '409': { $ref: '#/components/responses/AccountConnectionRequired' }
         '422': { description: "The TikTok connection has no TikTok Ads token: connect TikTok Ads first (code ads_connection_required)." }
-        '502': { description: "TikTok's material report slices came back with fewer rows than the row count it declared, on two reads. Retry later." }
+        '502': { description: "More rows than the tolerance (2, or 1% of the rows) were missing from TikTok's material report after a retry (`details` carries `totalNumber`, `distinctRows` and `missingRows`), or TikTok's Smart+ ad listing returned fewer ads than it declared (`details` carries `declaredAds`, `listedAds` and `listingTruncated`; with `listingTruncated` the advertiser has more than 2,000 Smart+ ads, so pass `smartPlusAdIds` or `adGroupIds`). Retry later." }
   /v1/ads/tiktok-smart-plus-reviews:
     get:
       x-resource-group: "ads"
