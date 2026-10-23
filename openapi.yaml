@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.339.0"
+  version: "1.339.1"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -12010,7 +12010,8 @@ components:
             type: object
             properties:
               date: { type: string, format: date }
-              spend: { type: number, description: "Native currency units (matches /ads/tree convention)." }
+              currency: { type: [string, "null"], description: "ISO 4217 currency of every money field in this row (spend, cpc, cpm, costPerConversion, purchaseValue, actionValues). An account whose ad accounts bill in different currencies gets one row per currency for that day, never a sum across currencies. Null when the currency of the ad accounts in this row is unknown. Added 2026-10-23." }
+              spend: { type: number, description: "Native currency units (matches /ads/tree convention), in `currency`." }
               impressions: { type: integer }
               reach: { type: integer, description: "Reach summed across the account's ads for this single day. A person seen by two ads the same day counts twice, and reach is de-duplicated per day only: do NOT sum it across days (people reached on multiple days would be double-counted)." }
               clicks: { type: integer }
@@ -58904,7 +58905,8 @@ paths:
         Returns an ads account's spend, results and other metrics day by day, ready for a daily performance chart.
 
         Returns daily aggregate metrics across all ads in a SocialAccount as a single
-        time series, one row per calendar day in the requested range. Use this for
+        time series, one row per calendar day and currency in the requested range (one row
+        per day unless the account's ad accounts bill in different currencies). Use this for
         dashboards that draw a daily-spend or daily-conversions chart, instead of
         calling `/v1/ads/tree` once per day.
 

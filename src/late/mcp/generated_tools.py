@@ -7731,7 +7731,8 @@ def register_generated_tools(mcp, _get_client):
         Returns an ads account's spend, results and other metrics day by day, ready for a daily performance chart.
 
         Returns daily aggregate metrics across all ads in a SocialAccount as a single
-        time series, one row per calendar day in the requested range. Use this for
+        time series, one row per calendar day and currency in the requested range (one row
+        per day unless the account's ad accounts bill in different currencies). Use this for
         dashboards that draw a daily-spend or daily-conversions chart, instead of
         calling `/v1/ads/tree` once per day.
 
@@ -7743,8 +7744,7 @@ def register_generated_tools(mcp, _get_client):
 
         History: when an ad account connects, Zernio imports its last 90 days of metrics, so `rows`
         hold no data for days before that. When `accountId` or `adAccountId` resolves to a Meta ad
-        account, a range reaching further back answers `202` with `backfillPending: true` and the
-        covered part while the older days (up to 730 days back) ...
+        account, a range reaching further back answers `202` ...
 
         Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit
 
