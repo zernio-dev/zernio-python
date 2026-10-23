@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.338.1"
+  version: "1.338.2"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -12321,14 +12321,14 @@ components:
         uniqueCtr: { type: number, description: "Derived `uniqueClicks / impressions * 100` (NOT Meta's reach-based unique_ctr). Inherits the non-additivity caveat of `uniqueClicks`." }
         videoPlayActions:
           type: integer
-          description: "Number of times the video started playing, summed over the date range and across children at ad-set/campaign level. 0 for non-video ads. Sources: Meta `video_play_actions`, TikTok `video_play_actions`."
+          description: "Number of times the video started playing, summed over the date range and across children at ad-set/campaign level. 0 for non-video ads. Sources: Meta `video_play_actions`, TikTok `video_play_actions`, X `video_content_starts`. X history note: added 2026-10-23, and X syncs only re-fetch the last 7 days, so older days read 0 on every X video field."
         video30SecWatchedActions: { type: integer, description: "Views of at least 30 seconds (or to the end, for shorter videos). Sources: Meta `video_30_sec_watched_actions` (Meta only)." }
         videoThruplayWatchedActions: { type: integer, description: "ThruPlays (watched to completion, or at least 15 seconds). Sources: Meta `video_thruplay_watched_actions` (Meta only)." }
-        videoP25WatchedActions: { type: integer, description: "Views reaching 25% of the video's length. With the other percentile fields, powers hook/hold/drop-off analysis (e.g. hook rate = videoP25WatchedActions / videoPlayActions). Sources: Meta `video_p25_watched_actions`, TikTok `video_views_p25`." }
-        videoP50WatchedActions: { type: integer, description: "Views reaching 50% of the video's length. Sources: Meta `video_p50_watched_actions`, TikTok `video_views_p50`." }
-        videoP75WatchedActions: { type: integer, description: "Views reaching 75% of the video's length. Sources: Meta `video_p75_watched_actions`, TikTok `video_views_p75`." }
+        videoP25WatchedActions: { type: integer, description: "Views reaching 25% of the video's length. With the other percentile fields, powers hook/hold/drop-off analysis (e.g. hook rate = videoP25WatchedActions / videoPlayActions). Sources: Meta `video_p25_watched_actions`, TikTok `video_views_p25`, X `video_views_25`." }
+        videoP50WatchedActions: { type: integer, description: "Views reaching 50% of the video's length. Sources: Meta `video_p50_watched_actions`, TikTok `video_views_p50`, X `video_views_50`." }
+        videoP75WatchedActions: { type: integer, description: "Views reaching 75% of the video's length. Sources: Meta `video_p75_watched_actions`, TikTok `video_views_p75`, X `video_views_75`." }
         videoP95WatchedActions: { type: integer, description: "Views reaching 95% of the video's length. Sources: Meta `video_p95_watched_actions` (Meta only)." }
-        videoP100WatchedActions: { type: integer, description: "Views reaching 100% of the video's length. Sources: Meta `video_p100_watched_actions`, TikTok `video_views_p100`." }
+        videoP100WatchedActions: { type: integer, description: "Views reaching 100% of the video's length. Sources: Meta `video_p100_watched_actions`, TikTok `video_views_p100`, X `video_views_100`." }
         video2SecWatchedActions:
           type: integer
           description: "Plays of at least 2 seconds, replays excluded. Hook rate = video2SecWatchedActions / impressions. Sources: TikTok `video_watched_2s` (TikTok only; Meta's closest field, 2-second continuous plays, is not synced). TikTok history note: added 2026-10, and each sync re-fetches only the last 7 days, so older days read 0."
