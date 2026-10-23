@@ -8396,9 +8396,7 @@ def register_generated_tools(mcp, _get_client):
 
         Returns the review verdict of every Upgraded Smart+ ad of one TikTok advertiser, with each creative's verdict, in one paginated read. Use it to refresh reviews periodically: one call (plus its pages) per advertiser per refresh, instead of `GET /v1/ads/{adId}/tiktok-smart-plus-review` per ad.
 
-        Zernio lists the advertiser's Smart+ ads with `/smart_plus/ad/get/` (deleted ones only with `includeDeleted=true`; the listing is cached for 5 minutes) and reads `/smart_plus/ad/review_info/` for up to 100 Smart+ ads per call, across ad groups, one call after another. A full refresh of N Smart+ ads costs about `ceil(N / 100)` listing calls and `ceil(N / 100)` review calls on TikTok. Each review is cached for 10 minutes per connection, advertiser and Smart+ ad, shared with the single-ad read, so cached reviews are served without calling TikTok and `readAt` can be up to 10 minutes old.
-
-        TikTok's review endpoint has a strict quota of its own. When it is over quota (or Zernio is holding review reads ...
+        Zernio lists the advertiser's Smart+ ads with `/smart_plus/ad/get/` (deleted ones only with `includeDeleted=true`; the listing is cached for 10 minutes) and reads `/smart_plus/ad/review_info/` for Smart+ ads holding up to 50 creatives in total per call (TikTok refuses more; a Smart+ ad with more than 50 creatives is read alone), across ad groups, one call after another. A full refresh of N Smart+ ads with C creatives in total costs about `ceil(N / 100)` listing calls and `ceil(C / 50)` review calls on TikTok. When TikTok still refuses a call for its creative count, Zernio lowers the creative cap for that advertiser and reads the same ads again in smaller calls, never resending the refused size. ...
 
         Platforms: tiktok
 
