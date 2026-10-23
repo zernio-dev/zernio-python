@@ -20386,6 +20386,7 @@ def register_generated_tools(mcp, _get_client):
         welcome_theme: str | None = None,
         logo_url: str | None = None,
         language: Literal["en", "es", "pt-BR"] | None = None,
+        handoff: bool = False,
     ) -> str:
         """Get OAuth connect URL
 
@@ -20590,7 +20591,8 @@ def register_generated_tools(mcp, _get_client):
                 welcome: Any platform. When `true`, `authUrl` points to a Zernio-hosted welcome screen that shows your brand next to the platform ("<brandName> wants to connect to your <platform>") whose button reads Connecting for about a second and then sends the user on to the platform's own authorization screen, with no click; the rest of the flow is unchanged. `brandName`, `logoUrl`, `primaryColor` and `welcomeTheme` are optional and default to Zernio's own name, mark and look. The link is valid for 30 minutes, after which the page asks the user to start again. The brand also carries to the account and channel pickers Zernio shows after authorization, and when you pass no `redirect_url` the flow ends on a branded Zernio-hosted page saying whether the account connected, instead of the Zernio dashboard. Cannot be combined with `headless=true` or `signup=hosted` (400 `INVALID_FIELD_VALUE`). The platform's authorization screen still names the Zernio app. Recommended. When left out, the screen is shown if the workspace saved it as on by default (`PUT /v1/connect/welcome-screen`), except with `headless=true` or `signup=hosted`; pass `false` to skip it. Branding you leave out of the call comes from those saved settings, and a `welcomeTheme` you send is merged key by key over the saved theme.
                 welcome_theme: Welcome screen only (`welcome=true`): a URL-encoded JSON object that restyles and rewords the screen. All keys are optional. Copy: `heading` (up to 120 characters), `trustLine`, `consentLine` and `statusLine` (up to 200 each, `statusLine` being the line above the button), `buttonLabel` (up to 30, the label of the link the button becomes if the redirect stalls); each may contain the placeholders `{brand}` and `{platform}`. Style: `primaryColor` (the button), `accentColor` (the header gradient, built as a scale of that colour, and the icons), `pageColor`, `cardColor` and `textColor` as `#RRGGBB`, `cornerRadius` as an integer from 0 to 24 (pixels), `font` as `sans`, `serif` or `mono`. A `primaryColor` here wins over the `primaryColor` parameter. Unknown keys, invalid JSON or an invalid value are a 400 `INVALID_FIELD_VALUE`. Rejected when the welcome screen is not shown. Example: `{"heading":"Link your {platform} to {brand}","cardColor":"#FFF7ED","cornerRadius":12}`.
                 logo_url: Welcome screen only (`welcome=true`): https URL of your logo, shown in a square tile, so use a square image. Without it the tile shows the first letter of `brandName`, or the Zernio mark when there is no `brandName` either. Rejected with 400 `INVALID_FIELD_VALUE` when the welcome screen is not shown.
-                language: Hosted signup page only (`signup=hosted`, WhatsApp): language of the page and its follow-along guide. Explainer videos stay in English. Default `en`. Rejected without `signup=hosted`."""
+                language: Hosted signup page only (`signup=hosted`, WhatsApp): language of the page and its follow-along guide. Explainer videos stay in English. Default `en`. Rejected without `signup=hosted`.
+                handoff: Let the user finish on their phone. When `true`, the response also carries `handoff`: show `handoff.url` as a QR code in your app (any QR library), the user scans it and the welcome screen opens on the phone, already carrying this connect, so they log in to the platform there without signing in to anything else. The phone ends on a Zernio result screen telling them to go back to their computer. Learn the outcome by polling `GET /v1/connect/handoffs/{handoffId}` (every 2 to 5 seconds is fine) or from the `account.connected` webhook. Shows the welcome screen with your branding parameters or saved settings. Cannot be combined with `welcome=false`, `headless=true`, `signup`, `redirect=true` or `redirect_url` (400 `INVALID_FIELD_VALUE`). `handoff.url` works for 30 minutes. When the account is re-enabled straight away the response carries `account` instead, as without `handoff`."""
         client = _get_client()
         try:
             response = client.connect.get_connect_url(
@@ -20612,6 +20614,7 @@ def register_generated_tools(mcp, _get_client):
                 welcome_theme=welcome_theme,
                 logo_url=logo_url,
                 language=language,
+                handoff=handoff,
             )
             return _format_response(response)
         except Exception as e:
@@ -21406,6 +21409,28 @@ def register_generated_tools(mcp, _get_client):
                 pending_data_token=pending_data_token,
                 redirect_url=redirect_url,
             )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get a phone handoff",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def connect_get_connect_handoff(handoff_id: str) -> str:
+        """Get a phone handoff
+
+        Where a connect started with `handoff=true` on `GET /v1/connect/{platform}` stands: `waiting` until the QR code is scanned, `opened` once the phone opened it, then `connected` with the new accounts or `failed` with the error the flow ended on (the same `error` codes as the redirect flow). `expired` when nobody opened the QR code within its 30 minutes. Poll it every 2 to 5 seconds while your QR code is shown, and stop once it is `connected`, `failed` or `expired`. Readable for 60 minutes after it was created, then 404, as is a handoff created by another workspace.
+
+        Args:
+            handoff_id: `handoff.id` from the connect response. (required)"""
+        client = _get_client()
+        try:
+            response = client.connect.get_connect_handoff(handoff_id=handoff_id)
             return _format_response(response)
         except Exception as e:
             return f"Error: {e}"
@@ -27057,6 +27082,22 @@ def register_generated_tools(mcp, _get_client):
         scope: Literal["all", "profiles"],
         profile_ids: list[str] | None = None,
         role: Literal["admin", "member", "billing_admin", "viewer"] = "member",
+        disabled_resource_groups: list[
+            Literal[
+                "publishing",
+                "engagement",
+                "messages",
+                "contacts",
+                "analytics",
+                "ads",
+                "telephony",
+                "accounts",
+                "billing",
+                "webhooks",
+                "commerce",
+            ]
+        ]
+        | None = None,
         read_only: bool | None = None,
     ) -> str:
         """Create invite token
@@ -27071,11 +27112,16 @@ def register_generated_tools(mcp, _get_client):
             scope: 'all' grants access to all profiles, 'profiles' restricts to specific profiles (required)
             profile_ids: Required if scope is 'profiles'. Array of profile IDs to grant access to.
             role: Org role granted to the invitee. Defaults to 'member'. 'admin' can manage the team (invite/remove members, change roles and access) and billing, but not ownership transfer or account deletion. 'billing_admin' (displayed as Billing Manager) manages billing only. 'viewer' creates a read-only member who can view everything in their profile scope but cannot perform any content mutation (publish, edit, delete, connect accounts).
+            disabled_resource_groups: Resource groups the invitee may not use once they join (the same groups as restricted API keys). Their dashboard hides those sections and every API request into a disabled group, with any credential they hold, is refused with 403. Omitted or empty means full access. Groups the caller lacks themselves are always added.
             read_only: Deprecated. Use role 'viewer' instead. When true, the invite is created with role 'viewer'. Cannot be combined with role 'billing_admin' or 'admin'."""
         client = _get_client()
         try:
             response = client.invites.create_invite_token(
-                scope=scope, profile_ids=profile_ids, role=role, read_only=read_only
+                scope=scope,
+                profile_ids=profile_ids,
+                role=role,
+                disabled_resource_groups=disabled_resource_groups,
+                read_only=read_only,
             )
             return _format_response(response)
         except Exception as e:

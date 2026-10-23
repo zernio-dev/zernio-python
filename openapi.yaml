@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.342.0"
+  version: "1.343.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -1221,6 +1221,38 @@ components:
         currency: { type: [string, "null"] }
         contactId: { type: [string, "null"], description: 'The contact a lead_received workflow created or matched for this lead.' }
         firstContactedAt: { type: [string, "null"], format: date-time, description: 'When the first WhatsApp message to the lead was delivered.' }
+    ConnectHandoffLink:
+      type: object
+      description: 'Only with `handoff=true`: the link to show as a QR code.'
+      properties:
+        id: { type: string, format: uuid, description: 'Pass to `GET /v1/connect/handoffs/{handoffId}`.' }
+        url: { type: string, format: uri, description: 'Short link to encode in the QR code. It opens the welcome screen on the phone.' }
+        expiresAt: { type: string, format: date-time, description: 'When `url` stops working (30 minutes).' }
+    ConnectHandoff:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        status: { type: string, enum: [waiting, opened, connected, failed, expired] }
+        platform: { type: string }
+        accounts:
+          type: array
+          description: 'Filled when `status` is `connected`: every account the connect added (several when the user picked several pages, locations or organizations), each checked to be on the profile the connect was started for and written during this handoff. Empty otherwise.'
+          items:
+            type: object
+            properties:
+              id: { type: string, description: 'The Zernio account id.' }
+              profileId: { type: string }
+              username: { type: string }
+        error:
+          type: [object, "null"]
+          description: 'Set when `status` is `failed`.'
+          properties:
+            code: { type: string, description: 'The `error` code the flow ended on, as on a redirect_url. `connect_incomplete` when the phone reported no outcome, `connect_unverified` when it reported an account Zernio could not match to this connect.' }
+            message: { type: [string, "null"] }
+            details:
+              type: object
+              additionalProperties: { type: string }
+              description: 'The other params the redirect flow appends for that error, such as `is_user_fixable`, `reason`, `dashboard_url`, `request_id` and `stage`. All optional.'
     ConnectWelcomeScreen:
       type: object
       properties:
@@ -11979,6 +12011,10 @@ components:
           type: string
         role:
           type: string
+        disabledResourceGroups:
+          type: array
+          items: { type: string }
+          description: 'Resource groups turned off for this team member. Empty for owners and unrestricted members.'
         createdAt:
           type: string
           format: date-time
@@ -26949,6 +26985,12 @@ paths:
                   enum: [admin, member, billing_admin, viewer]
                   default: member
                   description: Org role granted to the invitee. Defaults to 'member'. 'admin' can manage the team (invite/remove members, change roles and access) and billing, but not ownership transfer or account deletion. 'billing_admin' (displayed as Billing Manager) manages billing only. 'viewer' creates a read-only member who can view everything in their profile scope but cannot perform any content mutation (publish, edit, delete, connect accounts).
+                disabledResourceGroups:
+                  type: array
+                  items:
+                    type: string
+                    enum: [publishing, engagement, messages, contacts, analytics, ads, telephony, accounts, billing, webhooks, commerce]
+                  description: 'Resource groups the invitee may not use once they join (the same groups as restricted API keys). Their dashboard hides those sections and every API request into a disabled group, with any credential they hold, is refused with 403. Omitted or empty means full access. Groups the caller lacks themselves are always added.'
                 readOnly:
                   type: boolean
                   deprecated: true
@@ -26972,6 +27014,9 @@ paths:
                   invitedProfileIds:
                     type: array
                     items: { type: string }
+                  disabledResourceGroups:
+                    type: array
+                    items: { type: string }
                   expiresAt: { type: string, format: date-time }
                   inviteUrl: { type: string, format: uri }
               example:
@@ -26980,6 +27025,7 @@ paths:
                 invitedProfileIds:
                   - "64f0a1b2c3d4e5f6a7b8c9d0"
                   - "64f0a1b2c3d4e5f6a7b8c9d1"
+                disabledResourceGroups: []
                 expiresAt: "2024-11-08T10:30:00Z"
                 inviteUrl: "https://zernio.com/invite/inv_abc123def456ghi789"
         '400': { description: Invalid request }
@@ -27258,6 +27304,10 @@ paths:
           in: query
           schema: { type: string, enum: [en, es, pt-BR] }
           description: 'Hosted signup page only (`signup=hosted`, WhatsApp): language of the page and its follow-along guide. Explainer videos stay in English. Default `en`. Rejected without `signup=hosted`.'
+        - name: handoff
+          in: query
+          schema: { type: boolean, default: false }
+          description: 'Let the user finish on their phone. When `true`, the response also carries `handoff`: show `handoff.url` as a QR code in your app (any QR library), the user scans it and the welcome screen opens on the phone, already carrying this connect, so they log in to the platform there without signing in to anything else. The phone ends on a Zernio result screen telling them to go back to their computer. Learn the outcome by polling `GET /v1/connect/handoffs/{handoffId}` (every 2 to 5 seconds is fine) or from the `account.connected` webhook. Shows the welcome screen with your branding parameters or saved settings. Cannot be combined with `welcome=false`, `headless=true`, `signup`, `redirect=true` or `redirect_url` (400 `INVALID_FIELD_VALUE`). `handoff.url` works for 30 minutes. When the account is re-enabled straight away the response carries `account` instead, as without `handoff`.'
       security:
         - bearerAuth: []
       responses:
@@ -27275,6 +27325,8 @@ paths:
                   state: 
                     type: string
                     description: State parameter for security (handled automatically)
+                  handoff:
+                    $ref: '#/components/schemas/ConnectHandoffLink'
               example:
                 authUrl: "https://www.facebook.com/v21.0/dialog/oauth?client_id=..."
                 state: "user123-profile456-1234567890-https://yourdomain.com/callback"
@@ -31004,6 +31056,39 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/ErrorResponse' }
 
+  /v1/connect/handoffs/{handoffId}:
+    get:
+      x-resource-group: accounts
+      operationId: getConnectHandoff
+      tags: [Connect]
+      summary: Get a phone handoff
+      description: 'Where a connect started with `handoff=true` on `GET /v1/connect/{platform}` stands: `waiting` until the QR code is scanned, `opened` once the phone opened it, then `connected` with the new accounts or `failed` with the error the flow ended on (the same `error` codes as the redirect flow). `expired` when nobody opened the QR code within its 30 minutes. Poll it every 2 to 5 seconds while your QR code is shown, and stop once it is `connected`, `failed` or `expired`. Readable for 60 minutes after it was created, then 404, as is a handoff created by another workspace.'
+      parameters:
+        - name: handoffId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+          description: '`handoff.id` from the connect response.'
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: The handoff.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ConnectHandoff' }
+              example:
+                id: 79c6dbf2-97ba-4f34-b615-5bf9435526db
+                status: connected
+                platform: instagram
+                accounts: [{ id: 6ab0c2f1e4d5a6b7c8d9e0f1, profileId: 69b0a1b2c3d4e5f6a7b8c9d0, username: acme }]
+                error: null
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: The handoff expired, does not exist, or belongs to another workspace (code RESOURCE_NOT_FOUND).
   /v1/connect/welcome-screen:
     get:
       x-resource-group: accounts

@@ -94,6 +94,7 @@ class ConnectResource:
         welcome_theme: str | None = None,
         logo_url: str | None = None,
         language: str | None = None,
+        handoff: bool | None = False,
     ) -> dict[str, Any]:
         """Get OAuth connect URL"""
         params = self._build_params(
@@ -114,6 +115,7 @@ class ConnectResource:
             welcome_theme=welcome_theme,
             logo_url=logo_url,
             language=language,
+            handoff=handoff,
         )
         return self._client._get(f"/v1/connect/{platform}", params=params)
 
@@ -374,6 +376,10 @@ class ConnectResource:
         return self._client._post(
             "/v1/connect/googlebusiness/select-location", data=payload
         )
+
+    def get_connect_handoff(self, handoff_id: str) -> dict[str, Any]:
+        """Get a phone handoff"""
+        return self._client._get(f"/v1/connect/handoffs/{handoff_id}")
 
     def get_connect_welcome_screen(self) -> dict[str, Any]:
         """Get the saved welcome screen"""
@@ -1038,6 +1044,7 @@ class ConnectResource:
         welcome_theme: str | None = None,
         logo_url: str | None = None,
         language: str | None = None,
+        handoff: bool | None = False,
     ) -> dict[str, Any]:
         """Get OAuth connect URL (async)"""
         params = self._build_params(
@@ -1058,6 +1065,7 @@ class ConnectResource:
             welcome_theme=welcome_theme,
             logo_url=logo_url,
             language=language,
+            handoff=handoff,
         )
         return await self._client._aget(f"/v1/connect/{platform}", params=params)
 
@@ -1322,6 +1330,10 @@ class ConnectResource:
         return await self._client._apost(
             "/v1/connect/googlebusiness/select-location", data=payload
         )
+
+    async def aget_connect_handoff(self, handoff_id: str) -> dict[str, Any]:
+        """Get a phone handoff (async)"""
+        return await self._client._aget(f"/v1/connect/handoffs/{handoff_id}")
 
     async def aget_connect_welcome_screen(self) -> dict[str, Any]:
         """Get the saved welcome screen (async)"""

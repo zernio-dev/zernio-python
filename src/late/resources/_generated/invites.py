@@ -79,6 +79,7 @@ class InvitesResource:
         *,
         profile_ids: list[str] | None = None,
         role: str | None = "member",
+        disabled_resource_groups: list[str] | None = None,
         read_only: bool | None = None,
     ) -> dict[str, Any]:
         """Create invite token"""
@@ -86,6 +87,7 @@ class InvitesResource:
             scope=scope,
             profile_ids=profile_ids,
             role=role,
+            disabled_resource_groups=disabled_resource_groups,
             read_only=read_only,
         )
         return self._client._post("/v1/invite/tokens", data=payload)
@@ -96,6 +98,7 @@ class InvitesResource:
         *,
         profile_ids: list[str] | None = None,
         role: str | None = "member",
+        disabled_resource_groups: list[str] | None = None,
         read_only: bool | None = None,
     ) -> dict[str, Any]:
         """Create invite token (async)"""
@@ -103,6 +106,7 @@ class InvitesResource:
             scope=scope,
             profile_ids=profile_ids,
             role=role,
+            disabled_resource_groups=disabled_resource_groups,
             read_only=read_only,
         )
         return await self._client._apost("/v1/invite/tokens", data=payload)

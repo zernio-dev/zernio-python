@@ -354,6 +354,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `connect.list_whats_app_phone_numbers()` | List numbers for selection |
 | `connect.create_pinterest_board()` | Create Pinterest board |
 | `connect.create_youtube_playlist()` | Create YouTube playlist |
+| `connect.get_connect_handoff()` | Get a phone handoff |
 | `connect.get_connect_url()` | Get OAuth connect URL |
 | `connect.get_connect_welcome_screen()` | Get the saved welcome screen |
 | `connect.get_facebook_pages()` | List Facebook pages |
