@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.340.0"
+  version: "1.340.1"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -42921,8 +42921,18 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403':
           description: Inbox addon required
+        '404':
+          description: "The platform no longer has this review (deleted or not addressable by this account). Permanent for that review: do not retry."
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
         '409': { $ref: '#/components/responses/IdempotencyKeyInFlight' }
         '422': { $ref: '#/components/responses/IdempotencyKeyReused' }
+        '502':
+          description: "The platform failed the call (upstream 5xx or an unreadable response). Transient: safe to retry with backoff."
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
     delete:
       x-resource-group: "engagement"
       operationId: deleteInboxReviewReply
@@ -42958,6 +42968,16 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403':
           description: Inbox addon required
+        '404':
+          description: "The platform no longer has this review or its reply. Permanent: do not retry."
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+        '502':
+          description: "The platform failed the call (upstream 5xx or an unreadable response). Transient: safe to retry with backoff."
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
   # ──────────────────────────────────────────────────────────────────────────
   # WHATSAPP-SPECIFIC ENDPOINTS
   # Templates, business profile, phone numbers: ACTIVE (no cross-platform equivalent)
