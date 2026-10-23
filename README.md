@@ -521,6 +521,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `ad_audiences.update_ad_audience()` | Update an audience |
 | `ad_audiences.delete_ad_audience()` | Delete custom audience |
 | `ad_audiences.add_users_to_ad_audience()` | Add users to audience |
+| `ad_audiences.remove_users_from_ad_audience()` | Remove users from audience |
 | `ad_audiences.replace_ad_audience_companies()` | Replace audience companies |
 
 ### Ad Campaigns

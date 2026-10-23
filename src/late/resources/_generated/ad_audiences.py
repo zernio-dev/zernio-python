@@ -129,6 +129,17 @@ class AdAudiencesResource:
             f"/v1/ads/audiences/{audience_id}/users", data=payload
         )
 
+    def remove_users_from_ad_audience(
+        self, audience_id: str, users: list[dict[str, Any]]
+    ) -> dict[str, Any]:
+        """Remove users from audience"""
+        payload = self._build_payload(
+            users=users,
+        )
+        return self._client._delete(
+            f"/v1/ads/audiences/{audience_id}/users", data=payload
+        )
+
     def replace_ad_audience_companies(
         self, audience_id: str, companies: list[dict[str, Any]]
     ) -> dict[str, Any]:
@@ -195,6 +206,17 @@ class AdAudiencesResource:
             users=users,
         )
         return await self._client._apost(
+            f"/v1/ads/audiences/{audience_id}/users", data=payload
+        )
+
+    async def aremove_users_from_ad_audience(
+        self, audience_id: str, users: list[dict[str, Any]]
+    ) -> dict[str, Any]:
+        """Remove users from audience (async)"""
+        payload = self._build_payload(
+            users=users,
+        )
+        return await self._client._adelete(
             f"/v1/ads/audiences/{audience_id}/users", data=payload
         )
 

@@ -5412,6 +5412,41 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="Remove users from audience",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def ad_audiences_remove_users_from_ad_audience(
+        audience_id: str, users: list[dict[str, Any]] | None
+    ) -> str:
+        """Remove users from audience
+
+        Removes customer emails and phone numbers from a Meta customer list audience. Same body as
+        `POST /v1/ads/audiences/{audienceId}/users`: send plaintext rows, they are normalized and
+        SHA256-hashed server-side exactly like an upload, so a row removes the person it added.
+
+        Meta only, customer_list only. Every other platform returns 422 with code `feature_not_available`,
+        and every other audience type returns 422. Max 10,000 users per request. Meta applies the removal
+        asynchronously, so the audience size does not drop immediately.
+
+        Platforms: meta
+
+        Args:
+            audience_id: The Zernio audience id (the id field of GET /v1/ads/audiences), not the platform segment id. (required)
+            users: Each item is an object with keys: email (string); phone (string) (required)"""
+        client = _get_client()
+        try:
+            response = client.ad_audiences.remove_users_from_ad_audience(
+                audience_id=audience_id, users=users
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="Replace audience companies",
             readOnlyHint=False,
             destructiveHint=True,
