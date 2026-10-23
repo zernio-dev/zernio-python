@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.338.0"
+  version: "1.338.1"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -12301,7 +12301,7 @@ components:
             offsite_conversion.fb_pixel_add_to_cart: 980.50
         purchaseValue:
           type: number
-          description: "Convenience sum of purchase-type action values, picked from `actionValues` for the ad set promoted_object event (custom conversion, custom_event_type, else PURCHASE). It matches `conversions` for conversion-optimized ad sets; when the optimization goal reports a different result (LINK_CLICKS, LANDING_PAGE_VIEWS, ...) it stays on the promoted event so ROAS keeps its purchase basis. In ad-account native currency. 0 when the campaign has no purchase event configured. TikTok: app purchase value plus website complete-payment value (from 2026-10-08), or the Place an Order value when that is larger (they are never summed, since a pixel can fire both for one sale); days synced before each was added carry the app value only until the ad is re-synced. Other platforms report 0."
+          description: "Convenience sum of purchase-type action values, picked from `actionValues` for the ad set promoted_object event (custom conversion, custom_event_type, else PURCHASE). It matches `conversions` for conversion-optimized ad sets; when the optimization goal reports a different result (LINK_CLICKS, LANDING_PAGE_VIEWS, ...) it stays on the promoted event so ROAS keeps its purchase basis. In ad-account native currency. 0 when the campaign has no purchase event configured. TikTok: app purchase value plus website complete-payment value (from 2026-10-08), or the Place an Order value when that is larger (they are never summed, since a pixel can fire both for one sale); days synced before each was added carry the app value only until the ad is re-synced. Google: `conversions_value` of every primary conversion action. Pinterest: checkout value. LinkedIn: `conversionValueInLocalCurrency`, the advertiser-defined value of every conversion (days synced before 2026-10-23 report 0). Other platforms report 0."
         roas:
           type: number
           description: "Return on ad spend, derived as `purchaseValue / spend`. 0 when `spend` is 0. Equivalent to Meta's `purchase_roas` under default attribution. At ad-set and campaign levels this is recomputed from summed purchaseValue + spend (NOT averaged across children) so it's mathematically correct at every rollup level."
