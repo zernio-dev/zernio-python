@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.347.0"
+  version: "1.348.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -58186,8 +58186,10 @@ paths:
         directly, independent of the `ads` rollup GET /v1/ads/tree uses, so a
         newly created standalone ad group with no ad yet (POST /v1/ads/ad-sets,
         Google only) is visible here even though it is invisible in the tree
-        until an ad joins it via `adSetId` on POST /v1/ads/create. Returns at most 500
-        rows, newest first.
+        until an ad joins it via `adSetId` on POST /v1/ads/create. Rows come newest first
+        (by platform creation time, then id, so pages never overlap), 500 per page unless `limit`
+        says otherwise; `pagination.total` counts every matching ad set and `page` reaches the
+        rest.
 
         **This list is SYNCED, not live** (refreshed by background sync, see below). Each row also
         carries the ad set's config (`targeting`, `bidStrategy`, `bidAmount`, `optimizationGoal`,
@@ -58206,8 +58208,8 @@ paths:
         which reads the switches from the platform now, stores them, and returns `statusReadAt`
         (null when the read failed and the stored values were returned).
         With `live=true` (which needs a `campaignId` or `adSetId` filter) each listed ad set's own
-        switch (`platformAdSetStatus`) is read live, for the first 20 rows; later rows keep their
-        synced value with `statusReadAt: null`. Live reads cover TikTok, Meta, Google, OpenAI and Reddit.
+        switch (`platformAdSetStatus`) is read live, for the first 20 rows of the page; later rows keep their
+        synced value with `statusReadAt: null`. To read more ad sets live, page with `limit=20`. Live reads cover TikTok, Meta, Google, OpenAI and Reddit.
         The rolled-up `status` is not re-derived by a live read. On TikTok the same live read also
         returns the ad group's applied `optimizationGoal` and `billingEvent`, as TikTok's adgroup/get
         reports them, so you can verify the goal TikTok applied rather than the one you requested.
@@ -58226,6 +58228,9 @@ paths:
         - { name: campaignId, in: query, schema: { type: string }, description: Platform campaign ID }
         - { name: adSetId, in: query, schema: { type: string }, description: Platform ad set ID }
         - { name: platform, in: query, schema: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit] } }
+        - { name: status, in: query, schema: { $ref: '#/components/schemas/AdStatus' }, description: "Filter by the ad set's stored `status`, the value each row returns. A live read does not change it. Rows whose `status` is null match no filter." }
+        - { name: page, in: query, schema: { type: integer, minimum: 1, default: 1 } }
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 500, default: 500 } }
         - $ref: '#/components/parameters/LiveStatusRead'
       responses:
         '200':
@@ -58243,7 +58248,7 @@ paths:
                         platformAdSetId: { type: string }
                         platform: { type: string }
                         adSetName: { type: [string, "null"] }
-                        status: { type: [string, "null"] }
+                        status: { type: [string, "null"], description: "Stored ad set status (active, paused, pending_review, rejected, completed, cancelled, error), as last synced. The `status` filter matches it." }
                         platformAdSetStatus: { type: [string, "null"], description: "Raw platform ad set status. On TikTok the ad group's own switch `operation_status` (ENABLE / DISABLE), independent of its campaign. On Meta and Reddit the ad set's `effective_status` (e.g. CAMPAIGN_PAUSED)." }
                         platformCampaignId: { type: [string, "null"] }
                         platformAdAccountId: { type: string }
@@ -58309,6 +58314,7 @@ paths:
                         promotedObject: { type: [object, "null"], additionalProperties: true, description: "Meta only. The ad set's `promoted_object` verbatim (snake_case, for example pixel_id + custom_event_type, page_id, application_id), as last synced from its most recent ad. Null on other platforms and on an ad set with no ad yet; GET /v1/ads/accounts/live reads it live for every ad set." }
                         nativeSettings: { type: object, additionalProperties: true, description: "TikTok only, only with `live=true` and only on rows read live. A fixed subset of TikTok's adgroup/get record, not the whole record (snake_case, TikTok's own names, enums and values): adgroup_id, campaign_id, operation_status, optimization_goal, optimization_event, billing_event, bid_type, bid_price, budget, budget_mode, pacing, schedule_type, schedule_start_time, schedule_end_time, dayparting, placement_type, placements, location_ids, age_groups, gender, languages, interest_category_ids, interest_keyword_ids, actions, audience_ids, excluded_audience_ids, operating_systems, frequency, frequency_schedule, smart_audience_enabled, smart_interest_behavior_enabled. schedule_start_time and schedule_end_time are UTC wall clocks (YYYY-MM-DD HH:MM:SS). location_ids holds TikTok's native location ids (GeoNames ids for countries); GET /v1/ads/targeting/search?dimension=geo returns them as `platformId` on country results. Plus advertiser_currency and advertiser_timezone from TikTok's advertiser/info. A field TikTok does not return is absent." }
                         configReadAt: { type: [string, "null"], format: date-time, description: "Only with `live=true`. When `nativeSettings` was read from the platform. Null on every row whose native settings were not read now (row past the cap, failed read, or a platform without a native read)." }
+                  pagination: { $ref: '#/components/schemas/Pagination' }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403':

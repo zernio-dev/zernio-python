@@ -654,6 +654,9 @@ class AdCampaignsResource:
         campaign_id: str | None = None,
         ad_set_id: str | None = None,
         platform: str | None = None,
+        status: Any | None = None,
+        page: int | None = 1,
+        limit: int | None = 500,
         live: bool | None = False,
     ) -> dict[str, Any]:
         """List ad sets"""
@@ -663,6 +666,9 @@ class AdCampaignsResource:
             campaign_id=campaign_id,
             ad_set_id=ad_set_id,
             platform=platform,
+            status=status,
+            page=page,
+            limit=limit,
             live=live,
         )
         return self._client._get("/v1/ads/ad-sets", params=params)
@@ -2265,6 +2271,9 @@ class AdCampaignsResource:
         campaign_id: str | None = None,
         ad_set_id: str | None = None,
         platform: str | None = None,
+        status: Any | None = None,
+        page: int | None = 1,
+        limit: int | None = 500,
         live: bool | None = False,
     ) -> dict[str, Any]:
         """List ad sets (async)"""
@@ -2274,6 +2283,9 @@ class AdCampaignsResource:
             campaign_id=campaign_id,
             ad_set_id=ad_set_id,
             platform=platform,
+            status=status,
+            page=page,
+            limit=limit,
             live=live,
         )
         return await self._client._aget("/v1/ads/ad-sets", params=params)

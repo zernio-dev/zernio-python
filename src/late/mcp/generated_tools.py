@@ -7122,6 +7122,18 @@ def register_generated_tools(mcp, _get_client):
             "reddit",
         ]
         | None = None,
+        status: Literal[
+            "active",
+            "paused",
+            "pending_review",
+            "rejected",
+            "completed",
+            "cancelled",
+            "error",
+        ]
+        | None = None,
+        page: int = 1,
+        limit: int = 500,
         live: bool = False,
     ) -> str:
         """List ad sets
@@ -7133,14 +7145,14 @@ def register_generated_tools(mcp, _get_client):
         directly, independent of the `ads` rollup GET /v1/ads/tree uses, so a
         newly created standalone ad group with no ad yet (POST /v1/ads/ad-sets,
         Google only) is visible here even though it is invisible in the tree
-        until an ad joins it via `adSetId` on POST /v1/ads/create. Returns at most 500
-        rows, newest first.
+        until an ad joins it via `adSetId` on POST /v1/ads/create. Rows come newest first
+        (by platform creation time, then id, so pages never overlap), 500 per page unless `limit`
+        says otherwise; `pagination.total` counts every matching ad set and `page` reaches the
+        rest.
 
         **This list is SYNCED, not live** (refreshed by background sync, see below). Each row also
         carries the ad set's config (`targeting`, `bidStrategy`, `bidAmount`, `optimizationGoal`,
-        `billingEvent`, `promotedObject`), so `?accountId=...&adAccountId=act_...` returns the config of
-        every ad set of an ad account in one call, without a `campaignId`. To read
-        budgets, status, targeting, promoted object and bid strategy of every campaign and ...
+        `billingEvent`, `promotedObject`), so `?accountId=...&adAccountId=act_...` returns the ...
 
         Platforms: meta, google, tiktok, linkedin, pinterest, x, openai, reddit
 
@@ -7150,6 +7162,9 @@ def register_generated_tools(mcp, _get_client):
             campaign_id: Platform campaign ID
             ad_set_id: Platform ad set ID
             platform
+            status: Filter by the ad set's stored `status`, the value each row returns. A live read does not change it. Rows whose `status` is null match no filter.
+            page
+            limit
             live: Read the on/off switches live from the platform instead of returning the synced values. The fresh values are stored (so later reads return them too) and the response carries `statusReadAt`, the time of the read. At most 20 platform objects are read per request. Where a read fails (credentials, platform error, no reader on that platform), the stored values come back with `statusReadAt: null`. See "Status freshness" in the operation description. On X the budget is read live in the same read: on GET /v1/ads/{adId} `budget`, `adSetBudget`, `campaignBudget` and `budgetLevel` are the line item and campaign budgets X holds now (stored like the switches); on the ad set and campaign listings `budget` is the one that line item or campaign holds now (returned, not stored); a row whose budget the other level holds keeps its synced `budget`."""
         client = _get_client()
         try:
@@ -7159,6 +7174,9 @@ def register_generated_tools(mcp, _get_client):
                 campaign_id=campaign_id,
                 ad_set_id=ad_set_id,
                 platform=platform,
+                status=status,
+                page=page,
+                limit=limit,
                 live=live,
             )
             return _format_response(response)
