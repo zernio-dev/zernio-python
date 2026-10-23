@@ -39546,7 +39546,15 @@ def register_generated_tools(mcp, _get_client):
     def whatsapp_send_whats_app_conversion(
         account_id: str,
         event_name: Literal[
-            "LeadSubmitted", "Purchase", "AddToCart", "InitiateCheckout", "ViewContent"
+            "LeadSubmitted",
+            "QualifiedLead",
+            "Purchase",
+            "AddToCart",
+            "InitiateCheckout",
+            "ViewContent",
+            "OrderCreated",
+            "OrderCanceled",
+            "OrderReturned",
         ],
         event_id: str,
         event_time: float | None = None,
@@ -39562,8 +39570,9 @@ def register_generated_tools(mcp, _get_client):
         """Send WhatsApp conversion event
 
             Forward a WhatsApp Business Messaging conversion event (`LeadSubmitted`,
-            `Purchase`, `AddToCart`, `InitiateCheckout`, `ViewContent`) to Meta's
-            Conversions API with `action_source = business_messaging` and
+            `QualifiedLead`, `Purchase`, `AddToCart`, `InitiateCheckout`,
+            `ViewContent`, `OrderCreated`, `OrderCanceled`, `OrderReturned`) to
+            Meta's Conversions API with `action_source = business_messaging` and
             `messaging_channel = whatsapp`. The endpoint looks up the originating
             CTWA click ID (`ctwa_clid`) captured on the first inbound message of
             the conversation and replays it on every event so Meta can attribute
@@ -39576,15 +39585,12 @@ def register_generated_tools(mcp, _get_client):
             The WABA ID (already set automatically at connect time) is forwarded as
             `user_data.whatsapp_business_account_id`, which is the per-channel
             attribution identifier Meta requires for WhatsApp events. No Facebook
-            Page ID is needed (that field is the Messenger-branch identifier).
-
-            Identify the conversation by either `conversationId` ...
+            Page ID is needed (that field is the Messenger-branch ...
 
             Args:
                 account_id: WhatsApp SocialAccount ID. (required)
-                event_name: Live-verified allowlist of event names accepted by Meta's
-        CAPI for Business Messaging (Graph API v25.0). Other
-        standard pixel events including `Lead`,
+                event_name: Event names accepted by Meta's CAPI for Business
+        Messaging. Other standard pixel events including `Lead`,
         `CompleteRegistration`, `Subscribe`, `Schedule`, `Contact`,
         `StartTrial`, `AddPaymentInfo`, `Search`, and
         `SubmitApplication` are rejected with subcode 2804066
@@ -39592,7 +39598,11 @@ def register_generated_tools(mcp, _get_client):
         `action_source = business_messaging` events. Custom event
         names are also rejected.
 
-        Use `LeadSubmitted` (NOT `Lead`) for lead-style conversions.
+        Use `LeadSubmitted` (NOT `Lead`) when a lead comes in and
+        `QualifiedLead` once your team qualifies it. `OrderCreated`,
+        `OrderCanceled` and `OrderReturned` track an order placed in
+        the chat; send `value` and `currency` with them (and with
+        `Purchase`) to report the order amount.
          (required)
                 event_time: Unix seconds. Defaults to the time of the request when
         omitted. Meta's attribution window is 7 days from click;

@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.339.2"
+  version: "1.340.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -14587,6 +14587,11 @@ components:
             for Business Messaging). `channel` is sent as the event's `messaging_channel`
             (`instagram_direct` goes out as `instagram`). Each id lands in Meta's
             `user_data` unhashed, and an id that does not belong to `channel` is ignored.
+            Meta accepts only its business messaging event names here (`LeadSubmitted`,
+            `QualifiedLead`, `Purchase`, `AddToCart`, `InitiateCheckout`, `ViewContent`,
+            `OrderCreated`, `OrderShipped`, `OrderDelivered`, `OrderCanceled`,
+            `OrderReturned`, `CartAbandoned`, `RatingProvided`, `ReviewProvided`);
+            `eventName` is forwarded unchanged.
           required: [channel]
           properties:
             channel: { type: string, enum: [whatsapp, messenger, instagram_direct] }
@@ -73439,7 +73444,7 @@ paths:
                           description: When the event was sent to Meta.
                         eventName:
                           type: string
-                          description: One of LeadSubmitted, Purchase, AddToCart, InitiateCheckout, ViewContent.
+                          description: 'One of LeadSubmitted, QualifiedLead, Purchase, AddToCart, InitiateCheckout, ViewContent, OrderCreated, OrderCanceled, OrderReturned.'
                         conversationId:
                           type: [string, "null"]
                         eventsReceived:
@@ -73462,8 +73467,9 @@ paths:
       summary: Send WhatsApp conversion event
       description: |
         Forward a WhatsApp Business Messaging conversion event (`LeadSubmitted`,
-        `Purchase`, `AddToCart`, `InitiateCheckout`, `ViewContent`) to Meta's
-        Conversions API with `action_source = business_messaging` and
+        `QualifiedLead`, `Purchase`, `AddToCart`, `InitiateCheckout`,
+        `ViewContent`, `OrderCreated`, `OrderCanceled`, `OrderReturned`) to
+        Meta's Conversions API with `action_source = business_messaging` and
         `messaging_channel = whatsapp`. The endpoint looks up the originating
         CTWA click ID (`ctwa_clid`) captured on the first inbound message of
         the conversation and replays it on every event so Meta can attribute
@@ -73512,11 +73518,10 @@ paths:
                   description: WhatsApp SocialAccount ID.
                 eventName:
                   type: string
-                  enum: [LeadSubmitted, Purchase, AddToCart, InitiateCheckout, ViewContent]
+                  enum: [LeadSubmitted, QualifiedLead, Purchase, AddToCart, InitiateCheckout, ViewContent, OrderCreated, OrderCanceled, OrderReturned]
                   description: |
-                    Live-verified allowlist of event names accepted by Meta's
-                    CAPI for Business Messaging (Graph API v25.0). Other
-                    standard pixel events including `Lead`,
+                    Event names accepted by Meta's CAPI for Business
+                    Messaging. Other standard pixel events including `Lead`,
                     `CompleteRegistration`, `Subscribe`, `Schedule`, `Contact`,
                     `StartTrial`, `AddPaymentInfo`, `Search`, and
                     `SubmitApplication` are rejected with subcode 2804066
@@ -73524,7 +73529,11 @@ paths:
                     `action_source = business_messaging` events. Custom event
                     names are also rejected.
 
-                    Use `LeadSubmitted` (NOT `Lead`) for lead-style conversions.
+                    Use `LeadSubmitted` (NOT `Lead`) when a lead comes in and
+                    `QualifiedLead` once your team qualifies it. `OrderCreated`,
+                    `OrderCanceled` and `OrderReturned` track an order placed in
+                    the chat; send `value` and `currency` with them (and with
+                    `Purchase`) to report the order amount.
                 eventTime:
                   type: number
                   description: |
