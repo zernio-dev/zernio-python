@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.341.0"
+  version: "1.342.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -11828,8 +11828,10 @@ components:
           type: boolean
           description: Whether user has analytics add-on access
         pagination:
-          description: Only present when page/limit params are provided
-          $ref: '#/components/schemas/Pagination'
+          description: 'Present on a paginated request: `{ page, limit, total, pages }` with page and limit, `{ limit, nextCursor }` with cursor paging (limit alone or cursor).'
+          oneOf:
+            - $ref: '#/components/schemas/Pagination'
+            - $ref: '#/components/schemas/AccountCursorPagination'
         profileTotals:
           type: object
           additionalProperties: { type: integer }
@@ -11845,6 +11847,14 @@ components:
             disconnected:
               type: integer
               description: Of those, the accounts that need reconnection.
+    AccountCursorPagination:
+      type: object
+      required: [limit, nextCursor]
+      properties:
+        limit: { type: integer }
+        nextCursor:
+          type: [string, "null"]
+          description: 'Opaque cursor for the next page; pass it back as `cursor`. Null on the last page.'
     FollowerStatsResponse:
       type: object
       properties:
@@ -11867,6 +11877,9 @@ components:
             from: { type: string, format: date-time }
             to: { type: string, format: date-time }
         granularity: { type: string }
+        pagination:
+          description: Only present when limit or cursor is sent.
+          $ref: '#/components/schemas/AccountCursorPagination'
     UploadedFile:
       type: object
       properties:
@@ -25317,8 +25330,9 @@ paths:
       summary: List accounts
       description: |
         Returns connected accounts. Only includes accounts within the plan limit by default. Follower data requires analytics add-on.
-        Supports optional server-side pagination via page/limit params. When omitted, returns all accounts (backward-compatible).
-        page and limit must be supplied together; out-of-range page/limit values are rejected with 400 rather than silently clamped.
+        Supports optional server-side pagination. When omitted, returns all accounts (backward-compatible).
+        Cursor paging: send `limit` alone for the first page, then pass `pagination.nextCursor` back as `cursor` until it is null. Pages are ordered by account id, so accounts added or removed between calls never shift a page. Cannot be combined with `page`, `sort` or `perProfile`.
+        Offset paging: send `page` and `limit` together. Out-of-range page/limit values are rejected with 400 rather than silently clamped.
       parameters:
         - name: profileId
           in: query
@@ -25353,7 +25367,7 @@ paths:
           schema:
             type: string
             enum: [account, platform, profile, status, connected]
-          description: 'Sort a paginated listing (page/limit) by account name, platform, profile name, status (accounts needing a reconnect first when ascending) or connection date. Ties keep the default order: platform, then newest first.'
+          description: 'Sort an offset-paginated listing (page and limit) by account name, platform, profile name, status (accounts needing a reconnect first when ascending) or connection date. Ties keep the default order: platform, then newest first.'
         - name: order
           in: query
           schema:
@@ -25390,7 +25404,7 @@ paths:
           description: |
             When true, appends the shared WhatsApp sandbox account and the iMessage sandbox account
             to the list when they are active, honouring `platform` but no other filter. Ignored on
-            a paginated request (page/limit) and together with `perProfile`. Accepts `true` or
+            a paginated request (page, limit or cursor) and together with `perProfile`. Accepts `true` or
             `false` in any letter case; any other value returns 400.
         - name: includeStatusCounts
           in: query
@@ -25406,12 +25420,16 @@ paths:
           in: query
           schema: { type: integer, minimum: 1 }
           description: |
-            Page number (1-based). Must be provided together with limit to enable server-side pagination; sending only one of the two returns 400. Omit both for all accounts.
+            Page number (1-based) for offset paging. Requires limit; omit page, limit and cursor for all accounts.
         - name: limit
           in: query
           schema: { type: integer, minimum: 1, maximum: 500 }
           description: |
-            Page size. Must be provided together with page; sending only one of the two returns 400.
+            Page size. With page, an offset page; alone or with cursor, a cursor page.
+        - name: cursor
+          in: query
+          schema: { type: string }
+          description: 'Opaque cursor from a previous response''s `pagination.nextCursor`; returns the next page of `limit` accounts (500 when limit is omitted). A cursor we cannot parse returns 400. Cannot be combined with page.'
         - name: profileIds
           in: query
           schema: { type: string }
@@ -25419,7 +25437,7 @@ paths:
         - name: perProfile
           in: query
           schema: { type: integer, minimum: 1, maximum: 24 }
-          description: 'Return a preview of each profile in profileIds: the newest account of every platform it has, topped up to at least N. Requires profileIds; cannot be combined with page and limit.'
+          description: 'Return a preview of each profile in profileIds: the newest account of every platform it has, topped up to at least N. Requires profileIds; cannot be combined with page, limit or cursor.'
       responses:
         '200':
           description: Accounts (with optional pagination)
@@ -25476,6 +25494,14 @@ paths:
           in: query
           schema: { type: string, enum: [daily, weekly, monthly], default: daily }
           description: Data aggregation level
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 25 }
+          description: 'Accounts per page, ordered by account id. Send it to page through accounts; the response then carries `pagination.nextCursor`. Without limit or cursor every matching account is returned.'
+        - name: cursor
+          in: query
+          schema: { type: string }
+          description: 'Opaque cursor from a previous response''s `pagination.nextCursor`; returns the next page of `limit` accounts (25 when limit is omitted). A cursor we cannot parse returns 400.'
       responses:
         '200':
           description: Follower stats
@@ -25504,6 +25530,7 @@ paths:
                       from: "2024-01-01T00:00:00.000Z"
                       to: "2024-01-31T23:59:59.999Z"
                     granularity: "daily"
+        '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403':
           description: Analytics access required. Legacy plans need the Analytics add-on; included by default on usage-based plans.

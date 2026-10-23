@@ -89,6 +89,7 @@ class AccountsResource:
         include_status_counts: bool | None = False,
         page: int | None = None,
         limit: int | None = None,
+        cursor: str | None = None,
         profile_ids: str | None = None,
         per_profile: int | None = None,
     ) -> dict[str, Any]:
@@ -107,6 +108,7 @@ class AccountsResource:
             include_status_counts=include_status_counts,
             page=page,
             limit=limit,
+            cursor=cursor,
             profile_ids=profile_ids,
             per_profile=per_profile,
         )
@@ -120,6 +122,8 @@ class AccountsResource:
         from_date: str | None = None,
         to_date: str | None = None,
         granularity: str | None = "daily",
+        limit: int | None = None,
+        cursor: str | None = None,
     ) -> dict[str, Any]:
         """Get follower stats"""
         params = self._build_params(
@@ -128,6 +132,8 @@ class AccountsResource:
             from_date=from_date,
             to_date=to_date,
             granularity=granularity,
+            limit=limit,
+            cursor=cursor,
         )
         return self._client._get("/v1/accounts/follower-stats", params=params)
 
@@ -685,6 +691,7 @@ class AccountsResource:
         include_status_counts: bool | None = False,
         page: int | None = None,
         limit: int | None = None,
+        cursor: str | None = None,
         profile_ids: str | None = None,
         per_profile: int | None = None,
     ) -> dict[str, Any]:
@@ -703,6 +710,7 @@ class AccountsResource:
             include_status_counts=include_status_counts,
             page=page,
             limit=limit,
+            cursor=cursor,
             profile_ids=profile_ids,
             per_profile=per_profile,
         )
@@ -716,6 +724,8 @@ class AccountsResource:
         from_date: str | None = None,
         to_date: str | None = None,
         granularity: str | None = "daily",
+        limit: int | None = None,
+        cursor: str | None = None,
     ) -> dict[str, Any]:
         """Get follower stats (async)"""
         params = self._build_params(
@@ -724,6 +734,8 @@ class AccountsResource:
             from_date=from_date,
             to_date=to_date,
             granularity=granularity,
+            limit=limit,
+            cursor=cursor,
         )
         return await self._client._aget("/v1/accounts/follower-stats", params=params)
 

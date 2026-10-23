@@ -657,14 +657,16 @@ def register_generated_tools(mcp, _get_client):
         include_status_counts: bool = False,
         page: int | None = None,
         limit: int | None = None,
+        cursor: str | None = None,
         profile_ids: str | None = None,
         per_profile: int | None = None,
     ) -> str:
         """List accounts
 
             Returns connected accounts. Only includes accounts within the plan limit by default. Follower data requires analytics add-on.
-            Supports optional server-side pagination via page/limit params. When omitted, returns all accounts (backward-compatible).
-            page and limit must be supplied together; out-of-range page/limit values are rejected with 400 rather than silently clamped.
+            Supports optional server-side pagination. When omitted, returns all accounts (backward-compatible).
+            Cursor paging: send `limit` alone for the first page, then pass `pagination.nextCursor` back as `cursor` until it is null. Pages are ordered by account id, so accounts added or removed between calls never shift a page. Cannot be combined with `page`, `sort` or `perProfile`.
+            Offset paging: send `page` and `limit` together. Out-of-range page/limit values are rejected with 400 rather than silently clamped.
 
             Args:
                 profile_id: Filter accounts by profile ID. Must be a valid ObjectId.
@@ -672,7 +674,7 @@ def register_generated_tools(mcp, _get_client):
                 status: Filter accounts by connection status. `connected` returns healthy accounts; `disconnected` returns accounts that need reconnection (per the same reconnection check surfaced in the dashboard). Omit to return accounts in any status. When combined with page/limit, pagination totals reflect the filtered result set.
                 search: Case-insensitive match on the account username, display name or platform user id, or an exact account id. Combine with page/limit to paginate the matches.
                 category: Only accounts of this kind. ads = ad accounts (Meta, Google, LinkedIn, Pinterest, TikTok, X, OpenAI, Reddit), communication = WhatsApp, Telegram, Discord, Slack and iMessage, blogs = Shopify and WordPress, crm = HubSpot, social = every other platform.
-                sort: Sort a paginated listing (page/limit) by account name, platform, profile name, status (accounts needing a reconnect first when ascending) or connection date. Ties keep the default order: platform, then newest first.
+                sort: Sort an offset-paginated listing (page and limit) by account name, platform, profile name, status (accounts needing a reconnect first when ascending) or connection date. Ties keep the default order: platform, then newest first.
                 order: Direction for `sort`.
                 include_over_limit: When true, includes accounts from over-limit profiles.
                 exclude_hidden: When true, leaves out accounts the dashboard does not show as connections: posting
@@ -683,15 +685,16 @@ def register_generated_tools(mcp, _get_client):
         `true` or `false` in any letter case; any other value returns 400.
                 include_sandbox: When true, appends the shared WhatsApp sandbox account and the iMessage sandbox account
         to the list when they are active, honouring `platform` but no other filter. Ignored on
-        a paginated request (page/limit) and together with `perProfile`. Accepts `true` or
+        a paginated request (page, limit or cursor) and together with `perProfile`. Accepts `true` or
         `false` in any letter case; any other value returns 400.
                 include_status_counts: When true, the response carries `statusCounts`: how many accounts match every other
         filter of the request (with `status` lifted) in total and how many of those need a
         reconnection. Accepts `true` or `false` in any letter case; any other value returns 400.
-                page: Page number (1-based). Must be provided together with limit to enable server-side pagination; sending only one of the two returns 400. Omit both for all accounts.
-                limit: Page size. Must be provided together with page; sending only one of the two returns 400.
+                page: Page number (1-based) for offset paging. Requires limit; omit page, limit and cursor for all accounts.
+                limit: Page size. With page, an offset page; alone or with cursor, a cursor page.
+                cursor: Opaque cursor from a previous response's `pagination.nextCursor`; returns the next page of `limit` accounts (500 when limit is omitted). A cursor we cannot parse returns 400. Cannot be combined with page.
                 profile_ids: Comma-separated profile IDs (up to 50) to preview, together with perProfile. The response then also carries `profileTotals`.
-                per_profile: Return a preview of each profile in profileIds: the newest account of every platform it has, topped up to at least N. Requires profileIds; cannot be combined with page and limit."""
+                per_profile: Return a preview of each profile in profileIds: the newest account of every platform it has, topped up to at least N. Requires profileIds; cannot be combined with page, limit or cursor."""
         client = _get_client()
         try:
             response = client.accounts.list_accounts(
@@ -708,6 +711,7 @@ def register_generated_tools(mcp, _get_client):
                 include_status_counts=include_status_counts,
                 page=page,
                 limit=limit,
+                cursor=cursor,
                 profile_ids=profile_ids,
                 per_profile=per_profile,
             )
@@ -729,6 +733,8 @@ def register_generated_tools(mcp, _get_client):
         from_date: str | None = None,
         to_date: str | None = None,
         granularity: Literal["daily", "weekly", "monthly"] = "daily",
+        limit: int | None = None,
+        cursor: str | None = None,
     ) -> str:
         """Get follower stats
 
@@ -740,7 +746,9 @@ def register_generated_tools(mcp, _get_client):
             profile_id: Filter by profile ID
             from_date: Start date in YYYY-MM-DD format (defaults to 30 days ago)
             to_date: End date in YYYY-MM-DD format (defaults to today)
-            granularity: Data aggregation level"""
+            granularity: Data aggregation level
+            limit: Accounts per page, ordered by account id. Send it to page through accounts; the response then carries `pagination.nextCursor`. Without limit or cursor every matching account is returned.
+            cursor: Opaque cursor from a previous response's `pagination.nextCursor`; returns the next page of `limit` accounts (25 when limit is omitted). A cursor we cannot parse returns 400."""
         client = _get_client()
         try:
             response = client.accounts.get_follower_stats(
@@ -749,6 +757,8 @@ def register_generated_tools(mcp, _get_client):
                 from_date=from_date,
                 to_date=to_date,
                 granularity=granularity,
+                limit=limit,
+                cursor=cursor,
             )
             return _format_response(response)
         except Exception as e:
