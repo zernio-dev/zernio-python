@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.344.0"
+  version: "1.345.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -202,7 +202,6 @@ x-documentation:
     - `campaign.budget.depleted` - A campaign Zernio already tracked ran out of budget (TikTok, the only network that reports it on the ad)
     - `ad_account.status_changed` - An ad account Zernio already tracked became `active`, `restricted`, `disabled` or `closed` (Meta, Google, TikTok, X)
     - `ad.video.processed` - Meta finished processing a video uploaded with `POST /v1/ads/videos` and `async: true`. `video.status` is `ready` (usable as `video.id`) or `error`
-    - `ad_rule.triggered` - A scheduled ad rule run found campaigns or ad sets meeting every condition, once per object per cooldown (closed beta: ad rules pilot accounts only). `objects` lists the objects acted on
     - `whatsapp.template.status_updated` - WhatsApp Business template completed (re)review by Meta. `template.status` carries the new state (APPROVED, REJECTED, PENDING, PAUSED, DISABLED, IN_APPEAL, PENDING_DELETION); `template.reason` is Meta's free-form reason or "NONE".
     - `whatsapp.template.category_updated` - Meta reclassified a WhatsApp Business template's category (drives tariff and marketing opt-out applicability). `template.changeType` is `scheduled` (24h advance notice) or `applied`; `template.category` is always the category right now.
     - `whatsapp.account.name_status_updated` - Meta finished reviewing a WhatsApp display-name change. `name.status` carries the outcome (APPROVED, DECLINED, PENDING_REVIEW). Fires only on a review outcome; a name applied without review (`name_status: AVAILABLE_WITHOUT_REVIEW`) produces no event.
@@ -264,7 +263,7 @@ x-documentation:
     | `post.platform.*`, `post.tiktok.url_resolved` | `account.accountId` (the target this event is about; `post.platforms[].accountId` lists every target) |
     | `post.scheduled`, `post.published`, `post.failed`, `post.partial`, `post.cancelled`, `post.recycled` | `post.platforms[].accountId`, one per target; there is no top-level account |
     | `post.external.*` | `account.accountId` (also `post.accountId`) |
-    | `ad.status_changed`, `ad.review.*`, `ad.video.processed`, `ad_rule.triggered`, `whatsapp.template.*`, `whatsapp.account.*`, `whatsapp.contact.identity_changed` | `account.accountId` |
+    | `ad.status_changed`, `ad.review.*`, `ad.video.processed`, `whatsapp.template.*`, `whatsapp.account.*`, `whatsapp.contact.identity_changed` | `account.accountId` |
     | `whatsapp.automatic_event` | top-level `accountId` |
     | `whatsapp.number.*`, `sms.registration.*` | none; `number.id` / `registration.id` are the number and registration ids, `number.profileId` / `registration.profileId` the profile |
     | `verification.*`, `phone_number.stock_available`, `api.changelog.published`, `webhook.test`, `contact.*`, `sequence.*`, `workflow.run.*` | none (`sequence.*` and `workflow.run.*` still reach subscriptions scoped to the sending account) |
@@ -601,10 +600,10 @@ tags:
   - name: Webhooks
     description: |
       Configure webhooks for real-time notifications. Webhooks can be created from the dashboard (Settings → Webhooks) or via this API.
-      Events: post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.ads.initial_sync_completed, account.ads.sync_failed, account.ads.sync_recovered, analytics.synced, message.received, conversation.started, conversation.control_changed, call.received, call.ended, call.failed, call.permission_request, message.sent, message.edited, message.deleted, message.delivered, message.read, message.played, message.failed, reaction.received, referral.received, comment.received, review.new, review.updated, lead.received, ad.status_changed, ad.review.approved, ad.review.rejected, ad.delivery_issue, campaign.budget.depleted, ad_account.status_changed, ad.video.processed, ad_rule.triggered, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.account.quality_updated, whatsapp.account.status_updated, whatsapp.account.alert_received, whatsapp.contact.identity_changed, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, phone_number.stock_available, verification.approved, verification.failed, api.changelog.published, sms.registration.action_required, sms.registration.status_updated, branded_calling.identity.status_updated, branded_calling.identity.action_required, branded_calling.number.status_updated, rcs.agent.status_updated, commerce.product.created, commerce.product.updated, commerce.product.deleted, commerce.order.created, commerce.order.updated, commerce.order.refunded, contact.tag_added, contact.tag_removed, contact.field_changed, sequence.enrolled, sequence.exited, workflow.run.started, workflow.run.completed, workflow.run.failed, support.run.completed, support.run.failed, webhook.test.
+      Events: post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.ads.initial_sync_completed, account.ads.sync_failed, account.ads.sync_recovered, analytics.synced, message.received, conversation.started, conversation.control_changed, call.received, call.ended, call.failed, call.permission_request, message.sent, message.edited, message.deleted, message.delivered, message.read, message.played, message.failed, reaction.received, referral.received, comment.received, review.new, review.updated, lead.received, ad.status_changed, ad.review.approved, ad.review.rejected, ad.delivery_issue, campaign.budget.depleted, ad_account.status_changed, ad.video.processed, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.account.quality_updated, whatsapp.account.status_updated, whatsapp.account.alert_received, whatsapp.contact.identity_changed, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, phone_number.stock_available, verification.approved, verification.failed, api.changelog.published, sms.registration.action_required, sms.registration.status_updated, branded_calling.identity.status_updated, branded_calling.identity.action_required, branded_calling.number.status_updated, rcs.agent.status_updated, commerce.product.created, commerce.product.updated, commerce.product.deleted, commerce.order.created, commerce.order.updated, commerce.order.refunded, contact.tag_added, contact.tag_removed, contact.field_changed, sequence.enrolled, sequence.exited, workflow.run.started, workflow.run.completed, workflow.run.failed, support.run.completed, support.run.failed, webhook.test.
       Headers: every delivery carries X-Zernio-Event (event name) and X-Zernio-Event-Id (the payload `id`, a UUID minted once per event and identical across every subscribed endpoint, every automatic retry and every redelivery, so dedupe on it). Security: optional HMAC-SHA256 signature in X-Zernio-Signature header. Configure a secret key to enable verification. Custom headers supported. Legacy X-Late-Event, X-Late-Event-Id and X-Late-Signature duplicates are still sent and will be removed in a future major version.
 
-      Resource groups. Every event belongs to one group: post.* to publishing, message.*, reaction.*, conversation.*, call.* and whatsapp.automatic_event to messages, comment.* and review.* to engagement, lead.* and contact.* to contacts, sequence.* and workflow.run.* to messages, ad.*, ad_account.*, ad_rule.* and campaign.* to ads, account.*, whatsapp.template.* and whatsapp.account.* to accounts, analytics.* to analytics, whatsapp.number.*, verification.* and sms.registration.* to telephony, api.changelog.published and webhook.test to webhooks. Support Assistant events (support.run.*) belong to no single group: they need every resource group enabled and a first-party full-scope caller (a session or a full-scope key, never an OAuth token or a profile-scoped key). Two independent controls use that mapping. (1) A restricted (zrk_) API key can only subscribe to, test-fire, redeliver, or read delivery logs for events in the groups it holds, so it can never create a subscription broader than itself. (2) Each subscription carries its own `disabledResourceGroups` denylist: events in a disabled group are dropped before delivery to that endpoint, on live delivery and on every replay path, no matter which key or session created the subscription. Changing that denylist applies to every event emitted after the change; events already queued when it landed can still be delivered for up to five minutes after they were enqueued, because the delivery worker trusts a five-minute enqueue-time snapshot before re-checking. Absent or empty on a subscription means it receives everything it subscribes to, which is the behavior of every subscription created before the field existed.
+      Resource groups. Every event belongs to one group: post.* to publishing, message.*, reaction.*, conversation.*, call.* and whatsapp.automatic_event to messages, comment.* and review.* to engagement, lead.* and contact.* to contacts, sequence.* and workflow.run.* to messages, ad.*, ad_account.* and campaign.* to ads, account.*, whatsapp.template.* and whatsapp.account.* to accounts, analytics.* to analytics, whatsapp.number.*, verification.* and sms.registration.* to telephony, api.changelog.published and webhook.test to webhooks. Support Assistant events (support.run.*) belong to no single group: they need every resource group enabled and a first-party full-scope caller (a session or a full-scope key, never an OAuth token or a profile-scoped key). Two independent controls use that mapping. (1) A restricted (zrk_) API key can only subscribe to, test-fire, redeliver, or read delivery logs for events in the groups it holds, so it can never create a subscription broader than itself. (2) Each subscription carries its own `disabledResourceGroups` denylist: events in a disabled group are dropped before delivery to that endpoint, on live delivery and on every replay path, no matter which key or session created the subscription. Changing that denylist applies to every event emitted after the change; events already queued when it landed can still be delivered for up to five minutes after they were enqueued, because the delivery worker trusts a five-minute enqueue-time snapshot before re-checking. Absent or empty on a subscription means it receives everything it subscribes to, which is the behavior of every subscription created before the field existed.
 
       Profile and account filters. A subscription can also carry `profileIds`, an allowlist of profiles, and `accountIds`, an allowlist of connected accounts with the same semantics keyed on the account; each non-empty list narrows delivery and a subscription with both must be satisfied on both. A scoped subscription is only sent events it can attribute to one of those profiles: the profile of the connected account behind the event, or for an aggregate `post.*` event the profile of every account the post targets (a post spanning two scoped endpoints' profiles reaches both). So an integrator can route the profile holding test accounts to a staging endpoint while a second subscription, scoped to the production profiles, keeps production traffic. Events that belong to no profile (`verification.*`, `phone_number.*`, and a legacy post whose accounts were deleted) reach only unscoped subscriptions. The filter runs when an event is emitted; redelivery replays a delivery already made to that endpoint and test fires ignore it. Absent or empty means every profile (or every account).
   - name: Support Assistant
@@ -4386,7 +4385,7 @@ components:
           type: array
           items:
             type: string
-            enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.ads.initial_sync_completed, account.ads.sync_failed, account.ads.sync_recovered, analytics.synced, message.received, conversation.started, conversation.control_changed, call.received, call.ended, call.failed, call.permission_request, message.sent, message.edited, message.deleted, message.delivered, message.read, message.played, message.failed, reaction.received, referral.received, comment.received, review.new, review.updated, lead.received, ad.status_changed, ad.review.approved, ad.review.rejected, ad.delivery_issue, campaign.budget.depleted, ad_account.status_changed, ad.video.processed, ad_rule.triggered, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.account.quality_updated, whatsapp.account.status_updated, whatsapp.account.alert_received, whatsapp.contact.identity_changed, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, phone_number.stock_available, verification.approved, verification.failed, api.changelog.published, sms.registration.action_required, sms.registration.status_updated, branded_calling.identity.status_updated, branded_calling.identity.action_required, branded_calling.number.status_updated, rcs.agent.status_updated, commerce.product.created, commerce.product.updated, commerce.product.deleted, commerce.order.created, commerce.order.updated, commerce.order.refunded, contact.tag_added, contact.tag_removed, contact.field_changed, sequence.enrolled, sequence.exited, workflow.run.started, workflow.run.completed, workflow.run.failed, support.run.completed, support.run.failed]
+            enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.ads.initial_sync_completed, account.ads.sync_failed, account.ads.sync_recovered, analytics.synced, message.received, conversation.started, conversation.control_changed, call.received, call.ended, call.failed, call.permission_request, message.sent, message.edited, message.deleted, message.delivered, message.read, message.played, message.failed, reaction.received, referral.received, comment.received, review.new, review.updated, lead.received, ad.status_changed, ad.review.approved, ad.review.rejected, ad.delivery_issue, campaign.budget.depleted, ad_account.status_changed, ad.video.processed, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.account.quality_updated, whatsapp.account.status_updated, whatsapp.account.alert_received, whatsapp.contact.identity_changed, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, phone_number.stock_available, verification.approved, verification.failed, api.changelog.published, sms.registration.action_required, sms.registration.status_updated, branded_calling.identity.status_updated, branded_calling.identity.action_required, branded_calling.number.status_updated, rcs.agent.status_updated, commerce.product.created, commerce.product.updated, commerce.product.deleted, commerce.order.created, commerce.order.updated, commerce.order.refunded, contact.tag_added, contact.tag_removed, contact.field_changed, sequence.enrolled, sequence.exited, workflow.run.started, workflow.run.completed, workflow.run.failed, support.run.completed, support.run.failed]
           description: Events subscribed to
         isActive:
           type: boolean
@@ -7713,73 +7712,6 @@ components:
             previous: { type: string, enum: [active, restricted, disabled, closed] }
             current: { type: string, enum: [active, restricted, disabled, closed] }
             raw: { type: string, description: "Platform-native status, forwarded verbatim (Meta `account_status` code such as `2`, Google `SUSPENDED`, TikTok `STATUS_LIMIT`, X `REJECTED`)." }
-        timestamp:
-          type: string
-          format: date-time
-          description: UTC time at which Zernio generated this event.
-    WebhookPayloadAdRuleTriggered:
-      type: object
-      description: |
-        Webhook payload for the `ad_rule.triggered` event. Ad rules are in closed beta:
-        the event only fires for accounts in the ad rules pilot.
-
-        Fires when a scheduled ad rule run finds campaigns or ad sets that meet every
-        condition of the rule. Each object is announced at most once per rule cooldown,
-        so `objects` lists only the objects the run acted on, never the ones still in
-        cooldown. A run where every matching object is still in cooldown sends nothing.
-      required: [id, event, account, rule, run, objects, timestamp]
-      properties:
-        id:
-          type: string
-          description: 'Stable webhook event ID: the dedupe key, also sent as the X-Zernio-Event-Id header and identical on every retry and redelivery.'
-        profiles: { $ref: '#/components/schemas/WebhookProfiles' }
-        test:
-          type: boolean
-          description: 'Always true when present: only a sample sent by POST /v1/webhooks/test with an event carries it. Real deliveries never do.'
-        event:
-          type: string
-          enum: [ad_rule.triggered]
-        account: { $ref: '#/components/schemas/WebhookAdsAccount' }
-        rule:
-          type: object
-          required: [id, name, level, platformAdAccountId]
-          properties:
-            id: { type: string, description: Zernio ad rule ID. }
-            name: { type: string }
-            level: { type: string, enum: [campaign, adset], description: Whether the rule evaluates campaigns or ad sets. }
-            platformAdAccountId: { type: string, description: Platform-native ad account ID the rule watches. }
-        run:
-          type: object
-          required: [id, ranAt, today, timezone, timezoneAssumed, currency]
-          properties:
-            id: { type: string, description: ID of the rule run that triggered. }
-            ranAt: { type: string, format: date-time, description: Scheduled time of the run (UTC). }
-            today: { type: string, format: date, description: "The ad account's calendar date (YYYY-MM-DD) the condition windows were resolved against, so `today` and `last_7d` mean the account's days, not UTC days." }
-            timezone: { type: string, description: "IANA timezone used for `today`, for example `Europe/Madrid`." }
-            timezoneAssumed: { type: boolean, description: "True when the ad account has no known timezone and UTC was assumed." }
-            currency: { type: [string, "null"], description: "ISO 4217 currency of the ad account, which money metrics (`spend`, `cpc`, `cpm`, `cpa`) and condition values are in. Null when unknown." }
-        objects:
-          type: array
-          description: The campaigns or ad sets this run acted on, at the rule's `level`. Objects still in cooldown are left out.
-          items:
-            type: object
-            required: [platformId, name, platformCampaignId, conditions]
-            properties:
-              platformId: { type: string, description: Platform-native ID of the campaign or ad set. }
-              name: { type: string, description: Name on the platform. Falls back to `platformId` when the platform reports none. }
-              platformCampaignId: { type: [string, "null"], description: "Platform-native ID of the campaign the object belongs to (on a campaign-level rule, the campaign's own ID). Null when unknown." }
-              conditions:
-                type: array
-                description: Every condition of the rule, with the value the object reached.
-                items:
-                  type: object
-                  required: [metric, window, op, value, actual]
-                  properties:
-                    metric: { type: string, description: "`spend`, `impressions`, `clicks`, `conversions`, `ctr`, `cpc`, `cpm`, `cpa` or `roas`. New values may be added." }
-                    window: { type: string, description: "`today`, `yesterday`, `last_3d`, `last_7d`, `last_14d` or `last_30d`, in the account's calendar (see `run.today`). New values may be added." }
-                    op: { type: string, enum: ['>', '>=', '<', '<='] }
-                    value: { type: number, description: The threshold set on the rule. }
-                    actual: { type: [number, "null"], description: "The object's value for the metric over the window. Null when it cannot be computed, for example a cost per action with no actions." }
         timestamp:
           type: string
           format: date-time
@@ -17247,60 +17179,6 @@ webhooks:
                     error: null
                     thumbnailUrl: "https://scontent.xx.fbcdn.net/v/t15.5256-10/poster.jpg"
                   timestamp: "2026-10-05T15:25:27.944Z"
-      responses:
-        '200':
-          description: Webhook received successfully
-  ad_rule.triggered:
-    post:
-      operationId: onAdRuleTriggered
-      summary: Ad rule triggered event
-      description: |
-        Fired when a scheduled ad rule run finds campaigns or ad sets meeting every condition,
-        once per object per cooldown. Ad rules are in closed beta: the event only fires for
-        accounts in the ad rules pilot.
-        See `WebhookPayloadAdRuleTriggered` for when it fires and when it does not.
-      tags: [Webhook Events]
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/WebhookPayloadAdRuleTriggered'
-            examples:
-              sample:
-                summary: Ad set over its CPA threshold
-                value:
-                  id: "01J7K3P4N5Q6R7S8T9V0W1X2Z3"
-                  event: ad_rule.triggered
-                  account:
-                    accountId: "65c8f7e2a1b3c4d5e6f7a8b9"
-                    profileId: "65c8f7e2a1b3c4d5e6f7a800"
-                    platform: metaads
-                    username: acme-ads
-                    displayName: Acme Ads
-                  rule:
-                    id: "65c8f7e2a1b3c4d5e6f7a8c1"
-                    name: "Pause watch: CPA over 40"
-                    level: adset
-                    platformAdAccountId: act_1234567890
-                  run:
-                    id: "65c8f7e2a1b3c4d5e6f7a8c2"
-                    ranAt: "2026-10-22T09:10:00.000Z"
-                    today: "2026-10-22"
-                    timezone: Europe/Madrid
-                    timezoneAssumed: false
-                    currency: EUR
-                  objects:
-                    - platformId: "120210000000000002"
-                      name: Prospecting, broad
-                      platformCampaignId: "120210000000000001"
-                      conditions:
-                        - metric: cpa
-                          window: last_3d
-                          op: '>'
-                          value: 40
-                          actual: 52.75
-                  timestamp: "2026-10-22T09:10:04.120Z"
       responses:
         '200':
           description: Webhook received successfully
@@ -37248,7 +37126,7 @@ paths:
                   minItems: 1
                   items:
                     type: string
-                    enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.ads.initial_sync_completed, account.ads.sync_failed, account.ads.sync_recovered, analytics.synced, message.received, conversation.started, conversation.control_changed, call.received, call.ended, call.failed, call.permission_request, message.sent, message.edited, message.deleted, message.delivered, message.read, message.played, message.failed, reaction.received, referral.received, comment.received, review.new, review.updated, lead.received, ad.status_changed, ad.review.approved, ad.review.rejected, ad.delivery_issue, campaign.budget.depleted, ad_account.status_changed, ad.video.processed, ad_rule.triggered, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.account.quality_updated, whatsapp.account.status_updated, whatsapp.account.alert_received, whatsapp.contact.identity_changed, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, phone_number.stock_available, verification.approved, verification.failed, api.changelog.published, sms.registration.action_required, sms.registration.status_updated, branded_calling.identity.status_updated, branded_calling.identity.action_required, branded_calling.number.status_updated, rcs.agent.status_updated, commerce.product.created, commerce.product.updated, commerce.product.deleted, commerce.order.created, commerce.order.updated, commerce.order.refunded, contact.tag_added, contact.tag_removed, contact.field_changed, sequence.enrolled, sequence.exited, workflow.run.started, workflow.run.completed, workflow.run.failed, support.run.completed, support.run.failed]
+                    enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.ads.initial_sync_completed, account.ads.sync_failed, account.ads.sync_recovered, analytics.synced, message.received, conversation.started, conversation.control_changed, call.received, call.ended, call.failed, call.permission_request, message.sent, message.edited, message.deleted, message.delivered, message.read, message.played, message.failed, reaction.received, referral.received, comment.received, review.new, review.updated, lead.received, ad.status_changed, ad.review.approved, ad.review.rejected, ad.delivery_issue, campaign.budget.depleted, ad_account.status_changed, ad.video.processed, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.account.quality_updated, whatsapp.account.status_updated, whatsapp.account.alert_received, whatsapp.contact.identity_changed, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, phone_number.stock_available, verification.approved, verification.failed, api.changelog.published, sms.registration.action_required, sms.registration.status_updated, branded_calling.identity.status_updated, branded_calling.identity.action_required, branded_calling.number.status_updated, rcs.agent.status_updated, commerce.product.created, commerce.product.updated, commerce.product.deleted, commerce.order.created, commerce.order.updated, commerce.order.refunded, contact.tag_added, contact.tag_removed, contact.field_changed, sequence.enrolled, sequence.exited, workflow.run.started, workflow.run.completed, workflow.run.failed, support.run.completed, support.run.failed]
                   description: Events to subscribe to (at least one required)
                 isActive:
                   type: boolean
@@ -37405,7 +37283,7 @@ paths:
                   minItems: 1
                   items:
                     type: string
-                    enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.ads.initial_sync_completed, account.ads.sync_failed, account.ads.sync_recovered, analytics.synced, message.received, conversation.started, conversation.control_changed, call.received, call.ended, call.failed, call.permission_request, message.sent, message.edited, message.deleted, message.delivered, message.read, message.played, message.failed, reaction.received, referral.received, comment.received, review.new, review.updated, lead.received, ad.status_changed, ad.review.approved, ad.review.rejected, ad.delivery_issue, campaign.budget.depleted, ad_account.status_changed, ad.video.processed, ad_rule.triggered, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.account.quality_updated, whatsapp.account.status_updated, whatsapp.account.alert_received, whatsapp.contact.identity_changed, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, phone_number.stock_available, verification.approved, verification.failed, api.changelog.published, sms.registration.action_required, sms.registration.status_updated, branded_calling.identity.status_updated, branded_calling.identity.action_required, branded_calling.number.status_updated, rcs.agent.status_updated, commerce.product.created, commerce.product.updated, commerce.product.deleted, commerce.order.created, commerce.order.updated, commerce.order.refunded, contact.tag_added, contact.tag_removed, contact.field_changed, sequence.enrolled, sequence.exited, workflow.run.started, workflow.run.completed, workflow.run.failed, support.run.completed, support.run.failed]
+                    enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.ads.initial_sync_completed, account.ads.sync_failed, account.ads.sync_recovered, analytics.synced, message.received, conversation.started, conversation.control_changed, call.received, call.ended, call.failed, call.permission_request, message.sent, message.edited, message.deleted, message.delivered, message.read, message.played, message.failed, reaction.received, referral.received, comment.received, review.new, review.updated, lead.received, ad.status_changed, ad.review.approved, ad.review.rejected, ad.delivery_issue, campaign.budget.depleted, ad_account.status_changed, ad.video.processed, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.account.quality_updated, whatsapp.account.status_updated, whatsapp.account.alert_received, whatsapp.contact.identity_changed, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, phone_number.stock_available, verification.approved, verification.failed, api.changelog.published, sms.registration.action_required, sms.registration.status_updated, branded_calling.identity.status_updated, branded_calling.identity.action_required, branded_calling.number.status_updated, rcs.agent.status_updated, commerce.product.created, commerce.product.updated, commerce.product.deleted, commerce.order.created, commerce.order.updated, commerce.order.refunded, contact.tag_added, contact.tag_removed, contact.field_changed, sequence.enrolled, sequence.exited, workflow.run.started, workflow.run.completed, workflow.run.failed, support.run.completed, support.run.failed]
                   description: Events to subscribe to. Must contain at least one event if provided.
                 isActive:
                   type: boolean
@@ -37788,7 +37666,6 @@ paths:
                     - campaign.budget.depleted
                     - ad_account.status_changed
                     - ad.video.processed
-                    - ad_rule.triggered
                     - lead.received
                     - whatsapp.template.status_updated
                     - whatsapp.template.category_updated
