@@ -30373,6 +30373,7 @@ def register_generated_tools(mcp, _get_client):
         reuse_option_id: str | None = None,
         reuse_from: str | None = None,
         area_code: str | None = None,
+        phone_number: str | None = None,
         pre_order: bool | None = None,
         end_user_first_name: str | None = None,
         end_user_last_name: str | None = None,
@@ -30409,6 +30410,7 @@ def register_generated_tools(mcp, _get_client):
             reuse_option_id: Which reusable verification to use (GET reusable.options[].id). The unambiguous selection key. Omitted = the approved default. No match = 409.
             reuse_from: Legacy fallback for `reuseOptionId`: the source phone number (GET reusable.options[].fromPhoneNumber). Ambiguous when a number labels two verifications, so prefer `reuseOptionId`. Omitted = the approved default. No match = 409.
             area_code: Area code (NDC) the number must be in. Hard constraint: an empty area pool fails with 409 code AREA_CODE_UNAVAILABLE instead of ordering from another area. Omit for any area. Options come from GET /v1/phone-numbers/availability (areaOptions); the purchase 202 kycUrl echoes the areaCode picked at purchase time so it can be passed here.
+            phone_number: Exact number to order, in E.164, taken from GET /v1/phone-numbers/available. It is ordered as is or the request fails with 409 code phone_number_unavailable; another number is never substituted and a pre-order is never placed. Requires quantity 1 (or omitted). Omit to let the carrier pick a number in the area.
             pre_order: With areaCode: pre-order that area when it has no stock (an area listed in soldOutAreas with preOrderable true) instead of failing with AREA_CODE_UNAVAILABLE. The carrier sources a number in that area. Without areaCode it accepts the pre-order a previous submit offered with 409 code area_pre_order_available (a geographic-match country whose address area has no stock): resend the same body with preOrder true and the order is placed for that area. A whole pair with no stock is pre-ordered without either flag.
             end_user_first_name: End user's legal first name. Required when the country has an action/ID-verification (Onfido) requirement.
             end_user_last_name: End user's legal last name. Same condition as endUserFirstName.
@@ -30426,6 +30428,7 @@ def register_generated_tools(mcp, _get_client):
                 reuse_option_id=reuse_option_id,
                 reuse_from=reuse_from,
                 area_code=area_code,
+                phone_number=phone_number,
                 pre_order=pre_order,
                 end_user_first_name=end_user_first_name,
                 end_user_last_name=end_user_last_name,
@@ -41285,6 +41288,7 @@ def register_generated_tools(mcp, _get_client):
         reuse_option_id: str | None = None,
         reuse_from: str | None = None,
         area_code: str | None = None,
+        phone_number: str | None = None,
         pre_order: bool | None = None,
         end_user_first_name: str | None = None,
         end_user_last_name: str | None = None,
@@ -41322,6 +41326,7 @@ def register_generated_tools(mcp, _get_client):
             reuse_option_id: Which reusable verification to use (GET reusable.options[].id). The unambiguous selection key. Omitted = the approved default. No match = 409.
             reuse_from: Legacy fallback for `reuseOptionId`: the source phone number (GET reusable.options[].fromPhoneNumber). Ambiguous when a number labels two verifications, so prefer `reuseOptionId`. Omitted = the approved default. No match = 409.
             area_code: Area code (NDC) the number must be in. Hard constraint: an empty area pool fails with 409 code AREA_CODE_UNAVAILABLE instead of ordering from another area. Omit for any area. Options come from GET /v1/phone-numbers/availability (areaOptions); the purchase 202 kycUrl echoes the areaCode picked at purchase time so it can be passed here.
+            phone_number: Exact number to order, in E.164, taken from GET /v1/whatsapp/phone-numbers/available. It is ordered as is or the request fails with 409 code phone_number_unavailable; another number is never substituted and a pre-order is never placed. Requires quantity 1 (or omitted). Omit to let the carrier pick a number in the area.
             pre_order: With areaCode: pre-order that area when it has no stock (an area listed in soldOutAreas with preOrderable true) instead of failing with AREA_CODE_UNAVAILABLE. The carrier sources a number in that area. Without areaCode it accepts the pre-order a previous submit offered with 409 code area_pre_order_available (a geographic-match country whose address area has no stock): resend the same body with preOrder true and the order is placed for that area. A whole pair with no stock is pre-ordered without either flag.
             end_user_first_name: End user's legal first name. Required when the country has an action/ID-verification (Onfido) requirement.
             end_user_last_name: End user's legal last name. Same condition as endUserFirstName.
@@ -41339,6 +41344,7 @@ def register_generated_tools(mcp, _get_client):
                 reuse_option_id=reuse_option_id,
                 reuse_from=reuse_from,
                 area_code=area_code,
+                phone_number=phone_number,
                 pre_order=pre_order,
                 end_user_first_name=end_user_first_name,
                 end_user_last_name=end_user_last_name,
