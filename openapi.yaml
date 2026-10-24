@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.350.4"
+  version: "1.350.5"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -3275,6 +3275,31 @@ components:
           description: 'Why it failed.'
           enum: [linkedin_mention_unresolvable, linkedin_mention_requires_page_admin, linkedin_mention_name_unavailable, linkedin_mentions_limit_exceeded, rate_limited, reconnect_required, temporarily_unavailable]
         message: { type: string, description: 'Human-readable reason.' }
+    PinPostRequest:
+      type: object
+      required:
+        - platform
+      properties:
+        platform:
+          type: string
+          description: Must be `facebook`. Any other value answers 400 `platform_not_supported`.
+          example: facebook
+        accountId:
+          type: string
+          description: Which Facebook account's copy to change when the post was published to several Facebook accounts. Required in that case.
+    PinPostResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        pinned:
+          type: boolean
+          description: Whether the post is now pinned to the top of the Page.
+        platformPostId:
+          type: string
+          description: The Facebook post ID that was changed.
+        message:
+          type: string
     ErrorResponse:
       type: object
       description: |
@@ -24834,6 +24859,128 @@ paths:
               schema: { $ref: '#/components/schemas/ErrorResponse' }
         '500':
           description: Platform API deletion failed
+  /v1/posts/{postId}/pin:
+    post:
+      x-resource-group: "publishing"
+      operationId: pinPost
+      tags: [Posts]
+      summary: Pin post
+      description: |
+        Pins a published Facebook Page post to the top of its Page. Only Facebook posts can be pinned; any other platform answers 400 `platform_not_supported`. Works for posts on Pages connected through Facebook Login.
+      parameters:
+        - name: postId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PinPostRequest'
+            example:
+              platform: facebook
+      responses:
+        '200':
+          description: 'Pin applied on Facebook'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PinPostResponse'
+              example:
+                success: true
+                pinned: true
+                platformPostId: '123456789012345_987654321098765'
+                message: Post pinned to the top of the Facebook Page
+        '400':
+          description: >-
+            Invalid request: invalid postId or accountId, the post or the chosen account is not on Facebook
+            (`platform_not_supported`), the Facebook entry is not published or has no platform post ID, no access
+            token, or Facebook rejected the change.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: The post was published to several Facebook accounts and no accountId was sent (ambiguous_account).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Facebook API call failed
+  /v1/posts/{postId}/unpin:
+    post:
+      x-resource-group: "publishing"
+      operationId: unpinPost
+      tags: [Posts]
+      summary: Unpin post
+      description: |
+        Unpins a published Facebook Page post from the top of its Page. Only Facebook posts can be unpinned; any other platform answers 400 `platform_not_supported`.
+      parameters:
+        - name: postId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PinPostRequest'
+            example:
+              platform: facebook
+      responses:
+        '200':
+          description: 'Unpin applied on Facebook'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PinPostResponse'
+              example:
+                success: true
+                pinned: false
+                platformPostId: '123456789012345_987654321098765'
+                message: Post unpinned from the Facebook Page
+        '400':
+          description: >-
+            Invalid request: invalid postId or accountId, the post or the chosen account is not on Facebook
+            (`platform_not_supported`), the Facebook entry is not published or has no platform post ID, no access
+            token, or Facebook rejected the change.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: The post was published to several Facebook accounts and no accountId was sent (ambiguous_account).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Facebook API call failed
   /v1/posts/{postId}/edit:
     post:
       x-resource-group: "publishing"

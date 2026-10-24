@@ -264,6 +264,26 @@ class PostsResource:
         )
         return self._client._post(f"/v1/posts/{post_id}/unpublish", data=payload)
 
+    def pin_post(
+        self, post_id: str, platform: str, *, account_id: str | None = None
+    ) -> dict[str, Any]:
+        """Pin post"""
+        payload = self._build_payload(
+            platform=platform,
+            account_id=account_id,
+        )
+        return self._client._post(f"/v1/posts/{post_id}/pin", data=payload)
+
+    def unpin_post(
+        self, post_id: str, platform: str, *, account_id: str | None = None
+    ) -> dict[str, Any]:
+        """Unpin post"""
+        payload = self._build_payload(
+            platform=platform,
+            account_id=account_id,
+        )
+        return self._client._post(f"/v1/posts/{post_id}/unpin", data=payload)
+
     def edit_post(
         self,
         post_id: str,
@@ -504,6 +524,26 @@ class PostsResource:
             account_id=account_id,
         )
         return await self._client._apost(f"/v1/posts/{post_id}/unpublish", data=payload)
+
+    async def apin_post(
+        self, post_id: str, platform: str, *, account_id: str | None = None
+    ) -> dict[str, Any]:
+        """Pin post (async)"""
+        payload = self._build_payload(
+            platform=platform,
+            account_id=account_id,
+        )
+        return await self._client._apost(f"/v1/posts/{post_id}/pin", data=payload)
+
+    async def aunpin_post(
+        self, post_id: str, platform: str, *, account_id: str | None = None
+    ) -> dict[str, Any]:
+        """Unpin post (async)"""
+        payload = self._build_payload(
+            platform=platform,
+            account_id=account_id,
+        )
+        return await self._client._apost(f"/v1/posts/{post_id}/unpin", data=payload)
 
     async def aedit_post(
         self,

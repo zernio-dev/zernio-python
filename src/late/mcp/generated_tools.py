@@ -31672,6 +31672,62 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="Pin post",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def posts_pin_post(
+        post_id: str, platform: str, account_id: str | None = None
+    ) -> str:
+        """Pin post
+
+        Pins a published Facebook Page post to the top of its Page. Only Facebook posts can be pinned; any other platform answers 400 `platform_not_supported`. Works for posts on Pages connected through Facebook Login.
+
+        Args:
+            post_id: (required)
+            platform: Must be `facebook`. Any other value answers 400 `platform_not_supported`. (required)
+            account_id: Which Facebook account's copy to change when the post was published to several Facebook accounts. Required in that case."""
+        client = _get_client()
+        try:
+            response = client.posts.pin_post(
+                post_id=post_id, platform=platform, account_id=account_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Unpin post",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def posts_unpin_post(
+        post_id: str, platform: str, account_id: str | None = None
+    ) -> str:
+        """Unpin post
+
+        Unpins a published Facebook Page post from the top of its Page. Only Facebook posts can be unpinned; any other platform answers 400 `platform_not_supported`.
+
+        Args:
+            post_id: (required)
+            platform: Must be `facebook`. Any other value answers 400 `platform_not_supported`. (required)
+            account_id: Which Facebook account's copy to change when the post was published to several Facebook accounts. Required in that case."""
+        client = _get_client()
+        try:
+            response = client.posts.unpin_post(
+                post_id=post_id, platform=platform, account_id=account_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="Edit published post",
             readOnlyHint=False,
             destructiveHint=True,

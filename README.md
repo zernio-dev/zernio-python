@@ -190,8 +190,10 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `posts.update_post_metadata()` | Update post metadata |
 | `posts.delete_post()` | Delete post |
 | `posts.edit_post()` | Edit published post |
+| `posts.pin_post()` | Pin post |
 | `posts.retry_post()` | Retry failed post |
 | `posts.review_post()` | Approve or reject a post |
+| `posts.unpin_post()` | Unpin post |
 | `posts.unpublish_post()` | Unpublish post |
 
 ### Accounts
