@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.348.1"
+  version: "1.349.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -3264,6 +3264,17 @@ components:
         paymentMethodRequired: { type: boolean, description: "Always true. The account has no billing until it is set up in Google Ads." }
         nextSteps: { type: string, description: "Billing setup instructions for the user." }
         validateOnly: { type: boolean, description: "Always false on a 201." }
+    LinkedInMentionIssue:
+      type: object
+      description: 'One LinkedIn mention that could not be resolved, listed under `details.mentions[]` of the error.'
+      required: [input, code, message]
+      properties:
+        input: { type: string, description: 'The mention exactly as written in the request, for example `@[https://www.linkedin.com/in/jane-doe]`.' }
+        code:
+          type: string
+          description: 'Why it failed.'
+          enum: [linkedin_mention_unresolvable, linkedin_mention_requires_page_admin, linkedin_mention_name_unavailable, linkedin_mentions_limit_exceeded, rate_limited, reconnect_required, temporarily_unavailable]
+        message: { type: string, description: 'Human-readable reason.' }
     ErrorResponse:
       type: object
       description: |
@@ -8692,7 +8703,7 @@ components:
           items: { type: string }
         mentions:
           type: array
-          description: "Stored for reference only. This field does NOT automatically create @mentions when publishing. For LinkedIn @mentions, use the /v1/accounts/{accountId}/linkedin-mentions endpoint to resolve profile URLs to URNs, then embed the returned mentionFormat directly in the post content field."
+          description: "Stored for reference only. This field does NOT automatically create @mentions when publishing. For LinkedIn @mentions, write them in the post content, for example @[https://www.linkedin.com/in/jane-doe] or @[https://www.linkedin.com/company/acme]."
           items: { type: string }
         visibility: { type: string, enum: [public, private, unlisted] }
         metadata:
@@ -23422,6 +23433,12 @@ paths:
 
         See each platform's schema for media constraints.
 
+        ## LinkedIn @mentions
+
+        Put the profile or company URL inside `@[...]` in `content`, or in a LinkedIn entry's `customContent`: `@[https://www.linkedin.com/in/jane-doe]` or `@[https://www.linkedin.com/company/acme]`. The post is published with LinkedIn's real name and link, and no lookup call is needed first. Custom text is optional, as in `@[Jane](https://www.linkedin.com/in/jane-doe)`: for a person it must be the first name, last name or full name, for a company the exact company name, both case-sensitive. Any other text is replaced with LinkedIn's name and a `warnings` entry is returned (`linkedin_mention_name_replaced`). `@[Text](urn:li:person:ID)` markup, as returned by `GET /v1/accounts/{accountId}/linkedin-mentions`, is published exactly as you wrote it: it is not looked up, checked or changed, so its text must already be LinkedIn's name.
+
+        Resolving a person's profile URL needs one of your LinkedIn accounts to administer a Page; publishing does not. Only profile and company URLs can fail. A scheduled or published post is rejected when one cannot be resolved: `400` with code `linkedin_mentions_invalid`, `429` with `rate_limited` (LinkedIn is rate limiting), `401` with `reconnect_required` (expired token) or a retryable `503` with `temporarily_unavailable` (LinkedIn did not answer within 8 seconds in total). Each failing mention is listed under `details.mentions[]` (`LinkedInMentionIssue`) with its own code: `linkedin_mention_unresolvable`, `linkedin_mention_requires_page_admin` or `linkedin_mention_name_unavailable` (LinkedIn withheld the name and none was given). A post can resolve at most 10 profile or company URL mentions across its shared content and LinkedIn entries: more is a `400` with `linkedin_mentions_limit_exceeded`. Drafts never fail on a mention: unresolved ones (and more than 10) stay as written and come back as `warnings`. A draft is checked again when it is scheduled. On platforms other than LinkedIn, `@[linkedin.com/in/jane]` is posted as its text, or as the vanity (`jane`) when you wrote no text, and `@[Text](urn:li:...)` as `Text`.
+
         ## Scheduling
 
         Pick one of:
@@ -23482,7 +23499,7 @@ paths:
                   description: "Stored on the post for reference/display only. This field is NOT used as the video title when publishing. To set a YouTube video title, use platformSpecificData.title on the youtube platform target (falls back to the first line of content when omitted)."
                 content:
                   type: string
-                  description: 'Post caption/text. Optional when media is attached, all platforms have customContent, every platform entry is an X Article (platformSpecificData.article), or every platform entry is a LinkedIn text-free reshare (platformSpecificData.reshareUrl with no text). Required for other text-only posts.'
+                  description: 'Post caption/text. Optional when media is attached, all platforms have customContent, every platform entry is an X Article (platformSpecificData.article), or every platform entry is a LinkedIn text-free reshare (platformSpecificData.reshareUrl with no text). Required for other text-only posts. LinkedIn @mentions: write @[https://www.linkedin.com/in/jane-doe] or @[https://www.linkedin.com/company/acme] in the text (see the operation description).'
                 mediaItems:
                   type: array
                   description: 'Media attached to every platform in the request (a platform entry can override it with `customMedia`). Each entry needs a publicly reachable HTTPS `url`; `type` (image, video, gif, document) is inferred from the URL extension when omitted and a `type` that contradicts the extension is rejected with 400. Upload files with `POST /v1/media/presign` first; per-platform size, duration and format limits are listed on each platform schema.'
@@ -23556,7 +23573,7 @@ paths:
                   items: { type: string }
                 mentions:
                   type: array
-                  description: "Stored for reference only. This field does NOT automatically create @mentions when publishing. For LinkedIn @mentions, use the /v1/accounts/{accountId}/linkedin-mentions endpoint to resolve profile URLs to URNs, then embed the returned mentionFormat directly in the post content field."
+                  description: "Stored for reference only. This field does NOT automatically create @mentions when publishing. For LinkedIn @mentions, write them in the post content, for example @[https://www.linkedin.com/in/jane-doe] or @[https://www.linkedin.com/company/acme]."
                   items: { type: string }
                 crosspostingEnabled:
                   type: boolean
@@ -23966,13 +23983,20 @@ paths:
                         status: "pending"
                         error: null
         '400':
-          description: Validation error
+          description: 'Validation error. A LinkedIn profile or company URL mention that cannot be resolved returns code `linkedin_mentions_invalid` with `details.mentions[]`.'
           content:
             application/json:
               schema:
                 type: object
                 properties:
                   error: { type: string }
+                  code: { type: string }
+                  details:
+                    type: object
+                    properties:
+                      mentions:
+                        type: array
+                        items: { $ref: '#/components/schemas/LinkedInMentionIssue' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403':
           description: |
@@ -24013,8 +24037,9 @@ paths:
                       accountId: { type: string }
                       platform: { type: string }
                       existingPostId: { type: string }
+        '503': { $ref: '#/components/responses/TemporarilyUnavailable' }
         '429':
-          description: "Rate limit exceeded. Possible causes: API rate limit, velocity limit (25 posts/hour per account), account cooldown, or daily platform limits."
+          description: "Rate limit exceeded. Possible causes: API rate limit, velocity limit (25 posts/hour per account), account cooldown, or daily platform limits, or LinkedIn rate limiting a LinkedIn mention lookup (code `rate_limited`)."
           content:
             application/json:
               schema:
@@ -24277,6 +24302,17 @@ paths:
 
         Non-draft updates run the same per-platform validation as post creation (media requirements, platform-specific
         field rules, etc.) against the resulting platforms, returning 400 on failure.
+
+        ## LinkedIn @mentions
+
+        Profile and company URLs written as `@[https://www.linkedin.com/in/jane-doe]` or
+        `@[Jane](https://www.linkedin.com/company/acme)` in the `content` or LinkedIn `customContent` you send are
+        resolved to LinkedIn's name and link, exactly as on `POST /v1/posts` (see Create post for the rules). Only what
+        the request sends is looked up: an update of the schedule, status or media makes no LinkedIn call, and
+        `@[Text](urn:li:...)` markup is stored as written. Moving a draft out of draft also resolves the stored
+        `content` and the stored `customContent` of its LinkedIn entries, and saves the result. A mention that cannot be resolved on a non-draft returns `400` `linkedin_mentions_invalid`, `429`
+        `rate_limited`, `401` `reconnect_required` or a retryable `503` `temporarily_unavailable`, with each mention
+        under `details.mentions[]` (`LinkedInMentionIssue`). Drafts get `warnings` instead.
       parameters:
         - name: postId
           in: path
@@ -24385,7 +24421,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/PostPublishIncompleteResponse'
         '400':
-          description: Invalid request
+          description: 'Invalid request. A LinkedIn profile or company URL mention that cannot be resolved returns code `linkedin_mentions_invalid` with `details.mentions[]` (`LinkedInMentionIssue`).'
           content:
             application/json:
               schema: { $ref: '#/components/schemas/ErrorResponse' }
@@ -24396,6 +24432,8 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/ErrorResponse' }
         '404': { $ref: '#/components/responses/NotFound' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+        '503': { $ref: '#/components/responses/TemporarilyUnavailable' }
         '409':
           description: 'The requested scheduledFor collides with another post already occupying that slot in the same queue (code: queue_slot_conflict). Choose a different time, omit scheduledFor and let the queue assign the next open slot, or send queueId: null to schedule this post outside the queue. Also returned when requiresApproval is sent on a post that is not a draft (code: invalid_resource_state).'
           content:
@@ -33617,22 +33655,19 @@ paths:
       description: |
         Converts a LinkedIn profile or company URL to a URN for @mentions in posts.
 
-        How to use LinkedIn @mentions (2-step workflow):
-
-        1. Call this endpoint with the LinkedIn profile/company URL to get the mention URN and format.
-        2. Embed the returned mentionFormat (e.g. @[Vincent Jong](urn:li:person:xxx)) directly in your post's content field.
+        You usually do not need this endpoint. Put the profile or company URL inside `@[...]` in the post `content` (for example `@[https://www.linkedin.com/in/vincentjong]`) and the post resolves it for you, using LinkedIn's own name. Use this endpoint to preview what a URL resolves to, or to get ready-made `@[Name](urn)` markup, which still works in `content` and is published exactly as written.
 
         Example:
-        - Resolve: GET /v1/accounts/{id}/linkedin-mentions?url=linkedin.com/in/vincentjong&displayName=Vincent Jong
+        - Resolve: GET /v1/accounts/{id}/linkedin-mentions?url=linkedin.com/in/vincentjong
         - Returns: mentionFormat: "@[Vincent Jong](urn:li:person:xxx)"
         - Use in post content: "Great talk with @[Vincent Jong](urn:li:person:xxx) today!"
 
-        Important: The mentions array field in POST /v1/posts is stored for reference only and does NOT trigger @mentions on LinkedIn. You must embed the mention format directly in the content text.
+        Important: The mentions array field in POST /v1/posts is stored for reference only and does NOT trigger @mentions on LinkedIn. Write the mention in the content text.
 
         Requirements:
         - Resolving a profile URL to a person mention requires the LinkedIn account to be admin of at least one organization: both endpoints that resolve a profile URL to a member URN take an organization you administer. A resolved person mention publishes from any account. Organization mentions (e.g. @Microsoft) have no such requirement.
         - The two are not scoped alike. peopleTypeahead?q=organizationFollowers only returns that organization's followers; vanityUrl?q=vanityUrlAsOrganization does not, and its resolvable set is opaque. A 404 here does not mean the person is unknown to you or unknown to LinkedIn: a live public profile can 404 with no reason given.
-        - displayName is optional: the endpoint looks up the person's real name itself. LinkedIn renders a person mention as a link when the mention text is the person's first name, last name or full name (case-sensitive).
+        - displayName is deprecated and ignored in practice: the endpoint reads the person's real name from LinkedIn itself. LinkedIn renders a person mention as a link only when the mention text is the person's first name, last name or full name (case-sensitive).
         - Person mentions DO work when published from personal profiles (the URN only needs to be valid). The limitation is only in the resolution step (URL to URN), not in publishing.
       parameters:
         - name: accountId
@@ -33661,7 +33696,8 @@ paths:
         - name: displayName
           in: query
           required: false
-          description: Optional override for a person's mention text. When omitted, the real name is resolved from LinkedIn. Ignored for org mentions, which always use the organization's LinkedIn name.
+          deprecated: true
+          description: "Deprecated: omit it. When sent for a person it overrides the mention text, and LinkedIn renders the mention only if it is exactly the person's first name, last name or full name (case-sensitive). When omitted the real name is read from LinkedIn. Ignored for org mentions, which always use the organization's LinkedIn name."
           schema: { type: string }
           examples:
             personName:
