@@ -13422,6 +13422,45 @@ def register_generated_tools(mcp, _get_client):
         except Exception as e:
             return f"Error: {e}"
 
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List the posts a Facebook Page is tagged in",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def analytics_list_facebook_tagged_posts(
+        account_id: str, limit: int = 25, cursor: str | None = None
+    ) -> str:
+        """List the posts a Facebook Page is tagged in
+
+        Returns the public posts where other people or Pages tagged the connected
+        Facebook Page, as Meta returns them from the Page's `tagged` edge.
+
+        Cursor-paginated: pass `nextCursor` from the previous response as
+        `cursor` to read the next page. `nextCursor` is null when there are no
+        more pages. Meta does not say whether a page is the last one, so the
+        final page can come back empty with `nextCursor` null.
+
+        Works for `facebook` accounts with a Page selected. Meta needs the
+        `pages_read_user_content` permission on the connection: a connection
+        made without it gets Meta's refusal back as `platform_api_error`, and
+        reconnecting the account grants it.
+
+        Args:
+            account_id: The ID of a connected Facebook account. (required)
+            limit: Page size.
+            cursor: The `nextCursor` of the previous page."""
+        client = _get_client()
+        try:
+            response = client.analytics.list_facebook_tagged_posts(
+                account_id=account_id, limit=limit, cursor=cursor
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
     # API_KEYS
 
     @mcp.tool(

@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.348.0"
+  version: "1.348.1"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -9373,6 +9373,24 @@ components:
         mediaProductType: { type: [string, "null"], description: LIVE for a live video., example: LIVE }
         username: { type: [string, "null"], description: Instagram handle of the broadcasting account. }
         timestamp: { type: [string, "null"], description: 'Creation time of the broadcast media as Meta returns it (ISO 8601).' }
+
+    FacebookTaggedPost:
+      type: object
+      required: [id, message, createdTime, taggedTime, permalinkUrl, pictureUrl, from]
+      properties:
+        id: { type: string, description: Facebook post ID of the post that tags the Page. }
+        message: { type: [string, "null"] }
+        createdTime: { type: [string, "null"], description: 'Publication time as Meta returns it (ISO 8601).' }
+        taggedTime: { type: [string, "null"], description: 'When the Page was tagged in the post (ISO 8601).' }
+        permalinkUrl: { type: [string, "null"], description: Public Facebook URL of the post. }
+        pictureUrl: { type: [string, "null"], description: Full-size picture attached to the post. }
+        from:
+          type: [object, "null"]
+          description: Null when Meta does not return the author, which is common for posts by people.
+          required: [id, name]
+          properties:
+            id: { type: string }
+            name: { type: [string, "null"] }
 
     InstagramTaggedMedia:
       type: object
@@ -35069,6 +35087,96 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { description: Account not found }
         '502': { description: Facebook rejected the request }
+
+  /v1/accounts/{accountId}/facebook-tagged-posts:
+    get:
+      x-resource-group: "analytics"
+      operationId: listFacebookTaggedPosts
+      tags: [Analytics]
+      summary: List the posts a Facebook Page is tagged in
+      description: |
+        Returns the public posts where other people or Pages tagged the connected
+        Facebook Page, as Meta returns them from the Page's `tagged` edge.
+
+        Cursor-paginated: pass `nextCursor` from the previous response as
+        `cursor` to read the next page. `nextCursor` is null when there are no
+        more pages. Meta does not say whether a page is the last one, so the
+        final page can come back empty with `nextCursor` null.
+
+        Works for `facebook` accounts with a Page selected. Meta needs the
+        `pages_read_user_content` permission on the connection: a connection
+        made without it gets Meta's refusal back as `platform_api_error`, and
+        reconnecting the account grants it.
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          description: The ID of a connected Facebook account.
+          schema:
+            type: string
+        - name: limit
+          in: query
+          required: false
+          description: Page size.
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+            default: 25
+        - name: cursor
+          in: query
+          required: false
+          description: The `nextCursor` of the previous page.
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 1000
+      responses:
+        '200':
+          description: One page of posts the Page is tagged in
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, nextCursor]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/FacebookTaggedPost'
+                  nextCursor:
+                    type: [string, "null"]
+                    description: Pass as `cursor` to read the next page. Null when there are no more pages.
+        '400':
+          description: >-
+            Invalid accountId, limit or cursor, an account on another platform (`platform_not_supported`), or Meta
+            refused the request (`platform_api_error`, for example a missing `pages_read_user_content` permission).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: The API key is not scoped to this account.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: The account is not reachable by the caller (`account_not_found`).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          $ref: '#/components/responses/AccountConnectionRequired'
+        '422':
+          description: The connection has no Facebook Page selected (`linked_account_required`). Select a Page or reconnect the account.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
   /v1/accounts/{accountId}/reddit-subreddits:
     get:
