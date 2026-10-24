@@ -13421,6 +13421,51 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="List visitor posts on a Facebook Page",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def analytics_list_facebook_visitor_posts(
+        account_id: str, limit: int = 25, cursor: str | None = None
+    ) -> str:
+        """List visitor posts on a Facebook Page
+
+        Returns the posts other people published on the connected Facebook Page,
+        newest first. Zernio reads the Page feed (Graph `/{page-id}/feed`, which
+        works on New Pages Experience Pages, unlike the deprecated `visitor_posts`
+        edge) and drops the posts the Page published itself and the posts other
+        people published on their own timeline that only tag the Page. A Page
+        without visitor posts returns an empty `data` array.
+
+        Cursor-paginated: pass `nextCursor` from the previous response as
+        `cursor` to read the next page. `limit` sets how many feed entries are
+        scanned, so a page can hold fewer posts than `limit`, or none, while
+        `nextCursor` is not null. `nextCursor` is null when there are no more
+        pages, and the final page can come back empty.
+
+        Works on `facebook` accounts with a Page selected. Meta requires the `pages_read_user_content`
+        permission, which Zernio requests with the comments scope: an account
+        connected without it receives Meta's refusal as `platform_api_error`.
+
+        Platforms: facebook
+
+        Args:
+            account_id: The ID of a connected Facebook Page account. (required)
+            limit: Number of Page feed entries to scan. The Page's own posts are dropped from them.
+            cursor: The `nextCursor` of the previous page."""
+        client = _get_client()
+        try:
+            response = client.analytics.list_facebook_visitor_posts(
+                account_id=account_id, limit=limit, cursor=cursor
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="List the posts a Facebook Page is tagged in",
             readOnlyHint=True,
             destructiveHint=False,

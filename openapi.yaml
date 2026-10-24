@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.350.1"
+  version: "1.350.3"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -9384,6 +9384,38 @@ components:
         mediaProductType: { type: [string, "null"], description: LIVE for a live video., example: LIVE }
         username: { type: [string, "null"], description: Instagram handle of the broadcasting account. }
         timestamp: { type: [string, "null"], description: 'Creation time of the broadcast media as Meta returns it (ISO 8601).' }
+
+    FacebookVisitorPost:
+      type: object
+      required: [id, message, createdTime, from, permalinkUrl, media]
+      properties:
+        id: { type: string, description: 'Facebook post ID (`{pageId}_{postId}`).' }
+        message: { type: [string, "null"], description: Text of the post. Null for media-only posts. }
+        createdTime: { type: [string, "null"], description: 'Creation time as Meta returns it (ISO 8601).' }
+        from:
+          type: [object, "null"]
+          description: The person or Page that published the post. Null when Meta omits the author.
+          required: [id, name]
+          properties:
+            id: { type: string, description: App-scoped ID of the author. }
+            name: { type: [string, "null"] }
+        permalinkUrl: { type: [string, "null"], description: Public Facebook URL of the post. }
+        media:
+          type: [object, "null"]
+          description: Media of the first attachment, in the same shape as Facebook Page posts. Null when the post has no attachment.
+          required: [mediaType, thumbnailUrl, mediaItems]
+          properties:
+            mediaType: { type: string, enum: [image, video, carousel, text] }
+            thumbnailUrl: { type: string, description: 'Temporary CDN URL of the cover image. Empty when there is none.' }
+            mediaItems:
+              type: array
+              items:
+                type: object
+                required: [type, url]
+                properties:
+                  type: { type: string, enum: [image, video] }
+                  url: { type: string, description: Temporary CDN URL. }
+                  thumbnail: { type: string, description: Poster frame of a video. }
 
     FacebookTaggedPost:
       type: object
@@ -35123,6 +35155,108 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { description: Account not found }
         '502': { description: Facebook rejected the request }
+
+  /v1/accounts/{accountId}/facebook-visitor-posts:
+    get:
+      x-resource-group: "analytics"
+      operationId: listFacebookVisitorPosts
+      x-platforms: ["facebook"]
+      tags: [Analytics]
+      summary: List visitor posts on a Facebook Page
+      description: |
+        Returns the posts other people published on the connected Facebook Page,
+        newest first. Zernio reads the Page feed (Graph `/{page-id}/feed`, which
+        works on New Pages Experience Pages, unlike the deprecated `visitor_posts`
+        edge) and drops the posts the Page published itself and the posts other
+        people published on their own timeline that only tag the Page. A Page
+        without visitor posts returns an empty `data` array.
+
+        Cursor-paginated: pass `nextCursor` from the previous response as
+        `cursor` to read the next page. `limit` sets how many feed entries are
+        scanned, so a page can hold fewer posts than `limit`, or none, while
+        `nextCursor` is not null. `nextCursor` is null when there are no more
+        pages, and the final page can come back empty.
+
+        Works on `facebook` accounts with a Page selected. Meta requires the `pages_read_user_content`
+        permission, which Zernio requests with the comments scope: an account
+        connected without it receives Meta's refusal as `platform_api_error`.
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          description: The ID of a connected Facebook Page account.
+          schema:
+            type: string
+        - name: limit
+          in: query
+          required: false
+          description: Number of Page feed entries to scan. The Page's own posts are dropped from them.
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 25
+        - name: cursor
+          in: query
+          required: false
+          description: The `nextCursor` of the previous page.
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 4096
+      responses:
+        '200':
+          description: One page of visitor posts
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, nextCursor]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/FacebookVisitorPost'
+                  nextCursor:
+                    type: [string, "null"]
+                    description: Pass as `cursor` to read the next page. Null when there are no more pages.
+              example:
+                data:
+                  - id: '108765432101234_900000000000001'
+                    message: Love this page
+                    createdTime: '2026-10-20T08:00:00+0000'
+                    from: { id: '27000000000001', name: Jane Visitor }
+                    permalinkUrl: 'https://www.facebook.com/108765432101234/posts/900000000000001'
+                    media: null
+                nextCursor: QVFIUa
+        '400':
+          description: 'Invalid accountId, limit or cursor, an account on another platform (`platform_not_supported`), or Meta refused the request (`platform_api_error`, for example the Page was connected without the `pages_read_user_content` permission).'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: 'The API key is not scoped to this account.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: The account is not reachable by the caller (`account_not_found`).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          $ref: '#/components/responses/AccountConnectionRequired'
+        '422':
+          description: The connection has no Facebook Page selected (`linked_account_required`). Select a Page or reconnect the account.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
   /v1/accounts/{accountId}/facebook-tagged-posts:
     get:

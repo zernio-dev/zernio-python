@@ -238,6 +238,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | Method | Description |
 |--------|-------------|
 | `analytics.list_facebook_tagged_posts()` | List the posts a Facebook Page is tagged in |
+| `analytics.list_facebook_visitor_posts()` | List visitor posts on a Facebook Page |
 | `analytics.get_analytics()` | Get post analytics |
 | `analytics.get_analytics_dashboard()` | Get an analytics dashboard |
 | `analytics.get_analytics_delta()` | Analytics changed since a cursor |
