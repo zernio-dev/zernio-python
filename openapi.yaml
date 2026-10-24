@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.350.6"
+  version: "1.350.7"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -992,6 +992,15 @@ components:
         is your own ad account's quota), `details.resetsAt` (ISO instant when
         Google accepts requests again) and `Retry-After` counting down to it.
         Retrying earlier cannot succeed.
+
+        YouTube Analytics: reads (channel-insights, demographics, daily-views,
+        video-retention) run on the "Queries per day" quota of the Google Cloud
+        project the YouTube account is connected through, shared with other
+        Zernio customers, so a 429 there is not your own volume. It resets at
+        midnight Pacific Time. The envelope has
+        `code: rate_limited`, `platform: google`, `details.quotaExhausted: true`,
+        `details.quotaScope: DEVELOPER`, `details.resetsAt` and `Retry-After`
+        counting down to it. Retrying earlier cannot succeed.
 
         Meta ads: every Meta throttle (codes 4, 17, 32, 613 and the
         business-use-case codes 80000-80014) returns 429 `rate_limited`, even
@@ -3344,12 +3353,13 @@ components:
             single reply is already spent, and `privateReplyOutcome: "unknown"` on its 502 when Meta
             answered a server error and the reply may have been delivered.
 
-            On a Google Ads 429 it carries `quotaExhausted: true`, which marks the failure as
-            Google's own ads quota rather than a Zernio rate limit, so you can keep calling
-            other platforms instead of backing off everywhere. When Google names the scope it
-            also carries `quotaScope`: `DEVELOPER` means the shared developer-token budget
-            (every Google account is affected and there is nothing to change on your side),
-            `ACCOUNT` means your own ad account. A Meta 429 carries neither field.
+            On a Google Ads or YouTube Analytics 429 it carries `quotaExhausted: true`, which marks
+            the failure as Google's own quota rather than a Zernio rate limit, so you can keep
+            calling other platforms instead of backing off everywhere. When Google names the scope
+            it also carries `quotaScope`: `DEVELOPER` means the shared budget (the developer token
+            for Google Ads, the Google Cloud project for YouTube Analytics; every account on
+            Zernio is affected and there is nothing to change on your side), `ACCOUNT` means your
+            own ad account (Google Ads only). A Meta 429 carries neither field.
 
             A Zernio Google Ads burst-limit 429 carries `budgetScope` instead, and never
             `quotaExhausted`: these are Zernio's own limits, applied before the call
@@ -3404,11 +3414,11 @@ components:
                 parentId: { type: string, description: 'Where to look for it: the ad set for an ad, the campaign for an ad set, the ad account otherwise.' }
             quotaExhausted:
               type: boolean
-              description: 'Google Ads 429 only. True when the upstream Google Ads quota is spent rather than a Zernio limit.'
+              description: 'Google Ads and YouTube Analytics 429 only. True when the upstream Google quota is spent rather than a Zernio limit.'
             quotaScope:
               type: string
               enum: [DEVELOPER, ACCOUNT]
-              description: 'Google Ads 429 only, when Google names the scope. DEVELOPER is the shared developer-token budget; ACCOUNT is your ad account.'
+              description: 'Google Ads and YouTube Analytics 429 only, when the scope is known. DEVELOPER is the shared budget (the developer token for Google Ads, the Google Cloud project for YouTube Analytics); ACCOUNT is your ad account (Google Ads only).'
             budgetScope:
               type: string
               enum: [account, user]
@@ -19178,6 +19188,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/YouTubeScopeMissingResponse'
+        '429': { $ref: '#/components/responses/RateLimited' }
         '503': { $ref: '#/components/responses/TemporarilyUnavailable' }
         '502': { $ref: '#/components/responses/UpstreamFailure' }
 
@@ -20762,6 +20773,7 @@ paths:
                       hasAnalyticsScope: { type: boolean, example: false }
                       requiresReauthorization: { type: boolean, example: true }
                       reauthorizeUrl: { type: string }
+        '429': { $ref: '#/components/responses/RateLimited' }
         '503': { $ref: '#/components/responses/TemporarilyUnavailable' }
         '502': { $ref: '#/components/responses/UpstreamFailure' }
 
