@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.350.8"
+  version: "1.350.9"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -9469,6 +9469,20 @@ components:
           properties:
             id: { type: string }
             name: { type: [string, "null"] }
+
+    FacebookPageInfo:
+      type: object
+      required: [about, description, website, phone, emails, hours]
+      properties:
+        about: { type: [string, "null"], description: 'Short description, shown as Description in the Page''s Edit Page Info.' }
+        description: { type: [string, "null"], description: 'Longer text, shown as Additional Information.' }
+        website: { type: [string, "null"] }
+        phone: { type: [string, "null"] }
+        emails: { type: array, items: { type: string } }
+        hours:
+          type: object
+          description: 'Opening hours keyed `{day}_{slot}_{open|close}`, for example `mon_1_open: "09:00"`. Empty when the Page has none.'
+          additionalProperties: { type: string }
 
     InstagramTaggedMedia:
       type: object
@@ -33301,6 +33315,125 @@ paths:
         '404': { description: 'Account not found, or not a facebook or metaads account' }
         '409':
           description: "Another account on this profile is already connected to that destination (profile_platform_conflict), or the Page has no stored access token (reconnect_required)."
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+
+  /v1/accounts/{accountId}/facebook-page-info:
+    get:
+      x-resource-group: "accounts"
+      operationId: getFacebookPageInfo
+      tags: [Account Settings]
+      summary: Get a Facebook Page's public info
+      description: |
+        Returns the public info of the Page selected on a `facebook` account: about,
+        description, website, phone, emails and opening hours, as Meta returns them
+        from the Page node. Text fields the Page never filled come back as null.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          description: The ID of a connected Facebook account.
+          schema: { type: string }
+      responses:
+        '200':
+          description: The Page's public info
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/FacebookPageInfo' }
+        '400':
+          description: 'Invalid accountId, an account on another platform (`platform_not_supported`), or Meta refused the request (`platform_api_error`).'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403':
+          description: The API key is not scoped to this account.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+        '404':
+          description: The account is not reachable by the caller (`account_not_found`).
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+        '409': { $ref: '#/components/responses/AccountConnectionRequired' }
+        '422':
+          description: The connection has no Facebook Page selected (`linked_account_required`). Select a Page or reconnect the account.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+    patch:
+      x-resource-group: "accounts"
+      operationId: updateFacebookPageInfo
+      tags: [Account Settings]
+      summary: Update a Facebook Page's public info
+      description: |
+        Updates the public info of the Page selected on a `facebook` account. Only the
+        fields in the body are sent to Meta, every other field keeps its value. Send an
+        empty string to clear a text field. Unknown fields are rejected with a 400.
+
+        Returns the Page info read back from Meta after the update. Meta needs the
+        `pages_manage_metadata` permission and a Page role that can edit the Page:
+        without them Meta's refusal comes back as `platform_api_error`.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          description: The ID of a connected Facebook account.
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              minProperties: 1
+              properties:
+                about: { type: string, maxLength: 100, description: 'Short description, shown as Description in the Page''s Edit Page Info.' }
+                description: { type: string, description: 'Longer text, shown as Additional Information.' }
+                website: { type: string, description: URL of the Page's website. }
+                phone: { type: string }
+                emails:
+                  type: array
+                  description: Replaces every email listed on the Page.
+                  items: { type: string, format: email }
+                hours:
+                  type: object
+                  description: 'Replaces the opening hours. Keys are `{day}_{slot}_{open|close}` with day `mon` to `sun` and slot 1 or 2, values are 24h `HH:MM` times.'
+                  propertyNames: { pattern: '^(mon|tue|wed|thu|fri|sat|sun)_[12]_(open|close)$' }
+                  additionalProperties: { type: string, pattern: '^([01]\d|2[0-3]):[0-5]\d$' }
+            example:
+              website: https://zernio.com
+              hours: { mon_1_open: '09:00', mon_1_close: '18:00' }
+      responses:
+        '200':
+          description: The Page's public info after the update
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/FacebookPageInfo' }
+        '400':
+          description: 'Invalid accountId, an empty body, an unknown or malformed field, an account on another platform (`platform_not_supported`), or Meta refused the value (`platform_api_error`).'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403':
+          description: 'The API key is not scoped to this account, or Meta refused the edit (`platform_api_error`, for example a Page role that cannot edit the Page).'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+        '404':
+          description: The account is not reachable by the caller (`account_not_found`).
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+        '409': { $ref: '#/components/responses/AccountConnectionRequired' }
+        '422':
+          description: The connection has no Facebook Page selected (`linked_account_required`). Select a Page or reconnect the account.
           content:
             application/json:
               schema: { $ref: '#/components/schemas/ErrorResponse' }

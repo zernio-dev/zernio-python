@@ -185,6 +185,82 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="Get a Facebook Page's public info",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def account_settings_get_facebook_page_info(account_id: str) -> str:
+        """Get a Facebook Page's public info
+
+        Returns the public info of the Page selected on a `facebook` account: about,
+        description, website, phone, emails and opening hours, as Meta returns them
+        from the Page node. Text fields the Page never filled come back as null.
+
+        Args:
+            account_id: The ID of a connected Facebook account. (required)"""
+        client = _get_client()
+        try:
+            response = client.account_settings.get_facebook_page_info(
+                account_id=account_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Update a Facebook Page's public info",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def account_settings_update_facebook_page_info(
+        account_id: str,
+        about: str | None = None,
+        description: str | None = None,
+        website: str | None = None,
+        phone: str | None = None,
+        emails: list[str] | None = None,
+        hours: dict[str, Any] | None = None,
+    ) -> str:
+        """Update a Facebook Page's public info
+
+        Updates the public info of the Page selected on a `facebook` account. Only the
+        fields in the body are sent to Meta, every other field keeps its value. Send an
+        empty string to clear a text field. Unknown fields are rejected with a 400.
+
+        Returns the Page info read back from Meta after the update. Meta needs the
+        `pages_manage_metadata` permission and a Page role that can edit the Page:
+        without them Meta's refusal comes back as `platform_api_error`.
+
+        Args:
+            account_id: The ID of a connected Facebook account. (required)
+            about: Short description, shown as Description in the Page's Edit Page Info.
+            description: Longer text, shown as Additional Information.
+            website: URL of the Page's website.
+            phone
+            emails: Replaces every email listed on the Page.
+            hours: Replaces the opening hours. Keys are `{day}_{slot}_{open|close}` with day `mon` to `sun` and slot 1 or 2, values are 24h `HH:MM` times."""
+        client = _get_client()
+        try:
+            response = client.account_settings.update_facebook_page_info(
+                account_id=account_id,
+                about=about,
+                description=description,
+                website=website,
+                phone=phone,
+                emails=emails,
+                hours=hours,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="Get persistent menu",
             readOnlyHint=True,
             destructiveHint=False,

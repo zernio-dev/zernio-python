@@ -73,6 +73,34 @@ class AccountSettingsResource:
                 result[to_camel(k)] = v
         return result
 
+    def get_facebook_page_info(self, account_id: str) -> dict[str, Any]:
+        """Get a Facebook Page's public info"""
+        return self._client._get(f"/v1/accounts/{account_id}/facebook-page-info")
+
+    def update_facebook_page_info(
+        self,
+        account_id: str,
+        *,
+        about: str | None = None,
+        description: str | None = None,
+        website: str | None = None,
+        phone: str | None = None,
+        emails: list[str] | None = None,
+        hours: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        """Update a Facebook Page's public info"""
+        payload = self._build_payload(
+            about=about,
+            description=description,
+            website=website,
+            phone=phone,
+            emails=emails,
+            hours=hours,
+        )
+        return self._client._patch(
+            f"/v1/accounts/{account_id}/facebook-page-info", data=payload
+        )
+
     def get_messenger_menu(self, account_id: str) -> dict[str, Any]:
         """Get persistent menu"""
         return self._client._get(f"/v1/accounts/{account_id}/messenger-menu")
@@ -186,6 +214,34 @@ class AccountSettingsResource:
     def delete_telegram_commands(self, account_id: str) -> dict[str, Any]:
         """Delete TG bot commands"""
         return self._client._delete(f"/v1/accounts/{account_id}/telegram-commands")
+
+    async def aget_facebook_page_info(self, account_id: str) -> dict[str, Any]:
+        """Get a Facebook Page's public info (async)"""
+        return await self._client._aget(f"/v1/accounts/{account_id}/facebook-page-info")
+
+    async def aupdate_facebook_page_info(
+        self,
+        account_id: str,
+        *,
+        about: str | None = None,
+        description: str | None = None,
+        website: str | None = None,
+        phone: str | None = None,
+        emails: list[str] | None = None,
+        hours: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        """Update a Facebook Page's public info (async)"""
+        payload = self._build_payload(
+            about=about,
+            description=description,
+            website=website,
+            phone=phone,
+            emails=emails,
+            hours=hours,
+        )
+        return await self._client._apatch(
+            f"/v1/accounts/{account_id}/facebook-page-info", data=payload
+        )
 
     async def aget_messenger_menu(self, account_id: str) -> dict[str, Any]:
         """Get persistent menu (async)"""

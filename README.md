@@ -424,12 +424,14 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 ### Account Settings
 | Method | Description |
 |--------|-------------|
+| `account_settings.get_facebook_page_info()` | Get a Facebook Page's public info |
 | `account_settings.get_instagram_ice_breakers()` | Get IG ice breakers |
 | `account_settings.get_messenger_get_started()` | Get FB Get Started button |
 | `account_settings.get_messenger_greeting()` | Get FB greeting text |
 | `account_settings.get_messenger_ice_breakers()` | Get FB ice breakers |
 | `account_settings.get_messenger_menu()` | Get persistent menu |
 | `account_settings.get_telegram_commands()` | Get TG bot commands |
+| `account_settings.update_facebook_page_info()` | Update a Facebook Page's public info |
 | `account_settings.delete_instagram_ice_breakers()` | Delete IG ice breakers |
 | `account_settings.delete_messenger_get_started()` | Delete FB Get Started button |
 | `account_settings.delete_messenger_greeting()` | Delete FB greeting text |
