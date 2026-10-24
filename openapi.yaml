@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.350.9"
+  version: "1.351.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -3449,7 +3449,11 @@ components:
               * `skip` - stay silent.
               * `verify` - send `followGate.message` with a confirm button. Tapping it is a
                 message, which grants consent, so the re-check on the tap resolves and the
-                real DM (or `followGate.notFollowingMessage`) follows automatically.
+                real DM (or `followGate.notFollowingMessage`) follows automatically. The tap
+                re-checks the follow relationship live, with no cached answer. A known
+                non-follower gets `followGate.notFollowingMessage`, never the DM. If Instagram
+                still will not reveal the relationship on the tap, or the lookup fails, the DM
+                is delivered (fails open).
         tapToUnlock:
           type: boolean
           default: false
@@ -3470,6 +3474,11 @@ components:
           type: string
           maxLength: 20
           description: 'Confirm button label. Defaults to "I''m following" (whenUnknown=verify) or "Unlock" (tapToUnlock).'
+        profileButtonLabel:
+          type: string
+          minLength: 1
+          maxLength: 20
+          description: 'Optional. When set, the follow gate DM and the not-following message with the confirm button also carry a URL button with this label that opens the connected Instagram account''s profile. Omit for the confirm button only. Instagram only.'
         notFollowingMessage:
           type: string
           maxLength: 1000
