@@ -643,6 +643,17 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 |--------|-------------|
 | `ad_library.search_ad_library()` | Search the public Ad Library |
 
+### Ad Rules
+| Method | Description |
+|--------|-------------|
+| `ad_rules.list_ad_rule_runs()` | List an ad rule's runs |
+| `ad_rules.list_ad_rules()` | List ad rules |
+| `ad_rules.create_ad_rule()` | Create an ad rule |
+| `ad_rules.get_ad_rule()` | Get an ad rule |
+| `ad_rules.update_ad_rule()` | Update an ad rule |
+| `ad_rules.delete_ad_rule()` | Delete an ad rule |
+| `ad_rules.preview_ad_rule()` | Preview an ad rule |
+
 ### Ad Targeting
 | Method | Description |
 |--------|-------------|

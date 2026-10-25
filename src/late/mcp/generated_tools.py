@@ -11734,6 +11734,261 @@ def register_generated_tools(mcp, _get_client):
         except Exception as e:
             return f"Error: {e}"
 
+    # AD_RULES
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List ad rules",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def ad_rules_list_ad_rules(
+        account_id: str | None = None,
+        ad_account_id: str | None = None,
+        limit: int = 50,
+        skip: int = 0,
+    ) -> str:
+        """List ad rules
+
+        Lists the ad rules on the profiles your key can reach, newest first.
+
+        Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit
+
+        Args:
+            account_id: Only rules on this ads connection.
+            ad_account_id: Only rules watching this platform ad account.
+            limit
+            skip"""
+        client = _get_client()
+        try:
+            response = client.ad_rules.list_ad_rules(
+                account_id=account_id,
+                ad_account_id=ad_account_id,
+                limit=limit,
+                skip=skip,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Create an ad rule",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def ad_rules_create_ad_rule(
+        name: str,
+        account_id: str,
+        ad_account_id: str,
+        level: Literal["campaign", "adset"],
+        conditions: dict[str, Any] | None,
+        actions: list[dict[str, Any]] | None,
+        campaign_ids: list[str] | None = None,
+        schedule: dict[str, Any] | None = None,
+        cooldown_minutes: int = 1440,
+        enabled: bool = True,
+    ) -> str:
+        """Create an ad rule
+
+        Creates a rule that checks the campaigns or ad sets of one ad account on a schedule and acts on
+        each one that meets every condition.
+
+        Rules support Meta, Google, TikTok, LinkedIn, Pinterest, X and Reddit ads connections. Each
+        campaign or ad set is evaluated on its own, over the ad account's calendar days, from the
+        metrics Zernio syncs. A rule can notify (the `ad_rule.triggered` webhook), and take at most one of
+        `pause`, `activate` and `adjust_budget`. After acting on an object, the rule leaves that object
+        alone for `cooldownMinutes`; a rule that pauses, activates or adjusts budgets needs a cooldown at
+        least as long as its schedule.
+
+        `activate` only reactivates objects a rule paused, never ones you paused yourself, and only once
+        the cooldown has passed since that pause. If you reactivate and pause such an object yourself
+        between two runs of a rule, Zernio cannot tell your pause from the rule's, and an `activate` rule
+        may reactivate it.
+
+        Use `POST /v1/ads/rules/{ruleId}/preview` to see ...
+
+        Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit
+
+        Args:
+            name: (required)
+            account_id: The ads connection (account ID from `GET /v1/accounts`). (required)
+            ad_account_id: Platform ad account ID, from `GET /v1/ads/accounts`. (required)
+            level: (required)
+            campaign_ids: Only check these platform campaign IDs (or their ad sets). Leave out to check the whole ad account.
+            conditions: Object with keys: all (list of objects with keys metric, window, op, value, required) (required)
+            actions: Each item is an object with keys: type (one of: notify; required) - Send the `ad_rule.triggered` webhook. (required)
+            schedule: Leave it out to run every 60 minutes. Object with keys: everyMinutes (one of: 60, 180, 360, 720, 1440; required) - How often the rule runs, in minutes.
+            cooldown_minutes: How long the rule leaves an object alone after acting on it.
+            enabled"""
+        client = _get_client()
+        try:
+            response = client.ad_rules.create_ad_rule(
+                name=name,
+                account_id=account_id,
+                ad_account_id=ad_account_id,
+                level=level,
+                campaign_ids=campaign_ids,
+                conditions=conditions,
+                actions=actions,
+                schedule=schedule,
+                cooldown_minutes=cooldown_minutes,
+                enabled=enabled,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get an ad rule",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def ad_rules_get_ad_rule() -> str:
+        """Get an ad rule
+
+        Returns one ad rule.
+
+        Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit"""
+        client = _get_client()
+        try:
+            response = client.ad_rules.get_ad_rule()
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Update an ad rule",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def ad_rules_update_ad_rule(
+        name: str | None = None,
+        level: Literal["campaign", "adset"] | None = None,
+        campaign_ids: str | None = None,
+        conditions: dict[str, Any] | None = None,
+        actions: list[dict[str, Any]] | None = None,
+        schedule: dict[str, Any] | None = None,
+        cooldown_minutes: int | None = None,
+        enabled: bool | None = None,
+    ) -> str:
+        """Update an ad rule
+
+        Changes any field of a rule except its connection and ad account. Send `campaignIds: null` to
+        check the whole ad account again. Changing the schedule, or enabling a disabled rule, moves the
+        next run; re-sending `enabled: true` on an enabled rule does not.
+
+        Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit
+
+        Args:
+            name
+            level
+            campaign_ids
+            conditions: Object with keys: all (list of objects with keys metric, window, op, value, required)
+            actions: Each item is an object with keys: type (one of: notify; required) - Send the `ad_rule.triggered` webhook.
+            schedule: Object with keys: everyMinutes (one of: 60, 180, 360, 720, 1440; required) - How often the rule runs, in minutes.
+            cooldown_minutes
+            enabled"""
+        client = _get_client()
+        try:
+            response = client.ad_rules.update_ad_rule(
+                name=name,
+                level=level,
+                campaign_ids=campaign_ids,
+                conditions=conditions,
+                actions=actions,
+                schedule=schedule,
+                cooldown_minutes=cooldown_minutes,
+                enabled=enabled,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Delete an ad rule",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def ad_rules_delete_ad_rule() -> str:
+        """Delete an ad rule
+
+        Deletes a rule and its run history. Changes the rule already made on the platform stay.
+
+        Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit"""
+        client = _get_client()
+        try:
+            response = client.ad_rules.delete_ad_rule()
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Preview an ad rule",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def ad_rules_preview_ad_rule(rule_id: str) -> str:
+        """Preview an ad rule
+
+        Evaluates a rule against current metrics and returns what it would match right now, without
+        acting on anything, sending a webhook or starting a cooldown. Works on disabled rules.
+
+        Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit
+
+        Args:
+            rule_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.ad_rules.preview_ad_rule(rule_id=rule_id)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List an ad rule's runs",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def ad_rules_list_ad_rule_runs(rule_id: str, limit: int = 20, skip: int = 0) -> str:
+        """List an ad rule's runs
+
+        Lists a rule's scheduled runs, newest first: what each run evaluated, matched and did.
+
+        Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit
+
+        Args:
+            rule_id: (required)
+            limit
+            skip"""
+        client = _get_client()
+        try:
+            response = client.ad_rules.list_ad_rule_runs(
+                rule_id=rule_id, limit=limit, skip=skip
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
     # AD_TARGETING
 
     @mcp.tool(
@@ -37957,6 +38212,7 @@ def register_generated_tools(mcp, _get_client):
                 "campaign.budget.depleted",
                 "ad_account.status_changed",
                 "ad.video.processed",
+                "ad_rule.triggered",
                 "whatsapp.template.status_updated",
                 "whatsapp.template.category_updated",
                 "whatsapp.account.name_status_updated",
@@ -38129,6 +38385,7 @@ def register_generated_tools(mcp, _get_client):
                 "campaign.budget.depleted",
                 "ad_account.status_changed",
                 "ad.video.processed",
+                "ad_rule.triggered",
                 "whatsapp.template.status_updated",
                 "whatsapp.template.category_updated",
                 "whatsapp.account.name_status_updated",
@@ -38419,6 +38676,7 @@ def register_generated_tools(mcp, _get_client):
             "campaign.budget.depleted",
             "ad_account.status_changed",
             "ad.video.processed",
+            "ad_rule.triggered",
             "lead.received",
             "whatsapp.template.status_updated",
             "whatsapp.template.category_updated",

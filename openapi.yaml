@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.357.0"
+  version: "1.358.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -202,6 +202,7 @@ x-documentation:
     - `campaign.budget.depleted` - A campaign Zernio already tracked ran out of budget (TikTok, the only network that reports it on the ad)
     - `ad_account.status_changed` - An ad account Zernio already tracked became `active`, `restricted`, `disabled` or `closed` (Meta, Google, TikTok, X)
     - `ad.video.processed` - Meta finished processing a video uploaded with `POST /v1/ads/videos` and `async: true`. `video.status` is `ready` (usable as `video.id`) or `error`
+    - `ad_rule.triggered` - A scheduled ad rule run found campaigns or ad sets meeting every condition, once per object per cooldown. `objects` lists the objects acted on
     - `whatsapp.template.status_updated` - WhatsApp Business template completed (re)review by Meta. `template.status` carries the new state (APPROVED, REJECTED, PENDING, PAUSED, DISABLED, IN_APPEAL, PENDING_DELETION); `template.reason` is Meta's free-form reason or "NONE".
     - `whatsapp.template.category_updated` - Meta reclassified a WhatsApp Business template's category (drives tariff and marketing opt-out applicability). `template.changeType` is `scheduled` (24h advance notice) or `applied`; `template.category` is always the category right now.
     - `whatsapp.account.name_status_updated` - Meta finished reviewing a WhatsApp display-name change. `name.status` carries the outcome (APPROVED, DECLINED, PENDING_REVIEW). Fires only on a review outcome; a name applied without review (`name_status: AVAILABLE_WITHOUT_REVIEW`) produces no event.
@@ -263,7 +264,7 @@ x-documentation:
     | `post.platform.*`, `post.tiktok.url_resolved` | `account.accountId` (the target this event is about; `post.platforms[].accountId` lists every target) |
     | `post.scheduled`, `post.published`, `post.failed`, `post.partial`, `post.cancelled`, `post.recycled` | `post.platforms[].accountId`, one per target; there is no top-level account |
     | `post.external.*` | `account.accountId` (also `post.accountId`) |
-    | `ad.status_changed`, `ad.review.*`, `ad.video.processed`, `whatsapp.template.*`, `whatsapp.account.*`, `whatsapp.contact.identity_changed` | `account.accountId` |
+    | `ad.status_changed`, `ad.review.*`, `ad.video.processed`, `ad_rule.triggered`, `whatsapp.template.*`, `whatsapp.account.*`, `whatsapp.contact.identity_changed` | `account.accountId` |
     | `whatsapp.automatic_event` | top-level `accountId` |
     | `whatsapp.number.*`, `sms.registration.*` | none; `number.id` / `registration.id` are the number and registration ids, `number.profileId` / `registration.profileId` the profile |
     | `verification.*`, `phone_number.stock_available`, `api.changelog.published`, `webhook.test`, `contact.*`, `sequence.*`, `workflow.run.*` | none (`sequence.*` and `workflow.run.*` still reach subscriptions scoped to the sending account) |
@@ -484,6 +485,10 @@ tags:
       `platformPostId` to match comments on every post on the account, with unlimited
       automations stacked per account). Supports dedup, optional public comment reply, and
       auto-creates contacts.
+  - name: Ad Rules
+    description: |
+      Rules that check campaigns or ad sets on a schedule and pause, reactivate, rebudget or notify
+      when their metrics cross a threshold. Requires the Ads add-on.
   - name: Ad Campaigns
     description: |
       The advertising structure: campaigns, ad sets, and ads. Create standalone campaigns/ads, boost an
@@ -600,10 +605,10 @@ tags:
   - name: Webhooks
     description: |
       Configure webhooks for real-time notifications. Webhooks can be created from the dashboard (Settings → Webhooks) or via this API.
-      Events: post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.ads.initial_sync_completed, account.ads.sync_failed, account.ads.sync_recovered, analytics.synced, message.received, conversation.started, conversation.control_changed, call.received, call.ended, call.failed, call.permission_request, message.sent, message.edited, message.deleted, message.delivered, message.read, message.played, message.failed, reaction.received, referral.received, comment.received, review.new, review.updated, lead.received, ad.status_changed, ad.review.approved, ad.review.rejected, ad.delivery_issue, campaign.budget.depleted, ad_account.status_changed, ad.video.processed, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.account.quality_updated, whatsapp.account.status_updated, whatsapp.account.alert_received, whatsapp.contact.identity_changed, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, phone_number.stock_available, verification.approved, verification.failed, api.changelog.published, sms.registration.action_required, sms.registration.status_updated, branded_calling.identity.status_updated, branded_calling.identity.action_required, branded_calling.number.status_updated, rcs.agent.status_updated, commerce.product.created, commerce.product.updated, commerce.product.deleted, commerce.order.created, commerce.order.updated, commerce.order.refunded, contact.tag_added, contact.tag_removed, contact.field_changed, sequence.enrolled, sequence.exited, workflow.run.started, workflow.run.completed, workflow.run.failed, support.run.completed, support.run.failed, webhook.test.
+      Events: post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.ads.initial_sync_completed, account.ads.sync_failed, account.ads.sync_recovered, analytics.synced, message.received, conversation.started, conversation.control_changed, call.received, call.ended, call.failed, call.permission_request, message.sent, message.edited, message.deleted, message.delivered, message.read, message.played, message.failed, reaction.received, referral.received, comment.received, review.new, review.updated, lead.received, ad.status_changed, ad.review.approved, ad.review.rejected, ad.delivery_issue, campaign.budget.depleted, ad_account.status_changed, ad.video.processed, ad_rule.triggered, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.account.quality_updated, whatsapp.account.status_updated, whatsapp.account.alert_received, whatsapp.contact.identity_changed, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, phone_number.stock_available, verification.approved, verification.failed, api.changelog.published, sms.registration.action_required, sms.registration.status_updated, branded_calling.identity.status_updated, branded_calling.identity.action_required, branded_calling.number.status_updated, rcs.agent.status_updated, commerce.product.created, commerce.product.updated, commerce.product.deleted, commerce.order.created, commerce.order.updated, commerce.order.refunded, contact.tag_added, contact.tag_removed, contact.field_changed, sequence.enrolled, sequence.exited, workflow.run.started, workflow.run.completed, workflow.run.failed, support.run.completed, support.run.failed, webhook.test.
       Headers: every delivery carries X-Zernio-Event (event name) and X-Zernio-Event-Id (the payload `id`, a UUID minted once per event and identical across every subscribed endpoint, every automatic retry and every redelivery, so dedupe on it). Security: optional HMAC-SHA256 signature in X-Zernio-Signature header. Configure a secret key to enable verification. Custom headers supported. Legacy X-Late-Event, X-Late-Event-Id and X-Late-Signature duplicates are still sent and will be removed in a future major version.
 
-      Resource groups. Every event belongs to one group: post.* to publishing, message.*, reaction.*, conversation.*, call.* and whatsapp.automatic_event to messages, comment.* and review.* to engagement, lead.* and contact.* to contacts, sequence.* and workflow.run.* to messages, ad.*, ad_account.* and campaign.* to ads, account.*, whatsapp.template.* and whatsapp.account.* to accounts, analytics.* to analytics, whatsapp.number.*, verification.* and sms.registration.* to telephony, api.changelog.published and webhook.test to webhooks. Support Assistant events (support.run.*) belong to no single group: they need every resource group enabled and a first-party full-scope caller (a session or a full-scope key, never an OAuth token or a profile-scoped key). Two independent controls use that mapping. (1) A restricted (zrk_) API key can only subscribe to, test-fire, redeliver, or read delivery logs for events in the groups it holds, so it can never create a subscription broader than itself. (2) Each subscription carries its own `disabledResourceGroups` denylist: events in a disabled group are dropped before delivery to that endpoint, on live delivery and on every replay path, no matter which key or session created the subscription. Changing that denylist applies to every event emitted after the change; events already queued when it landed can still be delivered for up to five minutes after they were enqueued, because the delivery worker trusts a five-minute enqueue-time snapshot before re-checking. Absent or empty on a subscription means it receives everything it subscribes to, which is the behavior of every subscription created before the field existed.
+      Resource groups. Every event belongs to one group: post.* to publishing, message.*, reaction.*, conversation.*, call.* and whatsapp.automatic_event to messages, comment.* and review.* to engagement, lead.* and contact.* to contacts, sequence.* and workflow.run.* to messages, ad.*, ad_account.*, ad_rule.* and campaign.* to ads, account.*, whatsapp.template.* and whatsapp.account.* to accounts, analytics.* to analytics, whatsapp.number.*, verification.* and sms.registration.* to telephony, api.changelog.published and webhook.test to webhooks. Support Assistant events (support.run.*) belong to no single group: they need every resource group enabled and a first-party full-scope caller (a session or a full-scope key, never an OAuth token or a profile-scoped key). Two independent controls use that mapping. (1) A restricted (zrk_) API key can only subscribe to, test-fire, redeliver, or read delivery logs for events in the groups it holds, so it can never create a subscription broader than itself. (2) Each subscription carries its own `disabledResourceGroups` denylist: events in a disabled group are dropped before delivery to that endpoint, on live delivery and on every replay path, no matter which key or session created the subscription. Changing that denylist applies to every event emitted after the change; events already queued when it landed can still be delivered for up to five minutes after they were enqueued, because the delivery worker trusts a five-minute enqueue-time snapshot before re-checking. Absent or empty on a subscription means it receives everything it subscribes to, which is the behavior of every subscription created before the field existed.
 
       Profile and account filters. A subscription can also carry `profileIds`, an allowlist of profiles, and `accountIds`, an allowlist of connected accounts with the same semantics keyed on the account; each non-empty list narrows delivery and a subscription with both must be satisfied on both. A scoped subscription is only sent events it can attribute to one of those profiles: the profile of the connected account behind the event, or for an aggregate `post.*` event the profile of every account the post targets (a post spanning two scoped endpoints' profiles reaches both). So an integrator can route the profile holding test accounts to a staging endpoint while a second subscription, scoped to the production profiles, keeps production traffic. Events that belong to no profile (`verification.*`, `phone_number.*`, and a legacy post whose accounts were deleted) reach only unscoped subscriptions. The filter runs when an event is emitted; redelivery replays a delivery already made to that endpoint and test fires ignore it. Absent or empty means every profile (or every account).
   - name: Support Assistant
@@ -4440,7 +4445,7 @@ components:
           type: array
           items:
             type: string
-            enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.ads.initial_sync_completed, account.ads.sync_failed, account.ads.sync_recovered, analytics.synced, message.received, conversation.started, conversation.control_changed, call.received, call.ended, call.failed, call.permission_request, message.sent, message.edited, message.deleted, message.delivered, message.read, message.played, message.failed, reaction.received, referral.received, comment.received, review.new, review.updated, lead.received, ad.status_changed, ad.review.approved, ad.review.rejected, ad.delivery_issue, campaign.budget.depleted, ad_account.status_changed, ad.video.processed, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.account.quality_updated, whatsapp.account.status_updated, whatsapp.account.alert_received, whatsapp.contact.identity_changed, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, phone_number.stock_available, verification.approved, verification.failed, api.changelog.published, sms.registration.action_required, sms.registration.status_updated, branded_calling.identity.status_updated, branded_calling.identity.action_required, branded_calling.number.status_updated, rcs.agent.status_updated, commerce.product.created, commerce.product.updated, commerce.product.deleted, commerce.order.created, commerce.order.updated, commerce.order.refunded, contact.tag_added, contact.tag_removed, contact.field_changed, sequence.enrolled, sequence.exited, workflow.run.started, workflow.run.completed, workflow.run.failed, support.run.completed, support.run.failed]
+            enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.ads.initial_sync_completed, account.ads.sync_failed, account.ads.sync_recovered, analytics.synced, message.received, conversation.started, conversation.control_changed, call.received, call.ended, call.failed, call.permission_request, message.sent, message.edited, message.deleted, message.delivered, message.read, message.played, message.failed, reaction.received, referral.received, comment.received, review.new, review.updated, lead.received, ad.status_changed, ad.review.approved, ad.review.rejected, ad.delivery_issue, campaign.budget.depleted, ad_account.status_changed, ad.video.processed, ad_rule.triggered, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.account.quality_updated, whatsapp.account.status_updated, whatsapp.account.alert_received, whatsapp.contact.identity_changed, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, phone_number.stock_available, verification.approved, verification.failed, api.changelog.published, sms.registration.action_required, sms.registration.status_updated, branded_calling.identity.status_updated, branded_calling.identity.action_required, branded_calling.number.status_updated, rcs.agent.status_updated, commerce.product.created, commerce.product.updated, commerce.product.deleted, commerce.order.created, commerce.order.updated, commerce.order.refunded, contact.tag_added, contact.tag_removed, contact.field_changed, sequence.enrolled, sequence.exited, workflow.run.started, workflow.run.completed, workflow.run.failed, support.run.completed, support.run.failed]
           description: Events subscribed to
         isActive:
           type: boolean
@@ -7767,6 +7772,85 @@ components:
             previous: { type: string, enum: [active, restricted, disabled, closed] }
             current: { type: string, enum: [active, restricted, disabled, closed] }
             raw: { type: string, description: "Platform-native status, forwarded verbatim (Meta `account_status` code such as `2`, Google `SUSPENDED`, TikTok `STATUS_LIMIT`, X `REJECTED`)." }
+        timestamp:
+          type: string
+          format: date-time
+          description: UTC time at which Zernio generated this event.
+    WebhookPayloadAdRuleTriggered:
+      type: object
+      description: |
+        Webhook payload for the `ad_rule.triggered` event.
+
+        Fires when a scheduled run of a rule with a `notify` action finds campaigns or ad sets
+        that meet every condition of the rule. Each object is announced at most once per rule
+        cooldown, so `objects` lists only the objects the run acted on, never the ones still in
+        cooldown. A run where every matching object is still in cooldown sends nothing. An object
+        whose action failed gets no cooldown: the next run retries it and reports it again.
+      required: [id, event, account, rule, run, objects, timestamp]
+      properties:
+        id:
+          type: string
+          description: 'Stable webhook event ID: the dedupe key, also sent as the X-Zernio-Event-Id header and identical on every retry and redelivery.'
+        profiles: { $ref: '#/components/schemas/WebhookProfiles' }
+        test:
+          type: boolean
+          description: 'Always true when present: only a sample sent by POST /v1/webhooks/test with an event carries it. Real deliveries never do.'
+        event:
+          type: string
+          enum: [ad_rule.triggered]
+        account: { $ref: '#/components/schemas/WebhookAdsAccount' }
+        rule:
+          type: object
+          required: [id, name, level, platformAdAccountId]
+          properties:
+            id: { type: string, description: Zernio ad rule ID. }
+            name: { type: string }
+            level: { type: string, enum: [campaign, adset], description: Whether the rule evaluates campaigns or ad sets. }
+            platformAdAccountId: { type: string, description: Platform-native ad account ID the rule watches. }
+        run:
+          type: object
+          required: [id, ranAt, today, timezone, timezoneAssumed, currency]
+          properties:
+            id: { type: string, description: ID of the rule run that triggered. }
+            ranAt: { type: string, format: date-time, description: Scheduled time of the run (UTC). }
+            today: { type: string, format: date, description: "The ad account's calendar date (YYYY-MM-DD) the condition windows were resolved against, so `today` and `last_7d` mean the account's days, not UTC days." }
+            timezone: { type: string, description: "IANA timezone used for `today`, for example `Europe/Madrid`." }
+            timezoneAssumed: { type: boolean, description: "True when the ad account has no known timezone and UTC was assumed." }
+            currency: { type: [string, "null"], description: "ISO 4217 currency of the ad account, which money metrics (`spend`, `cpc`, `cpm`, `cpa`) and condition values are in. Null when unknown." }
+        objects:
+          type: array
+          description: The campaigns or ad sets this run acted on, at the rule's `level`, including those whose action failed. Objects still in cooldown are left out.
+          items:
+            type: object
+            required: [platformId, name, platformCampaignId, conditions, actions]
+            properties:
+              platformId: { type: string, description: Platform-native ID of the campaign or ad set. }
+              name: { type: string, description: Name on the platform. Falls back to `platformId` when the platform reports none. }
+              platformCampaignId: { type: [string, "null"], description: "Platform-native ID of the campaign the object belongs to (on a campaign-level rule, the campaign's own ID). Null when unknown." }
+              conditions:
+                type: array
+                description: Every condition of the rule, with the value the object reached.
+                items:
+                  type: object
+                  required: [metric, window, op, value, actual]
+                  properties:
+                    metric: { type: string, description: "`spend`, `impressions`, `clicks`, `conversions`, `ctr`, `cpc`, `cpm`, `cpa` or `roas`. New values may be added." }
+                    window: { type: string, description: "`today`, `yesterday`, `last_3d`, `last_7d`, `last_14d` or `last_30d`, in the account's calendar (see `run.today`). New values may be added." }
+                    op: { type: string, enum: ['>', '>=', '<', '<='] }
+                    value: { type: number, description: The threshold set on the rule. }
+                    actual: { type: [number, "null"], description: "The object's value for the metric over the window. Null when it cannot be computed, for example a cost per action with no actions." }
+              actions:
+                type: array
+                description: What the rule did to the object. Empty on a rule that only notifies.
+                items:
+                  type: object
+                  required: [type, status, reason, previousDailyBudget, newDailyBudget]
+                  properties:
+                    type: { type: string, enum: [pause, activate, adjust_budget] }
+                    status: { type: string, enum: [done, skipped, failed], description: "`skipped` when the action could not or need not apply (already paused or active, budget at its limit, a budget that is unknown, not daily or set at another level, no live ads, or a permanent refusal from the platform), `failed` when it errored and will be retried on the next run." }
+                    reason: { type: [string, "null"], description: "Why the action was skipped or failed: `already_paused`, `already_active`, `at_limit`, `budget_unknown`, `budget_not_daily`, `budget_level_mismatch`, `no_live_ads`, `ads_allowance_exceeded` (a reactivation or budget increase for a team past its free live-ads allowance), or the platform's message. Null when done." }
+                    previousDailyBudget: { type: [number, "null"], description: "On `adjust_budget`, the daily budget before the change, in the ad account currency. Null otherwise." }
+                    newDailyBudget: { type: [number, "null"], description: "On `adjust_budget`, the daily budget after the change. Null when nothing changed." }
         timestamp:
           type: string
           format: date-time
@@ -14554,6 +14638,153 @@ components:
         name: { type: string }
         status: { type: string }
         conversionActionIds: { type: array, items: { type: string } }
+    AdRuleLevel:
+      type: string
+      enum: [campaign, adset]
+      description: Whether the rule checks campaigns or ad sets. Each one is evaluated on its own.
+    AdRuleCondition:
+      type: object
+      required: [metric, window, op, value]
+      properties:
+        metric:
+          type: string
+          enum: [spend, impressions, clicks, conversions, ctr, cpc, cpm, cpa, roas]
+          description: '`ctr` is a percentage. `spend`, `cpc`, `cpm` and `cpa` are in the ad account currency.'
+        window:
+          type: string
+          enum: [today, yesterday, last_3d, last_7d, last_14d, last_30d]
+          description: "Days in the ad account's own timezone. `last_7d` includes today."
+        op: { type: string, enum: ['>', '>=', '<', '<='] }
+        value: { type: number, minimum: 0 }
+    AdRuleConditions:
+      type: object
+      required: [all]
+      description: Every condition must hold for an object to match. A rate with no denominator (a CPA with no conversions) never matches.
+      properties:
+        all:
+          type: array
+          minItems: 1
+          maxItems: 10
+          items: { $ref: '#/components/schemas/AdRuleCondition' }
+    AdRuleAction:
+      oneOf:
+        - type: object
+          required: [type]
+          properties:
+            type: { type: string, enum: [notify], description: 'Send the `ad_rule.triggered` webhook.' }
+        - type: object
+          required: [type]
+          properties:
+            type: { type: string, enum: [pause], description: Pause the campaign or ad set. }
+        - type: object
+          required: [type]
+          properties:
+            type: { type: string, enum: [activate], description: 'Reactivate a campaign or ad set a rule paused, once `cooldownMinutes` has passed since the pause. Objects you paused yourself are never touched.' }
+        - type: object
+          required: [type, direction, percent, limit]
+          properties:
+            type: { type: string, enum: [adjust_budget], description: "Change the daily budget. Google ad groups have no budget of their own, so on Google it needs a campaign-level rule." }
+            direction: { type: string, enum: [increase, decrease] }
+            percent: { type: integer, minimum: 1, maximum: 100, description: 'Change in percent: up to 100 for an increase, up to 90 for a decrease.' }
+            limit: { type: number, exclusiveMinimum: 0, description: 'The budget never goes above this on an increase, or below it on a decrease, in the ad account currency.' }
+    AdRuleActions:
+      type: array
+      minItems: 1
+      items: { $ref: '#/components/schemas/AdRuleAction' }
+      description: Each type at most once, and at most one of `pause`, `activate` and `adjust_budget`.
+    AdRuleSchedule:
+      type: object
+      required: [everyMinutes]
+      properties:
+        everyMinutes: { type: integer, enum: [60, 180, 360, 720, 1440], description: 'How often the rule runs, in minutes.' }
+    AdRule:
+      type: object
+      required: [id, name, accountId, platform, adAccountId, level, campaignIds, conditions, actions, schedule, cooldownMinutes, enabled, lastRunAt, nextRunAt, createdAt, updatedAt]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        accountId: { type: string, description: The ads connection the rule acts through. }
+        platform: { type: string, description: 'Ad platform, for example `facebook` (Meta) or `google`.' }
+        adAccountId: { type: string, description: Platform ad account ID. }
+        level: { $ref: '#/components/schemas/AdRuleLevel' }
+        campaignIds: { type: [array, "null"], items: { type: string }, description: Platform campaign IDs the rule is limited to. Null checks the whole ad account. }
+        conditions: { $ref: '#/components/schemas/AdRuleConditions' }
+        actions: { $ref: '#/components/schemas/AdRuleActions' }
+        schedule: { $ref: '#/components/schemas/AdRuleSchedule' }
+        cooldownMinutes: { type: integer }
+        enabled: { type: boolean }
+        lastRunAt: { type: [string, "null"], format: date-time }
+        nextRunAt: { type: [string, "null"], format: date-time, description: Null while the rule is disabled. }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+    AdRuleObjectEvaluation:
+      type: object
+      required: [id, name, campaignId, matched, conditions]
+      properties:
+        id: { type: string, description: Platform ID of the campaign or ad set. }
+        name: { type: string }
+        campaignId: { type: [string, "null"] }
+        matched: { type: boolean, description: True when every condition holds. }
+        conditions:
+          type: array
+          items:
+            allOf:
+              - $ref: '#/components/schemas/AdRuleCondition'
+              - type: object
+                required: [actual, met]
+                properties:
+                  actual: { type: [number, "null"], description: "The object's value over the window. Null when it cannot be computed." }
+                  met: { type: boolean }
+    AdRuleEvaluation:
+      type: object
+      required: [evaluatedAt, today, timezone, timezoneAssumed, currency, matched, objects]
+      properties:
+        evaluatedAt: { type: string, format: date-time }
+        today: { type: string, format: date, description: "The ad account's calendar date the windows were resolved against." }
+        timezone: { type: string, description: IANA timezone of the ad account. }
+        timezoneAssumed: { type: boolean, description: True when the ad account has no known timezone and UTC was assumed. }
+        currency: { type: [string, "null"] }
+        matched: { type: integer, description: How many objects meet every condition. }
+        objects:
+          type: array
+          description: Every delivering campaign or ad set in scope (for an `activate` rule, the rule-paused ones it may reactivate).
+          items: { $ref: '#/components/schemas/AdRuleObjectEvaluation' }
+    AdRuleRun:
+      type: object
+      required: [id, ranAt, outcome, objectsEvaluated, actedObjectIds, evaluation, error]
+      properties:
+        id: { type: string }
+        ranAt: { type: string, format: date-time }
+        outcome:
+          type: string
+          enum: [triggered, cooldown, no_match, failed]
+          description: '`triggered`: the rule acted on at least one object (`error` is set if the webhook could not be sent afterwards). `cooldown`: objects matched but all were in cooldown. `no_match`: nothing matched. `failed`: the metrics could not be read, every action failed, or the webhook of a notify-only rule could not be sent (see `error`).'
+        objectsEvaluated: { type: integer }
+        actedObjectIds: { type: array, items: { type: string } }
+        evaluation:
+          type: [object, "null"]
+          description: The matched objects with their condition values, and what each action did.
+          properties:
+            today: { type: string, format: date }
+            timezone: { type: string }
+            timezoneAssumed: { type: boolean }
+            currency: { type: [string, "null"] }
+            matched:
+              type: array
+              items: { $ref: '#/components/schemas/AdRuleObjectEvaluation' }
+            actions:
+              type: array
+              items:
+                type: object
+                required: [objectId, type, status]
+                properties:
+                  objectId: { type: string }
+                  type: { type: string, enum: [pause, activate, adjust_budget] }
+                  status: { type: string, enum: [done, skipped, failed] }
+                  reason: { type: string, description: 'Why it was skipped or failed, for example `already_paused`.' }
+                  previousDailyBudget: { type: number }
+                  newDailyBudget: { type: number }
+        error: { type: [string, "null"] }
     AdKeyword:
       type: object
       properties:
@@ -17298,6 +17529,65 @@ webhooks:
                     error: null
                     thumbnailUrl: "https://scontent.xx.fbcdn.net/v/t15.5256-10/poster.jpg"
                   timestamp: "2026-10-05T15:25:27.944Z"
+      responses:
+        '200':
+          description: Webhook received successfully
+  ad_rule.triggered:
+    post:
+      operationId: onAdRuleTriggered
+      summary: Ad rule triggered event
+      description: |
+        Fired when a scheduled ad rule run finds campaigns or ad sets meeting every condition,
+        once per object per cooldown.
+        See `WebhookPayloadAdRuleTriggered` for when it fires and when it does not.
+      tags: [Webhook Events]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebhookPayloadAdRuleTriggered'
+            examples:
+              sample:
+                summary: Ad set over its CPA threshold
+                value:
+                  id: "01J7K3P4N5Q6R7S8T9V0W1X2Z3"
+                  event: ad_rule.triggered
+                  account:
+                    accountId: "65c8f7e2a1b3c4d5e6f7a8b9"
+                    profileId: "65c8f7e2a1b3c4d5e6f7a800"
+                    platform: metaads
+                    username: acme-ads
+                    displayName: Acme Ads
+                  rule:
+                    id: "65c8f7e2a1b3c4d5e6f7a8c1"
+                    name: "Pause watch: CPA over 40"
+                    level: adset
+                    platformAdAccountId: act_1234567890
+                  run:
+                    id: "65c8f7e2a1b3c4d5e6f7a8c2"
+                    ranAt: "2026-10-22T09:10:00.000Z"
+                    today: "2026-10-22"
+                    timezone: Europe/Madrid
+                    timezoneAssumed: false
+                    currency: EUR
+                  objects:
+                    - platformId: "120210000000000002"
+                      name: Prospecting, broad
+                      platformCampaignId: "120210000000000001"
+                      conditions:
+                        - metric: cpa
+                          window: last_3d
+                          op: '>'
+                          value: 40
+                          actual: 52.75
+                      actions:
+                        - type: pause
+                          status: done
+                          reason: null
+                          previousDailyBudget: null
+                          newDailyBudget: null
+                  timestamp: "2026-10-22T09:10:04.120Z"
       responses:
         '200':
           description: Webhook received successfully
@@ -37715,7 +38005,7 @@ paths:
                   minItems: 1
                   items:
                     type: string
-                    enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.ads.initial_sync_completed, account.ads.sync_failed, account.ads.sync_recovered, analytics.synced, message.received, conversation.started, conversation.control_changed, call.received, call.ended, call.failed, call.permission_request, message.sent, message.edited, message.deleted, message.delivered, message.read, message.played, message.failed, reaction.received, referral.received, comment.received, review.new, review.updated, lead.received, ad.status_changed, ad.review.approved, ad.review.rejected, ad.delivery_issue, campaign.budget.depleted, ad_account.status_changed, ad.video.processed, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.account.quality_updated, whatsapp.account.status_updated, whatsapp.account.alert_received, whatsapp.contact.identity_changed, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, phone_number.stock_available, verification.approved, verification.failed, api.changelog.published, sms.registration.action_required, sms.registration.status_updated, branded_calling.identity.status_updated, branded_calling.identity.action_required, branded_calling.number.status_updated, rcs.agent.status_updated, commerce.product.created, commerce.product.updated, commerce.product.deleted, commerce.order.created, commerce.order.updated, commerce.order.refunded, contact.tag_added, contact.tag_removed, contact.field_changed, sequence.enrolled, sequence.exited, workflow.run.started, workflow.run.completed, workflow.run.failed, support.run.completed, support.run.failed]
+                    enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.ads.initial_sync_completed, account.ads.sync_failed, account.ads.sync_recovered, analytics.synced, message.received, conversation.started, conversation.control_changed, call.received, call.ended, call.failed, call.permission_request, message.sent, message.edited, message.deleted, message.delivered, message.read, message.played, message.failed, reaction.received, referral.received, comment.received, review.new, review.updated, lead.received, ad.status_changed, ad.review.approved, ad.review.rejected, ad.delivery_issue, campaign.budget.depleted, ad_account.status_changed, ad.video.processed, ad_rule.triggered, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.account.quality_updated, whatsapp.account.status_updated, whatsapp.account.alert_received, whatsapp.contact.identity_changed, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, phone_number.stock_available, verification.approved, verification.failed, api.changelog.published, sms.registration.action_required, sms.registration.status_updated, branded_calling.identity.status_updated, branded_calling.identity.action_required, branded_calling.number.status_updated, rcs.agent.status_updated, commerce.product.created, commerce.product.updated, commerce.product.deleted, commerce.order.created, commerce.order.updated, commerce.order.refunded, contact.tag_added, contact.tag_removed, contact.field_changed, sequence.enrolled, sequence.exited, workflow.run.started, workflow.run.completed, workflow.run.failed, support.run.completed, support.run.failed]
                   description: Events to subscribe to (at least one required)
                 isActive:
                   type: boolean
@@ -37872,7 +38162,7 @@ paths:
                   minItems: 1
                   items:
                     type: string
-                    enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.ads.initial_sync_completed, account.ads.sync_failed, account.ads.sync_recovered, analytics.synced, message.received, conversation.started, conversation.control_changed, call.received, call.ended, call.failed, call.permission_request, message.sent, message.edited, message.deleted, message.delivered, message.read, message.played, message.failed, reaction.received, referral.received, comment.received, review.new, review.updated, lead.received, ad.status_changed, ad.review.approved, ad.review.rejected, ad.delivery_issue, campaign.budget.depleted, ad_account.status_changed, ad.video.processed, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.account.quality_updated, whatsapp.account.status_updated, whatsapp.account.alert_received, whatsapp.contact.identity_changed, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, phone_number.stock_available, verification.approved, verification.failed, api.changelog.published, sms.registration.action_required, sms.registration.status_updated, branded_calling.identity.status_updated, branded_calling.identity.action_required, branded_calling.number.status_updated, rcs.agent.status_updated, commerce.product.created, commerce.product.updated, commerce.product.deleted, commerce.order.created, commerce.order.updated, commerce.order.refunded, contact.tag_added, contact.tag_removed, contact.field_changed, sequence.enrolled, sequence.exited, workflow.run.started, workflow.run.completed, workflow.run.failed, support.run.completed, support.run.failed]
+                    enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.ads.initial_sync_completed, account.ads.sync_failed, account.ads.sync_recovered, analytics.synced, message.received, conversation.started, conversation.control_changed, call.received, call.ended, call.failed, call.permission_request, message.sent, message.edited, message.deleted, message.delivered, message.read, message.played, message.failed, reaction.received, referral.received, comment.received, review.new, review.updated, lead.received, ad.status_changed, ad.review.approved, ad.review.rejected, ad.delivery_issue, campaign.budget.depleted, ad_account.status_changed, ad.video.processed, ad_rule.triggered, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.account.quality_updated, whatsapp.account.status_updated, whatsapp.account.alert_received, whatsapp.contact.identity_changed, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, phone_number.stock_available, verification.approved, verification.failed, api.changelog.published, sms.registration.action_required, sms.registration.status_updated, branded_calling.identity.status_updated, branded_calling.identity.action_required, branded_calling.number.status_updated, rcs.agent.status_updated, commerce.product.created, commerce.product.updated, commerce.product.deleted, commerce.order.created, commerce.order.updated, commerce.order.refunded, contact.tag_added, contact.tag_removed, contact.field_changed, sequence.enrolled, sequence.exited, workflow.run.started, workflow.run.completed, workflow.run.failed, support.run.completed, support.run.failed]
                   description: Events to subscribe to. Must contain at least one event if provided.
                 isActive:
                   type: boolean
@@ -38255,6 +38545,7 @@ paths:
                     - campaign.budget.depleted
                     - ad_account.status_changed
                     - ad.video.processed
+                    - ad_rule.triggered
                     - lead.received
                     - whatsapp.template.status_updated
                     - whatsapp.template.category_updated
@@ -57671,6 +57962,336 @@ paths:
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/AccountUnavailable' }
+  /v1/ads/rules:
+    get:
+      x-resource-group: ads
+      operationId: listAdRules
+      tags: [Ad Rules]
+      x-platforms: [meta, google, tiktok, linkedin, pinterest, x, reddit]
+      summary: List ad rules
+      description: |
+        Lists the ad rules on the profiles your key can reach, newest first.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: accountId
+          in: query
+          schema: { type: string }
+          description: Only rules on this ads connection.
+        - name: adAccountId
+          in: query
+          schema: { type: string }
+          description: Only rules watching this platform ad account.
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 100, default: 50 }
+        - name: skip
+          in: query
+          schema: { type: integer, minimum: 0, default: 0 }
+      responses:
+        '200':
+          description: Rules
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [rules]
+                properties:
+                  rules:
+                    type: array
+                    items: { $ref: '#/components/schemas/AdRule' }
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: Ads access required (code `ads_addon_required`). Legacy plans need the Ads add-on; included by default on usage-based plans.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    post:
+      x-resource-group: ads
+      operationId: createAdRule
+      tags: [Ad Rules]
+      x-platforms: [meta, google, tiktok, linkedin, pinterest, x, reddit]
+      summary: Create an ad rule
+      description: |
+        Creates a rule that checks the campaigns or ad sets of one ad account on a schedule and acts on
+        each one that meets every condition.
+
+        Rules support Meta, Google, TikTok, LinkedIn, Pinterest, X and Reddit ads connections. Each
+        campaign or ad set is evaluated on its own, over the ad account's calendar days, from the
+        metrics Zernio syncs. A rule can notify (the `ad_rule.triggered` webhook), and take at most one of
+        `pause`, `activate` and `adjust_budget`. After acting on an object, the rule leaves that object
+        alone for `cooldownMinutes`; a rule that pauses, activates or adjusts budgets needs a cooldown at
+        least as long as its schedule.
+
+        `activate` only reactivates objects a rule paused, never ones you paused yourself, and only once
+        the cooldown has passed since that pause. If you reactivate and pause such an object yourself
+        between two runs of a rule, Zernio cannot tell your pause from the rule's, and an `activate` rule
+        may reactivate it.
+
+        Use `POST /v1/ads/rules/{ruleId}/preview` to see what a rule would match before enabling it.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, accountId, adAccountId, level, conditions, actions]
+              properties:
+                name: { type: string, minLength: 1, maxLength: 200 }
+                accountId: { type: string, description: The ads connection (account ID from `GET /v1/accounts`). }
+                adAccountId: { type: string, description: 'Platform ad account ID, from `GET /v1/ads/accounts`.' }
+                level: { $ref: '#/components/schemas/AdRuleLevel' }
+                campaignIds:
+                  type: array
+                  minItems: 1
+                  maxItems: 100
+                  items: { type: string }
+                  description: Only check these platform campaign IDs (or their ad sets). Leave out to check the whole ad account.
+                conditions: { $ref: '#/components/schemas/AdRuleConditions' }
+                actions: { $ref: '#/components/schemas/AdRuleActions' }
+                schedule: { allOf: [{ $ref: '#/components/schemas/AdRuleSchedule' }], description: Leave it out to run every 60 minutes. }
+                cooldownMinutes: { type: integer, minimum: 0, maximum: 43200, default: 1440, description: How long the rule leaves an object alone after acting on it. }
+                enabled: { type: boolean, default: true }
+      responses:
+        '201':
+          description: Rule created
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [rule]
+                properties:
+                  rule: { $ref: '#/components/schemas/AdRule' }
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: >-
+            Code `ads_addon_required` when the team has no ads access (legacy plans need the Ads add-on),
+            `ad_account_not_selected` when `adAccountId` is not in the connection's selected ad accounts, or
+            `ads_allowance_exceeded` when a rule that reactivates or raises budgets is created for a team past its
+            free live-ads allowance with no payment method.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/AccountUnavailable'
+        '409':
+          $ref: '#/components/responses/AccountConnectionRequired'
+  /v1/ads/rules/{ruleId}:
+    parameters:
+      - name: ruleId
+        in: path
+        required: true
+        schema: { type: string }
+    get:
+      x-resource-group: ads
+      operationId: getAdRule
+      tags: [Ad Rules]
+      x-platforms: [meta, google, tiktok, linkedin, pinterest, x, reddit]
+      summary: Get an ad rule
+      description: |
+        Returns one ad rule.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Rule
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [rule]
+                properties:
+                  rule: { $ref: '#/components/schemas/AdRule' }
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: Ads access required (code `ads_addon_required`). Legacy plans need the Ads add-on; included by default on usage-based plans.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      x-resource-group: ads
+      operationId: updateAdRule
+      tags: [Ad Rules]
+      x-platforms: [meta, google, tiktok, linkedin, pinterest, x, reddit]
+      summary: Update an ad rule
+      description: |
+        Changes any field of a rule except its connection and ad account. Send `campaignIds: null` to
+        check the whole ad account again. Changing the schedule, or enabling a disabled rule, moves the
+        next run; re-sending `enabled: true` on an enabled rule does not.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name: { type: string, minLength: 1, maxLength: 200 }
+                level: { $ref: '#/components/schemas/AdRuleLevel' }
+                campaignIds:
+                  type: [array, "null"]
+                  minItems: 1
+                  maxItems: 100
+                  items: { type: string }
+                conditions: { $ref: '#/components/schemas/AdRuleConditions' }
+                actions: { $ref: '#/components/schemas/AdRuleActions' }
+                schedule: { $ref: '#/components/schemas/AdRuleSchedule' }
+                cooldownMinutes: { type: integer, minimum: 0, maximum: 43200 }
+                enabled: { type: boolean }
+      responses:
+        '200':
+          description: Rule updated
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [rule]
+                properties:
+                  rule: { $ref: '#/components/schemas/AdRule' }
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: >-
+            Code `ads_addon_required` when the team has no ads access, or `ads_allowance_exceeded` when the change
+            enables a rule that reactivates or raises budgets for a team past its free live-ads allowance with no
+            payment method.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      x-resource-group: ads
+      operationId: deleteAdRule
+      tags: [Ad Rules]
+      x-platforms: [meta, google, tiktok, linkedin, pinterest, x, reddit]
+      summary: Delete an ad rule
+      description: |
+        Deletes a rule and its run history. Changes the rule already made on the platform stay.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Rule deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: Ads access required (code `ads_addon_required`). Legacy plans need the Ads add-on; included by default on usage-based plans.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /v1/ads/rules/{ruleId}/preview:
+    post:
+      x-resource-group: ads
+      operationId: previewAdRule
+      tags: [Ad Rules]
+      x-platforms: [meta, google, tiktok, linkedin, pinterest, x, reddit]
+      summary: Preview an ad rule
+      description: |
+        Evaluates a rule against current metrics and returns what it would match right now, without
+        acting on anything, sending a webhook or starting a cooldown. Works on disabled rules.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: ruleId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Evaluation
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AdRuleEvaluation' }
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: Ads access required (code `ads_addon_required`). Legacy plans need the Ads add-on; included by default on usage-based plans.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /v1/ads/rules/{ruleId}/runs:
+    get:
+      x-resource-group: ads
+      operationId: listAdRuleRuns
+      tags: [Ad Rules]
+      x-platforms: [meta, google, tiktok, linkedin, pinterest, x, reddit]
+      summary: List an ad rule's runs
+      description: |
+        Lists a rule's scheduled runs, newest first: what each run evaluated, matched and did.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: ruleId
+          in: path
+          required: true
+          schema: { type: string }
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 100, default: 20 }
+        - name: skip
+          in: query
+          schema: { type: integer, minimum: 0, default: 0 }
+      responses:
+        '200':
+          description: Runs
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [runs]
+                properties:
+                  runs:
+                    type: array
+                    items: { $ref: '#/components/schemas/AdRuleRun' }
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: Ads access required (code `ads_addon_required`). Legacy plans need the Ads add-on; included by default on usage-based plans.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /v1/ads/campaigns:
     get:
       x-resource-group: "ads"
