@@ -1122,6 +1122,7 @@ class AdCampaignsResource:
         ad_account_id: str,
         *,
         include_deleted: bool | None = False,
+        max_age_seconds: int | None = 3600,
         page: int | None = 1,
         page_size: int | None = 500,
     ) -> dict[str, Any]:
@@ -1130,6 +1131,7 @@ class AdCampaignsResource:
             account_id=account_id,
             ad_account_id=ad_account_id,
             include_deleted=include_deleted,
+            max_age_seconds=max_age_seconds,
             page=page,
             page_size=page_size,
         )
@@ -2749,6 +2751,7 @@ class AdCampaignsResource:
         ad_account_id: str,
         *,
         include_deleted: bool | None = False,
+        max_age_seconds: int | None = 3600,
         page: int | None = 1,
         page_size: int | None = 500,
     ) -> dict[str, Any]:
@@ -2757,6 +2760,7 @@ class AdCampaignsResource:
             account_id=account_id,
             ad_account_id=ad_account_id,
             include_deleted=include_deleted,
+            max_age_seconds=max_age_seconds,
             page=page,
             page_size=page_size,
         )
