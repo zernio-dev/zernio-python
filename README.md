@@ -1087,6 +1087,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 ### Messages (Inbox)
 | Method | Description |
 |--------|-------------|
+| `messages.list_conversation_labels()` | List the labels on a conversation |
 | `messages.list_inbox_conversations()` | List conversations |
 | `messages.list_inbox_labels()` | List the Page's conversation labels |
 | `messages.create_inbox_conversation()` | Create conversation |
@@ -1099,9 +1100,11 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `messages.delete_inbox_label()` | Delete a conversation label |
 | `messages.delete_inbox_message()` | Delete message |
 | `messages.accept_conversation_request()` | Accept a message request |
+| `messages.add_conversation_label()` | Add a label to a conversation |
 | `messages.add_message_reaction()` | Add reaction |
 | `messages.edit_inbox_message()` | Edit message |
 | `messages.mark_conversation_read()` | Mark a conversation as read |
+| `messages.remove_conversation_label()` | Remove a label from a conversation |
 | `messages.remove_message_reaction()` | Remove reaction |
 | `messages.search_inbox_conversations()` | Search conversations |
 | `messages.send_inbox_message()` | Send message |

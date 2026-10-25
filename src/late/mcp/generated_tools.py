@@ -28710,6 +28710,91 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="List the labels on a conversation",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def messages_list_conversation_labels(conversation_id: str, account_id: str) -> str:
+        """List the labels on a conversation
+
+        Facebook Messenger only. Lists the Page's custom labels applied to the person in this conversation (Graph `/{psid}/custom_labels`). Other platforms answer 400 `platform_not_supported`.
+
+        Args:
+            conversation_id: Conversation ID (Zernio id or Meta platform conversation id) (required)
+            account_id: Facebook social account ID (required)"""
+        client = _get_client()
+        try:
+            response = client.messages.list_conversation_labels(
+                conversation_id=conversation_id, account_id=account_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Add a label to a conversation",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def messages_add_conversation_label(
+        conversation_id: str, account_id: str, label_id: str
+    ) -> str:
+        """Add a label to a conversation
+
+        Facebook Messenger only. Applies one of the Page's custom labels to the person in this conversation (Graph `POST /{label-id}/label?user={psid}`). The id must be one of the Page's custom labels, otherwise 404 `resource_not_found`. Other platforms answer 400 `platform_not_supported`.
+
+        Args:
+            conversation_id: Conversation ID (Zernio id or Meta platform conversation id) (required)
+            account_id: Facebook social account ID (required)
+            label_id: Meta label id from listInboxLabels (required)"""
+        client = _get_client()
+        try:
+            response = client.messages.add_conversation_label(
+                conversation_id=conversation_id,
+                account_id=account_id,
+                label_id=label_id,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Remove a label from a conversation",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def messages_remove_conversation_label(
+        conversation_id: str, label_id: str, account_id: str
+    ) -> str:
+        """Remove a label from a conversation
+
+        Facebook Messenger only. Removes one of the Page's custom labels from the person in this conversation (Graph `DELETE /{label-id}/label?user={psid}`). The label itself stays on the Page. The id must be one of the Page's custom labels, otherwise 404 `resource_not_found`. Other platforms answer 400 `platform_not_supported`.
+
+        Args:
+            conversation_id: Conversation ID (Zernio id or Meta platform conversation id) (required)
+            label_id: Meta label id (required)
+            account_id: Facebook social account ID (required)"""
+        client = _get_client()
+        try:
+            response = client.messages.remove_conversation_label(
+                conversation_id=conversation_id,
+                label_id=label_id,
+                account_id=account_id,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="Mark a conversation as read",
             readOnlyHint=False,
             destructiveHint=True,
