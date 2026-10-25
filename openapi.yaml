@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.351.0"
+  version: "1.352.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -27565,7 +27565,7 @@ paths:
         - name: welcomeTheme
           in: query
           schema: { type: string, maxLength: 4000 }
-          description: 'Welcome screen only (`welcome=true`): a URL-encoded JSON object that restyles and rewords the screen. All keys are optional. Copy: `heading` (up to 120 characters), `trustLine`, `consentLine` and `statusLine` (up to 200 each, `statusLine` being the line above the button), `buttonLabel` (up to 30, the label of the link the button becomes if the redirect stalls); each may contain the placeholders `{brand}` and `{platform}`. Style: `primaryColor` (the button), `accentColor` (the header gradient, built as a scale of that colour, and the icons), `pageColor`, `cardColor` and `textColor` as `#RRGGBB`, `cornerRadius` as an integer from 0 to 24 (pixels), `font` as `sans`, `serif` or `mono`. A `primaryColor` here wins over the `primaryColor` parameter. Unknown keys, invalid JSON or an invalid value are a 400 `INVALID_FIELD_VALUE`. Rejected when the welcome screen is not shown. Example: `{"heading":"Link your {platform} to {brand}","cardColor":"#FFF7ED","cornerRadius":12}`.'
+          description: 'Welcome screen only (`welcome=true`): a URL-encoded JSON object that restyles and rewords the screen. All keys are optional. Copy: `heading` (up to 120 characters), `trustLine`, `consentLine` and `statusLine` (up to 200 each, `statusLine` being the line above the button), `buttonLabel` (up to 30, the label of the link the button becomes if the redirect stalls), and for the closing page shown when there is no `redirect_url`, `successHeading` and `errorHeading` (up to 120) and `successBody` and `errorBody` (up to 200); each may contain the placeholders `{brand}` and `{platform}`. Style: `primaryColor` (the button), `accentColor` (the header gradient, built as a scale of that colour, and the icons), `pageColor`, `cardColor` and `textColor` as `#RRGGBB`, `cornerRadius` as an integer from 0 to 24 (pixels), `font` as `sans`, `serif` or `mono`, `bannerStyle` as `halftone` (default), `solid` (a flat tint of `accentColor`) or `plain` (no banner fill). Icons: `trustLineIcon` (default `shield`) and `consentLineIcon` (default `link`), each one of `shield`, `lock`, `link`, `check`, `user`, `sparkles` or `none`. Visibility: `hide`, an array of any of `heading`, `trustLine`, `consentLine`, `statusLine`, `successBody` and `errorBody`, removes those lines from the screens. Links: `termsUrl` and `privacyUrl` (https, up to 2048 characters) add small Terms and Privacy links at the bottom of every hosted screen. A `primaryColor` here wins over the `primaryColor` parameter. Unknown keys, invalid JSON or an invalid value are a 400 `INVALID_FIELD_VALUE`. Rejected when the welcome screen is not shown. Example: `{"heading":"Link your {platform} to {brand}","cardColor":"#FFF7ED","cornerRadius":12}`.'
         - name: logoUrl
           in: query
           schema: { type: string, format: uri, maxLength: 2048 }
