@@ -8747,6 +8747,7 @@ def register_generated_tools(mcp, _get_client):
         bodies: list[str] | None = None,
         smart_targeting: dict[str, Any] | None = None,
         optimization_goal: str | None = None,
+        meta_objective: Literal["OUTCOME_ENGAGEMENT"] | None = None,
     ) -> str:
         """Boost post as ad
 
@@ -8933,7 +8934,18 @@ def register_generated_tools(mcp, _get_client):
         "engagement"` to objective `OUTCOME_AWARENESS`, which accepts
         `REACH`, `IMPRESSIONS`, `AD_RECALL_LIFT`, or THRUPLAY-class values, and
         rejects `POST_ENGAGEMENT` (that value is only valid under
-        `OUTCOME_ENGAGEMENT`, which create uses for the same goal name)."""
+        `OUTCOME_ENGAGEMENT`, which create uses for the same goal name, and
+        which `metaObjective` selects on a boost).
+                meta_objective: Meta only, with `goal: engagement` and without `adSetId` (400 otherwise).
+        `OUTCOME_ENGAGEMENT` creates the campaign with objective `OUTCOME_ENGAGEMENT`
+        and the ad set with `optimization_goal` `POST_ENGAGEMENT` (unless
+        `optimizationGoal` is set) and `destination_type` `ON_POST` (unless
+        `destinationType` is set), the shape Ads Manager uses to boost an existing
+        post. When omitted, an engagement boost keeps `OUTCOME_AWARENESS` with
+        `REACH`. Returns 400 with `leadGenFormId` or with a `callToAction` whose objective
+        is not `OUTCOME_ENGAGEMENT` (`CALL_NOW`); messaging CTAs keep their own
+        `CONVERSATIONS` ad set. Verified against Meta on Facebook posts; Instagram posts
+        are accepted but not yet verified."""
         client = _get_client()
         try:
             response = client.ad_campaigns.boost_post(
@@ -8993,6 +9005,7 @@ def register_generated_tools(mcp, _get_client):
                 bodies=bodies,
                 smart_targeting=smart_targeting,
                 optimization_goal=optimization_goal,
+                meta_objective=meta_objective,
             )
             return _format_response(response)
         except Exception as e:
