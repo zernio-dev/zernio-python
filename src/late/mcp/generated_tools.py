@@ -1052,12 +1052,12 @@ def register_generated_tools(mcp, _get_client):
         a video picker in your own UI.
 
         Not every field applies to every platform: `reactionCount` is Facebook and LinkedIn,
-        `shareCount` is platform dependent, `cid` is the Bluesky content id needed to reply, and
-        `subreddit` is Reddit only. Absent fields are omitted from the response.
+        `shareCount` is platform dependent, `cid` is the Bluesky content id needed to reply,
+        `subreddit` is Reddit only, and `title`, `description`, `link`, `boardId` and
+        `boardOwnerUsername` are Pinterest only (the native Pin values; `message` keeps title and
+        description joined). Absent fields are omitted from the response.
 
-        The account's token is refreshed before the call when it has expired. When the refresh
-        cannot recover it, the response is a 401 with code `TOKEN_EXPIRED` and the account has to
-        be reconnected.
+        The account's token is refreshed before the call when it has expired. When ...
 
         Platforms: facebook, instagram, twitter, bluesky, threads, youtube, linkedin, reddit, tiktok, pinterest
 

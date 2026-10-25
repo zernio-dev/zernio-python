@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.356.1"
+  version: "1.357.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -26478,8 +26478,10 @@ paths:
         a video picker in your own UI.
 
         Not every field applies to every platform: `reactionCount` is Facebook and LinkedIn,
-        `shareCount` is platform dependent, `cid` is the Bluesky content id needed to reply, and
-        `subreddit` is Reddit only. Absent fields are omitted from the response.
+        `shareCount` is platform dependent, `cid` is the Bluesky content id needed to reply,
+        `subreddit` is Reddit only, and `title`, `description`, `link`, `boardId` and
+        `boardOwnerUsername` are Pinterest only (the native Pin values; `message` keeps title and
+        description joined). Absent fields are omitted from the response.
 
         The account's token is refreshed before the call when it has expired. When the refresh
         cannot recover it, the response is a 401 with code `TOKEN_EXPIRED` and the account has to
@@ -26516,6 +26518,11 @@ paths:
                         shareCount: { type: integer }
                         cid: { type: string, description: 'Bluesky content id, required to reply to the post' }
                         subreddit: { type: string, description: 'Reddit only' }
+                        title: { type: string, description: 'Pinterest only: native Pin title' }
+                        description: { type: string, description: 'Pinterest only: full native Pin description (Pinterest caps it at 800 characters)' }
+                        link: { type: string, description: 'Pinterest only: destination URL of the Pin, not the Pin page (see permalink)' }
+                        boardId: { type: string, description: 'Pinterest only: id of the board holding the Pin' }
+                        boardOwnerUsername: { type: string, description: 'Pinterest only: username of the board owner' }
                   lastUpdated: { type: string, format: date-time }
               example:
                 status: "success"
