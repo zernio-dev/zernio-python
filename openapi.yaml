@@ -40774,6 +40774,141 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/ErrorResponse' }
 
+  /v1/inbox/labels:
+    get:
+      x-resource-group: messages
+      operationId: listInboxLabels
+      summary: List the Page's conversation labels
+      description: >-
+        Facebook Messenger only. Lists the custom labels defined on the Page (Graph `/{page-id}/custom_labels`).
+        Other platforms answer 400 `platform_not_supported`.
+      tags: [Messages]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: accountId
+          in: query
+          required: true
+          schema: { type: string }
+          description: Facebook social account ID
+      responses:
+        '200':
+          description: The Page's labels
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  labels:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id: { type: string, description: Meta label id }
+                        name: { type: string }
+        '400':
+          description: "Invalid accountId, or an account that is not Facebook (platform_not_supported), or Meta refusing for good (platform_api_error with Meta's error_user_title and error_user_msg in the message, e.g. the Page has not accepted the label privacy terms, subcode 2018344, in platformError). A transient Meta failure answers 502"
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403':
+          description: Inbox addon required
+        '404':
+          description: Account not found
+        '422':
+          description: No Facebook Page is selected on this account (linked_account_required); reconnect it and select the Page
+    post:
+      x-resource-group: messages
+      operationId: createInboxLabel
+      summary: Create a conversation label
+      description: >-
+        Facebook Messenger only. Creates a custom label on the Page (Graph `POST /{page-id}/custom_labels`).
+        Other platforms answer 400 `platform_not_supported`.
+      tags: [Messages]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [accountId, name]
+              properties:
+                accountId: { type: string, description: Facebook social account ID }
+                name: { type: string, minLength: 1, description: Label name }
+            example:
+              accountId: 64e1f0a9e2b5af0012ab34cd
+              name: VIP
+      responses:
+        '201':
+          description: Label created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  label:
+                    type: object
+                    properties:
+                      id: { type: string, description: Meta label id }
+                      name: { type: string }
+        '400':
+          description: "Invalid body, or an account that is not Facebook (platform_not_supported), or Meta refusing for good (platform_api_error with Meta's error_user_title and error_user_msg in the message, e.g. the Page has not accepted the label privacy terms, subcode 2018344, in platformError). A transient Meta failure answers 502"
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403':
+          description: Inbox addon required
+        '404':
+          description: Account not found
+        '422':
+          description: No Facebook Page is selected on this account (linked_account_required); reconnect it and select the Page
+
+  /v1/inbox/labels/{labelId}:
+    delete:
+      x-resource-group: messages
+      operationId: deleteInboxLabel
+      summary: Delete a conversation label
+      description: >-
+        Facebook Messenger only. Deletes a custom label from the Page (Graph `DELETE /{label-id}`), which also
+        removes it from every conversation. The id must be one of the Page's custom labels, otherwise 404
+        `resource_not_found`. Other platforms answer 400 `platform_not_supported`.
+      tags: [Messages]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: labelId
+          in: path
+          required: true
+          schema: { type: string, pattern: '^[0-9]+$' }
+          description: Meta label id
+        - name: accountId
+          in: query
+          required: true
+          schema: { type: string }
+          description: Facebook social account ID
+      responses:
+        '200':
+          description: Label deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+        '400':
+          description: "Invalid id, or an account that is not Facebook (platform_not_supported), or Meta refusing for good (platform_api_error with Meta's error_user_title and error_user_msg in the message, e.g. the Page has not accepted the label privacy terms, subcode 2018344, in platformError). A transient Meta failure answers 502"
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403':
+          description: Inbox addon required
+        '404':
+          description: Account not found, or the label is not one of the Page's custom labels
+        '422':
+          description: No Facebook Page is selected on this account (linked_account_required); reconnect it and select the Page
+
   /v1/inbox/conversations/{conversationId}/read:
     post:
       x-resource-group: "messages"

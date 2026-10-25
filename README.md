@@ -1088,12 +1088,15 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | Method | Description |
 |--------|-------------|
 | `messages.list_inbox_conversations()` | List conversations |
+| `messages.list_inbox_labels()` | List the Page's conversation labels |
 | `messages.create_inbox_conversation()` | Create conversation |
+| `messages.create_inbox_label()` | Create a conversation label |
 | `messages.get_inbox_conversation()` | Get conversation |
 | `messages.get_inbox_conversation_messages()` | List messages |
 | `messages.get_message_attachment()` | Resolve message attachment |
 | `messages.update_inbox_conversation()` | Update conversation status |
 | `messages.delete_inbox_conversation()` | Delete conversation |
+| `messages.delete_inbox_label()` | Delete a conversation label |
 | `messages.delete_inbox_message()` | Delete message |
 | `messages.accept_conversation_request()` | Accept a message request |
 | `messages.add_message_reaction()` | Add reaction |

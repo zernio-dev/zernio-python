@@ -355,6 +355,28 @@ class MessagesResource:
             f"/v1/inbox/conversations/{conversation_id}/accept", data=payload
         )
 
+    def list_inbox_labels(self, account_id: str) -> dict[str, Any]:
+        """List the Page's conversation labels"""
+        params = self._build_params(
+            account_id=account_id,
+        )
+        return self._client._get("/v1/inbox/labels", params=params)
+
+    def create_inbox_label(self, account_id: str, name: str) -> dict[str, Any]:
+        """Create a conversation label"""
+        payload = self._build_payload(
+            account_id=account_id,
+            name=name,
+        )
+        return self._client._post("/v1/inbox/labels", data=payload)
+
+    def delete_inbox_label(self, label_id: str, account_id: str) -> dict[str, Any]:
+        """Delete a conversation label"""
+        params = self._build_params(
+            account_id=account_id,
+        )
+        return self._client._delete(f"/v1/inbox/labels/{label_id}", params=params)
+
     def mark_conversation_read(
         self, conversation_id: str, account_id: str
     ) -> dict[str, Any]:
@@ -694,6 +716,32 @@ class MessagesResource:
         )
         return await self._client._apost(
             f"/v1/inbox/conversations/{conversation_id}/accept", data=payload
+        )
+
+    async def alist_inbox_labels(self, account_id: str) -> dict[str, Any]:
+        """List the Page's conversation labels (async)"""
+        params = self._build_params(
+            account_id=account_id,
+        )
+        return await self._client._aget("/v1/inbox/labels", params=params)
+
+    async def acreate_inbox_label(self, account_id: str, name: str) -> dict[str, Any]:
+        """Create a conversation label (async)"""
+        payload = self._build_payload(
+            account_id=account_id,
+            name=name,
+        )
+        return await self._client._apost("/v1/inbox/labels", data=payload)
+
+    async def adelete_inbox_label(
+        self, label_id: str, account_id: str
+    ) -> dict[str, Any]:
+        """Delete a conversation label (async)"""
+        params = self._build_params(
+            account_id=account_id,
+        )
+        return await self._client._adelete(
+            f"/v1/inbox/labels/{label_id}", params=params
         )
 
     async def amark_conversation_read(

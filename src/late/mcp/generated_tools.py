@@ -28638,6 +28638,78 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="List the Page's conversation labels",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def messages_list_inbox_labels(account_id: str) -> str:
+        """List the Page's conversation labels
+
+        Facebook Messenger only. Lists the custom labels defined on the Page (Graph `/{page-id}/custom_labels`). Other platforms answer 400 `platform_not_supported`.
+
+        Args:
+            account_id: Facebook social account ID (required)"""
+        client = _get_client()
+        try:
+            response = client.messages.list_inbox_labels(account_id=account_id)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Create a conversation label",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def messages_create_inbox_label(account_id: str, name: str) -> str:
+        """Create a conversation label
+
+        Facebook Messenger only. Creates a custom label on the Page (Graph `POST /{page-id}/custom_labels`). Other platforms answer 400 `platform_not_supported`.
+
+        Args:
+            account_id: Facebook social account ID (required)
+            name: Label name (required)"""
+        client = _get_client()
+        try:
+            response = client.messages.create_inbox_label(
+                account_id=account_id, name=name
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Delete a conversation label",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def messages_delete_inbox_label(label_id: str, account_id: str) -> str:
+        """Delete a conversation label
+
+        Facebook Messenger only. Deletes a custom label from the Page (Graph `DELETE /{label-id}`), which also removes it from every conversation. The id must be one of the Page's custom labels, otherwise 404 `resource_not_found`. Other platforms answer 400 `platform_not_supported`.
+
+        Args:
+            label_id: Meta label id (required)
+            account_id: Facebook social account ID (required)"""
+        client = _get_client()
+        try:
+            response = client.messages.delete_inbox_label(
+                label_id=label_id, account_id=account_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="Mark a conversation as read",
             readOnlyHint=False,
             destructiveHint=True,
