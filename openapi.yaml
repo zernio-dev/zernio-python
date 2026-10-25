@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.356.0"
+  version: "1.356.1"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -48446,7 +48446,7 @@ paths:
                   description: Business websites (max 2)
                 vertical:
                   type: string
-                  description: Business category (e.g., RETAIL, ENTERTAINMENT, etc.)
+                  description: 'Business category, one of Meta''s keys (e.g. AUTO, ENTERTAIN, RETAIL, PROF_SERVICES, OTHER)'
                 profilePictureHandle:
                   type: string
                   description: Handle from resumable upload for profile picture

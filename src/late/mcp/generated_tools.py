@@ -39223,7 +39223,7 @@ def register_generated_tools(mcp, _get_client):
             description: Full business description (max 512 characters)
             email: Business email
             websites: Business websites (max 2)
-            vertical: Business category (e.g., RETAIL, ENTERTAINMENT, etc.)
+            vertical: Business category, one of Meta's keys (e.g. AUTO, ENTERTAIN, RETAIL, PROF_SERVICES, OTHER)
             profile_picture_handle: Handle from resumable upload for profile picture"""
         client = _get_client()
         try:
