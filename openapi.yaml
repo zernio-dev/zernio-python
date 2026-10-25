@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.355.0"
+  version: "1.356.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -14865,7 +14865,7 @@ components:
         warnings:
           type: array
           items: { type: string }
-          description: 'Present when Meta created the ad set differently from the request: Meta kept the ad set without the requested `whatsappPhoneNumber` in its promoted_object (the ads still carry it on their WhatsApp button), or the ad set joined a CBO campaign (`existingCampaignId`) whose own bid strategy applies, so a different `bidStrategy` or a `roasAverageFloor` that strategy cannot take was not applied.'
+          description: 'Present when Meta created the ad set differently from the request: a multi-destination ad set (`destinations` including whatsapp) that Meta kept without the requested `whatsappPhoneNumber` in its promoted_object, which an existing ad set cannot change (a WhatsApp-only ad set returns no such warning, because every ad routes conversations by the number on its WhatsApp button), or the ad set joined a CBO campaign (`existingCampaignId`) whose own bid strategy applies, so a different `bidStrategy` or a `roasAverageFloor` that strategy cannot take was not applied.'
 
     CtwaMultiResponse:
       type: object
@@ -14889,7 +14889,7 @@ components:
         warnings:
           type: array
           items: { type: string }
-          description: 'Present when Meta created the ad set differently from the request: Meta kept the ad set without the requested `whatsappPhoneNumber` in its promoted_object (the ads still carry it on their WhatsApp button), or the ad set joined a CBO campaign (`existingCampaignId`) whose own bid strategy applies, so a different `bidStrategy` or a `roasAverageFloor` that strategy cannot take was not applied.'
+          description: 'Present when Meta created the ad set differently from the request: a multi-destination ad set (`destinations` including whatsapp) that Meta kept without the requested `whatsappPhoneNumber` in its promoted_object, which an existing ad set cannot change (a WhatsApp-only ad set returns no such warning, because every ad routes conversations by the number on its WhatsApp button), or the ad set joined a CBO campaign (`existingCampaignId`) whose own bid strategy applies, so a different `bidStrategy` or a `roasAverageFloor` that strategy cannot take was not applied.'
 
     CustomConversion:
       type: object
@@ -59684,7 +59684,7 @@ paths:
                     customerLifecycle: { $ref: '#/components/schemas/MetaCustomerLifecycle' }
                     promotedObject:
                       type: object
-                      description: "Meta ad-set promoted_object, forwarded verbatim (same shape as /v1/ads/create). Unknown keys are rejected with 400."
+                      description: "Meta ad-set promoted_object (same shape as /v1/ads/create). Meta makes promoted_object immutable once the ad set exists, so only `pixelId`, `customEventType`, `customEventStr` (with `customEventType` OTHER), `applicationId` and `productCatalogId` can be sent here. Any other key (`pageId`, `whatsappPhoneNumber`, `customConversionId`, `objectStoreUrl`, `productSetId`, `offlineConversionDataSetId`) is a 400 with `param: platformSpecificData.promotedObject` and nothing is written; changing them needs a new ad set (POST /v1/ads/create). Unknown keys are rejected with 400."
                       properties:
                         pixelId: { type: string }
                         customEventType: { type: string }
@@ -59720,7 +59720,7 @@ paths:
                   roasAverageFloor: { type: [number, "null"] }
                   platformSpecificData: { type: object }
                   targeting: { type: object, description: "Present when `placements` or `targeting` was sent. The ad set's full Meta targeting as written (Meta snake_case). The same snake_case object is stored as the ad set's and its ads' `targeting`." }
-        '400': { description: "Invalid input, including `placements` or `targeting` on a platform other than Meta, a targeting field Meta cannot honour, or `placements` sent both at the top level and inside `targeting`" }
+        '400': { description: "Invalid input, including `placements` or `targeting` on a platform other than Meta, a targeting field Meta cannot honour, `placements` sent both at the top level and inside `targeting`, or a `platformSpecificData.promotedObject` key Meta cannot change on an existing ad set (anything but `pixelId`, `customEventType`, `customEventStr`, `applicationId` and `productCatalogId`)" }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403':
           description: |
