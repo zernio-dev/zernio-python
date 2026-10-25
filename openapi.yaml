@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.358.1"
+  version: "1.359.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -14784,6 +14784,13 @@ components:
                   reason: { type: string, description: 'Why it was skipped or failed, for example `already_paused`.' }
                   previousDailyBudget: { type: number }
                   newDailyBudget: { type: number }
+            notification:
+              type: object
+              description: 'Set when a run of a rule with a `notify` action matched objects and tried to send the webhook. A notify-only rule whose webhook fails ends with outcome `failed`. `done` once the `ad_rule.triggered` webhook is queued for the webhooks subscribed to it (with none subscribed it is still `done`, but nothing is delivered), `failed` when it could not be queued.'
+              required: [status]
+              properties:
+                status: { type: string, enum: [done, failed] }
+                reason: { type: string, description: Why the webhook could not be queued. }
         error: { type: [string, "null"] }
     AdKeyword:
       type: object
