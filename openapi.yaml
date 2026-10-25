@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.359.0"
+  version: "1.359.1"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -1026,9 +1026,11 @@ components:
         The Smart+ review read (`GET /v1/ads/{adId}/tiktok-smart-plus-review`)
         has a stricter quota of its own on TikTok: after an
         overage Zernio answers 429 for that advertiser and connection, without
-        calling TikTok, for about 60 seconds, then 120, then 240 while TikTok keeps
-        refusing (one step down after a successful call, each with up to 10% of
-        random jitter); `Retry-After` is the time left. The advertiser-wide read
+        calling TikTok, for about 60 seconds, then 120, 240, 480 and up to 960
+        while TikTok keeps refusing, each with up to 10% of random jitter. After
+        an overage, each successful call holds the next one for one step less
+        (480, 240, 120, then 60 seconds) until a success at 60 seconds ends it;
+        `Retry-After` is the time left. The advertiser-wide read
         (`GET /v1/ads/tiktok-smart-plus-reviews`) answers 200 with
         `incomplete: true` instead. Keep one request in flight per advertiser
         there.
@@ -62325,8 +62327,9 @@ paths:
         can be up to 10 minutes old; an older one is read again. Read reviews when you need
         them instead of sweeping every ad on a loop. When TikTok answers over quota, Zernio returns 429
         and answers 429 for that advertiser and connection without calling TikTok for about 60 seconds, then
-        120, then 240 while TikTok keeps refusing (one step down after a successful call, each with up to 10%
-        of random jitter), with the time left as `Retry-After`; reviews read in the last 10 minutes are still served.
+        120, 240, 480 and up to 960 while TikTok keeps refusing, and after an overage each successful call holds
+        the next one for one step less (480, 240, 120, then 60 seconds) until a success at 60 seconds ends it, each
+        with up to 10% of random jitter, with the time left as `Retry-After`; reviews read in the last 10 minutes are still served.
       security:
         - bearerAuth: []
       parameters:
@@ -62353,7 +62356,7 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { description: "Ad not found, it has no TikTok ad or ad group id yet, or no Smart+ ad of its ad group holds it. In the last case `details.listedSmartPlusAds` is how many Smart+ ads TikTok lists in the ad group, deleted ones included: 0 means the ad group lists none." }
         '422': { description: "The TikTok ad is not an Upgraded Smart+ ad (read it with GET /v1/ads/{adId}/review)" }
-        '429': { description: "Rate limited. TikTok's general limit answers `Retry-After: 10`; its stricter Smart+ review quota (which behaves per advertiser) answers `Retry-After` of up to 240 seconds, the time left before Zernio calls TikTok's review endpoint again for this advertiser and connection.", $ref: '#/components/responses/RateLimited' }
+        '429': { description: "Rate limited. TikTok's general limit answers `Retry-After: 10`; its stricter Smart+ review quota (which behaves per advertiser) answers `Retry-After` of up to 1056 seconds, the time left before Zernio calls TikTok's review endpoint again for this advertiser and connection.", $ref: '#/components/responses/RateLimited' }
         '501': { description: "Only supported on TikTok" }
 
   /v1/ads/{adId}/media:
@@ -63733,7 +63736,7 @@ paths:
 
         The listing is stored with the time it was read (`listing.readAt`) and listed again when it is older than `maxAgeSeconds`, so it can be up to `maxAgeSeconds` old: a Smart+ ad created on TikTok appears after at most that long (one hour by default). If that relisting fails, Zernio serves the stored listing with `listing.source: fallback` and the relist error in `listing.error`, instead of failing the request; `listing.source: fresh` means the listing was read within `maxAgeSeconds`. Only when no listing was ever stored does the listing error fail the request.
 
-        TikTok's review endpoint has a strict quota of its own (TikTok documents neither the quota nor its scope). When it is over quota (or Zernio is holding review reads for this advertiser and connection after an overage: about 60 seconds, then 120, then 240 while TikTok keeps refusing, one step down after a successful call, each with up to 10% of random jitter), Zernio stops calling TikTok and answers 200 with the reviews it has: stale reviews in `items`, the Smart+ ads never read in `pendingSmartPlusAdIds` and, when any are pending, `incomplete: true` with `retryAfterSeconds` (also in the `Retry-After` header). Every Smart+ ad of the page is in `items`, `failedSmartPlusAds` or `pendingSmartPlusAdIds`. Wait `retryAfterSeconds` and read the same page again: only the stale and pending ads reach TikTok.
+        TikTok's review endpoint has a strict quota of its own (TikTok documents neither the quota nor its scope). When it is over quota (or Zernio is holding review reads for this advertiser and connection after an overage: about 60 seconds, then 120, 240, 480 and up to 960 while TikTok keeps refusing, and after each successful call one step less, 480 down to 60 seconds, until a success at 60 seconds ends it, each with up to 10% of random jitter), Zernio stops calling TikTok and answers 200 with the reviews it has: stale reviews in `items`, the Smart+ ads never read in `pendingSmartPlusAdIds` and, when any are pending, `incomplete: true` with `retryAfterSeconds` (also in the `Retry-After` header). Every Smart+ ad of the page is in `items`, `failedSmartPlusAds` or `pendingSmartPlusAdIds`. Wait `retryAfterSeconds` and read the same page again: only the stale and pending ads reach TikTok.
 
         A Smart+ ad whose review TikTok refuses on its own (for example one deleted on TikTok since the listing was read) is returned in `failedSmartPlusAds` with TikTok's error and `refusedAt`, and the rest of the page is still read. Zernio finds it by splitting the refused batch in halves, at most 16 extra TikTok calls per page; ads still unresolved after that keep their stored review, or stay in `pendingSmartPlusAdIds` when they have none, and are read first by the next request. A refusal of a single ad is stored for 24 hours and read again once it is older than `maxAgeSeconds`; when an ad has both a stored review and a stored refusal, the more recent one is returned. When both halves of a refused batch are refused with the same TikTok error (for example a permission error), Zernio stops calling TikTok for that page: when every Smart+ ad of the page has a stored review or refusal, it serves them and returns the refusal in `reviewError`; when some ad was never read, the whole request fails with that error.
 
