@@ -918,9 +918,11 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `conversions.list_conversion_associations()` | List associated campaigns |
 | `conversions.list_conversion_destinations()` | List conversion destinations |
 | `conversions.list_custom_conversion_goals()` | List custom conversion goals |
+| `conversions.list_event_destinations()` | List event destinations |
 | `conversions.create_conversion_action()` | Create website conversion action |
 | `conversions.create_conversion_destination()` | Create a conversion destination |
 | `conversions.create_custom_conversion_goal()` | Create a custom conversion goal |
+| `conversions.create_event_destination()` | Add an event destination |
 | `conversions.get_conversion_destination()` | Get a conversion destination |
 | `conversions.get_conversion_metrics()` | Get attribution metrics |
 | `conversions.get_conversions_quality()` | Get Event Match Quality |
@@ -929,11 +931,13 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `conversions.update_conversion_destination()` | Update a conversion destination |
 | `conversions.update_custom_conversion_goal()` | Update a custom conversion goal |
 | `conversions.delete_conversion_destination()` | Delete a conversion destination |
+| `conversions.delete_event_destination()` | Remove an event destination |
 | `conversions.add_conversion_associations()` | Associate campaigns |
 | `conversions.adjust_conversions()` | Adjust uploaded conversions |
 | `conversions.remove_conversion_associations()` | Remove associated campaigns |
 | `conversions.remove_custom_conversion_goal()` | Remove a custom conversion goal |
 | `conversions.send_conversions()` | Send conversion events |
+| `conversions.send_events()` | Send events to every destination |
 
 ### Custom Fields
 | Method | Description |

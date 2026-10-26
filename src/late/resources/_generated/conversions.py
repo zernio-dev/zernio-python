@@ -309,6 +309,55 @@ class ConversionsResource:
             f"/v1/ads/conversions/custom-goals/{goal_id}", params=params
         )
 
+    def send_events(
+        self,
+        profile_id: str,
+        events: list[Any],
+        *,
+        destinations: list[dict[str, Any]] | None = None,
+        consent: dict[str, Any] | None = None,
+        test_code: str | None = None,
+    ) -> dict[str, Any]:
+        """Send events to every destination"""
+        payload = self._build_payload(
+            profile_id=profile_id,
+            events=events,
+            destinations=destinations,
+            consent=consent,
+            test_code=test_code,
+        )
+        return self._client._post("/v1/events", data=payload)
+
+    def list_event_destinations(
+        self, *, profile_id: str | None = None
+    ) -> dict[str, Any]:
+        """List event destinations"""
+        params = self._build_params(
+            profile_id=profile_id,
+        )
+        return self._client._get("/v1/events/destinations", params=params)
+
+    def create_event_destination(
+        self,
+        profile_id: str,
+        account_id: str,
+        destination_id: str,
+        *,
+        event_names: list[str] | None = None,
+    ) -> dict[str, Any]:
+        """Add an event destination"""
+        payload = self._build_payload(
+            profile_id=profile_id,
+            account_id=account_id,
+            destination_id=destination_id,
+            event_names=event_names,
+        )
+        return self._client._post("/v1/events/destinations", data=payload)
+
+    def delete_event_destination(self, destination_id: str) -> dict[str, Any]:
+        """Remove an event destination"""
+        return self._client._delete(f"/v1/events/destinations/{destination_id}")
+
     def list_conversion_destinations(self, account_id: str) -> dict[str, Any]:
         """List conversion destinations"""
         return self._client._get(f"/v1/accounts/{account_id}/conversion-destinations")
@@ -710,6 +759,55 @@ class ConversionsResource:
         return await self._client._adelete(
             f"/v1/ads/conversions/custom-goals/{goal_id}", params=params
         )
+
+    async def asend_events(
+        self,
+        profile_id: str,
+        events: list[Any],
+        *,
+        destinations: list[dict[str, Any]] | None = None,
+        consent: dict[str, Any] | None = None,
+        test_code: str | None = None,
+    ) -> dict[str, Any]:
+        """Send events to every destination (async)"""
+        payload = self._build_payload(
+            profile_id=profile_id,
+            events=events,
+            destinations=destinations,
+            consent=consent,
+            test_code=test_code,
+        )
+        return await self._client._apost("/v1/events", data=payload)
+
+    async def alist_event_destinations(
+        self, *, profile_id: str | None = None
+    ) -> dict[str, Any]:
+        """List event destinations (async)"""
+        params = self._build_params(
+            profile_id=profile_id,
+        )
+        return await self._client._aget("/v1/events/destinations", params=params)
+
+    async def acreate_event_destination(
+        self,
+        profile_id: str,
+        account_id: str,
+        destination_id: str,
+        *,
+        event_names: list[str] | None = None,
+    ) -> dict[str, Any]:
+        """Add an event destination (async)"""
+        payload = self._build_payload(
+            profile_id=profile_id,
+            account_id=account_id,
+            destination_id=destination_id,
+            event_names=event_names,
+        )
+        return await self._client._apost("/v1/events/destinations", data=payload)
+
+    async def adelete_event_destination(self, destination_id: str) -> dict[str, Any]:
+        """Remove an event destination (async)"""
+        return await self._client._adelete(f"/v1/events/destinations/{destination_id}")
 
     async def alist_conversion_destinations(self, account_id: str) -> dict[str, Any]:
         """List conversion destinations (async)"""

@@ -24354,6 +24354,140 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="Send events to every destination",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def conversions_send_events(
+        profile_id: str,
+        events: list[dict[str, Any]] | None,
+        destinations: list[dict[str, Any]] | None = None,
+        consent: dict[str, Any] | None = None,
+        test_code: str | None = None,
+    ) -> str:
+        """Send events to every destination
+
+        Sends conversion events once and forwards them to every ad platform destination saved for the
+        profile (see `POST /v1/events/destinations`), or to the `destinations` given in the request.
+        Each destination receives the events exactly as `POST /v1/ads/conversions` would send them, so the
+        per-platform notes there (hashing, batching, `eventName` semantics, dedup on `eventId`) apply here too.
+        A destination saved with `eventNames` only receives events with those names.
+
+        Zernio also stores each event for the profile's reporting. Email, phone and `externalId` are stored
+        only as SHA-256 hashes, and `sourceUrl` keeps only its origin, path and attribution parameters
+        (`utm_*`, `gclid`, `fbclid`, `ttclid`, `li_fat_id`, `epik`, `rdt_cid`, `gbraid`, `wbraid`).
+        Events sent with `testCode` are forwarded but not stored.
+
+        One destination failing never blocks the others: each one reports its own result. Requires the Ads add-on.
+
+        Platforms: meta, google, tiktok, linkedin, pinterest, reddit
+
+        Args:
+            profile_id: Profile the events belong to. Its saved destinations receive the events. (required)
+            events: Each item is an object with keys: eventName (string, required) - Standard event name (Purchase, Lead, CompleteRegistration, AddToCart, InitiateCheckout, AddPaymentInfo, Subscribe, StartTrial, ViewContent, Search, Contact, ...; eventTime (integer, required) - When the conversion happened, in unix seconds.; eventId (string, required) - Unique dedup key. The same eventId must be used on pixel + CAPI to prevent double-counting. Mapped to event_id on Meta, transactionId on Google, eventId on ...; value (number) - Conversion value in the specified currency.; currency (string) - ISO 4217 currency code.; user (object with keys email, phone, firstName, lastName, externalId, ipAddress, userAgent, country, city, state, zip, dob, gender, leadId, clickIds, required) - User identity fields. More signals mean higher match rates.; items (list of objects with keys id, name, price, quantity, category) - Item-level detail for ecommerce events.; sourceUrl (string) - URL where the conversion originated (used by Meta).; actionSource (one of: web, app, offline, crm, phone_call, system_generated, business_messaging) - Where the conversion happened. Used by Meta. Google also requires an event source internally; omitting this field sends OTHER to Google. Send an explicit ...; messaging (object with keys channel, wabaId, ctwaClid, pageId, instagramBusinessAccountId, pageScopedUserId, instagramScopedUserId) - Meta only, read when `actionSource` is `business_messaging` (Conversions API for Business Messaging). `channel` is sent as the event's `messaging_channel` ...; platformData (object) - Escape hatch for platform-specific fields we haven't normalized. On Meta, keys are shallow-merged into `custom_data` only: fields Zernio already builds ... (required)
+            destinations: Send to these destinations instead of the saved ones (every event goes to each). Each item is an object with keys: accountId (string, required) - Connected ads account ID (metaads, googleads, linkedinads, tiktokads, openaiads, pinterestads or redditads).; destinationId (string, required) - Platform destination, as listed by GET /v1/accounts/{accountId}/conversion-destinations.
+            consent: Batch-level user consent, forwarded to every destination (see POST /v1/ads/conversions). Object with keys: adUserData (one of: GRANTED, DENIED); adPersonalization (one of: GRANTED, DENIED)
+            test_code: Forwarded as each platform test code (see POST /v1/ads/conversions). Test events are not stored."""
+        client = _get_client()
+        try:
+            response = client.conversions.send_events(
+                profile_id=profile_id,
+                events=events,
+                destinations=destinations,
+                consent=consent,
+                test_code=test_code,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List event destinations",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def conversions_list_event_destinations(profile_id: str | None = None) -> str:
+        """List event destinations
+
+        Lists the ad platform destinations that receive events sent to `POST /v1/events`, for one profile or every profile you can access.
+
+        Args:
+            profile_id"""
+        client = _get_client()
+        try:
+            response = client.conversions.list_event_destinations(profile_id=profile_id)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Add an event destination",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def conversions_create_event_destination(
+        profile_id: str,
+        account_id: str,
+        destination_id: str,
+        event_names: list[str] | None = None,
+    ) -> str:
+        """Add an event destination
+
+        Saves an ad platform destination for a profile, so events sent to `POST /v1/events` for that profile are forwarded
+        to it. Pick `destinationId` from `GET /v1/accounts/{accountId}/conversion-destinations`. Set `eventNames` to forward
+        only those events (for example only `Purchase`); leave it out to forward every event.
+
+        Args:
+            profile_id: (required)
+            account_id: Connected ads account ID that owns the destination. (required)
+            destination_id: (required)
+            event_names"""
+        client = _get_client()
+        try:
+            response = client.conversions.create_event_destination(
+                profile_id=profile_id,
+                account_id=account_id,
+                destination_id=destination_id,
+                event_names=event_names,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Remove an event destination",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def conversions_delete_event_destination(destination_id: str) -> str:
+        """Remove an event destination
+
+        Stops forwarding events to this destination. `destinationId` is the event destination `id`, not the platform destination.
+
+        Args:
+            destination_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.conversions.delete_event_destination(
+                destination_id=destination_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="List conversion destinations",
             readOnlyHint=True,
             destructiveHint=False,
