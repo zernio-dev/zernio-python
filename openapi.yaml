@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.363.0"
+  version: "1.364.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -14015,6 +14015,28 @@ components:
           - DESCRIPTION_2
           description: "Optional fixed description position. Omit to leave the asset unpinned."
 
+    InstagramVideoFallback:
+      type: object
+      description: >-
+        Meta only. Present when Meta refused an existing Instagram video as the boosted ad (code 100, subcode 1815279:
+        upload it to Facebook first) and Zernio created the ad another way. `instagram_video_reuploaded`: the video was
+        copied into the ad account and the ad still references the original post. `instagram_video_rehosted_copy`: the
+        video was uploaded as a new Facebook video in a new Page post, so the ad does not show the original post's likes
+        and comments. Send `rehostOnInstagramVideoRejection: false` on the boost to get Meta's error instead.
+      required: [kind, linkedToOriginalPost, videoId, platformError]
+      properties:
+        kind: { type: string, enum: [instagram_video_reuploaded, instagram_video_rehosted_copy] }
+        linkedToOriginalPost: { type: boolean, description: 'True when the ad still references the original Instagram post and keeps its engagement.' }
+        videoId: { type: string, description: 'The Facebook-side ad video Zernio made. With instagram_video_reuploaded it is the copy in the ad account video library (possibly one made by an earlier boost of the same media, reused); the creative carries it as video_id unless Meta accepted the plain post reference once the copy existed, in which case the copy is kept for that reference. With instagram_video_rehosted_copy it is the new upload the creative uses (an unused copy made by this request is deleted).' }
+        platformError:
+          type: object
+          description: "Meta's original refusal."
+          required: [message]
+          properties:
+            code: { type: integer, example: 100 }
+            subcode: { type: integer, example: 1815279 }
+            message: { type: string }
+            fbtraceId: { type: string }
     Ad:
       type: object
       properties:
@@ -14310,6 +14332,7 @@ components:
               description: "Google only. YouTube video ids behind a Video campaign ad (video and responsive video ads) or a Demand Gen video ad, same id as `youtubeVideoId` on Performance Max asset groups. When the ad has no image, `thumbnailUrl` is the first video's YouTube thumbnail. Absent on ads without a video."
             linkUrl: { type: string, description: Destination URL }
             whatsappPhoneNumber: { type: string, description: 'Explicit E.164 WhatsApp number supplied when creating a Meta boost or messaging ad. Absent when omitted by the caller or on older records.', example: '+12025550123' }
+            instagramVideoFallback: { $ref: '#/components/schemas/InstagramVideoFallback' }
             pinterestImageUrl: { type: string }
             pinterestTitle: { type: string }
             pinterestDescription: { type: string }
@@ -68898,6 +68921,15 @@ paths:
                   maxItems: 5
                   items: { type: string }
                   description: 'Meta only. Extra primary-text options Meta rotates on the boosted post (asset_feed_spec.bodies with DEGREES_OF_FREEDOM); the post keeps its own text as one of the options. Works for Facebook posts and Instagram media. Under a conversions or traffic goal Meta also wants a website URL on the options, taken from `linkUrl` (send it with a `callToAction`); engagement boosts need none.'
+                rehostOnInstagramVideoRejection:
+                  type: boolean
+                  default: true
+                  description: >-
+                    Meta only (a 400 elsewhere). When Meta refuses an existing Instagram video as the ad (subcode
+                    1815279), Zernio first copies the video into the ad account and retries on the original post, then
+                    falls back to a new Facebook video in a new Page post that does not show the original post's likes
+                    and comments; the response reports which in `instagramVideoFallback`. Messaging boosts never use
+                    the unlinked copy. `false` skips every fallback and returns Meta's error.
                 smartTargeting:
                   type: object
                   description: |
@@ -68962,6 +68994,11 @@ paths:
                 properties:
                   ad: { $ref: '#/components/schemas/Ad' }
                   message: { type: string }
+                  instagramVideoFallback: { $ref: '#/components/schemas/InstagramVideoFallback' }
+                  warnings:
+                    type: array
+                    items: { type: string }
+                    description: 'Present with instagramVideoFallback: one human-readable line saying how the Instagram video was boosted.'
         '400':
           description: Missing required fields or invalid values
         '401': { $ref: '#/components/responses/Unauthorized' }

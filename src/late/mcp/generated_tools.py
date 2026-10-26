@@ -8745,6 +8745,7 @@ def register_generated_tools(mcp, _get_client):
         budget_level: Literal["adset", "campaign"] | None = None,
         attribution_spec: list[dict[str, Any]] | None = None,
         bodies: list[str] | None = None,
+        rehost_on_instagram_video_rejection: bool = True,
         smart_targeting: dict[str, Any] | None = None,
         optimization_goal: str | None = None,
         meta_objective: Literal["OUTCOME_ENGAGEMENT"] | None = None,
@@ -8922,6 +8923,7 @@ def register_generated_tools(mcp, _get_client):
                 budget_level: Meta only, same semantics as POST /v1/ads/create: campaign = Advantage campaign budget (CBO), the budget and bid strategy sit on the campaign and the ad set inherits them. Default adset. Not allowed with adSetId.
                 attribution_spec: Meta only. Ad-set attribution windows, same shape as POST /v1/ads/create. Applied on OUTCOME_SALES, OUTCOME_LEADS and OUTCOME_APP_PROMOTION campaigns (conversions, lead_conversion, lead_generation, app_promotion); other objectives keep Meta's default. Not allowed with adSetId. Each item is an object with keys: eventType (one of: CLICK_THROUGH, VIEW_THROUGH, ENGAGED_VIDEO_VIEW; required); windowDays (one of: 1, 7, 28; required)
                 bodies: Meta only. Extra primary-text options Meta rotates on the boosted post (asset_feed_spec.bodies with DEGREES_OF_FREEDOM); the post keeps its own text as one of the options. Works for Facebook posts and Instagram media. Under a conversions or traffic goal Meta also wants a website URL on the options, taken from `linkUrl` (send it with a `callToAction`); engagement boosts need none.
+                rehost_on_instagram_video_rejection: Meta only (a 400 elsewhere). When Meta refuses an existing Instagram video as the ad (subcode 1815279), Zernio first copies the video into the ad account and retries on the original post, then falls back to a new Facebook video in a new Page post that does not show the original post's likes and comments; the response reports which in `instagramVideoFallback`. Messaging boosts never use the unlinked copy. `false` skips every fallback and returns Meta's error.
                 smart_targeting: TikTok only (a 400 elsewhere). TikTok Smart Targeting on the ad group: `audience` is TikTok's `smart_audience_enabled`, `interestsBehaviors` its `smart_interest_behavior_enabled`. When on, TikTok may deliver beyond the selected audiences or interests. Available on Video views, Traffic, Lead generation, App install, Web conversion and Community interaction. Only the flags you send are written; an unwritten flag reads back null in `nativeSettings`, so send `false` explicitly to be able to verify it is off. Not available with smartPlus or when attaching to an existing ad set (adSetId). Object with keys: audience (boolean) - TikTok smart_audience_enabled.; interestsBehaviors (boolean) - TikTok smart_interest_behavior_enabled.
                 optimization_goal: Meta, or TikTok with `goal: video_views`. TikTok: ENGAGED_VIEW (6-second
         Focused View, the default) or ENGAGED_VIEW_FIFTEEN (15-second views), both
@@ -9003,6 +9005,7 @@ def register_generated_tools(mcp, _get_client):
                 budget_level=budget_level,
                 attribution_spec=attribution_spec,
                 bodies=bodies,
+                rehost_on_instagram_video_rejection=rehost_on_instagram_video_rejection,
                 smart_targeting=smart_targeting,
                 optimization_goal=optimization_goal,
                 meta_objective=meta_objective,
