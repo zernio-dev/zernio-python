@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.365.0"
+  version: "1.366.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -15301,6 +15301,7 @@ components:
         title: { type: string }
         bodyHtml: { type: [string, "null"], description: 'Article body as HTML. Wix stores rich content, converted from and to HTML; Wix lists return null (get the article for its body).' }
         handle: { type: string, description: 'URL slug of the article.' }
+        url: { type: [string, "null"], description: 'WordPress and Wix. Public URL of the article while it is published; null for drafts and scheduled posts, and on a Wix site that is not published yet.' }
         tags: { type: array, items: { type: string }, description: 'Tag names. On WordPress and Wix, missing tag names are created and matching is case-insensitive.' }
         author: { type: [string, "null"], description: 'Shopify author display name, numeric WordPress user id serialized as a string, or Wix site member id. Wix posts without one are attributed to the site''s default author.' }
         excerpt: { type: [string, "null"], description: 'Short summary shown in blog listings.' }
