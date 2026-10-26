@@ -507,6 +507,73 @@ class AnalyticsResource:
         )
         return self._client._get("/v1/analytics/post-timeline", params=params)
 
+    def run_google_analytics_report(
+        self,
+        account_id: str,
+        metrics: list[str],
+        *,
+        dimensions: list[str] | None = None,
+        dimension_filter: dict[str, Any] | None = None,
+        metric_filter: dict[str, Any] | None = None,
+        order_bys: list[dict[str, Any]] | None = None,
+        limit: int | None = None,
+        date_ranges: list[dict[str, Any]] | None = None,
+        offset: int | None = None,
+        keep_empty_rows: bool | None = None,
+        currency_code: str | None = None,
+    ) -> dict[str, Any]:
+        """Run a Google Analytics (GA4) report"""
+        payload = self._build_payload(
+            account_id=account_id,
+            dimensions=dimensions,
+            metrics=metrics,
+            dimension_filter=dimension_filter,
+            metric_filter=metric_filter,
+            order_bys=order_bys,
+            limit=limit,
+            date_ranges=date_ranges,
+            offset=offset,
+            keep_empty_rows=keep_empty_rows,
+            currency_code=currency_code,
+        )
+        return self._client._post("/v1/analytics/googleanalytics/report", data=payload)
+
+    def run_google_analytics_realtime_report(
+        self,
+        account_id: str,
+        metrics: list[str],
+        *,
+        dimensions: list[str] | None = None,
+        dimension_filter: dict[str, Any] | None = None,
+        metric_filter: dict[str, Any] | None = None,
+        order_bys: list[dict[str, Any]] | None = None,
+        limit: int | None = None,
+        minute_ranges: list[dict[str, Any]] | None = None,
+    ) -> dict[str, Any]:
+        """Run a Google Analytics (GA4) realtime report"""
+        payload = self._build_payload(
+            account_id=account_id,
+            dimensions=dimensions,
+            metrics=metrics,
+            dimension_filter=dimension_filter,
+            metric_filter=metric_filter,
+            order_bys=order_bys,
+            limit=limit,
+            minute_ranges=minute_ranges,
+        )
+        return self._client._post(
+            "/v1/analytics/googleanalytics/realtime", data=payload
+        )
+
+    def get_google_analytics_metadata(self, account_id: str) -> dict[str, Any]:
+        """List Google Analytics (GA4) dimensions and metrics"""
+        params = self._build_params(
+            account_id=account_id,
+        )
+        return self._client._get(
+            "/v1/analytics/googleanalytics/metadata", params=params
+        )
+
     def get_google_business_performance(
         self,
         account_id: str,
@@ -1097,6 +1164,75 @@ class AnalyticsResource:
             to_date=to_date,
         )
         return await self._client._aget("/v1/analytics/post-timeline", params=params)
+
+    async def arun_google_analytics_report(
+        self,
+        account_id: str,
+        metrics: list[str],
+        *,
+        dimensions: list[str] | None = None,
+        dimension_filter: dict[str, Any] | None = None,
+        metric_filter: dict[str, Any] | None = None,
+        order_bys: list[dict[str, Any]] | None = None,
+        limit: int | None = None,
+        date_ranges: list[dict[str, Any]] | None = None,
+        offset: int | None = None,
+        keep_empty_rows: bool | None = None,
+        currency_code: str | None = None,
+    ) -> dict[str, Any]:
+        """Run a Google Analytics (GA4) report (async)"""
+        payload = self._build_payload(
+            account_id=account_id,
+            dimensions=dimensions,
+            metrics=metrics,
+            dimension_filter=dimension_filter,
+            metric_filter=metric_filter,
+            order_bys=order_bys,
+            limit=limit,
+            date_ranges=date_ranges,
+            offset=offset,
+            keep_empty_rows=keep_empty_rows,
+            currency_code=currency_code,
+        )
+        return await self._client._apost(
+            "/v1/analytics/googleanalytics/report", data=payload
+        )
+
+    async def arun_google_analytics_realtime_report(
+        self,
+        account_id: str,
+        metrics: list[str],
+        *,
+        dimensions: list[str] | None = None,
+        dimension_filter: dict[str, Any] | None = None,
+        metric_filter: dict[str, Any] | None = None,
+        order_bys: list[dict[str, Any]] | None = None,
+        limit: int | None = None,
+        minute_ranges: list[dict[str, Any]] | None = None,
+    ) -> dict[str, Any]:
+        """Run a Google Analytics (GA4) realtime report (async)"""
+        payload = self._build_payload(
+            account_id=account_id,
+            dimensions=dimensions,
+            metrics=metrics,
+            dimension_filter=dimension_filter,
+            metric_filter=metric_filter,
+            order_bys=order_bys,
+            limit=limit,
+            minute_ranges=minute_ranges,
+        )
+        return await self._client._apost(
+            "/v1/analytics/googleanalytics/realtime", data=payload
+        )
+
+    async def aget_google_analytics_metadata(self, account_id: str) -> dict[str, Any]:
+        """List Google Analytics (GA4) dimensions and metrics (async)"""
+        params = self._build_params(
+            account_id=account_id,
+        )
+        return await self._client._aget(
+            "/v1/analytics/googleanalytics/metadata", params=params
+        )
 
     async def aget_google_business_performance(
         self,

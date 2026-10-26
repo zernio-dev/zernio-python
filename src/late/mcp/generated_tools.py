@@ -730,7 +730,7 @@ def register_generated_tools(mcp, _get_client):
         platform: str | None = None,
         status: Literal["connected", "disconnected"] | None = None,
         search: str | None = None,
-        category: Literal["social", "ads", "communication", "blogs", "crm"]
+        category: Literal["social", "ads", "communication", "blogs", "crm", "analytics"]
         | None = None,
         sort: Literal["account", "platform", "profile", "status", "connected"]
         | None = None,
@@ -757,7 +757,7 @@ def register_generated_tools(mcp, _get_client):
                 platform: Filter accounts by platform (e.g. "instagram", "twitter").
                 status: Filter accounts by connection status. `connected` returns healthy accounts; `disconnected` returns accounts that need reconnection (per the same reconnection check surfaced in the dashboard). Omit to return accounts in any status. When combined with page/limit, pagination totals reflect the filtered result set.
                 search: Case-insensitive match on the account username, display name or platform user id, or an exact account id. Combine with page/limit to paginate the matches.
-                category: Only accounts of this kind. ads = ad accounts (Meta, Google, LinkedIn, Pinterest, TikTok, X, OpenAI, Reddit), communication = WhatsApp, Telegram, Discord, Slack and iMessage, blogs = Shopify and WordPress, crm = HubSpot, social = every other platform.
+                category: Only accounts of this kind. ads = ad accounts (Meta, Google, LinkedIn, Pinterest, TikTok, X, OpenAI, Reddit), communication = WhatsApp, Telegram, Discord, Slack and iMessage, blogs = Shopify and WordPress, crm = HubSpot, analytics = Google Analytics, social = every other platform.
                 sort: Sort an offset-paginated listing (page and limit) by account name, platform, profile name, status (accounts needing a reconnect first when ascending) or connection date. Ties keep the default order: platform, then newest first.
                 order: Direction for `sort`.
                 include_over_limit: When true, includes accounts from over-limit profiles.
@@ -983,6 +983,7 @@ def register_generated_tools(mcp, _get_client):
             "whopads",
             "hubspot",
             "webflow",
+            "googleanalytics",
         ]
         | None = None,
         status: Literal["healthy", "warning", "error"] | None = None,
@@ -13525,6 +13526,140 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="Run a Google Analytics (GA4) report",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def analytics_run_google_analytics_report(
+        account_id: str,
+        metrics: list[str] | None,
+        dimensions: list[str] | None = None,
+        dimension_filter: dict[str, Any] | None = None,
+        metric_filter: dict[str, Any] | None = None,
+        order_bys: list[dict[str, Any]] | None = None,
+        limit: int | None = None,
+        date_ranges: list[dict[str, Any]] | None = None,
+        offset: int | None = None,
+        keep_empty_rows: bool | None = None,
+        currency_code: str | None = None,
+    ) -> str:
+        """Run a Google Analytics (GA4) report
+
+        Runs a report on a connected GA4 property through Google's Data API (`runReport`).
+        Pick any GA4 dimensions and metrics; filters and ordering use Google's own shapes.
+        Identical requests on the same property are cached for 10 minutes. Google meters each
+        property by quota tokens; when it is used up the request returns 429 until Google refills it
+        (hourly quotas within the hour, daily ones at midnight Pacific time).
+
+        Args:
+            account_id: Zernio account ID of the Google Analytics connection (platform `googleanalytics`). (required)
+            dimensions: GA4 dimension API names, e.g. `date`, `sessionSource`, `pagePath`. List them with GET /v1/analytics/googleanalytics/metadata.
+            metrics: GA4 metric API names, e.g. `sessions`, `activeUsers`, `keyEvents`, `totalRevenue`. (required)
+            dimension_filter: A Google FilterExpression on dimensions, in Google's own shape.
+            metric_filter: A Google FilterExpression on metrics, in Google's own shape.
+            order_bys: Google OrderBy objects, e.g. `{ "metric": { "metricName": "sessions" }, "desc": true }`.
+            limit: Rows to return. Defaults to Google's default (10000).
+            date_ranges: Defaults to the last 28 days (`28daysAgo` to `yesterday`). Each item is an object with keys: startDate (string, required) - YYYY-MM-DD, today, yesterday or NdaysAgo.; endDate (string, required) - YYYY-MM-DD, today, yesterday or NdaysAgo.; name (string)
+            offset: Row offset for paging through a report larger than `limit`.
+            keep_empty_rows
+            currency_code: ISO 4217 code for currency metrics. Defaults to the property currency."""
+        client = _get_client()
+        try:
+            response = client.analytics.run_google_analytics_report(
+                account_id=account_id,
+                dimensions=dimensions,
+                metrics=metrics,
+                dimension_filter=dimension_filter,
+                metric_filter=metric_filter,
+                order_bys=order_bys,
+                limit=limit,
+                date_ranges=date_ranges,
+                offset=offset,
+                keep_empty_rows=keep_empty_rows,
+                currency_code=currency_code,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Run a Google Analytics (GA4) realtime report",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def analytics_run_google_analytics_realtime_report(
+        account_id: str,
+        metrics: list[str] | None,
+        dimensions: list[str] | None = None,
+        dimension_filter: dict[str, Any] | None = None,
+        metric_filter: dict[str, Any] | None = None,
+        order_bys: list[dict[str, Any]] | None = None,
+        limit: int | None = None,
+        minute_ranges: list[dict[str, Any]] | None = None,
+    ) -> str:
+        """Run a Google Analytics (GA4) realtime report
+
+        Activity on a connected GA4 property in the last 30 minutes (up to 60 for Analytics 360),
+        through Google's `runRealtimeReport`. Not cached. Only realtime dimensions and metrics are
+        accepted, e.g. `country`, `unifiedScreenName` with `activeUsers`.
+
+        Args:
+            account_id: Zernio account ID of the Google Analytics connection (platform `googleanalytics`). (required)
+            dimensions: GA4 dimension API names, e.g. `date`, `sessionSource`, `pagePath`. List them with GET /v1/analytics/googleanalytics/metadata.
+            metrics: GA4 metric API names, e.g. `sessions`, `activeUsers`, `keyEvents`, `totalRevenue`. (required)
+            dimension_filter: A Google FilterExpression on dimensions, in Google's own shape.
+            metric_filter: A Google FilterExpression on metrics, in Google's own shape.
+            order_bys: Google OrderBy objects, e.g. `{ "metric": { "metricName": "sessions" }, "desc": true }`.
+            limit: Rows to return. Defaults to Google's default (10000).
+            minute_ranges: Each item is an object with keys: startMinutesAgo (integer); endMinutesAgo (integer); name (string)"""
+        client = _get_client()
+        try:
+            response = client.analytics.run_google_analytics_realtime_report(
+                account_id=account_id,
+                dimensions=dimensions,
+                metrics=metrics,
+                dimension_filter=dimension_filter,
+                metric_filter=metric_filter,
+                order_bys=order_bys,
+                limit=limit,
+                minute_ranges=minute_ranges,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List Google Analytics (GA4) dimensions and metrics",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def analytics_get_google_analytics_metadata(account_id: str) -> str:
+        """List Google Analytics (GA4) dimensions and metrics
+
+        Every dimension and metric the connected GA4 property accepts in a report, including its
+        custom definitions. Cached for one hour.
+
+        Args:
+            account_id: Zernio account ID of the Google Analytics connection. (required)"""
+        client = _get_client()
+        try:
+            response = client.analytics.get_google_analytics_metadata(
+                account_id=account_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="Get Google Business Profile performance metrics",
             readOnlyHint=True,
             destructiveHint=False,
@@ -21385,6 +21520,47 @@ def register_generated_tools(mcp, _get_client):
         try:
             response = client.connect.connect_shopify_with_token(
                 profile_id=profile_id, shop=shop, access_token=access_token
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get Google Analytics OAuth connect URL",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def connect_get_google_analytics_connect_url(
+        profile_id: str,
+        redirect_url: str | None = None,
+        reconnect_account_id: str | None = None,
+    ) -> str:
+        """Get Google Analytics OAuth connect URL
+
+        Starts OAuth for Google Analytics (GA4). Each connected GA4 property becomes its own account
+        with platform `googleanalytics`; it reads reports and does not post.
+        Redirect the user to `authUrl`. When the Google account can read one property, Zernio connects
+        it and redirects to `redirect_url` (or the dashboard) with `connected=googleanalytics`,
+        `profileId`, `accountId` and `username` (the property name). When it can read several, the user
+        first picks one on a Zernio-hosted page, which then redirects the same way. On failure the
+        redirect carries `error`, `platform=googleanalytics` and `error_message`; errors include
+        `googleanalytics_scope_missing` (the user unticked Analytics access) and
+        `googleanalytics_no_properties`.
+        Requested scope: `https://www.googleapis.com/auth/analytics.readonly`.
+
+        Args:
+            profile_id: Your Zernio profile ID (get from /v1/profiles). (required)
+            redirect_url: Custom redirect after connection. Must be an absolute http(s) URL or custom app scheme such as `myapp://callback`; relative and unsafe URLs return 400.
+            reconnect_account_id: Zernio account ID of the Google Analytics account being reconnected. Picking a different property then fails instead of adding a second account."""
+        client = _get_client()
+        try:
+            response = client.connect.get_google_analytics_connect_url(
+                profile_id=profile_id,
+                redirect_url=redirect_url,
+                reconnect_account_id=reconnect_account_id,
             )
             return _format_response(response)
         except Exception as e:

@@ -251,6 +251,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `analytics.get_facebook_page_insights()` | Get Facebook Page insights |
 | `analytics.get_facebook_post_earnings()` | Get Facebook post monetization earnings |
 | `analytics.get_facebook_post_reactions()` | Get Facebook post reactions |
+| `analytics.get_google_analytics_metadata()` | List Google Analytics (GA4) dimensions and metrics |
 | `analytics.get_google_business_performance()` | Get Google Business Profile performance metrics |
 | `analytics.get_google_business_search_keywords()` | Get Google Business Profile search keywords |
 | `analytics.get_instagram_account_insights()` | Get Instagram insights |
@@ -269,6 +270,8 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `analytics.get_you_tube_daily_views()` | Get YouTube daily views |
 | `analytics.get_you_tube_demographics()` | Get YouTube demographics |
 | `analytics.get_you_tube_video_retention()` | Get YouTube video retention curve |
+| `analytics.run_google_analytics_realtime_report()` | Run a Google Analytics (GA4) realtime report |
+| `analytics.run_google_analytics_report()` | Run a Google Analytics (GA4) report |
 | `analytics.sync_external_posts()` | Sync an external post |
 
 ### Account Groups
@@ -363,6 +366,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `connect.get_connect_welcome_screen()` | Get the saved welcome screen |
 | `connect.get_facebook_pages()` | List Facebook pages |
 | `connect.get_gmb_locations()` | List Google Business Profile locations |
+| `connect.get_google_analytics_connect_url()` | Get Google Analytics OAuth connect URL |
 | `connect.get_hub_spot_connect_url()` | Get HubSpot OAuth connect URL |
 | `connect.get_linked_in_organizations()` | List LinkedIn orgs |
 | `connect.get_page_webhook_subscription()` | Read a Facebook Page's webhook subscription |

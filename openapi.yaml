@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.364.0"
+  version: "1.365.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -10844,6 +10844,101 @@ components:
         logMessages:
           type: boolean
           description: Whether Zernio logs inbox messages on HubSpot contact timelines.
+    GoogleAnalyticsReport:
+      type: object
+      description: >-
+        Google Analytics Data API report, passed through as Google returns it. Every value in `rows` is a
+        string; read `metricHeaders[].type` to parse metrics.
+      properties:
+        accountId:
+          type: string
+          description: Zernio account ID of the Google Analytics connection.
+        propertyId:
+          type: string
+          description: Numeric GA4 property ID.
+        dimensionHeaders:
+          type: array
+          items:
+            type: object
+            properties:
+              name: { type: string }
+        metricHeaders:
+          type: array
+          items:
+            type: object
+            properties:
+              name: { type: string }
+              type: { type: string, description: 'Google metric type, e.g. TYPE_INTEGER, TYPE_FLOAT, TYPE_SECONDS, TYPE_CURRENCY.' }
+        rows:
+          type: array
+          items:
+            type: object
+            properties:
+              dimensionValues:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    value: { type: string }
+              metricValues:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    value: { type: string }
+        rowCount:
+          type: integer
+          description: Total rows matching the request, across all pages.
+        metadata:
+          type: object
+          additionalProperties: true
+          description: 'Google report metadata (currency, time zone, sampling and thresholding flags).'
+        propertyQuota:
+          type: object
+          additionalProperties: true
+          description: >-
+            Google quota left on this property after the request (tokens per day and per hour, concurrent
+            requests). Cached responses carry the quota from when they were fetched.
+    GoogleAnalyticsReportFields:
+      type: object
+      required: [accountId, metrics]
+      properties:
+        accountId:
+          type: string
+          description: 'Zernio account ID of the Google Analytics connection (platform `googleanalytics`).'
+        dimensions:
+          type: array
+          maxItems: 9
+          items: { type: string }
+          description: 'GA4 dimension API names, e.g. `date`, `sessionSource`, `pagePath`. List them with GET /v1/analytics/googleanalytics/metadata.'
+          example: [date, sessionDefaultChannelGroup]
+        metrics:
+          type: array
+          minItems: 1
+          maxItems: 10
+          items: { type: string }
+          description: 'GA4 metric API names, e.g. `sessions`, `activeUsers`, `keyEvents`, `totalRevenue`.'
+          example: [sessions, activeUsers]
+        dimensionFilter:
+          type: object
+          additionalProperties: true
+          description: A Google FilterExpression on dimensions, in Google's own shape.
+        metricFilter:
+          type: object
+          additionalProperties: true
+          description: A Google FilterExpression on metrics, in Google's own shape.
+        orderBys:
+          type: array
+          maxItems: 10
+          items:
+            type: object
+            additionalProperties: true
+          description: 'Google OrderBy objects, e.g. `{ "metric": { "metricName": "sessions" }, "desc": true }`.'
+        limit:
+          type: integer
+          minimum: 1
+          maximum: 10000
+          description: "Rows to return. Defaults to Google's default (10000)."
     SocialAccount:
       type: object
       required: [_id, platform, profileId, isActive]
@@ -10851,7 +10946,7 @@ components:
         _id: { type: string }
         platform:
           type: string
-          enum: [tiktok, instagram, facebook, youtube, linkedin, twitter, threads, pinterest, reddit, bluesky, googlebusiness, telegram, snapchat, discord, slack, whatsapp, shopify, wordpress, wix, linkedinads, metaads, pinterestads, tiktokads, xads, googleads, openaiads, redditads, sms, phone, rcs, whopads, hubspot, webflow]
+          enum: [tiktok, instagram, facebook, youtube, linkedin, twitter, threads, pinterest, reddit, bluesky, googlebusiness, telegram, snapchat, discord, slack, whatsapp, shopify, wordpress, wix, linkedinads, metaads, pinterestads, tiktokads, xads, googleads, openaiads, redditads, sms, phone, rcs, whopads, hubspot, webflow, googleanalytics]
         profileId:
           oneOf:
             - type: string
@@ -21805,6 +21900,183 @@ paths:
                 properties:
                   error: { type: string, example: "Post not found" }
 
+  /v1/analytics/googleanalytics/report:
+    post:
+      x-resource-group: "analytics"
+      operationId: runGoogleAnalyticsReport
+      tags: [Analytics]
+      summary: Run a Google Analytics (GA4) report
+      description: |
+        Runs a report on a connected GA4 property through Google's Data API (`runReport`).
+        Pick any GA4 dimensions and metrics; filters and ordering use Google's own shapes.
+        Identical requests on the same property are cached for 10 minutes. Google meters each
+        property by quota tokens; when it is used up the request returns 429 until Google refills it
+        (hourly quotas within the hour, daily ones at midnight Pacific time).
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/GoogleAnalyticsReportFields'
+                - type: object
+                  properties:
+                    dateRanges:
+                      type: array
+                      minItems: 1
+                      maxItems: 4
+                      description: 'Defaults to the last 28 days (`28daysAgo` to `yesterday`).'
+                      items:
+                        type: object
+                        required: [startDate, endDate]
+                        properties:
+                          startDate: { type: string, description: 'YYYY-MM-DD, today, yesterday or NdaysAgo.', example: 30daysAgo }
+                          endDate: { type: string, description: 'YYYY-MM-DD, today, yesterday or NdaysAgo.', example: today }
+                          name: { type: string }
+                    offset:
+                      type: integer
+                      minimum: 0
+                      description: Row offset for paging through a report larger than `limit`.
+                    keepEmptyRows:
+                      type: boolean
+                    currencyCode:
+                      type: string
+                      description: 'ISO 4217 code for currency metrics. Defaults to the property currency.'
+            example:
+              accountId: 6650f1c2a1b2c3d4e5f60789
+              dateRanges: [{ startDate: 30daysAgo, endDate: yesterday }]
+              dimensions: [sessionDefaultChannelGroup]
+              metrics: [sessions, activeUsers, keyEvents]
+              orderBys: [{ metric: { metricName: sessions }, desc: true }]
+      responses:
+        '200':
+          description: Report rows from Google
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GoogleAnalyticsReport'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: The Google account that connected the property lost access to it, or revoked Zernio. Reconnect Google Analytics.
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+  /v1/analytics/googleanalytics/realtime:
+    post:
+      x-resource-group: "analytics"
+      operationId: runGoogleAnalyticsRealtimeReport
+      tags: [Analytics]
+      summary: Run a Google Analytics (GA4) realtime report
+      description: |
+        Activity on a connected GA4 property in the last 30 minutes (up to 60 for Analytics 360),
+        through Google's `runRealtimeReport`. Not cached. Only realtime dimensions and metrics are
+        accepted, e.g. `country`, `unifiedScreenName` with `activeUsers`.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/GoogleAnalyticsReportFields'
+                - type: object
+                  properties:
+                    minuteRanges:
+                      type: array
+                      minItems: 1
+                      maxItems: 2
+                      items:
+                        type: object
+                        properties:
+                          startMinutesAgo: { type: integer, minimum: 0, maximum: 59 }
+                          endMinutesAgo: { type: integer, minimum: 0, maximum: 59 }
+                          name: { type: string }
+            example:
+              accountId: 6650f1c2a1b2c3d4e5f60789
+              dimensions: [country]
+              metrics: [activeUsers]
+      responses:
+        '200':
+          description: Realtime report rows from Google
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GoogleAnalyticsReport'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: The Google account that connected the property lost access to it, or revoked Zernio. Reconnect Google Analytics.
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+  /v1/analytics/googleanalytics/metadata:
+    get:
+      x-resource-group: "analytics"
+      operationId: getGoogleAnalyticsMetadata
+      tags: [Analytics]
+      summary: List Google Analytics (GA4) dimensions and metrics
+      description: |
+        Every dimension and metric the connected GA4 property accepts in a report, including its
+        custom definitions. Cached for one hour.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: accountId
+          in: query
+          required: true
+          schema: { type: string }
+          description: Zernio account ID of the Google Analytics connection.
+      responses:
+        '200':
+          description: Available dimensions and metrics
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  accountId: { type: string }
+                  propertyId: { type: string }
+                  dimensions:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        apiName: { type: string, example: sessionSource }
+                        uiName: { type: string, example: Session source }
+                        description: { type: string }
+                        category: { type: string }
+                        customDefinition: { type: boolean }
+                  metrics:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        apiName: { type: string, example: sessions }
+                        uiName: { type: string, example: Sessions }
+                        description: { type: string }
+                        type: { type: string, example: TYPE_INTEGER }
+                        category: { type: string }
+                        customDefinition: { type: boolean }
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: The Google account that connected the property lost access to it, or revoked Zernio. Reconnect Google Analytics.
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimited'
   /v1/analytics/googlebusiness/performance:
     get:
       x-resource-group: "analytics"
@@ -26005,8 +26277,8 @@ paths:
           in: query
           schema:
             type: string
-            enum: [social, ads, communication, blogs, crm]
-          description: 'Only accounts of this kind. ads = ad accounts (Meta, Google, LinkedIn, Pinterest, TikTok, X, OpenAI, Reddit), communication = WhatsApp, Telegram, Discord, Slack and iMessage, blogs = Shopify and WordPress, crm = HubSpot, social = every other platform.'
+            enum: [social, ads, communication, blogs, crm, analytics]
+          description: 'Only accounts of this kind. ads = ad accounts (Meta, Google, LinkedIn, Pinterest, TikTok, X, OpenAI, Reddit), communication = WhatsApp, Telegram, Discord, Slack and iMessage, blogs = Shopify and WordPress, crm = HubSpot, analytics = Google Analytics, social = every other platform.'
         - name: sort
           in: query
           schema:
@@ -26361,7 +26633,7 @@ paths:
           description: Filter by platform
           schema:
             type: string
-            enum: [facebook, instagram, linkedin, twitter, tiktok, youtube, threads, pinterest, reddit, bluesky, googlebusiness, telegram, snapchat, discord, slack, whatsapp, shopify, wordpress, wix, linkedinads, metaads, pinterestads, tiktokads, xads, googleads, openaiads, redditads, whopads, hubspot, webflow]
+            enum: [facebook, instagram, linkedin, twitter, tiktok, youtube, threads, pinterest, reddit, bluesky, googlebusiness, telegram, snapchat, discord, slack, whatsapp, shopify, wordpress, wix, linkedinads, metaads, pinterestads, tiktokads, xads, googleads, openaiads, redditads, whopads, hubspot, webflow, googleanalytics]
         - name: status
           in: query
           description: Filter by health status
@@ -28461,6 +28733,78 @@ paths:
         '403':
           description: 'API key does not have access to this profile.'
 
+  /v1/connect/googleanalytics:
+    get:
+      x-resource-group: accounts
+      operationId: getGoogleAnalyticsConnectUrl
+      tags:
+        - Connect
+      summary: Get Google Analytics OAuth connect URL
+      description: |
+        Starts OAuth for Google Analytics (GA4). Each connected GA4 property becomes its own account
+        with platform `googleanalytics`; it reads reports and does not post.
+        Redirect the user to `authUrl`. When the Google account can read one property, Zernio connects
+        it and redirects to `redirect_url` (or the dashboard) with `connected=googleanalytics`,
+        `profileId`, `accountId` and `username` (the property name). When it can read several, the user
+        first picks one on a Zernio-hosted page, which then redirects the same way. On failure the
+        redirect carries `error`, `platform=googleanalytics` and `error_message`; errors include
+        `googleanalytics_scope_missing` (the user unticked Analytics access) and
+        `googleanalytics_no_properties`.
+        Requested scope: `https://www.googleapis.com/auth/analytics.readonly`.
+      security:
+        - bearerAuth: []
+        - connectToken: []
+      parameters:
+        - name: profileId
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Your Zernio profile ID (get from /v1/profiles).
+        - name: redirect_url
+          in: query
+          schema:
+            type: string
+          description: >-
+            Custom redirect after connection. Must be an absolute http(s) URL or custom app scheme such as
+            `myapp://callback`; relative and unsafe URLs return 400.
+        - name: reconnectAccountId
+          in: query
+          schema:
+            type: string
+          description: >-
+            Zernio account ID of the Google Analytics account being reconnected. Picking a different property
+            then fails instead of adding a second account.
+      responses:
+        '200':
+          description: OAuth authorization URL and authenticated state
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - authUrl
+                  - state
+                properties:
+                  authUrl:
+                    type: string
+                    format: uri
+                    description: Google URL to open in the user agent.
+                  state:
+                    type: string
+                    description: Authenticated, expiring OAuth state handled by the callback.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '402':
+          $ref: '#/components/responses/PaymentRequired'
+        '403':
+          description: API key does not have access to this profile, or the key is read-only.
+        '404':
+          description: Profile not found or access denied.
+        '503':
+          description: Google Analytics OAuth is not configured.
   /v1/connect/hubspot:
     get:
       x-resource-group: accounts

@@ -193,6 +193,21 @@ class ConnectResource:
         )
         return self._client._post("/v1/connect/shopify/token", data=payload)
 
+    def get_google_analytics_connect_url(
+        self,
+        profile_id: str,
+        *,
+        redirect_url: str | None = None,
+        reconnect_account_id: str | None = None,
+    ) -> dict[str, Any]:
+        """Get Google Analytics OAuth connect URL"""
+        params = self._build_params(
+            profile_id=profile_id,
+            redirect_url=redirect_url,
+            reconnect_account_id=reconnect_account_id,
+        )
+        return self._client._get("/v1/connect/googleanalytics", params=params)
+
     def get_hub_spot_connect_url(
         self, profile_id: str, *, redirect_url: str | None = None
     ) -> dict[str, Any]:
@@ -1142,6 +1157,21 @@ class ConnectResource:
             access_token=access_token,
         )
         return await self._client._apost("/v1/connect/shopify/token", data=payload)
+
+    async def aget_google_analytics_connect_url(
+        self,
+        profile_id: str,
+        *,
+        redirect_url: str | None = None,
+        reconnect_account_id: str | None = None,
+    ) -> dict[str, Any]:
+        """Get Google Analytics OAuth connect URL (async)"""
+        params = self._build_params(
+            profile_id=profile_id,
+            redirect_url=redirect_url,
+            reconnect_account_id=reconnect_account_id,
+        )
+        return await self._client._aget("/v1/connect/googleanalytics", params=params)
 
     async def aget_hub_spot_connect_url(
         self, profile_id: str, *, redirect_url: str | None = None
