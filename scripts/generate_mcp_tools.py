@@ -396,8 +396,9 @@ def extract_parameters(
         if "name" not in param:
             continue
 
-        # Skip header parameters - they're handled differently in SDK
-        if param.get("in") == "header":
+        # Optional headers (Idempotency-Key, x-request-id, ...) stay off the tool
+        # surface; required ones are SDK positional args, so the tool must pass them.
+        if param.get("in") == "header" and not param.get("required", False):
             continue
 
         py_name = camel_to_snake(param["name"])
@@ -424,8 +425,19 @@ def extract_parameters(
 
     # Request body
     request_body = operation.get("requestBody", {})
-    if request_body:
-        content = request_body.get("content", {})
+    content = request_body.get("content", {})
+    if "application/octet-stream" in content and "application/json" not in content:
+        # Tool args are JSON, so raw bytes arrive base64-encoded.
+        add_param({
+            "name": "content_base64",
+            "type": "str",
+            "required": True,
+            "default": "",
+            "description": "File contents, base64-encoded (a data: URL prefix is accepted). The tool decodes it and sends the raw bytes as the request body.",
+            "sdk_name": "content",
+            "sdk_value": "_decode_base64(content_base64)",
+        })
+    elif request_body:
         json_content = content.get("application/json", {})
         schema = json_content.get("schema", {})
 
@@ -445,6 +457,9 @@ def extract_parameters(
 
         for prop_name, prop_schema in properties.items():
             py_name = camel_to_snake(prop_name)
+            # generate_resources.py keeps the leading underscore on the SDK
+            # kwarg, so only the MCP-facing name is stripped.
+            sdk_name = py_name
             # MCP doesn't allow params starting with underscore
             if py_name.startswith("_"):
                 py_name = py_name.lstrip("_")
@@ -459,7 +474,7 @@ def extract_parameters(
                 "required": is_required,
                 "default": default_str,
                 "description": _with_nested_fields(prop_schema.get("description", ""), prop_schema, spec),
-                "sdk_name": py_name,
+                "sdk_name": sdk_name,
             })
 
     return params
@@ -575,7 +590,7 @@ def generate_tool_handler(
     sdk_args = []
     for p in params:
         sdk_name = p.get("sdk_name", p["name"])
-        sdk_args.append(f"{sdk_name}={p['name']}")
+        sdk_args.append(f"{sdk_name}={p.get('sdk_value', p['name'])}")
 
     lines.append("    try:")
     lines.append(f"        response = client.{resource}.{sdk_method}({', '.join(sdk_args)})")
@@ -665,9 +680,17 @@ def main() -> int:
         "",
         "from __future__ import annotations",
         "",
+        "import base64",
         "from typing import Any, Literal",
         "",
         "from mcp.types import ToolAnnotations",
+        "",
+        "",
+        "def _decode_base64(value: str) -> bytes:",
+        '    """Decode a base64 tool argument, accepting a data: URL."""',
+        '    if value.startswith("data:") and "," in value:',
+        '        value = value.split(",", 1)[1]',
+        "    return base64.b64decode(value, validate=True)",
         "",
         "",
         "def _enum_str(value: Any) -> str:",

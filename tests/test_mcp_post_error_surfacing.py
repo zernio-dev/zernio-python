@@ -1,7 +1,7 @@
 """
-Regression tests for the MCP post-reading tools (Crisp session_6e4c63b7).
+Regression tests for the MCP post-reading tools.
 
-An integrator reported two defects in the same ticket:
+An integrator reported two defects together:
 
 1. The failed-post views read the error from ``post.metadata["error"]``, a key
    the API never populates, and fell back to the literal ``"Unknown error"``.
