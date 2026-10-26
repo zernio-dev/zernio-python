@@ -352,6 +352,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | Method | Description |
 |--------|-------------|
 | `connect.list_facebook_pages()` | List Facebook pages |
+| `connect.list_google_analytics_properties()` | List Google Analytics properties for a pending connect |
 | `connect.list_google_business_locations()` | List Google Business Profile locations |
 | `connect.list_instagram_pages()` | List Pages with a linked Instagram account |
 | `connect.list_linked_in_organizations()` | List LinkedIn orgs |
@@ -410,6 +411,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `connect.initiate_telegram_connect()` | Connect Telegram directly |
 | `connect.resync_page_webhook_subscription()` | Re-subscribe a Facebook Page to Zernio's webhooks |
 | `connect.select_facebook_page()` | Select Facebook page |
+| `connect.select_google_analytics_property()` | Connect the chosen Google Analytics property |
 | `connect.select_google_business_location()` | Select Google Business Profile location |
 | `connect.select_instagram_account()` | Select the Page whose Instagram account to connect |
 | `connect.select_linked_in_organization()` | Select LinkedIn org |

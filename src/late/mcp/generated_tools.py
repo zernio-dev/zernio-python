@@ -21545,11 +21545,12 @@ def register_generated_tools(mcp, _get_client):
         Redirect the user to `authUrl`. When the Google account can read one property, Zernio connects
         it and redirects to `redirect_url` (or the dashboard) with `connected=googleanalytics`,
         `profileId`, `accountId` and `username` (the property name). When it can read several, the user
-        first picks one on a Zernio-hosted page, which then redirects the same way. On failure the
+        first picks one on a Zernio-hosted page, which then redirects the same way. To show your own picker
+        instead, add `headless=true` to `redirect_url`: Zernio then redirects there with `step=select_property`,
+        `profileId`, `platform=googleanalytics` and a `pendingDataToken` for
+        `GET /v1/connect/googleanalytics/properties` and `POST /v1/connect/googleanalytics/select-property`. On failure the
         redirect carries `error`, `platform=googleanalytics` and `error_message`; errors include
-        `googleanalytics_scope_missing` (the user unticked Analytics access) and
-        `googleanalytics_no_properties`.
-        Requested scope: `https://www.googleapis.com/auth/analytics.readonly`.
+        `googleanalytics_scope_missing` (the user unticked Analytics access) and ...
 
         Args:
             profile_id: Your Zernio profile ID (get from /v1/profiles). (required)
@@ -21561,6 +21562,67 @@ def register_generated_tools(mcp, _get_client):
                 profile_id=profile_id,
                 redirect_url=redirect_url,
                 reconnect_account_id=reconnect_account_id,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List Google Analytics properties for a pending connect",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def connect_list_google_analytics_properties(pending_data_token: str) -> str:
+        """List Google Analytics properties for a pending connect
+
+        For headless flows. When the connect started with `redirect_url=...?headless=true` and the Google
+        account can read several GA4 properties, Zernio redirects to your `redirect_url` with
+        `step=select_property`, `profileId`, `platform=googleanalytics` and a `pendingDataToken`. Call this
+        to list the properties and show your own picker, then call
+        `POST /v1/connect/googleanalytics/select-property`. Listing does not consume the token. A headless
+        token passes through your own URLs, so it is honored only together with your API key (or connect
+        token) for the same profile. It expires after one hour.
+
+        Args:
+            pending_data_token: Token from the headless redirect. (required)"""
+        client = _get_client()
+        try:
+            response = client.connect.list_google_analytics_properties(
+                pending_data_token=pending_data_token
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Connect the chosen Google Analytics property",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def connect_select_google_analytics_property(
+        pending_data_token: str, property_id: str
+    ) -> str:
+        """Connect the chosen Google Analytics property
+
+        For headless flows. Connects the property the user picked as a `googleanalytics` account and returns
+        where to send the user next: your `redirect_url` with `connected=googleanalytics`, `profileId`,
+        `accountId` and `username`, or an `error` when the connect was refused (for example a billing block).
+        Consumes the `pendingDataToken`; a refused or failed attempt leaves it usable for a retry. Send your
+        API key (or connect token) for the same profile with a headless token.
+
+        Args:
+            pending_data_token: Token from the headless redirect. (required)
+            property_id: A propertyId from the properties list. (required)"""
+        client = _get_client()
+        try:
+            response = client.connect.select_google_analytics_property(
+                pending_data_token=pending_data_token, property_id=property_id
             )
             return _format_response(response)
         except Exception as e:

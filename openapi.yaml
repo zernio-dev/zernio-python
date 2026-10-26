@@ -28747,7 +28747,10 @@ paths:
         Redirect the user to `authUrl`. When the Google account can read one property, Zernio connects
         it and redirects to `redirect_url` (or the dashboard) with `connected=googleanalytics`,
         `profileId`, `accountId` and `username` (the property name). When it can read several, the user
-        first picks one on a Zernio-hosted page, which then redirects the same way. On failure the
+        first picks one on a Zernio-hosted page, which then redirects the same way. To show your own picker
+        instead, add `headless=true` to `redirect_url`: Zernio then redirects there with `step=select_property`,
+        `profileId`, `platform=googleanalytics` and a `pendingDataToken` for
+        `GET /v1/connect/googleanalytics/properties` and `POST /v1/connect/googleanalytics/select-property`. On failure the
         redirect carries `error`, `platform=googleanalytics` and `error_message`; errors include
         `googleanalytics_scope_missing` (the user unticked Analytics access) and
         `googleanalytics_no_properties`.
@@ -28806,6 +28809,104 @@ paths:
           description: Profile not found or access denied.
         '503':
           description: Google Analytics OAuth is not configured.
+  /v1/connect/googleanalytics/properties:
+    get:
+      x-resource-group: accounts
+      operationId: listGoogleAnalyticsProperties
+      tags:
+        - Connect
+      summary: List Google Analytics properties for a pending connect
+      description: |
+        For headless flows. When the connect started with `redirect_url=...?headless=true` and the Google
+        account can read several GA4 properties, Zernio redirects to your `redirect_url` with
+        `step=select_property`, `profileId`, `platform=googleanalytics` and a `pendingDataToken`. Call this
+        to list the properties and show your own picker, then call
+        `POST /v1/connect/googleanalytics/select-property`. Listing does not consume the token. A headless
+        token passes through your own URLs, so it is honored only together with your API key (or connect
+        token) for the same profile. It expires after one hour.
+      security:
+        - bearerAuth: []
+        - connectToken: []
+      parameters:
+        - name: pendingDataToken
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Token from the headless redirect.
+      responses:
+        '200':
+          description: Properties the Google account can read
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  properties:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        propertyId: { type: string, description: 'Numeric GA4 property ID.', example: '312456789' }
+                        displayName: { type: string, example: acme.com }
+                        accountId: { type: string, description: Google Analytics account ID. }
+                        accountName: { type: string, example: Acme Inc }
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: The pending sign-in expired or was already used. Start the connect again.
+  /v1/connect/googleanalytics/select-property:
+    post:
+      x-resource-group: accounts
+      operationId: selectGoogleAnalyticsProperty
+      tags:
+        - Connect
+      summary: Connect the chosen Google Analytics property
+      description: |
+        For headless flows. Connects the property the user picked as a `googleanalytics` account and returns
+        where to send the user next: your `redirect_url` with `connected=googleanalytics`, `profileId`,
+        `accountId` and `username`, or an `error` when the connect was refused (for example a billing block).
+        Consumes the `pendingDataToken`; a refused or failed attempt leaves it usable for a retry. Send your
+        API key (or connect token) for the same profile with a headless token.
+      security:
+        - bearerAuth: []
+        - connectToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [pendingDataToken, propertyId]
+              properties:
+                pendingDataToken: { type: string, description: Token from the headless redirect. }
+                propertyId: { type: string, description: 'A propertyId from the properties list.', example: '312456789' }
+      responses:
+        '200':
+          description: The property is connected, or the connect was refused with a reason in redirect_url
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  redirect_url: { type: string, description: Where to send the user next. }
+                  account:
+                    type: [object, "null"]
+                    description: The connected account, or null when the connect was refused.
+                    properties:
+                      accountId: { type: string }
+                      platform: { type: string, example: googleanalytics }
+                      username: { type: string }
+                      displayName: { type: string }
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          description: The pending sign-in expired or was already used. Start the connect again.
+        '500':
+          description: Google or Zernio failed while saving. The pendingDataToken stays usable; retry.
+
   /v1/connect/hubspot:
     get:
       x-resource-group: accounts
