@@ -6489,9 +6489,9 @@ def register_generated_tools(mcp, _get_client):
 
         **Live read, then write.** The campaign's switch is read from the platform first. When that
         live read shows it already in the requested state nothing is written (`updated: 0`,
-        `skipped: 1`, with the reason). Otherwise the switch is written (`updated: 1`), read back and
-        stored, and the delivery status of the ads under it (up to 20) is re-read and stored, so an
-        immediate GET returns what the ...
+        `skipped: 1`, with the reason), and when the campaign delivers in that state but some of its
+        ads are stored in the other state (for example ads switched on in the platform's own UI and
+        still stored `paused`), those ...
 
         Platforms: meta, google, tiktok, linkedin, pinterest, x, openai, reddit
 

@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.366.1"
+  version: "1.368.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -59035,7 +59035,10 @@ paths:
 
         **Live read, then write.** The campaign's switch is read from the platform first. When that
         live read shows it already in the requested state nothing is written (`updated: 0`,
-        `skipped: 1`, with the reason). Otherwise the switch is written (`updated: 1`), read back and
+        `skipped: 1`, with the reason), and when the campaign delivers in that state but some of its
+        ads are stored in the other state (for example ads switched on in the platform's own UI and
+        still stored `paused`), those ads (up to 20, at most once every 10 minutes per campaign) are
+        re-read and stored. Otherwise the switch is written (`updated: 1`), read back and
         stored, and the delivery status of the ads under it (up to 20) is re-read and stored, so an
         immediate GET returns what the platform now reports. A stored switch never skips a write, and
         when the platform cannot be read the write always goes out. On Meta the check reads the
@@ -60915,7 +60918,10 @@ paths:
 
         **Live read, then write.** The ad set's switch is read from the platform
         first. When that live read shows it already in the requested state
-        nothing is written (`updated: 0`, `skipped: 1`, with the reason).
+        nothing is written (`updated: 0`, `skipped: 1`, with the reason), and
+        when the ad set delivers in that state but some of its ads are stored in
+        the other state, those ads (up to 20, at most once every 10 minutes per
+        ad set) are re-read and stored.
         Otherwise the switch is written (`updated: 1`), read back and stored, and
         the delivery status of its ads (up to 20) is re-read and stored, so an
         immediate GET returns what the platform now reports. A stored switch
