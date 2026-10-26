@@ -6,9 +6,17 @@ DO NOT EDIT - Run `python scripts/generate_mcp_tools.py` to regenerate.
 
 from __future__ import annotations
 
+import base64
 from typing import Any, Literal
 
 from mcp.types import ToolAnnotations
+
+
+def _decode_base64(value: str) -> bytes:
+    """Decode a base64 tool argument, accepting a data: URL."""
+    if value.startswith("data:") and "," in value:
+        value = value.split(",", 1)[1]
+    return base64.b64decode(value, validate=True)
 
 
 def _enum_str(value: Any) -> str:
@@ -22044,19 +22052,22 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def connect_list_pinterest_boards_for_selection(
-        profile_id: str, temp_token: str
+        x_connect_token: str, profile_id: str, temp_token: str
     ) -> str:
         """List Pinterest boards
 
         For headless flows. Returns Pinterest boards the user can post to. Use X-Connect-Token from the redirect URL.
 
         Args:
+            x_connect_token: Short-lived connect token from the OAuth redirect (required)
             profile_id: Your Zernio profile ID (required)
             temp_token: Temporary Pinterest access token from the OAuth callback redirect (required)"""
         client = _get_client()
         try:
             response = client.connect.list_pinterest_boards_for_selection(
-                profile_id=profile_id, temp_token=temp_token
+                x_connect_token=x_connect_token,
+                profile_id=profile_id,
+                temp_token=temp_token,
             )
             return _format_response(response)
         except Exception as e:
@@ -22117,18 +22128,23 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=False,
         )
     )
-    def connect_list_snapchat_profiles(profile_id: str, temp_token: str) -> str:
+    def connect_list_snapchat_profiles(
+        x_connect_token: str, profile_id: str, temp_token: str
+    ) -> str:
         """List Snapchat profiles
 
         For headless flows. Returns Snapchat Public Profiles the user can post to. Use X-Connect-Token from the redirect URL.
 
         Args:
+            x_connect_token: Short-lived connect token from the OAuth redirect (required)
             profile_id: Your Zernio profile ID (required)
             temp_token: Temporary Snapchat access token from the OAuth callback redirect (required)"""
         client = _get_client()
         try:
             response = client.connect.list_snapchat_profiles(
-                profile_id=profile_id, temp_token=temp_token
+                x_connect_token=x_connect_token,
+                profile_id=profile_id,
+                temp_token=temp_token,
             )
             return _format_response(response)
         except Exception as e:
@@ -31166,7 +31182,9 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=True,
         )
     )
-    def phone_numbers_upload_phone_number_kyc_document() -> str:
+    def phone_numbers_upload_phone_number_kyc_document(
+        x_filename: str, content_base64: str
+    ) -> str:
         """Upload a KYC document
 
         Upload ONE document and get back its provider document id, to reference
@@ -31174,10 +31192,16 @@ def register_generated_tools(mcp, _get_client):
         Send the RAW file bytes as the request body (not base64); put the filename
         in the `X-Filename` header. Uploading documents one-per-request keeps each
         request under the ~4.5MB body limit. The document streams straight to the
-        number provider and is not stored by Zernio."""
+        number provider and is not stored by Zernio.
+
+        Args:
+            x_filename: URL-encoded original filename. (required)
+            content_base64: File contents, base64-encoded (a data: URL prefix is accepted). The tool decodes it and sends the raw bytes as the request body. (required)"""
         client = _get_client()
         try:
-            response = client.phone_numbers.upload_phone_number_kyc_document()
+            response = client.phone_numbers.upload_phone_number_kyc_document(
+                x_filename=x_filename, content=_decode_base64(content_base64)
+            )
             return _format_response(response)
         except Exception as e:
             return f"Error: {e}"
@@ -38618,7 +38642,7 @@ def register_generated_tools(mcp, _get_client):
         try:
             response = client.webhooks.update_webhook_settings(
                 webhook_id=webhook_id,
-                id=id,
+                _id=id,
                 name=name,
                 url=url,
                 secret=secret,
@@ -42112,7 +42136,9 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=True,
         )
     )
-    def whatsapp_phone_numbers_upload_whats_app_number_kyc_document() -> str:
+    def whatsapp_phone_numbers_upload_whats_app_number_kyc_document(
+        x_filename: str, content_base64: str
+    ) -> str:
         """Upload a KYC document
 
         Deprecated alias of `/v1/phone-numbers/kyc/upload-document`; same contract. New
@@ -42123,11 +42149,17 @@ def register_generated_tools(mcp, _get_client):
         Send the RAW file bytes as the request body (not base64); put the filename
         in the `X-Filename` header. Uploading documents one-per-request keeps each
         request under the ~4.5MB body limit. The document streams straight to the
-        number provider and is not stored by Zernio."""
+        number provider and is not stored by Zernio.
+
+        Args:
+            x_filename: URL-encoded original filename. (required)
+            content_base64: File contents, base64-encoded (a data: URL prefix is accepted). The tool decodes it and sends the raw bytes as the request body. (required)"""
         client = _get_client()
         try:
             response = (
-                client.whatsapp_phone_numbers.upload_whats_app_number_kyc_document()
+                client.whatsapp_phone_numbers.upload_whats_app_number_kyc_document(
+                    x_filename=x_filename, content=_decode_base64(content_base64)
+                )
             )
             return _format_response(response)
         except Exception as e:

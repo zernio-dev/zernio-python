@@ -58,6 +58,11 @@ def _with_request_id(headers: dict[str, str] | None) -> dict[str, str]:
     return merged
 
 
+# Raw-bytes POST bodies (e.g. KYC document uploads) must override the client's
+# default JSON Content-Type.
+_OCTET_STREAM_HEADERS = {"Content-Type": "application/octet-stream"}
+
+
 class BaseClient:
     """
     Base HTTP client supporting both sync and async operations.
@@ -72,7 +77,7 @@ class BaseClient:
     # request. One measured Threads publish took 222s against DEFAULT_TIMEOUT's
     # 30s, so httpx aborted while the server was still working and the retry
     # loop replayed the POST - two live posts, and a 409 for the one that
-    # actually published. Crisp session_8e5d3e6e-1e10-4a33-95f1-0b1e33d119da.
+    # actually published.
     DEFAULT_PUBLISH_TIMEOUT = 300.0
     DEFAULT_MAX_RETRIES = 3
     SDK_VERSION = _resolve_sdk_version()
@@ -287,6 +292,7 @@ class BaseClient:
         files: dict[str, Any] | list[tuple[str, Any]] | None = None,
         params: dict[str, Any] | None = None,
         headers: dict[str, str] | None = None,
+        content: bytes | None = None,
     ) -> dict[str, Any]:
         """Make a sync POST request."""
         if files:
@@ -302,6 +308,17 @@ class BaseClient:
             ) as client:
                 return self._request_with_retry(
                     client, "POST", path, files=files, params=params, headers=headers
+                )
+
+        if content is not None:
+            with self._sync_client() as client:
+                return self._request_with_retry(
+                    client,
+                    "POST",
+                    path,
+                    content=content,
+                    params=params,
+                    headers={**_OCTET_STREAM_HEADERS, **(headers or {})},
                 )
 
         with self._sync_client() as client:
@@ -462,6 +479,7 @@ class BaseClient:
         files: dict[str, Any] | list[tuple[str, Any]] | None = None,
         params: dict[str, Any] | None = None,
         headers: dict[str, str] | None = None,
+        content: bytes | None = None,
     ) -> dict[str, Any]:
         """Make an async POST request."""
         if files:
@@ -476,6 +494,17 @@ class BaseClient:
             ) as client:
                 return await self._arequest_with_retry(
                     client, "POST", path, files=files, params=params, headers=headers
+                )
+
+        if content is not None:
+            async with self._async_client() as client:
+                return await self._arequest_with_retry(
+                    client,
+                    "POST",
+                    path,
+                    content=content,
+                    params=params,
+                    headers={**_OCTET_STREAM_HEADERS, **(headers or {})},
                 )
 
         async with self._async_client() as client:

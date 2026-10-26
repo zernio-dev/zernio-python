@@ -153,8 +153,18 @@ def extract_parameters(
 
     # Request body parameters
     request_body = operation.get("requestBody", {})
-    if request_body:
-        content = request_body.get("content", {})
+    content = request_body.get("content", {})
+    if "application/octet-stream" in content and "application/json" not in content:
+        params.append({
+            "name": "content",
+            "original_name": "content",
+            "type": "bytes",
+            "required": True,
+            "description": "Raw file bytes sent as the request body.",
+            "in": "binary_body",
+            "default": None,
+        })
+    elif request_body:
         json_content = content.get("application/json", {})
         schema = json_content.get("schema", {})
 
@@ -269,6 +279,7 @@ def generate_method_body(
     query_params = [p for p in params if p["in"] == "query"]
     body_params = [p for p in params if p["in"] == "body"]
     raw_body_params = [p for p in params if p["in"] == "raw_body"]
+    binary_body_params = [p for p in params if p["in"] == "binary_body"]
     path_params = [p for p in params if p["in"] == "path"]
     header_params = [p for p in params if p["in"] == "header"]
 
@@ -360,6 +371,8 @@ def generate_method_body(
             call_args.append("data=payload")
         elif raw_body_params:
             call_args.append(f"data={raw_body_params[0]['name']}")
+        elif binary_body_params:
+            call_args.append(f"content={binary_body_params[0]['name']}")
         if query_params:
             call_args.append("params=params")
         if use_headers:

@@ -468,7 +468,7 @@ class TestAccountsResource:
 
     @respx.mock
     def test_get_follower_stats_forwards_all_params(self, client: Late) -> None:
-        """Regression for GET-820: the manual override dropped profile_id/
+        """Regression: the manual override dropped profile_id/
         from_date/to_date/granularity, raising TypeError. All five params must
         reach the endpoint as camelCase query params."""
         route = respx.get("https://api.test.com/v1/accounts/follower-stats").mock(
@@ -490,6 +490,71 @@ class TestAccountsResource:
         assert "fromDate=2026-01-01" in url_str
         assert "toDate=2026-01-31" in url_str
         assert "granularity=weekly" in url_str
+
+    @respx.mock
+    def test_get_follower_stats_accepts_none_limit_and_cursor(
+        self, client: Late
+    ) -> None:
+        """The MCP tool always forwards limit/cursor, even as None. Pre-fix the
+        override lacked them and every accounts_get_follower_stats call raised
+        TypeError."""
+        route = respx.get("https://api.test.com/v1/accounts/follower-stats").mock(
+            return_value=httpx.Response(200, json={"accounts": [], "stats": {}})
+        )
+
+        result = client.accounts.get_follower_stats(
+            profile_id="prof_1", limit=None, cursor=None
+        )
+
+        assert route.called
+        url_str = str(route.calls[0].request.url)
+        assert "profileId=prof_1" in url_str
+        assert "limit=" not in url_str
+        assert "cursor=" not in url_str
+        assert result.stats == {}
+
+    @respx.mock
+    def test_get_follower_stats_forwards_limit_and_cursor(self, client: Late) -> None:
+        """limit/cursor must reach the query string and pagination must parse."""
+        route = respx.get("https://api.test.com/v1/accounts/follower-stats").mock(
+            return_value=httpx.Response(
+                200,
+                json={
+                    "accounts": [],
+                    "stats": {},
+                    "pagination": {"limit": 10, "nextCursor": "next_abc"},
+                },
+            )
+        )
+
+        result = client.accounts.get_follower_stats(
+            profile_id="prof_1", limit=10, cursor="abc"
+        )
+
+        url_str = str(route.calls[0].request.url)
+        assert "limit=10" in url_str
+        assert "cursor=abc" in url_str
+        assert result.pagination is not None
+        assert result.pagination.nextCursor == "next_abc"
+
+    @respx.mock
+    @pytest.mark.asyncio
+    async def test_aget_follower_stats_forwards_limit_and_cursor(
+        self, client: Late
+    ) -> None:
+        route = respx.get("https://api.test.com/v1/accounts/follower-stats").mock(
+            return_value=httpx.Response(200, json={"accounts": [], "stats": {}})
+        )
+
+        result = await client.accounts.aget_follower_stats(
+            account_ids=["acc_1", "acc_2"], limit=5, cursor="abc"
+        )
+
+        url_str = str(route.calls[0].request.url)
+        assert "accountIds=acc_1%2Cacc_2" in url_str
+        assert "limit=5" in url_str
+        assert "cursor=abc" in url_str
+        assert result.stats == {}
 
     @respx.mock
     def test_get_follower_stats_parses_stats_and_granularity(
