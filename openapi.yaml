@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.376.0"
+  version: "1.377.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -1901,6 +1901,15 @@ components:
                 x-app-usage: { type: string }
                 x-business-use-case-usage: { type: string }
               additionalProperties: false
+    AdAppliedDefaults:
+      type: object
+      description: "What the create filled in for fields the request left out. Empty when every field was sent. A passing validateOnly returns it too, so a dry run previews these values before anything is created."
+      properties:
+        name: { type: string, description: 'Sent when `name` was omitted: `Ad <YYYY-MM-DD HH:MM:SS>` in UTC.' }
+        goal: { type: string, description: "Sent when `goal` was omitted. `lead_generation` with a `leadGenFormId`; `app_promotion` when `promotedObject` names an app; `conversions` with `promotedObject.pixelId` and `customEventType`; `traffic` when the ad has a link (`linkUrl`, a carousel card, `creatives[].linkUrl`, `dynamicCreative.linkUrls` or a LinkedIn carousel card); otherwise `engagement`. Each only when the platform offers it, falling back to `engagement`, then `awareness`, then the platform's first goal. Never inferred with `existingCampaignId`, `smartPlus` or the LinkedIn spotlight, follower and jobs formats: those still return 400 without `goal`." }
+        budgetType: { type: string, enum: [daily], description: 'Sent when `budgetAmount` came without `budgetType`.' }
+        endDate: { type: string, description: 'Sent when a lifetime budget had no `endDate`: 7 days after the start. A start with an offset (or no start) gets a UTC instant; an offset-less start gets an offset-less end, read in the ad account timezone like the start; a date-only start gets the date 6 days later, which runs to 23:59:59. A daily budget never gets one and runs until paused.' }
+        countries: { type: array, items: { type: string }, description: 'Sent when the request sent no countries and the ad gets the long-standing United States default. Not sent on attach, Google Performance Max or Demand Gen, or a Google ad group joining `existingCampaignId`, which keep their own geo.' }
     AdTracking:
       type: object
       description: "Meta, plus `urlTags` on ChatGPT (OpenAI) and `pixelId` on Reddit. Meta: attaches pixel measurement to the ad regardless of the optimization goal (the \"Website events\" tracking row in Ads Manager). `pixelId` becomes the ad's `tracking_specs` (offsite_conversion + fb_pixel); `urlTags` is stored on the new creative as `url_tags` and retained on the ad for compatibility. Applied on the legacy single-creative shape, every ad of the multi-creative shape, and the attach shape. NOTE: tracking lives on the AD object and is not inherited from the ad set, so pass it on EVERY attach call that should carry the pixel. ChatGPT (OpenAI): `urlTags` becomes the ad's `landing_page_configuration.query_string_template`, which OpenAI appends to `linkUrl` on click. Reddit: `pixelId` picks the pixel of the new ad group, like `promotedObject.pixelId` (which wins when both are sent)."
@@ -70048,7 +70057,7 @@ paths:
 
         **Meta required fields per shape** (a missing one is a 400 naming it in `param`):
 
-        - Every shape that builds a new ad set (no `adSetId`, `existingCampaignId` or `buyingType: "RESERVED"`): `budgetAmount` and `budgetType`, plus `endDate` for a lifetime budget.
+        - Every shape that builds a new ad set (no `adSetId`, `existingCampaignId` or `buyingType: "RESERVED"`): `budgetAmount`. `budgetType` defaults to daily, and a lifetime budget without `endDate` ends 7 days after it starts (see `appliedDefaults`).
         - Single image or video (the default), also with `adSetId`: `headline` (max 255), `body`, `callToAction`, exactly one of `imageUrl` / `video` (none for a catalog template creative, which ignores and does not upload any sent), and `linkUrl` unless the goal is `lead_generation` or `page_visits` or `leadGenFormId` is set.
         - `bodies[]` / `headlines[]` text variations: `body`, one list with 2+ items, `callToAction`, `imageUrl` or `video`, and `linkUrl` unless the goal is `lead_generation` or `leadGenFormId` is set. `headline` is not required.
         - `placementAssets`: `headline`, `body`, `callToAction`, and `linkUrl` with the same exemptions as the single shape; the media comes from `placementAssets`.
@@ -70073,11 +70082,11 @@ paths:
           application/json:
             schema:
               type: object
-              required: [accountId, adAccountId, name]
+              required: [accountId, adAccountId]
               properties:
                 accountId: { type: string }
                 adAccountId: { type: string }
-                name: { type: string, maxLength: 255 }
+                name: { type: string, maxLength: 255, description: 'Omitted, the ad is named `Ad <YYYY-MM-DD HH:MM:SS>` (UTC) and the response reports it in `appliedDefaults.name`.' }
                 campaignName: { type: string, maxLength: 255, description: "Meta, Reddit and Google. Exact campaign name. Overrides the default `<name> - Campaign`. Ignored when the request joins an existing campaign or ad set. Google: no line breaks and at most 255 characters, checked before calling Google; names are unique in the Google Ads account, and on Search and Display a taken name is a 400 naming this field." }
                 adSetName: { type: string, maxLength: 255, description: "Meta, Reddit and Google (the ad group). Exact ad set name. Overrides the default `<name> - Ad Set` (Google Search and Display: `<name> - Ad Group`). Ignored when the request joins an existing ad set (`adSetId`). Google Search and Display only, also on `existingCampaignId`, where the new ad group's name is returned as `adSetName`; no line breaks, at most 255 characters, unique in the campaign (a taken name is a 400 naming this field). Demand Gen names its ad group with `demandGen.adGroupName` and Performance Max with `assetGroup.name`. (For per-ad names on the multi-creative shape, set `name` on each `creatives[]` entry.)" }
                 adName: { type: string, maxLength: 255, description: "Meta only. Exact ad name (the single-creative ad object's name). Overrides the default, which is `name`. (For per-ad names on the multi-creative shape, set `name` on each `creatives[]` entry instead.)" }
@@ -70086,7 +70095,7 @@ paths:
                   type: string
                   enum: [engagement, traffic, awareness, video_views, lead_generation, lead_conversion, conversions, app_promotion, catalog_sales, page_likes, page_visits, job_applicants]
                   description: |
-                    Required on legacy and multi-creative shapes; the attach shape inherits it from the ad set. Available goals vary by platform.
+                    Available goals vary by platform. Omitted, it is inferred from the ad (see `appliedDefaults.goal` in the response); the attach shape inherits it from the ad set.
 
                     **Meta**
                     - `conversions`: OUTCOME_SALES. Requires `promotedObject.pixelId` and `promotedObject.customEventType` with a commerce event such as PURCHASE or START_TRIAL, or `promotedObject.customConversionId` to optimise against a Custom Conversion, or `customEventType: OTHER` + `customEventStr` to optimise against a pixel custom event.
@@ -70154,7 +70163,7 @@ paths:
                   type: boolean
                   description: 'Google Performance Max validates the complete atomic campaign and asset group with no resource creation or local persistence. Google validation still downloads image URLs and consumes quota. On Meta, validates the complete inline campaign, ad set, creative and ad with execution_options validate_only. Nothing is uploaded or created, and validation bypasses Idempotency-Key storage. Supports a single image or existing video.id (each also with bodies[] / headlines[] Multiple Text Options), all-image placementAssets with per-rule copy and text pools, or existingCreativeId; dynamicCreative, translations, carouselCards, placement videos, new video uploads, creatives[], adSetId and RESERVED buying return 400. Placement validation uses existing Instagram identities only. Existing campaign or creative nodes are marked skipped. When Meta cannot dry-run the nested tree (code 2, or an unknown-error code 1 on an OFFSITE_CONVERSIONS ad set nested in a new campaign, which Meta returns for some website-conversion ad sets that it then creates normally, or a code 100 subcode 2446880 "WhatsApp number required" on an ad that does not message on WhatsApp, which Meta returns intermittently and then creates the ad normally), the campaign and creative are validated on their own and the adSet and ad nodes come back unverified with the reason. If the creative''s own dry run also asks for a WhatsApp number, the creative comes back unverified too. Messaging ads still fail on 2446880. Success returns 200 with per-node results; Meta rejection returns an error. ChatGPT (OpenAI) has no platform dry-run: Zernio runs every check it knows (creative lengths, budget, bid strategy, targeting) plus live lookups of the conversion event and target countries, and uploads or creates nothing. OpenAI''s own write-time checks (image fetch, currency-specific minimums, ad review) still run only on a real create. Any other platform, or a Google campaignType other than pmax or demand_gen, returns 501 `feature_not_available`.'
                 budgetAmount: { type: number, description: "Budget in WHOLE currency units (USD: 50 = $50.00), NOT cents. Meta's own Marketing API takes this same number in minor units, so it is an easy and expensive mix-up. Required on legacy, multi-creative and Performance Max shapes. Inherited on attach. OpenAI Ads: in the ad account currency, minimum 1; OpenAI can require a higher daily minimum for some currencies and names it in the error." }
-                budgetType: { type: string, enum: [daily, lifetime], description: "Required on legacy, multi-creative and Performance Max shapes. Inherited on attach. OpenAI Ads accepts both as the campaign's single spend cap. A lifetime cap can later switch to daily with PUT /v1/ads/campaigns/{campaignId}, but OpenAI never switches a daily cap back to lifetime (422). Automatic bidding (Maximize Results) needs a daily budget. Reddit Ads: the ad group's daily or lifetime spend goal; lifetime needs `endDate`." }
+                budgetType: { type: string, enum: [daily, lifetime], description: "Defaults to daily when `budgetAmount` is sent without it (reported in `appliedDefaults.budgetType`). Inherited on attach. OpenAI Ads accepts both as the campaign's single spend cap. A lifetime cap can later switch to daily with PUT /v1/ads/campaigns/{campaignId}, but OpenAI never switches a daily cap back to lifetime (422). Automatic bidding (Maximize Results) needs a daily budget. Reddit Ads: the ad group's daily or lifetime spend goal." }
                 status:
                   type: string
                   enum: [ACTIVE, PAUSED]
@@ -70641,7 +70650,7 @@ paths:
                     (the keys the declared categories expect), details.suggestedCategories (the markets Meta
                     ties to that subcode) and Meta's metaCode, metaSubcode and fbtraceId.
                     Ignored when adSetId adds the ad to an existing ad set.
-                endDate: { type: string, format: date-time, description: 'Required for lifetime budgets. Read like `startDate` (account timezone on Meta, TikTok, X, Pinterest, OpenAI and Reddit; whole account-local days on Google; UTC on LinkedIn), and a date-only end runs to 23:59:59 local.' }
+                endDate: { type: string, format: date-time, description: 'Omitted on a lifetime budget, the ad ends 7 days after it starts (reported in `appliedDefaults.endDate`); a daily budget without one runs until paused. Read like `startDate` (account timezone on Meta, TikTok, X, Pinterest, OpenAI and Reddit; whole account-local days on Google; UTC on LinkedIn), and a date-only end runs to 23:59:59 local.' }
                 startDate:
                   type: string
                   format: date-time
@@ -71138,7 +71147,7 @@ paths:
                     Targeting works like on any TikTok ad (defaults to `countries: ["US"]` when
                     omitted); TikTok automates delivery within it.
                     The budget lives on the Smart+ campaign (Campaign Budget Optimization); a `lifetime`
-                    budget additionally requires `endDate`. Cannot be combined with `adSetId`.
+                    budget without `endDate` ends 7 days after it starts. Smart+ needs `goal` sent, it is never inferred. Cannot be combined with `adSetId`.
                 userOs:
                   type: array
                   minItems: 1
@@ -71339,6 +71348,7 @@ paths:
                 type: object
                 properties:
                   validateOnly: { type: boolean, description: 'Always true in a validate-only response.' }
+                  appliedDefaults: { $ref: '#/components/schemas/AdAppliedDefaults' }
                   results:
                     type: array
                     items:
@@ -71358,6 +71368,7 @@ paths:
                     description: "Legacy + attach shapes: one ad returned."
                     properties:
                       ad: { $ref: '#/components/schemas/Ad' }
+                      appliedDefaults: { $ref: '#/components/schemas/AdAppliedDefaults' }
                       message: { type: string }
                   - type: object
                     description: "Multi-creative shape: N ads returned sharing platformCampaignId / platformAdSetId."
@@ -71367,6 +71378,7 @@ paths:
                         items: { $ref: '#/components/schemas/Ad' }
                       platformCampaignId: { type: string }
                       platformAdSetId: { type: string }
+                      appliedDefaults: { $ref: '#/components/schemas/AdAppliedDefaults' }
                       message: { type: string }
         '400':
           description: 'Missing required fields, invalid values, non-Meta platform used with creatives[] / adSetId, or a Meta validateOnly validation failure (verbatim)'
