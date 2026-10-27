@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.370.0"
+  version: "1.371.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -1217,6 +1217,17 @@ components:
                   effective_account_limit: 2000
                   current_account_count: 2000
   schemas:
+    AdLeadConsent:
+      type: object
+      description: 'One custom disclaimer checkbox on a Meta lead form (for example a TCPA call or SMS consent), as Meta returns it in custom_disclaimer_responses.'
+      required: [checkboxKey, isChecked]
+      properties:
+        checkboxKey: { type: string, description: 'The checkbox key as Meta returns it: the one set in platformSpecificData.customDisclaimer.checkboxes[].key on POST /v1/ads/lead-forms, or otherwise a key Meta derives from the checkbox text, which can be long and contain spaces and punctuation.' }
+        isChecked: { type: boolean }
+    AdLeadConsents:
+      type: array
+      items: { $ref: '#/components/schemas/AdLeadConsent' }
+      description: 'Meta lead forms only: the answer to every custom disclaimer checkbox, required or optional. Empty when the form has none, and may be empty on leads stored before 2026-10-22. LinkedIn leads do not carry the field.'
     AdLead:
       type: object
       properties:
@@ -1232,6 +1243,7 @@ components:
         createdTime: { type: [string, "null"], description: ISO 8601. }
         fields: { type: object, additionalProperties: { type: string }, description: 'Question key → answer. On LinkedIn, the key is the lowercased predefinedField, else the question name, else the numeric questionId; multiple-choice values are option labels (unlike Meta, which returns the option key).' }
         fieldData: { type: array, items: { type: object }, description: "Raw Meta field_data." }
+        consents: { $ref: '#/components/schemas/AdLeadConsents' }
         status: { type: string, enum: [new, contacted, unreachable, qualified, converted, disqualified], description: 'Meta leads only. `contacted` is set when the first WhatsApp message of a lead_received workflow is delivered, `unreachable` when it fails or the phone number is not valid.' }
         statusChangedAt: { type: [string, "null"], format: date-time }
         value: { type: [number, "null"] }
@@ -5495,6 +5507,10 @@ components:
               description: >
                 Flattened question key -> answer map. For multiple-choice questions
                 the value is the option key (e.g. "k1"), not the display label.
+            consents:
+              allOf:
+                - $ref: '#/components/schemas/AdLeadConsents'
+              description: 'Sent on every delivery since 2026-10-25. Absent when an older event is redelivered, since redeliveries replay the stored payload.'
             isOrganic:
               type: boolean
               description: True when the lead came from an organic post rather than a paid ad
@@ -71705,6 +71721,7 @@ paths:
                         formId: { type: string }
                         fields: { type: object, additionalProperties: { type: string } }
                         fieldData: { type: array, items: { type: object } }
+                        consents: { $ref: '#/components/schemas/AdLeadConsents' }
                   pagination: { type: object, properties: { hasMore: { type: boolean }, cursor: { type: [string, "null"] } } }
                   meta:
                     type: object
