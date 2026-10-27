@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.372.0"
+  version: "1.373.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -3408,6 +3408,16 @@ components:
             lists the objects left behind and ends with Meta's original error, which also stays
             verbatim in `platformError`. Meta often reports the first failure under an
             unrelated code (e.g. 1487194 on the creative), so branch on `code`, not on
+            `platformError`.
+
+            When Meta refuses a write because the Facebook user behind the connection's token
+            lacks the Advertise permission on the ad account (Meta subcode 2490585, 2490591 or 4841020 on
+            the write, or a code 200 refusal such as 1487194 whose cleanup deletes Meta refused
+            with 2490591 or 4841020), any Meta ads write answers 403 `insufficient_permissions`.
+            Meta may still accept the campaign and ad set and refuse only the ad. The message
+            names the ad account, asks for the Advertise or Manage permission on it (or a token
+            granted `ads_management`, by reconnecting), lists the objects left behind and ends
+            with Meta's `error_user_title`, `error_user_msg` and subcode; the raw error stays in
             `platformError`.
           properties:
             stage:
@@ -69517,7 +69527,7 @@ paths:
         '429': { $ref: '#/components/responses/MetaAdAccountWriteLimited' }
         '403':
           description: |
-            Ads access required. Legacy plans need the Ads add-on; included by default on usage-based plans. Also returned with code `ads_allowance_exceeded` when the team has no payment method on file and has reached the 500 free live ads: add a card to resume. Also returned with code `ad_account_not_selected` when the connection has selected ad accounts and the ad account this request targets is not among them; `details` carries `accountId`, `adAccountId` and `selectedAdAccountIds`. Add the ad account to the selection (GET /v1/connect/{platform}/ads with adAccountIds, which replaces the selection) or use a connection that has it selected.
+            Ads access required. Legacy plans need the Ads add-on; included by default on usage-based plans. Also returned with code `ads_allowance_exceeded` when the team has no payment method on file and has reached the 500 free live ads: add a card to resume. Also returned with code `ad_account_not_selected` when the connection has selected ad accounts and the ad account this request targets is not among them; `details` carries `accountId`, `adAccountId` and `selectedAdAccountIds`. Add the ad account to the selection (GET /v1/connect/{platform}/ads with adAccountIds, which replaces the selection) or use a connection that has it selected. Also returned with code `insufficient_permissions` when the Facebook user behind the connection's token lacks the Advertise permission on the Meta ad account, or the token lacks `ads_management` (Meta subcode 2490585, 2490591 or 4841020; see `ErrorResponse.details`).
         '409':
           description: |
             The account may also be inactive or need reconnection (code ads_connection_required). Reconnect it and read GET /v1/accounts for its current ID before retrying.
@@ -71257,7 +71267,7 @@ paths:
         '429': { $ref: '#/components/responses/MetaAdAccountWriteLimited' }
         '403':
           description: |
-            Ads access required. Legacy plans need the Ads add-on; included by default on usage-based plans. Also returned with code `ads_allowance_exceeded` when the team has no payment method on file and has reached the 500 free live ads: add a card to resume. Also returned with code `ad_account_not_selected` when the connection has selected ad accounts and the ad account this request targets is not among them; `details` carries `accountId`, `adAccountId` and `selectedAdAccountIds`. Add the ad account to the selection (GET /v1/connect/{platform}/ads with adAccountIds, which replaces the selection) or use a connection that has it selected.
+            Ads access required. Legacy plans need the Ads add-on; included by default on usage-based plans. Also returned with code `ads_allowance_exceeded` when the team has no payment method on file and has reached the 500 free live ads: add a card to resume. Also returned with code `ad_account_not_selected` when the connection has selected ad accounts and the ad account this request targets is not among them; `details` carries `accountId`, `adAccountId` and `selectedAdAccountIds`. Add the ad account to the selection (GET /v1/connect/{platform}/ads with adAccountIds, which replaces the selection) or use a connection that has it selected. Also returned with code `insufficient_permissions` when the Facebook user behind the connection's token lacks the Advertise permission on the Meta ad account, or the token lacks `ads_management` (Meta subcode 2490585, 2490591 or 4841020; see `ErrorResponse.details`).
         '422':
           description: |
             Platform ads connection required (TikTok Ads, X Ads) or missing linked account.
@@ -76417,7 +76427,7 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403':
           description: |
-            Returned with code `ads_allowance_exceeded` when the team has no payment method on file and has reached the 500 free live ads: add a card to resume. Also returned with code `ad_account_not_selected` when the connection has selected ad accounts and the ad account this request targets is not among them; `details` carries `accountId`, `adAccountId` and `selectedAdAccountIds`. Add the ad account to the selection (GET /v1/connect/{platform}/ads with adAccountIds, which replaces the selection) or use a connection that has it selected.
+            Returned with code `ads_allowance_exceeded` when the team has no payment method on file and has reached the 500 free live ads: add a card to resume. Also returned with code `ad_account_not_selected` when the connection has selected ad accounts and the ad account this request targets is not among them; `details` carries `accountId`, `adAccountId` and `selectedAdAccountIds`. Add the ad account to the selection (GET /v1/connect/{platform}/ads with adAccountIds, which replaces the selection) or use a connection that has it selected. Also returned with code `insufficient_permissions` when the Facebook user behind the connection's token lacks the Advertise permission on the Meta ad account, or the token lacks `ads_management` (Meta subcode 2490585, 2490591 or 4841020; see `ErrorResponse.details`).
         '404': { $ref: '#/components/responses/AccountUnavailable' }
 
         '422': { description: "No Facebook Page resolved for the account" }
@@ -76503,7 +76513,7 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403':
           description: |
-            Forbidden. Also returned with code `ads_allowance_exceeded` when the team has no payment method on file and has reached the 500 free live ads: add a card to resume. Also returned with code `ad_account_not_selected` when the connection has selected ad accounts and the ad account this request targets is not among them; `details` carries `accountId`, `adAccountId` and `selectedAdAccountIds`. Add the ad account to the selection (GET /v1/connect/{platform}/ads with adAccountIds, which replaces the selection) or use a connection that has it selected.
+            Forbidden. Also returned with code `ads_allowance_exceeded` when the team has no payment method on file and has reached the 500 free live ads: add a card to resume. Also returned with code `ad_account_not_selected` when the connection has selected ad accounts and the ad account this request targets is not among them; `details` carries `accountId`, `adAccountId` and `selectedAdAccountIds`. Add the ad account to the selection (GET /v1/connect/{platform}/ads with adAccountIds, which replaces the selection) or use a connection that has it selected. Also returned with code `insufficient_permissions` when the Facebook user behind the connection's token lacks the Advertise permission on the Meta ad account, or the token lacks `ads_management` (Meta subcode 2490585, 2490591 or 4841020; see `ErrorResponse.details`).
         '404': { $ref: '#/components/responses/AccountUnavailable' }
 
         '422':
