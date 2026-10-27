@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.388.0"
+  version: "1.389.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -24716,6 +24716,18 @@ paths:
             unknown field returns 400 naming it. `fields=_id` returns ids
             only. Omit it (or send it empty) for the full post. Not
             available with `source=external`.
+        - name: updatedSince
+          in: query
+          schema: { type: string, format: date-time }
+          example: '2026-10-27T18:00:00Z'
+          description: >-
+            Only posts whose `updatedAt` is at or after this ISO 8601
+            timestamp, an offset or `Z` required. `updatedAt` moves when the
+            post or any of its platforms changes (an edit, a status change, a
+            platform publishing or failing), so to keep a copy in sync, send
+            the time of your previous sync instead of reading every page
+            again. Combines with the other filters and with `cursor`. Deleted
+            posts are not returned. Not available with `source=external`.
         - name: source
           in: query
           schema: { type: string, enum: [zernio, external], default: zernio }

@@ -33800,6 +33800,7 @@ def register_generated_tools(mcp, _get_client):
         offset: int | None = None,
         cursor: str | None = None,
         fields: str | None = None,
+        updated_since: str | None = None,
         source: Literal["zernio", "external"] = "zernio",
         status: Literal[
             "draft",
@@ -33842,6 +33843,7 @@ def register_generated_tools(mcp, _get_client):
             offset: Row offset. Takes precedence over page when both are sent; the response pagination.page is derived from it.
             cursor: Opaque cursor from a previous response's `pagination.nextCursor`. Returns the page that follows it in the same `sortBy` order, and takes precedence over `page` and `offset`. Each cursor page costs the same however deep it is, unlike `page`/`offset`, which get slower the further you go; prefer it to walk a long history. Send the same filters and `sortBy` as the request that issued it: a cursor from another `sortBy` returns 400. Not available with `sortBy=status` or `sortBy=platform`, or with `source=external`.
             fields: Comma-separated list of post fields to return. Each post then carries `_id` plus only these fields, which makes large pages much cheaper: leave out `platforms`, `content`, `mediaItems` or `metadata` when you do not need them. Accepted: `userId`, `title`, `content`, `mediaItems`, `platforms`, `scheduledFor`, `timezone`, `status`, `tags`, `hashtags`, `mentions`, `visibility`, `metadata`, `recycling`, `recycledFromPostId`, `queuedFromProfile`, `queueId`, `createdAt`, `updatedAt`. An unknown field returns 400 naming it. `fields=_id` returns ids only. Omit it (or send it empty) for the full post. Not available with `source=external`.
+            updated_since: Only posts whose `updatedAt` is at or after this ISO 8601 timestamp, an offset or `Z` required. `updatedAt` moves when the post or any of its platforms changes (an edit, a status change, a platform publishing or failing), so to keep a copy in sync, send the time of your previous sync instead of reading every page again. Combines with the other filters and with `cursor`. Deleted posts are not returned. Not available with `source=external`.
             source: Which collection to read. `zernio` (default) returns posts authored through Zernio. `external` returns posts synced from the platform (existing/historical posts that were published outside Zernio). Combine with `accountId` and paginate via `page`/`limit` to walk the full synced history (we keep up to the last ~12 months per account).
             status
             platform
@@ -33864,6 +33866,7 @@ def register_generated_tools(mcp, _get_client):
                 offset=offset,
                 cursor=cursor,
                 fields=fields,
+                updated_since=updated_since,
                 source=source,
                 status=status,
                 platform=platform,
