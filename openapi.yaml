@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.387.0"
+  version: "1.388.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -15082,6 +15082,10 @@ components:
           items: { type: string }
           description: "LinkedIn only. Why the LinkedIn campaign backing this ad set is (or is not) delivering. A LinkedIn Campaign maps to this ad-set node, so this is the level where LinkedIn's holds actually apply. Empty means no serving data, [\"RUNNABLE\"] means eligible to serve, anything else is a hold. See the `servingStatuses` field on `Ad` for the known values."
           example: ["RUNNABLE"]
+        learningStatus:
+          type: [string, "null"]
+          enum: [LEARNING, SUCCESS, FAIL, null]
+          description: "Meta only. Where the ad set stands in Meta's learning phase, as of the last sync: LEARNING while delivery is still being optimized (about 50 optimization events in 7 days end it), SUCCESS once it has left learning, FAIL when it could not gather enough events (Ads Manager's \"Learning limited\"). Null on other platforms and for ad sets not yet synced."
         promotedObject:
           type: [object, "null"]
           description: "Meta promoted object for this ad set (conversion event details)"
