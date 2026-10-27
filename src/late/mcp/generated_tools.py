@@ -8756,6 +8756,7 @@ def register_generated_tools(mcp, _get_client):
         smart_targeting: dict[str, Any] | None = None,
         optimization_goal: str | None = None,
         meta_objective: Literal["OUTCOME_ENGAGEMENT"] | None = None,
+        validate_only: bool = False,
     ) -> str:
         """Boost post as ad
 
@@ -8966,7 +8967,17 @@ def register_generated_tools(mcp, _get_client):
         omitted, an engagement boost keeps `OUTCOME_AWARENESS` with `REACH`. Returns 400 with `leadGenFormId` or with a `callToAction` whose objective
         is not `OUTCOME_ENGAGEMENT` (`CALL_NOW`); messaging CTAs keep their own
         `CONVERSATIONS` ad set. Verified against Meta on Facebook posts; Instagram posts
-        are accepted but not yet verified."""
+        are accepted but not yet verified.
+                validate_only: Meta only (facebook, instagram and Meta ads connections). Dry-runs the boost with Meta's
+        execution_options validate_only: the campaign, ad set, creative (the post reference) and ad
+        are checked as sent, everything PAUSED, and nothing is created or stored on Meta or in Zernio.
+        Returns 200 with the same body as a validateOnly POST /v1/ads/create (`validateOnly`, `results`
+        per node, `message`). Idempotency-Key storage and the duplicate-boost guard are bypassed. Counts
+        toward the 30 Meta writes per ad account per 5 minutes. With `adSetId` only the ad is dry-run.
+        An Instagram video that Meta refuses as a direct reference (subcode 1815279) comes back as
+        `unverified` nodes, because the copy a real boost makes cannot be dry-run.
+        `true` on any other platform returns 400 naming `validateOnly` and creates nothing; `false` is
+        ignored. `dryRun` is not a field: sending it returns 400 instead of creating the ad."""
         client = _get_client()
         try:
             response = client.ad_campaigns.boost_post(
@@ -9028,6 +9039,7 @@ def register_generated_tools(mcp, _get_client):
                 smart_targeting=smart_targeting,
                 optimization_goal=optimization_goal,
                 meta_objective=meta_objective,
+                validate_only=validate_only,
             )
             return _format_response(response)
         except Exception as e:

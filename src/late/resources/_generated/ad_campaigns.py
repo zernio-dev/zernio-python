@@ -1222,6 +1222,7 @@ class AdCampaignsResource:
         smart_targeting: dict[str, Any] | None = None,
         optimization_goal: str | None = None,
         meta_objective: str | None = None,
+        validate_only: bool | None = False,
     ) -> dict[str, Any]:
         """Boost post as ad"""
         payload = self._build_payload(
@@ -1283,6 +1284,7 @@ class AdCampaignsResource:
             smart_targeting=smart_targeting,
             optimization_goal=optimization_goal,
             meta_objective=meta_objective,
+            validate_only=validate_only,
         )
         headers: dict[str, str] = {}
         if idempotency_key is not None:
@@ -2857,6 +2859,7 @@ class AdCampaignsResource:
         smart_targeting: dict[str, Any] | None = None,
         optimization_goal: str | None = None,
         meta_objective: str | None = None,
+        validate_only: bool | None = False,
     ) -> dict[str, Any]:
         """Boost post as ad (async)"""
         payload = self._build_payload(
@@ -2918,6 +2921,7 @@ class AdCampaignsResource:
             smart_targeting=smart_targeting,
             optimization_goal=optimization_goal,
             meta_objective=meta_objective,
+            validate_only=validate_only,
         )
         headers: dict[str, str] = {}
         if idempotency_key is not None:

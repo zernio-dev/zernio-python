@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.374.2"
+  version: "1.375.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -69507,6 +69507,20 @@ paths:
                     is not `OUTCOME_ENGAGEMENT` (`CALL_NOW`); messaging CTAs keep their own
                     `CONVERSATIONS` ad set. Verified against Meta on Facebook posts; Instagram posts
                     are accepted but not yet verified.
+                validateOnly:
+                  type: boolean
+                  default: false
+                  description: |
+                    Meta only (facebook, instagram and Meta ads connections). Dry-runs the boost with Meta's
+                    execution_options validate_only: the campaign, ad set, creative (the post reference) and ad
+                    are checked as sent, everything PAUSED, and nothing is created or stored on Meta or in Zernio.
+                    Returns 200 with the same body as a validateOnly POST /v1/ads/create (`validateOnly`, `results`
+                    per node, `message`). Idempotency-Key storage and the duplicate-boost guard are bypassed. Counts
+                    toward the 30 Meta writes per ad account per 5 minutes. With `adSetId` only the ad is dry-run.
+                    An Instagram video that Meta refuses as a direct reference (subcode 1815279) comes back as
+                    `unverified` nodes, because the copy a real boost makes cannot be dry-run.
+                    `true` on any other platform returns 400 naming `validateOnly` and creates nothing; `false` is
+                    ignored. `dryRun` is not a field: sending it returns 400 instead of creating the ad.
             example:
               accountId: '69ca62446cb7b8cf4cb13603'
               adAccountId: act_757082720485182
@@ -69519,6 +69533,23 @@ paths:
               status: PAUSED
       responses:
         '404': { $ref: '#/components/responses/AccountUnavailable' }
+        '200':
+          description: 'validateOnly dry-run passed (Meta), nothing was created'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  validateOnly: { type: boolean, description: 'Always true in a validate-only response.' }
+                  results:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        node: { type: string, enum: [campaign, adSet, creative, ad] }
+                        status: { type: string, enum: [validated, skipped, unverified] }
+                        reason: { type: string, description: 'Why the node was skipped (it already exists with adSetId), why Meta could not dry-run it (on unverified), or what the dry run could not check (on validated).' }
+                  message: { type: string }
         '201':
           description: Ad created
           content:
@@ -69534,7 +69565,7 @@ paths:
                     items: { type: string }
                     description: 'Present with instagramVideoFallback: one human-readable line saying how the Instagram video was boosted.'
         '400':
-          description: Missing required fields or invalid values
+          description: 'Missing required fields or invalid values, `validateOnly: true` outside Meta, `dryRun` sent, or a Meta validateOnly validation failure (verbatim)'
         '401': { $ref: '#/components/responses/Unauthorized' }
         '429': { $ref: '#/components/responses/MetaAdAccountWriteLimited' }
         '403':
