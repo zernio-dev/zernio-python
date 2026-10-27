@@ -7571,6 +7571,10 @@ def register_generated_tools(mcp, _get_client):
             "LOWEST_COST_WITH_MIN_ROAS",
         ]
         | None = None,
+        dsa_beneficiary: str | None = None,
+        dsa_payor: str | None = None,
+        regional_regulated_categories: list[str] | None = None,
+        regional_regulation_identities: dict[str, Any] | None = None,
         smart_targeting: dict[str, Any] | None = None,
         placements: str | None = None,
         targeting: dict[str, Any] | None = None,
@@ -7585,7 +7589,10 @@ def register_generated_tools(mcp, _get_client):
             Changes an ad set's settings, such as its budget, bid strategy, status or delivery options.
 
             Use this for ABO budget updates, ad-set-scoped
-            pause/resume, bid-strategy edits, Meta value-rule-set attach/detach, and
+            pause/resume, bid-strategy edits, Meta value-rule-set attach/detach, Meta
+            beneficiary and payer (`dsaBeneficiary` / `dsaPayor` for the EU,
+            `regionalRegulatedCategories` / `regionalRegulationIdentities` for the
+            regional regimes), and
             Meta-only post-launch delivery settings via `platformSpecificData`. At
             least one updatable field is required.
 
@@ -7595,9 +7602,7 @@ def register_generated_tools(mcp, _get_client):
               replaces the previous association; there is no separate replace call.
             - DETACH: send `valueRulesApplied: false` and OMIT `valueRuleSetId`.
             - Sending `valueRulesApplied: false` TOGETHER with `valueRuleSetId` returns 400
-              `mutually_exclusive_fields`. This is deliberate: Meta attaches the rule set
-              whenever `value_rule_set_id` is present, even with `value_rules_applied` false,
-              so echoing stored state while asking to detach would silently keep the bid ...
+              `mutually_exclusive_fields`. This is deliberate: Meta attaches the rule set ...
 
             Platforms: meta, google, tiktok, linkedin, pinterest, x, openai, reddit
 
@@ -7621,6 +7626,30 @@ def register_generated_tools(mcp, _get_client):
         WEBSITE_CLICKS, MAX not on REACH or FOLLOWERS). On Reddit, see the mapping in the
         description above (LOWEST_COST_WITH_MIN_ROAS returns 422). Other platforms
         (linkedin, pinterest, google) return 501 Not Implemented when bidStrategy is set.
+                dsa_beneficiary: Meta only (400 elsewhere, before anything in the request is written). Writes the ad
+        set's `dsa_beneficiary`, the legal entity that benefits from its ads, same field and
+        limits as `dsaBeneficiary` on POST /v1/ads/create. Only the fields you send are
+        written. It is the EU DSA field; for the regional regimes (Brazil, Malaysia,
+        Thailand, Australia, Singapore, Taiwan, India) use `regionalRegulatedCategories` and
+        `regionalRegulationIdentities` instead. Read it back with
+        GET /v1/ads/ad-sets/{adSetId}?accountId={accountId}&fields=dsa_beneficiary,dsa_payor.
+                dsa_payor: Meta only (400 elsewhere, before anything in the request is written). Writes the ad
+        set's `dsa_payor`, the legal entity that pays for its ads, same field and limits as
+        `dsaPayor` on POST /v1/ads/create. Can differ from `dsaBeneficiary`.
+                regional_regulated_categories: Meta only (400 elsewhere, before anything in the request is written). Writes the ad
+        set's `regional_regulated_categories`, same values as on POST /v1/ads/create
+        (AUSTRALIA_FINSERV, AUSTRALIA_UNIVERSAL, BRAZIL_REGULATION, INDIA_FINSERV,
+        MALAYSIA_UNIVERSAL, SINGAPORE_UNIVERSAL, TAIWAN_FINSERV, TAIWAN_UNIVERSAL,
+        THAILAND_UNIVERSAL). Send it with `regionalRegulationIdentities`. An empty array is a 400.
+                regional_regulation_identities: Meta only (400 elsewhere, before anything in the request is written). Writes the ad
+        set's `regional_regulation_identities`: the Verified identity IDs of the beneficiary
+        and payer for each declared category, same keys and validation as on
+        POST /v1/ads/create (for example `universal_beneficiary` / `universal_payer` for
+        BRAZIL_REGULATION, MALAYSIA_UNIVERSAL and THAILAND_UNIVERSAL). Send each ID as a
+        string of digits; an empty object is a 400. When Meta refuses the ad set for a missing
+        verified advertiser, the 400 `platform_api_error` names the keys the declared categories
+        expect in `details.expectedIdentityKeys`, as on create. Read both back with
+        GET /v1/ads/ad-sets/{adSetId}?accountId={accountId}&fields=regional_regulated_categories,regional_regulation_identities.
                 smart_targeting: TikTok only (a 400 elsewhere). TikTok Smart Targeting on the ad group: `audience` is TikTok's `smart_audience_enabled`, `interestsBehaviors` its `smart_interest_behavior_enabled`. When on, TikTok may deliver beyond the selected audiences or interests. Available on Video views, Traffic, Lead generation, App install, Web conversion and Community interaction. Only the flags you send are written; an unwritten flag reads back null in `nativeSettings`, so send `false` explicitly to be able to verify it is off. Applied with TikTok's adgroup/update; read it back with GET /v1/ads/ad-sets?adSetId=...&live=true. Object with keys: audience (boolean) - TikTok smart_audience_enabled.; interestsBehaviors (boolean) - TikTok smart_interest_behavior_enabled.
                 placements: Meta only (400 elsewhere). Manual placements, same object and enums as `placements` on
         POST /v1/ads/create. Sending an object REPLACES the ad set's current placement set
@@ -7662,6 +7691,10 @@ def register_generated_tools(mcp, _get_client):
                 status=status,
                 name=name,
                 bid_strategy=bid_strategy,
+                dsa_beneficiary=dsa_beneficiary,
+                dsa_payor=dsa_payor,
+                regional_regulated_categories=regional_regulated_categories,
+                regional_regulation_identities=regional_regulation_identities,
                 smart_targeting=smart_targeting,
                 placements=placements,
                 targeting=targeting,
