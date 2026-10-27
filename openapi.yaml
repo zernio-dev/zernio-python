@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.368.0"
+  version: "1.370.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -9781,6 +9781,37 @@ components:
         dailyMinSpendTarget: { type: number, description: "Meta daily_min_spend_target on the ad set being created: the least it should spend per day, in whole currency units. It reserves a share of a CAMPAIGN budget, so it requires budgetLevel campaign or an existingCampaignId whose campaign has the budget (Advantage campaign budget / CBO); with an ad-set budget it is a 400, because Meta rejects a spend limit on an ad set that owns its budget. A target, not a guarantee. Mutually exclusive with lifetimeMinSpendTarget: the flavour must match the campaign budget type. Rejected with 400 on POST /v1/ads/boost and in adSetId attach mode: use PUT /v1/ads/ad-sets/{adSetId} for an ad set that already exists." }
         lifetimeMinSpendTarget: { type: number, description: "Meta lifetime_min_spend_target: the lifetime-budget flavour of dailyMinSpendTarget, in whole currency units. Same rules and same rejections." }
         customerLifecycle: { $ref: '#/components/schemas/MetaCustomerLifecycle' }
+        adSchedule:
+          allOf: [{ $ref: '#/components/schemas/MetaAdSchedule' }]
+          minItems: 1
+          description: |
+            Dayparting on the ad set being created (Meta `adset_schedule` with `pacing_type: ["day_parting"]`).
+            Meta runs a schedule only on a LIFETIME budget, so a daily budget (on the ad set, or on the
+            campaign joined with `existingCampaignId`) is a 400 with `param: platformSpecificData.adSchedule`.
+            Also a 400 when empty, in adSetId attach mode and with `buyingType: RESERVED`. Change it later with
+            `PUT /v1/ads/ad-sets/{adSetId}`.
+    MetaAdSchedule:
+      type: array
+      maxItems: 168
+      description: |
+        Meta ad set dayparting: the hours the ad set delivers, in whole hours. Same `dayOfWeek` /
+        `startHour` / `endHour` naming as the Google `PUT /v1/ads/campaigns/{campaignId}/ad-schedule`,
+        but Meta has no minutes and no bid modifiers. Windows on one day must not overlap (adjacent is
+        fine) and every window must use the same `timezoneType`. Invalid windows are a 400 on
+        `platformSpecificData.adSchedule`.
+      items:
+        type: object
+        additionalProperties: false
+        required: [dayOfWeek, startHour, endHour]
+        properties:
+          dayOfWeek: { type: string, enum: [MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY, SUNDAY] }
+          startHour: { type: integer, minimum: 0, maximum: 23 }
+          endHour: { type: integer, minimum: 1, maximum: 24, description: "Must be after startHour. 24 is midnight at the end of the day." }
+          timezoneType:
+            type: string
+            enum: [USER, ADVERTISER]
+            default: USER
+            description: "Meta `timezone_type`: USER runs the hours in each viewer's time zone, ADVERTISER in the ad account time zone."
     MetaCustomerLifecycle:
       type: object
       additionalProperties: false
@@ -60546,8 +60577,8 @@ paths:
 
         Reads the ad set live from Meta, returned verbatim. The default projection includes
         `learning_stage_info` (learning-phase status: LEARNING / SUCCESS / FAIL / WAIVING; Meta
-        omits its `status` key on paused ad sets), delivery settings, budgets, schedule and
-        targeting. `fields` is a raw-passthrough override; unknown fields return Meta's 400
+        omits its `status` key on paused ad sets), delivery settings, budgets, schedule, dayparting
+        (`adset_schedule`, `pacing_type`) and targeting. `fields` is a raw-passthrough override; unknown fields return Meta's 400
         verbatim.
       security:
         - bearerAuth: []
@@ -60809,6 +60840,16 @@ paths:
                         `dailyMinSpendTarget`, in whole currency units. Send this one when the campaign
                         budget is a lifetime budget. Same rules and same rejections.
                     customerLifecycle: { $ref: '#/components/schemas/MetaCustomerLifecycle' }
+                    adSchedule:
+                      allOf: [{ $ref: '#/components/schemas/MetaAdSchedule' }]
+                      description: |
+                        Replaces the ad set's dayparting (Meta `adset_schedule`, `pacing_type: ["day_parting"]`).
+                        Meta runs a schedule only on a lifetime budget. Before anything in the request is written,
+                        Zernio takes `budget.type` from the same request or reads the ad set's budget (or its
+                        campaign's under Advantage campaign budget), and a daily one is a 400 with
+                        `param: platformSpecificData.adSchedule`. An empty array removes the schedule
+                        (`pacing_type: ["standard"]`). Read it back with `GET /v1/ads/ad-sets/{adSetId}`
+                        (`adset_schedule`, `pacing_type`) or as `adSchedule` on `GET /v1/ads/accounts/live`.
                     promotedObject:
                       type: object
                       description: "Meta ad-set promoted_object (same shape as /v1/ads/create). Meta makes promoted_object immutable once the ad set exists, so only `pixelId`, `customEventType`, `customEventStr` (with `customEventType` OTHER), `applicationId` and `productCatalogId` can be sent here. Any other key (`pageId`, `whatsappPhoneNumber`, `customConversionId`, `objectStoreUrl`, `productSetId`, `offlineConversionDataSetId`) is a 400 with `param: platformSpecificData.promotedObject` and nothing is written; changing them needs a new ad set (POST /v1/ads/create). Unknown keys are rejected with 400."
@@ -68373,6 +68414,11 @@ paths:
                           properties:
                             startDate: { type: string, format: date-time }
                             endDate: { type: string, format: date-time, description: "Absent when the ad set runs until it is stopped." }
+                        adSchedule:
+                          description: "Meta only. The ad set's dayparting (`adset_schedule`) in the `platformSpecificData.adSchedule` shape, one window per day (a window Meta stores off the hour is widened to whole hours). Null when the ad set runs around the clock. Absent on TikTok."
+                          oneOf:
+                            - { $ref: '#/components/schemas/MetaAdSchedule' }
+                            - { type: "null" }
                   paging:
                     type: object
                     description: "One entry per level read. `after` is null on the last page."
