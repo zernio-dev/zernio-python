@@ -942,6 +942,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `conversions.list_conversion_destinations()` | List conversion destinations |
 | `conversions.list_custom_conversion_goals()` | List custom conversion goals |
 | `conversions.list_event_destinations()` | List event destinations |
+| `conversions.list_events()` | List stored events |
 | `conversions.create_conversion_action()` | Create website conversion action |
 | `conversions.create_conversion_destination()` | Create a conversion destination |
 | `conversions.create_custom_conversion_goal()` | Create a custom conversion goal |

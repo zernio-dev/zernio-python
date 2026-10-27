@@ -10,6 +10,8 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
+    from datetime import datetime
+
     from ..client.base import BaseClient
 
 
@@ -308,6 +310,27 @@ class ConversionsResource:
         return self._client._delete(
             f"/v1/ads/conversions/custom-goals/{goal_id}", params=params
         )
+
+    def list_events(
+        self,
+        profile_id: str,
+        *,
+        limit: int | None = 50,
+        from_: datetime | str | None = None,
+        to: datetime | str | None = None,
+        event_name: str | None = None,
+        cursor: str | None = None,
+    ) -> dict[str, Any]:
+        """List stored events"""
+        params = self._build_params(
+            profile_id=profile_id,
+            limit=limit,
+            from_=from_,
+            to=to,
+            event_name=event_name,
+            cursor=cursor,
+        )
+        return self._client._get("/v1/events", params=params)
 
     def send_events(
         self,
@@ -759,6 +782,27 @@ class ConversionsResource:
         return await self._client._adelete(
             f"/v1/ads/conversions/custom-goals/{goal_id}", params=params
         )
+
+    async def alist_events(
+        self,
+        profile_id: str,
+        *,
+        limit: int | None = 50,
+        from_: datetime | str | None = None,
+        to: datetime | str | None = None,
+        event_name: str | None = None,
+        cursor: str | None = None,
+    ) -> dict[str, Any]:
+        """List stored events (async)"""
+        params = self._build_params(
+            profile_id=profile_id,
+            limit=limit,
+            from_=from_,
+            to=to,
+            event_name=event_name,
+            cursor=cursor,
+        )
+        return await self._client._aget("/v1/events", params=params)
 
     async def asend_events(
         self,

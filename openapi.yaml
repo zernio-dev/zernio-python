@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.383.0"
+  version: "1.384.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -62044,14 +62044,32 @@ paths:
       x-resource-group: "ads"
       operationId: createAdSet
       tags: ["Ad Campaigns"]
-      x-platforms: ["google"]
+      x-platforms: ["google", "reddit"]
       summary: Create a standalone ad group
       description: |-
-        Creates an empty Google ad group under an existing campaign, ready for ads to be added later.
+        Creates an empty ad group under an existing campaign, ready for ads to be added later.
 
-        Google Ads compliance row C.190: creates an ad group WITHOUT an ad,
+        Creates an ad group WITHOUT an ad (Google Ads compliance row C.190),
         under an existing campaign. Ads join it later via `adSetId`
-        on POST /v1/ads/create. Google only; every other platform returns 501.
+        on POST /v1/ads/create. Google Ads and Reddit Ads; every other platform returns 501.
+
+        **Reddit Ads** (`platform: reddit`): `adAccountId` (the Reddit ad
+        account id) is required and must be a selected ad account of the
+        connection (403 otherwise). When the campaign has no campaign budget,
+        send `budgetAmount` + `budgetType` (a lifetime budget needs
+        `endDate`); the ad group is optimized for the campaign's objective
+        (`promotedObject.customEventType` is required on a conversions
+        campaign, and the pixel must have received that event, else 422),
+        and bids with `bidStrategy`/`bidAmount` like POST /v1/ads/create.
+        Under campaign budget optimization the ad group takes the
+        campaign's bid, goal type, optimization event and pixel, and bid
+        fields return 400. The ad group must start no earlier than a future
+        campaign start and end no later than the campaign end (400
+        otherwise). `targeting` takes the same targeting object as
+        the other ad endpoints (no geo defaults to the US). A campaign of
+        another ad account returns 404, a Reddit Max campaign 422.
+        `maxCpc` and `customerId` are Google only (400 on Reddit), and the
+        Reddit fields return 400 on Google.
 
         Created `PAUSED` unless `status: ACTIVE`. The new ad group has no ad
         yet, so it will not appear in GET /v1/ads/tree (built purely from `ads`
@@ -62080,14 +62098,28 @@ paths:
               type: object
               required: [accountId, platform, campaignId, name]
               properties:
-                accountId: { type: string, description: "Zernio SocialAccount id owning the Google Ads connection." }
-                platform: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit], description: "Only \"google\" is implemented today; every other value returns 501." }
-                campaignId: { type: string, description: "Google platform campaign ID (numeric) the ad group is created under." }
+                accountId: { type: string, description: "Zernio SocialAccount id owning the Google Ads or Reddit Ads connection." }
+                platform: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit], description: "\"google\" and \"reddit\" are implemented; every other value returns 501." }
+                campaignId: { type: string, description: "Platform campaign ID the ad group is created under (numeric on Google)." }
                 name: { type: string, minLength: 1, maxLength: 255 }
                 status: { type: string, enum: [ACTIVE, PAUSED], default: PAUSED }
                 maxCpc: { type: number, exclusiveMinimum: 0, description: "Max CPC of the new ad group, in the account's currency units. Send it when the campaign uses Manual CPC: Google gives an ad group without one a 0.01 bid." }
-                adAccountId: { type: string, description: "Platform ad account ID (Google customer ID, digits only). Only required when the connection has more than one." }
-                customerId: { type: string, deprecated: true, description: "Alias of adAccountId, kept for existing callers" }
+                adAccountId: { type: string, description: "Platform ad account ID: the Google customer ID (digits only, only required when the connection has more than one) or the Reddit ad account id (required)." }
+                customerId: { type: string, deprecated: true, description: "Google only. Alias of adAccountId, kept for existing callers" }
+                budgetAmount: { type: number, exclusiveMinimum: 0, description: "Reddit only. Budget of the new ad group, in the ad account's currency units. Required when the campaign has no campaign budget; not applied under campaign budget optimization." }
+                budgetType: { type: string, enum: [daily, lifetime], description: "Reddit only. Sent together with budgetAmount." }
+                startDate: { type: string, description: "Reddit only. ISO 8601 start of the ad group. Defaults to now, or to the campaign start when it is in the future." }
+                endDate: { type: string, description: "Reddit only. ISO 8601 end of the ad group. Defaults to the campaign end." }
+                targeting: { $ref: '#/components/schemas/TargetingSpec' }
+                promotedObject:
+                  type: object
+                  description: "Reddit only. The pixel and the conversion event the ad group optimizes toward."
+                  properties:
+                    pixelId: { type: string, description: "Reddit pixel id. Defaults to the ad account's first pixel." }
+                    customEventType: { type: string, description: "Conversion event (PURCHASE, LEAD, SIGN_UP, ADD_TO_CART, PAGE_VISIT). Required on a conversions campaign." }
+                optimizationGoal: { type: string, description: "Reddit only. VIDEO_VIEW_6S (default) or VIDEO_VIEW_15S on a video views campaign." }
+                bidStrategy: { type: string, enum: [LOWEST_COST_WITHOUT_CAP, LOWEST_COST_WITH_BID_CAP, COST_CAP], description: "Reddit only. Defaults to LOWEST_COST_WITHOUT_CAP. Not accepted under campaign budget optimization." }
+                bidAmount: { type: number, exclusiveMinimum: 0, description: "Reddit only. Bid cap in currency units, sent with bidStrategy." }
       responses:
         '409': { $ref: '#/components/responses/AccountConnectionRequired' }
         '201':
@@ -62106,7 +62138,8 @@ paths:
             Returned with code `ads_allowance_exceeded` when the team has no payment method on file and has reached the 500 free live ads: add a card to resume. Also returned with code `ad_account_not_selected` when the connection has selected ad accounts and the ad account this request targets is not among them; `details` carries `accountId`, `adAccountId` and `selectedAdAccountIds`. Add the ad account to the selection (GET /v1/connect/{platform}/ads with adAccountIds, which replaces the selection) or use a connection that has it selected.
         '404': { $ref: '#/components/responses/AccountUnavailable' }
 
-        '501': { description: Only supported on Google Ads }
+        '422': { description: 'Reddit: the campaign is a Reddit Max campaign, the ad account has no pixel, or the pixel never received the conversion event' }
+        '501': { description: Only supported on Google Ads and Reddit Ads }
 
   /v1/ads/ad-sets/{adSetId}/duplicate:
     post:
@@ -72133,10 +72166,18 @@ paths:
                     ad's creative, the new ad is created PAUSED, and ad group settings
                     (geo, languages, `demandGen.channels`/`audience`/`audienceId`/
                     `adGroupName`) return 400. `validateOnly` is supported.
+
+                    On Reddit Ads the `adSetId` is the AD GROUP id. Only the post
+                    and the ad are created; the ad group keeps its budget,
+                    schedule, targeting, bid and optimization, so `budgetAmount`,
+                    `budgetType`, `startDate`, `endDate`, targeting fields,
+                    `promotedObject`, `tracking.pixelId` and `optimizationGoal`
+                    return 400. `goal` is not required. An ad group of another
+                    ad account returns 404.
                 existingCampaignId:
                   type: string
                   description: |
-                    Meta, Google Ads, LinkedIn and TikTok. On TikTok: creates
+                    Meta, Google Ads, LinkedIn, TikTok and Reddit Ads. On TikTok: creates
                     the ad group and the ad under this existing campaign; the
                     campaign is neither created nor activated and its
                     objective must fit `goal`; not with `smartPlus`.
@@ -72162,8 +72203,26 @@ paths:
                     a new ad group, so geo and language fields return 400 there; the new
                     ad group follows the campaign's targeting. On failure only the entities we
                     authored are cleaned up; the pre-existing parent is left
-                    untouched and is never (re)activated. Mutually exclusive
-                    with `adSetId` and `creatives[]`.
+                    untouched and is never (re)activated. On Reddit Ads:
+                    creates a new ad group and the ad under this EXISTING
+                    campaign; `goal` may be omitted (the campaign's objective
+                    decides it) and any other goal returns 400 naming the one to
+                    send. The ad group must start no earlier than a future
+                    campaign start and end no later than the campaign end
+                    (400 otherwise); without `endDate` it ends with the
+                    campaign. When the campaign has
+                    no campaign budget, send `budgetAmount`/`budgetType` for the
+                    new ad group (400 without them); bid, conversion event and
+                    pixel work as on a new campaign. Under campaign budget
+                    optimization the ad group takes the campaign's bid,
+                    goal type, optimization event and pixel, carries no budget
+                    of its own (a budget in the request is not applied), and
+                    bid fields or another conversion event or pixel return
+                    400, as does an `endDate` when the campaign has no end
+                    date. A
+                    campaign of another ad account returns 404, a Reddit Max
+                    campaign 422. If the ad fails, the new ad group is
+                    archived. Mutually exclusive with `adSetId` and `creatives[]`.
                 phoneNumber:
                   type: string
                   pattern: '^\+[1-9]\d{6,14}$'
@@ -76954,6 +77013,90 @@ paths:
         '501': { description: Only available on Google Ads accounts }
 
   /v1/events:
+    get:
+      x-resource-group: "ads"
+      operationId: listEvents
+      tags: [Conversions]
+      summary: List stored events
+      description: |
+        Lists the conversion events stored for a profile by `POST /v1/events`, newest first. Personal data is never
+        returned: `hasEmail`, `hasPhone` and `hasExternalId` only say whether the event carried that identifier.
+        Events sent with `testCode` are not stored, so they never appear here.
+
+        Paginate with `cursor`: pass the `nextCursor` of the previous page until it comes back `null`.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: profileId
+          in: query
+          required: true
+          schema: { type: string }
+        - name: limit
+          in: query
+          required: false
+          schema: { type: integer, minimum: 1, maximum: 200, default: 50 }
+        - name: from
+          in: query
+          required: false
+          description: 'Only events at or after this time (ISO 8601, on the event time).'
+          schema: { type: string, format: date-time }
+        - name: to
+          in: query
+          required: false
+          description: 'Only events before this time (ISO 8601, on the event time).'
+          schema: { type: string, format: date-time }
+        - name: eventName
+          in: query
+          required: false
+          description: Only events with this name, such as `Purchase`.
+          schema: { type: string }
+        - name: cursor
+          in: query
+          required: false
+          description: '`nextCursor` from the previous page.'
+          schema: { type: string }
+      responses:
+        '200':
+          description: A page of stored events.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  events:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        eventId: { type: string }
+                        eventName: { type: string }
+                        eventTime: { type: string, format: date-time }
+                        receivedAt: { type: string, format: date-time }
+                        actionSource: { type: [string, "null"] }
+                        value: { type: [number, "null"] }
+                        currency: { type: [string, "null"] }
+                        sourceUrl: { type: [string, "null"], description: 'Origin, path and attribution parameters only.' }
+                        utm:
+                          type: object
+                          properties:
+                            source: { type: [string, "null"] }
+                            medium: { type: [string, "null"] }
+                            campaign: { type: [string, "null"] }
+                            content: { type: [string, "null"] }
+                        zrn: { type: [string, "null"], description: 'Ad ID from the `zrn` parameter Zernio adds to links of ads it creates.' }
+                        clickIds:
+                          type: object
+                          properties:
+                            gclid: { type: [string, "null"] }
+                            fbc: { type: [string, "null"] }
+                        destinationsSent: { type: integer, description: Destinations the event was forwarded to. }
+                        hasEmail: { type: boolean }
+                        hasPhone: { type: boolean }
+                        hasExternalId: { type: boolean }
+                  nextCursor: { type: [string, "null"], description: 'Pass as `cursor` to get the next page; `null` on the last page.' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
     post:
       x-resource-group: "ads"
       operationId: sendEvents

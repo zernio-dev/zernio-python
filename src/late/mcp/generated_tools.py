@@ -7337,33 +7337,59 @@ def register_generated_tools(mcp, _get_client):
         max_cpc: float | None = None,
         ad_account_id: str | None = None,
         customer_id: str | None = None,
+        budget_amount: float | None = None,
+        budget_type: Literal["daily", "lifetime"] | None = None,
+        start_date: str | None = None,
+        end_date: str | None = None,
+        targeting: dict[str, Any] | None = None,
+        promoted_object: dict[str, Any] | None = None,
+        optimization_goal: str | None = None,
+        bid_strategy: Literal[
+            "LOWEST_COST_WITHOUT_CAP", "LOWEST_COST_WITH_BID_CAP", "COST_CAP"
+        ]
+        | None = None,
+        bid_amount: float | None = None,
     ) -> str:
         """Create a standalone ad group
 
-        Creates an empty Google ad group under an existing campaign, ready for ads to be added later.
+        Creates an empty ad group under an existing campaign, ready for ads to be added later.
 
-        Google Ads compliance row C.190: creates an ad group WITHOUT an ad,
+        Creates an ad group WITHOUT an ad (Google Ads compliance row C.190),
         under an existing campaign. Ads join it later via `adSetId`
-        on POST /v1/ads/create. Google only; every other platform returns 501.
+        on POST /v1/ads/create. Google Ads and Reddit Ads; every other platform returns 501.
 
-        Created `PAUSED` unless `status: ACTIVE`. The new ad group has no ad
-        yet, so it will not appear in GET /v1/ads/tree (built purely from `ads`
-        rows) until one is added; use GET /v1/ads/ad-sets to see it in the
-        meantime.
+        **Reddit Ads** (`platform: reddit`): `adAccountId` (the Reddit ad
+        account id) is required and must be a selected ad account of the
+        connection (403 otherwise). When the campaign has no campaign budget,
+        send `budgetAmount` + `budgetType` (a lifetime budget needs
+        `endDate`); the ad group is optimized for the campaign's objective
+        (`promotedObject.customEventType` is required on a conversions
+        campaign, and the pixel must have received that event, else 422),
+        and bids with `bidStrategy`/`bidAmount` like POST /v1/ads/create.
+        Under campaign budget optimization the ad group takes the
+        campaign's bid, goal type, optimization event and pixel, and bid
+        fields return 400. The ad group must start no ...
 
-        **Idempotency:** send an `Idempotency-Key` header to make retries safe.
-
-        Platforms: google
+        Platforms: google, reddit
 
         Args:
-            account_id: Zernio SocialAccount id owning the Google Ads connection. (required)
-            platform: Only "google" is implemented today; every other value returns 501. (required)
-            campaign_id: Google platform campaign ID (numeric) the ad group is created under. (required)
+            account_id: Zernio SocialAccount id owning the Google Ads or Reddit Ads connection. (required)
+            platform: "google" and "reddit" are implemented; every other value returns 501. (required)
+            campaign_id: Platform campaign ID the ad group is created under (numeric on Google). (required)
             name: (required)
             status
             max_cpc: Max CPC of the new ad group, in the account's currency units. Send it when the campaign uses Manual CPC: Google gives an ad group without one a 0.01 bid.
-            ad_account_id: Platform ad account ID (Google customer ID, digits only). Only required when the connection has more than one.
-            customer_id: Alias of adAccountId, kept for existing callers"""
+            ad_account_id: Platform ad account ID: the Google customer ID (digits only, only required when the connection has more than one) or the Reddit ad account id (required).
+            customer_id: Google only. Alias of adAccountId, kept for existing callers
+            budget_amount: Reddit only. Budget of the new ad group, in the ad account's currency units. Required when the campaign has no campaign budget; not applied under campaign budget optimization.
+            budget_type: Reddit only. Sent together with budgetAmount.
+            start_date: Reddit only. ISO 8601 start of the ad group. Defaults to now, or to the campaign start when it is in the future.
+            end_date: Reddit only. ISO 8601 end of the ad group. Defaults to the campaign end.
+            targeting: Object with keys: userOs (list of string) - Meta only. Operating systems and version ranges, such as iOS_ver_14.0_and_above or Android. Emitted as user_os. May also be supplied inside targeting.; userDevice (list of string) - Meta only. Device models such as iPhone. Emitted as user_device. May also be supplied inside targeting.; countries (list of string) - ISO 3166-1 alpha-2 country codes (e.g. ['US']).; regions (list of any) - Region/state targeting. `key` is the platform location ID from /v1/ads/targeting/search?dimension=geo&geoType=region. An entry may also be that id as a plain ...; cities (list of any) - City targeting. Optional `radius` + `distanceUnit` extend beyond the city limits; both must be set together or both omitted. `radius` is only honoured on ...; zips (list of objects with keys key, name) - Postal/ZIP targeting. `key` is the platform's postal location ID (e.g. Meta `US:94304`). Supported on Meta, Google, TikTok, Pinterest, X.; metros (list of objects with keys key, name) - DMA / metro-area targeting. `key` is the platform's metro ID (e.g. Meta `DMA:807`).; countryGroups (list of string) - Meta only. Continents and trade blocs (`geo_locations.country_groups`), for targeting a whole region without listing its countries. Combines with `countries` ...; customLocations (list of objects with keys latitude, longitude, radius, distanceUnit, name, address) - Point-radius (lat/lng) targeting (Meta custom_locations / Google proximity). Honoured on Meta and Google; ignored on platforms without radius support.; excludedLocations (object with keys countries, countryGroups, regions, cities, zips, places, neighborhoods, customLocations) - Geo to exclude from the audience. Mirrors the inclusion geo shape: excluded cities can carry a radius catchment and excluded custom (lat/lng) pins are ...; ageMin (integer) - Minimum age. Applied on Meta, TikTok, Pinterest, LinkedIn, X and Google Search/Display (Google excludes the age ranges outside the request); rejected with 400 ...; ageMax (integer) - Maximum age. Same per-platform application and clamping as ageMin.; gender (one of: all, male, female) - Restrict by gender. 'all' (default) targets everyone. Applied on Meta, TikTok, Pinterest, LinkedIn, X, Reddit and Google Search/Display (Google excludes the ...; incomeTier (one of: top_5, top_10, top_10_25, top_25_50) - Normalized household-income tier (ZIP/percentile based). Meta and TikTok express all four. Google maps only `top_10` (its INCOME_RANGE_90_UP); other tiers on ...; languages (list of string) - Language codes restricting the audience by language. Applied on Meta, Google, TikTok, LinkedIn, X, Pinterest and Reddit; rejected with 400 on OpenAI. A code ...; interests (list of objects with keys id, name) - Interest entities from /v1/ads/targeting/search?dimension=interest. Each carries the platform's opaque id. On Google, applied as ad-group interest criteria ...; behaviors (list of objects with keys id, name) - Behaviour entities from /v1/ads/targeting/search?dimension=behavior (Meta, TikTok and LinkedIn). On TikTok they target people who interacted with videos ...; workPositions (list of objects with keys id, name) - Meta only. Job title entities from /v1/ads/targeting/search?dimension=workPosition. Not interchangeable with the LinkedIn `jobTitles` URN fragments.; workEmployers (list of objects with keys id, name) - Meta only. Employer entities from /v1/ads/targeting/search?dimension=workEmployer.; workIndustries (list of objects with keys id, name) - Meta only. Work-industry entities from /v1/ads/targeting/search?dimension=workIndustry. Not interchangeable with the LinkedIn `industries` URN fragments.; industries (list of string) - LinkedIn B2B only. Industry URN id fragments, or the full urn:li:industry:* URN from /v1/ads/targeting/search?dimension=industry.; companySizes (list of string) - LinkedIn B2B only. Single-letter size codes (A to I), or the full urn:li:staffCountRange:* URN from /v1/ads/targeting/search?dimension=companySize.; seniorities (list of string) - LinkedIn B2B only. Seniority URN id fragments, or the full urn:li:seniority:* URN from /v1/ads/targeting/search?dimension=seniority.; jobFunctions (list of string) - LinkedIn B2B only. Function URN id fragments, or the full urn:li:function:* URN from /v1/ads/targeting/search?dimension=jobFunction.; skills (list of string) - LinkedIn B2B only. Member skills (e.g. Python, Recruiting): skill URN id fragments, or the full urn:li:skill:* URN from ...; audienceInclude (list of string) - Platform audience IDs to include, as returned by GET /v1/ads/audiences (Meta custom audience ids, TikTok audience ids, Pinterest customer list ids, LinkedIn ...; audienceExclude (list of string) - Platform audience IDs to exclude; same ID formats as audienceInclude. Not supported on OpenAI (400).; communities (list of string) - Reddit only (400 elsewhere). Subreddits to target, by name, with or without the `r/` prefix (e.g. `['marketing', 'r/startups']`), as returned by ...; excludedCommunities (list of string) - Reddit only (400 elsewhere). Subreddits to exclude, named like `communities`.; conversationKeywords (list of string) - Reddit only (400 elsewhere). Keywords that place the ad in Reddit conversations about them, as returned by ...; excludedConversationKeywords (list of string) - Reddit only (400 elsewhere). Conversation keywords to keep the ad away from.
+            promoted_object: Reddit only. The pixel and the conversion event the ad group optimizes toward. Object with keys: pixelId (string) - Reddit pixel id. Defaults to the ad account's first pixel.; customEventType (string) - Conversion event (PURCHASE, LEAD, SIGN_UP, ADD_TO_CART, PAGE_VISIT). Required on a conversions campaign.
+            optimization_goal: Reddit only. VIDEO_VIEW_6S (default) or VIDEO_VIEW_15S on a video views campaign.
+            bid_strategy: Reddit only. Defaults to LOWEST_COST_WITHOUT_CAP. Not accepted under campaign budget optimization.
+            bid_amount: Reddit only. Bid cap in currency units, sent with bidStrategy."""
         client = _get_client()
         try:
             response = client.ad_campaigns.create_ad_set(
@@ -7375,6 +7401,15 @@ def register_generated_tools(mcp, _get_client):
                 max_cpc=max_cpc,
                 ad_account_id=ad_account_id,
                 customer_id=customer_id,
+                budget_amount=budget_amount,
+                budget_type=budget_type,
+                start_date=start_date,
+                end_date=end_date,
+                targeting=targeting,
+                promoted_object=promoted_object,
+                optimization_goal=optimization_goal,
+                bid_strategy=bid_strategy,
+                bid_amount=bid_amount,
             )
             return _format_response(response)
         except Exception as e:
@@ -9870,7 +9905,15 @@ def register_generated_tools(mcp, _get_client):
         ad's creative, the new ad is created PAUSED, and ad group settings
         (geo, languages, `demandGen.channels`/`audience`/`audienceId`/
         `adGroupName`) return 400. `validateOnly` is supported.
-                existing_campaign_id: Meta, Google Ads, LinkedIn and TikTok. On TikTok: creates
+
+        On Reddit Ads the `adSetId` is the AD GROUP id. Only the post
+        and the ad are created; the ad group keeps its budget,
+        schedule, targeting, bid and optimization, so `budgetAmount`,
+        `budgetType`, `startDate`, `endDate`, targeting fields,
+        `promotedObject`, `tracking.pixelId` and `optimizationGoal`
+        return 400. `goal` is not required. An ad group of another
+        ad account returns 404.
+                existing_campaign_id: Meta, Google Ads, LinkedIn, TikTok and Reddit Ads. On TikTok: creates
         the ad group and the ad under this existing campaign; the
         campaign is neither created nor activated and its
         objective must fit `goal`; not with `smartPlus`.
@@ -9896,8 +9939,26 @@ def register_generated_tools(mcp, _get_client):
         a new ad group, so geo and language fields return 400 there; the new
         ad group follows the campaign's targeting. On failure only the entities we
         authored are cleaned up; the pre-existing parent is left
-        untouched and is never (re)activated. Mutually exclusive
-        with `adSetId` and `creatives[]`.
+        untouched and is never (re)activated. On Reddit Ads:
+        creates a new ad group and the ad under this EXISTING
+        campaign; `goal` may be omitted (the campaign's objective
+        decides it) and any other goal returns 400 naming the one to
+        send. The ad group must start no earlier than a future
+        campaign start and end no later than the campaign end
+        (400 otherwise); without `endDate` it ends with the
+        campaign. When the campaign has
+        no campaign budget, send `budgetAmount`/`budgetType` for the
+        new ad group (400 without them); bid, conversion event and
+        pixel work as on a new campaign. Under campaign budget
+        optimization the ad group takes the campaign's bid,
+        goal type, optimization event and pixel, carries no budget
+        of its own (a budget in the request is not applied), and
+        bid fields or another conversion event or pixel return
+        400, as does an `endDate` when the campaign has no end
+        date. A
+        campaign of another ad account returns 404, a Reddit Max
+        campaign 422. If the ad fails, the new ad group is
+        archived. Mutually exclusive with `adSetId` and `creatives[]`.
                 phone_number: Meta attach shape only (`adSetId`). The phone number (E.164, e.g. `+4712345678`)
         for an ad added to a "website and phone call" ad set (destination_type
         `WEBSITE_AND_PHONE_CALL`), sent as the creative's call configuration. Optional:
@@ -25220,6 +25281,51 @@ def register_generated_tools(mcp, _get_client):
                 account_id=account_id,
                 ad_account_id=ad_account_id,
                 customer_id=customer_id,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List stored events",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def conversions_list_events(
+        profile_id: str,
+        limit: int = 50,
+        from_: str | None = None,
+        to: str | None = None,
+        event_name: str | None = None,
+        cursor: str | None = None,
+    ) -> str:
+        """List stored events
+
+        Lists the conversion events stored for a profile by `POST /v1/events`, newest first. Personal data is never
+        returned: `hasEmail`, `hasPhone` and `hasExternalId` only say whether the event carried that identifier.
+        Events sent with `testCode` are not stored, so they never appear here.
+
+        Paginate with `cursor`: pass the `nextCursor` of the previous page until it comes back `null`.
+
+        Args:
+            profile_id: (required)
+            limit
+            from_: Only events at or after this time (ISO 8601, on the event time).
+            to: Only events before this time (ISO 8601, on the event time).
+            event_name: Only events with this name, such as `Purchase`.
+            cursor: `nextCursor` from the previous page."""
+        client = _get_client()
+        try:
+            response = client.conversions.list_events(
+                profile_id=profile_id,
+                limit=limit,
+                from_=from_,
+                to=to,
+                event_name=event_name,
+                cursor=cursor,
             )
             return _format_response(response)
         except Exception as e:

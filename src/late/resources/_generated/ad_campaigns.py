@@ -685,6 +685,15 @@ class AdCampaignsResource:
         max_cpc: float | None = None,
         ad_account_id: str | None = None,
         customer_id: str | None = None,
+        budget_amount: float | None = None,
+        budget_type: str | None = None,
+        start_date: str | None = None,
+        end_date: str | None = None,
+        targeting: Any | None = None,
+        promoted_object: dict[str, Any] | None = None,
+        optimization_goal: str | None = None,
+        bid_strategy: str | None = None,
+        bid_amount: float | None = None,
     ) -> dict[str, Any]:
         """Create a standalone ad group"""
         payload = self._build_payload(
@@ -696,6 +705,15 @@ class AdCampaignsResource:
             max_cpc=max_cpc,
             ad_account_id=ad_account_id,
             customer_id=customer_id,
+            budget_amount=budget_amount,
+            budget_type=budget_type,
+            start_date=start_date,
+            end_date=end_date,
+            targeting=targeting,
+            promoted_object=promoted_object,
+            optimization_goal=optimization_goal,
+            bid_strategy=bid_strategy,
+            bid_amount=bid_amount,
         )
         headers: dict[str, str] = {}
         if idempotency_key is not None:
@@ -2336,6 +2354,15 @@ class AdCampaignsResource:
         max_cpc: float | None = None,
         ad_account_id: str | None = None,
         customer_id: str | None = None,
+        budget_amount: float | None = None,
+        budget_type: str | None = None,
+        start_date: str | None = None,
+        end_date: str | None = None,
+        targeting: Any | None = None,
+        promoted_object: dict[str, Any] | None = None,
+        optimization_goal: str | None = None,
+        bid_strategy: str | None = None,
+        bid_amount: float | None = None,
     ) -> dict[str, Any]:
         """Create a standalone ad group (async)"""
         payload = self._build_payload(
@@ -2347,6 +2374,15 @@ class AdCampaignsResource:
             max_cpc=max_cpc,
             ad_account_id=ad_account_id,
             customer_id=customer_id,
+            budget_amount=budget_amount,
+            budget_type=budget_type,
+            start_date=start_date,
+            end_date=end_date,
+            targeting=targeting,
+            promoted_object=promoted_object,
+            optimization_goal=optimization_goal,
+            bid_strategy=bid_strategy,
+            bid_amount=bid_amount,
         )
         headers: dict[str, str] = {}
         if idempotency_key is not None:
