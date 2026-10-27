@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.380.0"
+  version: "1.380.1"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -165,7 +165,7 @@ x-documentation:
     - `post.published` - Post successfully published. If a platform target later fails background reconciliation, the post is re-rolled up and a `post.failed` or `post.partial` follows for the same post.
     - `post.failed` - Post failed on all platforms. Can follow an earlier `post.published` for the same post when background reconciliation discovers the publish never actually completed.
     - `post.partial` - Post published to some platforms, failed on others. Can follow an earlier `post.published` for the same post when background reconciliation discovers one target's publish never actually completed.
-    - `post.cancelled` - Post publishing was cancelled
+    - `post.cancelled` - A scheduled post was cancelled because its account was disconnected (not sent by `DELETE /v1/posts/{postId}`)
     - `post.recycled` - Post recycled (cloned and re-scheduled)
     - `post.platform.published` - A single platform target inside a post finished publishing successfully. Fires once per platform-account as it terminates, without waiting for other platforms on the same post. Use this for incremental UIs; use `post.published` for the post-level rollup. A target that later fails background reconciliation (e.g. a Facebook video Meta accepted but never actually published) emits `post.platform.failed` afterward for the same target.
     - `post.platform.failed` - A single platform target inside a post failed permanently. Temporary/retryable failures do NOT fire this event, only permanent ones, so retry loops stay quiet. Can fire after this same target already emitted `post.platform.published`, when background reconciliation later discovers the publish never actually completed on the platform's side.
@@ -17200,7 +17200,7 @@ webhooks:
     post:
       operationId: onPostCancelled
       summary: Post cancelled event
-      description: Fired when a post publishing job is cancelled.
+      description: Fired when a scheduled post is cancelled because its account was disconnected and nothing published. Not sent when a post is deleted.
       tags: [Webhook Events]
       requestBody:
         required: true
@@ -30538,6 +30538,7 @@ paths:
                 hasMore: false
         '400': { description: Missing required parameters (profileId or tempToken) }
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'The connect token was issued for a different profile or platform (INSUFFICIENT_PERMISSIONS).' }
         '500': 
           description: Failed to fetch locations (e.g., invalid token, insufficient permissions)
           content:
@@ -33232,6 +33233,7 @@ paths:
                       errors: 0
         '400': { description: Missing required fields }
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'The connect token was issued for a different profile or platform (INSUFFICIENT_PERMISSIONS).' }
         '422':
           description: 'selections only. None of the accounts could be connected; `details.failed` lists each one with its reason.'
           content:
@@ -33653,6 +33655,7 @@ paths:
                 redirectUrl: "https://zernio.com/dashboard/profiles/64f0.../accounts"
         '400': { description: Invalid request - missing fields or invalid state format }
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'The connect token was issued for a different profile or platform (INSUFFICIENT_PERMISSIONS).' }
         '500': { description: Internal error }
 
   /v1/connect/openai-ads/credentials:
