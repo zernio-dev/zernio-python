@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.375.1"
+  version: "1.376.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -1249,6 +1249,8 @@ components:
         currency: { type: [string, "null"] }
         contactId: { type: [string, "null"], description: 'The contact a lead_received workflow created or matched for this lead.' }
         firstContactedAt: { type: [string, "null"], format: date-time, description: 'When the first WhatsApp message to the lead was delivered.' }
+        conversationId: { type: [string, "null"], description: 'The Inbox conversation a lead_received workflow opened with the lead.' }
+        webhookDeliveredAt: { type: [string, "null"], format: date-time, description: 'Meta leads only. When the `lead.received` webhook was delivered; null while it has not been.' }
     ConnectHandoffLink:
       type: object
       description: 'Only with `handoff=true`: the link to show as a QR code.'
@@ -3371,6 +3373,12 @@ components:
           type: object
           additionalProperties: true
           description: |
+            Meta ads refusals customers hit most come back with their own `code` instead of
+            `platform_api_error`, the field to fix in `param`, and `details.fix` ({ label, url }) pointing at
+            the Meta page that resolves it: `ad_account_payment_required`, `ad_account_policy_not_accepted`,
+            `meta_security_check_required`, `meta_action_blocked`,
+            `whatsapp_number_not_linked` and `invalid_targeting`. Meta's own error stays in the message
+            and in `platformError`.
             Additional structured context (e.g. field-level validation errors), for example
             `privateReplyConsumed` on the private-reply endpoint's 400 when the comment's
             single reply is already spent, and `privateReplyOutcome: "unknown"` on its 502 when Meta
@@ -62673,7 +62681,7 @@ paths:
                 creativeSpec:
                   type: object
                   additionalProperties: true
-                  description: "Raw Meta creative spec forwarded verbatim to /generatepreviews. Mutually exclusive with existingCreativeId."
+                  description: "Raw Meta creative spec forwarded to /generatepreviews. Mutually exclusive with existingCreativeId. An `object_story_spec` without `page_id` or `instagram_user_id`, and a `source_instagram_media_id` spec without `instagram_user_id`, get the connection's Facebook Page and Instagram account, as a create would."
       responses:
         '409': { $ref: '#/components/responses/AccountConnectionRequired' }
         '404': { $ref: '#/components/responses/AccountUnavailable' }
@@ -68307,6 +68315,62 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '501': { description: Only supported on Meta (facebook/instagram) }
 
+  /v1/ads/accounts/health:
+    get:
+      x-resource-group: "ads"
+      operationId: getAdAccountHealth
+      tags: ["Ad Accounts"]
+      x-platforms: ["meta"]
+      summary: Check an ad account before creating ads
+      description: |-
+        Checks whether a Meta ad account can run ads right now, with a fix link for each problem.
+
+        Reads the account status, the payment method, the account spending limit, the Facebook Page
+        and its Instagram account, the Page's Lead Ads terms, the newest pixel event and the WhatsApp
+        number linked to the Page. Each check reads on its own: one this connection cannot see comes
+        back `unknown` instead of failing the request.
+
+        `status` is `blocked` when any check is `error` (ads will be refused), `attention` when one is
+        `warning`, else `ok`. `missing` marks an optional asset that is not set up (a pixel, a
+        WhatsApp number): only the ads that need it are affected. A `fix.url` is either a Meta page
+        or a Zernio dashboard path (starting with `/`).
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: accountId, in: query, required: true, schema: { type: string }, description: "Zernio SocialAccount id (posting or ads variant) used to resolve the Meta token." }
+        - { name: adAccountId, in: query, required: true, schema: { type: string, example: act_123 }, description: "Meta ad account id (act_<n>)." }
+      responses:
+        '200':
+          description: Account checks
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  adAccountId: { type: string }
+                  status: { type: string, enum: [ok, attention, blocked] }
+                  checkedAt: { type: string, format: date-time }
+                  checks:
+                    type: array
+                    items:
+                      type: object
+                      required: [id, status, title, message]
+                      properties:
+                        id: { type: string, enum: [account_status, payment, spend_cap, page, instagram, lead_terms, pixel, whatsapp] }
+                        status: { type: string, enum: [ok, warning, error, missing, unknown] }
+                        title: { type: string }
+                        message: { type: string }
+                        fix:
+                          type: object
+                          properties:
+                            label: { type: string }
+                            url: { type: string }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/AccountUnavailable' }
+        '409': { $ref: '#/components/responses/AccountConnectionRequired' }
+        '501': { description: Only supported on Meta (facebook/instagram) }
+
   /v1/ads/accounts/live:
     get:
       x-resource-group: "ads"
@@ -71391,6 +71455,11 @@ paths:
       parameters:
         - { name: formId, in: query, schema: { type: string }, description: Filter to a single lead form. }
         - { name: accountId, in: query, schema: { type: string }, description: Filter to a single connected account. LinkedIn ads accounts switch to the live fetch. }
+        - { name: accountIds, in: query, schema: { type: string }, description: "Meta only. Comma-separated connected account ids, to list several accounts at once. Without accountId or accountIds every account of the team is listed." }
+        - { name: status, in: query, schema: { type: string, example: 'new,contacted' }, description: "Meta only. Comma-separated lead statuses: new, contacted, unreachable, qualified, converted, disqualified." }
+        - { name: campaignId, in: query, schema: { type: string }, description: "Meta only. The platform campaign id the lead came from." }
+        - { name: platform, in: query, schema: { type: string, enum: [meta, linkedin] }, description: "meta skips the LinkedIn live fetch; linkedin requires accountId to be a LinkedIn ads connection (400 otherwise)." }
+        - { name: q, in: query, schema: { type: string, maxLength: 200 }, description: "Meta only. Case-insensitive text search over the lead's answers and the form name." }
         - { name: adAccountId, in: query, schema: { type: string }, description: "LinkedIn only: the LinkedIn ad account id whose responses to read (owner-scoped finder)." }
         - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 25 } }
         - { name: since, in: query, schema: { type: integer, minimum: 1, maximum: 253402300799, example: 1757404800 }, description: "Unix seconds; only leads created at/after this timestamp. Millisecond timestamps return 400 with instructions to divide by 1000." }
@@ -71422,6 +71491,43 @@ paths:
         '403': { description: Ads add-on required. }
         '503': { $ref: '#/components/responses/TemporarilyUnavailable' }
         '502': { $ref: '#/components/responses/UpstreamFailure' }
+
+  /v1/ads/leads/counts:
+    get:
+      x-resource-group: "contacts"
+      operationId: countLeads
+      tags: ["Lead Gen"]
+      x-platforms: ["meta"]
+      summary: Count leads by status
+      description: |
+        Counts your team's stored Meta leads per status, for a status filter or a "new leads" badge.
+
+        Every status is present, with 0 when no lead has it. Requires the Ads add-on.
+      parameters:
+        - { name: accountId, in: query, schema: { type: string }, description: Count one connected account only. }
+        - { name: campaignId, in: query, schema: { type: string }, description: The platform campaign id the leads came from. }
+      responses:
+        '200':
+          description: Lead counts.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, example: success }
+                  counts:
+                    type: object
+                    properties:
+                      new: { type: integer }
+                      contacted: { type: integer }
+                      unreachable: { type: integer }
+                      qualified: { type: integer }
+                      converted: { type: integer }
+                      disqualified: { type: integer }
+                  total: { type: integer }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: Ads add-on required. }
 
   /v1/ads/leads/{id}:
     patch:

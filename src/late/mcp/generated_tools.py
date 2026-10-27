@@ -4860,6 +4860,43 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="Check an ad account before creating ads",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def ad_accounts_get_ad_account_health(account_id: str, ad_account_id: str) -> str:
+        """Check an ad account before creating ads
+
+        Checks whether a Meta ad account can run ads right now, with a fix link for each problem.
+
+        Reads the account status, the payment method, the account spending limit, the Facebook Page
+        and its Instagram account, the Page's Lead Ads terms, the newest pixel event and the WhatsApp
+        number linked to the Page. Each check reads on its own: one this connection cannot see comes
+        back `unknown` instead of failing the request.
+
+        `status` is `blocked` when any check is `error` (ads will be refused), `attention` when one is
+        `warning`, else `ok`. `missing` marks an optional asset that is not set up (a pixel, a
+        WhatsApp number): only the ads that need it are affected. A `fix.url` is either a Meta page
+        or a Zernio dashboard path (starting with `/`).
+
+        Platforms: meta
+
+        Args:
+            account_id: Zernio SocialAccount id (posting or ads variant) used to resolve the Meta token. (required)
+            ad_account_id: Meta ad account id (act_<n>). (required)"""
+        client = _get_client()
+        try:
+            response = client.ad_accounts.get_ad_account_health(
+                account_id=account_id, ad_account_id=ad_account_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="Read an ad account's campaigns and ad sets live",
             readOnlyHint=True,
             destructiveHint=False,
@@ -10234,7 +10271,7 @@ def register_generated_tools(mcp, _get_client):
             ad_account_id: Platform ad account id (Meta act_<n>, Google customer id, LinkedIn account id, ...). (required)
             formats: Meta ad_format values, one preview per format. Defaults to [DESKTOP_FEED_STANDARD].
             existing_creative_id: Preview an existing ad-account creative by id. Mutually exclusive with creativeSpec.
-            creative_spec: Raw Meta creative spec forwarded verbatim to /generatepreviews. Mutually exclusive with existingCreativeId."""
+            creative_spec: Raw Meta creative spec forwarded to /generatepreviews. Mutually exclusive with existingCreativeId. An `object_story_spec` without `page_id` or `instagram_user_id`, and a `source_instagram_media_id` spec without `instagram_user_id`, get the connection's Facebook Page and Instagram account, as a create would."""
         client = _get_client()
         try:
             response = client.ad_creatives.generate_ad_previews(
@@ -28001,6 +28038,11 @@ def register_generated_tools(mcp, _get_client):
     def lead_gen_list_leads(
         form_id: str | None = None,
         account_id: str | None = None,
+        account_ids: str | None = None,
+        status: str | None = None,
+        campaign_id: str | None = None,
+        platform: Literal["meta", "linkedin"] | None = None,
+        q: str | None = None,
         ad_account_id: str | None = None,
         limit: int = 25,
         since: int | None = None,
@@ -28017,6 +28059,11 @@ def register_generated_tools(mcp, _get_client):
         Args:
             form_id: Filter to a single lead form.
             account_id: Filter to a single connected account. LinkedIn ads accounts switch to the live fetch.
+            account_ids: Meta only. Comma-separated connected account ids, to list several accounts at once. Without accountId or accountIds every account of the team is listed.
+            status: Meta only. Comma-separated lead statuses: new, contacted, unreachable, qualified, converted, disqualified.
+            campaign_id: Meta only. The platform campaign id the lead came from.
+            platform: meta skips the LinkedIn live fetch; linkedin requires accountId to be a LinkedIn ads connection (400 otherwise).
+            q: Meta only. Case-insensitive text search over the lead's answers and the form name.
             ad_account_id: LinkedIn only: the LinkedIn ad account id whose responses to read (owner-scoped finder).
             limit
             since: Unix seconds; only leads created at/after this timestamp. Millisecond timestamps return 400 with instructions to divide by 1000.
@@ -28026,10 +28073,46 @@ def register_generated_tools(mcp, _get_client):
             response = client.lead_gen.list_leads(
                 form_id=form_id,
                 account_id=account_id,
+                account_ids=account_ids,
+                status=status,
+                campaign_id=campaign_id,
+                platform=platform,
+                q=q,
                 ad_account_id=ad_account_id,
                 limit=limit,
                 since=since,
                 cursor=cursor,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Count leads by status",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def lead_gen_count_leads(
+        account_id: str | None = None, campaign_id: str | None = None
+    ) -> str:
+        """Count leads by status
+
+        Counts your team's stored Meta leads per status, for a status filter or a \"new leads\" badge.
+
+        Every status is present, with 0 when no lead has it. Requires the Ads add-on.
+
+        Platforms: meta
+
+        Args:
+            account_id: Count one connected account only.
+            campaign_id: The platform campaign id the leads came from."""
+        client = _get_client()
+        try:
+            response = client.lead_gen.count_leads(
+                account_id=account_id, campaign_id=campaign_id
             )
             return _format_response(response)
         except Exception as e:

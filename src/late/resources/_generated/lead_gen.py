@@ -78,6 +78,11 @@ class LeadGenResource:
         *,
         form_id: str | None = None,
         account_id: str | None = None,
+        account_ids: str | None = None,
+        status: str | None = None,
+        campaign_id: str | None = None,
+        platform: str | None = None,
+        q: str | None = None,
         ad_account_id: str | None = None,
         limit: int | None = 25,
         since: int | None = None,
@@ -87,12 +92,27 @@ class LeadGenResource:
         params = self._build_params(
             form_id=form_id,
             account_id=account_id,
+            account_ids=account_ids,
+            status=status,
+            campaign_id=campaign_id,
+            platform=platform,
+            q=q,
             ad_account_id=ad_account_id,
             limit=limit,
             since=since,
             cursor=cursor,
         )
         return self._client._get("/v1/ads/leads", params=params)
+
+    def count_leads(
+        self, *, account_id: str | None = None, campaign_id: str | None = None
+    ) -> dict[str, Any]:
+        """Count leads by status"""
+        params = self._build_params(
+            account_id=account_id,
+            campaign_id=campaign_id,
+        )
+        return self._client._get("/v1/ads/leads/counts", params=params)
 
     def update_lead(
         self,
@@ -230,6 +250,11 @@ class LeadGenResource:
         *,
         form_id: str | None = None,
         account_id: str | None = None,
+        account_ids: str | None = None,
+        status: str | None = None,
+        campaign_id: str | None = None,
+        platform: str | None = None,
+        q: str | None = None,
         ad_account_id: str | None = None,
         limit: int | None = 25,
         since: int | None = None,
@@ -239,12 +264,27 @@ class LeadGenResource:
         params = self._build_params(
             form_id=form_id,
             account_id=account_id,
+            account_ids=account_ids,
+            status=status,
+            campaign_id=campaign_id,
+            platform=platform,
+            q=q,
             ad_account_id=ad_account_id,
             limit=limit,
             since=since,
             cursor=cursor,
         )
         return await self._client._aget("/v1/ads/leads", params=params)
+
+    async def acount_leads(
+        self, *, account_id: str | None = None, campaign_id: str | None = None
+    ) -> dict[str, Any]:
+        """Count leads by status (async)"""
+        params = self._build_params(
+            account_id=account_id,
+            campaign_id=campaign_id,
+        )
+        return await self._client._aget("/v1/ads/leads/counts", params=params)
 
     async def aupdate_lead(
         self,

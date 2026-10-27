@@ -1073,6 +1073,16 @@ class AdAccountsResource:
         )
         return self._client._get("/v1/ads/accounts/finance", params=params)
 
+    def get_ad_account_health(
+        self, account_id: str, ad_account_id: str
+    ) -> dict[str, Any]:
+        """Check an ad account before creating ads"""
+        params = self._build_params(
+            account_id=account_id,
+            ad_account_id=ad_account_id,
+        )
+        return self._client._get("/v1/ads/accounts/health", params=params)
+
     def get_ad_account_live_entities(
         self,
         account_id: str,
@@ -2226,6 +2236,16 @@ class AdAccountsResource:
             ad_account_id=ad_account_id,
         )
         return await self._client._aget("/v1/ads/accounts/finance", params=params)
+
+    async def aget_ad_account_health(
+        self, account_id: str, ad_account_id: str
+    ) -> dict[str, Any]:
+        """Check an ad account before creating ads (async)"""
+        params = self._build_params(
+            account_id=account_id,
+            ad_account_id=ad_account_id,
+        )
+        return await self._client._aget("/v1/ads/accounts/health", params=params)
 
     async def aget_ad_account_live_entities(
         self,

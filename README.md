@@ -483,6 +483,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `ad_accounts.create_value_rule_set()` | Create a value rule set |
 | `ad_accounts.get_ad_account_billing()` | Get ad account billing |
 | `ad_accounts.get_ad_account_finance()` | Ad account finances |
+| `ad_accounts.get_ad_account_health()` | Check an ad account before creating ads |
 | `ad_accounts.get_ad_account_hierarchy()` | Get manager account hierarchy |
 | `ad_accounts.get_ad_account_live_entities()` | Read an ad account's campaigns and ad sets live |
 | `ad_accounts.get_ad_comments()` | List comments on an ad |
@@ -1098,6 +1099,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `lead_gen.update_lead()` | Update a lead's status |
 | `lead_gen.delete_test_lead()` | Delete a test lead |
 | `lead_gen.archive_lead_form()` | Archive a lead form |
+| `lead_gen.count_leads()` | Count leads by status |
 
 ### Mentions
 | Method | Description |
