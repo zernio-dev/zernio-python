@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.382.0"
+  version: "1.383.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -75452,18 +75452,21 @@ paths:
       x-resource-group: "ads"
       operationId: listAdAudiences
       tags: ["Ad Audiences"]
-      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "reddit"]
       summary: List custom audiences
       description: |
         Lists the custom audiences in an ad account so you can reuse them for targeting.
 
-        Supports Meta, Google, TikTok, Pinterest, LinkedIn, and X.
+        Supports Meta, Google, TikTok, Pinterest, LinkedIn, X, and Reddit.
+
+        On Reddit, `size` is the lower bound of Reddit's matched-users range, and `status` is `too_small`
+        while the list has matched fewer than 1,000 people.
       security:
         - bearerAuth: []
       parameters:
         - { name: accountId, in: query, required: true, schema: { type: string }, description: Account ID }
         - { name: adAccountId, in: query, required: true, schema: { type: string }, description: Platform ad account ID }
-        - { name: platform, in: query, schema: { type: string, enum: [facebook, instagram, googleads, tiktok, tiktokads, pinterest, linkedin, linkedinads, twitter, xads] } }
+        - { name: platform, in: query, schema: { type: string, enum: [facebook, instagram, googleads, tiktok, tiktokads, pinterest, linkedin, linkedinads, twitter, xads, redditads] } }
         - { name: type, in: query, required: false, schema: { type: string, enum: [customer_list, company_list, engagement, meta_engagement, website, website_retargeting, lookalike, saved_targeting] }, description: "Filter to one audience type. `saved_targeting` returns stored TargetingSpec audiences; the other types return uploaded/derived audiences." }
       responses:
         '409': { $ref: '#/components/responses/AccountConnectionRequired' }
@@ -75486,7 +75489,7 @@ paths:
                         platformAudienceId: { type: string }
                         name: { type: string }
                         description: { type: string }
-                        type: { type: string, enum: [customer_list, company_list, engagement, meta_engagement, tiktok_engagement, pinterest_engagement, website, website_retargeting, lookalike, saved_targeting] }
+                        type: { type: string, enum: [customer_list, company_list, engagement, meta_engagement, tiktok_engagement, pinterest_engagement, website, website_retargeting, lookalike, saved_targeting, reddit_engagement, third_party, in_market], description: "`reddit_engagement`, `third_party` and `in_market` are listed from Reddit (engagement retargeting, and Reddit's own audiences) so they can be targeted. Zernio cannot create them." }
                         spec:
                           anyOf:
                             - $ref: '#/components/schemas/TargetingSpec'
@@ -75502,13 +75505,15 @@ paths:
       x-resource-group: "ads"
       operationId: createAdAudience
       tags: ["Ad Audiences"]
-      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "reddit"]
       summary: Create custom audience
       description: |
         Creates a custom audience from a customer list, website visitors, a lookalike, or people who engaged with your content.
 
-        `customer_list` is supported on Meta, Google, X, LinkedIn, TikTok, and Pinterest.
-        `website` (pixel/tag visitors) and `lookalike` are supported on Meta, TikTok, Pinterest and Google.
+        `customer_list` is supported on Meta, Google, X, LinkedIn, TikTok, Pinterest, and Reddit.
+        `website` (pixel/tag visitors) is supported on Meta, TikTok, Pinterest, Google, and Reddit.
+        `lookalike` is supported on Meta, TikTok, Pinterest and Google (Reddit's API cannot create one).
+        Reddit audience names need at least 3 characters.
         `meta_engagement` is Meta-only, `tiktok_engagement` TikTok-only, `pinterest_engagement` Pinterest-only;
         `company_list`, `engagement` and `website_retargeting` are LinkedIn-only. A type sent to a platform
         that does not support it is a 422 `FEATURE_NOT_AVAILABLE`.
@@ -75525,6 +75530,9 @@ paths:
           Pinterest matches URLs exactly, so `urlContains` is a 400 there.
         - Google: no `pixelId` (the account's Google tag is used), `retentionDays` 1-540, `urlContains`
           defaults to `/` (all visitors). Built as a rule-based user list with prepopulation requested.
+        - Reddit: `pixelId` is the Reddit pixel id, `retentionDays` 1-90. `event` is a Reddit conversion event
+          (`PAGE_VISIT` by default; also `VIEW_CONTENT`, `SEARCH`, `ADD_TO_CART`, `ADD_TO_WISHLIST`, `PURCHASE`,
+          `LEAD`, `SIGN_UP`); any other value is sent as a custom event name. `urlContains` and `rule` are a 400.
 
         Per-platform rules for `lookalike`: Meta takes `ratio` (0.01-0.20); Pinterest takes `ratio` in whole
         percents (0.01-0.10) and `country` US, CA or GB; TikTok and Google take `size` (narrow, balanced, broad)
@@ -75633,8 +75641,8 @@ paths:
                           domain: { type: string, maxLength: 100 }
                           website: { type: string, maxLength: 100 }
                           linkedinPageUrl: { type: string }
-                    pixelId: { type: string, description: "website: the Meta pixel, TikTok pixel or Pinterest tag id. Required on those three, rejected on Google." }
-                    retentionDays: { type: integer, minimum: 1, maximum: 540, description: "Required for website (Meta max 180, TikTok 7/14/30/60/90/180, Pinterest and Google max 540), meta_engagement (max 365) and tiktok_engagement (7/14/30/60/90/180; organic and live video and most business-account events only 7/14/30)." }
+                    pixelId: { type: string, description: "website: the Meta pixel, TikTok pixel, Pinterest tag or Reddit pixel id. Required on those four, rejected on Google." }
+                    retentionDays: { type: integer, minimum: 1, maximum: 540, description: "Required for website (Meta max 180, TikTok 7/14/30/60/90/180, Reddit max 90, Pinterest and Google max 540), meta_engagement (max 365) and tiktok_engagement (7/14/30/60/90/180; organic and live video and most business-account events only 7/14/30)." }
                     engagementSource:
                       type: string
                       enum: [page, instagram, video]
@@ -75650,6 +75658,8 @@ paths:
                         meta_engagement: the engagement event; defaults per source
                         (page → page_engaged, instagram → ig_business_profile_all,
                         video → video_watched). Ignored when `rule` is provided.
+
+                        website on Reddit: the conversion event (default `PAGE_VISIT`), or a custom event name.
 
                         website on TikTok: the pixel event (default `PAGE BROWSE`). website
                         on Pinterest: the tag event (`pagevisit`, `signup`, `checkout`, `viewcategory`, `search`, `addtocart`, `watchvideo`, `lead`, `custom` or a partner-defined event).
@@ -75757,7 +75767,7 @@ paths:
       x-resource-group: "ads"
       operationId: getAdAudience
       tags: ["Ad Audiences"]
-      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "reddit"]
       summary: Get audience details
       description: |
         Shows a custom audience's details, including its latest data from the ad platform when available.
@@ -75839,13 +75849,13 @@ paths:
       x-resource-group: "ads"
       operationId: deleteAdAudience
       tags: ["Ad Audiences"]
-      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "reddit"]
       summary: Delete custom audience
       description: |
         Removes a custom audience from its ad platform (archiving it where the platform does not delete).
 
         Removes the audience on its ad platform, then deletes the Zernio record. Meta, Google, TikTok,
-        LinkedIn list and engagement segments, and X are deleted; Pinterest audiences and LinkedIn
+        LinkedIn list and engagement segments, X, and Reddit are deleted; Pinterest audiences and LinkedIn
         `website_retargeting` segments are archived, which is how those platforms remove them.
         `saved_targeting` audiences exist only on Zernio, so only the local record is removed.
 
@@ -75878,7 +75888,7 @@ paths:
       x-resource-group: "ads"
       operationId: addUsersToAdAudience
       tags: ["Ad Audiences"]
-      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "reddit"]
       summary: Add users to audience
       description: |
         Uploads customer emails (and phone numbers on Meta) to a customer list audience, hashed before they are sent.
@@ -75886,6 +75896,9 @@ paths:
         Data is SHA256-hashed server-side before sending to the platform.
         Email is used on every platform; phone is used on Meta only (other platforms ignore it). On TikTok and Pinterest,
         the first upload also provisions the audience (deferred create). LinkedIn uploads are full-replace. Max 10,000 users per request.
+        On Reddit, emails are lowercased and trimmed before hashing, duplicates are sent once, and the upload goes out
+        in batches of 2,500. Reddit matches by email only: rows without a valid email count in `numInvalid`, and a
+        request where no row has one is a 400. Reddit audiences need the `redditads` connection, not the Reddit posting account (422).
 
         customer_list only. A LinkedIn `company_list` audience takes company rows, not people: send those to
         `POST /v1/ads/audiences/{audienceId}/companies`. This endpoint 422s for every other audience type.
@@ -75920,7 +75933,7 @@ paths:
                 properties:
                   message: { type: string }
                   numReceived: { type: integer }
-                  numInvalid: { type: integer, description: "Rows the platform could not read. Returned on Meta only." }
+                  numInvalid: { type: integer, description: "Rows the platform could not read. Returned on Meta, and on Reddit for rows without a valid email." }
         '400':
           description: Invalid input (malformed audienceId, empty users array, missing email/phone)
         '401': { $ref: '#/components/responses/Unauthorized' }
@@ -75934,16 +75947,16 @@ paths:
       x-resource-group: "ads"
       operationId: removeUsersFromAdAudience
       tags: ["Ad Audiences"]
-      x-platforms: ["meta"]
+      x-platforms: ["meta", "reddit"]
       summary: Remove users from audience
       description: |
-        Removes customer emails and phone numbers from a Meta customer list audience. Same body as
+        Removes customer emails (and phone numbers on Meta) from a Meta or Reddit customer list audience. Same body as
         `POST /v1/ads/audiences/{audienceId}/users`: send plaintext rows, they are normalized and
         SHA256-hashed server-side exactly like an upload, so a row removes the person it added.
 
-        Meta only, customer_list only. Every other platform returns 422 with code `feature_not_available`,
-        and every other audience type returns 422. Max 10,000 users per request. Meta applies the removal
-        asynchronously, so the audience size does not drop immediately.
+        Meta and Reddit only, customer_list only. Every other platform returns 422 with code `feature_not_available`,
+        and every other audience type returns 422. Max 10,000 users per request. The platform applies the removal
+        asynchronously, so the audience size does not drop immediately. On Reddit `invalidEntrySamples` is always empty.
       security:
         - bearerAuth: []
       parameters:
@@ -75975,8 +75988,8 @@ paths:
                 type: object
                 properties:
                   message: { type: string }
-                  numReceived: { type: integer, description: "Rows Meta received." }
-                  numInvalid: { type: integer, description: "Rows Meta could not read." }
+                  numReceived: { type: integer, description: "Rows the platform received." }
+                  numInvalid: { type: integer, description: "Rows the platform could not read." }
                   invalidEntrySamples:
                     type: object
                     additionalProperties: { type: string }
@@ -75988,7 +76001,7 @@ paths:
             Ads access required. Legacy plans need the Ads add-on; included by default on usage-based plans. Also returned with code `ad_account_not_selected` when the connection has selected ad accounts and the ad account this request targets is not among them; `details` carries `accountId`, `adAccountId` and `selectedAdAccountIds`. Add the ad account to the selection (GET /v1/connect/{platform}/ads with adAccountIds, which replaces the selection) or use a connection that has it selected.
         '404': { $ref: '#/components/responses/NotFound' }
         '422':
-          description: "The audience is not a customer_list, is not on Meta (code `feature_not_available`), or has no platform ID yet."
+          description: "The audience is not a customer_list, is not on Meta or Reddit (code `feature_not_available`), or has no platform ID yet."
 
   /v1/ads/audiences/{audienceId}/companies:
     post:
