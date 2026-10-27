@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.377.0"
+  version: "1.377.1"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -59400,6 +59400,7 @@ paths:
         - { name: accountId, in: query, required: true, schema: { type: string }, description: "Zernio SocialAccount id (posting or ads variant) used to resolve the Meta token." }
         - { name: fields, in: query, schema: { type: string, example: 'id,name,status,daily_budget' }, description: 'Comma-separated Graph field override. Supports nested {} projections and Graph field modifiers.' }
       responses:
+        '403': { $ref: '#/components/responses/AdAccountNotSelected' }
         '409': { $ref: '#/components/responses/AccountConnectionRequired' }
         '404': { $ref: '#/components/responses/AccountUnavailable' }
         '200':
@@ -60589,6 +60590,7 @@ paths:
                   default: false
                   description: 'Point the copy at the source ad''s creative object instead of copying it, so the copy keeps the same Facebook post, the same Instagram media, their existing likes, comments and shares, and the full creative setup (text variations included). This is what Ads Manager''s "show existing reactions, comments and shares" does. Meta''s native copy always publishes new posts. A creative belongs to one ad account, so `adSetId` must be in the source ad''s account. 400 when the source ad has no creative yet.'
       responses:
+        '409': { description: "Several active connections on the API key's profiles reach the ad account of this ad (code `ambiguous_account`), so the connection to act with is ambiguous. Keep one of them connected or move the others to a profile this key cannot access." }
         '200':
           description: Ad duplicated
           content:
@@ -60629,6 +60631,7 @@ paths:
         - { name: accountId, in: query, required: true, schema: { type: string }, description: "Zernio SocialAccount id (posting or ads variant) used to resolve the Meta token." }
         - { name: fields, in: query, schema: { type: string, example: 'id,status,ads.limit(100){id,name,status,issues_info}' }, description: 'Comma-separated Graph field override. Supports nested {} projections and Graph field modifiers, so a nested edge can be paged explicitly: without a .limit() modifier the expansion runs at the Meta default page size and the tail is dropped silently.' }
       responses:
+        '403': { $ref: '#/components/responses/AdAccountNotSelected' }
         '409': { $ref: '#/components/responses/AccountConnectionRequired' }
         '404': { $ref: '#/components/responses/AccountUnavailable' }
         '200':
@@ -62650,7 +62653,7 @@ paths:
               schema: { $ref: '#/components/schemas/ErrorResponse' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403':
-          description: Ads access required. Legacy plans need the Ads add-on; included by default on usage-based plans.
+          description: "Ads access required. Legacy plans need the Ads add-on; included by default on usage-based plans. Also returned with code `ad_account_not_selected` when the connection has selected ad accounts and the ad account this request targets is not among them; `details` carries `accountId`, `adAccountId` and `selectedAdAccountIds`. Add the ad account to the selection (GET /v1/connect/{platform}/ads with adAccountIds, which replaces the selection) or use a connection that has it selected."
         '404': { $ref: '#/components/responses/NotFound' }
         '429': { description: "Google operations budget or quota exhausted without a cached impression-share result." }
 
@@ -62731,6 +62734,8 @@ paths:
         - { name: adId, in: path, required: true, schema: { type: string }, description: "Zernio ad id (24-char hex)." }
         - { name: formats, in: query, schema: { type: string }, description: "Comma-separated Meta ad_format values (max 10), one preview per format. Defaults to DESKTOP_FEED_STANDARD." }
       responses:
+        '409': { description: "Several active connections on the API key's profiles reach the ad account of this ad (code `ambiguous_account`), so the connection to act with is ambiguous. Keep one of them connected or move the others to a profile this key cannot access." }
+        '403': { $ref: '#/components/responses/AdAccountNotSelected' }
         '200':
           description: Rendered previews
           content:
@@ -62799,6 +62804,7 @@ paths:
       parameters:
         - { name: adId, in: path, required: true, schema: { type: string }, description: "Zernio ad id (24-char hex) or the platform ad id." }
       responses:
+        '403': { $ref: '#/components/responses/AdAccountNotSelected' }
         '200':
           description: The review verdict
           content:
@@ -62910,6 +62916,7 @@ paths:
       parameters:
         - { name: adId, in: path, required: true, schema: { type: string }, description: "Zernio ad id (24-char hex) or the TikTok ad id: the Smart+ ad id or the ad id of one of its creatives." }
       responses:
+        '403': { $ref: '#/components/responses/AdAccountNotSelected' }
         '200':
           description: The Smart+ ad's review verdict per creative
           content:
@@ -62964,6 +62971,8 @@ paths:
       parameters:
         - { name: adId, in: path, required: true, schema: { type: string }, description: "Zernio ad id (24-char hex) or platform ad id." }
       responses:
+        '409': { description: "Several active connections on the API key's profiles reach the ad account of this ad (code `ambiguous_account`), so the connection to act with is ambiguous. Keep one of them connected or move the others to a profile this key cannot access." }
+        '403': { $ref: '#/components/responses/AdAccountNotSelected' }
         '200':
           description: Media assets
           content:
@@ -63393,6 +63402,7 @@ paths:
             Metrics TikTok refuses for a dimension are listed in `analytics.breakdownDroppedMetrics`,
             and the row values derived from them are null.
       responses:
+        '409': { description: "Several active connections on the API key's profiles reach the ad account of this ad (code `ambiguous_account`), so the connection to act with is ambiguous. Keep one of them connected or move the others to a profile this key cannot access." }
         '200':
           description: Ad analytics
           content:
@@ -63447,6 +63457,7 @@ paths:
       parameters:
         - { name: adId, in: path, required: true, schema: { type: string }, description: "Ad id (hex _id, platformAdId, or effective story/media id)." }
       responses:
+        '403': { $ref: '#/components/responses/AdAccountNotSelected' }
         '200':
           description: "Tracking tags for the ad's platform (shape varies by platform)."
           content:
@@ -64062,6 +64073,7 @@ paths:
         - { name: accountId, in: query, required: true, schema: { type: string } }
         - { name: adAccountId, in: query, required: true, schema: { type: string } }
       responses:
+        '403': { $ref: '#/components/responses/AdAccountNotSelected' }
         '409': { $ref: '#/components/responses/AccountConnectionRequired' }
         '404': { $ref: '#/components/responses/AccountUnavailable' }
         '200':
@@ -64169,6 +64181,7 @@ paths:
         - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 25 }, description: Rows per page }
         - { name: after, in: query, schema: { type: string }, description: "Cursor from paging.after of the previous page." }
       responses:
+        '403': { $ref: '#/components/responses/AdAccountNotSelected' }
         '409': { $ref: '#/components/responses/AccountConnectionRequired' }
         '404': { $ref: '#/components/responses/AccountUnavailable' }
         '200':
@@ -64597,7 +64610,7 @@ paths:
                     storeUrls: { iphone: "https://apps.apple.com/app/id123456789", google_play: "https://play.google.com/store/apps/details?id=com.example.app" }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '403': { description: "The account or Meta asset is not accessible." }
+        '403': { description: "The account or Meta asset is not accessible. Also returned with code `ad_account_not_selected` when the connection has selected ad accounts and the ad account this request targets is not among them; `details` carries `accountId`, `adAccountId` and `selectedAdAccountIds`. Add the ad account to the selection (GET /v1/connect/{platform}/ads with adAccountIds, which replaces the selection) or use a connection that has it selected." }
         '404': { $ref: '#/components/responses/AccountUnavailable' }
 
         '501': { description: "Only supported on Meta Ads and Facebook accounts." }
@@ -64642,7 +64655,7 @@ paths:
                 limits: { campaignGroupLimit: 9, campaignLimit: 5, campaignGroupLimitsDetails: [] }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '403': { description: "The account or Meta asset is not accessible." }
+        '403': { description: "The account or Meta asset is not accessible. Also returned with code `ad_account_not_selected` when the connection has selected ad accounts and the ad account this request targets is not among them; `details` carries `accountId`, `adAccountId` and `selectedAdAccountIds`. Add the ad account to the selection (GET /v1/connect/{platform}/ads with adAccountIds, which replaces the selection) or use a connection that has it selected." }
         '404': { $ref: '#/components/responses/AccountUnavailable' }
 
         '501': { description: "Only supported on Meta Ads and Facebook accounts." }
@@ -65146,6 +65159,7 @@ paths:
         - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 25 }, description: Rows per page }
         - { name: after, in: query, schema: { type: string }, description: "Cursor from paging.after of the previous page." }
       responses:
+        '403': { $ref: '#/components/responses/AdAccountNotSelected' }
         '409': { $ref: '#/components/responses/AccountConnectionRequired' }
         '404': { $ref: '#/components/responses/AccountUnavailable' }
         '200':
@@ -65243,6 +65257,7 @@ paths:
         - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 25 }, description: Rows per page }
         - { name: after, in: query, schema: { type: string }, description: "Cursor from paging.after of the previous page." }
       responses:
+        '403': { $ref: '#/components/responses/AdAccountNotSelected' }
         '409': { $ref: '#/components/responses/AccountConnectionRequired' }
         '404': { $ref: '#/components/responses/AccountUnavailable' }
         '200':
@@ -65379,6 +65394,7 @@ paths:
         - { name: thumbnailWidth, in: query, schema: { type: integer, minimum: 1, maximum: 4096, example: 600 }, description: 'Width in pixels of the `thumbnail_url` rendering, forwarded to Meta as `thumbnail_width`. Without it Meta returns a 64x64 thumbnail.' }
         - { name: thumbnailHeight, in: query, schema: { type: integer, minimum: 1, maximum: 4096, example: 600 }, description: 'Height in pixels of the `thumbnail_url` rendering, forwarded to Meta as `thumbnail_height`. Without it Meta returns a 64x64 thumbnail.' }
       responses:
+        '403': { $ref: '#/components/responses/AdAccountNotSelected' }
         '409': { $ref: '#/components/responses/AccountConnectionRequired' }
         '404': { $ref: '#/components/responses/AccountUnavailable' }
         '200':
@@ -65503,6 +65519,7 @@ paths:
         - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 25 }, description: Rows per page }
         - { name: after, in: query, schema: { type: string }, description: "Cursor from paging.after of the previous page. Meta does not document paging on this edge; `after` comes back null when it omits cursors." }
       responses:
+        '403': { $ref: '#/components/responses/AdAccountNotSelected' }
         '409': { $ref: '#/components/responses/AccountConnectionRequired' }
         '404': { $ref: '#/components/responses/AccountUnavailable' }
         '200':
@@ -68191,7 +68208,7 @@ paths:
                     items: { $ref: '#/components/schemas/MetaAssignedUser' }
         '400': { description: "Invalid input, or Meta rejected the query" }
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '403': { description: "Meta refused: the token lacks business_management or business admin access." }
+        '403': { description: "Meta refused: the token lacks business_management or business admin access. Also returned with code `ad_account_not_selected` when the connection has selected ad accounts and the ad account this request targets is not among them; `details` carries `accountId`, `adAccountId` and `selectedAdAccountIds`. Add the ad account to the selection (GET /v1/connect/{platform}/ads with adAccountIds, which replaces the selection) or use a connection that has it selected." }
         '429': { $ref: '#/components/responses/RateLimited' }
         '501': { description: Only supported on Meta (facebook/instagram) }
     post:
@@ -68301,6 +68318,7 @@ paths:
         - { name: accountId, in: query, required: true, schema: { type: string }, description: "Zernio SocialAccount id (posting or ads variant) used to resolve the Meta token." }
         - { name: adAccountId, in: query, required: true, schema: { type: string }, description: "Meta ad account id (act_<n>)." }
       responses:
+        '403': { $ref: '#/components/responses/AdAccountNotSelected' }
         '409': { $ref: '#/components/responses/AccountConnectionRequired' }
         '404': { $ref: '#/components/responses/AccountUnavailable' }
         '200':
@@ -72047,6 +72065,7 @@ paths:
         - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 25 }, description: Rows per page }
         - { name: after, in: query, schema: { type: string }, description: "Cursor from paging.after of the previous page." }
       responses:
+        '403': { $ref: '#/components/responses/AdAccountNotSelected' }
         '409': { $ref: '#/components/responses/AccountConnectionRequired' }
         '404': { $ref: '#/components/responses/AccountUnavailable' }
         '200':
@@ -72184,6 +72203,7 @@ paths:
         - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 25 }, description: Rows per page }
         - { name: after, in: query, schema: { type: string }, description: "Cursor from paging.after of the previous page." }
       responses:
+        '403': { $ref: '#/components/responses/AdAccountNotSelected' }
         '409': { $ref: '#/components/responses/AccountConnectionRequired' }
         '404': { $ref: '#/components/responses/AccountUnavailable' }
         '200':
@@ -72230,6 +72250,7 @@ paths:
         - { name: accountId, in: query, required: true, schema: { type: string }, description: "Zernio SocialAccount id (posting or ads variant) used to resolve the Meta token." }
         - { name: adAccountId, in: query, required: true, schema: { type: string }, description: "Meta ad account id (act_<n>) the video was uploaded to." }
       responses:
+        '403': { $ref: '#/components/responses/AdAccountNotSelected' }
         '409': { $ref: '#/components/responses/AccountConnectionRequired' }
         '404': { $ref: '#/components/responses/AccountUnavailable' }
         '200':
@@ -72627,7 +72648,7 @@ paths:
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403':
-          description: Ads access required. Legacy plans need the Ads add-on; included by default on usage-based plans.
+          description: "Ads access required. Legacy plans need the Ads add-on; included by default on usage-based plans. Also returned with code `ad_account_not_selected` when the connection has selected ad accounts and the ad account this request targets is not among them; `details` carries `accountId`, `adAccountId` and `selectedAdAccountIds`. Add the ad account to the selection (GET /v1/connect/{platform}/ads with adAccountIds, which replaces the selection) or use a connection that has it selected."
         '404': { $ref: '#/components/responses/AccountUnavailable' }
         '409': { $ref: '#/components/responses/AccountConnectionRequired' }
         '501': { description: "accountId is not a Meta connection (platform_not_supported)." }
@@ -73978,7 +73999,7 @@ paths:
                   platformData: { type: [object, "null"], description: Fresh data from the platform API }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403':
-          description: Ads access required. Legacy plans need the Ads add-on; included by default on usage-based plans.
+          description: "Ads access required. Legacy plans need the Ads add-on; included by default on usage-based plans. Also returned with code `ad_account_not_selected` when the connection has selected ad accounts and the ad account this request targets is not among them; `details` carries `accountId`, `adAccountId` and `selectedAdAccountIds`. Add the ad account to the selection (GET /v1/connect/{platform}/ads with adAccountIds, which replaces the selection) or use a connection that has it selected."
         '404': { $ref: '#/components/responses/NotFound' }
     put:
       x-resource-group: "ads"
@@ -76716,7 +76737,7 @@ paths:
                     items: { $ref: '#/components/schemas/CustomConversion' }
         '400': { description: "Invalid input, or Meta rejected the query" }
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '403': { description: "Ads access required, or the token lacks the ads permissions." }
+        '403': { description: "Ads access required, or the token lacks the ads permissions. Also returned with code `ad_account_not_selected` when the connection has selected ad accounts and the ad account this request targets is not among them; `details` carries `accountId`, `adAccountId` and `selectedAdAccountIds`. Add the ad account to the selection (GET /v1/connect/{platform}/ads with adAccountIds, which replaces the selection) or use a connection that has it selected." }
     post:
       x-resource-group: "accounts"
       operationId: createCustomConversion
