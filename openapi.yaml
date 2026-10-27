@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.381.0"
+  version: "1.382.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -9479,6 +9479,21 @@ components:
           type: array
           items: { type: string }
           description: Up to 3 Instagram usernames to invite as collaborators (feed/Reels only)
+        droppedCollaborators:
+          type: array
+          readOnly: true
+          description: 'Output only. Set by Zernio when Instagram rejected these collaborators and the retry was sent without them.'
+          items:
+            type: object
+            required: [username, reason]
+            properties:
+              username:
+                type: string
+                description: The collaborator username Instagram rejected
+                example: brandcommunity
+              reason:
+                type: string
+                description: The reason Instagram gave for rejecting the collaborator
         firstComment:
           type: string
           description: Optional first comment to add after the post is created (not applied to Stories)
