@@ -850,6 +850,7 @@ class AdCampaignsResource:
         sort: str | None = "newest",
         time_increment: int | None = None,
         daily_level: str | None = "campaign",
+        compare: str | None = None,
     ) -> dict[str, Any]:
         """Get campaign tree"""
         params = self._build_params(
@@ -872,6 +873,7 @@ class AdCampaignsResource:
             sort=sort,
             time_increment=time_increment,
             daily_level=daily_level,
+            compare=compare,
         )
         return self._client._get("/v1/ads/tree", params=params)
 
@@ -883,6 +885,7 @@ class AdCampaignsResource:
         from_date: str | None = None,
         to_date: str | None = None,
         platform: str | None = None,
+        compare: str | None = None,
     ) -> dict[str, Any]:
         """Get daily account metrics"""
         params = self._build_params(
@@ -891,6 +894,7 @@ class AdCampaignsResource:
             from_date=from_date,
             to_date=to_date,
             platform=platform,
+            compare=compare,
         )
         return self._client._get("/v1/ads/timeline", params=params)
 
@@ -1115,6 +1119,20 @@ class AdCampaignsResource:
     def get_tik_tok_smart_plus_ad_review(self, ad_id: str) -> dict[str, Any]:
         """Review status of each creative in a TikTok Smart+ ad"""
         return self._client._get(f"/v1/ads/{ad_id}/tiktok-smart-plus-review")
+
+    def list_ads_alerts(
+        self, *, account_id: str | None = None, include_dismissed: bool | None = False
+    ) -> dict[str, Any]:
+        """List ads that need attention"""
+        params = self._build_params(
+            account_id=account_id,
+            include_dismissed=include_dismissed,
+        )
+        return self._client._get("/v1/ads/alerts", params=params)
+
+    def dismiss_ads_alert(self, alert_id: str) -> dict[str, Any]:
+        """Dismiss an ads alert"""
+        return self._client._post(f"/v1/ads/alerts/{alert_id}/dismiss")
 
     def list_tik_tok_smart_plus_reviews(
         self,
@@ -2479,6 +2497,7 @@ class AdCampaignsResource:
         sort: str | None = "newest",
         time_increment: int | None = None,
         daily_level: str | None = "campaign",
+        compare: str | None = None,
     ) -> dict[str, Any]:
         """Get campaign tree (async)"""
         params = self._build_params(
@@ -2501,6 +2520,7 @@ class AdCampaignsResource:
             sort=sort,
             time_increment=time_increment,
             daily_level=daily_level,
+            compare=compare,
         )
         return await self._client._aget("/v1/ads/tree", params=params)
 
@@ -2512,6 +2532,7 @@ class AdCampaignsResource:
         from_date: str | None = None,
         to_date: str | None = None,
         platform: str | None = None,
+        compare: str | None = None,
     ) -> dict[str, Any]:
         """Get daily account metrics (async)"""
         params = self._build_params(
@@ -2520,6 +2541,7 @@ class AdCampaignsResource:
             from_date=from_date,
             to_date=to_date,
             platform=platform,
+            compare=compare,
         )
         return await self._client._aget("/v1/ads/timeline", params=params)
 
@@ -2750,6 +2772,20 @@ class AdCampaignsResource:
     async def aget_tik_tok_smart_plus_ad_review(self, ad_id: str) -> dict[str, Any]:
         """Review status of each creative in a TikTok Smart+ ad (async)"""
         return await self._client._aget(f"/v1/ads/{ad_id}/tiktok-smart-plus-review")
+
+    async def alist_ads_alerts(
+        self, *, account_id: str | None = None, include_dismissed: bool | None = False
+    ) -> dict[str, Any]:
+        """List ads that need attention (async)"""
+        params = self._build_params(
+            account_id=account_id,
+            include_dismissed=include_dismissed,
+        )
+        return await self._client._aget("/v1/ads/alerts", params=params)
+
+    async def adismiss_ads_alert(self, alert_id: str) -> dict[str, Any]:
+        """Dismiss an ads alert (async)"""
+        return await self._client._apost(f"/v1/ads/alerts/{alert_id}/dismiss")
 
     async def alist_tik_tok_smart_plus_reviews(
         self,

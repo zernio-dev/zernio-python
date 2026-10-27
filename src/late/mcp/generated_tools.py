@@ -7815,6 +7815,7 @@ def register_generated_tools(mcp, _get_client):
         sort: Literal["newest", "oldest", "spend_desc", "spend_asc"] = "newest",
         time_increment: int | None = None,
         daily_level: Literal["campaign", "adset", "ad"] = "campaign",
+        compare: Literal["previous"] | None = None,
     ) -> str:
         """Get campaign tree
 
@@ -7854,7 +7855,8 @@ def register_generated_tools(mcp, _get_client):
             min_spend: Return only campaigns whose spend between `fromDate` and `toDate` reaches this amount. Expressed in each campaign's OWN currency (the `currency` field on the campaign node): spend is stored per ad account in its native currency and one response can span several. Implies `hasDelivery`; `minSpend=0` applies no filter.
             sort: Campaign-level sort order. `newest` (default) / `oldest` order by the campaign's newest-ad createdAt. `spend_desc` / `spend_asc` order by aggregated spend in the requested date range; campaigns with no spend land at the end.
             time_increment: Set to `1` to also return a daily breakdown. Mirrors Meta Insights' `time_increment=1`: each node gains a `daily[]` array of per-day metrics (same fields as the aggregated `metrics`) alongside the range total, so you get per-entity daily trends in ONE call instead of calling the tree once per day. Only `1` (daily) is supported. The daily series covers the same date range and uses the same source data as `metrics`, except `reach` on Meta and TikTok: the range total is the platform's de-duplicated value, so daily reach does not sum to it. See `dailyLevel` to control which levels carry it.
-            daily_level: Which tree levels get the `daily[]` series when `timeIncrement=1`. `campaign` (default) attaches it on campaign nodes only: the common per-campaign-trend case, and the smallest payload. `adset` adds it on ad sets too; `ad` adds it on every ad in `ads[]` as well (heaviest: a long range × up to 100 ads per ad set). Scope with `campaignId` to keep `ad`-level responses small. Ignored when `timeIncrement` is unset."""
+            daily_level: Which tree levels get the `daily[]` series when `timeIncrement=1`. `campaign` (default) attaches it on campaign nodes only: the common per-campaign-trend case, and the smallest payload. `adset` adds it on ad sets too; `ad` adds it on every ad in `ads[]` as well (heaviest: a long range × up to 100 ads per ad set). Scope with `campaignId` to keep `ad`-level responses small. Ignored when `timeIncrement` is unset.
+            compare: Set to `previous` to also read the period of the same length that ends the day before `fromDate`. Every campaign, ad set and ad gains `previousMetrics` (same fields as `metrics`) and the response gains `previousRange`, so a table can show the change against the previous period in one call."""
         client = _get_client()
         try:
             response = client.ad_campaigns.get_ad_tree(
@@ -7877,6 +7879,7 @@ def register_generated_tools(mcp, _get_client):
                 sort=sort,
                 time_increment=time_increment,
                 daily_level=daily_level,
+                compare=compare,
             )
             return _format_response(response)
         except Exception as e:
@@ -7907,6 +7910,7 @@ def register_generated_tools(mcp, _get_client):
             "reddit",
         ]
         | None = None,
+        compare: Literal["previous"] | None = None,
     ) -> str:
         """Get daily account metrics
 
@@ -7935,7 +7939,8 @@ def register_generated_tools(mcp, _get_client):
             ad_account_id: Optional platform-native ad account ID (e.g. Meta `act_…`, TikTok advertiser ID). Use when the connection wraps multiple platform ad accounts and the chart should show one only. Note: rows ingested before 2026-05-13 don't carry this column; the recurring 7-day re-sync repopulates them naturally.
             from_date: Inclusive start of metrics range (YYYY-MM-DD). Defaults to 90 days ago.
             to_date: Inclusive end of metrics range (YYYY-MM-DD). Defaults to today. Max 730-day range.
-            platform: Restrict to one platform."""
+            platform: Restrict to one platform.
+            compare: Set to `previous` to also return `previousRows` for the period of the same length that ends the day before `fromDate`, with that period as `previousRange`. Needs a `fromDate` (sent or defaulted); `toDate` alone answers 400."""
         client = _get_client()
         try:
             response = client.ad_campaigns.get_ads_timeline(
@@ -7944,6 +7949,7 @@ def register_generated_tools(mcp, _get_client):
                 from_date=from_date,
                 to_date=to_date,
                 platform=platform,
+                compare=compare,
             )
             return _format_response(response)
         except Exception as e:
@@ -8555,6 +8561,66 @@ def register_generated_tools(mcp, _get_client):
         client = _get_client()
         try:
             response = client.ad_campaigns.get_tik_tok_smart_plus_ad_review(ad_id=ad_id)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List ads that need attention",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def ad_campaigns_list_ads_alerts(
+        account_id: str | None = None, include_dismissed: bool = False
+    ) -> str:
+        """List ads that need attention
+
+        Lists what needs attention across your ads, most severe first: ads created in the last 90 days that were rejected, campaigns the platform reports
+        delivery issues on, Meta ad accounts with a failed or overdue payment or disabled while holding live ads,
+        campaigns that spent on 3 or more of the last 7 days without a result (conversion, lead, purchase or
+        conversation goals), and budgets spent to their daily cap yesterday.
+
+        Built from stored data and the last 7 days of synced metrics, so it costs no platform call. Each alert has a
+        stable `id`; dismiss one with `POST /v1/ads/alerts/{alertId}/dismiss` to hide it for 30 days.
+
+        Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit
+
+        Args:
+            account_id: Only alerts of this ads connection (sibling-expanded like /v1/ads/tree). Omit for every ad account the API key can reach.
+            include_dismissed: Also return dismissed alerts, with `dismissed: true`."""
+        client = _get_client()
+        try:
+            response = client.ad_campaigns.list_ads_alerts(
+                account_id=account_id, include_dismissed=include_dismissed
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Dismiss an ads alert",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def ad_campaigns_dismiss_ads_alert(alert_id: str) -> str:
+        """Dismiss an ads alert
+
+        Hides an alert from `GET /v1/ads/alerts` for 30 days for the calling user. If the problem is still there after
+        that, the alert comes back.
+
+        Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit
+
+        Args:
+            alert_id: The `id` of an alert from GET /v1/ads/alerts. (required)"""
+        client = _get_client()
+        try:
+            response = client.ad_campaigns.dismiss_ads_alert(alert_id=alert_id)
             return _format_response(response)
         except Exception as e:
             return f"Error: {e}"

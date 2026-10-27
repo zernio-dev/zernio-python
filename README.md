@@ -546,6 +546,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `ad_campaigns.list_ad_keywords()` | List Search keywords |
 | `ad_campaigns.list_ad_sets()` | List ad sets |
 | `ad_campaigns.list_ads()` | List ads |
+| `ad_campaigns.list_ads_alerts()` | List ads that need attention |
 | `ad_campaigns.list_bid_strategies()` | List portfolio bid strategies |
 | `ad_campaigns.list_campaign_assets()` | List campaign assets |
 | `ad_campaigns.list_campaign_negative_keyword_lists()` | List campaign negative lists |
@@ -595,6 +596,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `ad_campaigns.attach_ad_group_assets()` | Attach ad-group assets |
 | `ad_campaigns.attach_campaign_assets()` | Attach campaign assets |
 | `ad_campaigns.boost_post()` | Boost post as ad |
+| `ad_campaigns.dismiss_ads_alert()` | Dismiss an ads alert |
 | `ad_campaigns.dismiss_google_recommendations()` | Dismiss Google Ads recommendations |
 | `ad_campaigns.duplicate_ad()` | Duplicate an ad |
 | `ad_campaigns.duplicate_ad_campaign()` | Duplicate a campaign |

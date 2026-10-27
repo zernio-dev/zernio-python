@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.377.2"
+  version: "1.378.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -12419,6 +12419,32 @@ components:
         backfillPending:
           type: boolean
           description: Meta only. Present and true while historical data is being backfilled.
+    AdsAlert:
+      type: object
+      properties:
+        id: { type: string, description: "Stable for the same problem on the same entity. Pass it to POST /v1/ads/alerts/{alertId}/dismiss." }
+        kind: { type: string, enum: [ad_rejected, delivery_issue, payment, budget_limited, spend_no_results] }
+        severity: { type: string, enum: [error, warning, info] }
+        title: { type: string }
+        message: { type: string, description: "What happened, in plain words. For a rejection or delivery issue, the platform's own reason when it gave one." }
+        platform: { type: string }
+        platformAdAccountId: { type: string }
+        entity:
+          type: object
+          properties:
+            level: { type: string, enum: [ad_account, campaign, ad_set, ad] }
+            id: { type: string, description: The platform id of the entity. }
+            name: { type: [string, "null"] }
+        adId: { type: string, description: "The Zernio ad id when the entity is an ad, for GET /v1/ads/{adId}." }
+        currency: { type: [string, "null"] }
+        detectedAt: { type: string, format: date-time }
+        fix:
+          type: object
+          description: Where to fix it on the platform, when there is such a place.
+          properties:
+            label: { type: string }
+            url: { type: string, format: uri }
+        dismissed: { type: boolean }
     AdTreeResponse:
       type: object
       properties:
@@ -12426,6 +12452,13 @@ components:
           type: array
           items: { $ref: '#/components/schemas/AdTreeCampaign' }
         pagination: { $ref: '#/components/schemas/Pagination' }
+        syncedAt: { type: [string, "null"], format: date-time, description: "When the most recently synced ad on this page was last read from the platform. Null before the first sync." }
+        previousRange:
+          type: object
+          description: Only with `compare=previous`. The range `previousMetrics` covers.
+          properties:
+            fromDate: { type: string, format: date }
+            toDate: { type: string, format: date }
         backfillPending:
           type: boolean
           description: Meta only. Present and true while historical data is being backfilled.
@@ -12435,6 +12468,16 @@ components:
         backfillPending:
           type: boolean
           description: Meta only. Present and true while historical data is being backfilled.
+        previousRows:
+          type: array
+          description: Only with `compare=previous`. The daily rows of `previousRange`, in the same shape as `rows`.
+          items: { type: object, additionalProperties: true }
+        previousRange:
+          type: object
+          description: Only with `compare=previous`. The period of the same length that ends the day before `fromDate`.
+          properties:
+            fromDate: { type: string, format: date }
+            toDate: { type: string, format: date }
         rows:
           type: array
           items:
@@ -14555,6 +14598,7 @@ components:
             lifetime: { type: number, description: "LinkedIn only. See `budget.lifetime`." }
             pacing: { type: string, description: "LinkedIn only. See `budget.pacing`." }
         metrics: { $ref: '#/components/schemas/AdMetrics' }
+        previousMetrics: { allOf: [{ $ref: '#/components/schemas/AdMetrics' }], description: "Only with `compare=previous`. The same metrics over `previousRange`." }
         optimizationGoal: { type: [string, "null"], description: "What the delivery system optimizes for. Meta ad set optimization goal (e.g. OFFSITE_CONVERSIONS, VALUE, LEAD_GENERATION), or on LinkedIn the campaign's effective optimizationTargetType (NONE means manual bidding). See the `optimizationGoal` field on `Ad` for the full value spaces." }
         bidStrategy:
           anyOf:
@@ -14641,6 +14685,7 @@ components:
           type: [string, "null"]
           description: "ISO 4217 currency code (e.g. USD, EUR, CLP, JPY) for all budget amounts in this campaign node. Budgets are NOT normalized to USD."
         metrics: { $ref: '#/components/schemas/AdMetrics' }
+        previousMetrics: { allOf: [{ $ref: '#/components/schemas/AdMetrics' }], description: "Only with `compare=previous`. The same metrics over `previousRange`." }
         platformAdAccountId: { type: string }
         platformAdAccountName: { type: [string, "null"], description: "Human-readable advertiser/account name from the platform. Refreshed on every sync." }
         accountId: { type: string }
@@ -61107,6 +61152,7 @@ paths:
         - { name: sort, in: query, schema: { type: string, enum: [newest, oldest, spend_desc, spend_asc], default: newest }, description: "Campaign-level sort order. `newest` (default) / `oldest` order by the campaign's newest-ad createdAt. `spend_desc` / `spend_asc` order by aggregated spend in the requested date range; campaigns with no spend land at the end." }
         - { name: timeIncrement, in: query, schema: { type: integer, enum: [1] }, description: "Set to `1` to also return a daily breakdown. Mirrors Meta Insights' `time_increment=1`: each node gains a `daily[]` array of per-day metrics (same fields as the aggregated `metrics`) alongside the range total, so you get per-entity daily trends in ONE call instead of calling the tree once per day. Only `1` (daily) is supported. The daily series covers the same date range and uses the same source data as `metrics`, except `reach` on Meta and TikTok: the range total is the platform's de-duplicated value, so daily reach does not sum to it. See `dailyLevel` to control which levels carry it." }
         - { name: dailyLevel, in: query, schema: { type: string, enum: [campaign, adset, ad], default: campaign }, description: "Which tree levels get the `daily[]` series when `timeIncrement=1`. `campaign` (default) attaches it on campaign nodes only: the common per-campaign-trend case, and the smallest payload. `adset` adds it on ad sets too; `ad` adds it on every ad in `ads[]` as well (heaviest: a long range × up to 100 ads per ad set). Scope with `campaignId` to keep `ad`-level responses small. Ignored when `timeIncrement` is unset." }
+        - { name: compare, in: query, schema: { type: string, enum: [previous] }, description: "Set to `previous` to also read the period of the same length that ends the day before `fromDate`. Every campaign, ad set and ad gains `previousMetrics` (same fields as `metrics`) and the response gains `previousRange`, so a table can show the change against the previous period in one call." }
       responses:
         '200':
           description: Nested campaign tree with pagination
@@ -61169,6 +61215,7 @@ paths:
         - { name: fromDate, in: query, schema: { type: string, format: date }, description: "Inclusive start of metrics range (YYYY-MM-DD). Defaults to 90 days ago." }
         - { name: toDate, in: query, schema: { type: string, format: date }, description: "Inclusive end of metrics range (YYYY-MM-DD). Defaults to today. Max 730-day range." }
         - { name: platform, in: query, schema: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit] }, description: Restrict to one platform. }
+        - { name: compare, in: query, schema: { type: string, enum: [previous] }, description: "Set to `previous` to also return `previousRows` for the period of the same length that ends the day before `fromDate`, with that period as `previousRange`. Needs a `fromDate` (sent or defaulted); `toDate` alone answers 400." }
       responses:
         '200':
           description: Daily time series of aggregate metrics. Empty `rows` means the account has no ad activity in the range.
@@ -63937,6 +63984,81 @@ paths:
         '404': { $ref: '#/components/responses/AccountUnavailable' }
 
         '422': { description: TikTok Ads not connected }
+
+  /v1/ads/alerts:
+    get:
+      x-resource-group: "ads"
+      operationId: listAdsAlerts
+      tags: ["Ad Campaigns"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "reddit"]
+      summary: List ads that need attention
+      description: |
+        Lists what needs attention across your ads, most severe first: ads created in the last 90 days that were rejected, campaigns the platform reports
+        delivery issues on, Meta ad accounts with a failed or overdue payment or disabled while holding live ads,
+        campaigns that spent on 3 or more of the last 7 days without a result (conversion, lead, purchase or
+        conversation goals), and budgets spent to their daily cap yesterday.
+
+        Built from stored data and the last 7 days of synced metrics, so it costs no platform call. Each alert has a
+        stable `id`; dismiss one with `POST /v1/ads/alerts/{alertId}/dismiss` to hide it for 30 days.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: accountId, in: query, schema: { type: string }, description: "Only alerts of this ads connection (sibling-expanded like /v1/ads/tree). Omit for every ad account the API key can reach." }
+        - { name: includeDismissed, in: query, schema: { type: boolean, default: false }, description: "Also return dismissed alerts, with `dismissed: true`." }
+      responses:
+        '200':
+          description: Alerts, most severe first.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  alerts:
+                    type: array
+                    items: { $ref: '#/components/schemas/AdsAlert' }
+                  counts:
+                    type: object
+                    description: Open (not dismissed) alerts per severity.
+                    properties:
+                      error: { type: integer }
+                      warning: { type: integer }
+                      info: { type: integer }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403':
+          description: Ads access required. Legacy plans need the Ads add-on; included by default on usage-based plans.
+
+  /v1/ads/alerts/{alertId}/dismiss:
+    post:
+      x-resource-group: "ads"
+      operationId: dismissAdsAlert
+      tags: ["Ad Campaigns"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "reddit"]
+      summary: Dismiss an ads alert
+      description: |
+        Hides an alert from `GET /v1/ads/alerts` for 30 days for the calling user. If the problem is still there after
+        that, the alert comes back.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: alertId, in: path, required: true, schema: { type: string, maxLength: 200 }, description: "The `id` of an alert from GET /v1/ads/alerts." }
+      responses:
+        '200':
+          description: Dismissed.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id: { type: string }
+                  dismissed: { type: boolean }
+                  dismissedUntil: { type: string, format: date-time }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403':
+          description: Ads access required. Legacy plans need the Ads add-on; included by default on usage-based plans.
+        '503':
+          description: Dismissing is temporarily unavailable (code `feature_not_available`).
 
   /v1/ads/activity:
     get:
