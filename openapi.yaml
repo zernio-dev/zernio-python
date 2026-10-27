@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.379.0"
+  version: "1.380.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -3480,7 +3480,7 @@ components:
             stage:
               type: string
               enum: [media, campaign, adset, creative, ad, activation, other]
-              description: "Meta ad create failures only. The step that failed: `media` (image/video download or upload), `campaign`, `adset`, `creative`, `ad` (the ad POST itself, where Meta's code 31 / 3858385 hold and 100 / 1359188 payment rejections land), `activation` (switching the created objects on), or `other` (a read or check before any write)."
+              description: "Meta ad create failures only. The step that failed: `media` (image/video download or upload), `campaign`, `adset`, `creative`, `ad` (the ad POST itself, where Meta's code 31 / 3858385 hold and 100 / 1359188 payment rejections land), `activation` (switching the created objects on; no longer returned, since a refused switch to ACTIVE now answers 201 with an `activation_failed:` warning and the objects kept PAUSED), or `other` (a read or check before any write)."
             adAccountId:
               type: string
               description: 'Meta ad create failures only. The ad account the request wrote to (`act_...`).'
@@ -15790,7 +15790,7 @@ components:
         warnings:
           type: array
           items: { type: string }
-          description: 'Present when Meta created the ad set differently from the request: a multi-destination ad set (`destinations` including whatsapp) that Meta kept without the requested `whatsappPhoneNumber` in its promoted_object, which an existing ad set cannot change (a WhatsApp-only ad set returns no such warning, because every ad routes conversations by the number on its WhatsApp button), or the ad set joined a CBO campaign (`existingCampaignId`) whose own bid strategy applies, so a different `bidStrategy` or a `roasAverageFloor` that strategy cannot take was not applied.'
+          description: 'Present when Meta created the ad set differently from the request: a multi-destination ad set (`destinations` including whatsapp) that Meta kept without the requested `whatsappPhoneNumber` in its promoted_object, which an existing ad set cannot change (a WhatsApp-only ad set returns no such warning, because every ad routes conversations by the number on its WhatsApp button), or the ad set joined a CBO campaign (`existingCampaignId`) whose own bid strategy applies, so a different `bidStrategy` or a `roasAverageFloor` that strategy cannot take was not applied. Also present, as an entry starting with `activation_failed:`, when Meta refused the final switch to ACTIVE: nothing was deleted, and the entry names what was kept PAUSED and what was switched ACTIVE, and quotes Meta''s error and the status calls that switch the PAUSED ones on later.'
 
     CtwaMultiResponse:
       type: object
@@ -15814,7 +15814,7 @@ components:
         warnings:
           type: array
           items: { type: string }
-          description: 'Present when Meta created the ad set differently from the request: a multi-destination ad set (`destinations` including whatsapp) that Meta kept without the requested `whatsappPhoneNumber` in its promoted_object, which an existing ad set cannot change (a WhatsApp-only ad set returns no such warning, because every ad routes conversations by the number on its WhatsApp button), or the ad set joined a CBO campaign (`existingCampaignId`) whose own bid strategy applies, so a different `bidStrategy` or a `roasAverageFloor` that strategy cannot take was not applied.'
+          description: 'Present when Meta created the ad set differently from the request: a multi-destination ad set (`destinations` including whatsapp) that Meta kept without the requested `whatsappPhoneNumber` in its promoted_object, which an existing ad set cannot change (a WhatsApp-only ad set returns no such warning, because every ad routes conversations by the number on its WhatsApp button), or the ad set joined a CBO campaign (`existingCampaignId`) whose own bid strategy applies, so a different `bidStrategy` or a `roasAverageFloor` that strategy cannot take was not applied. Also present, as an entry starting with `activation_failed:`, when Meta refused the final switch to ACTIVE: nothing was deleted, and the entry names what was kept PAUSED and what was switched ACTIVE, and quotes Meta''s error and the status calls that switch the PAUSED ones on later.'
 
     CustomConversion:
       type: object
@@ -71361,7 +71361,7 @@ paths:
                   warnings:
                     type: array
                     items: { type: string }
-                    description: 'Present with instagramVideoFallback: one human-readable line saying how the Instagram video was boosted.'
+                    description: 'Present with instagramVideoFallback: one human-readable line saying how the Instagram video was boosted. On Meta also present, as an entry starting with `activation_failed:`, when Meta refused the final switch to ACTIVE of the campaign, ad set or ad this boost created: nothing was deleted, `message` says not everything is ACTIVE, and the entry names what was kept PAUSED and what was switched ACTIVE, and quotes Meta''s error and the status calls that switch the PAUSED ones on later. A retry without Idempotency-Key inside the 10-minute dedup window that finds the stored ad PAUSED although it asks for ACTIVE gets a `replayed_paused:` entry with the same status calls instead.'
         '400':
           description: 'Missing required fields or invalid values, `validateOnly: true` outside Meta, `dryRun` sent, or a Meta validateOnly validation failure (verbatim)'
         '401': { $ref: '#/components/responses/Unauthorized' }
@@ -71791,6 +71791,8 @@ paths:
         - `dynamicCreative`: `imageUrls` or `videoUrls`, `callToActionTypes`, and `linkUrls` unless the goal is `lead_generation`. Top-level `body` is not required.
         - `existingCreativeId`: no creative fields. Goal `page_likes`: `body` only.
         - Goal `lead_generation` always needs `leadGenFormId`, except with `existingCreativeId`.
+
+        **Meta activation.** Meta builds the campaign, ad set and ads PAUSED and switches the requested levels to ACTIVE as the last step. When Meta refuses that switch, or the connection drops, after Zernio's retries, the request still answers 201 and nothing is deleted: the refused level and every level below it stay PAUSED, while levels above it that already went ACTIVE stay ACTIVE (the ad comes back with `status: paused` and its `configuredStatus` as read back from Meta). A switch Meta applied although its answer was lost counts as ACTIVE, since Zernio reads the status back first. `message` says not everything is ACTIVE, and `warnings` carries one entry starting with `activation_failed:` that quotes Meta's code, subcode and message, names what was kept PAUSED and what was switched ACTIVE, and lists the calls that switch the PAUSED ones on later (PUT /v1/ads/campaigns/{campaignId}/status, PUT /v1/ads/ad-sets/{adSetId}/status and PUT /v1/ads/{adId}/status with status `active`, in that order). On the `creatives[]` shape only the ads Meta refused stay PAUSED when the campaign and ad set went through. A Reach and Frequency ad is created ACTIVE and is never listed as kept PAUSED. With an `Idempotency-Key` a retry replays this 201.
 
         LinkedIn creates a Single Image or Single Video Ad backed by a Direct Sponsored Content "dark post" authored by a Company Page (see `organizationId`). Supported goals are engagement, traffic, awareness, and video_views (video ads use the `video` field; video_views requires a video), and traffic ads require `linkUrl`.
 
@@ -73095,6 +73097,10 @@ paths:
                       ad: { $ref: '#/components/schemas/Ad' }
                       appliedDefaults: { $ref: '#/components/schemas/AdAppliedDefaults' }
                       message: { type: string }
+                      warnings:
+                        type: array
+                        items: { type: string }
+                        description: 'Meta only, present only when needed. An `activation_failed:` entry means Meta refused the final switch to ACTIVE: the entry names what was kept PAUSED (the ad, and its ad set or campaign when Meta refused those) and what was switched ACTIVE, and quotes Meta''s error and the status calls that switch the PAUSED ones on later.'
                   - type: object
                     description: "Multi-creative shape: N ads returned sharing platformCampaignId / platformAdSetId."
                     properties:
@@ -73105,6 +73111,10 @@ paths:
                       platformAdSetId: { type: string }
                       appliedDefaults: { $ref: '#/components/schemas/AdAppliedDefaults' }
                       message: { type: string }
+                      warnings:
+                        type: array
+                        items: { type: string }
+                        description: 'Meta only, present only when needed. An `activation_failed:` entry means Meta refused the final switch to ACTIVE for the ads it names (or for their ad set or campaign): the entry names what was kept PAUSED and what was switched ACTIVE, and quotes Meta''s error and the status calls that switch the PAUSED ones on later.'
         '400':
           description: 'Missing required fields, invalid values, non-Meta platform used with creatives[] / adSetId, or a Meta validateOnly validation failure (verbatim)'
         '401': { $ref: '#/components/responses/Unauthorized' }
