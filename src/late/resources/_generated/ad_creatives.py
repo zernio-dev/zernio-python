@@ -93,17 +93,23 @@ class AdCreativesResource:
         return self._client._post("/v1/ads/preview", data=payload)
 
     def get_ad_previews(
-        self, ad_id: str, *, formats: str | None = None
+        self, ad_id: str, *, account_id: str | None = None, formats: str | None = None
     ) -> dict[str, Any]:
         """Render previews of an existing ad"""
         params = self._build_params(
+            account_id=account_id,
             formats=formats,
         )
         return self._client._get(f"/v1/ads/{ad_id}/preview", params=params)
 
-    def get_ad_media(self, ad_id: str) -> dict[str, Any]:
+    def get_ad_media(
+        self, ad_id: str, *, account_id: str | None = None
+    ) -> dict[str, Any]:
         """Direct video and image URLs for an ad"""
-        return self._client._get(f"/v1/ads/{ad_id}/media")
+        params = self._build_params(
+            account_id=account_id,
+        )
+        return self._client._get(f"/v1/ads/{ad_id}/media", params=params)
 
     def list_ads_tik_tok_identities(
         self, account_id: str, ad_account_id: str
@@ -366,17 +372,23 @@ class AdCreativesResource:
         return await self._client._apost("/v1/ads/preview", data=payload)
 
     async def aget_ad_previews(
-        self, ad_id: str, *, formats: str | None = None
+        self, ad_id: str, *, account_id: str | None = None, formats: str | None = None
     ) -> dict[str, Any]:
         """Render previews of an existing ad (async)"""
         params = self._build_params(
+            account_id=account_id,
             formats=formats,
         )
         return await self._client._aget(f"/v1/ads/{ad_id}/preview", params=params)
 
-    async def aget_ad_media(self, ad_id: str) -> dict[str, Any]:
+    async def aget_ad_media(
+        self, ad_id: str, *, account_id: str | None = None
+    ) -> dict[str, Any]:
         """Direct video and image URLs for an ad (async)"""
-        return await self._client._aget(f"/v1/ads/{ad_id}/media")
+        params = self._build_params(
+            account_id=account_id,
+        )
+        return await self._client._aget(f"/v1/ads/{ad_id}/media", params=params)
 
     async def alist_ads_tik_tok_identities(
         self, account_id: str, ad_account_id: str

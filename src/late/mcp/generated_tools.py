@@ -8095,7 +8095,9 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=False,
         )
     )
-    def ad_campaigns_get_ad(ad_id: str, live: bool = False) -> str:
+    def ad_campaigns_get_ad(
+        ad_id: str, live: bool = False, account_id: str | None = None
+    ) -> str:
         """Get ad details
 
            Shows one ad with its creative, targeting, status and performance metrics.
@@ -8119,10 +8121,13 @@ def register_generated_tools(mcp, _get_client):
            Args:
                ad_id: Zernio `_id` (hex), Meta `platformAdId` (numeric), or one of the creative's effective story/media IDs. See description for details.
         (required)
-               live: Read the on/off switches live from the platform instead of returning the synced values. The fresh values are stored (so later reads return them too) and the response carries `statusReadAt`, the time of the read. At most 20 platform objects are read per request. Where a read fails (credentials, platform error, no reader on that platform), the stored values come back with `statusReadAt: null`. See "Status freshness" in the operation description. On X the budget is read live in the same read: on GET /v1/ads/{adId} `budget`, `adSetBudget`, `campaignBudget` and `budgetLevel` are the line item and campaign budgets X holds now (stored like the switches); on the ad set and campaign listings `budget` is the one that line item or campaign holds now (returned, not stored); a row whose budget the other level holds keeps its synced `budget`."""
+               live: Read the on/off switches live from the platform instead of returning the synced values. The fresh values are stored (so later reads return them too) and the response carries `statusReadAt`, the time of the read. At most 20 platform objects are read per request. Where a read fails (credentials, platform error, no reader on that platform), the stored values come back with `statusReadAt: null`. See "Status freshness" in the operation description. On X the budget is read live in the same read: on GET /v1/ads/{adId} `budget`, `adSetBudget`, `campaignBudget` and `budgetLevel` are the line item and campaign budgets X holds now (stored like the switches); on the ad set and campaign listings `budget` is the one that line item or campaign holds now (returned, not stored); a row whose budget the other level holds keeps its synced `budget`.
+               account_id: Meta only. A Zernio connection id (Meta Ads or Facebook connection) used when `{adId}` is a Meta ad id that is not in Zernio's synced store, for example an ad created in Ads Manager on an ad account reached only through a Facebook connection. The ad is then read live from Meta through that connection and the response carries `synced: false`. The same rules as GET /v1/ads/campaigns/{campaignId} apply: a connection on a profile the API key cannot access answers 404, and an ad on an ad account outside the connection's selected ad accounts answers 403 `ad_account_not_selected`. An id Meta cannot read through the connection, or that is not an ad (a campaign or ad set id, for example), answers 404 `ad_not_found`, and a connection that is not Meta answers 501. Ads Meta reports as DELETED are returned too, with their status. Ignored when the ad is in the store (the stored ad's own connection is used). Without it an unsynced ad answers 404 `ad_not_found`. Writes (PUT, DELETE, status) still need the ad in the store."""
         client = _get_client()
         try:
-            response = client.ad_campaigns.get_ad(ad_id=ad_id, live=live)
+            response = client.ad_campaigns.get_ad(
+                ad_id=ad_id, live=live, account_id=account_id
+            )
             return _format_response(response)
         except Exception as e:
             return f"Error: {e}"
@@ -8633,7 +8638,7 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=False,
         )
     )
-    def ad_campaigns_get_ad_review(ad_id: str) -> str:
+    def ad_campaigns_get_ad_review(ad_id: str, account_id: str | None = None) -> str:
         """Read the platform's review verdict for an ad
 
         Shows whether the platform approved an ad, where it may not deliver, and every rejection reason, without re-enabling a paused ad.
@@ -8653,10 +8658,13 @@ def register_generated_tools(mcp, _get_client):
         Platforms: tiktok, google, meta
 
         Args:
-            ad_id: Zernio ad id (24-char hex) or the platform ad id. (required)"""
+            ad_id: Zernio ad id (24-char hex) or the platform ad id. (required)
+            account_id: Meta only. A Zernio connection id (Meta Ads or Facebook connection) used when `{adId}` is a Meta ad id that is not in Zernio's synced store, for example an ad created in Ads Manager on an ad account reached only through a Facebook connection. The ad is then read live from Meta through that connection and the response carries `synced: false`. The same rules as GET /v1/ads/campaigns/{campaignId} apply: a connection on a profile the API key cannot access answers 404, and an ad on an ad account outside the connection's selected ad accounts answers 403 `ad_account_not_selected`. An id Meta cannot read through the connection, or that is not an ad (a campaign or ad set id, for example), answers 404 `ad_not_found`, and a connection that is not Meta answers 501. Ads Meta reports as DELETED are returned too, with their status. Ignored when the ad is in the store (the stored ad's own connection is used). Without it an unsynced ad answers 404 `ad_not_found`. Writes (PUT, DELETE, status) still need the ad in the store."""
         client = _get_client()
         try:
-            response = client.ad_campaigns.get_ad_review(ad_id=ad_id)
+            response = client.ad_campaigns.get_ad_review(
+                ad_id=ad_id, account_id=account_id
+            )
             return _format_response(response)
         except Exception as e:
             return f"Error: {e}"
@@ -10517,7 +10525,9 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=False,
         )
     )
-    def ad_creatives_get_ad_previews(ad_id: str, formats: str | None = None) -> str:
+    def ad_creatives_get_ad_previews(
+        ad_id: str, account_id: str | None = None, formats: str | None = None
+    ) -> str:
         """Render previews of an existing ad
 
         Shows how an existing Meta ad looks in each placement, as embeddable previews.
@@ -10525,14 +10535,20 @@ def register_generated_tools(mcp, _get_client):
         Renders an EXISTING ad per placement via Meta's `/{ad_id}/previews`. Each preview is an HTML
         `<iframe>` snippet embeddable directly. Unknown `formats` values return Meta's 400 verbatim.
 
+        **Meta ads that are not synced yet.** Pass `accountId` with a Meta platform ad id that is not in
+        Zernio's store to render it live through that connection; the response carries `synced: false`.
+
         Platforms: meta
 
         Args:
-            ad_id: Zernio ad id (24-char hex). (required)
+            ad_id: Zernio ad id (24-char hex) or Meta platform ad id. (required)
+            account_id: Meta only. A Zernio connection id (Meta Ads or Facebook connection) used when `{adId}` is a Meta ad id that is not in Zernio's synced store, for example an ad created in Ads Manager on an ad account reached only through a Facebook connection. The ad is then read live from Meta through that connection and the response carries `synced: false`. The same rules as GET /v1/ads/campaigns/{campaignId} apply: a connection on a profile the API key cannot access answers 404, and an ad on an ad account outside the connection's selected ad accounts answers 403 `ad_account_not_selected`. An id Meta cannot read through the connection, or that is not an ad (a campaign or ad set id, for example), answers 404 `ad_not_found`, and a connection that is not Meta answers 501. Ads Meta reports as DELETED are returned too, with their status. Ignored when the ad is in the store (the stored ad's own connection is used). Without it an unsynced ad answers 404 `ad_not_found`. Writes (PUT, DELETE, status) still need the ad in the store.
             formats: Comma-separated Meta ad_format values (max 10), one preview per format. Defaults to DESKTOP_FEED_STANDARD."""
         client = _get_client()
         try:
-            response = client.ad_creatives.get_ad_previews(ad_id=ad_id, formats=formats)
+            response = client.ad_creatives.get_ad_previews(
+                ad_id=ad_id, account_id=account_id, formats=formats
+            )
             return _format_response(response)
         except Exception as e:
             return f"Error: {e}"
@@ -10545,7 +10561,7 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=False,
         )
     )
-    def ad_creatives_get_ad_media(ad_id: str) -> str:
+    def ad_creatives_get_ad_media(ad_id: str, account_id: str | None = None) -> str:
         """Direct video and image URLs for an ad
 
         Returns fresh, short-lived download links for every image and video a Meta ad uses, including the original media of a boosted Instagram post.
@@ -10568,10 +10584,13 @@ def register_generated_tools(mcp, _get_client):
         Platforms: meta
 
         Args:
-            ad_id: Zernio ad id (24-char hex) or platform ad id. (required)"""
+            ad_id: Zernio ad id (24-char hex) or platform ad id. (required)
+            account_id: Meta only. A Zernio connection id (Meta Ads or Facebook connection) used when `{adId}` is a Meta ad id that is not in Zernio's synced store, for example an ad created in Ads Manager on an ad account reached only through a Facebook connection. The ad is then read live from Meta through that connection and the response carries `synced: false`. The same rules as GET /v1/ads/campaigns/{campaignId} apply: a connection on a profile the API key cannot access answers 404, and an ad on an ad account outside the connection's selected ad accounts answers 403 `ad_account_not_selected`. An id Meta cannot read through the connection, or that is not an ad (a campaign or ad set id, for example), answers 404 `ad_not_found`, and a connection that is not Meta answers 501. Ads Meta reports as DELETED are returned too, with their status. Ignored when the ad is in the store (the stored ad's own connection is used). Without it an unsynced ad answers 404 `ad_not_found`. Writes (PUT, DELETE, status) still need the ad in the store."""
         client = _get_client()
         try:
-            response = client.ad_creatives.get_ad_media(ad_id=ad_id)
+            response = client.ad_creatives.get_ad_media(
+                ad_id=ad_id, account_id=account_id
+            )
             return _format_response(response)
         except Exception as e:
             return f"Error: {e}"

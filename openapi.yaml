@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.386.0"
+  version: "1.387.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -783,6 +783,28 @@ components:
         campaign listings `budget` is the one that line item or campaign holds
         now (returned, not stored); a row whose budget the other level holds
         keeps its synced `budget`.
+    UnsyncedMetaAdAccountId:
+      name: accountId
+      in: query
+      required: false
+      schema: { type: string }
+      description: >-
+        Meta only. A Zernio connection id (Meta Ads or Facebook connection) used
+        when `{adId}` is a Meta ad id that is not in Zernio's synced store, for
+        example an ad created in Ads Manager on an ad account reached only
+        through a Facebook connection. The ad is then read live from Meta
+        through that connection and the response carries `synced: false`.
+        The same rules as GET /v1/ads/campaigns/{campaignId} apply: a
+        connection on a profile the API key cannot access answers 404, and an
+        ad on an ad account outside the connection's selected ad accounts
+        answers 403 `ad_account_not_selected`. An id Meta cannot read through
+        the connection, or that is not an ad (a campaign or ad set id, for
+        example), answers 404 `ad_not_found`, and a connection that is not
+        Meta answers 501. Ads Meta reports as DELETED are returned too, with
+        their status. Ignored when the ad is in the store (the stored ad's own
+        connection is used). Without it an unsynced ad answers 404
+        `ad_not_found`. Writes (PUT, DELETE, status) still need the ad in the
+        store.
     CatalogId:
       name: catalogId
       in: path
@@ -14718,6 +14740,7 @@ components:
           example: video
         goal: { type: string, enum: [engagement, traffic, awareness, video_views, lead_generation, lead_conversion, conversions, app_promotion, catalog_sales, page_likes, page_visits, job_applicants], description: "Available goals vary by platform. Meta (Facebook/Instagram) supports all 11 (incl. `lead_conversion` = website pixel lead optimization, `catalog_sales` = Advantage+ catalog ads `page_likes` = Page Likes conversion location under Engagement and `page_visits` = Page visits and followers under Traffic). TikTok supports engagement, traffic, awareness, video_views, lead_generation, conversions, app_promotion. LinkedIn supports all Meta goals except app_promotion / lead_conversion / catalog_sales / page_likes / page_visits. X supports engagement, traffic, awareness, video_views, app_promotion. Pinterest supports only engagement, traffic, awareness, video_views. Google Ads supports only engagement, traffic, awareness (video_views is rejected at create with 422 FEATURE_NOT_AVAILABLE)." }
         isExternal: { type: boolean, description: True for ads synced from platform ad managers }
+        synced: { type: boolean, description: 'Only on GET /v1/ads/{adId}. True when the ad comes from Zernio''s synced store; false when it was read live from Meta because it is not synced yet (request made with `accountId`). An unsynced ad has no `id`.' }
         budget:
           type: [object, "null"]
           properties:
@@ -63051,6 +63074,15 @@ paths:
         With `live=true` the ad's own switch (`configuredStatus`), its delivery status (`status`,
         `platformStatus`) and its ad set and campaign switches (`platformAdSetStatus`,
         `platformCampaignStatus`) are read live.
+
+        **Meta ads that are not synced yet.** Pass `accountId` with a Meta `platformAdId` to read an ad
+        Zernio has not synced (for example one created in Ads Manager on an ad account reached only
+        through a Facebook connection). The ad is read live from Meta and mapped exactly like a synced
+        row (name, `status`, `platformStatus`, `configuredStatus`, `platformAdSetId`,
+        `platformCampaignId`, campaign and ad set names, budgets, and `creative` with its `id`, body,
+        link, image and video), with `synced: false`, no `id` (it has no Zernio row) and `statusReadAt`
+        set to the time of the read. Synced ads answer `synced: true`. Only a numeric id takes this
+        path, so dark post ids (`{pageId}_{postId}`) keep the dark post lookup above.
       security:
         - bearerAuth: []
       parameters:
@@ -63061,6 +63093,7 @@ paths:
           description: |
             Zernio `_id` (hex), Meta `platformAdId` (numeric), or one of the creative's effective story/media IDs. See description for details.
         - $ref: '#/components/parameters/LiveStatusRead'
+        - $ref: '#/components/parameters/UnsyncedMetaAdAccountId'
       responses:
         '200':
           description: Ad details
@@ -63086,7 +63119,7 @@ paths:
                   ad: { $ref: '#/components/schemas/Ad' }
                   cachedAt: { type: [string, "null"], format: date-time, description: "Google RSA details cache timestamp." }
                   stale: { type: boolean, description: "Whether Google RSA details use the last successful cached response." }
-                  statusReadAt: { type: [string, "null"], format: date-time, description: "Only with `live=true`. When the switches were read from the platform; null when the live read failed and the stored values were returned." }
+                  statusReadAt: { type: [string, "null"], format: date-time, description: "With `live=true`, when the switches were read from the platform; null when the live read failed and the stored values were returned. Always set on an unsynced Meta ad read with `accountId`, the time of that read." }
                   darkPost:
                     type: object
                     description: 'Only when `{adId}` is a Facebook ad dark post with no resolvable ad (then `ad` is null).'
@@ -63103,7 +63136,9 @@ paths:
                       lastActivityAt: { type: string, format: date-time }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/AdAccountNotSelected' }
         '404': { $ref: '#/components/responses/NotFound' }
+        '501': { description: "`accountId` names a connection that is not Meta (unsynced ad reads are Meta only)." }
     put:
       x-resource-group: "ads"
       operationId: updateAd
@@ -64537,10 +64572,14 @@ paths:
 
         Renders an EXISTING ad per placement via Meta's `/{ad_id}/previews`. Each preview is an HTML
         `<iframe>` snippet embeddable directly. Unknown `formats` values return Meta's 400 verbatim.
+
+        **Meta ads that are not synced yet.** Pass `accountId` with a Meta platform ad id that is not in
+        Zernio's store to render it live through that connection; the response carries `synced: false`.
       security:
         - bearerAuth: []
       parameters:
-        - { name: adId, in: path, required: true, schema: { type: string }, description: "Zernio ad id (24-char hex)." }
+        - { name: adId, in: path, required: true, schema: { type: string }, description: "Zernio ad id (24-char hex) or Meta platform ad id." }
+        - $ref: '#/components/parameters/UnsyncedMetaAdAccountId'
         - { name: formats, in: query, schema: { type: string }, description: "Comma-separated Meta ad_format values (max 10), one preview per format. Defaults to DESKTOP_FEED_STANDARD." }
       responses:
         '409': { description: "Several active connections on the API key's profiles reach the ad account of this ad (code `ambiguous_account`), so the connection to act with is ambiguous. Keep one of them connected or move the others to a profile this key cannot access." }
@@ -64553,6 +64592,7 @@ paths:
                 type: object
                 properties:
                   adId: { type: string }
+                  synced: { type: boolean, description: "False when the ad was read live from Meta because it is not in Zernio's store (request made with `accountId`)." }
                   previews:
                     type: array
                     items:
@@ -64564,7 +64604,7 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { description: Ad not found }
         '429': { $ref: '#/components/responses/MetaRateLimited' }
-        '501': { description: Only supported on Meta (facebook/instagram) }
+        '501': { description: "Only supported on Meta (facebook/instagram). `accountId` naming a connection that is not Meta also answers 501." }
 
   /v1/ads/{adId}/review:
     get:
@@ -64608,10 +64648,15 @@ paths:
         `platformStatus`: TikTok reports `AD_STATUS_AUDIT` while the ad is in review and
         `AD_STATUS_AD_PRE_ONLINE` once it passed and is about to deliver (both map to
         `status: pending_review`); `AD_STATUS_AUDIT_DENY` maps to `rejected`.
+
+        **Meta ads that are not synced yet.** Pass `accountId` with a Meta platform ad id that is not in
+        Zernio's store to read its review live through that connection. The response then has
+        `adId: null`, `synced: false`, and nothing is stored. Synced ads answer `synced: true`.
       security:
         - bearerAuth: []
       parameters:
         - { name: adId, in: path, required: true, schema: { type: string }, description: "Zernio ad id (24-char hex) or the platform ad id." }
+        - $ref: '#/components/parameters/UnsyncedMetaAdAccountId'
       responses:
         '403': { $ref: '#/components/responses/AdAccountNotSelected' }
         '200':
@@ -64621,9 +64666,10 @@ paths:
               schema:
                 type: object
                 properties:
-                  adId: { type: string }
+                  adId: { type: [string, "null"], description: "Zernio ad id; null for an unsynced Meta ad read with `accountId`." }
                   platform: { type: string }
                   platformAdId: { type: string }
+                  synced: { type: boolean, description: "False when the ad was read live from Meta because it is not in Zernio's store." }
                   review:
                     type: object
                     properties:
@@ -64687,7 +64733,7 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { description: "Ad not found, it has no platform ad id yet, or the platform has no review record for it" }
         '429': { $ref: '#/components/responses/RateLimited' }
-        '501': { description: "Only supported on TikTok, Google and Meta (Facebook and Instagram ads)" }
+        '501': { description: "Only supported on TikTok, Google and Meta (Facebook and Instagram ads). `accountId` naming a connection that is not Meta also answers 501." }
 
   /v1/ads/{adId}/tiktok-smart-plus-review:
     get:
@@ -64775,10 +64821,14 @@ paths:
         URLs carry an `oe=<hex>` expiration (image_url ~24 h, video source ~12 d). Treat
         URLs as short-lived: re-fetch this endpoint before serving or downloading assets
         instead of caching URLs beyond that window.
+
+        **Meta ads that are not synced yet.** Pass `accountId` with a Meta platform ad id that is not in
+        Zernio's store to read its media live through that connection; the response carries `synced: false`.
       security:
         - bearerAuth: []
       parameters:
         - { name: adId, in: path, required: true, schema: { type: string }, description: "Zernio ad id (24-char hex) or platform ad id." }
+        - $ref: '#/components/parameters/UnsyncedMetaAdAccountId'
       responses:
         '409': { description: "Several active connections on the API key's profiles reach the ad account of this ad (code `ambiguous_account`), so the connection to act with is ambiguous. Keep one of them connected or move the others to a profile this key cannot access." }
         '403': { $ref: '#/components/responses/AdAccountNotSelected' }
@@ -64791,6 +64841,7 @@ paths:
                 properties:
                   adId: { type: string }
                   platform: { type: string, description: "'facebook' or 'instagram'. Only Meta is supported for now." }
+                  synced: { type: boolean, description: "False when the ad was read live from Meta because it is not in Zernio's store (request made with `accountId`)." }
                   media:
                     type: array
                     items:
@@ -64806,7 +64857,7 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { description: Ad not found }
         '422': { description: No active Meta connection for this ad. Reconnect the account. }
-        '501': { description: Only supported on Meta (facebook/instagram) }
+        '501': { description: "Only supported on Meta (facebook/instagram). `accountId` naming a connection that is not Meta also answers 501." }
 
   /v1/ads/keywords/ideas:
     post:

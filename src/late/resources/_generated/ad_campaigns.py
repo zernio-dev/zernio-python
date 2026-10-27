@@ -939,10 +939,13 @@ class AdCampaignsResource:
         )
         return self._client._get("/v1/ads/timeline", params=params)
 
-    def get_ad(self, ad_id: str, *, live: bool | None = False) -> dict[str, Any]:
+    def get_ad(
+        self, ad_id: str, *, live: bool | None = False, account_id: str | None = None
+    ) -> dict[str, Any]:
         """Get ad details"""
         params = self._build_params(
             live=live,
+            account_id=account_id,
         )
         return self._client._get(f"/v1/ads/{ad_id}", params=params)
 
@@ -1153,9 +1156,14 @@ class AdCampaignsResource:
             f"/v1/ads/ad-sets/{ad_set_id}/assets", params=params
         )
 
-    def get_ad_review(self, ad_id: str) -> dict[str, Any]:
+    def get_ad_review(
+        self, ad_id: str, *, account_id: str | None = None
+    ) -> dict[str, Any]:
         """Read the platform's review verdict for an ad"""
-        return self._client._get(f"/v1/ads/{ad_id}/review")
+        params = self._build_params(
+            account_id=account_id,
+        )
+        return self._client._get(f"/v1/ads/{ad_id}/review", params=params)
 
     def get_tik_tok_smart_plus_ad_review(self, ad_id: str) -> dict[str, Any]:
         """Review status of each creative in a TikTok Smart+ ad"""
@@ -2627,10 +2635,13 @@ class AdCampaignsResource:
         )
         return await self._client._aget("/v1/ads/timeline", params=params)
 
-    async def aget_ad(self, ad_id: str, *, live: bool | None = False) -> dict[str, Any]:
+    async def aget_ad(
+        self, ad_id: str, *, live: bool | None = False, account_id: str | None = None
+    ) -> dict[str, Any]:
         """Get ad details (async)"""
         params = self._build_params(
             live=live,
+            account_id=account_id,
         )
         return await self._client._aget(f"/v1/ads/{ad_id}", params=params)
 
@@ -2847,9 +2858,14 @@ class AdCampaignsResource:
             f"/v1/ads/ad-sets/{ad_set_id}/assets", params=params
         )
 
-    async def aget_ad_review(self, ad_id: str) -> dict[str, Any]:
+    async def aget_ad_review(
+        self, ad_id: str, *, account_id: str | None = None
+    ) -> dict[str, Any]:
         """Read the platform's review verdict for an ad (async)"""
-        return await self._client._aget(f"/v1/ads/{ad_id}/review")
+        params = self._build_params(
+            account_id=account_id,
+        )
+        return await self._client._aget(f"/v1/ads/{ad_id}/review", params=params)
 
     async def aget_tik_tok_smart_plus_ad_review(self, ad_id: str) -> dict[str, Any]:
         """Review status of each creative in a TikTok Smart+ ad (async)"""
