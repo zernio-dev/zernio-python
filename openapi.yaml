@@ -2946,8 +2946,8 @@ components:
             workflowId }]` (1 to 3, text only and the text then 640 characters at most, sent
             as Meta's button_template, `phone` Facebook-only, not inside cards),
             `quickReplies:[{ title, payload, imageUrl, workflowId }]` (1 to 13, not combined with
-            `buttons`) and `messageTag: HUMAN_AGENT|CONFIRMED_EVENT_UPDATE|POST_PURCHASE_UPDATE|ACCOUNT_UPDATE`
-            (Instagram accepts only `HUMAN_AGENT`). Titles are capped at 20 characters (80 for card
+            `buttons`). `messageTag` is not available: a workflow only sends within the 24h window, and
+            `HUMAN_AGENT` is rejected with a 400 because it is only for replies typed by a person. Titles are capped at 20 characters (80 for card
             titles and subtitles). A postback button or quick reply with no `payload` gets
             `zernio:workflow:<this workflow id>`, so a tap answers this workflow's pending
             `wait_for_reply` or restarts it; with `workflowId` (a 24-hex workflow id, not combined
@@ -42689,7 +42689,7 @@ paths:
                 messageTag:
                   type: string
                   enum: [CONFIRMED_EVENT_UPDATE, POST_PURCHASE_UPDATE, ACCOUNT_UPDATE, HUMAN_AGENT]
-                  description: Facebook message tag for messaging outside 24h window. Requires messagingType MESSAGE_TAG. Instagram only supports HUMAN_AGENT.
+                  description: 'Facebook and Instagram. To reply after the 24h window, send HUMAN_AGENT with messagingType MESSAGE_TAG: it works up to 7 days after the person''s last message, for replies typed by a person only (Meta does not allow it on automated messages). Meta retired the other tags, so they fail.'
                 replyTo:
                   type: string
                   description: 'Platform message ID to quote-reply to. For WhatsApp, pass the wamid; for Telegram, the Telegram message ID (delivered as message.platformMessageId on webhooks, and as `id` on each entry of the list-messages endpoint). On Slack it threads the reply (thread_ts) instead of quoting. Instagram and Facebook Messenger do not support send-side quote replies: the message is sent without a quote and the successful response includes a warnings entry with code ignored_field and param replyTo. Other platforms without send-side reply support ignore this field.'
@@ -57295,7 +57295,7 @@ paths:
                     messageTag:
                       type: string
                       enum: [CONFIRMED_EVENT_UPDATE, POST_PURCHASE_UPDATE, ACCOUNT_UPDATE, HUMAN_AGENT]
-                      description: 'Instagram and Facebook only. Meta message tag sent with every recipient message (messaging_type MESSAGE_TAG) so the broadcast can reach people outside the 24h window. Instagram accepts HUMAN_AGENT only. Rejected with a 400 on any other platform.'
+                      description: 'Not usable: a broadcast only reaches people within the 24h window. HUMAN_AGENT is rejected with a 400 because it is only for replies typed by a person, and Meta retired the other tags.'
                 template:
                   type: object
                   description: WhatsApp template (required when platform is whatsapp)
