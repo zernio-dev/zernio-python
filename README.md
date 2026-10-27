@@ -567,6 +567,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `ad_campaigns.get_ad_campaign_details()` | Get live campaign details |
 | `ad_campaigns.get_ad_review()` | Read the platform's review verdict for an ad |
 | `ad_campaigns.get_ad_set_details()` | Get live ad-set details |
+| `ad_campaigns.get_ad_set_targeting()` | Read a Reddit ad group's targeting and schedule |
 | `ad_campaigns.get_ad_tree()` | Get campaign tree |
 | `ad_campaigns.get_ads_timeline()` | Get daily account metrics |
 | `ad_campaigns.get_campaign_ad_schedule()` | Read a campaign's ad schedule (dayparting) |

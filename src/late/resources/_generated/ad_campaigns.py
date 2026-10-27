@@ -811,6 +811,8 @@ class AdCampaignsResource:
         regional_regulation_identities: dict[str, Any] | None = None,
         smart_targeting: dict[str, Any] | None = None,
         placements: Any | None = None,
+        start_date: str | None = None,
+        end_date: Any | None = None,
         targeting: Any | None = None,
         bid_amount: float | None = None,
         roas_average_floor: float | None = None,
@@ -831,6 +833,8 @@ class AdCampaignsResource:
             regional_regulation_identities=regional_regulation_identities,
             smart_targeting=smart_targeting,
             placements=placements,
+            start_date=start_date,
+            end_date=end_date,
             targeting=targeting,
             bid_amount=bid_amount,
             roas_average_floor=roas_average_floor,
@@ -843,6 +847,17 @@ class AdCampaignsResource:
     def delete_ad_set(self, ad_set_id: str) -> dict[str, Any]:
         """Delete an ad set"""
         return self._client._delete(f"/v1/ads/ad-sets/{ad_set_id}")
+
+    def get_ad_set_targeting(
+        self, ad_set_id: str, *, platform: str | None = None
+    ) -> dict[str, Any]:
+        """Read a Reddit ad group's targeting and schedule"""
+        params = self._build_params(
+            platform=platform,
+        )
+        return self._client._get(
+            f"/v1/ads/ad-sets/{ad_set_id}/targeting", params=params
+        )
 
     def update_ad_set_status(
         self, ad_set_id: str, status: str, platform: str
@@ -2482,6 +2497,8 @@ class AdCampaignsResource:
         regional_regulation_identities: dict[str, Any] | None = None,
         smart_targeting: dict[str, Any] | None = None,
         placements: Any | None = None,
+        start_date: str | None = None,
+        end_date: Any | None = None,
         targeting: Any | None = None,
         bid_amount: float | None = None,
         roas_average_floor: float | None = None,
@@ -2502,6 +2519,8 @@ class AdCampaignsResource:
             regional_regulation_identities=regional_regulation_identities,
             smart_targeting=smart_targeting,
             placements=placements,
+            start_date=start_date,
+            end_date=end_date,
             targeting=targeting,
             bid_amount=bid_amount,
             roas_average_floor=roas_average_floor,
@@ -2514,6 +2533,17 @@ class AdCampaignsResource:
     async def adelete_ad_set(self, ad_set_id: str) -> dict[str, Any]:
         """Delete an ad set (async)"""
         return await self._client._adelete(f"/v1/ads/ad-sets/{ad_set_id}")
+
+    async def aget_ad_set_targeting(
+        self, ad_set_id: str, *, platform: str | None = None
+    ) -> dict[str, Any]:
+        """Read a Reddit ad group's targeting and schedule (async)"""
+        params = self._build_params(
+            platform=platform,
+        )
+        return await self._client._aget(
+            f"/v1/ads/ad-sets/{ad_set_id}/targeting", params=params
+        )
 
     async def aupdate_ad_set_status(
         self, ad_set_id: str, status: str, platform: str

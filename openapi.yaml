@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.384.0"
+  version: "1.385.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -62404,6 +62404,19 @@ paths:
         written (use PUT /v1/ads/{adId} with `targeting` where that platform supports it). The
         live read and the `incomeTier` lookup run before any other field is written, so a 502
         or 422 from them leaves the ad set unchanged.
+
+        Reddit ad group targeting and schedule: `targeting` (same shape as on create, `placements`
+        is a 400) and `startDate` / `endDate` change the ad group with one PATCH to Reddit. Zernio
+        reads the live ad group first and replaces only the targeting groups the request names:
+        the included locations (`countries`, `regions`, `metros`, `cities`, `zips`) are one list
+        on Reddit, so sending any of them replaces all included locations, and devices, platforms,
+        carriers and automated expansion set in Reddit Ads Manager are kept. Read the current
+        values with GET /v1/ads/ad-sets/{adSetId}/targeting. The schedule is checked against the
+        campaign before anything in the request is written: an ad group cannot start before a
+        campaign that starts in the future, cannot end after the campaign's end, and under
+        campaign budget optimization it must end by the campaign end (and has no end date when the
+        campaign has none); each returns 400 naming `startDate` or `endDate`. Zernio never resends
+        the PATCH on its own, so after a 5xx read the ad group back before retrying.
       security:
         - bearerAuth: []
       parameters:
@@ -62535,10 +62548,36 @@ paths:
                     devicePlatforms:
                       type: array
                       items: { type: string, enum: [mobile, desktop] }
+                startDate:
+                  type: string
+                  description: |
+                    Reddit only. Every other platform ignores it (nothing is written and no error is returned,
+                    so a body that also sends `status` still applies it); Meta takes it in
+                    `platformSpecificData.startDate`. The ad group's new start_time, ISO 8601. A value
+                    without an offset (`YYYY-MM-DD` or `YYYY-MM-DDTHH:MM:SS`) is read in the ad account
+                    timezone. It cannot be earlier than the start of a campaign that starts in the future,
+                    nor at or after the ad group's end (400, `param: startDate`).
+                endDate:
+                  type: [string, "null"]
+                  description: |
+                    Reddit only. Every other platform ignores it (nothing is written and no error is returned,
+                    so a body that also sends `status` still applies it); Meta takes it in
+                    `platformSpecificData.endDate`. The ad group's new end_time, ISO 8601, read in the ad
+                    account timezone when it has no offset; a date alone means the end of that day. `null`
+                    removes the end date so the ad group runs continuously. Returns 400 with
+                    `param: endDate` when it is not after the start, when it falls after the campaign's
+                    end, when the campaign uses campaign budget optimization with no end date (Reddit then
+                    takes no end date on its ad groups), when `null` would outlive a campaign budget
+                    campaign that ends, or when `null` is sent for an ad group with a lifetime budget.
                 targeting:
                   allOf: [{ $ref: '#/components/schemas/TargetingSpec' }]
                   description: |
-                    Meta only (400 elsewhere). Targeting fields to change, same shape as the `targeting`
+                    Meta and Reddit (400 elsewhere). On Reddit, see the description above: `languages`
+                    must be among Reddit's ISO 639-1 codes (AR, CS, DA, DE, EL, EN, ES, FI, FR, HU, IT, JA,
+                    KO, NL, NO, PL, PT, RO, SV, VI, ZH, any case), emptying every included location is a
+                    400 with `param: targeting.countries`, and fields Reddit ad groups cannot take (age,
+                    income, devices, behaviors, B2B, `places`) return 400 with `param: targeting.<field>`.
+                    On Meta: targeting fields to change, same shape as the `targeting`
                     object on POST /v1/ads/create. Only the keys you send change: Zernio reads the ad set's
                     live targeting from Meta, merges these keys over it and writes the full spec back, so
                     everything you do not send (custom audiences, geo, age, interest groups,
@@ -62658,8 +62697,10 @@ paths:
                   bidAmount: { type: [number, "null"] }
                   roasAverageFloor: { type: [number, "null"] }
                   platformSpecificData: { type: object }
-                  targeting: { type: object, description: "Present when `placements` or `targeting` was sent. The ad set's full Meta targeting as written (Meta snake_case). The same snake_case object is stored as the ad set's and its ads' `targeting`." }
-        '400': { description: "Invalid input, including `placements` or `targeting` on a platform other than Meta, a targeting field Meta cannot honour, `placements` sent both at the top level and inside `targeting`, or a `platformSpecificData.promotedObject` key Meta cannot change on an existing ad set (anything but `pixelId`, `customEventType`, `customEventStr`, `applicationId` and `productCatalogId`)" }
+                  targeting: { type: object, description: "Present when `placements` or `targeting` was sent. The ad set's full targeting as written, in the platform's own vocabulary (Meta or Reddit snake_case). Stored as the ad set's `targeting`. Meta stores the same object on its ads; Reddit stores it on its ads in the create vocabulary (`countries`, `communities`, ...), as GET /v1/ads/ad-sets/{adSetId}/targeting returns it." }
+                  startDate: { type: string, description: "Reddit: the start_time written, a UTC instant. Present when `startDate` was sent." }
+                  endDate: { type: [string, "null"], description: "Reddit: the end_time written, a UTC instant, or null when the end date was removed. Present when `endDate` was sent." }
+        '400': { description: "Invalid input, including `placements` on a platform other than Meta, `targeting` on a platform other than Meta and Reddit, a Reddit `startDate` or `endDate` that is not a date, a Reddit schedule the campaign does not allow, a targeting field the platform cannot honour, `placements` sent both at the top level and inside `targeting`, or a `platformSpecificData.promotedObject` key Meta cannot change on an existing ad set (anything but `pixelId`, `customEventType`, `customEventStr`, `applicationId` and `productCatalogId`)" }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403':
           description: |
@@ -62704,6 +62745,46 @@ paths:
         '404': { description: Ad set not found }
         '501': { description: Operation not supported on this platform }
 
+  /v1/ads/ad-sets/{adSetId}/targeting:
+    get:
+      x-resource-group: "ads"
+      operationId: getAdSetTargeting
+      tags: ["Ad Campaigns"]
+      x-platforms: ["reddit"]
+      summary: Read a Reddit ad group's targeting and schedule
+      description: |
+        Shows a Reddit ad group's live targeting and schedule in the same shape PUT /v1/ads/ad-sets/{adSetId} takes, so you can prefill an editor.
+
+        Read live from Reddit on every call. Location and interest names are resolved with
+        Reddit's targeting taxonomy; when Reddit cannot resolve them the ids stand in as names and
+        a location that is not a two-letter country is listed under `regions`. Excluded DMAs are
+        listed under `excludedLocations.regions`, since excluded locations have no metro list.
+        Languages come back as lowercase ISO 639-1 codes. Targeting Zernio cannot edit (devices,
+        platforms, carriers, automated expansion) is left out and kept on every edit. Reddit only;
+        every other platform returns 501.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: adSetId, in: path, required: true, schema: { type: string }, description: Reddit ad group ID }
+        - { name: platform, in: query, schema: { type: string, enum: [reddit] }, description: "Disambiguates when the same adSetId string exists on more than one connected platform." }
+      responses:
+        '200':
+          description: Current ad group targeting and schedule
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  adSetId: { type: string }
+                  targeting:
+                    allOf: [{ $ref: '#/components/schemas/TargetingSpec' }]
+                    description: "Only the keys the ad group sets. `regions`, `metros`, `cities` and `zips` entries carry `{ key, name }`; `interests` carry `{ id, name }`."
+                  startDate: { type: [string, "null"], description: "The ad group's start_time, null when it has none." }
+                  endDate: { type: [string, "null"], description: "The ad group's end_time, null when it runs continuously." }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: Ad set not found }
+        '501': { description: "The platform has no ad set targeting read (every platform but Reddit)" }
   /v1/ads/ad-sets/{adSetId}/status:
     put:
       x-resource-group: "ads"
