@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.377.1"
+  version: "1.377.2"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -1018,7 +1018,8 @@ components:
         (ads_read, ads_write, ads_analytics). `Retry-After` comes from
         Pinterest's `x-ratelimit-reset` when it sends one, otherwise 60 seconds.
 
-        TikTok ads: TikTok caps requests per second and answers overage with
+        TikTok ads: TikTok limits requests per app and per endpoint (per
+        second, per minute and per day) and answers overage with
         code 40100 or with code 40002 `OVER_QPS_LIMIT`. Both return 429
         `rate_limited` with `platform: tiktok` and `Retry-After: 10`. Space out
         bulk reads (for example one ad at a time per advertiser) instead of
