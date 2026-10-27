@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.374.1"
+  version: "1.374.2"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -39465,7 +39465,7 @@ paths:
                         lastMessage: { type: string }
                         updatedTime: { type: string, format: date-time }
                         status: { type: string, enum: [active, archived] }
-                        unreadCount: { type: [integer, "null"], description: Number of unread messages }
+                        unreadCount: { type: [integer, "null"], maximum: 1000, description: 'Number of unread incoming messages, capped at 1000. Read from a replica, so it can trail a conversation you just marked read by a few seconds.' }
                         threadControl:
                           type: string
                           enum: [app, ai_agent, other]
