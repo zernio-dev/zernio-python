@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.378.0"
+  version: "1.379.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -176,9 +176,11 @@ x-documentation:
     - `post.external.deleted` - A tracked native post was detected as removed from the platform. `post.deletedAt` carries the detection time. Coverage is bounded to the most recent posts the platform listing returns, and detection is a diff against posts a prior sync already indexed, so an account for which no post has ever been indexed never emits it.
     - `account.connected` - Account connected
     - `account.disconnected` - Account disconnected (token expired)
+    - `account.rate_limited` - A Google or Microsoft mailbox entered a sending cooldown; sends answer 429 until `account.resetsAt`
     - `account.ads.initial_sync_completed` - Initial ads sync (discovery + 90-day backfill) completed for an ads-enabled account
     - `account.ads.sync_failed` - An ad account's ads stopped syncing (no successful sync for 24 hours, or every live ad at the retry cap). Fires once until it recovers
     - `account.ads.sync_recovered` - An ad account reported by `account.ads.sync_failed` is syncing again
+    - `calendar.event.created` / `calendar.event.updated` / `calendar.event.deleted` - An event changed on a connected Microsoft calendar (push). Carries the event id and the change; read it with `GET /v1/calendar/events/{id}`
     - `analytics.synced` - One connected account's analytics sync cycle finished. A trigger, not a transport: it carries no metrics and no cursor, so call `GET /v1/analytics/delta` with your own last `nextCursor` to read what changed across every account. Poll-driven (~hourly per account), not real-time. High volume: subscribe to it on a dedicated endpoint.
     - `message.received` - New inbound DM or SMS received (SMS arrives with `platform: "sms"`)
     - `conversation.started` - A new conversation opened between one of your accounts and a contact, in either direction (any DM platform, and SMS); fires only the first time the thread appears
@@ -348,7 +350,7 @@ tags:
     description: |
       Create, list, and revoke API keys used to authenticate requests.
 
-      Resource groups. A key can opt out of any of the ten groups (publishing, engagement, messages, contacts, analytics, ads, telephony, accounts, billing, webhooks) via `disabledResourceGroups` at creation. Omit the field for a legacy full-access key. A key with any group disabled mints with the `zrk_` prefix, is refused on operations in those groups with 403 `insufficient_permissions` plus `required_group`, and can never manage API keys, invites, connected apps, or member identity. Each operation publishes its group as `x-resource-group`. There is no update endpoint: duplicate the key with different groups and revoke the old one.
+      Resource groups. A key can opt out of any of the twelve groups (publishing, engagement, messages, contacts, analytics, ads, telephony, accounts, billing, webhooks, commerce, calendar) via `disabledResourceGroups` at creation. Omit the field for a legacy full-access key. A key with any group disabled mints with the `zrk_` prefix, is refused on operations in those groups with 403 `insufficient_permissions` plus `required_group`, and can never manage API keys, invites, connected apps, or member identity. Each operation publishes its group as `x-resource-group`. There is no update endpoint: duplicate the key with different groups and revoke the old one.
   - name: Connected Apps
     description: |
       List and revoke the OAuth clients (AI assistants and MCP connectors) authorized
@@ -362,6 +364,22 @@ tags:
     description: |
       OAuth and credential flows for connecting accounts, plus per-platform selection
       steps (Facebook pages, Pinterest boards, LinkedIn organizations, Google Business Profile locations, etc.).
+  - name: Email
+    description: "Read, send and organize mail in connected Google Workspace and Microsoft 365 mailboxes. Connect with `scopes=email`."
+  - name: Calendar
+    description: "Calendars, events, RSVPs, free/busy and cross-account availability for connected Google and Microsoft accounts. Connect with `scopes=calendar`."
+  - name: Files
+    description: |
+      Google Drive and OneDrive files of a connected account: list, download, upload, folders, rename, move, trash and share links. Connect with `scopes=files`. A file can be attached to a post as `{ fileId, accountId }` in `mediaItems`.
+
+      **Google Drive access is per file.** Google accounts are connected with Google's `drive.file` scope, not full Drive access. Zernio, and so your integration, can open only:
+
+        - files created through Zernio (`POST /v1/files`, `POST /v1/files/folders`), and
+        - files the user picked in Google Picker: in the Zernio dashboard, or on a hosted picker page you open with `POST /v1/files/picker-sessions`.
+
+      Everything else in the user's Drive is invisible: listing returns only the files above, a folder the user never picked lists empty (picking a folder does not grant its contents), and any per-file call on another id answers 404 `resource_not_found` with `details.reason: file_not_granted`. The fix for that 404 is always the same: have the user pick the file. Picked files in shared drives work. Files and folders stay granted until the user removes Zernio from their Google account.
+
+      OneDrive (Microsoft accounts) has no such limit: the account reaches every file the user can see, and picker sessions do not apply.
   - name: Media
     description: |
       Upload and presign media (images, videos, documents) for use in posts.
@@ -605,7 +623,7 @@ tags:
   - name: Webhooks
     description: |
       Configure webhooks for real-time notifications. Webhooks can be created from the dashboard (Settings → Webhooks) or via this API.
-      Events: post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.ads.initial_sync_completed, account.ads.sync_failed, account.ads.sync_recovered, analytics.synced, message.received, conversation.started, conversation.control_changed, call.received, call.ended, call.failed, call.permission_request, message.sent, message.edited, message.deleted, message.delivered, message.read, message.played, message.failed, reaction.received, referral.received, comment.received, review.new, review.updated, lead.received, ad.status_changed, ad.review.approved, ad.review.rejected, ad.delivery_issue, campaign.budget.depleted, ad_account.status_changed, ad.video.processed, ad_rule.triggered, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.account.quality_updated, whatsapp.account.status_updated, whatsapp.account.alert_received, whatsapp.contact.identity_changed, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, phone_number.stock_available, verification.approved, verification.failed, api.changelog.published, sms.registration.action_required, sms.registration.status_updated, branded_calling.identity.status_updated, branded_calling.identity.action_required, branded_calling.number.status_updated, rcs.agent.status_updated, commerce.product.created, commerce.product.updated, commerce.product.deleted, commerce.order.created, commerce.order.updated, commerce.order.refunded, contact.tag_added, contact.tag_removed, contact.field_changed, sequence.enrolled, sequence.exited, workflow.run.started, workflow.run.completed, workflow.run.failed, support.run.completed, support.run.failed, webhook.test.
+      Events: post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.ads.initial_sync_completed, account.ads.sync_failed, account.ads.sync_recovered, analytics.synced, message.received, conversation.started, conversation.control_changed, call.received, call.ended, call.failed, call.permission_request, message.sent, message.edited, message.deleted, message.delivered, message.read, message.played, message.failed, reaction.received, referral.received, comment.received, review.new, review.updated, lead.received, ad.status_changed, ad.review.approved, ad.review.rejected, ad.delivery_issue, campaign.budget.depleted, ad_account.status_changed, ad.video.processed, ad_rule.triggered, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.account.quality_updated, whatsapp.account.status_updated, whatsapp.account.alert_received, whatsapp.contact.identity_changed, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, phone_number.stock_available, verification.approved, verification.failed, api.changelog.published, sms.registration.action_required, sms.registration.status_updated, branded_calling.identity.status_updated, branded_calling.identity.action_required, branded_calling.number.status_updated, rcs.agent.status_updated, commerce.product.created, commerce.product.updated, commerce.product.deleted, commerce.order.created, commerce.order.updated, commerce.order.refunded, contact.tag_added, contact.tag_removed, contact.field_changed, sequence.enrolled, sequence.exited, workflow.run.started, workflow.run.completed, workflow.run.failed, support.run.completed, support.run.failed, account.rate_limited, calendar.event.created, calendar.event.updated, calendar.event.deleted, file.created, file.updated, file.deleted, file.picked, contact.updated, contact.deleted, webhook.test.
       Headers: every delivery carries X-Zernio-Event (event name) and X-Zernio-Event-Id (the payload `id`, a UUID minted once per event and identical across every subscribed endpoint, every automatic retry and every redelivery, so dedupe on it). Security: optional HMAC-SHA256 signature in X-Zernio-Signature header. Configure a secret key to enable verification. Custom headers supported. Legacy X-Late-Event, X-Late-Event-Id and X-Late-Signature duplicates are still sent and will be removed in a future major version.
 
       Resource groups. Every event belongs to one group: post.* to publishing, message.*, reaction.*, conversation.*, call.* and whatsapp.automatic_event to messages, comment.* and review.* to engagement, lead.* and contact.* to contacts, sequence.* and workflow.run.* to messages, ad.*, ad_account.*, ad_rule.* and campaign.* to ads, account.*, whatsapp.template.* and whatsapp.account.* to accounts, analytics.* to analytics, whatsapp.number.*, verification.* and sms.registration.* to telephony, api.changelog.published and webhook.test to webhooks. Support Assistant events (support.run.*) belong to no single group: they need every resource group enabled and a first-party full-scope caller (a session or a full-scope key, never an OAuth token or a profile-scoped key). Two independent controls use that mapping. (1) A restricted (zrk_) API key can only subscribe to, test-fire, redeliver, or read delivery logs for events in the groups it holds, so it can never create a subscription broader than itself. (2) Each subscription carries its own `disabledResourceGroups` denylist: events in a disabled group are dropped before delivery to that endpoint, on live delivery and on every replay path, no matter which key or session created the subscription. Changing that denylist applies to every event emitted after the change; events already queued when it landed can still be delivered for up to five minutes after they were enqueued, because the delivery worker trusts a five-minute enqueue-time snapshot before re-checking. Absent or empty on a subscription means it receives everything it subscribes to, which is the behavior of every subscription created before the field existed.
@@ -740,6 +758,12 @@ components:
         and platform and are accepted only by connection-flow endpoints that
         explicitly list this security scheme.
   parameters:
+    EmailAccountId:
+      name: accountId
+      in: query
+      required: true
+      schema: { type: string }
+      description: The connected Google or Microsoft account.
     LiveStatusRead:
       name: live
       in: query
@@ -923,6 +947,21 @@ components:
             required: [success]
             properties:
               success: { type: boolean }
+    MailboxPreconditionFailed:
+      description: |
+        The connected account cannot serve this request until something outside the request changes. Two codes:
+
+          - `account_scope_missing`: the account was connected without the area this endpoint needs (`details.grantedAreas`, `details.missingArea`), or Google reports the grant lacks a permission. Reconnect with a wider `scopes=`.
+          - `admin_consent_required` (Microsoft): the tenant requires an administrator's approval; `details.adminConsentUrl` is the Microsoft Entra admin-consent link to hand to one. It opens in a browser with no API key and stays valid for one hour; `GET /v1/connect/microsoft/admin-consent` mints a fresh one.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorResponse' }
+    EmailSendRefused:
+      description: |
+        The send was refused before reaching the provider. `email_send_cap_reached`: today's cap for the mailbox is spent (`details.cap` names the limit and `resetsAt`; `retryAfterSeconds` counts to midnight UTC). `rate_limited`: the mailbox is in a sending cooldown, either from a same-body burst to more than 50 recipients in an hour (`details.cap.kind: recipient_burst`) or an earlier trigger; `retryAfterSeconds` says when it lifts and `account.rate_limited` fired when it started.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorResponse' }
     BadRequest:
       description: Invalid request
       content:
@@ -978,7 +1017,7 @@ components:
               required_group:
                 type: string
                 description: 'The resource group the key needs for this operation. Absent on admin-plane and unclassified-path denials.'
-                enum: [publishing, engagement, messages, contacts, analytics, ads, telephony, accounts, billing, webhooks]
+                enum: [publishing, engagement, messages, contacts, analytics, ads, telephony, accounts, billing, webhooks, commerce, calendar, files]
     RateLimited:
       description: |
         The connected account's upstream platform quota is exhausted.
@@ -4491,7 +4530,7 @@ components:
           type: array
           items:
             type: string
-            enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.ads.initial_sync_completed, account.ads.sync_failed, account.ads.sync_recovered, analytics.synced, message.received, conversation.started, conversation.control_changed, call.received, call.ended, call.failed, call.permission_request, message.sent, message.edited, message.deleted, message.delivered, message.read, message.played, message.failed, reaction.received, referral.received, comment.received, review.new, review.updated, lead.received, ad.status_changed, ad.review.approved, ad.review.rejected, ad.delivery_issue, campaign.budget.depleted, ad_account.status_changed, ad.video.processed, ad_rule.triggered, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.account.quality_updated, whatsapp.account.status_updated, whatsapp.account.alert_received, whatsapp.contact.identity_changed, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, phone_number.stock_available, verification.approved, verification.failed, api.changelog.published, sms.registration.action_required, sms.registration.status_updated, branded_calling.identity.status_updated, branded_calling.identity.action_required, branded_calling.number.status_updated, rcs.agent.status_updated, commerce.product.created, commerce.product.updated, commerce.product.deleted, commerce.order.created, commerce.order.updated, commerce.order.refunded, contact.tag_added, contact.tag_removed, contact.field_changed, sequence.enrolled, sequence.exited, workflow.run.started, workflow.run.completed, workflow.run.failed, support.run.completed, support.run.failed]
+            enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.ads.initial_sync_completed, account.ads.sync_failed, account.ads.sync_recovered, analytics.synced, message.received, conversation.started, conversation.control_changed, call.received, call.ended, call.failed, call.permission_request, message.sent, message.edited, message.deleted, message.delivered, message.read, message.played, message.failed, reaction.received, referral.received, comment.received, review.new, review.updated, lead.received, ad.status_changed, ad.review.approved, ad.review.rejected, ad.delivery_issue, campaign.budget.depleted, ad_account.status_changed, ad.video.processed, ad_rule.triggered, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.account.quality_updated, whatsapp.account.status_updated, whatsapp.account.alert_received, whatsapp.contact.identity_changed, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, phone_number.stock_available, verification.approved, verification.failed, api.changelog.published, sms.registration.action_required, sms.registration.status_updated, branded_calling.identity.status_updated, branded_calling.identity.action_required, branded_calling.number.status_updated, rcs.agent.status_updated, commerce.product.created, commerce.product.updated, commerce.product.deleted, commerce.order.created, commerce.order.updated, commerce.order.refunded, contact.tag_added, contact.tag_removed, contact.field_changed, sequence.enrolled, sequence.exited, workflow.run.started, workflow.run.completed, workflow.run.failed, support.run.completed, support.run.failed, account.rate_limited, calendar.event.created, calendar.event.updated, calendar.event.deleted, file.created, file.updated, file.deleted, file.picked, contact.updated, contact.deleted]
           description: Events subscribed to
         isActive:
           type: boolean
@@ -4518,7 +4557,7 @@ components:
           type: array
           items:
             type: string
-            enum: [publishing, engagement, messages, contacts, analytics, ads, telephony, accounts, billing, webhooks]
+            enum: [publishing, engagement, messages, contacts, analytics, ads, telephony, accounts, billing, webhooks, commerce, calendar, files]
           description: >-
             Resource groups this subscription does not receive (opt-out
             denylist, same vocabulary and same semantics as the field on API
@@ -8604,10 +8643,17 @@ components:
         type:
           type: string
           enum: [image, video, gif, document]
+          description: 'Optional when the item names a connected file (`fileId`): inferred from the file''s MIME type.'
         url:
           type: string
           format: uri
-          description: 'A media item with a null, missing or empty url is dropped.'
+          description: 'A media item with a null, missing or empty url is dropped, unless it names a connected file with `fileId` + `accountId`.'
+        fileId:
+          type: string
+          description: 'A file of a connected Google Drive or OneDrive account (see the Files endpoints). The file is copied into Zernio media storage when the post is created and the item is stored as a plain `url`; a folder, an undownloadable file or an unknown id fails the request with a 4xx naming `mediaItems[i].fileId`. Requires `accountId`.'
+        accountId:
+          type: string
+          description: 'The connected Google or Microsoft account the `fileId` belongs to (must have the `files` area). Required with `fileId`.'
         title:
           type: string
           description: Optional title for the media item. Used as the document title for LinkedIn PDF/carousel posts. If omitted, falls back to the post title, then the filename.
@@ -10884,6 +10930,391 @@ components:
           type: integer
           description: 'In the profile list. Connected accounts on the profile, including ones that need reconnecting; phone and SMS number internals and posting accounts hidden by an ads connect are not counted.'
         createdAt: { type: string, format: date-time }
+    EmailAddress:
+      type: object
+      required: [email]
+      properties:
+        email: { type: string, format: email }
+        name: { type: [string, "null"] }
+    CursorPagination:
+      type: object
+      properties:
+        hasMore: { type: boolean }
+        nextCursor: { type: [string, "null"], description: 'Opaque; pass it back as `cursor`.' }
+    EmailListMeta:
+      type: object
+      properties:
+        filteredClientSide:
+          type: array
+          items: { type: string }
+          description: 'The filters the provider could not apply server-side, so they were applied to the fetched page (Microsoft: `bcc`, `anyEmail`, and every other filter when `searchQueryNative` is set).'
+    EmailAttachment:
+      type: object
+      properties:
+        id: { type: string }
+        filename: { type: string }
+        contentType: { type: string }
+        size: { type: integer }
+        isInline: { type: boolean }
+        contentId: { type: [string, "null"] }
+    EmailMessage:
+      type: object
+      properties:
+        id: { type: string, description: "The provider's message id." }
+        threadId: { type: string }
+        accountId: { type: string }
+        provider: { type: string, enum: [google, microsoft] }
+        folders: { type: array, items: { type: string } }
+        from: { oneOf: [{ $ref: '#/components/schemas/EmailAddress' }, { type: "null" }] }
+        to: { type: array, items: { $ref: '#/components/schemas/EmailAddress' } }
+        cc: { type: array, items: { $ref: '#/components/schemas/EmailAddress' } }
+        bcc: { type: array, items: { $ref: '#/components/schemas/EmailAddress' } }
+        replyTo: { type: array, items: { $ref: '#/components/schemas/EmailAddress' } }
+        subject: { type: string }
+        snippet: { type: string }
+        text: { type: [string, "null"] }
+        html: { type: [string, "null"] }
+        attachments: { type: array, items: { $ref: '#/components/schemas/EmailAttachment' } }
+        headers: { type: object, additionalProperties: { type: string }, description: 'Only with `includeHeaders=true`.' }
+        raw: { type: string, description: 'MIME source, only with `raw=true`.' }
+        date: { type: string, format: date-time }
+        unread: { type: boolean }
+        starred: { type: boolean }
+        metadata: { type: object, additionalProperties: { type: string } }
+    EmailThread:
+      type: object
+      properties:
+        id: { type: string }
+        accountId: { type: string }
+        provider: { type: string, enum: [google, microsoft] }
+        subject: { type: string }
+        snippet: { type: string }
+        participants: { type: array, items: { $ref: '#/components/schemas/EmailAddress' } }
+        messageIds: { type: array, items: { type: string } }
+        draftIds: { type: array, items: { type: string } }
+        folders: { type: array, items: { type: string } }
+        hasAttachments: { type: boolean }
+        hasDrafts: { type: boolean }
+        unread: { type: boolean }
+        starred: { type: boolean }
+        earliestMessageAt: { type: [string, "null"], format: date-time }
+        latestMessageReceivedAt: { type: [string, "null"], format: date-time }
+        latestMessageSentAt: { type: [string, "null"], format: date-time }
+    EmailFolder:
+      type: object
+      properties:
+        id: { type: string }
+        accountId: { type: string }
+        provider: { type: string, enum: [google, microsoft] }
+        name: { type: string }
+        wellKnown: { type: string, enum: [inbox, sent, drafts, trash, spam, archive] }
+        unreadCount: { type: integer }
+        totalCount: { type: integer }
+    EmailMessagePatch:
+      type: object
+      required: [accountId]
+      properties:
+        accountId: { type: string }
+        unread: { type: boolean }
+        starred: { type: boolean }
+        folder: { type: string, description: 'Well-known folder name or folder id to move into.' }
+    SendEmailRequest:
+      type: object
+      required: [accountId, to, subject]
+      properties:
+        accountId: { type: string }
+        to: { type: array, minItems: 1, maxItems: 100, items: { $ref: '#/components/schemas/EmailAddress' } }
+        cc: { type: array, maxItems: 100, items: { $ref: '#/components/schemas/EmailAddress' } }
+        bcc: { type: array, maxItems: 100, items: { $ref: '#/components/schemas/EmailAddress' } }
+        replyTo: { type: array, maxItems: 5, items: { $ref: '#/components/schemas/EmailAddress' } }
+        fromName: { type: string, maxLength: 200 }
+        subject: { type: string, maxLength: 998 }
+        text: { type: string, description: 'Plain-text body. One of `text` or `html` is required.' }
+        html: { type: string }
+        attachments:
+          type: array
+          maxItems: 20
+          items:
+            type: object
+            required: [filename, contentType]
+            properties:
+              filename: { type: string }
+              contentType: { type: string }
+              url: { type: string, format: uri, description: 'Fetched at send time. Exactly one of `url` or `base64`.' }
+              base64: { type: string }
+              contentId: { type: string, description: 'Makes the attachment inline (`cid:` reference in the html).' }
+          description: '25 MB in total; 3 MB per attachment on Microsoft.'
+        headers: { type: object, additionalProperties: { type: string }, description: 'Custom `X-` headers only. `List-Unsubscribe` is dropped on Microsoft and reported in `metadata.droppedHeaders`.' }
+        metadata: { type: object, additionalProperties: { type: string } }
+        scheduledFor: { type: string, format: date-time, description: Reserved; currently rejected. }
+        holdAsDraft: { type: boolean, description: Reserved; currently rejected. }
+        trackOpens: { type: boolean, description: Not available; must be false. }
+        trackLinks: { type: boolean, description: Not available; must be false. }
+    Calendar:
+      type: object
+      properties:
+        id: { type: string }
+        accountId: { type: string }
+        provider: { type: string, enum: [google, microsoft] }
+        name: { type: string }
+        primary: { type: boolean }
+        timezone: { type: [string, "null"] }
+        color: { type: [string, "null"] }
+        readOnly: { type: boolean }
+    CalendarEventFields:
+      type: object
+      properties:
+        title: { type: string, maxLength: 1000 }
+        description: { type: string, description: HTML. }
+        location: { type: string }
+        start: { type: string, description: 'ISO date-time, or a date (`YYYY-MM-DD`) for all-day events.' }
+        end: { type: string, description: 'Exclusive for all-day events.' }
+        allDay: { type: boolean }
+        timezone: { type: string, description: 'IANA zone the event is scheduled in. Default UTC.' }
+        participants: { type: array, maxItems: 100, items: { $ref: '#/components/schemas/EmailAddress' } }
+        recurrence: { type: array, maxItems: 5, items: { type: string }, description: 'RRULE lines, e.g. `RRULE:FREQ=WEEKLY;BYDAY=MO,WE;COUNT=10`.' }
+        reminders:
+          type: object
+          properties:
+            useDefault: { type: boolean }
+            overrides: { type: array, maxItems: 5, items: { type: object, properties: { minutes: { type: integer } } } }
+        conferencing: { type: string, enum: [google_meet, teams] }
+        busy: { type: boolean }
+        visibility: { type: string, enum: [default, public, private] }
+        metadata: { type: object, additionalProperties: { type: string } }
+    CreateCalendarEventRequest:
+      allOf:
+        - type: object
+          required: [accountId, title, start, end]
+          properties:
+            accountId: { type: string }
+            calendarId: { type: string, description: Defaults to the primary calendar. }
+        - $ref: '#/components/schemas/CalendarEventFields'
+    CalendarEvent:
+      type: object
+      properties:
+        id: { type: string }
+        accountId: { type: string }
+        provider: { type: string, enum: [google, microsoft] }
+        calendarId: { type: string }
+        title: { type: string }
+        description: { type: [string, "null"] }
+        location: { type: [string, "null"] }
+        start: { type: string, description: 'ISO date-time with the rendered offset, or a date for all-day events.' }
+        end: { type: string }
+        allDay: { type: boolean }
+        timezone: { type: [string, "null"] }
+        participants:
+          type: array
+          items:
+            allOf:
+              - $ref: '#/components/schemas/EmailAddress'
+              - type: object
+                properties:
+                  status: { type: string, enum: [accepted, declined, tentative, pending] }
+                  comment: { type: [string, "null"] }
+        organizer: { oneOf: [{ $ref: '#/components/schemas/EmailAddress' }, { type: "null" }] }
+        recurrence: { type: [array, "null"], items: { type: string } }
+        reminders:
+          type: object
+          properties:
+            useDefault: { type: boolean }
+            overrides: { type: array, items: { type: object, properties: { minutes: { type: integer } } } }
+        conferencing:
+          type: [object, "null"]
+          properties:
+            provider: { type: string, enum: [google_meet, teams, other] }
+            url: { type: string, format: uri }
+        busy: { type: boolean }
+        visibility: { type: string, enum: [default, public, private] }
+        status: { type: string, enum: [confirmed, tentative, cancelled] }
+        icalUid: { type: [string, "null"] }
+        masterEventId: { type: [string, "null"] }
+        htmlLink: { type: [string, "null"] }
+        readOnly: { type: boolean }
+        metadata: { type: object, additionalProperties: { type: string } }
+        createdAt: { type: [string, "null"], format: date-time }
+        updatedAt: { type: [string, "null"], format: date-time }
+    BusyBlock:
+      type: object
+      properties:
+        start: { type: string, format: date-time }
+        end: { type: string, format: date-time }
+    OpenHours:
+      type: array
+      items:
+        type: object
+        required: [days, timezone, start, end]
+        properties:
+          days: { type: array, items: { type: integer, minimum: 0, maximum: 6 }, description: '0 = Sunday.' }
+          timezone: { type: string }
+          start: { type: string, example: '09:00' }
+          end: { type: string, example: '17:00' }
+          exdates: { type: array, items: { type: string, format: date }, description: Dates to exclude. }
+    WebhookPayloadAccountRateLimited:
+      type: object
+      description: 'Webhook payload for account.rate_limited: a mailbox entered a sending cooldown.'
+      required: [id, event, account, timestamp]
+      properties:
+        id: { type: string }
+        profiles: { $ref: '#/components/schemas/WebhookProfiles' }
+        test:
+          type: boolean
+          description: 'Always true when present: only a sample sent by POST /v1/webhooks/test with an event carries it. Real deliveries never do.'
+        event: { type: string, enum: [account.rate_limited] }
+        account:
+          type: object
+          required: [accountId, profileId, platform, username, reason, cooldownMinutes, resetsAt]
+          properties:
+            accountId: { type: string }
+            profileId: { type: string }
+            platform: { type: string }
+            username: { type: string }
+            displayName: { type: [string, "null"] }
+            reason: { type: string, enum: [recipient_burst, provider_rejection, bounces, daily_cap] }
+            cooldownMinutes: { type: integer }
+            resetsAt: { type: string, format: date-time }
+        timestamp: { type: string, format: date-time }
+    WebhookPayloadCalendarEvent:
+      type: object
+      description: 'Webhook payload for calendar.event.created, calendar.event.updated and calendar.event.deleted. Carries the provider event id and the change only; read the event with `GET /v1/calendar/events/{id}` (deleted ids answer 404).'
+      required: [id, event, account, calendarEvent, timestamp]
+      properties:
+        id: { type: string }
+        profiles: { $ref: '#/components/schemas/WebhookProfiles' }
+        test:
+          type: boolean
+          description: 'Always true when present: only a sample sent by POST /v1/webhooks/test with an event carries it. Real deliveries never do.'
+        event: { type: string, enum: [calendar.event.created, calendar.event.updated, calendar.event.deleted] }
+        account:
+          type: object
+          properties:
+            accountId: { type: string }
+            profileId: { type: string }
+            platform: { type: string }
+            username: { type: string }
+            displayName: { type: [string, "null"] }
+        calendarEvent:
+          type: object
+          properties:
+            id: { type: string }
+            changeType: { type: string, enum: [created, updated, deleted] }
+        timestamp: { type: string, format: date-time }
+    FileItem:
+      type: object
+      description: A file or folder in a connected Google Drive or OneDrive. Ids are the provider's own.
+      required: [id, accountId, provider, name, kind, mimeType, size, parentId, webUrl, downloadable, createdAt, modifiedAt, trashed]
+      properties:
+        id: { type: string }
+        accountId: { type: string }
+        provider: { type: string, enum: [google, microsoft] }
+        name: { type: string }
+        kind: { type: string, enum: [file, folder] }
+        mimeType: { type: [string, "null"] }
+        size: { type: [integer, "null"], description: 'Bytes; null for folders and Google editors files.' }
+        parentId: { type: [string, "null"] }
+        webUrl: { type: [string, "null"], description: "The provider's own link to open the item." }
+        downloadable: { type: boolean, description: 'False for folders and for Drive files whose owner disabled downloading.' }
+        exportMimeType: { type: [string, "null"], description: 'Google Docs, Slides and Drawings download as PDF/PNG and Sheets as XLSX; this is the type the download carries.' }
+        createdAt: { type: [string, "null"], format: date-time }
+        modifiedAt: { type: [string, "null"], format: date-time }
+        trashed: { type: boolean }
+    FileShareLink:
+      type: object
+      required: [url, scope]
+      properties:
+        url: { type: string, format: uri }
+        scope: { type: string, enum: [anyone_with_link] }
+    WebhookPayloadFilePicked:
+      type: object
+      description: 'Webhook payload for file.picked: the user picked files on a hosted picker page (`POST /v1/files/picker-sessions`), so the app may now open them. Every id was checked against Drive before the event fired.'
+      required: [id, event, account, picker, timestamp]
+      properties:
+        id: { type: string }
+        profiles: { $ref: '#/components/schemas/WebhookProfiles' }
+        test:
+          type: boolean
+          description: 'Always true when present: only a sample sent by POST /v1/webhooks/test with an event carries it. Real deliveries never do.'
+        event: { type: string, enum: [file.picked] }
+        account:
+          type: object
+          properties:
+            accountId: { type: string }
+            profileId: { type: string }
+            platform: { type: string }
+            username: { type: string }
+            displayName: { type: [string, "null"] }
+        picker:
+          type: object
+          properties:
+            sessionId: { type: string, description: 'The `id` returned when the session was created.' }
+            files:
+              type: array
+              items:
+                type: object
+                properties:
+                  id: { type: string }
+                  name: { type: string }
+                  mimeType: { type: [string, "null"] }
+                  kind: { type: string, enum: [file, folder] }
+        timestamp: { type: string, format: date-time }
+    FilePickerSession:
+      type: object
+      required: [id, url, expiresAt]
+      properties:
+        id: { type: string, example: ps_3f2a9c0d1e7b4a6c8d9e0f1a, description: 'Public session id, echoed as `pickerSessionId` on the redirect and as `picker.sessionId` on the webhook.' }
+        url: { type: string, format: uri, description: 'The hosted picker page. Open it in the end user''s browser (redirect or new tab, not an iframe). It is a credential: single-use and valid until `expiresAt`.' }
+        expiresAt: { type: string, format: date-time, description: '30 minutes after creation.' }
+    WebhookPayloadFile:
+      type: object
+      description: 'Webhook payload for file.created, file.updated and file.deleted. Carries the provider file id and the change only; read the file with `GET /v1/files/{id}`.'
+      required: [id, event, account, file, timestamp]
+      properties:
+        id: { type: string }
+        profiles: { $ref: '#/components/schemas/WebhookProfiles' }
+        test:
+          type: boolean
+          description: 'Always true when present: only a sample sent by POST /v1/webhooks/test with an event carries it. Real deliveries never do.'
+        event: { type: string, enum: [file.created, file.updated, file.deleted] }
+        account:
+          type: object
+          properties:
+            accountId: { type: string }
+            profileId: { type: string }
+            platform: { type: string }
+            username: { type: string }
+            displayName: { type: [string, "null"] }
+        file:
+          type: object
+          properties:
+            id: { type: string }
+            changeType: { type: string, enum: [created, updated, deleted] }
+        timestamp: { type: string, format: date-time }
+    WebhookPayloadContact:
+      type: object
+      description: 'Webhook payload for contact.updated and contact.deleted, fired after a provider contacts sync (Google Contacts, Outlook) changed a contact. Read the contact with `GET /v1/contacts/{id}`.'
+      required: [id, event, account, contact, timestamp]
+      properties:
+        id: { type: string }
+        profiles: { $ref: '#/components/schemas/WebhookProfiles' }
+        test:
+          type: boolean
+          description: 'Always true when present: only a sample sent by POST /v1/webhooks/test with an event carries it. Real deliveries never do.'
+        event: { type: string, enum: [contact.updated, contact.deleted] }
+        account:
+          type: object
+          properties:
+            accountId: { type: string }
+            profileId: { type: string }
+            platform: { type: string }
+            username: { type: string }
+            displayName: { type: [string, "null"] }
+        contact:
+          type: object
+          properties:
+            id: { type: string }
+            changeType: { type: string, enum: [updated, deleted] }
+        timestamp: { type: string, format: date-time }
     HubSpotSettings:
       type: object
       required:
@@ -11020,7 +11451,7 @@ components:
         _id: { type: string }
         platform:
           type: string
-          enum: [tiktok, instagram, facebook, youtube, linkedin, twitter, threads, pinterest, reddit, bluesky, googlebusiness, telegram, snapchat, discord, slack, whatsapp, shopify, wordpress, wix, linkedinads, metaads, pinterestads, tiktokads, xads, googleads, openaiads, redditads, sms, phone, rcs, whopads, hubspot, webflow, googleanalytics]
+          enum: [tiktok, instagram, facebook, youtube, linkedin, twitter, threads, pinterest, reddit, bluesky, googlebusiness, telegram, snapchat, discord, slack, whatsapp, shopify, wordpress, wix, linkedinads, metaads, pinterestads, tiktokads, xads, googleads, openaiads, redditads, sms, phone, rcs, whopads, google, microsoft, hubspot, webflow, googleanalytics]
         profileId:
           oneOf:
             - type: string
@@ -11182,7 +11613,7 @@ components:
           type: array
           items:
             type: string
-            enum: [publishing, engagement, messages, contacts, analytics, ads, telephony, accounts, billing, webhooks]
+            enum: [publishing, engagement, messages, contacts, analytics, ads, telephony, accounts, billing, webhooks, commerce, calendar, files]
           description: >-
             Resource groups this key can NOT access (opt-out denylist). Absent
             or empty means legacy full access. A key with any group disabled is
@@ -16902,6 +17333,153 @@ webhooks:
           application/json:
             schema:
               $ref: '#/components/schemas/WebhookPayloadAccountConnected'
+      responses:
+        '200':
+          description: Webhook received successfully
+  account.rate_limited:
+    post:
+      operationId: onAccountRateLimited
+      summary: Mailbox sending cooldown started
+      description: Fired when a Google or Microsoft mailbox enters a sending cooldown (same body to more than 50 recipients in an hour, or a later trigger). Sends answer 429 until `account.resetsAt`.
+      tags: [Webhook Events]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebhookPayloadAccountRateLimited'
+      responses:
+        '200':
+          description: Webhook received successfully
+  calendar.event.created:
+    post:
+      operationId: onCalendarEventCreated
+      summary: Calendar event created
+      description: A new event appeared on a connected Microsoft calendar (push, seconds after the change).
+      tags: [Webhook Events]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebhookPayloadCalendarEvent'
+      responses:
+        '200':
+          description: Webhook received successfully
+  calendar.event.updated:
+    post:
+      operationId: onCalendarEventUpdated
+      summary: Calendar event updated
+      tags: [Webhook Events]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebhookPayloadCalendarEvent'
+      responses:
+        '200':
+          description: Webhook received successfully
+  calendar.event.deleted:
+    post:
+      operationId: onCalendarEventDeleted
+      summary: Calendar event deleted
+      tags: [Webhook Events]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebhookPayloadCalendarEvent'
+      responses:
+        '200':
+          description: Webhook received successfully
+  file.created:
+    post:
+      operationId: onFileCreated
+      summary: File created
+      description: A file or folder appeared in a connected Drive or OneDrive (push, seconds after the change).
+      tags: [Webhook Events]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebhookPayloadFile'
+      responses:
+        '200':
+          description: Webhook received successfully
+  file.updated:
+    post:
+      operationId: onFileUpdated
+      summary: File updated
+      tags: [Webhook Events]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebhookPayloadFile'
+      responses:
+        '200':
+          description: Webhook received successfully
+  file.picked:
+    post:
+      operationId: onFilePicked
+      summary: Files picked
+      description: The user finished a hosted picker session (`POST /v1/files/picker-sessions`) and picked at least one file. The app can now open those files. Not sent on cancel.
+      tags: [Webhook Events]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebhookPayloadFilePicked'
+      responses:
+        '200':
+          description: Webhook received successfully
+  file.deleted:
+    post:
+      operationId: onFileDeleted
+      summary: File deleted
+      description: The item was trashed or removed on the provider.
+      tags: [Webhook Events]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebhookPayloadFile'
+      responses:
+        '200':
+          description: Webhook received successfully
+  contact.updated:
+    post:
+      operationId: onContactUpdated
+      summary: Contact updated
+      description: A provider contacts sync created or changed a contact.
+      tags: [Webhook Events]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebhookPayloadContact'
+      responses:
+        '200':
+          description: Webhook received successfully
+  contact.deleted:
+    post:
+      operationId: onContactDeleted
+      summary: Contact deleted
+      description: The provider contact was deleted; its email channel is removed, the contact row stays when other channels remain.
+      tags: [Webhook Events]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebhookPayloadContact'
       responses:
         '200':
           description: Webhook received successfully
@@ -27064,6 +27642,17 @@ paths:
                     type: string
                     enum: [business, developer]
                     description: 'TikTok only. The TikTok integration the account is connected through: business (TikTok for Business, Accounts API) or developer (the original integration). Absent on other platforms.'
+                  sendCap:
+                    type: object
+                    description: "Google and Microsoft only: today's outbound mail allowance for the mailbox."
+                    properties:
+                      limit: { type: integer }
+                      used: { type: integer }
+                      resetsAt: { type: string, format: date-time }
+                  push:
+                    type: string
+                    enum: [active, pending, failed, not_applicable]
+                    description: 'Google and Microsoft only: state of the provider change-notification subscriptions behind `message.received` and `calendar.event.*`. `pending` means a granted area has no live subscription yet (retried every 6 hours), `failed` that renewals keep failing (reconnect the account).'
                   username: { type: string }
                   displayName: { type: string }
                   status:
@@ -27803,7 +28392,7 @@ paths:
                   type: array
                   items:
                     type: string
-                    enum: [publishing, engagement, messages, contacts, analytics, ads, telephony, accounts, billing, webhooks]
+                    enum: [publishing, engagement, messages, contacts, analytics, ads, telephony, accounts, billing, webhooks, commerce, calendar, files]
                   description: >-
                     Resource groups to DISABLE on this key (opt-out denylist).
                     Omit for a legacy full-access key. A key with any group
@@ -28065,7 +28654,7 @@ paths:
           required: true
           schema:
             type: string
-            enum: [facebook, instagram, linkedin, twitter, tiktok, youtube, threads, reddit, pinterest, bluesky, googlebusiness, telegram, snapchat, discord, slack, whatsapp]
+            enum: [facebook, instagram, linkedin, twitter, tiktok, youtube, threads, reddit, pinterest, bluesky, googlebusiness, telegram, snapchat, discord, slack, whatsapp, google, microsoft]
           description: 'Social media platform to connect. `snapchat` is a closed beta with no public release date: it returns 403 `PLATFORM_BETA_RESTRICTED` until the account is approved.'
         - name: profileId
           in: query
@@ -28092,7 +28681,11 @@ paths:
           in: query
           schema: { type: string, format: uri }
           description: |
-            Your custom redirect URL after connection completes. MUST be an absolute http(s) URL or a custom app scheme for mobile deeplinks (e.g. myapp://callback); a relative path is rejected with 400 INVALID_REDIRECT_URL. X (twitter) caps the OAuth `state` at 500 characters and the redirect is carried inside it, so the URL-encoded `redirect_url` must be at most 258 characters for API callers (310 for dashboard sessions; in headless mode the appended `headless=true` counts toward it); a longer one is rejected with 400 INVALID_REDIRECT_URL. Result params are appended with the URL API, so an existing query string is preserved. Standard mode appends connected={platform}&profileId=X&accountId=Y&username=Z. Headless mode appends OAuth data params for platforms requiring selection (e.g. LinkedIn orgs, Facebook pages). If no selection is needed, the account is created directly and the redirect includes accountId.
+            Your custom redirect URL after connection completes. MUST be an absolute http(s) URL or a custom app scheme for mobile deeplinks (e.g. myapp://callback); a relative path is rejected with 400 INVALID_REDIRECT_URL.
+
+            Exit notice: when `redirect_url` is an http(s) URL on another site (anything but zernio.com), the user is not sent there directly. Every redirect of the flow lands first on a Zernio page, `https://zernio.com/connect/continue?to=<your URL>`, that names your site and continues to it with one click. All the params described below arrive on your URL unchanged; the notice page moves them over. A custom app scheme (myapp://...) is never routed through the notice. In headless mode the redirects we hand you (and the `redirect_url` returned by the selection endpoints) are notice URLs, so pass them back or navigate to them as they are.
+
+            X (twitter) caps the OAuth `state` at 500 characters and the redirect is carried inside it (for an http(s) URL on another site, wrapped in the notice URL), so the URL-encoded form must be at most 258 characters for API callers (310 for dashboard sessions; in headless mode the appended `headless=true` counts toward it). For a plain https URL on another site that leaves about 165 to 190 characters of your own URL, depending on how many characters need encoding; a longer one is rejected with 400 INVALID_REDIRECT_URL, and the error says by how much. Result params are appended with the URL API, so an existing query string is preserved. Standard mode appends connected={platform}&profileId=X&accountId=Y&username=Z. Headless mode appends OAuth data params for platforms requiring selection (e.g. LinkedIn orgs, Facebook pages). If no selection is needed, the account is created directly and the redirect includes accountId.
 
             On failure, the browser is sent to the same redirect_url with `error` and `platform` appended.
             `error` and `platform` are always present. `error_message`, `is_user_fixable`, `reason`,
@@ -28209,9 +28802,9 @@ paths:
             `loginMethod=facebook_login`. To move it to Instagram Login, disconnect it first.
         - name: scopes
           in: query
-          schema: { type: string, example: 'posting,analytics' }
+          schema: { type: string, example: 'posting,analytics', description: 'Comma-separated subset of posting, analytics, comments, messaging, ads, email, calendar, files, contacts.' }
           description: |
-            Comma-separated permission areas to request instead of the platform's full permission set. Values: `posting`, `analytics`, `comments`, `messaging`, `ads`. Omit it (the default, and what the dashboard does) to request everything the platform supports.
+            Comma-separated permission areas to request instead of the platform's full permission set. Values: `posting`, `analytics`, `comments`, `messaging`, `ads`, and on google and microsoft `email`, `calendar`, `files`, `contacts`. Omit it (the default, and what the dashboard does) to request everything the platform supports; google and microsoft REQUIRE it (400 `INVALID_FIELD_VALUE` when absent) because their consent screens are reviewed per area.
 
             When present, the consent dialog asks only for the platform scopes behind those areas plus the scopes every connection needs (identity, token refresh, and listing the pages, organizations or channels the user picks from). Scopes the user was never asked for are absent from the account's `permissions`, and the health endpoints report them as not granted, so a `posting`-only account cannot read analytics or the inbox until it is connected again with more areas. First comments need `comments`: a `posting`-only account publishes the post and skips the first comment. Scopes the platform lists under none of the areas (X likes, bookmarks and follows, Pinterest ads-only extras) are requested only when the parameter is omitted.
 
@@ -28234,6 +28827,19 @@ paths:
             | googlebusiness | `business.manage` | `business.manage` | `business.manage` | none | none | `business.manage`, `userinfo.profile`, `userinfo.email` |
             | slack | `chat:write`, `chat:write.public`, `chat:write.customize`, `files:write`, `files:read` | none | none | `chat:write`, `chat:write.customize`, `files:write`, `files:read`, `channels:history`, `groups:history`, `im:history`, `mpim:history`, `im:read`, `im:write`, `mpim:read`, `users:read`, `reactions:read`, `reactions:write` | none | `channels:join`, `channels:read`, `groups:read`, `team:read` |
 
+            Google and Microsoft accounts use the mailbox areas instead (`scopes` is required there):
+
+            | Platform | `email` | `calendar` | `files` | `contacts` | Always requested |
+            |---|---|---|---|---|---|
+            | google | `gmail.modify` | `calendar` | `drive.file` (only files Zernio created or the user picked, see the Files tag) | `contacts.readonly` | `openid`, `userinfo.email`, `userinfo.profile` |
+            | microsoft | `Mail.ReadWrite`, `Mail.Send` | `Calendars.ReadWrite` | `Files.ReadWrite` | `Contacts.Read` | `openid`, `profile`, `email`, `offline_access`, `User.Read` |
+
+            Areas accumulate: reconnecting with more areas widens the grant and `GET /v1/accounts/{accountId}/health` reports the result.
+
+        - name: loginHint
+          in: query
+          schema: { type: string, format: email }
+          description: 'google and microsoft only: pre-fills the account picker with this address so the user lands on the right mailbox.'
         - name: headless
           in: query
           schema: { type: boolean, default: false }
@@ -28365,7 +28971,7 @@ paths:
             served by their own dedicated routes, documented separately.
           schema:
             type: string
-            enum: [instagram, twitter, threads, linkedin, youtube, tiktok, reddit, pinterest]
+            enum: [instagram, twitter, threads, linkedin, youtube, tiktok, reddit, pinterest, google, microsoft]
       requestBody:
         required: true
         content:
@@ -38635,7 +39241,7 @@ paths:
                   type: array
                   items:
                     type: string
-                    enum: [publishing, engagement, messages, contacts, analytics, ads, telephony, accounts, billing, webhooks]
+                    enum: [publishing, engagement, messages, contacts, analytics, ads, telephony, accounts, billing, webhooks, commerce, calendar, files]
                   description: >-
                     Resource groups this subscription does not receive
                     (opt-out denylist). Omit or send an empty array to receive
@@ -38791,7 +39397,7 @@ paths:
                   type: array
                   items:
                     type: string
-                    enum: [publishing, engagement, messages, contacts, analytics, ads, telephony, accounts, billing, webhooks]
+                    enum: [publishing, engagement, messages, contacts, analytics, ads, telephony, accounts, billing, webhooks, commerce, calendar, files]
                   description: >-
                     Replaces the subscription's denylist. Send an empty array
                     to clear it and receive every event in `events` again.
@@ -39123,6 +39729,16 @@ paths:
                     - account.ads.initial_sync_completed
                     - account.ads.sync_failed
                     - account.ads.sync_recovered
+                    - account.rate_limited
+                    - calendar.event.created
+                    - calendar.event.updated
+                    - calendar.event.deleted
+                    - file.created
+                    - file.updated
+                    - file.deleted
+                    - file.picked
+                    - contact.updated
+                    - contact.deleted
                     - analytics.synced
                     - message.received
                     - message.sent
@@ -39441,6 +40057,949 @@ paths:
         '400': { description: "Invalid filter value. Unknown parameters are ignored on this list; the histogram, facets and export routes reject them." }
         '401': { $ref: '#/components/responses/Unauthorized' }
   # Unified Inbox Endpoints
+  /v1/email/threads:
+    get:
+      x-resource-group: "messages"
+      operationId: listEmailThreads
+      tags: [Email]
+      summary: List email threads
+      description: |
+        Threads of a connected Google or Microsoft mailbox, newest first. Every filter that the provider cannot apply server-side is applied to the fetched page instead and named in `meta.filteredClientSide`, so a filtered page can hold fewer than `limit` items while `pagination.hasMore` stays true.
+
+        On Google, folders are Gmail labels: `folder` takes a well-known name or a label id, `archive` means mail carrying none of the inbox, trash or spam labels, and `sortOrder=asc` reverses the fetched page (Gmail lists newest first only).
+
+        The account must have been connected with `scopes=email` (412 `account_scope_missing` otherwise).
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/EmailAccountId'
+        - { name: folder, in: query, schema: { type: string }, description: 'Well-known folder (`inbox`, `sent`, `drafts`, `trash`, `spam`, `archive`) or a provider folder id from `GET /v1/email/folders`. Default inbox.' }
+        - { name: unread, in: query, schema: { type: boolean } }
+        - { name: starred, in: query, schema: { type: boolean } }
+        - { name: hasAttachment, in: query, schema: { type: boolean } }
+        - { name: subject, in: query, schema: { type: string }, description: Substring match on the subject. }
+        - { name: from, in: query, schema: { type: string }, description: Sender address. }
+        - { name: to, in: query, schema: { type: string }, description: A recipient address. }
+        - { name: cc, in: query, schema: { type: string } }
+        - { name: bcc, in: query, schema: { type: string }, description: 'Applied client-side on Microsoft.' }
+        - { name: anyEmail, in: query, schema: { type: string }, description: 'Matches from, to, cc or bcc. Applied client-side on Microsoft.' }
+        - { name: after, in: query, schema: { type: string, format: date-time } }
+        - { name: before, in: query, schema: { type: string, format: date-time } }
+        - { name: searchQueryNative, in: query, schema: { type: string, maxLength: 500 }, description: "The provider's own search syntax (Gmail search operators, Microsoft KQL). On Microsoft it cannot be combined with other filters or server-side ordering; those are applied to the page." }
+        - { name: sortOrder, in: query, schema: { type: string, enum: [asc, desc], default: desc } }
+        - { name: cursor, in: query, schema: { type: string } }
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 200, default: 50 } }
+      responses:
+        '200':
+          description: Threads
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { type: array, items: { $ref: '#/components/schemas/EmailThread' } }
+                  pagination: { $ref: '#/components/schemas/CursorPagination' }
+                  meta: { $ref: '#/components/schemas/EmailListMeta' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '412': { $ref: '#/components/responses/MailboxPreconditionFailed' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+  /v1/email/threads/{threadId}:
+    get:
+      x-resource-group: "messages"
+      operationId: getEmailThread
+      tags: [Email]
+      summary: Get an email thread with its messages
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: threadId, in: path, required: true, schema: { type: string } }
+        - $ref: '#/components/parameters/EmailAccountId'
+      responses:
+        '200':
+          description: The thread and every message in it, oldest first
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    allOf:
+                      - $ref: '#/components/schemas/EmailThread'
+                      - type: object
+                        properties:
+                          messages: { type: array, items: { $ref: '#/components/schemas/EmailMessage' } }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '412': { $ref: '#/components/responses/MailboxPreconditionFailed' }
+    patch:
+      x-resource-group: "messages"
+      operationId: updateEmailThread
+      tags: [Email]
+      summary: Update every message in a thread
+      description: Applies `unread`, `starred` or a `folder` move to each message of the thread.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: threadId, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/EmailMessagePatch' }
+      responses:
+        '200':
+          description: The updated thread
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/EmailThread' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '412': { $ref: '#/components/responses/MailboxPreconditionFailed' }
+  /v1/email/messages:
+    get:
+      x-resource-group: "messages"
+      operationId: listEmailMessages
+      tags: [Email]
+      summary: List email messages
+      description: Same filters and envelope as `GET /v1/email/threads`, one row per message. Bodies are omitted; fetch a message to read `text` and `html`. On Google, list rows also omit `attachments` (Gmail's metadata pages carry headers only; `hasAttachment=true` still filters server-side), `sortOrder=asc` reverses the fetched page and `archive` means mail without the inbox, trash or spam labels.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/EmailAccountId'
+        - { name: folder, in: query, schema: { type: string } }
+        - { name: unread, in: query, schema: { type: boolean } }
+        - { name: starred, in: query, schema: { type: boolean } }
+        - { name: hasAttachment, in: query, schema: { type: boolean } }
+        - { name: subject, in: query, schema: { type: string } }
+        - { name: from, in: query, schema: { type: string } }
+        - { name: to, in: query, schema: { type: string } }
+        - { name: cc, in: query, schema: { type: string } }
+        - { name: bcc, in: query, schema: { type: string } }
+        - { name: anyEmail, in: query, schema: { type: string } }
+        - { name: after, in: query, schema: { type: string, format: date-time } }
+        - { name: before, in: query, schema: { type: string, format: date-time } }
+        - { name: searchQueryNative, in: query, schema: { type: string, maxLength: 500 } }
+        - { name: sortOrder, in: query, schema: { type: string, enum: [asc, desc], default: desc } }
+        - { name: cursor, in: query, schema: { type: string } }
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 200, default: 50 } }
+      responses:
+        '200':
+          description: Messages
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { type: array, items: { $ref: '#/components/schemas/EmailMessage' } }
+                  pagination: { $ref: '#/components/schemas/CursorPagination' }
+                  meta: { $ref: '#/components/schemas/EmailListMeta' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '412': { $ref: '#/components/responses/MailboxPreconditionFailed' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+    post:
+      x-resource-group: "messages"
+      operationId: sendEmailMessage
+      tags: [Email]
+      summary: Send an email
+      description: |
+        Sends from the connected mailbox and returns the stored sent copy. The message is mirrored into the inbox (`message.sent` fires once) and counted against the mailbox's daily cap, reported in the `X-Zernio-Send-Limit`, `X-Zernio-Send-Remaining` and `X-Zernio-Send-Reset` response headers.
+
+        Protection on every mailbox: a daily cap (Microsoft 1,000; Google Workspace 500; Gmail consumer 200) that answers 429 `email_send_cap_reached` with `details.cap`; the same body reaching more than 50 distinct recipients within an hour pauses the mailbox with an escalating cooldown (429 `rate_limited`, `account.rate_limited` webhook). These mailboxes are for one-to-one mail, not bulk sends. Gmail sends need a payment method on the workspace (402). Reading, calendar and files do not.
+
+        `scheduledFor` and `holdAsDraft` are reserved and currently rejected with 400.
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/SendEmailRequest' }
+      responses:
+        '201':
+          description: The sent message
+          headers:
+            X-Zernio-Send-Limit: { schema: { type: integer }, description: "Today's cap for this mailbox." }
+            X-Zernio-Send-Remaining: { schema: { type: integer } }
+            X-Zernio-Send-Reset: { schema: { type: string, format: date-time }, description: 'When the daily window resets (midnight UTC).' }
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/EmailMessage' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '402': { $ref: '#/components/responses/PaymentRequired' }
+        '412': { $ref: '#/components/responses/MailboxPreconditionFailed' }
+        '429': { $ref: '#/components/responses/EmailSendRefused' }
+  /v1/email/messages/{messageId}:
+    get:
+      x-resource-group: "messages"
+      operationId: getEmailMessage
+      tags: [Email]
+      summary: Get an email message
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: messageId, in: path, required: true, schema: { type: string } }
+        - $ref: '#/components/parameters/EmailAccountId'
+        - { name: includeHeaders, in: query, schema: { type: boolean, default: false }, description: 'Include the raw internet headers under `headers`.' }
+        - { name: raw, in: query, schema: { type: boolean, default: false }, description: 'Include the MIME source under `raw`.' }
+      responses:
+        '200':
+          description: The message with its bodies
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/EmailMessage' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '412': { $ref: '#/components/responses/MailboxPreconditionFailed' }
+    patch:
+      x-resource-group: "messages"
+      operationId: updateEmailMessage
+      tags: [Email]
+      summary: Mark read or starred, or move a message
+      description: '`folder` moves the message. On Google a move swaps the inbox, trash and spam labels and keeps every other label; `archive` removes the inbox label.'
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: messageId, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/EmailMessagePatch' }
+      responses:
+        '200':
+          description: The updated message. A move on Microsoft changes the message id; read it from `data.id`.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/EmailMessage' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '412': { $ref: '#/components/responses/MailboxPreconditionFailed' }
+    delete:
+      x-resource-group: "messages"
+      operationId: trashEmailMessage
+      tags: [Email]
+      summary: Move a message to trash
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: messageId, in: path, required: true, schema: { type: string } }
+        - $ref: '#/components/parameters/EmailAccountId'
+      responses:
+        '200':
+          description: Trashed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      id: { type: string }
+                      trashed: { type: boolean }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '412': { $ref: '#/components/responses/MailboxPreconditionFailed' }
+  /v1/email/messages/{messageId}/reply:
+    post:
+      x-resource-group: "messages"
+      operationId: replyEmailMessage
+      tags: [Email]
+      summary: Reply to a message
+      description: 'Replies inside the provider''s thread: the provider builds the quoted original and threading headers, your `html` or `text` goes above the quote. `to`, `cc`, `bcc`, `replyTo`, `subject`, `headers` and `attachments` are honoured; `scheduledFor` and `holdAsDraft` are rejected like on send. Same protection, caps and headers as sending.'
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: messageId, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/SendEmailRequest'
+                - type: object
+                  properties:
+                    mode: { type: string, enum: [reply, replyAll], default: reply }
+                    subject: { type: string, maxLength: 998, description: 'Optional on replies; the provider keeps the thread subject.' }
+      responses:
+        '201':
+          description: The sent reply
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/EmailMessage' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '402': { $ref: '#/components/responses/PaymentRequired' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '412': { $ref: '#/components/responses/MailboxPreconditionFailed' }
+        '429': { $ref: '#/components/responses/EmailSendRefused' }
+  /v1/email/folders:
+    get:
+      x-resource-group: "messages"
+      operationId: listEmailFolders
+      tags: [Email]
+      summary: List mailbox folders
+      description: On Google, folders are Gmail labels (system labels carry `wellKnown`; `unreadCount` and `totalCount` are present only where Gmail reports them). There is no archive folder on Google; archived mail is listed with `folder=archive`.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/EmailAccountId'
+      responses:
+        '200':
+          description: Folders, with `wellKnown` set on the provider's system folders
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { type: array, items: { $ref: '#/components/schemas/EmailFolder' } }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '412': { $ref: '#/components/responses/MailboxPreconditionFailed' }
+  /v1/email/attachments/{attachmentId}:
+    get:
+      x-resource-group: "messages"
+      operationId: downloadEmailAttachment
+      tags: [Email]
+      summary: Download an attachment
+      description: Streams the attachment bytes with its `Content-Type` and a `Content-Disposition` carrying the filename.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: attachmentId, in: path, required: true, schema: { type: string } }
+        - $ref: '#/components/parameters/EmailAccountId'
+        - { name: messageId, in: query, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: The attachment bytes
+          content:
+            application/octet-stream:
+              schema: { type: string, format: binary }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '412': { $ref: '#/components/responses/MailboxPreconditionFailed' }
+  /v1/calendar/calendars:
+    get:
+      x-resource-group: "calendar"
+      operationId: listCalendars
+      tags: [Calendar]
+      summary: List calendars
+      description: The account must have been connected with `scopes=calendar` (412 `account_scope_missing` otherwise).
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/EmailAccountId'
+      responses:
+        '200':
+          description: Calendars
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { type: array, items: { $ref: '#/components/schemas/Calendar' } }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '412': { $ref: '#/components/responses/MailboxPreconditionFailed' }
+  /v1/calendar/events:
+    get:
+      x-resource-group: "calendar"
+      operationId: listCalendarEvents
+      tags: [Calendar]
+      summary: List events in a window
+      description: 'Recurring series are expanded into their occurrences inside the window by default (`expandRecurring=false` lists the masters instead). `title` and `location` are substring matches applied to the fetched page.'
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/EmailAccountId'
+        - { name: calendarId, in: query, schema: { type: string }, description: 'Defaults to the primary calendar.' }
+        - { name: from, in: query, required: true, schema: { type: string, format: date-time } }
+        - { name: to, in: query, required: true, schema: { type: string, format: date-time } }
+        - { name: title, in: query, schema: { type: string } }
+        - { name: location, in: query, schema: { type: string } }
+        - { name: showCancelled, in: query, schema: { type: boolean, default: false } }
+        - { name: expandRecurring, in: query, schema: { type: boolean, default: true } }
+        - { name: icalUid, in: query, schema: { type: string } }
+        - { name: sortOrder, in: query, schema: { type: string, enum: [asc, desc], default: asc } }
+        - { name: cursor, in: query, schema: { type: string } }
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 200, default: 50 } }
+        - { name: timezone, in: query, schema: { type: string }, description: 'IANA zone the `start` and `end` offsets are rendered in. Default UTC.' }
+      responses:
+        '200':
+          description: Events
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { type: array, items: { $ref: '#/components/schemas/CalendarEvent' } }
+                  pagination: { $ref: '#/components/schemas/CursorPagination' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '412': { $ref: '#/components/responses/MailboxPreconditionFailed' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+    post:
+      x-resource-group: "calendar"
+      operationId: createCalendarEvent
+      tags: [Calendar]
+      summary: Create an event
+      description: '`conferencing: teams` adds a Teams meeting on Microsoft accounts; the created event comes back with `conferencing: null` when the tenant has no Teams (the EEA Business Basic SKUs ship without it). `google_meet` is rejected there with 400 (`param: conferencing`). On Google accounts `conferencing: google_meet` adds a Meet link, `teams` is rejected with 400, and `recurrence` accepts any RRULE Google Calendar supports. `recurrence` takes one RRULE line with FREQ, INTERVAL, COUNT, UNTIL, BYDAY and BYSETPOS; other parts are rejected with 400 (`param: recurrence`).'
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreateCalendarEventRequest' }
+      responses:
+        '201':
+          description: The created event
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/CalendarEvent' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '412': { $ref: '#/components/responses/MailboxPreconditionFailed' }
+  /v1/calendar/events/{eventId}:
+    get:
+      x-resource-group: "calendar"
+      operationId: getCalendarEvent
+      tags: [Calendar]
+      summary: Get an event
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: eventId, in: path, required: true, schema: { type: string } }
+        - $ref: '#/components/parameters/EmailAccountId'
+        - { name: calendarId, in: query, schema: { type: string }, description: "The calendar holding the event (an id from GET /v1/calendar/calendars). Defaults to the primary calendar." }
+        - { name: timezone, in: query, schema: { type: string } }
+      responses:
+        '200':
+          description: The event
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/CalendarEvent' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '412': { $ref: '#/components/responses/MailboxPreconditionFailed' }
+    patch:
+      x-resource-group: "calendar"
+      operationId: updateCalendarEvent
+      tags: [Calendar]
+      summary: Update an event
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: eventId, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - type: object
+                  required: [accountId]
+                  properties:
+                    accountId: { type: string }
+                    calendarId: { type: string, description: "The calendar holding the event (an id from GET /v1/calendar/calendars). Defaults to the primary calendar." }
+                - $ref: '#/components/schemas/CalendarEventFields'
+      responses:
+        '200':
+          description: The updated event
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/CalendarEvent' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '412': { $ref: '#/components/responses/MailboxPreconditionFailed' }
+    delete:
+      x-resource-group: "calendar"
+      operationId: deleteCalendarEvent
+      tags: [Calendar]
+      summary: Delete an event
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: eventId, in: path, required: true, schema: { type: string } }
+        - $ref: '#/components/parameters/EmailAccountId'
+        - { name: calendarId, in: query, schema: { type: string }, description: "The calendar holding the event (an id from GET /v1/calendar/calendars). Defaults to the primary calendar." }
+      responses:
+        '200':
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      id: { type: string }
+                      deleted: { type: boolean }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '412': { $ref: '#/components/responses/MailboxPreconditionFailed' }
+  /v1/calendar/events/{eventId}/rsvp:
+    post:
+      x-resource-group: "calendar"
+      operationId: rsvpCalendarEvent
+      tags: [Calendar]
+      summary: Respond to an invitation
+      description: Accepts, declines or tentatively accepts on behalf of the mailbox and notifies the organizer.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: eventId, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [accountId, status]
+              properties:
+                accountId: { type: string }
+                calendarId: { type: string, description: "The calendar holding the event (an id from GET /v1/calendar/calendars). Defaults to the primary calendar." }
+                status: { type: string, enum: [accepted, declined, tentative] }
+                comment: { type: string, maxLength: 1000 }
+      responses:
+        '200':
+          description: The event after the response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/CalendarEvent' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '412': { $ref: '#/components/responses/MailboxPreconditionFailed' }
+  /v1/calendar/free-busy:
+    post:
+      x-resource-group: "calendar"
+      operationId: calendarFreeBusy
+      tags: [Calendar]
+      summary: Busy blocks for one or more accounts
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [accountIds, from, to]
+              properties:
+                accountIds: { type: array, minItems: 1, maxItems: 10, items: { type: string } }
+                from: { type: string, format: date-time }
+                to: { type: string, format: date-time }
+      responses:
+        '200':
+          description: One entry per account, busy blocks in UTC
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        accountId: { type: string }
+                        from: { type: string, format: date-time }
+                        to: { type: string, format: date-time }
+                        busy: { type: array, items: { $ref: '#/components/schemas/BusyBlock' } }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '412': { $ref: '#/components/responses/MailboxPreconditionFailed' }
+  /v1/calendar/availability:
+    post:
+      x-resource-group: "calendar"
+      operationId: calendarAvailability
+      tags: [Calendar]
+      summary: Find meeting slots across accounts
+      description: 'Slots of `durationMinutes` every `intervalMinutes` between `from` and `to` that are free for every participant (`collective`) or for at least one (`max_availability`). Buffers pad the participants'' existing meetings. Open hours are evaluated in each participant''s own timezone; `defaultOpenHours` applies to participants without their own.'
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [participants, from, to, durationMinutes]
+              properties:
+                participants:
+                  type: array
+                  minItems: 1
+                  maxItems: 10
+                  items:
+                    type: object
+                    required: [accountId]
+                    properties:
+                      accountId: { type: string }
+                      openHours: { $ref: '#/components/schemas/OpenHours' }
+                from: { type: string, format: date-time }
+                to: { type: string, format: date-time }
+                durationMinutes: { type: integer, minimum: 5, maximum: 480 }
+                intervalMinutes: { type: integer, minimum: 5, maximum: 240, default: 30 }
+                roundTo: { type: integer, minimum: 5, maximum: 60, description: 'Rounds the first candidate slot up to this many minutes.' }
+                buffer:
+                  type: object
+                  properties:
+                    before: { type: integer, minimum: 0, maximum: 240, default: 0 }
+                    after: { type: integer, minimum: 0, maximum: 240, default: 0 }
+                defaultOpenHours: { $ref: '#/components/schemas/OpenHours' }
+                method: { type: string, enum: [collective, max_availability], default: collective }
+      responses:
+        '200':
+          description: Candidate slots
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      timeSlots:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            from: { type: string, format: date-time }
+                            to: { type: string, format: date-time }
+                            accountIds: { type: array, items: { type: string }, description: The participants free in this slot. }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '412': { $ref: '#/components/responses/MailboxPreconditionFailed' }
+  /v1/files:
+    get:
+      x-resource-group: "files"
+      operationId: listFiles
+      tags: [Files]
+      summary: List files in a folder or search the drive
+      description: 'Children of `folderId` (the root by default), folders first. With `q` and no `folderId` the whole drive is searched by name (on Google, every drive the app can see, shared drives included). The account must have been connected with `scopes=files` (412 `account_scope_missing` otherwise). Cursors are opaque and provider-issued. Google Drive returns only files Zernio created or the user picked (see the Files tag): an unpicked folder lists empty.'
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/EmailAccountId'
+        - { name: folderId, in: query, schema: { type: string }, description: 'Provider folder id; omit for the root.' }
+        - { name: q, in: query, schema: { type: string, maxLength: 200 }, description: 'Name search.' }
+        - { name: cursor, in: query, schema: { type: string } }
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 50 } }
+      responses:
+        '200':
+          description: Files
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { type: array, items: { $ref: '#/components/schemas/FileItem' } }
+                  pagination:
+                    type: object
+                    properties:
+                      hasMore: { type: boolean }
+                      nextCursor: { type: [string, "null"] }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '412': { $ref: '#/components/responses/MailboxPreconditionFailed' }
+    post:
+      x-resource-group: "files"
+      operationId: uploadFile
+      tags: [Files]
+      summary: Upload a file
+      description: 'Either `multipart/form-data` with the file under `file` plus `accountId`, `name` (defaults to the file name) and `parentId`, or JSON with a public `url` the file is fetched from (100 MB cap). Large files go through the provider''s resumable upload.'
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [accountId, name, contentType, url]
+              properties:
+                accountId: { type: string }
+                name: { type: string, maxLength: 255 }
+                contentType: { type: string, example: image/png }
+                parentId: { type: string, description: 'Target folder; the root when omitted.' }
+                url: { type: string, format: uri }
+                convertTo: { type: string, enum: [application/vnd.google-apps.document, application/vnd.google-apps.spreadsheet, application/vnd.google-apps.presentation], description: 'Google Drive only: import the bytes as a Docs, Sheets or Slides file (a text or Office file becomes an editable document). OneDrive answers 400.' }
+          multipart/form-data:
+            schema:
+              type: object
+              required: [accountId, file]
+              properties:
+                accountId: { type: string }
+                file: { type: string, format: binary }
+                name: { type: string }
+                parentId: { type: string }
+                convertTo: { type: string }
+      responses:
+        '201':
+          description: The stored file
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/FileItem' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '412': { $ref: '#/components/responses/MailboxPreconditionFailed' }
+  /v1/files/folders:
+    post:
+      x-resource-group: "files"
+      operationId: createFolder
+      tags: [Files]
+      summary: Create a folder
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [accountId, name]
+              properties:
+                accountId: { type: string }
+                name: { type: string, maxLength: 255 }
+                parentId: { type: string }
+      responses:
+        '201':
+          description: The folder
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/FileItem' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '412': { $ref: '#/components/responses/MailboxPreconditionFailed' }
+  /v1/files/picker-sessions:
+    post:
+      x-resource-group: "files"
+      operationId: createFilePickerSession
+      tags: [Files]
+      summary: Create a hosted Google Picker session
+      description: |
+        Google accounts are connected with `drive.file`, so Zernio opens only files it created or the user picked (see the Files tag). This is how your end user grants files: create a session, send the user to `url`, and they pick files in Google Picker on a Zernio-hosted page.
+
+        When they finish, the browser is sent to `redirectUrl` with these query params added (existing params are kept):
+
+          - `status=picked`, `pickerSessionId`, `fileIds` (comma-separated Drive file ids, already checked against Drive), or
+          - `status=cancelled`, `pickerSessionId` when the user pressed Cancel.
+
+        A `file.picked` webhook fires on every successful pick, so `redirectUrl` is optional for server-side integrations. Closing the picker without picking keeps the session open; the user can try again until it expires.
+
+        The URL is single-use and expires after 30 minutes; create a new session for every pick. Google accounts only: Microsoft accounts answer 400 `platform_not_supported` because OneDrive needs no picker. Picks are permanent grants: once picked, a file stays readable through the Files endpoints until the user removes Zernio from their Google account.
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [accountId]
+              properties:
+                accountId: { type: string, description: 'A Google account connected with `scopes=files`.' }
+                redirectUrl: { type: string, format: uri, maxLength: 2048, description: 'Where the browser goes when the user finishes. Absolute `http(s)` URL or a custom app scheme (`myapp://...`); relative, protocol-relative and script URLs are refused. Optional when you rely on the `file.picked` webhook.' }
+                fileIds: { type: array, maxItems: 50, items: { type: string }, description: 'Drive file ids to show the user first (Google Picker `DocsView.setFileIds`), for example to ask for access to files your app already knows about. Pre-navigation only: the user still has to pick them.' }
+                mimeTypes: { type: array, maxItems: 30, items: { type: string }, example: [image/png, image/jpeg, application/pdf], description: 'Only show files of these exact media types.' }
+                multiselect: { type: boolean, default: true, description: 'false limits the pick to one file.' }
+            example:
+              accountId: 6650f1c2a4b5c6d7e8f90123
+              redirectUrl: https://app.example.com/drive/picked
+              mimeTypes: [image/png, image/jpeg, video/mp4]
+      responses:
+        '201':
+          description: The session
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/FilePickerSession' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '412': { $ref: '#/components/responses/MailboxPreconditionFailed' }
+  /v1/files/{fileId}:
+    get:
+      x-resource-group: "files"
+      operationId: getFile
+      tags: [Files]
+      summary: Get a file or folder
+      description: 'On Google Drive, a file Zernio neither created nor was given through Google Picker answers 404 `resource_not_found` with `details: { fileId, reason: file_not_granted }`; send the user through `POST /v1/files/picker-sessions` (pass the id in `fileIds` to show it first). The same 404 applies to download, update, trash and share-link.'
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: fileId, in: path, required: true, schema: { type: string } }
+        - $ref: '#/components/parameters/EmailAccountId'
+      responses:
+        '200':
+          description: The item
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/FileItem' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '412': { $ref: '#/components/responses/MailboxPreconditionFailed' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    patch:
+      x-resource-group: "files"
+      operationId: updateFile
+      tags: [Files]
+      summary: Rename or move a file
+      description: '`parentId` moves the item into another folder; `name` renames it. At least one is required.'
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: fileId, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [accountId]
+              properties:
+                accountId: { type: string }
+                name: { type: string, maxLength: 255 }
+                parentId: { type: string }
+      responses:
+        '200':
+          description: The updated item
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/FileItem' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '412': { $ref: '#/components/responses/MailboxPreconditionFailed' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    delete:
+      x-resource-group: "files"
+      operationId: trashFile
+      tags: [Files]
+      summary: Move a file to the trash
+      description: Drive trash or the OneDrive recycle bin; nothing is destroyed and the user can restore it on the provider.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: fileId, in: path, required: true, schema: { type: string } }
+        - $ref: '#/components/parameters/EmailAccountId'
+      responses:
+        '200':
+          description: Trashed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      id: { type: string }
+                      trashed: { type: boolean, description: 'Always true.' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '412': { $ref: '#/components/responses/MailboxPreconditionFailed' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /v1/files/{fileId}/download:
+    get:
+      x-resource-group: "files"
+      operationId: downloadFile
+      tags: [Files]
+      summary: Download a file
+      description: 'Streams the bytes with `Content-Disposition: attachment`. Google Docs, Slides and Drawings arrive as PDF/PNG and Sheets as XLSX, named with the export extension. Folders answer 400.'
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: fileId, in: path, required: true, schema: { type: string } }
+        - $ref: '#/components/parameters/EmailAccountId'
+      responses:
+        '200':
+          description: The file bytes
+          content:
+            application/octet-stream:
+              schema: { type: string, format: binary }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '412': { $ref: '#/components/responses/MailboxPreconditionFailed' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /v1/files/{fileId}/share-link:
+    get:
+      x-resource-group: "files"
+      operationId: getFileShareLink
+      tags: [Files]
+      summary: Get an anyone-with-the-link share link
+      description: Grants read access to anyone holding the link (Drive `anyone` permission, OneDrive anonymous view link) and returns it. The grant stays until it is revoked on the provider.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: fileId, in: path, required: true, schema: { type: string } }
+        - $ref: '#/components/parameters/EmailAccountId'
+      responses:
+        '200':
+          description: The link
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/FileShareLink' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '412': { $ref: '#/components/responses/MailboxPreconditionFailed' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /v1/connect/microsoft/admin-consent:
+    get:
+      x-resource-group: "accounts"
+      operationId: startMicrosoftAdminConsent
+      tags: [Connect]
+      summary: Admin-consent link for a Microsoft tenant
+      description: |
+        Some Microsoft 365 tenants let no user grant mail or calendar access themselves; the API then answers 412 `admin_consent_required` with `details.adminConsentUrl`, a ready admin-consent link. This endpoint mints a fresh one (each is valid for one hour) and lets you choose `redirectUrl`. It returns the Microsoft Entra admin-consent link for the app. A tenant administrator opens it, approves, and is sent to `redirectUrl` with `adminConsent=granted&tenant=…` (or `adminConsent=denied&error=…`); the grant is recorded on the account and later requests succeed without a reconnect.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: accountId, in: query, required: true, schema: { type: string } }
+        - { name: redirectUrl, in: query, schema: { type: string, format: uri }, description: Where to send the administrator afterwards. }
+      responses:
+        '200':
+          description: The link to hand to a tenant administrator
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      adminConsentUrl: { type: string, format: uri }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
   /v1/inbox/conversations:
     get:
       x-resource-group: "messages"
@@ -39612,7 +41171,9 @@ paths:
       description: |
         Start a direct message conversation with a user. If a conversation with that recipient already exists, the message is added to the existing thread.
 
-        Supported platforms: X, Bluesky, Reddit, WhatsApp, SMS, Slack, and iMessage. Other platforms return PLATFORM_NOT_SUPPORTED.
+        Supported platforms: X, Bluesky, Reddit, WhatsApp, SMS, Slack, iMessage, and email (Google and Microsoft accounts). Other platforms return PLATFORM_NOT_SUPPORTED.
+
+        **Email (Google / Microsoft).** Pass the recipient address as participantId with `subject`, `message` and optionally `cc`. The mail is sent from the mailbox, mirrored into the inbox, and the response names the inbox conversation it opened (the provider thread id, usable with the other inbox endpoints). An account connected without the `email` area returns 412 `account_scope_missing`; a disconnected one 409. Gmail accounts need a card on file (402 `payment_required`). Sends count toward the mailbox's daily cap and never toward managed messages.
 
         **iMessage.** Pass the recipient as participantId: a phone number in international format (+15551234567) or an iMessage email. Senders ordered through Zernio can message contacts who never wrote to them. The first message to such a contact must be plain text from an identifiable person or business opening a conversation; a cold introduction, including a sales one, is fine ("Hi Mark, this is John from Pratt Media. I help local roofers get more leads. Would you be open to a quick chat?"). It may not contain links, email addresses, phone numbers, prices or attachments (the provider's own rule for opening messages). One that does returns 400 with code `invalid_content`, a message saying what was flagged, and nothing is sent. Each sender may open at most one new conversation every 15 minutes, and a new sender warms up: 2 new conversations per 24 hours on days 1-2 after activation, 5 on days 3-4, 10 on days 5-7, 20 on days 8-14, 30 on days 15-21 and 50 after that. Beyond that the request returns 429 with code `new_contact_limit` and a time to retry. The warm-up counts from when a sender ordered through Zernio went live; senders registered from your own provider account are not warmed up by Zernio. Until the contact replies, the thread accepts the opening and at most two follow-ups, at least 24 hours apart: a follow-up sooner returns 429 `new_contact_limit` with the time to retry, and a fourth message returns 409 `recipient_must_message_first`. The provider treats every message to a contact who has not replied as a new conversation, so follow-ups follow the same content rule and count toward the 15-minute spacing and the daily warm-up like an opening. Once the contact has written, the thread behaves like any other and is not limited. Recipients can report a first message as junk, and reports can get a sender blocked permanently, so keep the reply rate high (above roughly 30%). A sender registered with your own provider account may lack the add-on for new contacts; its sends to them return 409 `recipient_must_message_first`, and an opt-in link is the way in. A contact who opted out returns 409 `recipient_opted_out`.
 
@@ -39658,7 +41219,16 @@ paths:
                   description: "Recipient handle/username, an X or Bluesky handle (with or without @) or a Reddit username (with or without u/). Resolved via lookup. Provide either this or participantId."
                 message:
                   type: string
-                  description: 'Text content of the message. At least one of message, attachment, or (for WhatsApp) templateName is required. Required when category is set (a Direct Send utility message is a text message).'
+                  description: 'Text content of the message. At least one of message, attachment, or (for WhatsApp) templateName is required. Required when category is set (a Direct Send utility message is a text message). Required on email accounts.'
+                subject:
+                  type: string
+                  maxLength: 998
+                  description: Email accounts only (Google / Microsoft). Subject of the new thread.
+                cc:
+                  type: array
+                  maxItems: 50
+                  items: { type: string, format: email }
+                  description: Email accounts only (Google / Microsoft). Extra recipients copied on the opening mail.
                 skipDmCheck:
                   type: boolean
                   default: false
@@ -40540,6 +42110,15 @@ paths:
         buttons, templates, and message tags. Attachment and interactive message
         support varies by platform.
 
+        Email threads (Google / Microsoft accounts): the text is sent as a reply to
+        the latest mail of the thread, in either direction, with its recipients and
+        a "Re:" subject, and `cc` adds recipients. `message` is required; attachments
+        and `replyTo` return 400 here (use POST /v1/email/messages/{messageId}/reply
+        for a reply with attachments). An account connected without the `email` area
+        returns 412 `account_scope_missing`, a disconnected one 409, and a Gmail account
+        without a card on file 402. Mail sends count toward the mailbox's daily cap,
+        never toward managed messages.
+
         WhatsApp per-recipient rate limit: WhatsApp caps how many messages you may
         send to the same recipient in a short window and rejects the excess with
         error code `131056` ("Too many messages sent to this recipient"). Pace
@@ -40664,6 +42243,11 @@ paths:
                   type: string
                   maxLength: 1000
                   description: 'iMessage only (JSON body only). Bold title line rendered above the message text. Rejected with 400 on other platforms; ignored on voice-message sends.'
+                cc:
+                  type: array
+                  maxItems: 50
+                  items: { type: string, format: email }
+                  description: Email threads only (Google / Microsoft accounts, JSON body only). Extra recipients copied on the reply.
                 effect:
                   type: string
                   enum: [slam, loud, gentle, invisibleInk, echo, spotlight, balloons, confetti, love, lasers, fireworks, shootingStar, celebration]

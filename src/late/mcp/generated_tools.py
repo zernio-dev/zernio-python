@@ -14189,6 +14189,9 @@ def register_generated_tools(mcp, _get_client):
                 "accounts",
                 "billing",
                 "webhooks",
+                "commerce",
+                "calendar",
+                "files",
             ]
         ]
         | None = None,
@@ -17249,6 +17252,406 @@ def register_generated_tools(mcp, _get_client):
         try:
             response = client.business_agent.start_business_agent_eval_run(
                 account_id=account_id, eval_case_ids=eval_case_ids
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    # CALENDAR
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List calendars",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def calendar_list_calendars(account_id: str) -> str:
+        """List calendars
+
+        The account must have been connected with `scopes=calendar` (412 `account_scope_missing` otherwise).
+
+        Args:
+            account_id: The connected Google or Microsoft account. (required)"""
+        client = _get_client()
+        try:
+            response = client.calendar.list_calendars(account_id=account_id)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List events in a window",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def calendar_list_calendar_events(
+        account_id: str,
+        from_: str,
+        to: str,
+        calendar_id: str | None = None,
+        title: str | None = None,
+        location: str | None = None,
+        show_cancelled: bool = False,
+        expand_recurring: bool = True,
+        ical_uid: str | None = None,
+        sort_order: Literal["asc", "desc"] = "asc",
+        cursor: str | None = None,
+        limit: int = 50,
+        timezone: str | None = None,
+    ) -> str:
+        """List events in a window
+
+        Recurring series are expanded into their occurrences inside the window by default (`expandRecurring=false` lists the masters instead). `title` and `location` are substring matches applied to the fetched page.
+
+        Args:
+            account_id: The connected Google or Microsoft account. (required)
+            calendar_id: Defaults to the primary calendar.
+            from_: (required)
+            to: (required)
+            title
+            location
+            show_cancelled
+            expand_recurring
+            ical_uid
+            sort_order
+            cursor
+            limit
+            timezone: IANA zone the `start` and `end` offsets are rendered in. Default UTC."""
+        client = _get_client()
+        try:
+            response = client.calendar.list_calendar_events(
+                account_id=account_id,
+                calendar_id=calendar_id,
+                from_=from_,
+                to=to,
+                title=title,
+                location=location,
+                show_cancelled=show_cancelled,
+                expand_recurring=expand_recurring,
+                ical_uid=ical_uid,
+                sort_order=sort_order,
+                cursor=cursor,
+                limit=limit,
+                timezone=timezone,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Create an event",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def calendar_create_calendar_event(
+        account_id: str,
+        title: str,
+        start: str,
+        end: str,
+        calendar_id: str | None = None,
+        description: str | None = None,
+        location: str | None = None,
+        all_day: bool | None = None,
+        timezone: str | None = None,
+        participants: list[dict[str, Any]] | None = None,
+        recurrence: list[str] | None = None,
+        reminders: dict[str, Any] | None = None,
+        conferencing: Literal["google_meet", "teams"] | None = None,
+        busy: bool | None = None,
+        visibility: Literal["default", "public", "private"] | None = None,
+        metadata: dict[str, Any] | None = None,
+    ) -> str:
+        """Create an event
+
+        `conferencing: teams` adds a Teams meeting on Microsoft accounts; the created event comes back with `conferencing: null` when the tenant has no Teams (the EEA Business Basic SKUs ship without it). `google_meet` is rejected there with 400 (`param: conferencing`). On Google accounts `conferencing: google_meet` adds a Meet link, `teams` is rejected with 400, and `recurrence` accepts any RRULE Google Calendar supports. `recurrence` takes one RRULE line with FREQ, INTERVAL, COUNT, UNTIL, BYDAY and BYSETPOS; other parts are rejected with 400 (`param: recurrence`).
+
+        Args:
+            account_id: (required)
+            calendar_id: Defaults to the primary calendar.
+            title: (required)
+            description: HTML.
+            location
+            start: ISO date-time, or a date (`YYYY-MM-DD`) for all-day events. (required)
+            end: Exclusive for all-day events. (required)
+            all_day
+            timezone: IANA zone the event is scheduled in. Default UTC.
+            participants: Each item is an object with keys: email (string, required); name (string or null)
+            recurrence: RRULE lines, e.g. `RRULE:FREQ=WEEKLY;BYDAY=MO,WE;COUNT=10`.
+            reminders: Object with keys: useDefault (boolean); overrides (list of objects with keys minutes)
+            conferencing
+            busy
+            visibility
+            metadata"""
+        client = _get_client()
+        try:
+            response = client.calendar.create_calendar_event(
+                account_id=account_id,
+                calendar_id=calendar_id,
+                title=title,
+                description=description,
+                location=location,
+                start=start,
+                end=end,
+                all_day=all_day,
+                timezone=timezone,
+                participants=participants,
+                recurrence=recurrence,
+                reminders=reminders,
+                conferencing=conferencing,
+                busy=busy,
+                visibility=visibility,
+                metadata=metadata,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get an event",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def calendar_get_calendar_event(
+        event_id: str,
+        account_id: str,
+        calendar_id: str | None = None,
+        timezone: str | None = None,
+    ) -> str:
+        """Get an event
+
+        Args:
+            event_id: (required)
+            account_id: The connected Google or Microsoft account. (required)
+            calendar_id: The calendar holding the event (an id from GET /v1/calendar/calendars). Defaults to the primary calendar.
+            timezone"""
+        client = _get_client()
+        try:
+            response = client.calendar.get_calendar_event(
+                event_id=event_id,
+                account_id=account_id,
+                calendar_id=calendar_id,
+                timezone=timezone,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Update an event",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def calendar_update_calendar_event(
+        event_id: str,
+        account_id: str,
+        calendar_id: str | None = None,
+        title: str | None = None,
+        description: str | None = None,
+        location: str | None = None,
+        start: str | None = None,
+        end: str | None = None,
+        all_day: bool | None = None,
+        timezone: str | None = None,
+        participants: list[dict[str, Any]] | None = None,
+        recurrence: list[str] | None = None,
+        reminders: dict[str, Any] | None = None,
+        conferencing: Literal["google_meet", "teams"] | None = None,
+        busy: bool | None = None,
+        visibility: Literal["default", "public", "private"] | None = None,
+        metadata: dict[str, Any] | None = None,
+    ) -> str:
+        """Update an event
+
+        Args:
+            event_id: (required)
+            account_id: (required)
+            calendar_id: The calendar holding the event (an id from GET /v1/calendar/calendars). Defaults to the primary calendar.
+            title
+            description: HTML.
+            location
+            start: ISO date-time, or a date (`YYYY-MM-DD`) for all-day events.
+            end: Exclusive for all-day events.
+            all_day
+            timezone: IANA zone the event is scheduled in. Default UTC.
+            participants: Each item is an object with keys: email (string, required); name (string or null)
+            recurrence: RRULE lines, e.g. `RRULE:FREQ=WEEKLY;BYDAY=MO,WE;COUNT=10`.
+            reminders: Object with keys: useDefault (boolean); overrides (list of objects with keys minutes)
+            conferencing
+            busy
+            visibility
+            metadata"""
+        client = _get_client()
+        try:
+            response = client.calendar.update_calendar_event(
+                event_id=event_id,
+                account_id=account_id,
+                calendar_id=calendar_id,
+                title=title,
+                description=description,
+                location=location,
+                start=start,
+                end=end,
+                all_day=all_day,
+                timezone=timezone,
+                participants=participants,
+                recurrence=recurrence,
+                reminders=reminders,
+                conferencing=conferencing,
+                busy=busy,
+                visibility=visibility,
+                metadata=metadata,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Delete an event",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def calendar_delete_calendar_event(
+        event_id: str, account_id: str, calendar_id: str | None = None
+    ) -> str:
+        """Delete an event
+
+        Args:
+            event_id: (required)
+            account_id: The connected Google or Microsoft account. (required)
+            calendar_id: The calendar holding the event (an id from GET /v1/calendar/calendars). Defaults to the primary calendar."""
+        client = _get_client()
+        try:
+            response = client.calendar.delete_calendar_event(
+                event_id=event_id, account_id=account_id, calendar_id=calendar_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Respond to an invitation",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def calendar_rsvp_calendar_event(
+        event_id: str,
+        account_id: str,
+        status: Literal["accepted", "declined", "tentative"],
+        calendar_id: str | None = None,
+        comment: str | None = None,
+    ) -> str:
+        """Respond to an invitation
+
+        Accepts, declines or tentatively accepts on behalf of the mailbox and notifies the organizer.
+
+        Args:
+            event_id: (required)
+            account_id: (required)
+            calendar_id: The calendar holding the event (an id from GET /v1/calendar/calendars). Defaults to the primary calendar.
+            status: (required)
+            comment"""
+        client = _get_client()
+        try:
+            response = client.calendar.rsvp_calendar_event(
+                event_id=event_id,
+                account_id=account_id,
+                calendar_id=calendar_id,
+                status=status,
+                comment=comment,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Busy blocks for one or more accounts",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def calendar_free_busy(account_ids: list[str] | None, from_: str, to: str) -> str:
+        """Busy blocks for one or more accounts
+
+        Args:
+            account_ids: (required)
+            from_: (required)
+            to: (required)"""
+        client = _get_client()
+        try:
+            response = client.calendar.calendar_free_busy(
+                account_ids=account_ids, from_=from_, to=to
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Find meeting slots across accounts",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def calendar_availability(
+        participants: list[dict[str, Any]] | None,
+        from_: str,
+        to: str,
+        duration_minutes: int,
+        interval_minutes: int = 30,
+        round_to: int | None = None,
+        buffer: dict[str, Any] | None = None,
+        default_open_hours: list[dict[str, Any]] | None = None,
+        method: Literal["collective", "max_availability"] = "collective",
+    ) -> str:
+        """Find meeting slots across accounts
+
+        Slots of `durationMinutes` every `intervalMinutes` between `from` and `to` that are free for every participant (`collective`) or for at least one (`max_availability`). Buffers pad the participants' existing meetings. Open hours are evaluated in each participant's own timezone; `defaultOpenHours` applies to participants without their own.
+
+        Args:
+            participants: Each item is an object with keys: accountId (string, required); openHours (list of objects with keys days, timezone, start, end, exdates) (required)
+            from_: (required)
+            to: (required)
+            duration_minutes: (required)
+            interval_minutes
+            round_to: Rounds the first candidate slot up to this many minutes.
+            buffer: Object with keys: before (integer); after (integer)
+            default_open_hours: Each item is an object with keys: days (list of integer, required) - 0 = Sunday.; timezone (string, required); start (string, required); end (string, required); exdates (list of string) - Dates to exclude.
+            method"""
+        client = _get_client()
+        try:
+            response = client.calendar.calendar_availability(
+                participants=participants,
+                from_=from_,
+                to=to,
+                duration_minutes=duration_minutes,
+                interval_minutes=interval_minutes,
+                round_to=round_to,
+                buffer=buffer,
+                default_open_hours=default_open_hours,
+                method=method,
             )
             return _format_response(response)
         except Exception as e:
@@ -21087,6 +21490,8 @@ def register_generated_tools(mcp, _get_client):
             "discord",
             "slack",
             "whatsapp",
+            "google",
+            "microsoft",
         ],
         profile_id: str,
         reconnect_account_id: str | None = None,
@@ -21095,6 +21500,7 @@ def register_generated_tools(mcp, _get_client):
         force_reauth: bool = False,
         redirect_url: str | None = None,
         scopes: str | None = None,
+        login_hint: str | None = None,
         headless: bool = False,
         login_method: Literal["instagram_login", "facebook_login"] = "instagram_login",
         onboarding: Literal["api", "business_app"] | None = None,
@@ -21128,7 +21534,11 @@ def register_generated_tools(mcp, _get_client):
                 expected_platform_user_id: Only connect if the login lands on this platform account; any other account ends the flow with `error=account_mismatch` (a 409 `account_mismatch` on POST /v1/connect/instagram/select-account) and nothing is written. Compared with every id the platform reports for the authorized account: the `platformUserId` of a Zernio account on this platform, or on Instagram either the app-scoped id or the professional account id (`metadata.instagramScopedId`, the `17841...` id that Facebook Login accounts hold as platformUserId). TikTok open_ids are app-scoped, so an id from your own TikTok app never matches; use expectedUsername there. Honoured by the OAuth callback (every platform that connects without a selection step, Instagram Login included) and by the Instagram selection step; on the other selection endpoints you choose the destination yourself. In headless mode the marker travels in the redirect_url we hand you, so pass that URL back unchanged. On X it counts toward the OAuth state limit described under redirect_url.
                 expected_username: Only connect if the authorized account's handle is this one (case-insensitive, a leading @ is ignored); otherwise the flow ends with `error=account_mismatch`, `error_message` naming the handle that was authorized, and nothing is written. Same coverage and transport as expectedPlatformUserId; when both are sent both must match. Use this on a first connection, where you hold the handle the user typed but no Zernio id yet.
                 force_reauth: Instagram Login only (the default loginMethod); ignored elsewhere. Makes Instagram show its login page and ask for the credentials of the account to connect even when another Instagram account is logged in on the device or in the app, and hides the Facebook login option on that page. Use it when the person connecting manages several Instagram accounts on one phone: Instagram otherwise logs in, and converts to a professional account, whichever account is active, before any consent screen. Pair it with expectedUsername to also refuse a wrong account at the end.
-                redirect_url: Your custom redirect URL after connection completes. MUST be an absolute http(s) URL or a custom app scheme for mobile deeplinks (e.g. myapp://callback); a relative path is rejected with 400 INVALID_REDIRECT_URL. X (twitter) caps the OAuth `state` at 500 characters and the redirect is carried inside it, so the URL-encoded `redirect_url` must be at most 258 characters for API callers (310 for dashboard sessions; in headless mode the appended `headless=true` counts toward it); a longer one is rejected with 400 INVALID_REDIRECT_URL. Result params are appended with the URL API, so an existing query string is preserved. Standard mode appends connected={platform}&profileId=X&accountId=Y&username=Z. Headless mode appends OAuth data params for platforms requiring selection (e.g. LinkedIn orgs, Facebook pages). If no selection is needed, the account is created directly and the redirect includes accountId.
+                redirect_url: Your custom redirect URL after connection completes. MUST be an absolute http(s) URL or a custom app scheme for mobile deeplinks (e.g. myapp://callback); a relative path is rejected with 400 INVALID_REDIRECT_URL.
+
+        Exit notice: when `redirect_url` is an http(s) URL on another site (anything but zernio.com), the user is not sent there directly. Every redirect of the flow lands first on a Zernio page, `https://zernio.com/connect/continue?to=<your URL>`, that names your site and continues to it with one click. All the params described below arrive on your URL unchanged; the notice page moves them over. A custom app scheme (myapp://...) is never routed through the notice. In headless mode the redirects we hand you (and the `redirect_url` returned by the selection endpoints) are notice URLs, so pass them back or navigate to them as they are.
+
+        X (twitter) caps the OAuth `state` at 500 characters and the redirect is carried inside it (for an http(s) URL on another site, wrapped in the notice URL), so the URL-encoded form must be at most 258 characters for API callers (310 for dashboard sessions; in headless mode the appended `headless=true` counts toward it). For a plain https URL on another site that leaves about 165 to 190 characters of your own URL, depending on how many characters need encoding; a longer one is rejected with 400 INVALID_REDIRECT_URL, and the error says by how much. Result params are appended with the URL API, so an existing query string is preserved. Standard mode appends connected={platform}&profileId=X&accountId=Y&username=Z. Headless mode appends OAuth data params for platforms requiring selection (e.g. LinkedIn orgs, Facebook pages). If no selection is needed, the account is created directly and the redirect includes accountId.
 
         On failure, the browser is sent to the same redirect_url with `error` and `platform` appended.
         `error` and `platform` are always present. `error_message`, `is_user_fixable`, `reason`,
@@ -21243,7 +21653,7 @@ def register_generated_tools(mcp, _get_client):
         profile whose Instagram account is connected through Facebook Login, so nothing was
         changed and it keeps working as before. To refresh it, connect again with
         `loginMethod=facebook_login`. To move it to Instagram Login, disconnect it first.
-                scopes: Comma-separated permission areas to request instead of the platform's full permission set. Values: `posting`, `analytics`, `comments`, `messaging`, `ads`. Omit it (the default, and what the dashboard does) to request everything the platform supports.
+                scopes: Comma-separated permission areas to request instead of the platform's full permission set. Values: `posting`, `analytics`, `comments`, `messaging`, `ads`, and on google and microsoft `email`, `calendar`, `files`, `contacts`. Omit it (the default, and what the dashboard does) to request everything the platform supports; google and microsoft REQUIRE it (400 `INVALID_FIELD_VALUE` when absent) because their consent screens are reviewed per area.
 
         When present, the consent dialog asks only for the platform scopes behind those areas plus the scopes every connection needs (identity, token refresh, and listing the pages, organizations or channels the user picks from). Scopes the user was never asked for are absent from the account's `permissions`, and the health endpoints report them as not granted, so a `posting`-only account cannot read analytics or the inbox until it is connected again with more areas. First comments need `comments`: a `posting`-only account publishes the post and skips the first comment. Scopes the platform lists under none of the areas (X likes, bookmarks and follows, Pinterest ads-only extras) are requested only when the parameter is omitted.
 
@@ -21265,6 +21675,16 @@ def register_generated_tools(mcp, _get_client):
         | pinterest | `boards:write`, `pins:read`, `pins:write` | `pins:read`, `user_accounts:read` | none | none | `ads:read`, `ads:write`, `boards:write`, `pins:read`, `pins:write` | `boards:read`, `user_accounts:read` |
         | googlebusiness | `business.manage` | `business.manage` | `business.manage` | none | none | `business.manage`, `userinfo.profile`, `userinfo.email` |
         | slack | `chat:write`, `chat:write.public`, `chat:write.customize`, `files:write`, `files:read` | none | none | `chat:write`, `chat:write.customize`, `files:write`, `files:read`, `channels:history`, `groups:history`, `im:history`, `mpim:history`, `im:read`, `im:write`, `mpim:read`, `users:read`, `reactions:read`, `reactions:write` | none | `channels:join`, `channels:read`, `groups:read`, `team:read` |
+
+        Google and Microsoft accounts use the mailbox areas instead (`scopes` is required there):
+
+        | Platform | `email` | `calendar` | `files` | `contacts` | Always requested |
+        |---|---|---|---|---|---|
+        | google | `gmail.modify` | `calendar` | `drive.file` (only files Zernio created or the user picked, see the Files tag) | `contacts.readonly` | `openid`, `userinfo.email`, `userinfo.profile` |
+        | microsoft | `Mail.ReadWrite`, `Mail.Send` | `Calendars.ReadWrite` | `Files.ReadWrite` | `Contacts.Read` | `openid`, `profile`, `email`, `offline_access`, `User.Read` |
+
+        Areas accumulate: reconnecting with more areas widens the grant and `GET /v1/accounts/{accountId}/health` reports the result.
+                login_hint: google and microsoft only: pre-fills the account picker with this address so the user lands on the right mailbox.
                 headless: When true, the user is redirected to your redirect_url with raw OAuth data (code, state) instead of Zernio's default account selection UI. Use this to build a custom connect experience.
                 login_method: Instagram only. Which of the two Instagram connection methods to use. Ignored for every other platform.
 
@@ -21323,6 +21743,7 @@ def register_generated_tools(mcp, _get_client):
                 force_reauth=force_reauth,
                 redirect_url=redirect_url,
                 scopes=scopes,
+                login_hint=login_hint,
                 headless=headless,
                 login_method=login_method,
                 onboarding=onboarding,
@@ -21357,6 +21778,8 @@ def register_generated_tools(mcp, _get_client):
             "tiktok",
             "reddit",
             "pinterest",
+            "google",
+            "microsoft",
         ],
         code: str,
         state: str,
@@ -23749,6 +24172,33 @@ def register_generated_tools(mcp, _get_client):
                 post_id=post_id,
                 flair_template_id=flair_template_id,
                 text=text,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Admin-consent link for a Microsoft tenant",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def connect_start_microsoft_admin_consent(
+        account_id: str, redirect_url: str | None = None
+    ) -> str:
+        """Admin-consent link for a Microsoft tenant
+
+        Some Microsoft 365 tenants let no user grant mail or calendar access themselves; the API then answers 412 `admin_consent_required` with `details.adminConsentUrl`, a ready admin-consent link. This endpoint mints a fresh one (each is valid for one hour) and lets you choose `redirectUrl`. It returns the Microsoft Entra admin-consent link for the app. A tenant administrator opens it, approves, and is sent to `redirectUrl` with `adminConsent=granted&tenant=…` (or `adminConsent=denied&error=…`); the grant is recorded on the account and later requests succeed without a reconnect.
+
+        Args:
+            account_id: (required)
+            redirect_url: Where to send the administrator afterwards."""
+        client = _get_client()
+        try:
+            response = client.connect.start_microsoft_admin_consent(
+                account_id=account_id, redirect_url=redirect_url
             )
             return _format_response(response)
         except Exception as e:
@@ -26396,6 +26846,519 @@ def register_generated_tools(mcp, _get_client):
         except Exception as e:
             return f"Error: {e}"
 
+    # EMAIL
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List email threads",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def email_list_email_threads(
+        account_id: str,
+        folder: str | None = None,
+        unread: bool | None = None,
+        starred: bool | None = None,
+        has_attachment: bool | None = None,
+        subject: str | None = None,
+        from_: str | None = None,
+        to: str | None = None,
+        cc: str | None = None,
+        bcc: str | None = None,
+        any_email: str | None = None,
+        after: str | None = None,
+        before: str | None = None,
+        search_query_native: str | None = None,
+        sort_order: Literal["asc", "desc"] = "desc",
+        cursor: str | None = None,
+        limit: int = 50,
+    ) -> str:
+        """List email threads
+
+        Threads of a connected Google or Microsoft mailbox, newest first. Every filter that the provider cannot apply server-side is applied to the fetched page instead and named in `meta.filteredClientSide`, so a filtered page can hold fewer than `limit` items while `pagination.hasMore` stays true.
+
+        On Google, folders are Gmail labels: `folder` takes a well-known name or a label id, `archive` means mail carrying none of the inbox, trash or spam labels, and `sortOrder=asc` reverses the fetched page (Gmail lists newest first only).
+
+        The account must have been connected with `scopes=email` (412 `account_scope_missing` otherwise).
+
+        Args:
+            account_id: The connected Google or Microsoft account. (required)
+            folder: Well-known folder (`inbox`, `sent`, `drafts`, `trash`, `spam`, `archive`) or a provider folder id from `GET /v1/email/folders`. Default inbox.
+            unread
+            starred
+            has_attachment
+            subject: Substring match on the subject.
+            from_: Sender address.
+            to: A recipient address.
+            cc
+            bcc: Applied client-side on Microsoft.
+            any_email: Matches from, to, cc or bcc. Applied client-side on Microsoft.
+            after
+            before
+            search_query_native: The provider's own search syntax (Gmail search operators, Microsoft KQL). On Microsoft it cannot be combined with other filters or server-side ordering; those are applied to the page.
+            sort_order
+            cursor
+            limit"""
+        client = _get_client()
+        try:
+            response = client.email.list_email_threads(
+                account_id=account_id,
+                folder=folder,
+                unread=unread,
+                starred=starred,
+                has_attachment=has_attachment,
+                subject=subject,
+                from_=from_,
+                to=to,
+                cc=cc,
+                bcc=bcc,
+                any_email=any_email,
+                after=after,
+                before=before,
+                search_query_native=search_query_native,
+                sort_order=sort_order,
+                cursor=cursor,
+                limit=limit,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get an email thread with its messages",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def email_get_email_thread(thread_id: str, account_id: str) -> str:
+        """Get an email thread with its messages
+
+        Args:
+            thread_id: (required)
+            account_id: The connected Google or Microsoft account. (required)"""
+        client = _get_client()
+        try:
+            response = client.email.get_email_thread(
+                thread_id=thread_id, account_id=account_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Update every message in a thread",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def email_update_email_thread(
+        thread_id: str,
+        account_id: str,
+        unread: bool | None = None,
+        starred: bool | None = None,
+        folder: str | None = None,
+    ) -> str:
+        """Update every message in a thread
+
+        Applies `unread`, `starred` or a `folder` move to each message of the thread.
+
+        Args:
+            thread_id: (required)
+            account_id: (required)
+            unread
+            starred
+            folder: Well-known folder name or folder id to move into."""
+        client = _get_client()
+        try:
+            response = client.email.update_email_thread(
+                thread_id=thread_id,
+                account_id=account_id,
+                unread=unread,
+                starred=starred,
+                folder=folder,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List email messages",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def email_list_email_messages(
+        account_id: str,
+        folder: str | None = None,
+        unread: bool | None = None,
+        starred: bool | None = None,
+        has_attachment: bool | None = None,
+        subject: str | None = None,
+        from_: str | None = None,
+        to: str | None = None,
+        cc: str | None = None,
+        bcc: str | None = None,
+        any_email: str | None = None,
+        after: str | None = None,
+        before: str | None = None,
+        search_query_native: str | None = None,
+        sort_order: Literal["asc", "desc"] = "desc",
+        cursor: str | None = None,
+        limit: int = 50,
+    ) -> str:
+        """List email messages
+
+        Same filters and envelope as `GET /v1/email/threads`, one row per message. Bodies are omitted; fetch a message to read `text` and `html`. On Google, list rows also omit `attachments` (Gmail's metadata pages carry headers only; `hasAttachment=true` still filters server-side), `sortOrder=asc` reverses the fetched page and `archive` means mail without the inbox, trash or spam labels.
+
+        Args:
+            account_id: The connected Google or Microsoft account. (required)
+            folder
+            unread
+            starred
+            has_attachment
+            subject
+            from_
+            to
+            cc
+            bcc
+            any_email
+            after
+            before
+            search_query_native
+            sort_order
+            cursor
+            limit"""
+        client = _get_client()
+        try:
+            response = client.email.list_email_messages(
+                account_id=account_id,
+                folder=folder,
+                unread=unread,
+                starred=starred,
+                has_attachment=has_attachment,
+                subject=subject,
+                from_=from_,
+                to=to,
+                cc=cc,
+                bcc=bcc,
+                any_email=any_email,
+                after=after,
+                before=before,
+                search_query_native=search_query_native,
+                sort_order=sort_order,
+                cursor=cursor,
+                limit=limit,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Send an email",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def email_send_email_message(
+        account_id: str,
+        to: list[dict[str, Any]] | None,
+        subject: str,
+        cc: list[dict[str, Any]] | None = None,
+        bcc: list[dict[str, Any]] | None = None,
+        reply_to: list[dict[str, Any]] | None = None,
+        from_name: str | None = None,
+        text: str | None = None,
+        html: str | None = None,
+        attachments: list[dict[str, Any]] | None = None,
+        headers: dict[str, Any] | None = None,
+        metadata: dict[str, Any] | None = None,
+        scheduled_for: str | None = None,
+        hold_as_draft: bool | None = None,
+        track_opens: bool | None = None,
+        track_links: bool | None = None,
+    ) -> str:
+        """Send an email
+
+        Sends from the connected mailbox and returns the stored sent copy. The message is mirrored into the inbox (`message.sent` fires once) and counted against the mailbox's daily cap, reported in the `X-Zernio-Send-Limit`, `X-Zernio-Send-Remaining` and `X-Zernio-Send-Reset` response headers.
+
+        Protection on every mailbox: a daily cap (Microsoft 1,000; Google Workspace 500; Gmail consumer 200) that answers 429 `email_send_cap_reached` with `details.cap`; the same body reaching more than 50 distinct recipients within an hour pauses the mailbox with an escalating cooldown (429 `rate_limited`, `account.rate_limited` webhook). These mailboxes are for one-to-one mail, not bulk sends. Gmail sends need a payment method on the workspace (402). Reading, calendar and files do not.
+
+        `scheduledFor` and `holdAsDraft` are reserved and currently rejected with 400.
+
+        Args:
+            account_id: (required)
+            to: Each item is an object with keys: email (string, required); name (string or null) (required)
+            cc: Each item is an object with keys: email (string, required); name (string or null)
+            bcc: Each item is an object with keys: email (string, required); name (string or null)
+            reply_to: Each item is an object with keys: email (string, required); name (string or null)
+            from_name
+            subject: (required)
+            text: Plain-text body. One of `text` or `html` is required.
+            html
+            attachments: 25 MB in total; 3 MB per attachment on Microsoft. Each item is an object with keys: filename (string, required); contentType (string, required); url (string) - Fetched at send time. Exactly one of `url` or `base64`.; base64 (string); contentId (string) - Makes the attachment inline (`cid:` reference in the html).
+            headers: Custom `X-` headers only. `List-Unsubscribe` is dropped on Microsoft and reported in `metadata.droppedHeaders`.
+            metadata
+            scheduled_for: Reserved; currently rejected.
+            hold_as_draft: Reserved; currently rejected.
+            track_opens: Not available; must be false.
+            track_links: Not available; must be false."""
+        client = _get_client()
+        try:
+            response = client.email.send_email_message(
+                account_id=account_id,
+                to=to,
+                cc=cc,
+                bcc=bcc,
+                reply_to=reply_to,
+                from_name=from_name,
+                subject=subject,
+                text=text,
+                html=html,
+                attachments=attachments,
+                headers=headers,
+                metadata=metadata,
+                scheduled_for=scheduled_for,
+                hold_as_draft=hold_as_draft,
+                track_opens=track_opens,
+                track_links=track_links,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get an email message",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def email_get_email_message(
+        message_id: str,
+        account_id: str,
+        include_headers: bool = False,
+        raw: bool = False,
+    ) -> str:
+        """Get an email message
+
+        Args:
+            message_id: (required)
+            account_id: The connected Google or Microsoft account. (required)
+            include_headers: Include the raw internet headers under `headers`.
+            raw: Include the MIME source under `raw`."""
+        client = _get_client()
+        try:
+            response = client.email.get_email_message(
+                message_id=message_id,
+                account_id=account_id,
+                include_headers=include_headers,
+                raw=raw,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Mark read or starred, or move a message",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def email_update_email_message(
+        message_id: str,
+        account_id: str,
+        unread: bool | None = None,
+        starred: bool | None = None,
+        folder: str | None = None,
+    ) -> str:
+        """Mark read or starred, or move a message
+
+        `folder` moves the message. On Google a move swaps the inbox, trash and spam labels and keeps every other label; `archive` removes the inbox label.
+
+        Args:
+            message_id: (required)
+            account_id: (required)
+            unread
+            starred
+            folder: Well-known folder name or folder id to move into."""
+        client = _get_client()
+        try:
+            response = client.email.update_email_message(
+                message_id=message_id,
+                account_id=account_id,
+                unread=unread,
+                starred=starred,
+                folder=folder,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Move a message to trash",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def email_trash_email_message(message_id: str, account_id: str) -> str:
+        """Move a message to trash
+
+        Args:
+            message_id: (required)
+            account_id: The connected Google or Microsoft account. (required)"""
+        client = _get_client()
+        try:
+            response = client.email.trash_email_message(
+                message_id=message_id, account_id=account_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Reply to a message",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def email_reply_email_message(
+        message_id: str,
+        account_id: str,
+        to: list[dict[str, Any]] | None,
+        subject: str,
+        cc: list[dict[str, Any]] | None = None,
+        bcc: list[dict[str, Any]] | None = None,
+        reply_to: list[dict[str, Any]] | None = None,
+        from_name: str | None = None,
+        text: str | None = None,
+        html: str | None = None,
+        attachments: list[dict[str, Any]] | None = None,
+        headers: dict[str, Any] | None = None,
+        metadata: dict[str, Any] | None = None,
+        scheduled_for: str | None = None,
+        hold_as_draft: bool | None = None,
+        track_opens: bool | None = None,
+        track_links: bool | None = None,
+        mode: Literal["reply", "replyAll"] = "reply",
+    ) -> str:
+        """Reply to a message
+
+        Replies inside the provider's thread: the provider builds the quoted original and threading headers, your `html` or `text` goes above the quote. `to`, `cc`, `bcc`, `replyTo`, `subject`, `headers` and `attachments` are honoured; `scheduledFor` and `holdAsDraft` are rejected like on send. Same protection, caps and headers as sending.
+
+        Args:
+            message_id: (required)
+            account_id: (required)
+            to: Each item is an object with keys: email (string, required); name (string or null) (required)
+            cc: Each item is an object with keys: email (string, required); name (string or null)
+            bcc: Each item is an object with keys: email (string, required); name (string or null)
+            reply_to: Each item is an object with keys: email (string, required); name (string or null)
+            from_name
+            subject: Optional on replies; the provider keeps the thread subject. (required)
+            text: Plain-text body. One of `text` or `html` is required.
+            html
+            attachments: 25 MB in total; 3 MB per attachment on Microsoft. Each item is an object with keys: filename (string, required); contentType (string, required); url (string) - Fetched at send time. Exactly one of `url` or `base64`.; base64 (string); contentId (string) - Makes the attachment inline (`cid:` reference in the html).
+            headers: Custom `X-` headers only. `List-Unsubscribe` is dropped on Microsoft and reported in `metadata.droppedHeaders`.
+            metadata
+            scheduled_for: Reserved; currently rejected.
+            hold_as_draft: Reserved; currently rejected.
+            track_opens: Not available; must be false.
+            track_links: Not available; must be false.
+            mode"""
+        client = _get_client()
+        try:
+            response = client.email.reply_email_message(
+                message_id=message_id,
+                account_id=account_id,
+                to=to,
+                cc=cc,
+                bcc=bcc,
+                reply_to=reply_to,
+                from_name=from_name,
+                subject=subject,
+                text=text,
+                html=html,
+                attachments=attachments,
+                headers=headers,
+                metadata=metadata,
+                scheduled_for=scheduled_for,
+                hold_as_draft=hold_as_draft,
+                track_opens=track_opens,
+                track_links=track_links,
+                mode=mode,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List mailbox folders",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def email_list_email_folders(account_id: str) -> str:
+        """List mailbox folders
+
+        On Google, folders are Gmail labels (system labels carry `wellKnown`; `unreadCount` and `totalCount` are present only where Gmail reports them). There is no archive folder on Google; archived mail is listed with `folder=archive`.
+
+        Args:
+            account_id: The connected Google or Microsoft account. (required)"""
+        client = _get_client()
+        try:
+            response = client.email.list_email_folders(account_id=account_id)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Download an attachment",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def email_download_email_attachment(
+        attachment_id: str, account_id: str, message_id: str
+    ) -> str:
+        """Download an attachment
+
+        Streams the attachment bytes with its `Content-Type` and a `Content-Disposition` carrying the filename.
+
+        Args:
+            attachment_id: (required)
+            account_id: The connected Google or Microsoft account. (required)
+            message_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.email.download_email_attachment(
+                attachment_id=attachment_id,
+                account_id=account_id,
+                message_id=message_id,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
     # FEEDBACK
 
     @mcp.tool(
@@ -26450,6 +27413,293 @@ def register_generated_tools(mcp, _get_client):
                 expected=expected,
                 actual=actual,
                 agent=agent,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    # FILES
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List files in a folder or search the drive",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def files_list_files(
+        account_id: str,
+        folder_id: str | None = None,
+        q: str | None = None,
+        cursor: str | None = None,
+        limit: int = 50,
+    ) -> str:
+        """List files in a folder or search the drive
+
+        Children of `folderId` (the root by default), folders first. With `q` and no `folderId` the whole drive is searched by name (on Google, every drive the app can see, shared drives included). The account must have been connected with `scopes=files` (412 `account_scope_missing` otherwise). Cursors are opaque and provider-issued. Google Drive returns only files Zernio created or the user picked (see the Files tag): an unpicked folder lists empty.
+
+        Args:
+            account_id: The connected Google or Microsoft account. (required)
+            folder_id: Provider folder id; omit for the root.
+            q: Name search.
+            cursor
+            limit"""
+        client = _get_client()
+        try:
+            response = client.files.list_files(
+                account_id=account_id,
+                folder_id=folder_id,
+                q=q,
+                cursor=cursor,
+                limit=limit,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Upload a file",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def files_upload_file(
+        account_id: str,
+        name: str,
+        content_type: str,
+        url: str,
+        parent_id: str | None = None,
+        convert_to: Literal[
+            "application/vnd.google-apps.document",
+            "application/vnd.google-apps.spreadsheet",
+            "application/vnd.google-apps.presentation",
+        ]
+        | None = None,
+    ) -> str:
+        """Upload a file
+
+        Either `multipart/form-data` with the file under `file` plus `accountId`, `name` (defaults to the file name) and `parentId`, or JSON with a public `url` the file is fetched from (100 MB cap). Large files go through the provider's resumable upload.
+
+        Args:
+            account_id: (required)
+            name: (required)
+            content_type: (required)
+            parent_id: Target folder; the root when omitted.
+            url: (required)
+            convert_to: Google Drive only: import the bytes as a Docs, Sheets or Slides file (a text or Office file becomes an editable document). OneDrive answers 400."""
+        client = _get_client()
+        try:
+            response = client.files.upload_file(
+                account_id=account_id,
+                name=name,
+                content_type=content_type,
+                parent_id=parent_id,
+                url=url,
+                convert_to=convert_to,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Create a folder",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def files_create_folder(
+        account_id: str, name: str, parent_id: str | None = None
+    ) -> str:
+        """Create a folder
+
+        Args:
+            account_id: (required)
+            name: (required)
+            parent_id"""
+        client = _get_client()
+        try:
+            response = client.files.create_folder(
+                account_id=account_id, name=name, parent_id=parent_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Create a hosted Google Picker session",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def files_create_file_picker_session(
+        account_id: str,
+        redirect_url: str | None = None,
+        file_ids: list[str] | None = None,
+        mime_types: list[str] | None = None,
+        multiselect: bool = True,
+    ) -> str:
+        """Create a hosted Google Picker session
+
+        Google accounts are connected with `drive.file`, so Zernio opens only files it created or the user picked (see the Files tag). This is how your end user grants files: create a session, send the user to `url`, and they pick files in Google Picker on a Zernio-hosted page.
+
+        When they finish, the browser is sent to `redirectUrl` with these query params added (existing params are kept):
+
+          - `status=picked`, `pickerSessionId`, `fileIds` (comma-separated Drive file ids, already checked against Drive), or
+          - `status=cancelled`, `pickerSessionId` when the user pressed Cancel.
+
+        A `file.picked` webhook fires on every successful pick, so `redirectUrl` is optional for server-side integrations. Closing the picker without picking keeps the session open; the user can try again until it expires.
+
+        The URL is single-use and expires after 30 minutes; create a new session for every pick. Google accounts only: Microsoft accounts answer 400 `platform_not_supported` because OneDrive needs no picker. Picks ...
+
+        Args:
+            account_id: A Google account connected with `scopes=files`. (required)
+            redirect_url: Where the browser goes when the user finishes. Absolute `http(s)` URL or a custom app scheme (`myapp://...`); relative, protocol-relative and script URLs are refused. Optional when you rely on the `file.picked` webhook.
+            file_ids: Drive file ids to show the user first (Google Picker `DocsView.setFileIds`), for example to ask for access to files your app already knows about. Pre-navigation only: the user still has to pick them.
+            mime_types: Only show files of these exact media types.
+            multiselect: false limits the pick to one file."""
+        client = _get_client()
+        try:
+            response = client.files.create_file_picker_session(
+                account_id=account_id,
+                redirect_url=redirect_url,
+                file_ids=file_ids,
+                mime_types=mime_types,
+                multiselect=multiselect,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get a file or folder",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def files_get_file(file_id: str, account_id: str) -> str:
+        """Get a file or folder
+
+        On Google Drive, a file Zernio neither created nor was given through Google Picker answers 404 `resource_not_found` with `details: { fileId, reason: file_not_granted }`; send the user through `POST /v1/files/picker-sessions` (pass the id in `fileIds` to show it first). The same 404 applies to download, update, trash and share-link.
+
+        Args:
+            file_id: (required)
+            account_id: The connected Google or Microsoft account. (required)"""
+        client = _get_client()
+        try:
+            response = client.files.get_file(file_id=file_id, account_id=account_id)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Rename or move a file",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def files_update_file(
+        file_id: str,
+        account_id: str,
+        name: str | None = None,
+        parent_id: str | None = None,
+    ) -> str:
+        """Rename or move a file
+
+        `parentId` moves the item into another folder; `name` renames it. At least one is required.
+
+        Args:
+            file_id: (required)
+            account_id: (required)
+            name
+            parent_id"""
+        client = _get_client()
+        try:
+            response = client.files.update_file(
+                file_id=file_id, account_id=account_id, name=name, parent_id=parent_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Move a file to the trash",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def files_trash_file(file_id: str, account_id: str) -> str:
+        """Move a file to the trash
+
+        Drive trash or the OneDrive recycle bin; nothing is destroyed and the user can restore it on the provider.
+
+        Args:
+            file_id: (required)
+            account_id: The connected Google or Microsoft account. (required)"""
+        client = _get_client()
+        try:
+            response = client.files.trash_file(file_id=file_id, account_id=account_id)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Download a file",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def files_download_file(file_id: str, account_id: str) -> str:
+        """Download a file
+
+        Streams the bytes with `Content-Disposition: attachment`. Google Docs, Slides and Drawings arrive as PDF/PNG and Sheets as XLSX, named with the export extension. Folders answer 400.
+
+        Args:
+            file_id: (required)
+            account_id: The connected Google or Microsoft account. (required)"""
+        client = _get_client()
+        try:
+            response = client.files.download_file(
+                file_id=file_id, account_id=account_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get an anyone-with-the-link share link",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def files_get_file_share_link(file_id: str, account_id: str) -> str:
+        """Get an anyone-with-the-link share link
+
+        Grants read access to anyone holding the link (Drive `anyone` permission, OneDrive anonymous view link) and returns it. The grant stays until it is revoked on the provider.
+
+        Args:
+            file_id: (required)
+            account_id: The connected Google or Microsoft account. (required)"""
+        client = _get_client()
+        try:
+            response = client.files.get_file_share_link(
+                file_id=file_id, account_id=account_id
             )
             return _format_response(response)
         except Exception as e:
@@ -28884,6 +30134,8 @@ def register_generated_tools(mcp, _get_client):
         participant_id: str | None = None,
         participant_username: str | None = None,
         message: str | None = None,
+        subject: str | None = None,
+        cc: list[str] | None = None,
         skip_dm_check: bool = False,
         template_name: str | None = None,
         category: Literal["utility"] | None = None,
@@ -28899,15 +30151,19 @@ def register_generated_tools(mcp, _get_client):
 
         Start a direct message conversation with a user. If a conversation with that recipient already exists, the message is added to the existing thread.
 
-        Supported platforms: X, Bluesky, Reddit, WhatsApp, SMS, Slack, and iMessage. Other platforms return PLATFORM_NOT_SUPPORTED.
+        Supported platforms: X, Bluesky, Reddit, WhatsApp, SMS, Slack, iMessage, and email (Google and Microsoft accounts). Other platforms return PLATFORM_NOT_SUPPORTED.
 
-        **iMessage.** Pass the recipient as participantId: a phone number in international format (+15551234567) or an iMessage email. Senders ordered through Zernio can message contacts who never wrote to them. The first message to such a contact must be plain text from an identifiable person or business opening a conversation; a cold introduction, including a sales one, is fine (\"Hi Mark, this is John from Pratt Media. I help local roofers get more leads. Would you be open to a quick chat?\"). It may not contain links, email addresses, phone numbers, prices or attachments (the provider's own rule for opening messages). One that does returns 400 with code `invalid_content`, a message saying what was flagged, and nothing is ...
+        **Email (Google / Microsoft).** Pass the recipient address as participantId with `subject`, `message` and optionally `cc`. The mail is sent from the mailbox, mirrored into the inbox, and the response names the inbox conversation it opened (the provider thread id, usable with the other inbox endpoints). An account connected without the `email` area returns 412 `account_scope_missing`; a disconnected one 409. Gmail accounts need a card on file (402 `payment_required`). Sends count toward the mailbox's daily cap and never toward managed messages.
+
+        **iMessage.** Pass the recipient as participantId: a phone number in international format (+15551234567) or an iMessage email. Senders ...
 
         Args:
             account_id: The account ID to send from (required)
             participant_id: Recipient identifier. For X this is the numeric user ID; for WhatsApp and SMS, the recipient phone number in international format (digits, country code included); for Slack, the workspace member id (e.g. U01ABCDEF); for iMessage, a phone number in international format with the leading + or an iMessage email. Provide either this or participantUsername.
             participant_username: Recipient handle/username, an X or Bluesky handle (with or without @) or a Reddit username (with or without u/). Resolved via lookup. Provide either this or participantId.
-            message: Text content of the message. At least one of message, attachment, or (for WhatsApp) templateName is required. Required when category is set (a Direct Send utility message is a text message).
+            message: Text content of the message. At least one of message, attachment, or (for WhatsApp) templateName is required. Required when category is set (a Direct Send utility message is a text message). Required on email accounts.
+            subject: Email accounts only (Google / Microsoft). Subject of the new thread.
+            cc: Email accounts only (Google / Microsoft). Extra recipients copied on the opening mail.
             skip_dm_check: X only. Skip the receives_your_dm eligibility check before sending. Use if you have already verified the recipient accepts DMs.
             template_name: WhatsApp only. Name of the approved template to start the conversation with. Required for WhatsApp unless category is used instead (Direct Send). Cannot be combined with category.
             category: WhatsApp only (Meta Direct Send). Combined with message and without templateName, starts the conversation with a business-initiated UTILITY message and no pre-approved template; Meta matches or auto-creates a template asynchronously. The WhatsApp Business Account must be eligible for Direct Send, otherwise the send fails with an error telling you to use an approved message template instead. Cannot be combined with templateName (templates are already categorized at creation). Utility messages only; marketing content is not allowed under this category. Accepted on the JSON body only, not on multipart requests.
@@ -28925,6 +30181,8 @@ def register_generated_tools(mcp, _get_client):
                 participant_id=participant_id,
                 participant_username=participant_username,
                 message=message,
+                subject=subject,
+                cc=cc,
                 skip_dm_check=skip_dm_check,
                 template_name=template_name,
                 category=category,
@@ -29160,6 +30418,7 @@ def register_generated_tools(mcp, _get_client):
         attachment_name: str | None = None,
         voice_note: bool | None = None,
         subject: str | None = None,
+        cc: list[str] | None = None,
         effect: Literal[
             "slam",
             "loud",
@@ -29203,20 +30462,19 @@ def register_generated_tools(mcp, _get_client):
             buttons, templates, and message tags. Attachment and interactive message
             support varies by platform.
 
+            Email threads (Google / Microsoft accounts): the text is sent as a reply to
+            the latest mail of the thread, in either direction, with its recipients and
+            a \"Re:\" subject, and `cc` adds recipients. `message` is required; attachments
+            and `replyTo` return 400 here (use POST /v1/email/messages/{messageId}/reply
+            for a reply with attachments). An account connected without the `email` area
+            returns 412 `account_scope_missing`, a disconnected one 409, and a Gmail account
+            without a card on file 402. Mail sends count toward the mailbox's daily cap,
+            never toward managed messages.
+
             WhatsApp per-recipient rate limit: WhatsApp caps how many messages you may
             send to the same recipient in a short window and rejects the excess with
             error code `131056` (\"Too many messages sent to this recipient\"). Pace
-            sends to a single recipient at roughly 10 per minute; bursts above that
-            return a `400` with code `131056`. Sends to other recipients are
-            unaffected, so parallelise across recipients rather than flooding one.
-
-            iMessage pacing: messages to contacts who have not written to the
-            sender in the last 24 hours must be at least 2 minutes apart per
-            sender; a send inside that window returns `429` with code
-            `new_contact_limit` and the time to retry. Replies to contacts who
-            wrote within the last day are not paced. A thread opened with
-            `POST /v1/inbox/conversations` takes at most two follow-ups before
-            the ...
+            sends to a single ...
 
             Args:
                 conversation_id: Opaque conversation identifier, accepted verbatim from the list endpoint or from the conversationId on inbox webhooks. Format not to be assumed. (required)
@@ -29233,6 +30491,7 @@ def register_generated_tools(mcp, _get_client):
         encoded with the OPUS codec (mono) per Meta's voice-message contract;
         other formats are rejected by WhatsApp. Ignored for non-audio attachments.
                 subject: iMessage only (JSON body only). Bold title line rendered above the message text. Rejected with 400 on other platforms; ignored on voice-message sends.
+                cc: Email threads only (Google / Microsoft accounts, JSON body only). Extra recipients copied on the reply.
                 effect: iMessage only (JSON body only). Apple screen/bubble animation played when the message arrives. Rejected with 400 on other platforms.
                 contact_card: iMessage only (JSON body only). When `true`, attaches the sender's contact card (vCard) so the recipient can save the sender. Counts as message content on its own, so `message` becomes optional.
                 channel: iMessage only (JSON body only). Overrides the delivery channel for this one send; the provider otherwise picks it automatically. The sender must carry the matching add-on (SMS, RCS or WhatsApp), or the send fails. Not a default to set on every request. Rejected with 400 on other platforms.
@@ -29261,6 +30520,7 @@ def register_generated_tools(mcp, _get_client):
                 attachment_name=attachment_name,
                 voice_note=voice_note,
                 subject=subject,
+                cc=cc,
                 effect=effect,
                 contact_card=contact_card,
                 channel=channel,
@@ -32451,8 +33711,8 @@ def register_generated_tools(mcp, _get_client):
             Args:
                 title: Stored on the post for reference/display only. This field is NOT used as the video title when publishing. To set a YouTube video title, use platformSpecificData.title on the youtube platform target (falls back to the first line of content when omitted).
                 content: Post caption/text. Optional when media is attached, all platforms have customContent, every platform entry is an X Article (platformSpecificData.article), or every platform entry is a LinkedIn text-free reshare (platformSpecificData.reshareUrl with no text). Required for other text-only posts. LinkedIn @mentions: write @[https://www.linkedin.com/in/jane-doe] or @[https://www.linkedin.com/company/acme] in the text (see the operation description).
-                media_items: Media attached to every platform in the request (a platform entry can override it with `customMedia`). Each entry needs a publicly reachable HTTPS `url`; `type` (image, video, gif, document) is inferred from the URL extension when omitted and a `type` that contradicts the extension is rejected with 400. Upload files with `POST /v1/media/presign` first; per-platform size, duration and format limits are listed on each platform schema. Each item is an object with keys: type (one of: image, video, gif, document); url (string) - A media item with a null, missing or empty url is dropped.; title (string) - Optional title for the media item. Used as the document title for LinkedIn PDF/carousel posts. If omitted, falls back to the post title, then the filename.; altText (string) - Accessibility alternative text for an image, applied on every platform that supports it: Instagram (feed images only, not Reels/Stories), Facebook, Threads, X ...; filename (string); size (integer) - Optional file size in bytes; mimeType (string) - Optional MIME type (e.g. image/jpeg, video/mp4); thumbnail (string) - Optional custom thumbnail/cover image URL for videos. Supported for Facebook video posts, Facebook Reels, regular video uploads, and LinkedIn video posts. Max ...; instagramThumbnail (string) - Custom cover image URL for Instagram Reels. Can also be set via platformSpecificData.instagramThumbnail or platformSpecificData.reelCover. Resolution order: ...; subtitles (list of objects with keys url, language) - Subtitle (closed caption) files for a video item, in SRT or WebVTT. Each language may appear once per video. Sent to YouTube, Facebook videos, LinkedIn, X and ...; tiktokProcessed (boolean) - Internal flag indicating the image was resized for TikTok
-                platforms: Target platforms and accounts for this post. Required for non-draft posts (returns 400 if empty). Drafts can omit platforms. Each item is an object with keys: platform (string, required); accountId (string, required); customContent (string) - Platform-specific text override. When set, this content is used instead of the top-level post content for this platform. Useful for tailoring captions per ...; customMedia (list of objects with keys type, url, title, altText, filename, size, mimeType, thumbnail, instagramThumbnail, subtitles, tiktokProcessed); scheduledFor (string) - Optional per-platform scheduled time override. When omitted, the top-level scheduledFor is used.; platformSpecificData (object with keys article, replyToTweetId, quoteTweetId, replySettings, threadItems, poll, longVideo, geoRestriction, paidPartnership, madeWithAi, sensitiveMedia, mediaTaggedUsers)
+                media_items: Media attached to every platform in the request (a platform entry can override it with `customMedia`). Each entry needs a publicly reachable HTTPS `url`; `type` (image, video, gif, document) is inferred from the URL extension when omitted and a `type` that contradicts the extension is rejected with 400. Upload files with `POST /v1/media/presign` first; per-platform size, duration and format limits are listed on each platform schema. Each item is an object with keys: type (one of: image, video, gif, document) - Optional when the item names a connected file (`fileId`): inferred from the file's MIME type.; url (string) - A media item with a null, missing or empty url is dropped, unless it names a connected file with `fileId` + `accountId`.; fileId (string) - A file of a connected Google Drive or OneDrive account (see the Files endpoints). The file is copied into Zernio media storage when the post is created and ...; accountId (string) - The connected Google or Microsoft account the `fileId` belongs to (must have the `files` area). Required with `fileId`.; title (string) - Optional title for the media item. Used as the document title for LinkedIn PDF/carousel posts. If omitted, falls back to the post title, then the filename.; altText (string) - Accessibility alternative text for an image, applied on every platform that supports it: Instagram (feed images only, not Reels/Stories), Facebook, Threads, X ...; filename (string); size (integer) - Optional file size in bytes; mimeType (string) - Optional MIME type (e.g. image/jpeg, video/mp4); thumbnail (string) - Optional custom thumbnail/cover image URL for videos. Supported for Facebook video posts, Facebook Reels, regular video uploads, and LinkedIn video posts. Max ...; instagramThumbnail (string) - Custom cover image URL for Instagram Reels. Can also be set via platformSpecificData.instagramThumbnail or platformSpecificData.reelCover. Resolution order: ...; subtitles (list of objects with keys url, language) - Subtitle (closed caption) files for a video item, in SRT or WebVTT. Each language may appear once per video. Sent to YouTube, Facebook videos, LinkedIn, X and ...; tiktokProcessed (boolean) - Internal flag indicating the image was resized for TikTok
+                platforms: Target platforms and accounts for this post. Required for non-draft posts (returns 400 if empty). Drafts can omit platforms. Each item is an object with keys: platform (string, required); accountId (string, required); customContent (string) - Platform-specific text override. When set, this content is used instead of the top-level post content for this platform. Useful for tailoring captions per ...; customMedia (list of objects with keys type, url, fileId, accountId, title, altText, filename, size, mimeType, thumbnail, instagramThumbnail, subtitles, tiktokProcessed); scheduledFor (string) - Optional per-platform scheduled time override. When omitted, the top-level scheduledFor is used.; platformSpecificData (object with keys article, replyToTweetId, quoteTweetId, replySettings, threadItems, poll, longVideo, geoRestriction, paidPartnership, madeWithAi, sensitiveMedia, mediaTaggedUsers)
                 scheduled_for: When to publish. Required unless `publishNow` is true, `queuedFromProfile` is set, or the post is a draft. An ISO 8601 value with a `Z` or offset (`2026-01-15T10:00:00Z`, `2026-01-15T11:00:00+01:00`) is taken as-is; a value without one (`2026-01-15T10:00:00` or `2026-01-15 10:00`) is read as local time in `timezone`. A value already in the past is published synchronously in the same request. Ignored when `publishNow` is true.
                 publish_now: Publish to every platform synchronously in this request instead of scheduling; the response then carries each platform result and `platformPostUrl`, with HTTP 207 when some platforms failed. Takes precedence over `scheduledFor`; ignored when `isDraft` is true.
                 is_draft: When true, saves the post as a draft. When none of scheduledFor, publishNow, or queuedFromProfile are provided, the post defaults to draft automatically.
@@ -32575,8 +33835,8 @@ def register_generated_tools(mcp, _get_client):
             post_id: (required)
             title: Stored on the post for reference/display only. This field is NOT used as the video title when publishing. To set a YouTube video title, use platformSpecificData.title on the youtube platform target (falls back to the first line of content when omitted).
             content
-            media_items: Each item is an object with keys: type (one of: image, video, gif, document); url (string) - A media item with a null, missing or empty url is dropped.; title (string) - Optional title for the media item. Used as the document title for LinkedIn PDF/carousel posts. If omitted, falls back to the post title, then the filename.; altText (string) - Accessibility alternative text for an image, applied on every platform that supports it: Instagram (feed images only, not Reels/Stories), Facebook, Threads, X ...; filename (string); size (integer) - Optional file size in bytes; mimeType (string) - Optional MIME type (e.g. image/jpeg, video/mp4); thumbnail (string) - Optional custom thumbnail/cover image URL for videos. Supported for Facebook video posts, Facebook Reels, regular video uploads, and LinkedIn video posts. Max ...; instagramThumbnail (string) - Custom cover image URL for Instagram Reels. Can also be set via platformSpecificData.instagramThumbnail or platformSpecificData.reelCover. Resolution order: ...; subtitles (list of objects with keys url, language) - Subtitle (closed caption) files for a video item, in SRT or WebVTT. Each language may appear once per video. Sent to YouTube, Facebook videos, LinkedIn, X and ...; tiktokProcessed (boolean) - Internal flag indicating the image was resized for TikTok
-            platforms: Target platforms and accounts for this post. Each item must include platform and accountId. Each item is an object with keys: platform (string, required); accountId (string, required); customContent (string) - Platform-specific text override.; customMedia (list of objects with keys type, url, title, altText, filename, size, mimeType, thumbnail, instagramThumbnail, subtitles, tiktokProcessed); scheduledFor (string) - Optional per-platform scheduled time override. It is kept when a top-level scheduledFor is also sent, except a date sent back unchanged (same instant, or the ...; platformSpecificData (object) - A <platform>Settings namespace (e.g. facebookSettings, tiktokSettings) omitted from the request is preserved from the stored post. Sending the key replaces ...
+            media_items: Each item is an object with keys: type (one of: image, video, gif, document) - Optional when the item names a connected file (`fileId`): inferred from the file's MIME type.; url (string) - A media item with a null, missing or empty url is dropped, unless it names a connected file with `fileId` + `accountId`.; fileId (string) - A file of a connected Google Drive or OneDrive account (see the Files endpoints). The file is copied into Zernio media storage when the post is created and ...; accountId (string) - The connected Google or Microsoft account the `fileId` belongs to (must have the `files` area). Required with `fileId`.; title (string) - Optional title for the media item. Used as the document title for LinkedIn PDF/carousel posts. If omitted, falls back to the post title, then the filename.; altText (string) - Accessibility alternative text for an image, applied on every platform that supports it: Instagram (feed images only, not Reels/Stories), Facebook, Threads, X ...; filename (string); size (integer) - Optional file size in bytes; mimeType (string) - Optional MIME type (e.g. image/jpeg, video/mp4); thumbnail (string) - Optional custom thumbnail/cover image URL for videos. Supported for Facebook video posts, Facebook Reels, regular video uploads, and LinkedIn video posts. Max ...; instagramThumbnail (string) - Custom cover image URL for Instagram Reels. Can also be set via platformSpecificData.instagramThumbnail or platformSpecificData.reelCover. Resolution order: ...; subtitles (list of objects with keys url, language) - Subtitle (closed caption) files for a video item, in SRT or WebVTT. Each language may appear once per video. Sent to YouTube, Facebook videos, LinkedIn, X and ...; tiktokProcessed (boolean) - Internal flag indicating the image was resized for TikTok
+            platforms: Target platforms and accounts for this post. Each item must include platform and accountId. Each item is an object with keys: platform (string, required); accountId (string, required); customContent (string) - Platform-specific text override.; customMedia (list of objects with keys type, url, fileId, accountId, title, altText, filename, size, mimeType, thumbnail, instagramThumbnail, subtitles, tiktokProcessed); scheduledFor (string) - Optional per-platform scheduled time override. It is kept when a top-level scheduledFor is also sent, except a date sent back unchanged (same instant, or the ...; platformSpecificData (object) - A <platform>Settings namespace (e.g. facebookSettings, tiktokSettings) omitted from the request is preserved from the stored post. Sending the key replaces ...
             scheduled_for
             publish_now
             is_draft: When omitted, the post keeps its current draft status. Send `false` to promote a draft to scheduled (combined with `scheduledFor`, `publishNow`, or a queue).
@@ -37915,8 +39175,8 @@ def register_generated_tools(mcp, _get_client):
 
         Args:
             content: Post text content
-            platforms: Target platforms (same format as POST /v1/posts) Each item is an object with keys: platform (one of: twitter, instagram, tiktok, youtube, facebook, linkedin, bluesky, threads, reddit, pinterest, telegram, snapchat, googlebusiness, discord, slack; required); accountId (string) - Account to validate against. For twitter, resolves X Premium status to apply the 25000 character limit instead of 280.; customContent (string); platformSpecificData (object); customMedia (list of objects with keys type, url, title, altText, filename, size, mimeType, thumbnail, instagramThumbnail, subtitles, tiktokProcessed) (required)
-            media_items: Root media items shared across platforms Each item is an object with keys: type (one of: image, video, gif, document); url (string) - A media item with a null, missing or empty url is dropped.; title (string) - Optional title for the media item. Used as the document title for LinkedIn PDF/carousel posts. If omitted, falls back to the post title, then the filename.; altText (string) - Accessibility alternative text for an image, applied on every platform that supports it: Instagram (feed images only, not Reels/Stories), Facebook, Threads, X ...; filename (string); size (integer) - Optional file size in bytes; mimeType (string) - Optional MIME type (e.g. image/jpeg, video/mp4); thumbnail (string) - Optional custom thumbnail/cover image URL for videos. Supported for Facebook video posts, Facebook Reels, regular video uploads, and LinkedIn video posts. Max ...; instagramThumbnail (string) - Custom cover image URL for Instagram Reels. Can also be set via platformSpecificData.instagramThumbnail or platformSpecificData.reelCover. Resolution order: ...; subtitles (list of objects with keys url, language) - Subtitle (closed caption) files for a video item, in SRT or WebVTT. Each language may appear once per video. Sent to YouTube, Facebook videos, LinkedIn, X and ...; tiktokProcessed (boolean) - Internal flag indicating the image was resized for TikTok"""
+            platforms: Target platforms (same format as POST /v1/posts) Each item is an object with keys: platform (one of: twitter, instagram, tiktok, youtube, facebook, linkedin, bluesky, threads, reddit, pinterest, telegram, snapchat, googlebusiness, discord, slack; required); accountId (string) - Account to validate against. For twitter, resolves X Premium status to apply the 25000 character limit instead of 280.; customContent (string); platformSpecificData (object); customMedia (list of objects with keys type, url, fileId, accountId, title, altText, filename, size, mimeType, thumbnail, instagramThumbnail, subtitles, tiktokProcessed) (required)
+            media_items: Root media items shared across platforms Each item is an object with keys: type (one of: image, video, gif, document) - Optional when the item names a connected file (`fileId`): inferred from the file's MIME type.; url (string) - A media item with a null, missing or empty url is dropped, unless it names a connected file with `fileId` + `accountId`.; fileId (string) - A file of a connected Google Drive or OneDrive account (see the Files endpoints). The file is copied into Zernio media storage when the post is created and ...; accountId (string) - The connected Google or Microsoft account the `fileId` belongs to (must have the `files` area). Required with `fileId`.; title (string) - Optional title for the media item. Used as the document title for LinkedIn PDF/carousel posts. If omitted, falls back to the post title, then the filename.; altText (string) - Accessibility alternative text for an image, applied on every platform that supports it: Instagram (feed images only, not Reels/Stories), Facebook, Threads, X ...; filename (string); size (integer) - Optional file size in bytes; mimeType (string) - Optional MIME type (e.g. image/jpeg, video/mp4); thumbnail (string) - Optional custom thumbnail/cover image URL for videos. Supported for Facebook video posts, Facebook Reels, regular video uploads, and LinkedIn video posts. Max ...; instagramThumbnail (string) - Custom cover image URL for Instagram Reels. Can also be set via platformSpecificData.instagramThumbnail or platformSpecificData.reelCover. Resolution order: ...; subtitles (list of objects with keys url, language) - Subtitle (closed caption) files for a video item, in SRT or WebVTT. Each language may appear once per video. Sent to YouTube, Facebook videos, LinkedIn, X and ...; tiktokProcessed (boolean) - Internal flag indicating the image was resized for TikTok"""
         client = _get_client()
         try:
             response = client.validate.validate_post(
@@ -38843,6 +40103,9 @@ def register_generated_tools(mcp, _get_client):
                 "accounts",
                 "billing",
                 "webhooks",
+                "commerce",
+                "calendar",
+                "files",
             ]
         ]
         | None = None,
@@ -39015,6 +40278,9 @@ def register_generated_tools(mcp, _get_client):
                 "accounts",
                 "billing",
                 "webhooks",
+                "commerce",
+                "calendar",
+                "files",
             ]
         ]
         | None = None,
@@ -39209,6 +40475,16 @@ def register_generated_tools(mcp, _get_client):
             "account.ads.initial_sync_completed",
             "account.ads.sync_failed",
             "account.ads.sync_recovered",
+            "account.rate_limited",
+            "calendar.event.created",
+            "calendar.event.updated",
+            "calendar.event.deleted",
+            "file.created",
+            "file.updated",
+            "file.deleted",
+            "file.picked",
+            "contact.updated",
+            "contact.deleted",
             "analytics.synced",
             "message.received",
             "message.sent",

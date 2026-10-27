@@ -27,6 +27,7 @@ from ..resources import (
     BrandedCallingResource,
     BroadcastsResource,
     BusinessAgentResource,
+    CalendarResource,
     CallsResource,
     ChangelogResource,
     CommentAutomationsResource,
@@ -38,7 +39,9 @@ from ..resources import (
     ConversionsResource,
     CustomFieldsResource,
     DiscordResource,
+    EmailResource,
     FeedbackResource,
+    FilesResource,
     GmbServicesResource,
     GmbVerificationsResource,
     ImessageResource,
@@ -179,6 +182,7 @@ class Zernio(BaseClient):
         self.branded_calling = BrandedCallingResource(self)
         self.broadcasts = BroadcastsResource(self)
         self.business_agent = BusinessAgentResource(self)
+        self.calendar = CalendarResource(self)
         self.calls = CallsResource(self)
         self.changelog = ChangelogResource(self)
         self.comment_automations = CommentAutomationsResource(self)
@@ -190,7 +194,9 @@ class Zernio(BaseClient):
         self.conversions = ConversionsResource(self)
         self.custom_fields = CustomFieldsResource(self)
         self.discord = DiscordResource(self)
+        self.email = EmailResource(self)
         self.feedback = FeedbackResource(self)
+        self.files = FilesResource(self)
         self.gmb_services = GmbServicesResource(self)
         self.gmb_verifications = GmbVerificationsResource(self)
         self.imessage = ImessageResource(self)

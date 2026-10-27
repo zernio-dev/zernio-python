@@ -84,6 +84,7 @@ class ConnectResource:
         force_reauth: bool | None = False,
         redirect_url: str | None = None,
         scopes: str | None = None,
+        login_hint: str | None = None,
         headless: bool | None = False,
         login_method: str | None = "instagram_login",
         onboarding: str | None = None,
@@ -105,6 +106,7 @@ class ConnectResource:
             force_reauth=force_reauth,
             redirect_url=redirect_url,
             scopes=scopes,
+            login_hint=login_hint,
             headless=headless,
             login_method=login_method,
             onboarding=onboarding,
@@ -1061,6 +1063,16 @@ class ConnectResource:
             f"/v1/accounts/{account_id}/reddit-flairs", data=payload
         )
 
+    def start_microsoft_admin_consent(
+        self, account_id: str, *, redirect_url: str | None = None
+    ) -> dict[str, Any]:
+        """Admin-consent link for a Microsoft tenant"""
+        params = self._build_params(
+            account_id=account_id,
+            redirect_url=redirect_url,
+        )
+        return self._client._get("/v1/connect/microsoft/admin-consent", params=params)
+
     async def aget_connect_url(
         self,
         platform: str,
@@ -1072,6 +1084,7 @@ class ConnectResource:
         force_reauth: bool | None = False,
         redirect_url: str | None = None,
         scopes: str | None = None,
+        login_hint: str | None = None,
         headless: bool | None = False,
         login_method: str | None = "instagram_login",
         onboarding: str | None = None,
@@ -1093,6 +1106,7 @@ class ConnectResource:
             force_reauth=force_reauth,
             redirect_url=redirect_url,
             scopes=scopes,
+            login_hint=login_hint,
             headless=headless,
             login_method=login_method,
             onboarding=onboarding,
@@ -2077,4 +2091,16 @@ class ConnectResource:
         )
         return await self._client._apost(
             f"/v1/accounts/{account_id}/reddit-flairs", data=payload
+        )
+
+    async def astart_microsoft_admin_consent(
+        self, account_id: str, *, redirect_url: str | None = None
+    ) -> dict[str, Any]:
+        """Admin-consent link for a Microsoft tenant (async)"""
+        params = self._build_params(
+            account_id=account_id,
+            redirect_url=redirect_url,
+        )
+        return await self._client._aget(
+            "/v1/connect/microsoft/admin-consent", params=params
         )

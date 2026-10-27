@@ -19,6 +19,7 @@ from .blogs import BlogsResource
 from .branded_calling import BrandedCallingResource
 from .broadcasts import BroadcastsResource
 from .business_agent import BusinessAgentResource
+from .calendar import CalendarResource
 from .calls import CallsResource
 from .changelog import ChangelogResource
 from .comment_automations import CommentAutomationsResource
@@ -30,7 +31,9 @@ from .contacts import ContactsResource
 from .conversions import ConversionsResource
 from .custom_fields import CustomFieldsResource
 from .discord import DiscordResource
+from .email import EmailResource
 from .feedback import FeedbackResource
+from .files import FilesResource
 from .gmb_services import GmbServicesResource
 from .gmb_verifications import GmbVerificationsResource
 from .imessage import ImessageResource
@@ -92,6 +95,7 @@ __all__ = [
     "BrandedCallingResource",
     "BroadcastsResource",
     "BusinessAgentResource",
+    "CalendarResource",
     "CallsResource",
     "ChangelogResource",
     "CommentAutomationsResource",
@@ -103,7 +107,9 @@ __all__ = [
     "ConversionsResource",
     "CustomFieldsResource",
     "DiscordResource",
+    "EmailResource",
     "FeedbackResource",
+    "FilesResource",
     "GmbServicesResource",
     "GmbVerificationsResource",
     "ImessageResource",

@@ -21,6 +21,7 @@ from ._generated.blogs import BlogsResource
 from ._generated.branded_calling import BrandedCallingResource
 from ._generated.broadcasts import BroadcastsResource
 from ._generated.business_agent import BusinessAgentResource
+from ._generated.calendar import CalendarResource
 from ._generated.calls import CallsResource
 from ._generated.changelog import ChangelogResource
 from ._generated.comment_automations import CommentAutomationsResource
@@ -32,7 +33,9 @@ from ._generated.contacts import ContactsResource
 from ._generated.conversions import ConversionsResource
 from ._generated.custom_fields import CustomFieldsResource
 from ._generated.discord import DiscordResource
+from ._generated.email import EmailResource
 from ._generated.feedback import FeedbackResource
+from ._generated.files import FilesResource
 from ._generated.gmb_services import GmbServicesResource
 from ._generated.gmb_verifications import GmbVerificationsResource
 from ._generated.imessage import ImessageResource
@@ -98,6 +101,7 @@ __all__ = [
     "BrandedCallingResource",
     "BroadcastsResource",
     "BusinessAgentResource",
+    "CalendarResource",
     "CallsResource",
     "ChangelogResource",
     "CommentAutomationsResource",
@@ -109,7 +113,9 @@ __all__ = [
     "ConversionsResource",
     "CustomFieldsResource",
     "DiscordResource",
+    "EmailResource",
     "FeedbackResource",
+    "FilesResource",
     "GmbServicesResource",
     "GmbVerificationsResource",
     "ImessageResource",

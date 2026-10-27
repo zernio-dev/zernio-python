@@ -418,6 +418,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `connect.select_pinterest_board()` | Select Pinterest board |
 | `connect.select_snapchat_profile()` | Select Snapchat profile |
 | `connect.set_reddit_post_flair()` | Set Reddit post flair |
+| `connect.start_microsoft_admin_consent()` | Admin-consent link for a Microsoft tenant |
 | `connect.vote_reddit_thing()` | Vote on a Reddit post or comment |
 
 ### Reddit
@@ -781,6 +782,19 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `business_agent.start_business_agent_eval_run()` | Start an evaluation run |
 | `business_agent.upload_business_agent_file()` | Upload a knowledge file |
 
+### Calendar
+| Method | Description |
+|--------|-------------|
+| `calendar.list_calendar_events()` | List events in a window |
+| `calendar.list_calendars()` | List calendars |
+| `calendar.create_calendar_event()` | Create an event |
+| `calendar.get_calendar_event()` | Get an event |
+| `calendar.update_calendar_event()` | Update an event |
+| `calendar.delete_calendar_event()` | Delete an event |
+| `calendar.calendar_availability()` | Find meeting slots across accounts |
+| `calendar.calendar_free_busy()` | Busy blocks for one or more accounts |
+| `calendar.rsvp_calendar_event()` | Respond to an invitation |
+
 ### Calls
 | Method | Description |
 |--------|-------------|
@@ -986,10 +1000,38 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `discord.send_discord_direct_message()` | Send a Discord Direct Message |
 | `discord.unpin_discord_message()` | Unpin a Discord message |
 
+### Email
+| Method | Description |
+|--------|-------------|
+| `email.list_email_folders()` | List mailbox folders |
+| `email.list_email_messages()` | List email messages |
+| `email.list_email_threads()` | List email threads |
+| `email.get_email_message()` | Get an email message |
+| `email.get_email_thread()` | Get an email thread with its messages |
+| `email.update_email_message()` | Mark read or starred, or move a message |
+| `email.update_email_thread()` | Update every message in a thread |
+| `email.download_email_attachment()` | Download an attachment |
+| `email.reply_email_message()` | Reply to a message |
+| `email.send_email_message()` | Send an email |
+| `email.trash_email_message()` | Move a message to trash |
+
 ### Feedback
 | Method | Description |
 |--------|-------------|
 | `feedback.submit_feedback()` | Submit feedback |
+
+### Files
+| Method | Description |
+|--------|-------------|
+| `files.list_files()` | List files in a folder or search the drive |
+| `files.create_file_picker_session()` | Create a hosted Google Picker session |
+| `files.create_folder()` | Create a folder |
+| `files.get_file()` | Get a file or folder |
+| `files.get_file_share_link()` | Get an anyone-with-the-link share link |
+| `files.update_file()` | Rename or move a file |
+| `files.download_file()` | Download a file |
+| `files.trash_file()` | Move a file to the trash |
+| `files.upload_file()` | Upload a file |
 
 ### GMB Attributes
 | Method | Description |
