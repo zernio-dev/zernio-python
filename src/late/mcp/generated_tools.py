@@ -7384,7 +7384,7 @@ def register_generated_tools(mcp, _get_client):
             max_cpc: Max CPC of the new ad group, in the account's currency units. Send it when the campaign uses Manual CPC: Google gives an ad group without one a 0.01 bid.
             ad_account_id: Platform ad account ID: the Google customer ID (digits only, only required when the connection has more than one) or the Reddit ad account id (required).
             customer_id: Google only. Alias of adAccountId, kept for existing callers
-            budget_amount: Reddit only. Budget of the new ad group, in the ad account's currency units. Required when the campaign has no campaign budget; not applied under campaign budget optimization.
+            budget_amount: Reddit only. Budget of the new ad group, in the ad account's currency units. Required when the campaign has no campaign budget; 400 under campaign budget optimization, where the campaign budget funds the ad group.
             budget_type: Reddit only. Sent together with budgetAmount.
             start_date: Reddit only. ISO 8601 start of the ad group. Defaults to now, or to the campaign start when it is in the future.
             end_date: Reddit only. ISO 8601 end of the ad group. Defaults to the campaign end.
@@ -10018,10 +10018,10 @@ def register_generated_tools(mcp, _get_client):
         new ad group (400 without them); bid, conversion event and
         pixel work as on a new campaign. Under campaign budget
         optimization the ad group takes the campaign's bid,
-        goal type, optimization event and pixel, carries no budget
-        of its own (a budget in the request is not applied), and
-        bid fields or another conversion event or pixel return
-        400, as does an `endDate` when the campaign has no end
+        goal type, optimization event and pixel and carries no
+        budget of its own, so `budgetAmount`/`budgetType`, bid
+        fields or another conversion event or pixel return 400,
+        as does an `endDate` when the campaign has no end
         date. A
         campaign of another ad account returns 404, a Reddit Max
         campaign 422. If the ad fails, the new ad group is

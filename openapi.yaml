@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.395.0"
+  version: "1.395.1"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -62581,7 +62581,7 @@ paths:
                 maxCpc: { type: number, exclusiveMinimum: 0, description: "Max CPC of the new ad group, in the account's currency units. Send it when the campaign uses Manual CPC: Google gives an ad group without one a 0.01 bid." }
                 adAccountId: { type: string, description: "Platform ad account ID: the Google customer ID (digits only, only required when the connection has more than one) or the Reddit ad account id (required)." }
                 customerId: { type: string, deprecated: true, description: "Google only. Alias of adAccountId, kept for existing callers" }
-                budgetAmount: { type: number, exclusiveMinimum: 0, description: "Reddit only. Budget of the new ad group, in the ad account's currency units. Required when the campaign has no campaign budget; not applied under campaign budget optimization." }
+                budgetAmount: { type: number, exclusiveMinimum: 0, description: "Reddit only. Budget of the new ad group, in the ad account's currency units. Required when the campaign has no campaign budget; 400 under campaign budget optimization, where the campaign budget funds the ad group." }
                 budgetType: { type: string, enum: [daily, lifetime], description: "Reddit only. Sent together with budgetAmount." }
                 startDate: { type: string, description: "Reddit only. ISO 8601 start of the ad group. Defaults to now, or to the campaign start when it is in the future." }
                 endDate: { type: string, description: "Reddit only. ISO 8601 end of the ad group. Defaults to the campaign end." }
@@ -72800,10 +72800,10 @@ paths:
                     new ad group (400 without them); bid, conversion event and
                     pixel work as on a new campaign. Under campaign budget
                     optimization the ad group takes the campaign's bid,
-                    goal type, optimization event and pixel, carries no budget
-                    of its own (a budget in the request is not applied), and
-                    bid fields or another conversion event or pixel return
-                    400, as does an `endDate` when the campaign has no end
+                    goal type, optimization event and pixel and carries no
+                    budget of its own, so `budgetAmount`/`budgetType`, bid
+                    fields or another conversion event or pixel return 400,
+                    as does an `endDate` when the campaign has no end
                     date. A
                     campaign of another ad account returns 404, a Reddit Max
                     campaign 422. If the ad fails, the new ad group is
