@@ -29,6 +29,8 @@ from .connect import ConnectResource
 from .connected_apps import ConnectedAppsResource
 from .contacts import ContactsResource
 from .conversions import ConversionsResource
+from .creator_campaigns import CreatorCampaignsResource
+from .creator_portal import CreatorPortalResource
 from .custom_fields import CustomFieldsResource
 from .discord import DiscordResource
 from .email import EmailResource
@@ -41,6 +43,7 @@ from .inbox_analytics import InboxAnalyticsResource
 from .instagram import InstagramResource
 from .invites import InvitesResource
 from .lead_gen import LeadGenResource
+from .ledger import LedgerResource
 from .logs import LogsResource
 from .media import MediaResource
 from .mentions import MentionsResource
@@ -62,6 +65,7 @@ from .sms import SmsResource
 from .support_assistant import SupportAssistantResource
 from .tools import ToolsResource
 from .tracking_tags import TrackingTagsResource
+from .treasury import TreasuryResource
 from .twitter_engagement import TwitterEngagementResource
 from .usage import UsageResource
 from .users import UsersResource
@@ -105,6 +109,8 @@ __all__ = [
     "ConnectedAppsResource",
     "ContactsResource",
     "ConversionsResource",
+    "CreatorCampaignsResource",
+    "CreatorPortalResource",
     "CustomFieldsResource",
     "DiscordResource",
     "EmailResource",
@@ -117,6 +123,7 @@ __all__ = [
     "InstagramResource",
     "InvitesResource",
     "LeadGenResource",
+    "LedgerResource",
     "LogsResource",
     "MediaResource",
     "MentionsResource",
@@ -138,6 +145,7 @@ __all__ = [
     "SupportAssistantResource",
     "ToolsResource",
     "TrackingTagsResource",
+    "TreasuryResource",
     "TwitterEngagementResource",
     "UsageResource",
     "UsersResource",

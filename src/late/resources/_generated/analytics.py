@@ -574,6 +574,94 @@ class AnalyticsResource:
             "/v1/analytics/googleanalytics/metadata", params=params
         )
 
+    def open_tracking_window(
+        self,
+        *,
+        post_id: str | None = None,
+        account_id: str | None = None,
+        url: str | None = None,
+        tracking_days: int | None = 30,
+        requested_by: str | None = "api",
+    ) -> dict[str, Any]:
+        """Open a tracking window"""
+        payload = self._build_payload(
+            post_id=post_id,
+            account_id=account_id,
+            url=url,
+            tracking_days=tracking_days,
+            requested_by=requested_by,
+        )
+        return self._client._post("/v1/analytics/tracking", data=payload)
+
+    def list_tracking_windows(
+        self,
+        *,
+        account_id: str | None = None,
+        status: str | None = None,
+        limit: int | None = 50,
+        skip: int | None = 0,
+    ) -> dict[str, Any]:
+        """List tracking windows"""
+        params = self._build_params(
+            account_id=account_id,
+            status=status,
+            limit=limit,
+            skip=skip,
+        )
+        return self._client._get("/v1/analytics/tracking", params=params)
+
+    def get_tracking_window(self, window_id: str) -> dict[str, Any]:
+        """Get a tracking window"""
+        return self._client._get(f"/v1/analytics/tracking/{window_id}")
+
+    def cancel_tracking_window(self, window_id: str) -> dict[str, Any]:
+        """Cancel a tracking window"""
+        return self._client._delete(f"/v1/analytics/tracking/{window_id}")
+
+    def get_post_samples(
+        self,
+        post_id: str,
+        *,
+        from_date: datetime | str | None = None,
+        to_date: datetime | str | None = None,
+        limit: int | None = 500,
+    ) -> dict[str, Any]:
+        """Get post samples"""
+        params = self._build_params(
+            post_id=post_id,
+            from_date=from_date,
+            to_date=to_date,
+            limit=limit,
+        )
+        return self._client._get("/v1/analytics/samples", params=params)
+
+    def get_post_authenticity(self, post_id: str) -> dict[str, Any]:
+        """Get a post's authenticity score"""
+        return self._client._get(f"/v1/posts/{post_id}/authenticity")
+
+    def list_post_authenticity(
+        self,
+        account_id: str,
+        *,
+        min_score: int | None = None,
+        max_score: int | None = None,
+        from_: datetime | str | None = None,
+        to: datetime | str | None = None,
+        limit: int | None = 50,
+        skip: int | None = 0,
+    ) -> dict[str, Any]:
+        """List authenticity scores"""
+        params = self._build_params(
+            account_id=account_id,
+            min_score=min_score,
+            max_score=max_score,
+            from_=from_,
+            to=to,
+            limit=limit,
+            skip=skip,
+        )
+        return self._client._get("/v1/analytics/authenticity", params=params)
+
     def get_google_business_performance(
         self,
         account_id: str,
@@ -1233,6 +1321,94 @@ class AnalyticsResource:
         return await self._client._aget(
             "/v1/analytics/googleanalytics/metadata", params=params
         )
+
+    async def aopen_tracking_window(
+        self,
+        *,
+        post_id: str | None = None,
+        account_id: str | None = None,
+        url: str | None = None,
+        tracking_days: int | None = 30,
+        requested_by: str | None = "api",
+    ) -> dict[str, Any]:
+        """Open a tracking window (async)"""
+        payload = self._build_payload(
+            post_id=post_id,
+            account_id=account_id,
+            url=url,
+            tracking_days=tracking_days,
+            requested_by=requested_by,
+        )
+        return await self._client._apost("/v1/analytics/tracking", data=payload)
+
+    async def alist_tracking_windows(
+        self,
+        *,
+        account_id: str | None = None,
+        status: str | None = None,
+        limit: int | None = 50,
+        skip: int | None = 0,
+    ) -> dict[str, Any]:
+        """List tracking windows (async)"""
+        params = self._build_params(
+            account_id=account_id,
+            status=status,
+            limit=limit,
+            skip=skip,
+        )
+        return await self._client._aget("/v1/analytics/tracking", params=params)
+
+    async def aget_tracking_window(self, window_id: str) -> dict[str, Any]:
+        """Get a tracking window (async)"""
+        return await self._client._aget(f"/v1/analytics/tracking/{window_id}")
+
+    async def acancel_tracking_window(self, window_id: str) -> dict[str, Any]:
+        """Cancel a tracking window (async)"""
+        return await self._client._adelete(f"/v1/analytics/tracking/{window_id}")
+
+    async def aget_post_samples(
+        self,
+        post_id: str,
+        *,
+        from_date: datetime | str | None = None,
+        to_date: datetime | str | None = None,
+        limit: int | None = 500,
+    ) -> dict[str, Any]:
+        """Get post samples (async)"""
+        params = self._build_params(
+            post_id=post_id,
+            from_date=from_date,
+            to_date=to_date,
+            limit=limit,
+        )
+        return await self._client._aget("/v1/analytics/samples", params=params)
+
+    async def aget_post_authenticity(self, post_id: str) -> dict[str, Any]:
+        """Get a post's authenticity score (async)"""
+        return await self._client._aget(f"/v1/posts/{post_id}/authenticity")
+
+    async def alist_post_authenticity(
+        self,
+        account_id: str,
+        *,
+        min_score: int | None = None,
+        max_score: int | None = None,
+        from_: datetime | str | None = None,
+        to: datetime | str | None = None,
+        limit: int | None = 50,
+        skip: int | None = 0,
+    ) -> dict[str, Any]:
+        """List authenticity scores (async)"""
+        params = self._build_params(
+            account_id=account_id,
+            min_score=min_score,
+            max_score=max_score,
+            from_=from_,
+            to=to,
+            limit=limit,
+            skip=skip,
+        )
+        return await self._client._aget("/v1/analytics/authenticity", params=params)
 
     async def aget_google_business_performance(
         self,

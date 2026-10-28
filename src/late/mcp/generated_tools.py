@@ -737,6 +737,7 @@ def register_generated_tools(mcp, _get_client):
         order: Literal["asc", "desc"] = "asc",
         include_over_limit: bool = False,
         exclude_hidden: bool = False,
+        include_creator_accounts: bool = False,
         include_sandbox: bool = False,
         include_status_counts: bool = False,
         page: int | None = None,
@@ -767,6 +768,11 @@ def register_generated_tools(mcp, _get_client):
         before pagination, so page totals and `statusCounts` count only the remaining accounts.
         Sandbox accounts added by `includeSandbox` are appended after this filter. Accepts
         `true` or `false` in any letter case; any other value returns 400.
+                include_creator_accounts: When true, also lists the accounts creators connected to your creator campaigns. They
+        sit on creator profiles, which `GET /v1/profiles` does not list, and are left out by
+        default. Asking for one creator profile by `profileId` lists its accounts either way.
+        Applied before pagination. Accepts `true` or `false` in any letter case; any other value
+        returns 400.
                 include_sandbox: When true, appends the shared WhatsApp sandbox account and the iMessage sandbox account
         to the list when they are active, honouring `platform` but no other filter. Ignored on
         a paginated request (page, limit or cursor) and together with `perProfile`. Accepts `true` or
@@ -791,6 +797,7 @@ def register_generated_tools(mcp, _get_client):
                 order=order,
                 include_over_limit=include_over_limit,
                 exclude_hidden=exclude_hidden,
+                include_creator_accounts=include_creator_accounts,
                 include_sandbox=include_sandbox,
                 include_status_counts=include_status_counts,
                 page=page,
@@ -14014,6 +14021,254 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="Open a tracking window",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def analytics_open_tracking_window(
+        post_id: str | None = None,
+        account_id: str | None = None,
+        url: str | None = None,
+        tracking_days: int = 30,
+        requested_by: str = "api",
+    ) -> str:
+        """Open a tracking window
+
+        Starts watching a post's views and engagement. Zernio fetches the numbers from the platform itself on its
+        regular analytics sync, so every reading is verified: it is a value we read from the platform, never one
+        the creator or the caller reported. The window runs for `trackingDays` (30 by default, 90 at most) and
+        ends with one final read, after which the `post.tracking_completed` webhook fires. Identify the post
+        with `postId` (an external post id from Zernio), or with `accountId` together with the post's `url`.
+        Opening a window for a post that is already tracked returns the existing window with `200`. A new
+        window returns `201`. Requires the Analytics add-on.
+
+        Platforms: instagram, facebook, tiktok, youtube, twitter, threads, pinterest, reddit, bluesky, googlebusiness, linkedin
+
+        Args:
+            post_id: Id of an external post. Required unless `accountId` and `url` are both sent.
+            account_id: Connected account the post belongs to. Send together with `url`.
+            url: Public URL of the post on the platform. Send together with `accountId`.
+            tracking_days: How many days the window stays open.
+            requested_by: Free-form label for who asked for the window. It is stored and returned as given."""
+        client = _get_client()
+        try:
+            response = client.analytics.open_tracking_window(
+                post_id=post_id,
+                account_id=account_id,
+                url=url,
+                tracking_days=tracking_days,
+                requested_by=requested_by,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List tracking windows",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def analytics_list_tracking_windows(
+        account_id: str | None = None,
+        status: Literal["open", "completing", "completed", "cancelled"] | None = None,
+        limit: int = 50,
+        skip: int = 0,
+    ) -> str:
+        """List tracking windows
+
+        Lists the tracking windows you can see, newest first. Each window carries the latest verified
+        numbers we read from the platform. Requires the Analytics add-on.
+
+        Platforms: instagram, facebook, tiktok, youtube, twitter, threads, pinterest, reddit, bluesky, googlebusiness, linkedin
+
+        Args:
+            account_id: Only windows for this connected account.
+            status: Only windows in this status.
+            limit: Page size.
+            skip: Number of windows to skip."""
+        client = _get_client()
+        try:
+            response = client.analytics.list_tracking_windows(
+                account_id=account_id, status=status, limit=limit, skip=skip
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get a tracking window",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def analytics_get_tracking_window(window_id: str) -> str:
+        """Get a tracking window
+
+        Returns one tracking window with the latest verified numbers we read from the platform. Once the window
+        has completed, `finalReadAt` and `completionReason` say how it closed. Requires the Analytics add-on.
+
+        Platforms: instagram, facebook, tiktok, youtube, twitter, threads, pinterest, reddit, bluesky, googlebusiness, linkedin
+
+        Args:
+            window_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.analytics.get_tracking_window(window_id=window_id)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Cancel a tracking window",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def analytics_cancel_tracking_window(window_id: str) -> str:
+        """Cancel a tracking window
+
+        Stops tracking and returns the window with its final status. A window that already completed keeps its
+        `completed` status and its final read. A cancelled window gets no final read and fires no
+        `post.tracking_completed` webhook. Requires the Analytics add-on.
+
+        Platforms: instagram, facebook, tiktok, youtube, twitter, threads, pinterest, reddit, bluesky, googlebusiness, linkedin
+
+        Args:
+            window_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.analytics.cancel_tracking_window(window_id=window_id)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get post samples",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def analytics_get_post_samples(
+        post_id: str,
+        from_date: str | None = None,
+        to_date: str | None = None,
+        limit: int = 500,
+    ) -> str:
+        """Get post samples
+
+        Returns the raw readings behind a post's numbers, oldest first. Each sample is one analytics sync: the
+        views and engagement as the platform reported them at `syncedAt`. Zernio only stores what it fetched from
+        the platform, so nothing here was self-reported. `shares` and `saves` are null on platforms that do not
+        return that counter, which is different from a real zero. `watchSeconds` and `completionRate` are null
+        when the platform gives no watch signal. Requires the Analytics add-on.
+
+        Platforms: instagram, facebook, tiktok, youtube, twitter, threads, pinterest, reddit, bluesky, googlebusiness, linkedin
+
+        Args:
+            post_id: The post to read samples for. Accepts an external post id, a platform post id or a Zernio post id. (required)
+            from_date: Earliest sample to return (ISO 8601).
+            to_date: Latest sample to return (ISO 8601).
+            limit: Maximum number of samples."""
+        client = _get_client()
+        try:
+            response = client.analytics.get_post_samples(
+                post_id=post_id, from_date=from_date, to_date=to_date, limit=limit
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get a post's authenticity score",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def analytics_get_post_authenticity(post_id: str) -> str:
+        """Get a post's authenticity score
+
+        Returns Zernio's authenticity score for a post: an integer from 0 to 100 where higher means the view
+        pattern looks more like organic viewing. The score is ours. It is computed only from the verified
+        samples we fetched from the platform, never from anything the creator or caller reported, and `reasons`
+        lists each factor that lowered it with its weight in points. `confidence` (0 to 1) says how much data
+        the score rests on. A stored score newer than 30 minutes is returned as is, otherwise it is recomputed.
+        The `post.authenticity_changed` webhook fires when a score crosses 40. Requires the Analytics add-on.
+
+        Platforms: instagram, facebook, tiktok, youtube, twitter, threads, pinterest, reddit, bluesky, googlebusiness, linkedin
+
+        Args:
+            post_id: An external post id, a platform post id or a Zernio post id. (required)"""
+        client = _get_client()
+        try:
+            response = client.analytics.get_post_authenticity(post_id=post_id)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List authenticity scores",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def analytics_list_post_authenticity(
+        account_id: str,
+        min_score: int | None = None,
+        max_score: int | None = None,
+        from_: str | None = None,
+        to: str | None = None,
+        limit: int = 50,
+        skip: int = 0,
+    ) -> str:
+        """List authenticity scores
+
+        Lists the stored authenticity scores for one connected account, newest first. Scores are 0 to 100 and
+        come from Zernio's own model over verified platform samples. Filter with `minScore` and `maxScore` to
+        find posts that look inflated, and with `from` and `to` to bound when the score was computed. Requires
+        the Analytics add-on.
+
+        Platforms: instagram, facebook, tiktok, youtube, twitter, threads, pinterest, reddit, bluesky, googlebusiness, linkedin
+
+        Args:
+            account_id: The connected account to list scores for. (required)
+            min_score: Only scores at or above this value.
+            max_score: Only scores at or below this value.
+            from_: Only scores computed at or after this time (ISO 8601).
+            to: Only scores computed at or before this time (ISO 8601).
+            limit: Page size.
+            skip: Number of scores to skip."""
+        client = _get_client()
+        try:
+            response = client.analytics.list_post_authenticity(
+                account_id=account_id,
+                min_score=min_score,
+                max_score=max_score,
+                from_=from_,
+                to=to,
+                limit=limit,
+                skip=skip,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="Get Google Business Profile performance metrics",
             readOnlyHint=True,
             destructiveHint=False,
@@ -14419,6 +14674,8 @@ def register_generated_tools(mcp, _get_client):
                 "billing",
                 "webhooks",
                 "commerce",
+                "creator_campaigns",
+                "money",
                 "calendar",
                 "files",
             ]
@@ -26225,6 +26482,1208 @@ def register_generated_tools(mcp, _get_client):
         except Exception as e:
             return f"Error: {e}"
 
+    # CREATOR_CAMPAIGNS
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Create creator campaign",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def creator_campaigns_create_creator_campaign(
+        profile_id: str,
+        name: str,
+        brand_name: str,
+        economics: dict[str, Any] | None,
+        caps: dict[str, Any] | None = None,
+        platforms: list[Literal["tiktok", "instagram", "youtube"]] | None = None,
+        content_rules: str | None = None,
+        starts_at: str | None = None,
+        ends_at: str | None = None,
+        tracking_days: int = 30,
+        hold_days: int = 10,
+        max_post_age_minutes: int = 60,
+        settlement: Literal["none", "external", "treasury"] = "none",
+        branding: str | None = None,
+    ) -> str:
+        """Create creator campaign
+
+        Creates a campaign in `draft`. Creators are paid for verified performance of the posts they
+        submit: Zernio tracks each post through a tracking window, scores its authenticity and records
+        every earning in a ledger. Activate the campaign to start accepting submissions.
+
+        Creator campaigns run on usage-based billing; a workspace not on it gets 403
+        `feature_not_available`. `profileId` must be a profile this key can reach, otherwise 404.
+
+        Args:
+            profile_id: Profile the campaign lives in. Creator accounts connect into the same workspace. (required)
+            name: (required)
+            brand_name: (required)
+            economics: Object with keys: type (one of: cpm; required); ratePer1kCents (integer, required); minViewsToEarn (integer, required); maxPayoutPerClipCents (integer); budgetCents (integer, required) (required)
+            caps: Omitted, the campaign starts with authenticityThreshold 40 and no other caps. Object with keys: maxParticipants (integer) - Invites and joins past this count answer 403.; maxSubmissionsPerParticipantPerDay (integer) - Posts one participant can submit to this campaign per UTC day, counting every submission whatever its status. The next submit that day answers 409 ...; maxAccountsPerParticipant (integer) - Accounts a participant can use in this campaign. Connecting a new account past it answers 400; only the first accounts connected, up to this count, can submit ...; authenticityThreshold (number, required) - A submission whose authenticity score falls below this is flagged `low_authenticity`. It is never rejected automatically. Defaults to 40 on create.
+            platforms: Platforms creators may post on. At least one is needed to activate.
+            content_rules
+            starts_at
+            ends_at
+            tracking_days
+            hold_days
+            max_post_age_minutes
+            settlement
+            branding"""
+        client = _get_client()
+        try:
+            response = client.creator_campaigns.create_creator_campaign(
+                profile_id=profile_id,
+                name=name,
+                brand_name=brand_name,
+                economics=economics,
+                caps=caps,
+                platforms=platforms,
+                content_rules=content_rules,
+                starts_at=starts_at,
+                ends_at=ends_at,
+                tracking_days=tracking_days,
+                hold_days=hold_days,
+                max_post_age_minutes=max_post_age_minutes,
+                settlement=settlement,
+                branding=branding,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List creator campaigns",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def creator_campaigns_list_creator_campaigns(
+        status: Literal["draft", "active", "paused", "closed"] | None = None,
+        profile_id: str | None = None,
+        q: str | None = None,
+        limit: int = 50,
+        skip: int = 0,
+    ) -> str:
+        """List creator campaigns
+
+        Lists the team's campaigns in the profiles this key can reach, newest first.
+
+        Args:
+            status
+            profile_id: Only campaigns in this profile.
+            q: Only campaigns whose name or brand name contains this text, ignoring case.
+            limit
+            skip"""
+        client = _get_client()
+        try:
+            response = client.creator_campaigns.list_creator_campaigns(
+                status=status, profile_id=profile_id, q=q, limit=limit, skip=skip
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get creator campaign",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def creator_campaigns_get_creator_campaign(campaign_id: str) -> str:
+        """Get creator campaign
+
+        Returns the campaign with its budget consumption, participant count and submission counts.
+
+        Args:
+            campaign_id: Campaign ID. (required)"""
+        client = _get_client()
+        try:
+            response = client.creator_campaigns.get_creator_campaign(
+                campaign_id=campaign_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Update creator campaign",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def creator_campaigns_update_creator_campaign(
+        campaign_id: str,
+        name: str | None = None,
+        brand_name: str | None = None,
+        platforms: list[Literal["tiktok", "instagram", "youtube"]] | None = None,
+        content_rules: str | None = None,
+        starts_at: str | None = None,
+        ends_at: str | None = None,
+        tracking_days: int | None = None,
+        hold_days: int | None = None,
+        max_post_age_minutes: int | None = None,
+        settlement: Literal["none", "external", "treasury"] | None = None,
+        economics: dict[str, Any] | None = None,
+        caps: dict[str, Any] | None = None,
+        branding: str | None = None,
+    ) -> str:
+        """Update creator campaign
+
+        Updates any subset of the campaign's settings. `economics` (and with it the campaign type)
+        can only change while the campaign is a draft; afterwards that answers 409, and a live campaign's
+        budget is raised with `POST /v1/creator-campaigns/{campaignId}/budget`. An empty body
+        answers 400.
+
+        Args:
+            campaign_id: Campaign ID. (required)
+            name
+            brand_name
+            platforms
+            content_rules
+            starts_at
+            ends_at
+            tracking_days
+            hold_days
+            max_post_age_minutes
+            settlement
+            economics: Object with keys: type (one of: cpm; required); ratePer1kCents (integer, required); minViewsToEarn (integer, required); maxPayoutPerClipCents (integer); budgetCents (integer, required)
+            caps: Object with keys: maxParticipants (integer) - Invites and joins past this count answer 403.; maxSubmissionsPerParticipantPerDay (integer) - Posts one participant can submit to this campaign per UTC day, counting every submission whatever its status. The next submit that day answers 409 ...; maxAccountsPerParticipant (integer) - Accounts a participant can use in this campaign. Connecting a new account past it answers 400; only the first accounts connected, up to this count, can submit ...; authenticityThreshold (number, required) - A submission whose authenticity score falls below this is flagged `low_authenticity`. It is never rejected automatically. Defaults to 40 on create.
+            branding"""
+        client = _get_client()
+        try:
+            response = client.creator_campaigns.update_creator_campaign(
+                campaign_id=campaign_id,
+                name=name,
+                brand_name=brand_name,
+                platforms=platforms,
+                content_rules=content_rules,
+                starts_at=starts_at,
+                ends_at=ends_at,
+                tracking_days=tracking_days,
+                hold_days=hold_days,
+                max_post_age_minutes=max_post_age_minutes,
+                settlement=settlement,
+                economics=economics,
+                caps=caps,
+                branding=branding,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Raise creator campaign budget",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def creator_campaigns_raise_creator_campaign_budget(
+        campaign_id: str, budget_cents: int
+    ) -> str:
+        """Raise creator campaign budget
+
+        Raises the budget of a campaign that is `draft`, `active` or `paused`. Only the budget changes; the pay
+        terms stay as creators joined them, which `PATCH` refuses to change once the campaign is live. The new
+        `budgetCents` must be above the current budget, otherwise 400 `invalid_field_value`. When it is also above what
+        the campaign has spent, `budgetExhaustedAt` is cleared and earnings that stopped at the old budget resume. A
+        closed campaign answers 409 `invalid_resource_state`.
+
+        Args:
+            campaign_id: Campaign ID. (required)
+            budget_cents: The new total budget in cents. (required)"""
+        client = _get_client()
+        try:
+            response = client.creator_campaigns.raise_creator_campaign_budget(
+                campaign_id=campaign_id, budget_cents=budget_cents
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Activate creator campaign",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def creator_campaigns_activate_creator_campaign(campaign_id: str) -> str:
+        """Activate creator campaign
+
+        Moves a `draft` or `paused` campaign to `active`, where creators can join and submit posts and
+        tracked views accrue earnings. Needs at least one platform and a budget above zero; any other
+        starting state answers 409.
+
+        Args:
+            campaign_id: Campaign ID. (required)"""
+        client = _get_client()
+        try:
+            response = client.creator_campaigns.activate_creator_campaign(
+                campaign_id=campaign_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Pause creator campaign",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def creator_campaigns_pause_creator_campaign(campaign_id: str) -> str:
+        """Pause creator campaign
+
+        Moves an `active` campaign to `paused`: no new submissions, and approvals answer 409 until the
+        campaign is activated again.
+
+        Args:
+            campaign_id: Campaign ID. (required)"""
+        client = _get_client()
+        try:
+            response = client.creator_campaigns.pause_creator_campaign(
+                campaign_id=campaign_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Close creator campaign",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def creator_campaigns_close_creator_campaign(campaign_id: str) -> str:
+        """Close creator campaign
+
+        Closes an `active` or `paused` campaign for good and fires `creator_campaign.closed`. Open
+        tracking windows are cancelled. A pool campaign is split among participants at this moment by
+        their approved eligible views, so closing a pool campaign answers 409 while any post still
+        awaits review. A campaign also closes by itself once `endsAt` passed and every tracking window
+        had its final read.
+
+        Args:
+            campaign_id: Campaign ID. (required)"""
+        client = _get_client()
+        try:
+            response = client.creator_campaigns.close_creator_campaign(
+                campaign_id=campaign_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Invite campaign participant",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def creator_campaigns_create_campaign_participant(
+        campaign_id: str, display_name: str, email: str | None = None
+    ) -> str:
+        """Invite campaign participant
+
+        Invites one creator and returns their personal invite URL. Send it to the creator: on that
+        page they connect their accounts (read-only), submit posts and see their earnings. The URL is
+        returned only here; inviting again creates no second link (409 for a creator already in the
+        campaign). A creator is matched by email within your workspace, so the same person keeps one
+        identity across your campaigns.
+
+        Answers 409 on a closed campaign and 403 `feature_not_available` once `caps.maxParticipants`
+        is reached.
+
+        Args:
+            campaign_id: Campaign ID. (required)
+            display_name: (required)
+            email"""
+        client = _get_client()
+        try:
+            response = client.creator_campaigns.create_campaign_participant(
+                campaign_id=campaign_id, display_name=display_name, email=email
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List campaign participants",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def creator_campaigns_list_campaign_participants(
+        campaign_id: str,
+        status: Literal["invited", "active", "suspended", "removed"] | None = None,
+        limit: int = 50,
+        skip: int = 0,
+    ) -> str:
+        """List campaign participants
+
+        Lists the campaign's participants with their balances, flags and submission counts.
+
+        Args:
+            campaign_id: Campaign ID. (required)
+            status
+            limit
+            skip"""
+        client = _get_client()
+        try:
+            response = client.creator_campaigns.list_campaign_participants(
+                campaign_id=campaign_id, status=status, limit=limit, skip=skip
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get campaign participant",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def creator_campaigns_get_campaign_participant(
+        campaign_id: str, participant_id: str
+    ) -> str:
+        """Get campaign participant
+
+        Returns one participant with connected accounts, balances by state, flags and submission counts.
+
+        Args:
+            campaign_id: Campaign ID. (required)
+            participant_id: Participant ID. (required)"""
+        client = _get_client()
+        try:
+            response = client.creator_campaigns.get_campaign_participant(
+                campaign_id=campaign_id, participant_id=participant_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Suspend campaign participant",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def creator_campaigns_suspend_campaign_participant(
+        campaign_id: str, participant_id: str
+    ) -> str:
+        """Suspend campaign participant
+
+        Suspends an `active` participant: they can no longer submit posts. Any other status answers 409.
+
+        Args:
+            campaign_id: Campaign ID. (required)
+            participant_id: Participant ID. (required)"""
+        client = _get_client()
+        try:
+            response = client.creator_campaigns.suspend_campaign_participant(
+                campaign_id=campaign_id, participant_id=participant_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Reinstate campaign participant",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def creator_campaigns_reinstate_campaign_participant(
+        campaign_id: str, participant_id: str
+    ) -> str:
+        """Reinstate campaign participant
+
+        Reinstates a `suspended` participant: they can submit posts again. Any other status answers 409; a removed participant stays removed.
+
+        Args:
+            campaign_id: Campaign ID. (required)
+            participant_id: Participant ID. (required)"""
+        client = _get_client()
+        try:
+            response = client.creator_campaigns.reinstate_campaign_participant(
+                campaign_id=campaign_id, participant_id=participant_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Remove campaign participant",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def creator_campaigns_remove_campaign_participant(
+        campaign_id: str, participant_id: str
+    ) -> str:
+        """Remove campaign participant
+
+        Removes the participant from the campaign. Their earnings stay in the ledger. Removing an
+        already removed participant returns it unchanged.
+
+        Args:
+            campaign_id: Campaign ID. (required)
+            participant_id: Participant ID. (required)"""
+        client = _get_client()
+        try:
+            response = client.creator_campaigns.remove_campaign_participant(
+                campaign_id=campaign_id, participant_id=participant_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Settle campaign participant",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def creator_campaigns_settle_campaign_participant(
+        campaign_id: str,
+        participant_id: str,
+        amount_cents: int | None = None,
+        external_reference: str | None = None,
+        record_only: bool | None = None,
+    ) -> str:
+        """Settle campaign participant
+
+        Records a payout of the participant's payable balance and fires `campaign_payout.settled`.
+        Omit `amountCents` to settle the whole payable balance; an amount above it answers 400, and
+        nothing payable answers 409.
+
+        - `none` settlement: records a payout you made elsewhere.
+        - `external` settlement: pay from your own rails when `campaign_payout.payable` fires, then
+          call this with your payout id in `externalReference` (required in this mode).
+        - `treasury` settlement: transfers the amount from your Zernio balance to the creator's
+          connected Stripe account, then records it with the Stripe transfer id as `externalReference`.
+          The transfer fee (4%, $0.50 minimum) is added on top: the creator receives the full amount
+          and your balance is debited `totalCents`. The creator must have finished payout setup from
+          their campaign page (409 otherwise), and a balance that does not cover the amount plus the
+          fee answers 402. While Stripe confirms the transfer the amount sits in the participant's ...
+
+        Args:
+            campaign_id: Campaign ID. (required)
+            participant_id: Participant ID. (required)
+            amount_cents: Defaults to the whole payable balance.
+            external_reference: Your payout id. Required when the campaign settles externally.
+            record_only: Treasury campaigns only: record a payout you already made outside Zernio, without moving money. Ignored on other settlement modes, which always record."""
+        client = _get_client()
+        try:
+            response = client.creator_campaigns.settle_campaign_participant(
+                campaign_id=campaign_id,
+                participant_id=participant_id,
+                amount_cents=amount_cents,
+                external_reference=external_reference,
+                record_only=record_only,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Pay creators with one card payment",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def creator_campaigns_create_campaign_payout_batch(
+        participant_ids: list[str] | None = None,
+        exclude_participant_ids: list[str] | None = None,
+    ) -> str:
+        """Pay creators with one card payment
+
+        Pays exactly what is owed: every payable creator of a `treasury` campaign who finished payout
+        setup (or only `participantIds`, minus `excludeParticipantIds`) is held in `settling`, and the
+        response carries a Stripe Checkout `url` for the total plus the fee (4% per creator, 50 cent
+        minimum). Once the card payment completes, each creator gets a transfer funded by that charge
+        and the batch ends `paid` or `partially_failed`. A creator whose payouts were disabled before
+        the payment landed is skipped and stays payable. If the Checkout expires unpaid (24 hours),
+        every amount is payable again.
+
+        Card payouts are limited to $2,000.00 gross per rolling 30 days by default; over it the call
+        answers 402 (\"Over your instant payout limit. Top up your balance to pay more this month, or
+        contact support to raise the limit.\"). Nothing payable answers 400 (\"Nothing is payable.\").
+        Needs an owner, admin or billing admin, signed in or through a full-access key they created.
+        Send an `Idempotency-Key` so a ...
+
+        Args:
+            participant_ids: Pay only these participants. Defaults to every payable participant who is ready.
+            exclude_participant_ids: Leave these participants out."""
+        client = _get_client()
+        try:
+            response = client.creator_campaigns.create_campaign_payout_batch(
+                participant_ids=participant_ids,
+                exclude_participant_ids=exclude_participant_ids,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List payout batches",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def creator_campaigns_list_campaign_payout_batches(
+        limit: int = 20, skip: int = 0
+    ) -> str:
+        """List payout batches
+
+        The campaign's payout batches, newest first, with each creator's item.
+
+        Args:
+            limit
+            skip"""
+        client = _get_client()
+        try:
+            response = client.creator_campaigns.list_campaign_payout_batches(
+                limit=limit, skip=skip
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Create campaign invite link",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def creator_campaigns_create_campaign_invite_link(campaign_id: str) -> str:
+        """Create campaign invite link
+
+        Creates the campaign's open invite link: anyone with it can join as a participant (up to
+        `caps.maxParticipants`). Creating a new link revokes the previous one. The URL is returned only
+        here. Answers 409 on a closed campaign.
+
+        Args:
+            campaign_id: Campaign ID. (required)"""
+        client = _get_client()
+        try:
+            response = client.creator_campaigns.create_campaign_invite_link(
+                campaign_id=campaign_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List campaign submissions",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def creator_campaigns_list_campaign_submissions(
+        campaign_id: str,
+        status: Literal[
+            "received",
+            "tracking",
+            "pending_review",
+            "approved",
+            "rejected",
+            "expired",
+            "withdrawn",
+        ]
+        | None = None,
+        participant_id: str | None = None,
+        flag: Literal[
+            "duplicate_media",
+            "duplicate_post",
+            "view_spike",
+            "linked_accounts",
+            "cross_operator",
+            "unreachable",
+            "post_deleted",
+            "account_restricted",
+            "low_authenticity",
+        ]
+        | None = None,
+        platform: Literal["tiktok", "instagram", "youtube"] | None = None,
+        min_score: int | None = None,
+        max_score: int | None = None,
+        q: str | None = None,
+        sort: Literal[
+            "submittedAt", "viewsEligible", "earnedCents", "authenticityScore"
+        ] = "submittedAt",
+        order: Literal["asc", "desc"] = "desc",
+        limit: int = 50,
+        skip: int = 0,
+    ) -> str:
+        """List campaign submissions
+
+        Lists submitted posts with views, earnings, authenticity score and flags. Filter by status,
+        participant, flag, platform or score range to build a review queue, for example
+        `status=pending_review`.
+
+        Args:
+            campaign_id: Campaign ID. (required)
+            status
+            participant_id
+            flag
+            platform
+            min_score
+            max_score
+            q: Only submissions whose creator name or post link contains this text, ignoring case.
+            sort: What to sort by. Posts with no value to sort by (not read yet, not scored) come last in either direction.
+            order
+            limit
+            skip"""
+        client = _get_client()
+        try:
+            response = client.creator_campaigns.list_campaign_submissions(
+                campaign_id=campaign_id,
+                status=status,
+                participant_id=participant_id,
+                flag=flag,
+                platform=platform,
+                min_score=min_score,
+                max_score=max_score,
+                q=q,
+                sort=sort,
+                order=order,
+                limit=limit,
+                skip=skip,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get campaign submission",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def creator_campaigns_get_campaign_submission(
+        campaign_id: str, submission_id: str
+    ) -> str:
+        """Get campaign submission
+
+        Returns one submission with its per-sync samples (views, likes, comments, shares, saves).
+
+        Args:
+            campaign_id: Campaign ID. (required)
+            submission_id: Submission ID. (required)"""
+        client = _get_client()
+        try:
+            response = client.creator_campaigns.get_campaign_submission(
+                campaign_id=campaign_id, submission_id=submission_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Approve campaign submission",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def creator_campaigns_approve_campaign_submission(
+        campaign_id: str, submission_id: str
+    ) -> str:
+        """Approve campaign submission
+
+        Approves a `tracking` or `pending_review` submission of an active campaign and fires
+        `campaign_submission.approved`. The Zernio dashboard offers Approve only on `pending_review`
+        (a post that needs a decision) and waits for `tracking` posts to get there; the API accepts
+        `tracking` so an integration can approve early. What the post earned so far moves to owed and is held for the
+        campaign's `holdDays`; later earnings post straight to owed. A per-post campaign pays
+        `perApprovedPostCents` here. Any other state answers 409. The same post approved in another of your campaigns also answers 409 (`invalid_resource_state`, \"This post is already approved in another campaign of yours.\"), so one post never earns twice.
+
+        Args:
+            campaign_id: Campaign ID. (required)
+            submission_id: Submission ID. (required)"""
+        client = _get_client()
+        try:
+            response = client.creator_campaigns.approve_campaign_submission(
+                campaign_id=campaign_id, submission_id=submission_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Reject campaign submission",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def creator_campaigns_reject_campaign_submission(
+        campaign_id: str, submission_id: str, reason: str
+    ) -> str:
+        """Reject campaign submission
+
+        Rejects a submission (also one already approved) and fires `campaign_submission.rejected`. Its
+        tracking window is cancelled and its unsettled earnings return to the campaign budget.
+        Rejecting a rejected submission returns it unchanged; an expired or withdrawn one answers 409.
+
+        Args:
+            campaign_id: Campaign ID. (required)
+            submission_id: Submission ID. (required)
+            reason: (required)"""
+        client = _get_client()
+        try:
+            response = client.creator_campaigns.reject_campaign_submission(
+                campaign_id=campaign_id, submission_id=submission_id, reason=reason
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Reopen campaign submission",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def creator_campaigns_reopen_campaign_submission(
+        campaign_id: str, submission_id: str
+    ) -> str:
+        """Reopen campaign submission
+
+        Puts a rejected submission back to `pending_review` so it can be decided again. Its tracking
+        window resumes, so it works only while that window has not ended; otherwise 409 `invalid_resource_state`
+        (\"This post's tracking window has ended.\"). A post that earned money which was already paid
+        out cannot be reopened, and neither can a post of a closed campaign. Reopening a submission that is
+        already `pending_review` returns it unchanged; any other status answers 409. No webhook fires.
+
+        Args:
+            campaign_id: Campaign ID. (required)
+            submission_id: Submission ID. (required)"""
+        client = _get_client()
+        try:
+            response = client.creator_campaigns.reopen_campaign_submission(
+                campaign_id=campaign_id, submission_id=submission_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List campaign payables",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def creator_campaigns_list_campaign_payables(campaign_id: str) -> str:
+        """List campaign payables
+
+        Lists every participant with a payable balance (earnings past their hold), with the ledger
+        entries behind it. Pay these, then record each payout with the settle endpoint.
+
+        Args:
+            campaign_id: Campaign ID. (required)"""
+        client = _get_client()
+        try:
+            response = client.creator_campaigns.list_campaign_payables(
+                campaign_id=campaign_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Create campaign adjustment",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def creator_campaigns_create_campaign_adjustment(
+        campaign_id: str, participant_id: str, amount_cents: int, cause: str
+    ) -> str:
+        """Create campaign adjustment
+
+        Posts a manual adjustment to a participant's payable balance against the campaign budget: a
+        positive amount credits the participant (a bonus), a negative one claws back. `cause` is kept
+        on the ledger entry. A claw-back larger than the payable balance answers 409.
+
+        Args:
+            campaign_id: Campaign ID. (required)
+            participant_id: (required)
+            amount_cents: Non-zero. Positive credits, negative claws back. (required)
+            cause: (required)"""
+        client = _get_client()
+        try:
+            response = client.creator_campaigns.create_campaign_adjustment(
+                campaign_id=campaign_id,
+                participant_id=participant_id,
+                amount_cents=amount_cents,
+                cause=cause,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List campaign ledger",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def creator_campaigns_list_campaign_ledger(
+        campaign_id: str,
+        participant_id: str | None = None,
+        kind: Literal[
+            "accrual",
+            "approval",
+            "hold_release",
+            "adjustment",
+            "settling",
+            "settlement",
+            "reversal",
+            "topup",
+            "transfer",
+            "fee",
+        ]
+        | None = None,
+        limit: int = 50,
+        skip: int = 0,
+    ) -> str:
+        """List campaign ledger
+
+        Lists ledger entries, newest first. Without `participantId` it lists every entry of the campaign:
+        earnings drawn from the budget (accruals, per-post payments, pool shares, adjustments), the
+        approvals, hold releases and settlements that move money between its participants' buckets, and
+        their reversals. Pass `participantId` to narrow the list to one participant's entries.
+
+        Args:
+            campaign_id: Campaign ID. (required)
+            participant_id: List only this participant's entries.
+            kind
+            limit
+            skip"""
+        client = _get_client()
+        try:
+            response = client.creator_campaigns.list_campaign_ledger(
+                campaign_id=campaign_id,
+                participant_id=participant_id,
+                kind=kind,
+                limit=limit,
+                skip=skip,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get campaign report",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def creator_campaigns_get_campaign_report(campaign_id: str) -> str:
+        """Get campaign report
+
+        Returns spend against budget, views, submission counts, the top ten participants by earnings
+        and the authenticity score distribution.
+
+        Args:
+            campaign_id: Campaign ID. (required)"""
+        client = _get_client()
+        try:
+            response = client.creator_campaigns.get_campaign_report(
+                campaign_id=campaign_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    # CREATOR_PORTAL
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Email a creator their campaign links",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def creator_portal_recover_creator_portal_links(
+        email: str, campaign_id: str | None = None
+    ) -> str:
+        """Email a creator their campaign links
+
+        For a creator who lost their link. Emails every personal participant link held by `email`
+        in one message, optionally only the one for `campaignId`. Removed participants and draft
+        campaigns are left out. Always answers 202 with the same body, so the answer never tells
+        whether the address has links. Limited to 5 requests per hour per email address and 5 per
+        hour per IP address.
+
+        Args:
+            email: (required)
+            campaign_id: Only send the link for this campaign."""
+        client = _get_client()
+        try:
+            response = client.creator_portal.recover_creator_portal_links(
+                email=email, campaign_id=campaign_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Read a creator invite or participant page",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def creator_portal_get_creator_portal() -> str:
+        """Read a creator invite or participant page
+
+        What a creator sees behind a campaign link, with no API key. `token` is either an open
+        invite token (from `POST /v1/creator-campaigns/{campaignId}/invite-link`), which answers
+        `kind: invite` with the campaign only, or a participant token (from an invite or a join),
+        which answers `kind: participant` with the creator's connected accounts, latest 100
+        submissions, earnings and payout setup. Reading a participant page also re-checks the
+        creator's connected accounts. Never cached."""
+        client = _get_client()
+        try:
+            response = client.creator_portal.get_creator_portal()
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Join a campaign",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def creator_portal_join_creator_campaign(
+        display_name: str | None = None, email: str | None = None
+    ) -> str:
+        """Join a campaign
+
+        Accepts a participant invite, or joins through an open invite link. With a participant
+        token the body is ignored and the invite is accepted. With an open invite token a new
+        participant is created from `displayName` (required) and `email` (optional), and a fresh
+        participant token comes back: keep it, it is the creator's only key to their page.
+        Open-link joins are limited to about 20 per IP address and 60 per link every 10 minutes.
+
+        Args:
+            display_name: Required when joining through an open invite link.
+            email"""
+        client = _get_client()
+        try:
+            response = client.creator_portal.join_creator_campaign(
+                display_name=display_name, email=email
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Start connecting a creator account",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def creator_portal_start_creator_connect(platform: str) -> str:
+        """Start connecting a creator account
+
+        Returns the authorization URL that connects one of the creator's own social accounts,
+        read-only, so their posts can be verified. Send the creator's browser to `authUrl`; they
+        come back to their participant page. Only the campaign's platforms are accepted.
+
+        Args:
+            platform: One of the campaign's platforms, for example tiktok. (required)"""
+        client = _get_client()
+        try:
+            response = client.creator_portal.start_creator_connect(platform=platform)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Submit a post",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def creator_portal_submit_creator_post(url: str) -> str:
+        """Submit a post
+
+        Submits the link to a post the creator published from a connected account. The post opens
+        a tracking window and fires `campaign_submission.received` to the operator. About 30
+        attempts and 10 accepted posts per participant every 10 minutes.
+
+        Args:
+            url: The public link to the post. (required)"""
+        client = _get_client()
+        try:
+            response = client.creator_portal.submit_creator_post(url=url)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List a creator's earnings history",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def creator_portal_get_creator_payouts(limit: int = 50, skip: int = 0) -> str:
+        """List a creator's earnings history
+
+        The participant's ledger entries, newest first, with the bucket each one moved money
+        from and to (`accruing`, `owed`, `payable`, `settling`, `settled`; null for the other
+        side), plus the payout setup. Never cached.
+
+        Args:
+            limit
+            skip"""
+        client = _get_client()
+        try:
+            response = client.creator_portal.get_creator_payouts(limit=limit, skip=skip)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Start payout onboarding",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def creator_portal_start_creator_payouts(
+        action: Literal["onboard"], country: str | None = None
+    ) -> str:
+        """Start payout onboarding
+
+        For a campaign that pays through the Zernio treasury: creates the creator's payee on first
+        use and returns a Stripe-hosted onboarding link where they enter identity and bank
+        details. `country` is required the first time and cannot change afterwards. About 20
+        attempts per participant every 10 minutes.
+
+        Args:
+            action: (required)
+            country: ISO 3166-1 alpha-2 country the creator lives in. Required on the first call."""
+        client = _get_client()
+        try:
+            response = client.creator_portal.start_creator_payouts(
+                action=action, country=country
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Open the creator's Stripe dashboard",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def creator_portal_create_creator_payout_login() -> str:
+        """Open the creator's Stripe dashboard
+
+        Returns a one-time link into the creator's Stripe Express dashboard, where they change bank
+        details and see each payout. Only after the creator submitted their payout details. About
+        20 attempts per participant every 10 minutes."""
+        client = _get_client()
+        try:
+            response = client.creator_portal.create_creator_payout_login()
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Download a payout statement",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def creator_portal_get_creator_payout_statement() -> str:
+        """Download a payout statement
+
+        A PDF statement of one paid payout to this creator: who paid, the campaign, the date, the
+        amount and the Stripe transfer id. It is a statement of a payment, not a tax invoice. Only
+        for a paid payout of this participant; anything else answers 404. About 60 downloads per
+        participant every 10 minutes."""
+        client = _get_client()
+        try:
+            response = client.creator_portal.get_creator_payout_statement()
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
     # CUSTOM_FIELDS
 
     @mcp.tool(
@@ -30181,6 +31640,98 @@ def register_generated_tools(mcp, _get_client):
         try:
             response = client.lead_gen.delete_test_lead(
                 form_id=form_id, account_id=account_id, lead_id=lead_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    # LEDGER
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get ledger balances",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def ledger_get_ledger_balances(
+        scope_type: str, scope_id: str, currency: str = "usd"
+    ) -> str:
+        """Get ledger balances
+
+        Returns the balance of each bucket (for example accruing, owed, payable) for one ledger scope.
+        A scope owned by another team returns an empty balances object. A profile-scoped key (or a
+        member limited to some profiles) only reads `campaign` and `participant` scopes of campaigns
+        under its profiles; any other scope returns an empty balances object.
+
+        Args:
+            scope_type: Scope type, for example participant or campaign. (required)
+            scope_id: Scope identifier. (required)
+            currency: Lowercase ISO 4217 currency code."""
+        client = _get_client()
+        try:
+            response = client.ledger.get_ledger_balances(
+                scope_type=scope_type, scope_id=scope_id, currency=currency
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List ledger entries",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def ledger_list_ledger_entries(
+        scope_type: str | None = None,
+        scope_id: str | None = None,
+        kind: Literal[
+            "accrual",
+            "approval",
+            "hold_release",
+            "adjustment",
+            "settling",
+            "settlement",
+            "reversal",
+            "topup",
+            "transfer",
+            "fee",
+        ]
+        | None = None,
+        reference_type: str | None = None,
+        reference_id: str | None = None,
+        limit: int = 50,
+        skip: int = 0,
+    ) -> str:
+        """List ledger entries
+
+        Lists ledger entries for your team, newest first. Filter by scope (matches either side of the entry),
+        kind, or the reference that caused the entry. A profile-scoped key (or a member limited to some
+        profiles) only sees entries of campaigns under its profiles and of their participants; operator
+        and platform scopes stay hidden from it.
+
+        Args:
+            scope_type
+            scope_id
+            kind
+            reference_type
+            reference_id
+            limit
+            skip"""
+        client = _get_client()
+        try:
+            response = client.ledger.list_ledger_entries(
+                scope_type=scope_type,
+                scope_id=scope_id,
+                kind=kind,
+                reference_type=reference_type,
+                reference_id=reference_id,
+                limit=limit,
+                skip=skip,
             )
             return _format_response(response)
         except Exception as e:
@@ -39008,6 +40559,258 @@ def register_generated_tools(mcp, _get_client):
         except Exception as e:
             return f"Error: {e}"
 
+    # TREASURY
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get balance",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def treasury_get_balance() -> str:
+        """Get balance
+
+        Returns the balance you can transfer, card top-ups still on hold, top-ups still waiting for payment, and your latest top-ups. Card top-ups become available after 7 days. A transfer debits its amount plus the fee added on top; the payee receives the full amount. A card dispute or refund on a top-up is debited from the available balance and can make it negative; transfers are refused until it is positive again. A profile-scoped key answers 403, since the balance belongs to the whole team."""
+        client = _get_client()
+        try:
+            response = client.treasury.get_balance()
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Create a top-up",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def treasury_create_topup(
+        amount_cents: int, method: Literal["card", "bank_transfer"]
+    ) -> str:
+        """Create a top-up
+
+        Starts a Stripe Checkout session to fund your balance by card. Card top-ups pay Stripe's processing fee and become available after 7 days. Bank transfers are not available yet; `method: bank_transfer` returns 400. Needs an owner, admin or billing admin, signed in or through a full-access key they created.
+
+        Args:
+            amount_cents: Amount in cents, minimum $10 (required)
+            method: Only card is available. bank_transfer returns 400 "Bank transfers are not available yet." (required)"""
+        client = _get_client()
+        try:
+            response = client.treasury.create_topup(
+                amount_cents=amount_cents, method=method
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List top-ups",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def treasury_list_topups(limit: int = 50, skip: int = 0) -> str:
+        """List top-ups
+
+        Args:
+            limit
+            skip"""
+        client = _get_client()
+        try:
+            response = client.treasury.list_topups(limit=limit, skip=skip)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get a top-up receipt",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def treasury_get_topup_receipt(topup_id: str) -> str:
+        """Get a top-up receipt
+
+        The receipt for a paid top-up or creator payout payment (`purpose: payout_batch`). `format: pdf` is the Stripe invoice PDF; `format: page` is Stripe's receipt page, for payments that have no invoice. The link is short-lived, so fetch it when you need it. A profile-scoped key answers 403.
+
+        Args:
+            topup_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.treasury.get_topup_receipt(topup_id=topup_id)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List payees",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def treasury_list_payees() -> str:
+        """List payees
+
+        Payees you can transfer to. A payee can receive transfers once `payoutsEnabled` is true. A profile-scoped key answers 403."""
+        client = _get_client()
+        try:
+            response = client.treasury.list_payees()
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Create a payee onboarding link",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def treasury_create_payee_onboarding_link(payee_id: str) -> str:
+        """Create a payee onboarding link
+
+        Returns a Stripe-hosted link where the payee completes identity and bank details so they can receive payouts.
+
+        Args:
+            payee_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.treasury.create_payee_onboarding_link(payee_id=payee_id)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Create a transfer",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def treasury_create_transfer(
+        payee_id: str, amount_cents: int, reference: dict[str, Any] | None = None
+    ) -> str:
+        """Create a transfer
+
+        Moves money from your balance to a payee. The payee receives the full `amountCents`; Zernio's fee (4%, 50 cent minimum) is added on top,
+        so your balance is debited `totalCents` = `amountCents` + `feeCents`.
+        Returns 402 when the balance does not cover the amount plus the fee, or when it is negative after a dispute or refund of a card top-up (\"Your balance is negative after a dispute or refund of a card top-up. Add funds to cover it before sending transfers.\"), and 409 when the payee has not finished onboarding or the Idempotency-Key is still processing.
+        Needs an owner, admin or billing admin, signed in or through a full-access key they created: a profile-scoped key answers 403.
+        A same-key retry never makes the transfer twice within Stripe's 24-hour idempotency window and answers 409 while another request is still waiting on Stripe for it; a transfer Stripe has not confirmed after 24 hours answers 409 until the daily reconciliation marks it paid (Stripe made it) or failed (it did not).
+
+        Args:
+            payee_id: 24-character payee id (required)
+            amount_cents: Amount the payee receives, in cents. The fee is added on top. (required)
+            reference: Object with keys: type (string, required); id (string, required)"""
+        client = _get_client()
+        try:
+            response = client.treasury.create_transfer(
+                payee_id=payee_id, amount_cents=amount_cents, reference=reference
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List transfers",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def treasury_list_transfers(limit: int = 50, skip: int = 0) -> str:
+        """List transfers
+
+        Args:
+            limit
+            skip"""
+        client = _get_client()
+        try:
+            response = client.treasury.list_transfers(limit=limit, skip=skip)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get a transfer",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def treasury_get_transfer(transfer_id: str) -> str:
+        """Get a transfer
+
+        Args:
+            transfer_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.treasury.get_transfer(transfer_id=transfer_id)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get a payout batch",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def treasury_get_payout_batch(batch_id: str) -> str:
+        """Get a payout batch
+
+        One payout batch with its status and each creator's item. Poll it after the card payment to see when every creator is paid.
+
+        Args:
+            batch_id: Payout batch ID. (required)"""
+        client = _get_client()
+        try:
+            response = client.treasury.get_payout_batch(batch_id=batch_id)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Cancel an unpaid payout batch",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def treasury_cancel_payout_batch(batch_id: str) -> str:
+        """Cancel an unpaid payout batch
+
+        Ends the Stripe Checkout of a batch that is still `awaiting_payment` and makes every amount
+        payable again right away, instead of after Stripe's 24-hour expiry. A batch that was already
+        paid is returned unchanged. Needs an owner, admin or billing admin, signed in or through a
+        full-access key they created.
+
+        Args:
+            batch_id: Payout batch ID. (required)"""
+        client = _get_client()
+        try:
+            response = client.treasury.cancel_payout_batch(batch_id=batch_id)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
     # TWITTER_ENGAGEMENT
 
     @mcp.tool(
@@ -40457,6 +42260,8 @@ def register_generated_tools(mcp, _get_client):
                 "account.ads.sync_failed",
                 "account.ads.sync_recovered",
                 "analytics.synced",
+                "post.tracking_completed",
+                "post.authenticity_changed",
                 "message.received",
                 "conversation.started",
                 "conversation.control_changed",
@@ -40527,6 +42332,19 @@ def register_generated_tools(mcp, _get_client):
                 "workflow.run.failed",
                 "support.run.completed",
                 "support.run.failed",
+                "campaign_submission.received",
+                "campaign_submission.flagged",
+                "campaign_submission.pending_review",
+                "campaign_submission.approved",
+                "campaign_submission.rejected",
+                "creator_campaign.budget_exhausted",
+                "creator_campaign.closed",
+                "campaign_payout.payable",
+                "campaign_payout.settled",
+                "campaign_payout.failed",
+                "campaign_participant.joined",
+                "campaign_participant.suspended",
+                "campaign_participant.removed",
             ]
         ]
         | None,
@@ -40546,6 +42364,8 @@ def register_generated_tools(mcp, _get_client):
                 "billing",
                 "webhooks",
                 "commerce",
+                "creator_campaigns",
+                "money",
                 "calendar",
                 "files",
             ]
@@ -40634,6 +42454,8 @@ def register_generated_tools(mcp, _get_client):
                 "account.ads.sync_failed",
                 "account.ads.sync_recovered",
                 "analytics.synced",
+                "post.tracking_completed",
+                "post.authenticity_changed",
                 "message.received",
                 "conversation.started",
                 "conversation.control_changed",
@@ -40704,6 +42526,19 @@ def register_generated_tools(mcp, _get_client):
                 "workflow.run.failed",
                 "support.run.completed",
                 "support.run.failed",
+                "campaign_submission.received",
+                "campaign_submission.flagged",
+                "campaign_submission.pending_review",
+                "campaign_submission.approved",
+                "campaign_submission.rejected",
+                "creator_campaign.budget_exhausted",
+                "creator_campaign.closed",
+                "campaign_payout.payable",
+                "campaign_payout.settled",
+                "campaign_payout.failed",
+                "campaign_participant.joined",
+                "campaign_participant.suspended",
+                "campaign_participant.removed",
             ]
         ]
         | None = None,
@@ -40722,6 +42557,8 @@ def register_generated_tools(mcp, _get_client):
                 "billing",
                 "webhooks",
                 "commerce",
+                "creator_campaigns",
+                "money",
                 "calendar",
                 "files",
             ]
@@ -40930,6 +42767,8 @@ def register_generated_tools(mcp, _get_client):
             "contact.updated",
             "contact.deleted",
             "analytics.synced",
+            "post.tracking_completed",
+            "post.authenticity_changed",
             "message.received",
             "message.sent",
             "message.edited",
@@ -40952,6 +42791,19 @@ def register_generated_tools(mcp, _get_client):
             "workflow.run.failed",
             "support.run.completed",
             "support.run.failed",
+            "campaign_submission.received",
+            "campaign_submission.flagged",
+            "campaign_submission.pending_review",
+            "campaign_submission.approved",
+            "campaign_submission.rejected",
+            "creator_campaign.budget_exhausted",
+            "creator_campaign.closed",
+            "campaign_payout.payable",
+            "campaign_payout.settled",
+            "campaign_payout.failed",
+            "campaign_participant.joined",
+            "campaign_participant.suspended",
+            "campaign_participant.removed",
             "call.received",
             "call.ended",
             "call.failed",

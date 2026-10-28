@@ -241,6 +241,8 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 |--------|-------------|
 | `analytics.list_facebook_tagged_posts()` | List the posts a Facebook Page is tagged in |
 | `analytics.list_facebook_visitor_posts()` | List visitor posts on a Facebook Page |
+| `analytics.list_post_authenticity()` | List authenticity scores |
+| `analytics.list_tracking_windows()` | List tracking windows |
 | `analytics.get_analytics()` | Get post analytics |
 | `analytics.get_analytics_dashboard()` | Get an analytics dashboard |
 | `analytics.get_analytics_delta()` | Analytics changed since a cursor |
@@ -263,13 +265,18 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `analytics.get_linked_in_org_aggregate_analytics()` | Get LinkedIn org analytics |
 | `analytics.get_linked_in_post_analytics()` | Get LinkedIn post stats |
 | `analytics.get_linked_in_post_reactions()` | Get LinkedIn post reactions |
+| `analytics.get_post_authenticity()` | Get a post's authenticity score |
+| `analytics.get_post_samples()` | Get post samples |
 | `analytics.get_post_timeline()` | Get post analytics timeline |
 | `analytics.get_posting_frequency()` | Get frequency vs engagement |
 | `analytics.get_tik_tok_account_insights()` | Get TikTok account-level insights |
+| `analytics.get_tracking_window()` | Get a tracking window |
 | `analytics.get_you_tube_channel_insights()` | Get YouTube channel insights |
 | `analytics.get_you_tube_daily_views()` | Get YouTube daily views |
 | `analytics.get_you_tube_demographics()` | Get YouTube demographics |
 | `analytics.get_you_tube_video_retention()` | Get YouTube video retention curve |
+| `analytics.cancel_tracking_window()` | Cancel a tracking window |
+| `analytics.open_tracking_window()` | Open a tracking window |
 | `analytics.run_google_analytics_realtime_report()` | Run a Google Analytics (GA4) realtime report |
 | `analytics.run_google_analytics_report()` | Run a Google Analytics (GA4) report |
 | `analytics.sync_external_posts()` | Sync an external post |
@@ -971,6 +978,50 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `conversions.send_conversions()` | Send conversion events |
 | `conversions.send_events()` | Send events to every destination |
 
+### Creator Campaigns
+| Method | Description |
+|--------|-------------|
+| `creator_campaigns.list_campaign_ledger()` | List campaign ledger |
+| `creator_campaigns.list_campaign_participants()` | List campaign participants |
+| `creator_campaigns.list_campaign_payables()` | List campaign payables |
+| `creator_campaigns.list_campaign_payout_batches()` | List payout batches |
+| `creator_campaigns.list_campaign_submissions()` | List campaign submissions |
+| `creator_campaigns.list_creator_campaigns()` | List creator campaigns |
+| `creator_campaigns.create_campaign_adjustment()` | Create campaign adjustment |
+| `creator_campaigns.create_campaign_invite_link()` | Create campaign invite link |
+| `creator_campaigns.create_campaign_participant()` | Invite campaign participant |
+| `creator_campaigns.create_campaign_payout_batch()` | Pay creators with one card payment |
+| `creator_campaigns.create_creator_campaign()` | Create creator campaign |
+| `creator_campaigns.get_campaign_participant()` | Get campaign participant |
+| `creator_campaigns.get_campaign_report()` | Get campaign report |
+| `creator_campaigns.get_campaign_submission()` | Get campaign submission |
+| `creator_campaigns.get_creator_campaign()` | Get creator campaign |
+| `creator_campaigns.update_creator_campaign()` | Update creator campaign |
+| `creator_campaigns.activate_creator_campaign()` | Activate creator campaign |
+| `creator_campaigns.approve_campaign_submission()` | Approve campaign submission |
+| `creator_campaigns.close_creator_campaign()` | Close creator campaign |
+| `creator_campaigns.pause_creator_campaign()` | Pause creator campaign |
+| `creator_campaigns.raise_creator_campaign_budget()` | Raise creator campaign budget |
+| `creator_campaigns.reinstate_campaign_participant()` | Reinstate campaign participant |
+| `creator_campaigns.reject_campaign_submission()` | Reject campaign submission |
+| `creator_campaigns.remove_campaign_participant()` | Remove campaign participant |
+| `creator_campaigns.reopen_campaign_submission()` | Reopen campaign submission |
+| `creator_campaigns.settle_campaign_participant()` | Settle campaign participant |
+| `creator_campaigns.suspend_campaign_participant()` | Suspend campaign participant |
+
+### Creator Portal
+| Method | Description |
+|--------|-------------|
+| `creator_portal.create_creator_payout_login()` | Open the creator's Stripe dashboard |
+| `creator_portal.get_creator_payout_statement()` | Download a payout statement |
+| `creator_portal.get_creator_payouts()` | List a creator's earnings history |
+| `creator_portal.get_creator_portal()` | Read a creator invite or participant page |
+| `creator_portal.join_creator_campaign()` | Join a campaign |
+| `creator_portal.recover_creator_portal_links()` | Email a creator their campaign links |
+| `creator_portal.start_creator_connect()` | Start connecting a creator account |
+| `creator_portal.start_creator_payouts()` | Start payout onboarding |
+| `creator_portal.submit_creator_post()` | Submit a post |
+
 ### Custom Fields
 | Method | Description |
 |--------|-------------|
@@ -1153,6 +1204,12 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `lead_gen.delete_test_lead()` | Delete a test lead |
 | `lead_gen.archive_lead_form()` | Archive a lead form |
 | `lead_gen.count_leads()` | Count leads by status |
+
+### Ledger
+| Method | Description |
+|--------|-------------|
+| `ledger.list_ledger_entries()` | List ledger entries |
+| `ledger.get_ledger_balances()` | Get ledger balances |
 
 ### Mentions
 | Method | Description |
@@ -1369,6 +1426,21 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `tracking_tags.remove_tracking_tag_from_store()` | Remove from a Shopify, WordPress, Wix or Webflow site |
 | `tracking_tags.remove_tracking_tag_shared_account()` | Stop sharing with an account |
 | `tracking_tags.remove_tracking_tag_user()` | Remove a user from a tag |
+
+### Treasury
+| Method | Description |
+|--------|-------------|
+| `treasury.list_payees()` | List payees |
+| `treasury.list_topups()` | List top-ups |
+| `treasury.list_transfers()` | List transfers |
+| `treasury.create_payee_onboarding_link()` | Create a payee onboarding link |
+| `treasury.create_topup()` | Create a top-up |
+| `treasury.create_transfer()` | Create a transfer |
+| `treasury.get_balance()` | Get balance |
+| `treasury.get_payout_batch()` | Get a payout batch |
+| `treasury.get_topup_receipt()` | Get a top-up receipt |
+| `treasury.get_transfer()` | Get a transfer |
+| `treasury.cancel_payout_batch()` | Cancel an unpaid payout batch |
 
 ### Twitter Engagement
 | Method | Description |

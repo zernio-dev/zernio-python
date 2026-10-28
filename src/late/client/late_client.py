@@ -37,6 +37,8 @@ from ..resources import (
     ConnectResource,
     ContactsResource,
     ConversionsResource,
+    CreatorCampaignsResource,
+    CreatorPortalResource,
     CustomFieldsResource,
     DiscordResource,
     EmailResource,
@@ -49,6 +51,7 @@ from ..resources import (
     InstagramResource,
     InvitesResource,
     LeadGenResource,
+    LedgerResource,
     LogsResource,
     MediaResource,
     MentionsResource,
@@ -70,6 +73,7 @@ from ..resources import (
     SupportAssistantResource,
     ToolsResource,
     TrackingTagsResource,
+    TreasuryResource,
     TwitterEngagementResource,
     UsageResource,
     UsersResource,
@@ -192,6 +196,8 @@ class Zernio(BaseClient):
         self.connected_apps = ConnectedAppsResource(self)
         self.contacts = ContactsResource(self)
         self.conversions = ConversionsResource(self)
+        self.creator_campaigns = CreatorCampaignsResource(self)
+        self.creator_portal = CreatorPortalResource(self)
         self.custom_fields = CustomFieldsResource(self)
         self.discord = DiscordResource(self)
         self.email = EmailResource(self)
@@ -204,6 +210,7 @@ class Zernio(BaseClient):
         self.instagram = InstagramResource(self)
         self.invites = InvitesResource(self)
         self.lead_gen = LeadGenResource(self)
+        self.ledger = LedgerResource(self)
         self.logs = LogsResource(self)
         self.media = MediaResource(self)
         self.mentions = MentionsResource(self)
@@ -225,6 +232,7 @@ class Zernio(BaseClient):
         self.support_assistant = SupportAssistantResource(self)
         self.tools = ToolsResource(self)
         self.tracking_tags = TrackingTagsResource(self)
+        self.treasury = TreasuryResource(self)
         self.twitter_engagement = TwitterEngagementResource(self)
         self.usage = UsageResource(self)
         self.users = UsersResource(self)

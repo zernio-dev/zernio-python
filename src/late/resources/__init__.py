@@ -31,6 +31,8 @@ from ._generated.connect import ConnectResource
 from ._generated.connected_apps import ConnectedAppsResource
 from ._generated.contacts import ContactsResource
 from ._generated.conversions import ConversionsResource
+from ._generated.creator_campaigns import CreatorCampaignsResource
+from ._generated.creator_portal import CreatorPortalResource
 from ._generated.custom_fields import CustomFieldsResource
 from ._generated.discord import DiscordResource
 from ._generated.email import EmailResource
@@ -43,6 +45,7 @@ from ._generated.inbox_analytics import InboxAnalyticsResource
 from ._generated.instagram import InstagramResource
 from ._generated.invites import InvitesResource
 from ._generated.lead_gen import LeadGenResource
+from ._generated.ledger import LedgerResource
 from ._generated.logs import LogsResource
 from ._generated.mentions import MentionsResource
 from ._generated.messages import MessagesResource
@@ -59,6 +62,7 @@ from ._generated.slack import SlackResource
 from ._generated.sms import SmsResource
 from ._generated.support_assistant import SupportAssistantResource
 from ._generated.tracking_tags import TrackingTagsResource
+from ._generated.treasury import TreasuryResource
 from ._generated.twitter_engagement import TwitterEngagementResource
 from ._generated.usage import UsageResource
 from ._generated.validate import ValidateResource
@@ -111,6 +115,8 @@ __all__ = [
     "ConnectedAppsResource",
     "ContactsResource",
     "ConversionsResource",
+    "CreatorCampaignsResource",
+    "CreatorPortalResource",
     "CustomFieldsResource",
     "DiscordResource",
     "EmailResource",
@@ -123,6 +129,7 @@ __all__ = [
     "InstagramResource",
     "InvitesResource",
     "LeadGenResource",
+    "LedgerResource",
     "LogsResource",
     "MediaResource",
     "MentionsResource",
@@ -144,6 +151,7 @@ __all__ = [
     "SupportAssistantResource",
     "ToolsResource",
     "TrackingTagsResource",
+    "TreasuryResource",
     "TwitterEngagementResource",
     "UsageResource",
     "UsersResource",
