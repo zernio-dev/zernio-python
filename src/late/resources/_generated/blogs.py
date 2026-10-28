@@ -143,6 +143,7 @@ class BlogsResource:
         blog_id: str,
         title: str,
         *,
+        idempotency_key: str | None = None,
         body_html: str | None = None,
         handle: str | None = None,
         tags: list[str] | None = None,
@@ -168,8 +169,13 @@ class BlogsResource:
             publish_date=publish_date,
             field_data=field_data,
         )
+        headers: dict[str, str] = {}
+        if idempotency_key is not None:
+            headers["Idempotency-Key"] = idempotency_key
         return self._client._post(
-            f"/v1/accounts/{account_id}/blogs/{blog_id}/articles", data=payload
+            f"/v1/accounts/{account_id}/blogs/{blog_id}/articles",
+            data=payload,
+            headers=headers,
         )
 
     def get_blog_article(
@@ -297,6 +303,7 @@ class BlogsResource:
         blog_id: str,
         title: str,
         *,
+        idempotency_key: str | None = None,
         body_html: str | None = None,
         handle: str | None = None,
         tags: list[str] | None = None,
@@ -322,8 +329,13 @@ class BlogsResource:
             publish_date=publish_date,
             field_data=field_data,
         )
+        headers: dict[str, str] = {}
+        if idempotency_key is not None:
+            headers["Idempotency-Key"] = idempotency_key
         return await self._client._apost(
-            f"/v1/accounts/{account_id}/blogs/{blog_id}/articles", data=payload
+            f"/v1/accounts/{account_id}/blogs/{blog_id}/articles",
+            data=payload,
+            headers=headers,
         )
 
     async def aget_blog_article(

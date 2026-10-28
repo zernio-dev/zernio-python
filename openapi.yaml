@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.391.0"
+  version: "1.392.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -82343,6 +82343,8 @@ paths:
           top-level HTML element must fit 30,000 characters), and images in
           the body are imported into the site's Media Manager.
 
+        Send an Idempotency-Key header to make retries safe: a retry with the same key and body replays the original 201 instead of creating a second article. A retry while the first request is still running returns 409; retry after a short backoff.
+
         Supported on Shopify (`shopify`), WordPress (`wordpress`), Wix (`wix`) and Webflow (`webflow`). WordPress
         native scheduling depends on the site's scheduler/WP-Cron.
       security:
@@ -82350,6 +82352,7 @@ paths:
       parameters:
         - { name: accountId, in: path, required: true, schema: { type: string }, description: 'Connected Shopify, WordPress, Wix or Webflow account id.' }
         - { name: blogId, in: path, required: true, schema: { type: string, pattern: '^[A-Za-z0-9_-]{1,64}$' }, description: 'Platform-native blog/site id returned by the list operation.' }
+        - $ref: '#/components/parameters/IdempotencyKeyHeader'
       requestBody:
         required: true
         content:
@@ -82395,6 +82398,8 @@ paths:
         '403': { description: 'The platform rejected the request (code insufficient_permissions); reconnect the account or restore the WordPress user capabilities.' }
         '404': { description: 'Account not found or not accessible (code account_not_found), or blog not found (code blog_not_found).' }
         '405': { description: Platform does not support creating articles. }
+        '409': { $ref: '#/components/responses/IdempotencyKeyInFlight' }
+        '422': { $ref: '#/components/responses/IdempotencyKeyReused' }
         '429': { description: 'Rate limited by Zernio or the connected platform. Retry later.' }
         '502': { description: 'The connected platform returned an unclassified upstream error. Article mutations are not blindly retried.' }
 
