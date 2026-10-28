@@ -37,3 +37,17 @@ def test_authorization_server_matches_the_live_issuer() -> None:
         timeout=10,
     ).json()["issuer"]
     assert _metadata()["authorization_servers"] == [issuer]
+
+
+def test_metadata_advertises_the_google_and_microsoft_and_commerce_scopes() -> None:
+    # Clients such as ChatGPT and Cursor request exactly the advertised scopes, so a scope
+    # missing here means no MCP user can ever reach the calendar, files or commerce routes.
+    assert {"calendar:write", "files:write", "commerce:write"} <= set(_metadata()["scopes_supported"])
+
+
+def test_metadata_scopes_match_the_live_authorization_server() -> None:
+    supported = httpx.get(
+        f"{OAUTH_AUTHORIZATION_SERVER}/.well-known/oauth-authorization-server",
+        timeout=10,
+    ).json()["scopes_supported"]
+    assert _metadata()["scopes_supported"] == supported
