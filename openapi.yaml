@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.395.2"
+  version: "1.396.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -2039,8 +2039,8 @@ components:
               value: { type: string }
         zernioTag:
           type: boolean
-          default: true
-          description: "POST /v1/ads/create on Meta and Google only. Every ad created there carries `zrn=<platform ad id>` on its landing URL so orders and events tied to the landing URL map back to the ad. Meta: `{ key: zrn, value: '{{ad.id}}' }` is appended after your `urlTags`, which are sent unchanged; a `zrn` key you send yourself is kept. Skipped for lead forms, call ads, `existingCreativeId` and app promotion. Google (Display and Search): the ad's `final_url_suffix` is set to `zrn={creative}` only when the ad inherits no suffix from its ad group, campaign or account; when one exists the ad is left untouched (your suffix keeps applying) and attribution uses the click's `gclid`. If the inherited suffix cannot be read or Google rejects the tag, the ad is created untagged. Existing ads are never changed. Set `false` to create the ad with no Zernio tag."
+          default: false
+          description: "POST /v1/ads/create on Meta and Google only. Opt-in: set `true` and the ad carries `zrn=<platform ad id>` on its landing URL so orders and events tied to the landing URL map back to the ad. Meta: `{ key: zrn, value: '{{ad.id}}' }` is appended after your `urlTags`, which are sent unchanged; a `zrn` key you send yourself is kept. Skipped for lead forms, call ads, `existingCreativeId` and app promotion. Google (Display and Search): the ad's `final_url_suffix` is set to `zrn={creative}` only when the ad inherits no suffix from its ad group, campaign or account; when one exists the ad is left untouched (your suffix keeps applying) and attribution uses the click's `gclid`. If the inherited suffix cannot be read or Google rejects the tag, the ad is created untagged. Existing ads are never changed. Omitted or `false` creates the ad with no Zernio tag."
     MetaLeadForm:
       type: object
       description: >
