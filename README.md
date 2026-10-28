@@ -657,6 +657,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 ### Ad Rules
 | Method | Description |
 |--------|-------------|
+| `ad_rules.list_ad_rule_activity()` | List every change ad rules made |
 | `ad_rules.list_ad_rule_runs()` | List an ad rule's runs |
 | `ad_rules.list_ad_rules()` | List ad rules |
 | `ad_rules.create_ad_rule()` | Create an ad rule |

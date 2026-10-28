@@ -12159,6 +12159,53 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="List every change ad rules made",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def ad_rules_list_ad_rule_activity(
+        rule_id: str | None = None,
+        account_id: str | None = None,
+        type: Literal["pause", "activate", "adjust_budget"] | None = None,
+        from_: str | None = None,
+        to: str | None = None,
+        limit: int = 50,
+        cursor: str | None = None,
+    ) -> str:
+        """List every change ad rules made
+
+        The permanent record of what your rules did: one entry per pause, reactivation or budget change (including skipped and failed attempts), newest first, across all rules of the profiles the key can reach.
+        Entries stay after a rule is renamed or deleted; `ruleName` is the rule's name when it acted.
+
+        Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit
+
+        Args:
+            rule_id
+            account_id: Only changes of rules on this ads connection.
+            type
+            from_: ISO 8601 date-time, inclusive.
+            to: ISO 8601 date-time, inclusive.
+            limit
+            cursor: `nextCursor` from the previous page."""
+        client = _get_client()
+        try:
+            response = client.ad_rules.list_ad_rule_activity(
+                rule_id=rule_id,
+                account_id=account_id,
+                type=type,
+                from_=from_,
+                to=to,
+                limit=limit,
+                cursor=cursor,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="Get an ad rule",
             readOnlyHint=True,
             destructiveHint=False,
@@ -12287,6 +12334,8 @@ def register_generated_tools(mcp, _get_client):
         """List an ad rule's runs
 
         Lists a rule's scheduled runs, newest first: what each run evaluated, matched and did.
+        Runs that changed something (or tried to) are kept permanently, also after the rule is deleted; runs that changed nothing are dropped after about 31 days.
+        For every change across all rules, use `GET /v1/ads/rules/activity`.
 
         Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit
 

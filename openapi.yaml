@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.389.0"
+  version: "1.390.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -15482,6 +15482,16 @@ components:
           type: [object, "null"]
           description: The matched objects with their condition values, and what each action did.
           properties:
+            rule:
+              type: object
+              description: The rule as it was when this run happened, so its actions stay readable after the rule is renamed or deleted. Absent on runs recorded before October 2026.
+              properties:
+                name: { type: string }
+                profileId: { type: string }
+                accountId: { type: string }
+                platform: { type: string }
+                platformAdAccountId: { type: string }
+                level: { type: string, enum: [campaign, adset] }
             today: { type: string, format: date }
             timezone: { type: string }
             timezoneAssumed: { type: boolean }
@@ -15509,6 +15519,26 @@ components:
                 status: { type: string, enum: [done, failed] }
                 reason: { type: string, description: Why the webhook could not be queued. }
         error: { type: [string, "null"] }
+    AdRuleActivityEntry:
+      type: object
+      required: [id, ranAt, ruleId, ruleName, platform, accountId, adAccountId, level, objectId, objectName, type, status, reason, previousDailyBudget, newDailyBudget, currency]
+      properties:
+        id: { type: string, description: Stable ID of this entry. }
+        ranAt: { type: string, format: date-time }
+        ruleId: { type: string }
+        ruleName: { type: string, description: The rule's name when it acted. }
+        platform: { type: string }
+        accountId: { type: string, description: The ads connection the rule runs on. }
+        adAccountId: { type: string }
+        level: { type: string, enum: [campaign, adset] }
+        objectId: { type: string, description: Platform ID of the campaign or ad set. }
+        objectName: { type: [string, "null"], description: Its name when the rule acted. }
+        type: { type: string, enum: [pause, activate, adjust_budget] }
+        status: { type: string, enum: [done, skipped, failed] }
+        reason: { type: [string, "null"], description: 'Why it was skipped or failed, for example `already_paused`.' }
+        previousDailyBudget: { type: [number, "null"] }
+        newDailyBudget: { type: [number, "null"] }
+        currency: { type: [string, "null"] }
     AdKeyword:
       type: object
       properties:
@@ -60342,6 +60372,67 @@ paths:
           $ref: '#/components/responses/AccountUnavailable'
         '409':
           $ref: '#/components/responses/AccountConnectionRequired'
+  /v1/ads/rules/activity:
+    get:
+      x-resource-group: ads
+      operationId: listAdRuleActivity
+      tags: [Ad Rules]
+      x-platforms: [meta, google, tiktok, linkedin, pinterest, x, reddit]
+      summary: List every change ad rules made
+      description: |
+        The permanent record of what your rules did: one entry per pause, reactivation or budget change (including skipped and failed attempts), newest first, across all rules of the profiles the key can reach.
+        Entries stay after a rule is renamed or deleted; `ruleName` is the rule's name when it acted.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: ruleId
+          in: query
+          schema: { type: string }
+        - name: accountId
+          in: query
+          description: Only changes of rules on this ads connection.
+          schema: { type: string }
+        - name: type
+          in: query
+          schema: { type: string, enum: [pause, activate, adjust_budget] }
+        - name: from
+          in: query
+          description: 'ISO 8601 date-time, inclusive.'
+          schema: { type: string, format: date-time }
+        - name: to
+          in: query
+          description: 'ISO 8601 date-time, inclusive.'
+          schema: { type: string, format: date-time }
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 100, default: 50 }
+        - name: cursor
+          in: query
+          description: '`nextCursor` from the previous page.'
+          schema: { type: string }
+      responses:
+        '200':
+          description: Changes, newest first
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [activity, nextCursor]
+                properties:
+                  activity:
+                    type: array
+                    items: { $ref: '#/components/schemas/AdRuleActivityEntry' }
+                  nextCursor: { type: [string, "null"] }
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: Ads access required (code `ads_addon_required`). Legacy plans need the Ads add-on; included by default on usage-based plans.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
   /v1/ads/rules/{ruleId}:
     parameters:
       - name: ruleId
@@ -60511,6 +60602,8 @@ paths:
       summary: List an ad rule's runs
       description: |
         Lists a rule's scheduled runs, newest first: what each run evaluated, matched and did.
+        Runs that changed something (or tried to) are kept permanently, also after the rule is deleted; runs that changed nothing are dropped after about 31 days.
+        For every change across all rules, use `GET /v1/ads/rules/activity`.
       security:
         - bearerAuth: []
       parameters:

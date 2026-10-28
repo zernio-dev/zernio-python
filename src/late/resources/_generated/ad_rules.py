@@ -10,6 +10,8 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
+    from datetime import datetime
+
     from ..client.base import BaseClient
 
 
@@ -119,6 +121,29 @@ class AdRulesResource:
         )
         return self._client._post("/v1/ads/rules", data=payload)
 
+    def list_ad_rule_activity(
+        self,
+        *,
+        rule_id: str | None = None,
+        account_id: str | None = None,
+        type: str | None = None,
+        from_: datetime | str | None = None,
+        to: datetime | str | None = None,
+        limit: int | None = 50,
+        cursor: str | None = None,
+    ) -> dict[str, Any]:
+        """List every change ad rules made"""
+        params = self._build_params(
+            rule_id=rule_id,
+            account_id=account_id,
+            type=type,
+            from_=from_,
+            to=to,
+            limit=limit,
+            cursor=cursor,
+        )
+        return self._client._get("/v1/ads/rules/activity", params=params)
+
     def get_ad_rule(self) -> dict[str, Any]:
         """Get an ad rule"""
         return self._client._get("/v1/ads/rules/{ruleId}")
@@ -211,6 +236,29 @@ class AdRulesResource:
             enabled=enabled,
         )
         return await self._client._apost("/v1/ads/rules", data=payload)
+
+    async def alist_ad_rule_activity(
+        self,
+        *,
+        rule_id: str | None = None,
+        account_id: str | None = None,
+        type: str | None = None,
+        from_: datetime | str | None = None,
+        to: datetime | str | None = None,
+        limit: int | None = 50,
+        cursor: str | None = None,
+    ) -> dict[str, Any]:
+        """List every change ad rules made (async)"""
+        params = self._build_params(
+            rule_id=rule_id,
+            account_id=account_id,
+            type=type,
+            from_=from_,
+            to=to,
+            limit=limit,
+            cursor=cursor,
+        )
+        return await self._client._aget("/v1/ads/rules/activity", params=params)
 
     async def aget_ad_rule(self) -> dict[str, Any]:
         """Get an ad rule (async)"""
