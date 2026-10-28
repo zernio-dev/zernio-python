@@ -2165,21 +2165,24 @@ def register_generated_tools(mcp, _get_client):
         account_id: str,
         sync_contacts: bool | None = None,
         log_messages: bool | None = None,
+        report_deals: bool | None = None,
     ) -> str:
         """Update HubSpot account settings
 
-        Turn contact sync or message logging on or off for a connected HubSpot portal. Send at least one field; omitted fields keep their value. Settings survive reconnecting the same portal.
+        Turn contact sync, message logging or deal reporting on or off for a connected HubSpot portal. Send at least one field; omitted fields keep their value. Settings survive reconnecting the same portal.
 
         Args:
             account_id: (required)
             sync_contacts: Create a HubSpot contact for an inbox contact that matches none by email or phone. A match is linked as it is and never updated.
-            log_messages: Log inbound and outbound inbox messages on the contact's HubSpot timeline."""
+            log_messages: Log inbound and outbound inbox messages on the contact's HubSpot timeline.
+            report_deals: Send each deal that becomes closed won as a Purchase to the profile's event destinations, about once an hour. Requires the portal to have granted `crm.objects.deals.read`; otherwise 400. Deals closed before it was turned on are not sent."""
         client = _get_client()
         try:
             response = client.accounts.update_hub_spot_settings(
                 account_id=account_id,
                 sync_contacts=sync_contacts,
                 log_messages=log_messages,
+                report_deals=report_deals,
             )
             return _format_response(response)
         except Exception as e:

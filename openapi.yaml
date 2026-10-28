@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.393.0"
+  version: "1.394.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -11444,6 +11444,7 @@ components:
         - scopes
         - syncContacts
         - logMessages
+        - reportDeals
       properties:
         _id:
           type: string
@@ -11468,6 +11469,9 @@ components:
         logMessages:
           type: boolean
           description: Whether Zernio logs inbox messages on HubSpot contact timelines.
+        reportDeals:
+          type: boolean
+          description: Whether Zernio sends closed-won deals as Purchase events to the profile's event destinations.
     GoogleAnalyticsReport:
       type: object
       description: >-
@@ -37940,8 +37944,8 @@ paths:
         - Accounts
       summary: Update HubSpot account settings
       description: >-
-        Turn contact sync or message logging on or off for a connected HubSpot portal. Send at least one
-        field; omitted fields keep their value. Settings survive reconnecting the same portal.
+        Turn contact sync, message logging or deal reporting on or off for a connected HubSpot portal. Send at
+        least one field; omitted fields keep their value. Settings survive reconnecting the same portal.
       parameters:
         - name: accountId
           in: path
@@ -37963,6 +37967,12 @@ paths:
                 logMessages:
                   type: boolean
                   description: Log inbound and outbound inbox messages on the contact's HubSpot timeline.
+                reportDeals:
+                  type: boolean
+                  description: >-
+                    Send each deal that becomes closed won as a Purchase to the profile's event destinations, about
+                    once an hour. Requires the portal to have granted `crm.objects.deals.read`; otherwise 400.
+                    Deals closed before it was turned on are not sent.
       responses:
         '200':
           description: Updated settings

@@ -630,11 +630,13 @@ class AccountsResource:
         *,
         sync_contacts: bool | None = None,
         log_messages: bool | None = None,
+        report_deals: bool | None = None,
     ) -> dict[str, Any]:
         """Update HubSpot account settings"""
         payload = self._build_payload(
             sync_contacts=sync_contacts,
             log_messages=log_messages,
+            report_deals=report_deals,
         )
         return self._client._patch(
             f"/v1/accounts/{account_id}/hubspot-settings", data=payload
@@ -1236,11 +1238,13 @@ class AccountsResource:
         *,
         sync_contacts: bool | None = None,
         log_messages: bool | None = None,
+        report_deals: bool | None = None,
     ) -> dict[str, Any]:
         """Update HubSpot account settings (async)"""
         payload = self._build_payload(
             sync_contacts=sync_contacts,
             log_messages=log_messages,
+            report_deals=report_deals,
         )
         return await self._client._apatch(
             f"/v1/accounts/{account_id}/hubspot-settings", data=payload
