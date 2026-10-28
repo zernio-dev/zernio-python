@@ -22999,9 +22999,7 @@ def register_generated_tools(mcp, _get_client):
         label: str,
         client_id: str,
         client_secret: str,
-        scope_areas: list[
-            Literal["posting", "analytics", "comments", "messaging", "ads"]
-        ]
+        scope_areas: list[Literal["posting", "analytics", "comments", "messaging"]]
         | None = None,
     ) -> str:
         """Add an OAuth app
@@ -23055,9 +23053,7 @@ def register_generated_tools(mcp, _get_client):
     def connect_update_o_auth_app(
         label: str | None = None,
         client_secret: str | None = None,
-        scope_areas: list[
-            Literal["posting", "analytics", "comments", "messaging", "ads"]
-        ]
+        scope_areas: list[Literal["posting", "analytics", "comments", "messaging"]]
         | None = None,
     ) -> str:
         """Update an OAuth app

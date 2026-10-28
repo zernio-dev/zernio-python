@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.392.0"
+  version: "1.393.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -1356,7 +1356,7 @@ components:
         clientId: { type: string, description: 'The client ID (or app ID) of your app on the platform. The secret is never returned.' }
         scopeAreas:
           type: array
-          items: { type: string, enum: [posting, analytics, comments, messaging, ads] }
+          items: { type: string, enum: [posting, analytics, comments, messaging] }
           description: 'The permission areas every connect through this app requests. Pick only what your app is approved for on the platform.'
         status:
           type: string
@@ -1366,6 +1366,15 @@ components:
         lastError: { type: [string, "null"] }
         accountCount: { type: integer, description: 'Connected accounts currently running on this app.' }
         redirectUri: { type: string, format: uri, description: 'The OAuth redirect URI to allow in your app''s settings on the platform.' }
+        webhook:
+          type: [object, "null"]
+          description: 'Facebook and Instagram only: Meta delivers comments and messages to your app''s own webhook, so set it to this callback URL and verify token on the app''s webhook product (Page for Facebook, Instagram for Instagram) and subscribe the listed fields. Zernio checks each delivery against your app secret. Null on platforms with nothing to set up.'
+          required: [callbackUrl, verifyToken, object, fields]
+          properties:
+            callbackUrl: { type: string, format: uri }
+            verifyToken: { type: string }
+            object: { type: string, enum: [page, instagram], description: 'The webhook object to configure.' }
+            fields: { type: array, items: { type: string }, description: 'Subscribe the app to these fields.' }
         createdAt: { type: string, format: date-time }
     OAuthAppSetup:
       type: object
@@ -1381,7 +1390,7 @@ components:
             type: object
             required: [area, scopes]
             properties:
-              area: { type: string, enum: [posting, analytics, comments, messaging, ads] }
+              area: { type: string, enum: [posting, analytics, comments, messaging] }
               scopes: { type: array, items: { type: string } }
     ConnectWelcomeScreen:
       type: object
@@ -5114,7 +5123,7 @@ components:
             oauthAppId: { type: string, description: 'The OAuth app the account connected through.' }
             missingScopeAreas:
               type: array
-              items: { type: string, enum: [posting, analytics, comments, messaging, ads] }
+              items: { type: string, enum: [posting, analytics, comments, messaging] }
               description: 'Every area now missing. Enable the permission on your app (or have the user grant it), then reconnect the account.'
             reason: { type: string, description: 'The platform error that revealed it.' }
         timestamp: { type: string, format: date-time }
@@ -33172,7 +33181,7 @@ paths:
                 clientSecret: { type: string, minLength: 1, maxLength: 1000 }
                 scopeAreas:
                   type: array
-                  items: { type: string, enum: [posting, analytics, comments, messaging, ads] }
+                  items: { type: string, enum: [posting, analytics, comments, messaging] }
                   description: 'Areas this app requests. Defaults to every area the platform supports; an area the platform cannot request separately is a 400.'
             example:
               platform: youtube
@@ -33246,7 +33255,7 @@ paths:
                 clientSecret: { type: string, minLength: 1, maxLength: 1000 }
                 scopeAreas:
                   type: array
-                  items: { type: string, enum: [posting, analytics, comments, messaging, ads] }
+                  items: { type: string, enum: [posting, analytics, comments, messaging] }
                   description: 'Replaces the areas new connects request. Accounts already connected keep what they were granted until they reconnect.'
       responses:
         '200':
