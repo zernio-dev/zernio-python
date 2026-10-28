@@ -63,9 +63,10 @@ OAUTH_AUTHORIZATION_SERVER = "https://zernio.com"
 
 # OAuth scopes advertised in protected-resource metadata. Mirrors the set the
 # authorization server defines at zernio.com/.well-known/oauth-authorization-server
-# (kept in sync with libs/oauth/scopes.ts in the main app). Informational only:
-# the client requests scopes from the authorization-server metadata, not from
-# here, and scopes are not enforced per-endpoint today.
+# (kept in sync with libs/oauth/scopes.ts in the main app). Clients such as
+# ChatGPT and Cursor request exactly these scopes, and the API refuses a route
+# whose scope the token lacks, so a scope missing here is a route no MCP user
+# can reach.
 OAUTH_SCOPES = [
     "posts:read",
     "posts:write",
@@ -75,6 +76,9 @@ OAUTH_SCOPES = [
     "ads:write",
     "messaging:write",
     "automations:write",
+    "commerce:write",
+    "calendar:write",
+    "files:write",
 ]
 
 # Documentation
