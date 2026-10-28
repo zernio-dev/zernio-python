@@ -1373,9 +1373,13 @@ components:
           properties:
             callbackUrl: { type: string, format: uri }
             verifyToken: { type: string }
-            object: { type: string, enum: [page, instagram], description: 'The webhook object to configure.' }
+            object: { $ref: '#/components/schemas/OAuthAppWebhookObject' }
             fields: { type: array, items: { type: string }, description: 'Subscribe the app to these fields.' }
         createdAt: { type: string, format: date-time }
+    OAuthAppWebhookObject:
+      type: string
+      enum: [page, instagram]
+      description: 'The webhook object to configure.'
     OAuthAppSetup:
       type: object
       required: [platform, redirectUri, coreScopes, scopeAreas]
