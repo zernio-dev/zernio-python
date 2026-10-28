@@ -34693,15 +34693,22 @@ def register_generated_tools(mcp, _get_client):
         business_id: str | None = None,
         vertical: Literal[
             "commerce",
-            "vehicles",
-            "hotels",
-            "flights",
+            "adoptable_pets",
+            "apps_and_software",
+            "articles_and_publications",
             "destinations",
+            "flights",
+            "generic",
             "home_listings",
-            "local_service_business",
+            "hotels",
+            "local_service_businesses",
+            "media_titles",
+            "offer_items",
             "offline_commerce",
-            "ticketed_experiences",
+            "services",
             "transactable_items",
+            "vehicles",
+            "local_service_business",
         ] = "commerce",
     ) -> str:
         """Create a Meta product catalog
@@ -34718,7 +34725,7 @@ def register_generated_tools(mcp, _get_client):
             ad_account_id: Ad account whose owner business creates the catalog
             business_id: Business portfolio that owns the catalog
             name: (required)
-            vertical"""
+            vertical: Meta catalog vertical. Use services for a professional services catalog (for example one linked to WhatsApp). local_service_business is a deprecated alias of local_service_businesses. The product endpoints under /v1/ads/catalogs/{catalogId}/products write commerce product items only."""
         client = _get_client()
         try:
             response = client.product_catalogs.create_ad_catalog(

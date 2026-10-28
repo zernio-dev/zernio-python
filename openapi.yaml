@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.394.2"
+  version: "1.395.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -1873,7 +1873,7 @@ components:
       properties:
         id: { type: string }
         name: { type: string }
-        vertical: { type: [string, "null"], description: "Catalog vertical (e.g. commerce, vehicles, hotels)" }
+        vertical: { type: [string, "null"], description: "Catalog vertical as Meta reports it (e.g. commerce, services, vehicles, hotels)" }
         productCount: { type: integer }
         businessId: { type: [string, "null"] }
     MetaCatalogProductInput:
@@ -75473,7 +75473,11 @@ paths:
                 adAccountId: { type: string, description: "Ad account whose owner business creates the catalog" }
                 businessId: { type: string, description: "Business portfolio that owns the catalog" }
                 name: { type: string, maxLength: 100 }
-                vertical: { type: string, enum: [commerce, vehicles, hotels, flights, destinations, home_listings, local_service_business, offline_commerce, ticketed_experiences, transactable_items], default: commerce }
+                vertical:
+                  type: string
+                  enum: [commerce, adoptable_pets, apps_and_software, articles_and_publications, destinations, flights, generic, home_listings, hotels, local_service_businesses, media_titles, offer_items, offline_commerce, services, transactable_items, vehicles, local_service_business]
+                  default: commerce
+                  description: "Meta catalog vertical. Use services for a professional services catalog (for example one linked to WhatsApp). local_service_business is a deprecated alias of local_service_businesses. The product endpoints under /v1/ads/catalogs/{catalogId}/products write commerce product items only."
       responses:
         '201':
           description: Catalog created
