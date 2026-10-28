@@ -21721,6 +21721,7 @@ def register_generated_tools(mcp, _get_client):
         ],
         profile_id: str,
         reconnect_account_id: str | None = None,
+        oauth_app_id: str | None = None,
         expected_platform_user_id: str | None = None,
         expected_username: str | None = None,
         force_reauth: bool = False,
@@ -21757,6 +21758,7 @@ def register_generated_tools(mcp, _get_client):
                 platform: Social media platform to connect. `snapchat` is a closed beta with no public release date: it returns 403 `PLATFORM_BETA_RESTRICTED` until the account is approved. (required)
                 profile_id: Your Zernio profile ID (get from /v1/profiles). For WhatsApp, a Zernio-provisioned number can only be connected on the profile it was provisioned to; connecting from any other profile is rejected with a 409. (required)
                 reconnect_account_id: Refresh this existing account (a Zernio account id of the same platform on this profile; otherwise 400). The OAuth callback and the selection endpoints (select-page, select-organization, select-board, select-location, Instagram and Snapchat selection) refuse, with `reconnect_account_mismatch`, a login that would write to a different account of the platform on this profile instead of this one. In headless mode the marker travels in the redirect_url we hand you, so pass that URL back unchanged to the selection endpoint. On X it counts toward the OAuth state limit described under redirect_url.
+                oauth_app_id: Connect through one of your own OAuth apps (see /v1/connect/oauth-apps), so the consent screen shows your app and the platform's limits are your app's. Without it the connect runs on Zernio's app, whatever apps the workspace has saved. Only platforms listed in `platforms` of GET /v1/connect/oauth-apps accept an app; any other, and connects that end on a destination picker (Facebook Pages, Instagram through Facebook Login), return 400. The connect requests the app's `scopeAreas`; `scopes` may narrow them but not add an area the app does not enable (400). If the user does not grant every requested area, the account still connects and the redirect carries `missing_permissions=<areas>` (the headless POST returns `missingPermissions`). If the platform refuses a permission your app is not approved for, the redirect carries `error=oauth_app_scope_not_allowed`. The account remembers the app, and token refresh, publishing and inbox run on it; reconnecting through another app, or without one, moves the account to that app.
                 expected_platform_user_id: Only connect if the login lands on this platform account; any other account ends the flow with `error=account_mismatch` (a 409 `account_mismatch` on POST /v1/connect/instagram/select-account) and nothing is written. Compared with every id the platform reports for the authorized account: the `platformUserId` of a Zernio account on this platform, or on Instagram either the app-scoped id or the professional account id (`metadata.instagramScopedId`, the `17841...` id that Facebook Login accounts hold as platformUserId). TikTok open_ids are app-scoped, so an id from your own TikTok app never matches; use expectedUsername there. Honoured by the OAuth callback (every platform that connects without a selection step, Instagram Login included) and by the Instagram selection step; on the other selection endpoints you choose the destination yourself. In headless mode the marker travels in the redirect_url we hand you, so pass that URL back unchanged. On X it counts toward the OAuth state limit described under redirect_url.
                 expected_username: Only connect if the authorized account's handle is this one (case-insensitive, a leading @ is ignored); otherwise the flow ends with `error=account_mismatch`, `error_message` naming the handle that was authorized, and nothing is written. Same coverage and transport as expectedPlatformUserId; when both are sent both must match. Use this on a first connection, where you hold the handle the user typed but no Zernio id yet.
                 force_reauth: Instagram Login only (the default loginMethod); ignored elsewhere. Makes Instagram show its login page and ask for the credentials of the account to connect even when another Instagram account is logged in on the device or in the app, and hides the Facebook login option on that page. Use it when the person connecting manages several Instagram accounts on one phone: Instagram otherwise logs in, and converts to a professional account, whichever account is active, before any consent screen. Pair it with expectedUsername to also refuse a wrong account at the end.
@@ -21964,6 +21966,7 @@ def register_generated_tools(mcp, _get_client):
                 platform=platform,
                 profile_id=profile_id,
                 reconnect_account_id=reconnect_account_id,
+                oauth_app_id=oauth_app_id,
                 expected_platform_user_id=expected_platform_user_id,
                 expected_username=expected_username,
                 force_reauth=force_reauth,
@@ -22956,6 +22959,164 @@ def register_generated_tools(mcp, _get_client):
                 logo_url=logo_url,
                 theme=theme,
             )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List your OAuth apps",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def connect_list_o_auth_apps(limit: int = 50, cursor: str | None = None) -> str:
+        """List your OAuth apps
+
+        Your own OAuth apps on social platforms. A connect runs on one when it passes its id as `oauthAppId`: the consent screen then shows your app's name and logo, and the platform's rate limits and quotas are your app's. Add as many as you need, any number per platform. Also lists, in `platforms`, which platforms accept your own app and what to set up on each. Pages are ordered by id: pass `pagination.nextCursor` back as `cursor` until it is null. Like every OAuth-app call, it needs the account owner or a full-access team member, on a session or a full-scope API key.
+
+        Args:
+            limit
+            cursor: `pagination.nextCursor` from the previous page."""
+        client = _get_client()
+        try:
+            response = client.connect.list_o_auth_apps(limit=limit, cursor=cursor)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Add an OAuth app",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def connect_create_o_auth_app(
+        platform: str,
+        label: str,
+        client_id: str,
+        client_secret: str,
+        scope_areas: list[
+            Literal["posting", "analytics", "comments", "messaging", "ads"]
+        ]
+        | None = None,
+    ) -> str:
+        """Add an OAuth app
+
+        Saves your app's client ID and secret for a platform. The keys are checked with the platform first: keys it rejects return 400 OAUTH_APP_KEYS_REJECTED and are not saved; keys it could not check are saved with status `unchecked`. Allow the returned `redirectUri` in your app's settings on the platform before connecting. Only the account owner or a full-access team member can add apps, and not with a profile-scoped API key.
+
+        Args:
+            platform: One of the platforms listed in `platforms` of GET /v1/connect/oauth-apps. (required)
+            label: (required)
+            client_id: (required)
+            client_secret: (required)
+            scope_areas: Areas this app requests. Defaults to every area the platform supports; an area the platform cannot request separately is a 400."""
+        client = _get_client()
+        try:
+            response = client.connect.create_o_auth_app(
+                platform=platform,
+                label=label,
+                client_id=client_id,
+                client_secret=client_secret,
+                scope_areas=scope_areas,
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get an OAuth app",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def connect_get_o_auth_app() -> str:
+        """Get an OAuth app"""
+        client = _get_client()
+        try:
+            response = client.connect.get_o_auth_app()
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Update an OAuth app",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def connect_update_o_auth_app(
+        label: str | None = None,
+        client_secret: str | None = None,
+        scope_areas: list[
+            Literal["posting", "analytics", "comments", "messaging", "ads"]
+        ]
+        | None = None,
+    ) -> str:
+        """Update an OAuth app
+
+        Renames the app or rotates its secret. A new secret is checked with the platform before it is saved, and takes effect for every account on the app at once; their tokens keep working. The client ID cannot change: a different client ID is a different app, so add it and reconnect the accounts through it.
+
+        Args:
+            label
+            client_secret
+            scope_areas: Replaces the areas new connects request. Accounts already connected keep what they were granted until they reconnect."""
+        client = _get_client()
+        try:
+            response = client.connect.update_o_auth_app(
+                label=label, client_secret=client_secret, scope_areas=scope_areas
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Remove an OAuth app",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def connect_delete_o_auth_app(confirm: bool = False) -> str:
+        """Remove an OAuth app
+
+        Removes the app. Accounts connected through it can no longer refresh their tokens, so when any are connected the call returns 409 OAUTH_APP_IN_USE with `details.accountCount` unless `confirm=true` is passed. With confirm, those accounts are marked as needing reconnection and each fires `account.disconnected`.
+
+        Args:
+            confirm"""
+        client = _get_client()
+        try:
+            response = client.connect.delete_o_auth_app(confirm=confirm)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Check an OAuth app's keys",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def connect_test_o_auth_app(app_id: str) -> str:
+        """Check an OAuth app's keys
+
+        Checks the saved keys with the platform again and records the outcome in `status` and `lastError`.
+
+        Args:
+            app_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.connect.test_o_auth_app(app_id=app_id)
             return _format_response(response)
         except Exception as e:
             return f"Error: {e}"
@@ -40285,6 +40446,7 @@ def register_generated_tools(mcp, _get_client):
                 "post.external.deleted",
                 "account.connected",
                 "account.disconnected",
+                "account.permissions_changed",
                 "account.ads.initial_sync_completed",
                 "account.ads.sync_failed",
                 "account.ads.sync_recovered",
@@ -40461,6 +40623,7 @@ def register_generated_tools(mcp, _get_client):
                 "post.external.deleted",
                 "account.connected",
                 "account.disconnected",
+                "account.permissions_changed",
                 "account.ads.initial_sync_completed",
                 "account.ads.sync_failed",
                 "account.ads.sync_recovered",
@@ -40746,6 +40909,7 @@ def register_generated_tools(mcp, _get_client):
             "post.external.deleted",
             "account.connected",
             "account.disconnected",
+            "account.permissions_changed",
             "account.ads.initial_sync_completed",
             "account.ads.sync_failed",
             "account.ads.sync_recovered",

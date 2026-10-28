@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.390.0"
+  version: "1.391.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -176,6 +176,7 @@ x-documentation:
     - `post.external.deleted` - A tracked native post was detected as removed from the platform. `post.deletedAt` carries the detection time. Coverage is bounded to the most recent posts the platform listing returns, and detection is a diff against posts a prior sync already indexed, so an account for which no post has ever been indexed never emits it.
     - `account.connected` - Account connected
     - `account.disconnected` - Account disconnected (token expired)
+    - `account.permissions_changed` - An account connected through your own OAuth app lost a permission area (for example posting) while staying connected
     - `account.rate_limited` - A Google or Microsoft mailbox entered a sending cooldown; sends answer 429 until `account.resetsAt`
     - `account.ads.initial_sync_completed` - Initial ads sync (discovery + 90-day backfill) completed for an ads-enabled account
     - `account.ads.sync_failed` - An ad account's ads stopped syncing (no successful sync for 24 hours, or every live ad at the retry cap). Fires once until it recovers
@@ -623,7 +624,7 @@ tags:
   - name: Webhooks
     description: |
       Configure webhooks for real-time notifications. Webhooks can be created from the dashboard (Settings → Webhooks) or via this API.
-      Events: post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.ads.initial_sync_completed, account.ads.sync_failed, account.ads.sync_recovered, analytics.synced, message.received, conversation.started, conversation.control_changed, call.received, call.ended, call.failed, call.permission_request, message.sent, message.edited, message.deleted, message.delivered, message.read, message.played, message.failed, reaction.received, referral.received, comment.received, review.new, review.updated, lead.received, ad.status_changed, ad.review.approved, ad.review.rejected, ad.delivery_issue, campaign.budget.depleted, ad_account.status_changed, ad.video.processed, ad_rule.triggered, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.account.quality_updated, whatsapp.account.status_updated, whatsapp.account.alert_received, whatsapp.contact.identity_changed, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, phone_number.stock_available, verification.approved, verification.failed, api.changelog.published, sms.registration.action_required, sms.registration.status_updated, branded_calling.identity.status_updated, branded_calling.identity.action_required, branded_calling.number.status_updated, rcs.agent.status_updated, commerce.product.created, commerce.product.updated, commerce.product.deleted, commerce.order.created, commerce.order.updated, commerce.order.refunded, contact.tag_added, contact.tag_removed, contact.field_changed, sequence.enrolled, sequence.exited, workflow.run.started, workflow.run.completed, workflow.run.failed, support.run.completed, support.run.failed, account.rate_limited, calendar.event.created, calendar.event.updated, calendar.event.deleted, file.created, file.updated, file.deleted, file.picked, contact.updated, contact.deleted, webhook.test.
+      Events: post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.permissions_changed, account.ads.initial_sync_completed, account.ads.sync_failed, account.ads.sync_recovered, analytics.synced, message.received, conversation.started, conversation.control_changed, call.received, call.ended, call.failed, call.permission_request, message.sent, message.edited, message.deleted, message.delivered, message.read, message.played, message.failed, reaction.received, referral.received, comment.received, review.new, review.updated, lead.received, ad.status_changed, ad.review.approved, ad.review.rejected, ad.delivery_issue, campaign.budget.depleted, ad_account.status_changed, ad.video.processed, ad_rule.triggered, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.account.quality_updated, whatsapp.account.status_updated, whatsapp.account.alert_received, whatsapp.contact.identity_changed, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, phone_number.stock_available, verification.approved, verification.failed, api.changelog.published, sms.registration.action_required, sms.registration.status_updated, branded_calling.identity.status_updated, branded_calling.identity.action_required, branded_calling.number.status_updated, rcs.agent.status_updated, commerce.product.created, commerce.product.updated, commerce.product.deleted, commerce.order.created, commerce.order.updated, commerce.order.refunded, contact.tag_added, contact.tag_removed, contact.field_changed, sequence.enrolled, sequence.exited, workflow.run.started, workflow.run.completed, workflow.run.failed, support.run.completed, support.run.failed, account.rate_limited, calendar.event.created, calendar.event.updated, calendar.event.deleted, file.created, file.updated, file.deleted, file.picked, contact.updated, contact.deleted, webhook.test.
       Headers: every delivery carries X-Zernio-Event (event name) and X-Zernio-Event-Id (the payload `id`, a UUID minted once per event and identical across every subscribed endpoint, every automatic retry and every redelivery, so dedupe on it). Security: optional HMAC-SHA256 signature in X-Zernio-Signature header. Configure a secret key to enable verification. Custom headers supported. Legacy X-Late-Event, X-Late-Event-Id and X-Late-Signature duplicates are still sent and will be removed in a future major version.
 
       Resource groups. Every event belongs to one group: post.* to publishing, message.*, reaction.*, conversation.*, call.* and whatsapp.automatic_event to messages, comment.* and review.* to engagement, lead.* and contact.* to contacts, sequence.* and workflow.run.* to messages, ad.*, ad_account.*, ad_rule.* and campaign.* to ads, account.*, whatsapp.template.* and whatsapp.account.* to accounts, analytics.* to analytics, whatsapp.number.*, verification.* and sms.registration.* to telephony, api.changelog.published and webhook.test to webhooks. Support Assistant events (support.run.*) belong to no single group: they need every resource group enabled and a first-party full-scope caller (a session or a full-scope key, never an OAuth token or a profile-scoped key). Two independent controls use that mapping. (1) A restricted (zrk_) API key can only subscribe to, test-fire, redeliver, or read delivery logs for events in the groups it holds, so it can never create a subscription broader than itself. (2) Each subscription carries its own `disabledResourceGroups` denylist: events in a disabled group are dropped before delivery to that endpoint, on live delivery and on every replay path, no matter which key or session created the subscription. Changing that denylist applies to every event emitted after the change; events already queued when it landed can still be delivered for up to five minutes after they were enqueued, because the delivery worker trusts a five-minute enqueue-time snapshot before re-checking. Absent or empty on a subscription means it receives everything it subscribes to, which is the behavior of every subscription created before the field existed.
@@ -1345,6 +1346,43 @@ components:
               type: object
               additionalProperties: { type: string }
               description: 'The other params the redirect flow appends for that error, such as `is_user_fixable`, `reason`, `dashboard_url`, `request_id` and `stage`. All optional.'
+    OAuthApp:
+      type: object
+      required: [id, platform, label, clientId, scopeAreas, status, accountCount, redirectUri, createdAt]
+      properties:
+        id: { type: string, description: 'Pass it as `oauthAppId` on GET /v1/connect/{platform} to connect through this app.' }
+        platform: { type: string, description: 'The platform the app belongs to, as in GET /v1/connect/{platform}.' }
+        label: { type: string }
+        clientId: { type: string, description: 'The client ID (or app ID) of your app on the platform. The secret is never returned.' }
+        scopeAreas:
+          type: array
+          items: { type: string, enum: [posting, analytics, comments, messaging, ads] }
+          description: 'The permission areas every connect through this app requests. Pick only what your app is approved for on the platform.'
+        status:
+          type: string
+          enum: [ok, unchecked, invalid]
+          description: '`ok`: the platform accepted the keys at the last check. `unchecked`: the check could not reach a verdict (see lastError). `invalid`: the platform rejected the keys; connects and token refreshes through this app will fail until the secret is rotated.'
+        lastCheckedAt: { type: [string, "null"], format: date-time }
+        lastError: { type: [string, "null"] }
+        accountCount: { type: integer, description: 'Connected accounts currently running on this app.' }
+        redirectUri: { type: string, format: uri, description: 'The OAuth redirect URI to allow in your app''s settings on the platform.' }
+        createdAt: { type: string, format: date-time }
+    OAuthAppSetup:
+      type: object
+      required: [platform, redirectUri, coreScopes, scopeAreas]
+      properties:
+        platform: { type: string }
+        redirectUri: { type: string, format: uri, description: 'Allow this OAuth redirect URI in your app on the platform.' }
+        coreScopes: { type: array, items: { type: string }, description: 'Requested on every connect, whatever areas the app enables.' }
+        scopeAreas:
+          type: array
+          description: 'The areas an app on this platform can enable, each with the scopes it requests.'
+          items:
+            type: object
+            required: [area, scopes]
+            properties:
+              area: { type: string, enum: [posting, analytics, comments, messaging, ads] }
+              scopes: { type: array, items: { type: string } }
     ConnectWelcomeScreen:
       type: object
       properties:
@@ -4552,7 +4590,7 @@ components:
           type: array
           items:
             type: string
-            enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.ads.initial_sync_completed, account.ads.sync_failed, account.ads.sync_recovered, analytics.synced, message.received, conversation.started, conversation.control_changed, call.received, call.ended, call.failed, call.permission_request, message.sent, message.edited, message.deleted, message.delivered, message.read, message.played, message.failed, reaction.received, referral.received, comment.received, review.new, review.updated, lead.received, ad.status_changed, ad.review.approved, ad.review.rejected, ad.delivery_issue, campaign.budget.depleted, ad_account.status_changed, ad.video.processed, ad_rule.triggered, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.account.quality_updated, whatsapp.account.status_updated, whatsapp.account.alert_received, whatsapp.contact.identity_changed, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, phone_number.stock_available, verification.approved, verification.failed, api.changelog.published, sms.registration.action_required, sms.registration.status_updated, branded_calling.identity.status_updated, branded_calling.identity.action_required, branded_calling.number.status_updated, rcs.agent.status_updated, commerce.product.created, commerce.product.updated, commerce.product.deleted, commerce.order.created, commerce.order.updated, commerce.order.refunded, contact.tag_added, contact.tag_removed, contact.field_changed, sequence.enrolled, sequence.exited, workflow.run.started, workflow.run.completed, workflow.run.failed, support.run.completed, support.run.failed, account.rate_limited, calendar.event.created, calendar.event.updated, calendar.event.deleted, file.created, file.updated, file.deleted, file.picked, contact.updated, contact.deleted]
+            enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.permissions_changed, account.ads.initial_sync_completed, account.ads.sync_failed, account.ads.sync_recovered, analytics.synced, message.received, conversation.started, conversation.control_changed, call.received, call.ended, call.failed, call.permission_request, message.sent, message.edited, message.deleted, message.delivered, message.read, message.played, message.failed, reaction.received, referral.received, comment.received, review.new, review.updated, lead.received, ad.status_changed, ad.review.approved, ad.review.rejected, ad.delivery_issue, campaign.budget.depleted, ad_account.status_changed, ad.video.processed, ad_rule.triggered, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.account.quality_updated, whatsapp.account.status_updated, whatsapp.account.alert_received, whatsapp.contact.identity_changed, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, phone_number.stock_available, verification.approved, verification.failed, api.changelog.published, sms.registration.action_required, sms.registration.status_updated, branded_calling.identity.status_updated, branded_calling.identity.action_required, branded_calling.number.status_updated, rcs.agent.status_updated, commerce.product.created, commerce.product.updated, commerce.product.deleted, commerce.order.created, commerce.order.updated, commerce.order.refunded, contact.tag_added, contact.tag_removed, contact.field_changed, sequence.enrolled, sequence.exited, workflow.run.started, workflow.run.completed, workflow.run.failed, support.run.completed, support.run.failed, account.rate_limited, calendar.event.created, calendar.event.updated, calendar.event.deleted, file.created, file.updated, file.deleted, file.picked, contact.updated, contact.deleted]
           description: Events subscribed to
         isActive:
           type: boolean
@@ -5049,6 +5087,37 @@ components:
           type: string
           format: date-time
           description: 'UTC time at which Zernio generated this event (set once when the event payload is built, before delivery is queued). Retries and redeliveries keep the original value, so it reflects the event, not the delivery attempt.'
+    WebhookPayloadAccountPermissionsChanged:
+      type: object
+      description: 'Webhook payload for account.permissions_changed events: an account connected through your own OAuth app hit a missing permission and stays connected for its other areas.'
+      required: [id, event, account, timestamp]
+      properties:
+        id:
+          type: string
+          description: 'Stable webhook event ID: the dedupe key, also sent as the X-Zernio-Event-Id header and identical on every retry and redelivery.'
+        profiles: { $ref: '#/components/schemas/WebhookProfiles' }
+        test:
+          type: boolean
+          description: 'Always true when present: only a sample sent by POST /v1/webhooks/test with an event carries it.'
+        event:
+          type: string
+          enum: [account.permissions_changed]
+        account:
+          type: object
+          required: [accountId, profileId, platform, username, oauthAppId, missingScopeAreas, reason]
+          properties:
+            accountId: { type: string }
+            profileId: { type: string }
+            platform: { type: string }
+            username: { type: string }
+            displayName: { type: string }
+            oauthAppId: { type: string, description: 'The OAuth app the account connected through.' }
+            missingScopeAreas:
+              type: array
+              items: { type: string, enum: [posting, analytics, comments, messaging, ads] }
+              description: 'Every area now missing. Enable the permission on your app (or have the user grant it), then reconnect the account.'
+            reason: { type: string, description: 'The platform error that revealed it.' }
+        timestamp: { type: string, format: date-time }
     WebhookPayloadAccountDisconnected:
       type: object
       description: Webhook payload for account disconnected events
@@ -11498,6 +11567,13 @@ components:
         platformUserId:
           type: string
           description: "The account's id on its platform as the platform reports it to Zernio; stable across reconnects, so it is the key to match an account against your own records. Instagram: the app-scoped user id on Instagram Login accounts (the professional account id is in `metadata.instagramScopedId`), the professional account id (`17841...`) on Facebook Login accounts. TikTok: the open_id of Zernio's TikTok app, which differs from the open_id any other app sees for the same user. Either value can be passed back as `expectedPlatformUserId` on GET /v1/connect/{platform}."
+        scopeAreas:
+          type: [array, "null"]
+          items: { type: string }
+          description: "Accounts connected through your own OAuth app: the permission areas the connect requested. Null on accounts connected through Zernio's app."
+        oauthAppId:
+          type: [string, "null"]
+          description: "The id of your own OAuth app this account connected through (see /v1/connect/oauth-apps); null when it uses Zernio's app."
         tiktokAccountType:
           type: string
           enum: [business, personal, unknown]
@@ -17567,6 +17643,21 @@ webhooks:
           application/json:
             schema:
               $ref: '#/components/schemas/WebhookPayloadAccountDisconnected'
+      responses:
+        '200':
+          description: Webhook received successfully
+  account.permissions_changed:
+    post:
+      operationId: onAccountPermissionsChanged
+      summary: Account permissions changed event
+      description: Fired when a publish on an account connected through your own OAuth app fails for a missing permission. The account stays connected; only the missing area stops working until the permission is granted and the account reconnected.
+      tags: [Webhook Events]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebhookPayloadAccountPermissionsChanged'
       responses:
         '200':
           description: Webhook received successfully
@@ -28749,6 +28840,10 @@ paths:
           in: query
           schema: { type: string }
           description: "Refresh this existing account (a Zernio account id of the same platform on this profile; otherwise 400). The OAuth callback and the selection endpoints (select-page, select-organization, select-board, select-location, Instagram and Snapchat selection) refuse, with `reconnect_account_mismatch`, a login that would write to a different account of the platform on this profile instead of this one. In headless mode the marker travels in the redirect_url we hand you, so pass that URL back unchanged to the selection endpoint. On X it counts toward the OAuth state limit described under redirect_url."
+        - name: oauthAppId
+          in: query
+          schema: { type: string }
+          description: "Connect through one of your own OAuth apps (see /v1/connect/oauth-apps), so the consent screen shows your app and the platform's limits are your app's. Without it the connect runs on Zernio's app, whatever apps the workspace has saved. Only platforms listed in `platforms` of GET /v1/connect/oauth-apps accept an app; any other, and connects that end on a destination picker (Facebook Pages, Instagram through Facebook Login), return 400. The connect requests the app's `scopeAreas`; `scopes` may narrow them but not add an area the app does not enable (400). If the user does not grant every requested area, the account still connects and the redirect carries `missing_permissions=<areas>` (the headless POST returns `missingPermissions`). If the platform refuses a permission your app is not approved for, the redirect carries `error=oauth_app_scope_not_allowed`. The account remembers the app, and token refresh, publishing and inbox run on it; reconnecting through another app, or without one, moves the account to that app."
         - name: expectedPlatformUserId
           in: query
           schema: { type: string, maxLength: 100 }
@@ -33017,6 +33112,222 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           description: The caller cannot change workspace settings (code INSUFFICIENT_PERMISSIONS).
+  /v1/connect/oauth-apps:
+    get:
+      x-resource-group: accounts
+      operationId: listOAuthApps
+      tags: [Connect]
+      summary: List your OAuth apps
+      description: 'Your own OAuth apps on social platforms. A connect runs on one when it passes its id as `oauthAppId`: the consent screen then shows your app''s name and logo, and the platform''s rate limits and quotas are your app''s. Add as many as you need, any number per platform. Also lists, in `platforms`, which platforms accept your own app and what to set up on each. Pages are ordered by id: pass `pagination.nextCursor` back as `cursor` until it is null. Like every OAuth-app call, it needs the account owner or a full-access team member, on a session or a full-scope API key.'
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 100, default: 50 }
+        - name: cursor
+          in: query
+          schema: { type: string }
+          description: '`pagination.nextCursor` from the previous page.'
+      responses:
+        '200':
+          description: Your apps, and the platforms that accept one.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [apps, pagination, platforms]
+                properties:
+                  apps: { type: array, items: { $ref: '#/components/schemas/OAuthApp' } }
+                  pagination:
+                    type: object
+                    required: [nextCursor]
+                    properties:
+                      nextCursor: { type: [string, "null"], description: 'Null on the last page.' }
+                  platforms: { type: array, items: { $ref: '#/components/schemas/OAuthAppSetup' } }
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      x-resource-group: accounts
+      operationId: createOAuthApp
+      tags: [Connect]
+      summary: Add an OAuth app
+      description: 'Saves your app''s client ID and secret for a platform. The keys are checked with the platform first: keys it rejects return 400 OAUTH_APP_KEYS_REJECTED and are not saved; keys it could not check are saved with status `unchecked`. Allow the returned `redirectUri` in your app''s settings on the platform before connecting. Only the account owner or a full-access team member can add apps, and not with a profile-scoped API key.'
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [platform, label, clientId, clientSecret]
+              properties:
+                platform: { type: string, description: 'One of the platforms listed in `platforms` of GET /v1/connect/oauth-apps.' }
+                label: { type: string, minLength: 1, maxLength: 80 }
+                clientId: { type: string, minLength: 1, maxLength: 500 }
+                clientSecret: { type: string, minLength: 1, maxLength: 1000 }
+                scopeAreas:
+                  type: array
+                  items: { type: string, enum: [posting, analytics, comments, messaging, ads] }
+                  description: 'Areas this app requests. Defaults to every area the platform supports; an area the platform cannot request separately is a 400.'
+            example:
+              platform: youtube
+              label: Acme
+              clientId: 1234567890-abc.apps.googleusercontent.com
+              clientSecret: GOCSPX-xxxxxxxx
+      responses:
+        '201':
+          description: The app was saved.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [app]
+                properties:
+                  app: { $ref: '#/components/schemas/OAuthApp' }
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: The caller cannot change workspace settings (INSUFFICIENT_PERMISSIONS).
+        '409':
+          description: 'The workspace already has an app with this client ID on this platform (OAUTH_APP_ALREADY_EXISTS); `details.appId` names it. Rotate its secret with PATCH instead.'
+  /v1/connect/oauth-apps/{appId}:
+    parameters:
+      - name: appId
+        in: path
+        required: true
+        schema: { type: string }
+    get:
+      x-resource-group: accounts
+      operationId: getOAuthApp
+      tags: [Connect]
+      summary: Get an OAuth app
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: The app.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [app]
+                properties:
+                  app: { $ref: '#/components/schemas/OAuthApp' }
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      x-resource-group: accounts
+      operationId: updateOAuthApp
+      tags: [Connect]
+      summary: Update an OAuth app
+      description: 'Renames the app or rotates its secret. A new secret is checked with the platform before it is saved, and takes effect for every account on the app at once; their tokens keep working. The client ID cannot change: a different client ID is a different app, so add it and reconnect the accounts through it.'
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                label: { type: string, minLength: 1, maxLength: 80 }
+                clientSecret: { type: string, minLength: 1, maxLength: 1000 }
+                scopeAreas:
+                  type: array
+                  items: { type: string, enum: [posting, analytics, comments, messaging, ads] }
+                  description: 'Replaces the areas new connects request. Accounts already connected keep what they were granted until they reconnect.'
+      responses:
+        '200':
+          description: The updated app.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [app]
+                properties:
+                  app: { $ref: '#/components/schemas/OAuthApp' }
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: The caller cannot change workspace settings (INSUFFICIENT_PERMISSIONS).
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      x-resource-group: accounts
+      operationId: deleteOAuthApp
+      tags: [Connect]
+      summary: Remove an OAuth app
+      description: 'Removes the app. Accounts connected through it can no longer refresh their tokens, so when any are connected the call returns 409 OAUTH_APP_IN_USE with `details.accountCount` unless `confirm=true` is passed. With confirm, those accounts are marked as needing reconnection and each fires `account.disconnected`.'
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: confirm
+          in: query
+          schema: { type: boolean, default: false }
+      responses:
+        '200':
+          description: The app was removed.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [disconnectedAccounts]
+                properties:
+                  disconnectedAccounts: { type: integer }
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: The caller cannot change workspace settings (INSUFFICIENT_PERMISSIONS).
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: Accounts are still connected through the app (OAUTH_APP_IN_USE); resend with confirm=true.
+  /v1/connect/oauth-apps/{appId}/test:
+    post:
+      x-resource-group: accounts
+      operationId: testOAuthApp
+      tags: [Connect]
+      summary: Check an OAuth app's keys
+      description: 'Checks the saved keys with the platform again and records the outcome in `status` and `lastError`.'
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: appId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: The app with the new check result.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [app]
+                properties:
+                  app: { $ref: '#/components/schemas/OAuthApp' }
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /v1/connect/pending-data:
     get:
       x-resource-group: "public"
@@ -39313,7 +39624,7 @@ paths:
                   minItems: 1
                   items:
                     type: string
-                    enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.ads.initial_sync_completed, account.ads.sync_failed, account.ads.sync_recovered, analytics.synced, message.received, conversation.started, conversation.control_changed, call.received, call.ended, call.failed, call.permission_request, message.sent, message.edited, message.deleted, message.delivered, message.read, message.played, message.failed, reaction.received, referral.received, comment.received, review.new, review.updated, lead.received, ad.status_changed, ad.review.approved, ad.review.rejected, ad.delivery_issue, campaign.budget.depleted, ad_account.status_changed, ad.video.processed, ad_rule.triggered, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.account.quality_updated, whatsapp.account.status_updated, whatsapp.account.alert_received, whatsapp.contact.identity_changed, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, phone_number.stock_available, verification.approved, verification.failed, api.changelog.published, sms.registration.action_required, sms.registration.status_updated, branded_calling.identity.status_updated, branded_calling.identity.action_required, branded_calling.number.status_updated, rcs.agent.status_updated, commerce.product.created, commerce.product.updated, commerce.product.deleted, commerce.order.created, commerce.order.updated, commerce.order.refunded, contact.tag_added, contact.tag_removed, contact.field_changed, sequence.enrolled, sequence.exited, workflow.run.started, workflow.run.completed, workflow.run.failed, support.run.completed, support.run.failed]
+                    enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.permissions_changed, account.ads.initial_sync_completed, account.ads.sync_failed, account.ads.sync_recovered, analytics.synced, message.received, conversation.started, conversation.control_changed, call.received, call.ended, call.failed, call.permission_request, message.sent, message.edited, message.deleted, message.delivered, message.read, message.played, message.failed, reaction.received, referral.received, comment.received, review.new, review.updated, lead.received, ad.status_changed, ad.review.approved, ad.review.rejected, ad.delivery_issue, campaign.budget.depleted, ad_account.status_changed, ad.video.processed, ad_rule.triggered, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.account.quality_updated, whatsapp.account.status_updated, whatsapp.account.alert_received, whatsapp.contact.identity_changed, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, phone_number.stock_available, verification.approved, verification.failed, api.changelog.published, sms.registration.action_required, sms.registration.status_updated, branded_calling.identity.status_updated, branded_calling.identity.action_required, branded_calling.number.status_updated, rcs.agent.status_updated, commerce.product.created, commerce.product.updated, commerce.product.deleted, commerce.order.created, commerce.order.updated, commerce.order.refunded, contact.tag_added, contact.tag_removed, contact.field_changed, sequence.enrolled, sequence.exited, workflow.run.started, workflow.run.completed, workflow.run.failed, support.run.completed, support.run.failed]
                   description: Events to subscribe to (at least one required)
                 isActive:
                   type: boolean
@@ -39470,7 +39781,7 @@ paths:
                   minItems: 1
                   items:
                     type: string
-                    enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.ads.initial_sync_completed, account.ads.sync_failed, account.ads.sync_recovered, analytics.synced, message.received, conversation.started, conversation.control_changed, call.received, call.ended, call.failed, call.permission_request, message.sent, message.edited, message.deleted, message.delivered, message.read, message.played, message.failed, reaction.received, referral.received, comment.received, review.new, review.updated, lead.received, ad.status_changed, ad.review.approved, ad.review.rejected, ad.delivery_issue, campaign.budget.depleted, ad_account.status_changed, ad.video.processed, ad_rule.triggered, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.account.quality_updated, whatsapp.account.status_updated, whatsapp.account.alert_received, whatsapp.contact.identity_changed, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, phone_number.stock_available, verification.approved, verification.failed, api.changelog.published, sms.registration.action_required, sms.registration.status_updated, branded_calling.identity.status_updated, branded_calling.identity.action_required, branded_calling.number.status_updated, rcs.agent.status_updated, commerce.product.created, commerce.product.updated, commerce.product.deleted, commerce.order.created, commerce.order.updated, commerce.order.refunded, contact.tag_added, contact.tag_removed, contact.field_changed, sequence.enrolled, sequence.exited, workflow.run.started, workflow.run.completed, workflow.run.failed, support.run.completed, support.run.failed]
+                    enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.permissions_changed, account.ads.initial_sync_completed, account.ads.sync_failed, account.ads.sync_recovered, analytics.synced, message.received, conversation.started, conversation.control_changed, call.received, call.ended, call.failed, call.permission_request, message.sent, message.edited, message.deleted, message.delivered, message.read, message.played, message.failed, reaction.received, referral.received, comment.received, review.new, review.updated, lead.received, ad.status_changed, ad.review.approved, ad.review.rejected, ad.delivery_issue, campaign.budget.depleted, ad_account.status_changed, ad.video.processed, ad_rule.triggered, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.account.quality_updated, whatsapp.account.status_updated, whatsapp.account.alert_received, whatsapp.contact.identity_changed, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, phone_number.stock_available, verification.approved, verification.failed, api.changelog.published, sms.registration.action_required, sms.registration.status_updated, branded_calling.identity.status_updated, branded_calling.identity.action_required, branded_calling.number.status_updated, rcs.agent.status_updated, commerce.product.created, commerce.product.updated, commerce.product.deleted, commerce.order.created, commerce.order.updated, commerce.order.refunded, contact.tag_added, contact.tag_removed, contact.field_changed, sequence.enrolled, sequence.exited, workflow.run.started, workflow.run.completed, workflow.run.failed, support.run.completed, support.run.failed]
                   description: Events to subscribe to. Must contain at least one event if provided.
                 isActive:
                   type: boolean
@@ -39813,6 +40124,7 @@ paths:
                     - post.external.deleted
                     - account.connected
                     - account.disconnected
+                    - account.permissions_changed
                     - account.ads.initial_sync_completed
                     - account.ads.sync_failed
                     - account.ads.sync_recovered

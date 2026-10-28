@@ -356,10 +356,12 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `connect.list_google_business_locations()` | List Google Business Profile locations |
 | `connect.list_instagram_pages()` | List Pages with a linked Instagram account |
 | `connect.list_linked_in_organizations()` | List LinkedIn orgs |
+| `connect.list_o_auth_apps()` | List your OAuth apps |
 | `connect.list_pinterest_boards_for_selection()` | List Pinterest boards |
 | `connect.list_slack_channels()` | List Slack channels for the channel picker |
 | `connect.list_snapchat_profiles()` | List Snapchat profiles |
 | `connect.list_whats_app_phone_numbers()` | List numbers for selection |
+| `connect.create_o_auth_app()` | Add an OAuth app |
 | `connect.create_pinterest_board()` | Create Pinterest board |
 | `connect.create_youtube_playlist()` | Create YouTube playlist |
 | `connect.get_connect_handoff()` | Get a phone handoff |
@@ -370,6 +372,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `connect.get_google_analytics_connect_url()` | Get Google Analytics OAuth connect URL |
 | `connect.get_hub_spot_connect_url()` | Get HubSpot OAuth connect URL |
 | `connect.get_linked_in_organizations()` | List LinkedIn orgs |
+| `connect.get_o_auth_app()` | Get an OAuth app |
 | `connect.get_page_webhook_subscription()` | Read a Facebook Page's webhook subscription |
 | `connect.get_pending_o_auth_data()` | Get pending OAuth data |
 | `connect.get_pinterest_boards()` | List Pinterest boards |
@@ -388,9 +391,11 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `connect.update_facebook_page()` | Update Facebook page |
 | `connect.update_gmb_location()` | Update Google Business Profile location |
 | `connect.update_linked_in_organization()` | Switch LinkedIn account type |
+| `connect.update_o_auth_app()` | Update an OAuth app |
 | `connect.update_pinterest_boards()` | Set default Pinterest board |
 | `connect.update_reddit_subreddits()` | Set default subreddit |
 | `connect.update_youtube_default_playlist()` | Set default YouTube playlist |
+| `connect.delete_o_auth_app()` | Remove an OAuth app |
 | `connect.assign_google_business_location()` | Assign Google Business Profile location to another profile |
 | `connect.complete_meta_ads_business_login()` | Complete Meta business login |
 | `connect.complete_telegram_connect()` | Check Telegram status |
@@ -419,6 +424,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `connect.select_snapchat_profile()` | Select Snapchat profile |
 | `connect.set_reddit_post_flair()` | Set Reddit post flair |
 | `connect.start_microsoft_admin_consent()` | Admin-consent link for a Microsoft tenant |
+| `connect.test_o_auth_app()` | Check an OAuth app's keys |
 | `connect.vote_reddit_thing()` | Vote on a Reddit post or comment |
 
 ### Reddit

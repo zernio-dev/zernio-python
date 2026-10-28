@@ -79,6 +79,7 @@ class ConnectResource:
         profile_id: str,
         *,
         reconnect_account_id: str | None = None,
+        oauth_app_id: str | None = None,
         expected_platform_user_id: str | None = None,
         expected_username: str | None = None,
         force_reauth: bool | None = False,
@@ -101,6 +102,7 @@ class ConnectResource:
         params = self._build_params(
             profile_id=profile_id,
             reconnect_account_id=reconnect_account_id,
+            oauth_app_id=oauth_app_id,
             expected_platform_user_id=expected_platform_user_id,
             expected_username=expected_username,
             force_reauth=force_reauth,
@@ -441,6 +443,65 @@ class ConnectResource:
             theme=theme,
         )
         return self._client._put("/v1/connect/welcome-screen", data=payload)
+
+    def list_o_auth_apps(
+        self, *, limit: int | None = 50, cursor: str | None = None
+    ) -> dict[str, Any]:
+        """List your OAuth apps"""
+        params = self._build_params(
+            limit=limit,
+            cursor=cursor,
+        )
+        return self._client._get("/v1/connect/oauth-apps", params=params)
+
+    def create_o_auth_app(
+        self,
+        platform: str,
+        label: str,
+        client_id: str,
+        client_secret: str,
+        *,
+        scope_areas: list[str] | None = None,
+    ) -> dict[str, Any]:
+        """Add an OAuth app"""
+        payload = self._build_payload(
+            platform=platform,
+            label=label,
+            client_id=client_id,
+            client_secret=client_secret,
+            scope_areas=scope_areas,
+        )
+        return self._client._post("/v1/connect/oauth-apps", data=payload)
+
+    def get_o_auth_app(self) -> dict[str, Any]:
+        """Get an OAuth app"""
+        return self._client._get("/v1/connect/oauth-apps/{appId}")
+
+    def update_o_auth_app(
+        self,
+        *,
+        label: str | None = None,
+        client_secret: str | None = None,
+        scope_areas: list[str] | None = None,
+    ) -> dict[str, Any]:
+        """Update an OAuth app"""
+        payload = self._build_payload(
+            label=label,
+            client_secret=client_secret,
+            scope_areas=scope_areas,
+        )
+        return self._client._patch("/v1/connect/oauth-apps/{appId}", data=payload)
+
+    def delete_o_auth_app(self, *, confirm: bool | None = False) -> dict[str, Any]:
+        """Remove an OAuth app"""
+        params = self._build_params(
+            confirm=confirm,
+        )
+        return self._client._delete("/v1/connect/oauth-apps/{appId}", params=params)
+
+    def test_o_auth_app(self, app_id: str) -> dict[str, Any]:
+        """Check an OAuth app's keys"""
+        return self._client._post(f"/v1/connect/oauth-apps/{app_id}/test")
 
     def get_pending_o_auth_data(self, token: str) -> dict[str, Any]:
         """Get pending OAuth data"""
@@ -1079,6 +1140,7 @@ class ConnectResource:
         profile_id: str,
         *,
         reconnect_account_id: str | None = None,
+        oauth_app_id: str | None = None,
         expected_platform_user_id: str | None = None,
         expected_username: str | None = None,
         force_reauth: bool | None = False,
@@ -1101,6 +1163,7 @@ class ConnectResource:
         params = self._build_params(
             profile_id=profile_id,
             reconnect_account_id=reconnect_account_id,
+            oauth_app_id=oauth_app_id,
             expected_platform_user_id=expected_platform_user_id,
             expected_username=expected_username,
             force_reauth=force_reauth,
@@ -1445,6 +1508,71 @@ class ConnectResource:
             theme=theme,
         )
         return await self._client._aput("/v1/connect/welcome-screen", data=payload)
+
+    async def alist_o_auth_apps(
+        self, *, limit: int | None = 50, cursor: str | None = None
+    ) -> dict[str, Any]:
+        """List your OAuth apps (async)"""
+        params = self._build_params(
+            limit=limit,
+            cursor=cursor,
+        )
+        return await self._client._aget("/v1/connect/oauth-apps", params=params)
+
+    async def acreate_o_auth_app(
+        self,
+        platform: str,
+        label: str,
+        client_id: str,
+        client_secret: str,
+        *,
+        scope_areas: list[str] | None = None,
+    ) -> dict[str, Any]:
+        """Add an OAuth app (async)"""
+        payload = self._build_payload(
+            platform=platform,
+            label=label,
+            client_id=client_id,
+            client_secret=client_secret,
+            scope_areas=scope_areas,
+        )
+        return await self._client._apost("/v1/connect/oauth-apps", data=payload)
+
+    async def aget_o_auth_app(self) -> dict[str, Any]:
+        """Get an OAuth app (async)"""
+        return await self._client._aget("/v1/connect/oauth-apps/{appId}")
+
+    async def aupdate_o_auth_app(
+        self,
+        *,
+        label: str | None = None,
+        client_secret: str | None = None,
+        scope_areas: list[str] | None = None,
+    ) -> dict[str, Any]:
+        """Update an OAuth app (async)"""
+        payload = self._build_payload(
+            label=label,
+            client_secret=client_secret,
+            scope_areas=scope_areas,
+        )
+        return await self._client._apatch(
+            "/v1/connect/oauth-apps/{appId}", data=payload
+        )
+
+    async def adelete_o_auth_app(
+        self, *, confirm: bool | None = False
+    ) -> dict[str, Any]:
+        """Remove an OAuth app (async)"""
+        params = self._build_params(
+            confirm=confirm,
+        )
+        return await self._client._adelete(
+            "/v1/connect/oauth-apps/{appId}", params=params
+        )
+
+    async def atest_o_auth_app(self, app_id: str) -> dict[str, Any]:
+        """Check an OAuth app's keys (async)"""
+        return await self._client._apost(f"/v1/connect/oauth-apps/{app_id}/test")
 
     async def aget_pending_o_auth_data(self, token: str) -> dict[str, Any]:
         """Get pending OAuth data (async)"""
