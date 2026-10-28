@@ -79,6 +79,8 @@ OAUTH_SCOPES = [
     "commerce:write",
     "calendar:write",
     "files:write",
+    "campaigns:write",
+    "money:write",
 ]
 
 # Documentation
