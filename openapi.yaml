@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.394.0"
+  version: "1.394.1"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -41907,7 +41907,7 @@ paths:
                   - { $ref: '#/components/schemas/WhatsAppTemplateLookupError' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403':
-          description: Inbox addon required or profile limit reached
+          description: Inbox addon required, profile limit reached, or a sandbox send with a template other than the locked sandbox template
         '404':
           description: 'Account or recipient user not found (Reddit: PARTICIPANT_NOT_FOUND when the u/username does not exist)'
           content:
@@ -43300,7 +43300,7 @@ paths:
             platform_api_error, with platform and platformError set).
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403':
-          description: 'Inbox addon required, or Meta rejected the send outside the messaging window (type platform_error, code platform_api_error, platform, platformError with code/subcode/fbtraceId/type)'
+          description: 'Inbox addon required, a sandbox send with a template other than the locked sandbox template, or Meta rejected the send outside the messaging window (type platform_error, code platform_api_error, platform, platformError with code/subcode/fbtraceId/type)'
           content:
             application/json:
               schema: { $ref: '#/components/schemas/ErrorResponse' }
@@ -47097,6 +47097,7 @@ paths:
                       message_send_ttl_seconds: { type: integer, description: 'Echoed when supplied on the request.' }
         '400': { description: "Validation error (invalid name format, missing fields, invalid category)" }
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'The shared WhatsApp sandbox account: its templates are read-only.' }
         '404': { description: WhatsApp account not found }
         '502': { description: Meta rejected the request or was unreachable. Meta 4xx statuses are forwarded as-is. }
 
@@ -47267,6 +47268,7 @@ paths:
                         example: PENDING
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'The shared WhatsApp sandbox account: its templates are read-only.' }
         '404': { description: 'Account not found, or no template with that name (and language, when given) (code template_not_found).' }
         '409':
           description: 'The template name exists in several languages and no language was given (code ambiguous_template). details.languages lists them.'
@@ -47331,6 +47333,7 @@ paths:
                   message: { type: string }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'The shared WhatsApp sandbox account: its templates are read-only.' }
         '404': { description: 'Account not found, or (with language) no such variant (code template_not_found).' }
         '409':
           description: 'Only with language: a bare code (es) matched several regional variants (es_ES, es_MX), so nothing was deleted (code ambiguous_template). Without language there is no 409: the whole family is deleted.'
@@ -47466,6 +47469,7 @@ paths:
                         example: PENDING
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'The shared WhatsApp sandbox account: its templates are read-only.' }
         '404': { description: Account not found. }
         '502': { description: 'Meta rejected the update (including an id the account cannot access) or was unreachable. Meta 4xx statuses are forwarded as-is.' }
     delete:
@@ -47505,6 +47509,7 @@ paths:
                   message: { type: string }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'The shared WhatsApp sandbox account: its templates are read-only.' }
         '404': { description: Account not found. }
         '502': { description: 'Meta rejected the request (including an id the account cannot access) or was unreachable. Meta 4xx statuses are forwarded as-is.' }
   /v1/whatsapp/calling:
