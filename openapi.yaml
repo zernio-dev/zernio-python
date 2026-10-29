@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.413.3"
+  version: "1.414.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -7320,6 +7320,9 @@ components:
         platform: { type: string }
         username: { type: string }
         displayName: { type: string }
+        pageId:
+          type: string
+          description: 'The bare Facebook Page id behind the account, to route inbound messages by Page. Present for Facebook accounts and Instagram accounts connected through Facebook Login; omitted otherwise.'
     # ────────────────────────────────────────────────────────────────────────
     WebhookPayloadReaction:
       type: object
@@ -44955,6 +44958,9 @@ paths:
                         platform: { type: string }
                         accountId: { type: string }
                         accountUsername: { type: string }
+                        pageId:
+                          type: [string, "null"]
+                          description: 'The bare Facebook Page id behind the account, for Facebook and Instagram connected through Facebook Login. Null when the account has no Facebook Page.'
                         participantId: { type: string }
                         participantName: { type: string }
                         participantPicture: { type: [string, "null"] }
@@ -45677,6 +45683,9 @@ paths:
                       id: { type: string }
                       accountId: { type: string }
                       accountUsername: { type: string }
+                      pageId:
+                        type: [string, "null"]
+                        description: 'The bare Facebook Page id behind the account, for Facebook and Instagram connected through Facebook Login. Null when the account has no Facebook Page.'
                       platform: { type: string }
                       status: { type: string, enum: [active, archived] }
                       participantName: { type: string }
