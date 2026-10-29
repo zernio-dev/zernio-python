@@ -22899,7 +22899,7 @@ def register_generated_tools(mcp, _get_client):
         In headless mode the marker travels in the redirect_url we hand you, so pass that URL back unchanged to the selection endpoint. On X it counts toward the OAuth state limit described under redirect_url.
                 oauth_app_id: Connect through one of your own OAuth apps (see /v1/connect/oauth-apps), so the consent screen shows your app and the platform's limits are your app's. Without it the connect runs on Zernio's app, whatever apps the workspace has saved.
 
-        - Only platforms listed in `platforms` of GET /v1/connect/oauth-apps accept an app. Any other returns 400, and so do ads connects (`adsConnect=true` in the redirect URL) and connects that end on a destination picker other than Facebook Pages (Instagram through Facebook Login, for example).
+        - Only platforms listed in `platforms` of GET /v1/connect/oauth-apps accept an app. Any other returns 400, and so do ads connects (`adsConnect=true` in the redirect URL) and connects that end on a destination picker other than Facebook Pages, Pinterest boards and Snapchat public profiles (Instagram through Facebook Login, for example).
         - A LinkedIn connect through an app saves the member's own profile: organization pages, and mention lookups, stay on Zernio's app.
         - The connect requests the app's `scopeAreas`. `scopes` may narrow them but not add an area the app does not enable (400).
         - If the user does not grant every requested area, the account still connects and the redirect carries `missing_permissions=<areas>` (the headless POST returns `missingPermissions`).
@@ -24532,6 +24532,7 @@ def register_generated_tools(mcp, _get_client):
         refresh_token: str | None = None,
         expires_in: int | None = None,
         redirect_url: str | None = None,
+        oauth_app_id: str | None = None,
     ) -> str:
         """Select Pinterest board
 
@@ -24545,7 +24546,8 @@ def register_generated_tools(mcp, _get_client):
             user_profile: User profile data from OAuth redirect
             refresh_token: Pinterest refresh token (if available)
             expires_in: Token expiration time in seconds
-            redirect_url: Custom redirect URL after connection completes"""
+            redirect_url: Custom redirect URL after connection completes
+            oauth_app_id: The `oauthAppId` from the selection redirect, when the connect ran on one of your own OAuth apps. Pass it back so a retried selection stays on that app; a different app than the connect used returns 400."""
         client = _get_client()
         try:
             response = client.connect.select_pinterest_board(
@@ -24557,6 +24559,7 @@ def register_generated_tools(mcp, _get_client):
                 refresh_token=refresh_token,
                 expires_in=expires_in,
                 redirect_url=redirect_url,
+                oauth_app_id=oauth_app_id,
             )
             return _format_response(response)
         except Exception as e:
@@ -24608,6 +24611,7 @@ def register_generated_tools(mcp, _get_client):
         refresh_token: str | None = None,
         expires_in: int | None = None,
         redirect_url: str | None = None,
+        oauth_app_id: str | None = None,
     ) -> str:
         """Select Snapchat profile
 
@@ -24620,7 +24624,8 @@ def register_generated_tools(mcp, _get_client):
             user_profile: User profile data from OAuth redirect (required)
             refresh_token: Snapchat refresh token (if available)
             expires_in: Token expiration time in seconds
-            redirect_url: Custom redirect URL after connection completes"""
+            redirect_url: Custom redirect URL after connection completes
+            oauth_app_id: The `oauthAppId` from the selection redirect, when the connect ran on one of your own OAuth apps. Pass it back so a retried selection stays on that app; a different app than the connect used returns 400."""
         client = _get_client()
         try:
             response = client.connect.select_snapchat_profile(
@@ -24631,6 +24636,7 @@ def register_generated_tools(mcp, _get_client):
                 refresh_token=refresh_token,
                 expires_in=expires_in,
                 redirect_url=redirect_url,
+                oauth_app_id=oauth_app_id,
             )
             return _format_response(response)
         except Exception as e:

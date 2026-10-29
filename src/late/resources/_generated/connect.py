@@ -569,6 +569,7 @@ class ConnectResource:
         refresh_token: str | None = None,
         expires_in: int | None = None,
         redirect_url: str | None = None,
+        oauth_app_id: str | None = None,
     ) -> dict[str, Any]:
         """Select Pinterest board"""
         payload = self._build_payload(
@@ -580,6 +581,7 @@ class ConnectResource:
             refresh_token=refresh_token,
             expires_in=expires_in,
             redirect_url=redirect_url,
+            oauth_app_id=oauth_app_id,
         )
         return self._client._post("/v1/connect/pinterest/select-board", data=payload)
 
@@ -607,6 +609,7 @@ class ConnectResource:
         refresh_token: str | None = None,
         expires_in: int | None = None,
         redirect_url: str | None = None,
+        oauth_app_id: str | None = None,
     ) -> dict[str, Any]:
         """Select Snapchat profile"""
         payload = self._build_payload(
@@ -617,6 +620,7 @@ class ConnectResource:
             refresh_token=refresh_token,
             expires_in=expires_in,
             redirect_url=redirect_url,
+            oauth_app_id=oauth_app_id,
         )
         headers: dict[str, str] = {}
         if x_connect_token is not None:
@@ -1644,6 +1648,7 @@ class ConnectResource:
         refresh_token: str | None = None,
         expires_in: int | None = None,
         redirect_url: str | None = None,
+        oauth_app_id: str | None = None,
     ) -> dict[str, Any]:
         """Select Pinterest board (async)"""
         payload = self._build_payload(
@@ -1655,6 +1660,7 @@ class ConnectResource:
             refresh_token=refresh_token,
             expires_in=expires_in,
             redirect_url=redirect_url,
+            oauth_app_id=oauth_app_id,
         )
         return await self._client._apost(
             "/v1/connect/pinterest/select-board", data=payload
@@ -1684,6 +1690,7 @@ class ConnectResource:
         refresh_token: str | None = None,
         expires_in: int | None = None,
         redirect_url: str | None = None,
+        oauth_app_id: str | None = None,
     ) -> dict[str, Any]:
         """Select Snapchat profile (async)"""
         payload = self._build_payload(
@@ -1694,6 +1701,7 @@ class ConnectResource:
             refresh_token=refresh_token,
             expires_in=expires_in,
             redirect_url=redirect_url,
+            oauth_app_id=oauth_app_id,
         )
         headers: dict[str, str] = {}
         if x_connect_token is not None:
