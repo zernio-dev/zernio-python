@@ -84,6 +84,7 @@ class MessagesResource:
         limit: int | None = 50,
         cursor: str | None = None,
         account_id: str | None = None,
+        tags: str | None = None,
     ) -> dict[str, Any]:
         """List conversations"""
         params = self._build_params(
@@ -95,6 +96,7 @@ class MessagesResource:
             limit=limit,
             cursor=cursor,
             account_id=account_id,
+            tags=tags,
         )
         return self._client._get("/v1/inbox/conversations", params=params)
 
@@ -488,6 +490,7 @@ class MessagesResource:
         limit: int | None = 50,
         cursor: str | None = None,
         account_id: str | None = None,
+        tags: str | None = None,
     ) -> dict[str, Any]:
         """List conversations (async)"""
         params = self._build_params(
@@ -499,6 +502,7 @@ class MessagesResource:
             limit=limit,
             cursor=cursor,
             account_id=account_id,
+            tags=tags,
         )
         return await self._client._aget("/v1/inbox/conversations", params=params)
 

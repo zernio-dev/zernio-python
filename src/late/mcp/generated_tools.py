@@ -33526,6 +33526,7 @@ def register_generated_tools(mcp, _get_client):
         limit: int = 50,
         cursor: str | None = None,
         account_id: str | None = None,
+        tags: str | None = None,
     ) -> str:
         """List conversations
 
@@ -33558,7 +33559,8 @@ def register_generated_tools(mcp, _get_client):
                 sort_order: Sort order by updated time
                 limit: Maximum number of conversations to return; values above 100 are served as 100.
                 cursor: Pagination cursor for next page
-                account_id: Filter by specific account ID"""
+                account_id: Filter by specific account ID
+                tags: Comma-separated contact tags. Returns only conversations whose contact has any of them. Cannot be combined with folder=requests."""
         client = _get_client()
         try:
             response = client.messages.list_inbox_conversations(
@@ -33570,6 +33572,7 @@ def register_generated_tools(mcp, _get_client):
                 limit=limit,
                 cursor=cursor,
                 account_id=account_id,
+                tags=tags,
             )
             return _format_response(response)
         except Exception as e:
