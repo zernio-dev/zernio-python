@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.413.2"
+  version: "1.413.3"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -16200,7 +16200,7 @@ components:
               description: "Meta: every primary text variation of the creative (`asset_feed_spec.bodies`), the same shape as the `bodies` create input. Present only with 2 or more texts; a single text is `body`."
             description: { type: string, description: "Meta: the creative's description under the title (`link_data.description`, `video_data.link_description`, or the first `asset_feed_spec.descriptions` entry)." }
             callToAction: { type: string, description: "Meta: the call to action type (`call_to_action.type`, or the first `asset_feed_spec.call_to_action_types` entry), e.g. LEARN_MORE or SIGN_UP.", example: SIGN_UP }
-            leadGenFormId: { type: string, description: "Meta: the instant form the call to action opens (`call_to_action.value.lead_gen_form_id`), the same value as the `leadGenFormId` create input. Absent on ads without a lead form." }
+            leadGenFormId: { type: string, description: "Meta: the instant form the call to action opens (`call_to_action.value.lead_gen_form_id`, or the asset feed's `call_to_actions` on a dynamic creative), the same value as the `leadGenFormId` create input. Absent on ads without a lead form." }
             imageHash: { type: string, description: "Meta: the ad image hash (`image_hash`), reusable as `imageHash` on POST /v1/ads/create within the same ad account. `thumbnailUrl` and `mediaUrls` carry its stable full resolution permalink when Meta resolves it." }
             urlTags: { type: [string, "null"], description: "Meta: the creative's `url_tags` query string appended to the destination URL." }
             finalUrls:
