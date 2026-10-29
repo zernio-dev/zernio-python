@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.411.0"
+  version: "1.412.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -10995,7 +10995,7 @@ components:
           description: Target LinkedIn Organization URN (e.g. "urn:li:organization:123456789"). If omitted, uses the default org. Use GET /v1/accounts/{id}/linkedin-organizations to list orgs.
         firstComment:
           type: string
-          description: "Optional first comment to add after the post is created. Mention a profile or Page with @[Name](urn:li:person:ID) or @[Org](urn:li:organization:ID); the name must match LinkedIn's exactly (case-sensitive) or it renders as plain text. The profile-URL form is not resolved in comments, and an unknown person URN posts the plain name."
+          description: "Optional first comment to add after the post is created. Mention with @[https://www.linkedin.com/in/vanity] (resolved to LinkedIn's live name, same rules and errors as post content) or @[Name](urn:li:person|organization:ID); a hand-written name must match LinkedIn's exactly or it renders as plain text."
         disableLinkPreview:
           type: boolean
           description: Set to true to disable automatic link previews for URLs in the post content (default is false)
@@ -27818,14 +27818,14 @@ paths:
 
         ## LinkedIn @mentions
 
-        Mention a person or company by putting its LinkedIn URL inside `@[...]`, in `content` or in a LinkedIn entry's `customContent`. The post is published with LinkedIn's real name and link, with no lookup call first.
+        Mention a person or company by putting its LinkedIn URL inside `@[...]`, in `content`, a LinkedIn entry's `customContent` or its `platformSpecificData.firstComment`. The post is published with LinkedIn's real name and link, with no lookup call first.
 
         - Person: `@[https://www.linkedin.com/in/jane-doe]`
         - Company: `@[https://www.linkedin.com/company/acme]`
         - Your own text: `@[Jane](https://www.linkedin.com/in/jane-doe)`. For a person it must be the first, last or full name, for a company the exact company name, both case-sensitive. Other text is replaced with LinkedIn's name and returns a `linkedin_mention_name_replaced` warning.
         - `@[Text](urn:li:person:ID)`, as returned by `GET /v1/accounts/{accountId}/linkedin-mentions`: published exactly as written, with no lookup, so its text must already be LinkedIn's name.
 
-        A post can resolve at most 10 profile or company URL mentions across its shared content and LinkedIn entries. Resolving a person's profile URL needs one of your LinkedIn accounts to administer a Page; publishing does not.
+        A post can resolve at most 10 profile or company URL mentions across its shared content, LinkedIn entries and first comments. Resolving a person's profile URL needs one of your LinkedIn accounts to administer a Page; publishing does not.
 
         ### When a mention can't be resolved
 
@@ -48724,7 +48724,7 @@ paths:
               required: [accountId, message]
               properties:
                 accountId: { type: string }
-                message: { type: string, description: "Reply text. On LinkedIn, mention with @[Name](urn:li:person:ID) or @[Org](urn:li:organization:ID); the name must match LinkedIn's exactly (case-sensitive) or it renders as plain text. The profile-URL form is not resolved in comments, and an unknown person URN posts the plain name." }
+                message: { type: string, description: "Reply text. On LinkedIn, mention with @[https://www.linkedin.com/in/vanity] (resolved to LinkedIn's live name, same rules and errors as post content) or @[Name](urn:li:person|organization:ID); a hand-written name must match LinkedIn's exactly or it renders as plain text." }
                 attachmentUrl:
                   type: string
                   format: uri
@@ -48749,7 +48749,20 @@ paths:
                       isReply: { type: boolean }
                       cid: { type: [string, "null"], description: Bluesky CID }
         '400':
-          description: 'Invalid request (e.g. attachmentUrl on a platform other than Facebook, code PLATFORM_NOT_SUPPORTED)'
+          description: 'Invalid request (e.g. attachmentUrl on a platform other than Facebook, code PLATFORM_NOT_SUPPORTED). On LinkedIn, a profile or company URL mention that cannot be resolved returns code `linkedin_mentions_invalid`, or `linkedin_mentions_limit_exceeded` for more than 10, with `details.mentions[]`.'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error: { type: string }
+                  code: { type: string }
+                  details:
+                    type: object
+                    properties:
+                      mentions:
+                        type: array
+                        items: { $ref: '#/components/schemas/LinkedInMentionIssue' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403':
           description: 'Inbox addon required, or the connected account is not permitted to comment on this post on the platform (code platform_api_error, type platform_error)'
@@ -48759,6 +48772,7 @@ paths:
         '429': { $ref: '#/components/responses/RateLimited' }
         '502':
           description: 'Upstream platform error (code platform_api_error, type platform_error)'
+        '503': { $ref: '#/components/responses/TemporarilyUnavailable' }
     delete:
       x-resource-group: "engagement"
       operationId: deleteInboxComment

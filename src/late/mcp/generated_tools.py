@@ -19760,7 +19760,7 @@ def register_generated_tools(mcp, _get_client):
         Args:
             post_id: Zernio post ID or platform-specific post ID. On LinkedIn, pass the post id exactly as the feed returns it (urn:li:share:<id> or urn:li:ugcPost:<id>); a bare number is read as an activity id (urn:li:activity:<n>). (required)
             account_id: (required)
-            message: Reply text. On LinkedIn, mention with @[Name](urn:li:person:ID) or @[Org](urn:li:organization:ID); the name must match LinkedIn's exactly (case-sensitive) or it renders as plain text. The profile-URL form is not resolved in comments, and an unknown person URN posts the plain name. (required)
+            message: Reply text. On LinkedIn, mention with @[https://www.linkedin.com/in/vanity] (resolved to LinkedIn's live name, same rules and errors as post content) or @[Name](urn:li:person|organization:ID); a hand-written name must match LinkedIn's exactly or it renders as plain text. (required)
             attachment_url: (Facebook only) URL of an image to attach, publishing a photo comment alongside the text. The URL must be publicly accessible so Meta can fetch it. Returns 400 for other platforms.
             comment_id: Reply to specific comment (optional)
             parent_cid: (Bluesky only) Parent content identifier
@@ -37229,11 +37229,11 @@ def register_generated_tools(mcp, _get_client):
 
             ## LinkedIn @mentions
 
-            Mention a person or company by putting its LinkedIn URL inside `@[...]`, in `content` or in a LinkedIn entry's `customContent`. The post is published with LinkedIn's real name and link, with no lookup call first.
+            Mention a person or company by putting its LinkedIn URL inside `@[...]`, in `content`, a LinkedIn entry's `customContent` or its `platformSpecificData.firstComment`. The post is published with LinkedIn's real name and link, with no lookup call first.
 
             - Person: `@[https://www.linkedin.com/in/jane-doe]`
             - Company: `@[https://www.linkedin.com/company/acme]`
-            - Your own text: `@[Jane](https://www.linkedin.com/in/jane-doe)`. For a person it must be the first, last or full name, for a company the exact company name, both ...
+            - Your own text: `@[Jane](https://www.linkedin.com/in/jane-doe)`. For a person it must be the first, last or full name, for a ...
 
             Args:
                 title: Stored on the post for reference/display only. This field is NOT used as the video title when publishing. To set a YouTube video title, use platformSpecificData.title on the youtube platform target (falls back to the first line of content when omitted).
