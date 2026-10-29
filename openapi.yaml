@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.412.0"
+  version: "1.413.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -30551,6 +30551,20 @@ paths:
                         tokenExpiresAt: { type: string, format: date-time }
                         needsReconnect: { type: boolean, description: 'True when the token is expired or revoked, permissions are missing, the account is inactive, or the platform rejected its stored credentials (the same flag the account listing reports as needsReconnection).' }
                         issues: { type: array, items: { type: string } }
+                        ownerUserId:
+                          type: string
+                          description: 'User id of the profile owner, not necessarily the team member who connected the account.'
+                        disconnectReason:
+                          type: [string, "null"]
+                          description: 'Why the connection is broken or its token refresh is failing, from the most recent current cause. Null when the connection is healthy, including when the account is unhealthy for another reason (analytics, messaging restriction, missing analytics scopes), or when no cause is stored.'
+                        disconnectionType:
+                          type: [string, "null"]
+                          enum: [intentional, unintentional, null]
+                          description: 'intentional: deliberately disconnected by the user or by Zernio (for example a plan downgrade), not a token failure. unintentional: token expired or revoked, or an auth failure. Null when disconnectReason is null.'
+                        unhealthySince:
+                          type: [string, "null"]
+                          format: date-time
+                          description: 'When the earliest current stored cause was recorded (the start of the outage); for an intentional disconnect, when it was disconnected. Null when the connection is healthy, including when the account is unhealthy for another reason (analytics, messaging restriction, missing analytics scopes), or when the time is unknown.'
                         analyticsSync:
                           type: object
                           description: 'Absent on platforms without analytics sync. failing: several consecutive sync attempts failed. stalled: a sync was requested over 6 hours ago and never completed. never_synced: no sync has completed yet. Failing and stalled raise the account status to at least warning.'
@@ -30595,6 +30609,10 @@ paths:
                     tokenExpiresAt: "2025-06-15T00:00:00Z"
                     needsReconnect: false
                     issues: []
+                    ownerUserId: "user_123"
+                    disconnectReason: null
+                    disconnectionType: null
+                    unhealthySince: null
                   - accountId: "def456"
                     platform: "twitter"
                     username: "mytwitter"
@@ -30604,6 +30622,10 @@ paths:
                     tokenValid: false
                     needsReconnect: true
                     issues: ["Token expired"]
+                    ownerUserId: "user_123"
+                    disconnectReason: "Token expired"
+                    disconnectionType: "unintentional"
+                    unhealthySince: "2025-05-20T08:30:00Z"
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
   /v1/accounts/{accountId}/whatsapp/register:
@@ -30890,6 +30912,10 @@ paths:
                     type: array
                     items: { type: string }
                     description: Actionable recommendations to fix issues
+                  ownerUserId: { type: string, description: 'User id of the profile owner, not necessarily the team member who connected the account.' }
+                  disconnectReason: { type: [string, "null"], description: 'Why the connection is broken or its token refresh is failing, from the most recent current cause. Null when the connection is healthy, including when the account is unhealthy for another reason (analytics, messaging restriction, missing analytics scopes), or when no cause is stored.' }
+                  disconnectionType: { type: [string, "null"], enum: [intentional, unintentional, null], description: 'intentional: deliberately disconnected by the user or by Zernio (for example a plan downgrade), not a token failure. unintentional: token expired or revoked, or an auth failure. Null when disconnectReason is null.' }
+                  unhealthySince: { type: [string, "null"], format: date-time, description: 'When the earliest current stored cause was recorded (the start of the outage); for an intentional disconnect, when it was disconnected. Null when the connection is healthy, including when the account is unhealthy for another reason (analytics, messaging restriction, missing analytics scopes), or when the time is unknown.' }
                   analyticsSync:
                     type: object
                     description: 'Absent on platforms without analytics sync. failing: several consecutive sync attempts failed. stalled: a sync was requested over 6 hours ago and never completed. never_synced: no sync has completed yet. Failing and stalled raise the account status to at least warning.'
@@ -30976,6 +31002,10 @@ paths:
                   missingRequired: []
                 issues: []
                 recommendations: []
+                ownerUserId: "user_123"
+                disconnectReason: null
+                disconnectionType: null
+                unhealthySince: null
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
