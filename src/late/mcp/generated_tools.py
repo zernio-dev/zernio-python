@@ -19302,8 +19302,12 @@ def register_generated_tools(mcp, _get_client):
                 buttons: Optional inline DM buttons (1-3). Phone buttons are Facebook-only. Omit or pass [] for a plain-text DM. Each item is an object with keys: type (one of: url, postback, phone; required); title (string, required) - Button label (20 chars max); url (string) - Target URL (required when type is url); payload (string) - Postback payload delivered via the messaging_postbacks webhook (required when type is postback); phone (string) - Phone number, e.g. +14155551234 (required when type is phone; Facebook only)
                 template: Optional product card sent INSTEAD of the plain dmMessage bubble. Mutually exclusive with buttons. dmMessage stays required: it is what gets sent the moment the card is cleared. Object with keys: type (one of: generic; required); imageAspectRatio (one of: horizontal, square) - Facebook only. How Messenger renders each element imageUrl: horizontal (1.91:1, the default) or square (1:1). Instagram has no such setting, so an Instagram ...; elements (list of objects with keys title, subtitle, imageUrl, buttons, required)
                 comment_reply: Public reply to the comment. Optional on Instagram and Facebook; required on TikTok, Threads, LinkedIn and YouTube, where it is the automation's only action.
+
+        On LinkedIn, mention with `@[Name](urn:li:person:ID)` or `@[Name](urn:li:organization:ID)`, getting the URN from `GET /v1/accounts/{accountId}/linkedin-mentions`. The name must match the person's or Page's LinkedIn name exactly, or the mention renders as plain text. Profile or company URL mentions are not resolved here and are sent as plain text.
                 dm_message_variations: Optional alternate DM texts for random rotation. When set, each triggered comment sends one picked at random from [dmMessage, ...dmMessageVariations], so repeat commenters get slightly different DMs (helps avoid identical-message patterns). Up to 5. Buttons are attached to whichever text is picked, not varied.
                 comment_reply_variations: Optional alternate public replies, rotated at random alongside commentReply (picked independently of the DM). Up to 5.
+
+        LinkedIn mentions follow the commentReply rules.
                 link_tracking: Wrap link buttons in the DM in a tracked redirect so clicks are counted (Link Clicks / CTR). Pass false to send links exactly as written. Defaults to on.
                 click_tag: Optional tag applied to a contact when they click a tracked link (requires linkTracking). Lets you segment clickers for broadcasts/sequences.
                 dm_delay_seconds: Seconds to wait after the trigger before sending the DM. Omit or send 0 to reply immediately (the default). Max 86400 (24h). The trigger is still matched and deduplicated the moment the comment arrives, so a delay only moves when the response is sent.
@@ -19462,9 +19466,11 @@ def register_generated_tools(mcp, _get_client):
                 dm_message
                 buttons: Inline DM buttons (1-3). Pass [] to clear all buttons. Each item is an object with keys: type (one of: url, postback, phone; required); title (string, required) - Button label (20 chars max); url (string) - Target URL (required when type is url); payload (string) - Postback payload delivered via the messaging_postbacks webhook (required when type is postback); phone (string) - Phone number, e.g. +14155551234 (required when type is phone; Facebook only)
                 template: Product card sent instead of the plain dmMessage bubble. Pass null to clear it and fall back to dmMessage. Mutually exclusive with buttons, including with the buttons already stored on the automation.
-                comment_reply
+                comment_reply: On LinkedIn, mention with `@[Name](urn:li:person:ID)` or `@[Name](urn:li:organization:ID)`, getting the URN from `GET /v1/accounts/{accountId}/linkedin-mentions`. The name must match the person's or Page's LinkedIn name exactly, or the mention renders as plain text. Profile or company URL mentions are not resolved here and are sent as plain text.
                 dm_message_variations: Alternate DM texts for random rotation (see create). Pass [] to clear.
                 comment_reply_variations: Alternate public replies for random rotation. Pass [] to clear.
+
+        LinkedIn mentions follow the commentReply rules.
                 link_tracking: Wrap link buttons in a tracked redirect to count clicks. Pass false to send links untouched.
                 click_tag: Tag applied to a contact when they click a tracked link (requires linkTracking). Empty string clears it.
                 also_match_in_dms: Also fire these keywords on a plain inbound DM. Enabling it requires the automation to end up with at least one keyword (this request's keywords if you send them, otherwise the stored ones) and is rejected on story_reply automations.

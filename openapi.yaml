@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.413.1"
+  version: "1.413.2"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -63119,7 +63119,7 @@ paths:
                 template:
                   allOf: [{ $ref: '#/components/schemas/CommentAutomationTemplate' }]
                   description: "Optional product card sent INSTEAD of the plain dmMessage bubble. Mutually exclusive with buttons. dmMessage stays required: it is what gets sent the moment the card is cleared."
-                commentReply: { type: string, description: "Public reply to the comment. Optional on Instagram and Facebook; required on TikTok, Threads, LinkedIn and YouTube, where it is the automation's only action." }
+                commentReply: { type: string, description: "Public reply to the comment. Optional on Instagram and Facebook; required on TikTok, Threads, LinkedIn and YouTube, where it is the automation's only action.\n\nOn LinkedIn, mention with `@[Name](urn:li:person:ID)` or `@[Name](urn:li:organization:ID)`, getting the URN from `GET /v1/accounts/{accountId}/linkedin-mentions`. The name must match the person's or Page's LinkedIn name exactly, or the mention renders as plain text. Profile or company URL mentions are not resolved here and are sent as plain text." }
                 dmMessageVariations:
                   type: array
                   maxItems: 5
@@ -63129,7 +63129,7 @@ paths:
                   type: array
                   maxItems: 5
                   items: { type: string }
-                  description: "Optional alternate public replies, rotated at random alongside commentReply (picked independently of the DM). Up to 5."
+                  description: "Optional alternate public replies, rotated at random alongside commentReply (picked independently of the DM). Up to 5.\n\nLinkedIn mentions follow the commentReply rules."
                 linkTracking: { type: boolean, default: true, description: "Wrap link buttons in the DM in a tracked redirect so clicks are counted (Link Clicks / CTR). Pass false to send links exactly as written. Defaults to on." }
                 clickTag: { type: string, description: "Optional tag applied to a contact when they click a tracked link (requires linkTracking). Lets you segment clickers for broadcasts/sequences." }
                 dmDelaySeconds: { type: integer, minimum: 0, maximum: 86400, description: "Seconds to wait after the trigger before sending the DM. Omit or send 0 to reply immediately (the default). Max 86400 (24h). The trigger is still matched and deduplicated the moment the comment arrives, so a delay only moves when the response is sent." }
@@ -63323,7 +63323,7 @@ paths:
                     - $ref: '#/components/schemas/CommentAutomationTemplate'
                     - type: 'null'
                   description: "Product card sent instead of the plain dmMessage bubble. Pass null to clear it and fall back to dmMessage. Mutually exclusive with buttons, including with the buttons already stored on the automation."
-                commentReply: { type: string }
+                commentReply: { type: string, description: "On LinkedIn, mention with `@[Name](urn:li:person:ID)` or `@[Name](urn:li:organization:ID)`, getting the URN from `GET /v1/accounts/{accountId}/linkedin-mentions`. The name must match the person's or Page's LinkedIn name exactly, or the mention renders as plain text. Profile or company URL mentions are not resolved here and are sent as plain text." }
                 dmMessageVariations:
                   type: array
                   maxItems: 5
@@ -63333,7 +63333,7 @@ paths:
                   type: array
                   maxItems: 5
                   items: { type: string }
-                  description: "Alternate public replies for random rotation. Pass [] to clear."
+                  description: "Alternate public replies for random rotation. Pass [] to clear.\n\nLinkedIn mentions follow the commentReply rules."
                 linkTracking: { type: boolean, description: "Wrap link buttons in a tracked redirect to count clicks. Pass false to send links untouched." }
                 clickTag: { type: string, description: "Tag applied to a contact when they click a tracked link (requires linkTracking). Empty string clears it." }
                 alsoMatchInDms: { type: boolean, description: "Also fire these keywords on a plain inbound DM. Enabling it requires the automation to end up with at least one keyword (this request's keywords if you send them, otherwise the stored ones) and is rejected on story_reply automations." }
