@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.409.0"
+  version: "1.409.1"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -32879,6 +32879,7 @@ paths:
           $ref: '#/components/responses/BadRequest'
         '401':
           $ref: '#/components/responses/Unauthorized'
+        '403': { description: 'The connect token was issued for a different profile or platform (INSUFFICIENT_PERMISSIONS).' }
         '404':
           description: The pending sign-in expired or was already used. Start the connect again.
   /v1/connect/googleanalytics/select-property:
@@ -32929,6 +32930,7 @@ paths:
                       displayName: { type: string }
         '400':
           $ref: '#/components/responses/BadRequest'
+        '403': { description: 'The connect token was issued for a different profile or platform (INSUFFICIENT_PERMISSIONS).' }
         '404':
           description: The pending sign-in expired or was already used. Start the connect again.
         '500':
@@ -37859,6 +37861,7 @@ paths:
               schema: { $ref: '#/components/schemas/ErrorResponse' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '402': { $ref: '#/components/responses/PaymentRequired' }
+        '403': { description: 'The connect token was issued for a different profile or platform (INSUFFICIENT_PERMISSIONS).' }
         '404': { description: Profile not found }
 
   /v1/connect/slack:
@@ -37959,7 +37962,7 @@ paths:
                     state: "user123-profile456-1234567890-https%3A%2F%2Fzernio.com%2Fdashboard%2Fconnections"
         '400': { description: 'Invalid profileId or accountId format, or pendingDataToken invalid, expired or issued for another profile (code: invalid_field_value)' }
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '403': { description: 'No access to the profile, or Slack connections are temporarily unavailable (code: feature_not_available)' }
+        '403': { description: 'No access to the profile, or Slack connections are temporarily unavailable (code: feature_not_available), or the connect token was issued for a different profile or platform (INSUFFICIENT_PERMISSIONS)' }
         '404': { description: 'Profile not found (start-OAuth mode), or no active Slack account with that accountId for this user or their team (code: account_not_found)' }
     post:
       x-resource-group: "accounts"
@@ -37991,7 +37994,7 @@ paths:
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '402': { $ref: '#/components/responses/PaymentRequired' }
-        '403': { description: Slack connections are temporarily unavailable }
+        '403': { description: 'Slack connections are temporarily unavailable, or the connect token was issued for a different profile or platform (INSUFFICIENT_PERMISSIONS)' }
         '404': { description: Profile not found }
         '422':
           description: "channelIds only. None of the channels could be connected; `details.failed` lists each one with its reason."
@@ -38053,7 +38056,7 @@ paths:
                   - "Tip: If your channel has no public username, forward a message from it along with the code"
         '400': { description: Profile ID required or invalid format }
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '403': { description: No access to this profile }
+        '403': { description: 'No access to this profile, or the connect token was issued for a different profile or platform (INSUFFICIENT_PERMISSIONS)' }
         '404': { description: Profile not found }
         '500': { description: Internal error }
     post:
@@ -38108,7 +38111,7 @@ paths:
                   chatType: "channel"
         '400': { description: "Chat ID required, bot not admin, or cannot access chat" }
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '403': { description: No access to this profile }
+        '403': { description: 'No access to this profile, or the connect token was issued for a different profile or platform (INSUFFICIENT_PERMISSIONS)' }
         '404': { description: Profile not found }
         '500': { description: Internal error }
     patch:
@@ -38184,6 +38187,7 @@ paths:
                     message: "Access code has expired. Please generate a new one."
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'The connect token was issued for a different profile or platform (INSUFFICIENT_PERMISSIONS).' }
         '404': { description: Code not found }
         '500': { description: Internal error }
 
