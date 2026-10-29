@@ -22899,7 +22899,8 @@ def register_generated_tools(mcp, _get_client):
         In headless mode the marker travels in the redirect_url we hand you, so pass that URL back unchanged to the selection endpoint. On X it counts toward the OAuth state limit described under redirect_url.
                 oauth_app_id: Connect through one of your own OAuth apps (see /v1/connect/oauth-apps), so the consent screen shows your app and the platform's limits are your app's. Without it the connect runs on Zernio's app, whatever apps the workspace has saved.
 
-        - Only platforms listed in `platforms` of GET /v1/connect/oauth-apps accept an app. Any other returns 400, and so do ads connects (`adsConnect=true` in the redirect URL) and connects that end on a destination picker other than Facebook Pages, Pinterest boards and Snapchat public profiles (Instagram through Facebook Login, for example).
+        - Only platforms listed in `platforms` of GET /v1/connect/oauth-apps accept an app. Any other returns 400, and so do ads connects (`adsConnect=true` in the redirect URL).
+        - Connects that end on a destination picker also return 400, except Facebook Pages, Google Business locations, Pinterest boards and Snapchat public profiles (Instagram through Facebook Login, for example).
         - A LinkedIn connect through an app saves the member's own profile: organization pages, and mention lookups, stay on Zernio's app.
         - The connect requests the app's `scopeAreas`. `scopes` may narrow them but not add an area the app does not enable (400).
         - If the user does not grant every requested area, the account still connects and the redirect carries `missing_permissions=<areas>` (the headless POST returns `missingPermissions`).
