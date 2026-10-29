@@ -2278,6 +2278,7 @@ def register_generated_tools(mcp, _get_client):
         account_id: str,
         default_username: str | None = None,
         default_icon_url: str | None = None,
+        apply_to_workspace: bool = False,
     ) -> str:
         """Update Slack account settings
 
@@ -2286,13 +2287,15 @@ def register_generated_tools(mcp, _get_client):
         Args:
             account_id: (required)
             default_username: Author name shown on posts. Empty string clears it.
-            default_icon_url: Author avatar image URL. Empty string clears it."""
+            default_icon_url: Author avatar image URL. Empty string clears it.
+            apply_to_workspace: Applies the name and icon to every connected channel of this Slack workspace owned by the same owner, on the same Slack app, in profiles the caller can access. Channels connected later inherit the identity from a channel of that workspace."""
         client = _get_client()
         try:
             response = client.accounts.update_slack_settings(
                 account_id=account_id,
                 default_username=default_username,
                 default_icon_url=default_icon_url,
+                apply_to_workspace=apply_to_workspace,
             )
             return _format_response(response)
         except Exception as e:

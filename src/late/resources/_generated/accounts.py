@@ -654,11 +654,13 @@ class AccountsResource:
         *,
         default_username: str | None = None,
         default_icon_url: str | None = None,
+        apply_to_workspace: bool | None = False,
     ) -> dict[str, Any]:
         """Update Slack account settings"""
         payload = self._build_payload(
             default_username=default_username,
             default_icon_url=default_icon_url,
+            apply_to_workspace=apply_to_workspace,
         )
         return self._client._patch(
             f"/v1/accounts/{account_id}/slack-settings", data=payload
@@ -1264,11 +1266,13 @@ class AccountsResource:
         *,
         default_username: str | None = None,
         default_icon_url: str | None = None,
+        apply_to_workspace: bool | None = False,
     ) -> dict[str, Any]:
         """Update Slack account settings (async)"""
         payload = self._build_payload(
             default_username=default_username,
             default_icon_url=default_icon_url,
+            apply_to_workspace=apply_to_workspace,
         )
         return await self._client._apatch(
             f"/v1/accounts/{account_id}/slack-settings", data=payload
