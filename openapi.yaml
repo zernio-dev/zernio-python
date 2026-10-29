@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.408.1"
+  version: "1.409.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -3070,7 +3070,7 @@ components:
               description: "Top-level platforms to deliver on. A position field below is only honoured when its parent platform is included here."
             facebookPositions:
               type: array
-              items: { type: string, enum: [feed, right_hand_column, marketplace, video_feeds, story, search, instream_video, facebook_reels, facebook_reels_overlay, profile_feed, notification] }
+              items: { type: string, enum: [feed, right_hand_column, marketplace, story, search, instream_video, facebook_reels, facebook_reels_overlay, profile_feed, notification] }
             instagramPositions:
               type: array
               items: { type: string, enum: [stream, story, explore, explore_home, reels, profile_feed, ig_search, profile_reels] }
@@ -15388,7 +15388,7 @@ components:
                     items: { type: string, enum: [facebook, instagram, threads, messenger, audience_network, whatsapp] }
                   facebookPositions:
                     type: array
-                    items: { type: string, enum: [feed, right_hand_column, marketplace, video_feeds, story, search, instream_video, facebook_reels, facebook_reels_overlay, profile_feed, notification] }
+                    items: { type: string, enum: [feed, right_hand_column, marketplace, story, search, instream_video, facebook_reels, facebook_reels_overlay, profile_feed, notification] }
                   instagramPositions:
                     type: array
                     items: { type: string, enum: [stream, story, explore, explore_home, reels, profile_feed, ig_search, profile_reels] }
@@ -66833,7 +66833,7 @@ paths:
                       items: { type: string, enum: [facebook, instagram, threads, messenger, audience_network, whatsapp] }
                     facebookPositions:
                       type: array
-                      items: { type: string, enum: [feed, right_hand_column, marketplace, video_feeds, story, search, instream_video, facebook_reels, facebook_reels_overlay, profile_feed, notification] }
+                      items: { type: string, enum: [feed, right_hand_column, marketplace, story, search, instream_video, facebook_reels, facebook_reels_overlay, profile_feed, notification] }
                     instagramPositions:
                       type: array
                       items: { type: string, enum: [stream, story, explore, explore_home, reels, profile_feed, ig_search, profile_reels] }
@@ -77426,7 +77426,7 @@ paths:
                       description: "Top-level platforms to deliver on. A position field below is only honoured when its parent platform is included here."
                     facebookPositions:
                       type: array
-                      items: { type: string, enum: [feed, right_hand_column, marketplace, video_feeds, story, search, instream_video, facebook_reels, facebook_reels_overlay, profile_feed, notification] }
+                      items: { type: string, enum: [feed, right_hand_column, marketplace, story, search, instream_video, facebook_reels, facebook_reels_overlay, profile_feed, notification] }
                     instagramPositions:
                       type: array
                       items: { type: string, enum: [stream, story, explore, explore_home, reels, profile_feed, ig_search, profile_reels] }
