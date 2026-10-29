@@ -688,6 +688,7 @@ class ConnectResource:
         phone_number_id: str,
         *,
         pin: str | None = None,
+        oauth_app_id: str | None = None,
     ) -> dict[str, Any]:
         """Connect WhatsApp via credentials"""
         payload = self._build_payload(
@@ -696,6 +697,7 @@ class ConnectResource:
             waba_id=waba_id,
             phone_number_id=phone_number_id,
             pin=pin,
+            oauth_app_id=oauth_app_id,
         )
         return self._client._post("/v1/connect/whatsapp/credentials", data=payload)
 
@@ -1769,6 +1771,7 @@ class ConnectResource:
         phone_number_id: str,
         *,
         pin: str | None = None,
+        oauth_app_id: str | None = None,
     ) -> dict[str, Any]:
         """Connect WhatsApp via credentials (async)"""
         payload = self._build_payload(
@@ -1777,6 +1780,7 @@ class ConnectResource:
             waba_id=waba_id,
             phone_number_id=phone_number_id,
             pin=pin,
+            oauth_app_id=oauth_app_id,
         )
         return await self._client._apost(
             "/v1/connect/whatsapp/credentials", data=payload

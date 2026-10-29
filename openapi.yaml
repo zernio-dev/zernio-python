@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.403.0"
+  version: "1.404.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -36876,6 +36876,9 @@ paths:
                   type: string
                   pattern: '^\d{6}$'
                   description: 'The 6-digit two-step verification PIN set on the number. Required if you enabled two-step verification for it, otherwise Meta rejects the Cloud API registration with error 133005 and the number cannot send messages.'
+                oauthAppId:
+                  type: string
+                  description: "Your own WhatsApp OAuth app (see /v1/connect/oauth-apps) holding the Meta app the access token belongs to. The WABA's webhooks then go to that app's own callback URL and every delivery is checked against its app secret. Without it, deliveries come to Zernio's shared Meta webhook."
             example:
               profileId: "6507a1b2c3d4e5f6a7b8c9d0"
               accessToken: "EAABsbCS...your-system-user-token"

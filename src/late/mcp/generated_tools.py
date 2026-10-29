@@ -23779,6 +23779,7 @@ def register_generated_tools(mcp, _get_client):
         waba_id: str,
         phone_number_id: str,
         pin: str | None = None,
+        oauth_app_id: str | None = None,
     ) -> str:
         """Connect WhatsApp via credentials
 
@@ -23805,7 +23806,8 @@ def register_generated_tools(mcp, _get_client):
             access_token: Permanent System User access token from Meta Business Suite (required)
             waba_id: WhatsApp Business Account ID from Meta (required)
             phone_number_id: Phone Number ID from Meta WhatsApp Manager (required)
-            pin: The 6-digit two-step verification PIN set on the number. Required if you enabled two-step verification for it, otherwise Meta rejects the Cloud API registration with error 133005 and the number cannot send messages."""
+            pin: The 6-digit two-step verification PIN set on the number. Required if you enabled two-step verification for it, otherwise Meta rejects the Cloud API registration with error 133005 and the number cannot send messages.
+            oauth_app_id: Your own WhatsApp OAuth app (see /v1/connect/oauth-apps) holding the Meta app the access token belongs to. The WABA's webhooks then go to that app's own callback URL and every delivery is checked against its app secret. Without it, deliveries come to Zernio's shared Meta webhook."""
         client = _get_client()
         try:
             response = client.connect.connect_whats_app_credentials(
@@ -23814,6 +23816,7 @@ def register_generated_tools(mcp, _get_client):
                 waba_id=waba_id,
                 phone_number_id=phone_number_id,
                 pin=pin,
+                oauth_app_id=oauth_app_id,
             )
             return _format_response(response)
         except Exception as e:
