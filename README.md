@@ -1006,6 +1006,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `creator_campaigns.reject_campaign_submission()` | Reject campaign submission |
 | `creator_campaigns.remove_campaign_participant()` | Remove campaign participant |
 | `creator_campaigns.reopen_campaign_submission()` | Reopen campaign submission |
+| `creator_campaigns.resend_campaign_participant_invite()` | Resend campaign participant invite |
 | `creator_campaigns.settle_campaign_participant()` | Settle campaign participant |
 | `creator_campaigns.suspend_campaign_participant()` | Suspend campaign participant |
 
@@ -1441,6 +1442,9 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `treasury.get_topup_receipt()` | Get a top-up receipt |
 | `treasury.get_transfer()` | Get a transfer |
 | `treasury.cancel_payout_batch()` | Cancel an unpaid payout batch |
+| `treasury.cancel_topup()` | Cancel a top-up |
+| `treasury.confirm_payout_batch()` | Confirm a payout batch payment |
+| `treasury.confirm_topup()` | Confirm a top-up |
 
 ### Twitter Engagement
 | Method | Description |

@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.414.1"
+  version: "1.415.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -255,7 +255,7 @@ x-documentation:
     - `support.run.completed` - The Support Assistant finished a question. `run.status` is `completed`, or `needs_human` when the assistant handed the question to a person; `run.answer` holds the answer. The `run` object is exactly what `GET /v1/support/runs/{runId}` answers
     - `support.run.failed` - A Support Assistant question failed or expired. Failed runs are not billed, so `run.costUsd` is 0
     - `campaign_submission.received` - A creator submitted a post to a campaign and its tracking window opened
-    - `campaign_submission.flagged` - A submission gained a fraud flag it did not carry before, at submission (for example `duplicate_post` or `duplicate_media`) or on a later sync (`view_spike`, `low_authenticity`, `account_restricted`, `unreachable`, `post_deleted`); `submission.flags` lists every flag it carries
+    - `campaign_submission.flagged` - A submission gained a fraud flag it did not carry before, at submission (for example `duplicate_post` or `duplicate_media`) or on a later sync (`view_spike`, `low_authenticity`, `account_restricted`, `unreachable`, `post_deleted`, `x_read_cap`); `submission.flags` lists every flag it carries
     - `campaign_submission.pending_review` - A submission is ready for review: a CPM submission reached `minViewsToEarn` or a pool submission `minViewsToQualify`; per-post submissions on the first accrual pass after submission
     - `creator_campaign.budget_exhausted` - A campaign's earnings reached its budget; nothing more accrues until budget is freed. Fires once per campaign
     - `campaign_submission.approved` - An operator approved a submission; what it earned so far moves to owed with the campaign's hold, and later earnings post straight to owed
@@ -1390,7 +1390,7 @@ components:
         endsAt: { type: [string, "null"], format: date-time }
         currency: { type: string }
         economics: { $ref: '#/components/schemas/CreatorPortalEconomics' }
-        maxPostAgeMinutes: { type: integer, description: 'A post must be submitted within this many minutes of publishing.' }
+        maxPostAgeMinutes: { type: [integer, "null"], description: 'A post must be submitted within this many minutes of publishing. Null means any age. Either way, only posts published after the campaign started are accepted.' }
         holdDays: { type: integer, description: 'Days approved earnings stay owed before they become payable.' }
         trackingDays: { type: integer, description: 'Days each submitted post is tracked for views.' }
     CreatorPortalEconomics:
@@ -1526,7 +1526,7 @@ components:
         amountCents: { type: integer, description: Gross amount charged }
         stripeFeeCents: { type: [integer, "null"], description: 'Stripe processing fee you paid; null until Stripe reports it, 0 when Zernio covers it' }
         netCents: { type: [integer, "null"], description: 'Amount credited to your balance: gross minus the Stripe fee, or the whole charge when Zernio covers the fee; null until Stripe reports it' }
-        status: { type: string, enum: [pending, succeeded, failed, expired] }
+        status: { type: string, enum: [pending, succeeded, failed, expired], description: '`pending` until the card is charged (or 3D Secure is finished) and credited. `expired` means it ended unpaid: cancelled, or 3D Secure left unfinished for 30 minutes. Only `pending` counts toward pendingTopupCents.' }
         createdAt: { type: string, format: date-time }
         succeededAt: { type: [string, "null"], format: date-time }
     PayoutBatchItem:
@@ -1558,7 +1558,7 @@ components:
         status:
           type: string
           enum: [awaiting_payment, paying, paid, partially_failed, failed, expired]
-          description: '`awaiting_payment` until the card payment completes; `paying` while transfers go out; then `paid`, `partially_failed` (some items failed or were skipped), `failed` (none paid) or `expired` (the Checkout expired unpaid, every amount is payable again).'
+          description: '`awaiting_payment` until the card charge succeeds (3D Secure included); `paying` while transfers go out; then `paid`, `partially_failed` (some items failed or were skipped), `failed` (the card was declined, or none paid) or `expired` (the payment was cancelled unpaid, every amount is payable again).'
         method: { type: string, enum: [card] }
         amountCents: { type: integer, description: 'Total the creators receive.' }
         feeCents: { type: integer, description: 'Total Zernio fee.' }
@@ -5893,6 +5893,15 @@ components:
         maxParticipants: { type: integer, minimum: 1, description: 'Invites and joins past this count answer 403.' }
         maxSubmissionsPerParticipantPerDay: { type: integer, minimum: 1, description: 'Posts one participant can submit to this campaign per UTC day, counting every submission whatever its status. The next submit that day answers 409 invalid_resource_state.' }
         maxAccountsPerParticipant: { type: integer, minimum: 1, description: 'Accounts a participant can use in this campaign. Connecting a new account past it answers 400; only the first accounts connected, up to this count, can submit posts.' }
+        maxXReadSpendCents:
+          type: integer
+          minimum: 1
+          description: |
+            X campaigns only: what tracking X posts may cost in X reads, in cents. Unset means 5000 ($50).
+
+            X bills one read per tracked post per UTC day, and you pay it at cost through usage-based billing.
+
+            When it is spent, open X posts stop counting views and are flagged `x_read_cap`, and new X posts answer 409.
         authenticityThreshold:
           type: number
           minimum: 0
@@ -5920,7 +5929,7 @@ components:
         withdrawn: { type: integer }
     CreatorCampaign:
       type: object
-      required: [id, userId, profileId, kind, name, brandName, status, type, currency, platforms, contentRules, startsAt, endsAt, trackingDays, holdDays, maxPostAgeMinutes, settlement, economics, caps, branding, budgetExhaustedAt, closedAt, payableScannedAt, createdAt, updatedAt, hasOpenInvite, consumedCents, participantCount, submissionCounts]
+      required: [id, userId, profileId, kind, name, brandName, status, type, currency, platforms, contentRules, startsAt, endsAt, trackingDays, holdDays, maxPostAgeMinutes, settlement, economics, caps, branding, budgetExhaustedAt, closedAt, activatedAt, payableScannedAt, createdAt, updatedAt, hasOpenInvite, consumedCents, participantCount, submissionCounts, payableCents]
       properties:
         id: { type: string }
         userId: { type: string, description: 'The workspace billing owner the campaign belongs to.' }
@@ -5936,13 +5945,14 @@ components:
         currency: { type: string, example: usd }
         platforms:
           type: array
-          items: { type: string, enum: [tiktok, instagram, youtube] }
+          items: { type: string, enum: [tiktok, instagram, youtube, threads, pinterest, facebook, twitter] }
         contentRules: { type: [string, "null"], description: 'Free-text rules shown to creators on the join page.' }
         startsAt: { type: [string, "null"], format: date-time }
         endsAt: { type: [string, "null"], format: date-time, description: 'No new submissions after this time; the campaign closes once every tracking window had its final read.' }
         trackingDays: { type: integer, description: 'How long each submitted post is tracked.' }
         holdDays: { type: integer, description: 'Days approved earnings are held before they become payable.' }
-        maxPostAgeMinutes: { type: integer, description: 'A post older than this when submitted is refused.' }
+        maxPostAgeMinutes: { type: [integer, "null"], description: 'A post older than this many minutes when submitted is refused. Null (the default) accepts any age. Either way, a post published before the campaign started (`startsAt`, or `activatedAt` without one) is refused.' }
+        activatedAt: { type: [string, "null"], format: date-time, description: 'When the campaign was first activated. Without `startsAt`, posts must be published after this moment.' }
         settlement:
           type: string
           enum: [none, external, treasury]
@@ -5962,6 +5972,7 @@ components:
         consumedCents: { type: integer, description: 'Budget used so far: earnings accrued, approved or adjusted against the campaign.' }
         participantCount: { type: integer }
         submissionCounts: { $ref: '#/components/schemas/CampaignSubmissionCounts' }
+        payableCents: { type: integer, description: "What the campaign's creators can be paid now, summed over every participant's payable balance." }
     CreateCreatorCampaignRequest:
       type: object
       required: [profileId, name, brandName, economics]
@@ -5976,14 +5987,14 @@ components:
           description: 'Omitted, the campaign starts with authenticityThreshold 40 and no other caps.'
         platforms:
           type: array
-          items: { type: string, enum: [tiktok, instagram, youtube] }
-          description: 'Platforms creators may post on. At least one is needed to activate.'
+          items: { type: string, enum: [tiktok, instagram, youtube, threads, pinterest, facebook, twitter] }
+          description: 'Platforms creators may post on. At least one is needed to activate. `twitter` (X) needs usage-based billing: X reads are billed at cost, up to `caps.maxXReadSpendCents`, and X views are the post''s impressions. `facebook` takes Page reels and videos only.'
         contentRules: { type: [string, "null"], maxLength: 10000 }
         startsAt: { type: [string, "null"], format: date-time }
         endsAt: { type: [string, "null"], format: date-time }
         trackingDays: { type: integer, minimum: 1, maximum: 365, default: 30 }
         holdDays: { type: integer, minimum: 0, maximum: 90, default: 10 }
-        maxPostAgeMinutes: { type: integer, minimum: 1, default: 60 }
+        maxPostAgeMinutes: { type: [integer, "null"], minimum: 1, description: 'Optional maximum age in minutes of a post when it is submitted. Null or omitted (the default) accepts any age. Posts published before the campaign started are always refused.' }
         settlement: { type: string, enum: [none, external, treasury], default: none }
         branding:
           oneOf:
@@ -5998,13 +6009,13 @@ components:
         brandName: { type: string, minLength: 1, maxLength: 200 }
         platforms:
           type: array
-          items: { type: string, enum: [tiktok, instagram, youtube] }
+          items: { type: string, enum: [tiktok, instagram, youtube, threads, pinterest, facebook, twitter] }
         contentRules: { type: [string, "null"], maxLength: 10000 }
         startsAt: { type: [string, "null"], format: date-time }
         endsAt: { type: [string, "null"], format: date-time }
         trackingDays: { type: integer, minimum: 1, maximum: 365 }
         holdDays: { type: integer, minimum: 0, maximum: 90 }
-        maxPostAgeMinutes: { type: integer, minimum: 1 }
+        maxPostAgeMinutes: { type: [integer, "null"], minimum: 1, description: 'Null removes the limit.' }
         settlement: { type: string, enum: [none, external, treasury] }
         economics: { $ref: '#/components/schemas/CreatorCampaignEconomics' }
         caps: { $ref: '#/components/schemas/CreatorCampaignCaps' }
@@ -6074,7 +6085,7 @@ components:
       properties:
         code:
           type: string
-          enum: [duplicate_media, duplicate_post, view_spike, linked_accounts, cross_operator, unreachable, post_deleted, account_restricted, low_authenticity]
+          enum: [duplicate_media, duplicate_post, view_spike, linked_accounts, cross_operator, unreachable, post_deleted, account_restricted, low_authenticity, x_read_cap]
         detail: { type: string }
         raisedAt: { type: string, format: date-time }
     CampaignSubmission:
@@ -6086,7 +6097,7 @@ components:
         participantId: { type: string }
         creatorId: { type: string }
         accountId: { type: string, description: 'The creator account the post was published from.' }
-        platform: { type: string, enum: [tiktok, instagram, youtube] }
+        platform: { type: string, enum: [tiktok, instagram, youtube, threads, pinterest, facebook, twitter] }
         platformPostId: { type: string }
         platformPostUrl: { type: [string, "null"] }
         externalPostId: { type: [string, "null"], description: 'The tracked external post (see /v1/external-posts).' }
@@ -6101,9 +6112,9 @@ components:
         reviewRound: { type: integer, minimum: 0, description: 'How many times the post was reopened after a reject. 0 until the first reopen.' }
         reviewedBy: { type: [string, "null"], description: 'User id of the reviewer.' }
         reviewedAt: { type: [string, "null"], format: date-time }
-        viewsAtSubmission: { type: [integer, "null"], description: 'Views when the post was submitted; they never count toward earnings.' }
+        viewsAtSubmission: { type: [integer, "null"], description: 'Views when the post was submitted. They count toward earnings like every later view.' }
         viewsLatest: { type: [integer, "null"], description: 'Latest view count read for the post, frozen at the tracking window end.' }
-        viewsEligible: { type: [integer, "null"], description: 'Views gained after submission that count toward earnings, read at the tracking window end at the latest: once the window completes or is cancelled, the last read at or before its end is final and this value stops moving.' }
+        viewsEligible: { type: [integer, "null"], description: 'Views that count toward earnings: every view the platform reports for the post, including those before submission, read at the tracking window end at the latest: once the window completes or is cancelled, the last read at or before its end is final and this value stops moving.' }
         lastAccruedViews: { type: integer }
         accruedCents: { type: integer }
         approvedCents: { type: integer }
@@ -24309,11 +24320,11 @@ paths:
         Returns your team's balance:
 
         - the balance you can transfer
-        - card top-ups still on hold
+        - the part of it that cannot be paid out to creators yet (`payoutLockedCents`, `payoutLocks`)
         - top-ups still waiting for payment
         - your latest top-ups
 
-        Card top-ups become available after 7 days.
+        A card top-up is in `availableCents` as soon as it is paid. Transfers to payees can use it from 7 days after the charge, so a stolen card cannot be turned straight into payouts.
 
         A transfer debits its amount plus the fee added on top; the payee receives the full amount.
 
@@ -24328,11 +24339,23 @@ paths:
               schema:
                 type: object
                 properties:
-                  availableCents: { type: integer, description: 'Balance you can transfer now. Negative after a dispute or refund of a top-up that was already spent; transfers are refused while it is negative.' }
-                  pendingCents: { type: integer, description: 'Paid card top-ups still on hold. Card top-ups become available after 7 days.' }
+                  availableCents: { type: integer, description: 'Your balance, including card top-ups paid in the last 7 days (see payoutLockedCents). Negative after a dispute or refund of a top-up that was already spent; transfers are refused while it is negative.' }
+                  payoutLockedCents: { type: integer, description: 'Part of availableCents from card top-ups charged in the last 7 days, net of refunds and disputes. Transfers to payees cannot use it yet; a transfer that needs it answers 409 `payout_funds_locked` with the day it can be sent.' }
+                  payoutLocks:
+                    type: array
+                    description: 'The card top-ups behind payoutLockedCents, soonest first.'
+                    items:
+                      type: object
+                      required: [topupId, amountCents, chargedAt, unlocksAt]
+                      properties:
+                        topupId: { type: string }
+                        amountCents: { type: integer }
+                        chargedAt: { type: string, format: date-time }
+                        unlocksAt: { type: string, format: date-time, description: 'From this time transfers can use it: 7 days after the charge.' }
+                  pendingCents: { type: integer, description: 'Card top-ups paid before 2026-10-29 that were held and are moving to availableCents (within the hour). Always 0 after that.' }
                   pendingReleases:
                     type: array
-                    description: 'Card top-ups on hold, each with the time it becomes available.'
+                    description: 'The held card top-ups behind pendingCents.'
                     items:
                       type: object
                       required: [topupId, amountCents, availableAt]
@@ -24354,7 +24377,19 @@ paths:
       operationId: createTopup
       tags: [Treasury]
       summary: Create a top-up
-      description: "Starts a Stripe Checkout session to fund your balance by card. Card top-ups pay Stripe's processing fee and become available after 7 days. Bank transfers are not available yet; `method: bank_transfer` returns 400. Needs an owner, admin or billing admin, signed in or through a full-access key they created."
+      description: |
+        Charges the billing owner's saved card (the default one, or `paymentMethodId`) for `amountCents` while the payer is present.
+
+        - `status: succeeded`: the card was charged. The top-up is credited to `availableCents` within seconds, net of Stripe's processing fee. Transfers to payees can use it from 7 days after the charge.
+        - `status: requires_action`: the bank asked for 3D Secure. Complete it with Stripe.js `handleNextAction({ clientSecret })`, then call `POST /v1/balance/top-ups/{topupId}/confirm`. One left unconfirmed is cancelled after 30 minutes.
+
+        ### Errors
+
+        - 402 `payment_required`: no saved card.
+        - 402 `card_declined`: the bank's reason.
+        - 400: `method: bank_transfer` (bank transfers are not available yet).
+
+        Needs an owner, admin or billing admin, signed in or through a full-access key they created.
       parameters:
         - $ref: '#/components/parameters/IdempotencyKeyHeader'
       requestBody:
@@ -24367,21 +24402,29 @@ paths:
               properties:
                 amountCents: { type: integer, minimum: 1000, maximum: 10000000, description: 'Amount in cents, minimum $10' }
                 method: { type: string, enum: [card, bank_transfer], description: 'Only card is available. bank_transfer returns 400 "Bank transfers are not available yet."' }
+                paymentMethodId: { type: string, description: "A saved card of the billing owner's (`pm_...`). Defaults to the default payment method." }
       responses:
         '201':
-          description: Checkout session created
+          description: The card was charged, or the bank asked for 3D Secure
           content:
             application/json:
               schema:
                 type: object
+                required: [topupId, status, clientSecret]
                 properties:
                   topupId: { type: string }
-                  url: { type: string, format: uri, description: Stripe Checkout URL to send the payer to }
+                  status: { type: string, enum: [succeeded, processing, requires_action] }
+                  clientSecret: { type: [string, "null"], description: 'PaymentIntent client secret for Stripe.js handleNextAction; set only when status is requires_action' }
         '400':
           $ref: '#/components/responses/BadRequest'
         '402':
-          $ref: '#/components/responses/PaymentRequired'
+          description: 'No saved card (code `payment_required`), or the bank declined the charge (code `card_declined`, the message is the reason), or a billing gate.'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
         '403': { $ref: '#/components/responses/MoneyForbidden' }
+        '404':
+          $ref: '#/components/responses/NotFound'
         '409':
           $ref: '#/components/responses/IdempotencyKeyInFlight'
         '422':
@@ -24444,6 +24487,75 @@ paths:
         '403': { $ref: '#/components/responses/ResourceGroupForbidden' }
         '404':
           $ref: '#/components/responses/NotFound'
+  /v1/balance/top-ups/{topupId}/confirm:
+    post:
+      x-resource-group: "money"
+      operationId: confirmTopup
+      tags: [Treasury]
+      summary: Confirm a top-up
+      description: |
+        Call after 3D Secure. Reads the payment from Stripe, then:
+
+        - `succeeded`: paid, the top-up is credited.
+        - `failed`: the bank refused it.
+        - `pending`: Stripe is still settling the charge.
+
+        Safe to repeat. Needs an owner, admin or billing admin, signed in or through a full-access key they created.
+      parameters:
+        - name: topupId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: The top-up after confirming
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TreasuryTopup' }
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '402':
+          $ref: '#/components/responses/PaymentRequired'
+        '403': { $ref: '#/components/responses/MoneyForbidden' }
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /v1/balance/top-ups/{topupId}/cancel:
+    post:
+      x-resource-group: "money"
+      operationId: cancelTopup
+      tags: [Treasury]
+      summary: Cancel a top-up
+      description: |
+        Ends the payment of a pending top-up (3D Secure left unfinished), so it stops counting toward `pendingTopupCents`, and returns it as `expired`.
+
+        - When Stripe reports it already paid, the top-up is credited and comes back `succeeded`.
+        - A top-up that is no longer pending comes back unchanged.
+        - A creator payout payment (`purpose: payout_batch`) answers 409; cancel it from its campaign.
+
+        Needs an owner, admin or billing admin, signed in or through a full-access key they created.
+      parameters:
+        - name: topupId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: The top-up after cancelling
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TreasuryTopup' }
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '402':
+          $ref: '#/components/responses/PaymentRequired'
+        '403': { $ref: '#/components/responses/MoneyForbidden' }
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: 'The top-up is a creator payout payment (code `invalid_resource_state`); cancel it from its campaign.'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
   /v1/payees:
     get:
       x-resource-group: "money"
@@ -24516,6 +24628,7 @@ paths:
         - 402: the balance does not cover the amount plus the fee.
         - 402: the balance is negative after a dispute or refund of a card top-up ("Your balance is negative after a dispute or refund of a card top-up. Add funds to cover it before sending transfers.").
         - 409: the payee has not finished onboarding, or the Idempotency-Key is still processing.
+        - 409 `payout_funds_locked`: money from a card top-up can be transferred from 7 days after the charge. The message names the amount and the day ("$100.00 from your card top-up on Oct 29 can be paid out from Nov 5.").
 
         ### Retries
 
@@ -25000,6 +25113,42 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/ErrorResponse' }
+  /v1/payout-batches/{batchId}/confirm:
+    post:
+      x-resource-group: "money"
+      operationId: confirmPayoutBatch
+      tags: [Treasury]
+      summary: Confirm a payout batch payment
+      description: |
+        Call after 3D Secure. Reads the batch's payment from Stripe, then:
+
+        - charge succeeded: pays the creators (`paying`, then `paid`).
+        - bank refused: ends the batch (`failed`) and makes every amount payable again.
+        - still settling: leaves it `awaiting_payment`.
+
+        Safe to repeat. Needs an owner, admin or billing admin, signed in or through a full-access key they created.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: batchId
+          in: path
+          required: true
+          schema: { type: string }
+          description: Payout batch ID.
+      responses:
+        '200':
+          description: The payout batch after confirming.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [batch]
+                properties:
+                  batch: { $ref: '#/components/schemas/PayoutBatch' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/MoneyForbidden' }
+        '404':
+          $ref: '#/components/responses/NotFound'
   /v1/payout-batches/{batchId}/cancel:
     post:
       x-resource-group: "money"
@@ -25007,10 +25156,12 @@ paths:
       tags: [Treasury]
       summary: Cancel an unpaid payout batch
       description: |
-        Ends the Stripe Checkout of a batch that is still `awaiting_payment` and makes every amount
-        payable again right away, instead of after Stripe's 24-hour expiry. A batch that was already
-        paid is returned unchanged. Needs an owner, admin or billing admin, signed in or through a
-        full-access key they created.
+        Ends the payment of a batch that is still `awaiting_payment` (3D Secure left unfinished) and makes every amount payable again right away.
+
+        - When Stripe reports the charge already made, the batch is paid out instead.
+        - A batch that was already paid is returned unchanged.
+
+        Needs an owner, admin or billing admin, signed in or through a full-access key they created.
       security: [{ bearerAuth: [] }]
       parameters:
         - name: batchId
@@ -91590,7 +91741,8 @@ paths:
       summary: Remove campaign participant
       description: |
         Removes the participant from the campaign. Their earnings stay in the ledger. Removing an
-        already removed participant returns it unchanged.
+        `invited` participant revokes their invite: the link stops working. Removing an already
+        removed participant returns it unchanged.
       security: [{ bearerAuth: [] }]
       parameters:
         - name: campaignId
@@ -91617,6 +91769,47 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { $ref: '#/components/responses/CreatorCampaignForbidden' }
         '404': { $ref: '#/components/responses/CreatorCampaignNotFound' }
+  /v1/creator-campaigns/{campaignId}/participants/{participantId}/resend-invite:
+    post:
+      x-resource-group: "creator_campaigns"
+      operationId: resendCampaignParticipantInvite
+      tags: [Creator Campaigns]
+      summary: Resend campaign participant invite
+      description: |
+        Emails an `invited` participant their personal invite link again. The link does not change,
+        so a link you already sent keeps working. The email counts toward the daily invite email cap
+        of your workspace.
+
+        Answers 409 when the participant has already joined, was suspended or removed, has no email,
+        or the campaign is closed.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: campaignId
+          in: path
+          required: true
+          schema: { type: string }
+          description: Campaign ID.
+        - name: participantId
+          in: path
+          required: true
+          schema: { type: string }
+          description: Participant ID.
+        - $ref: '#/components/parameters/IdempotencyKeyHeader'
+      responses:
+        '200':
+          description: Invite email sent again
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [participant]
+                properties:
+                  participant: { $ref: '#/components/schemas/CampaignParticipant' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/CreatorCampaignForbidden' }
+        '404': { $ref: '#/components/responses/CreatorCampaignNotFound' }
+        '409': { $ref: '#/components/responses/CreatorCampaignConflict' }
   /v1/creator-campaigns/{campaignId}/participants/{participantId}/settle:
     post:
       x-resource-group: "creator_campaigns"
@@ -91640,6 +91833,7 @@ paths:
 
         - The creator must have finished payout setup from their campaign page (409 otherwise).
         - A balance that does not cover the amount plus the fee answers 402.
+        - Money from a card top-up charged under 7 days ago cannot be paid out yet: a payout that needs it answers 409 `payout_funds_locked` with the day it can be sent.
 
         Set `recordOnly: true` to record a payout you made yourself instead of moving money through the treasury (the webhook then carries `recorded: true`).
 
@@ -91720,19 +91914,27 @@ paths:
       tags: [Creator Campaigns]
       summary: Pay creators with one card payment
       description: |
-        Pays exactly what is owed to the creators of a `treasury` campaign, through one Stripe Checkout card payment.
+        Pays exactly what is owed to the creators of a `treasury` campaign by charging the billing owner's saved card, with no redirect.
 
         ### How it works
 
         1. Every payable creator who finished payout setup (or only `participantIds`, minus `excludeParticipantIds`) is held in `settling`.
-        2. The response carries a Stripe Checkout `url` for the total plus the fee (4% per creator, 50 cent minimum).
-        3. Once the card payment completes, each creator gets a transfer funded by that charge, and the batch ends `paid` or `partially_failed`.
+        2. The saved card (the default one, or `paymentMethodId`) is charged the total plus the fee (4% per creator, 50 cent minimum) while the payer is present.
+        3. Once the charge succeeds, each creator gets a transfer funded by it, and the batch ends `paid` or `partially_failed`.
 
-        A creator whose payouts were disabled before the payment landed is skipped and stays payable. If the Checkout expires unpaid (24 hours), every amount is payable again.
+        A creator whose payouts were disabled before the payment landed is skipped and stays payable.
+
+        ### 3D Secure
+
+        `payment.status: requires_action` means the bank asked the payer to confirm. Complete it with Stripe.js `handleNextAction({ clientSecret })`, then call `POST /v1/payout-batches/{batchId}/confirm`.
+
+        One left unfinished is cancelled after 30 minutes and every amount is payable again. Cancel it sooner with `POST /v1/payout-batches/{batchId}/cancel`.
 
         ### Limits and errors
 
-        - 402: card payouts are limited to $2,000.00 gross per rolling 30 days by default. Over it the call answers "Over your instant payout limit. Top up your balance to pay more this month, or contact support to raise the limit."
+        - 402 `payment_required`: no saved card. Nothing is held.
+        - 402 `card_declined`: the bank's reason; every amount is payable again.
+        - 402: card payouts are limited to $10,000.00 gross per rolling 30 days by default. Over it the call answers "Over your instant payout limit. Top up your balance to pay more this month, or contact support to raise the limit."
         - 400: nothing payable ("Nothing is payable.").
 
         ### Access and retries
@@ -91752,21 +91954,27 @@ paths:
               properties:
                 participantIds: { type: array, items: { type: string }, minItems: 1, maxItems: 500, description: 'Pay only these participants. Defaults to every payable participant who is ready.' }
                 excludeParticipantIds: { type: array, items: { type: string }, minItems: 1, maxItems: 500, description: 'Leave these participants out.' }
+                paymentMethodId: { type: string, description: "A saved card of the billing owner's (`pm_...`). Defaults to the default payment method." }
       responses:
         '201':
-          description: Batch created; send the operator to `url` to pay.
+          description: Batch created and the card charged, or the bank asked for 3D Secure.
           content:
             application/json:
               schema:
                 type: object
-                required: [batch, url]
+                required: [batch, payment]
                 properties:
                   batch: { $ref: '#/components/schemas/PayoutBatch' }
-                  url: { type: string, format: uri, description: 'Stripe Checkout for the card payment.' }
+                  payment:
+                    type: object
+                    required: [status, clientSecret]
+                    properties:
+                      status: { type: string, enum: [succeeded, processing, requires_action] }
+                      clientSecret: { type: [string, "null"], description: 'PaymentIntent client secret for Stripe.js handleNextAction; set only when status is requires_action' }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '402':
-          description: 'Over the instant payout limit (code `payment_required`).'
+          description: 'Over the instant payout limit or no saved card (code `payment_required`), or the bank declined the charge (code `card_declined`).'
           content:
             application/json:
               schema: { $ref: '#/components/schemas/ErrorResponse' }
@@ -91860,10 +92068,10 @@ paths:
           schema: { type: string }
         - name: flag
           in: query
-          schema: { type: string, enum: [duplicate_media, duplicate_post, view_spike, linked_accounts, cross_operator, unreachable, post_deleted, account_restricted, low_authenticity] }
+          schema: { type: string, enum: [duplicate_media, duplicate_post, view_spike, linked_accounts, cross_operator, unreachable, post_deleted, account_restricted, low_authenticity, x_read_cap] }
         - name: platform
           in: query
-          schema: { type: string, enum: [tiktok, instagram, youtube] }
+          schema: { type: string, enum: [tiktok, instagram, youtube, threads, pinterest, facebook, twitter] }
         - name: minScore
           in: query
           schema: { type: integer, minimum: 0, maximum: 100 }

@@ -27713,13 +27713,24 @@ def register_generated_tools(mcp, _get_client):
         brand_name: str,
         economics: dict[str, Any] | None,
         caps: dict[str, Any] | None = None,
-        platforms: list[Literal["tiktok", "instagram", "youtube"]] | None = None,
+        platforms: list[
+            Literal[
+                "tiktok",
+                "instagram",
+                "youtube",
+                "threads",
+                "pinterest",
+                "facebook",
+                "twitter",
+            ]
+        ]
+        | None = None,
         content_rules: str | None = None,
         starts_at: str | None = None,
         ends_at: str | None = None,
         tracking_days: int = 30,
         hold_days: int = 10,
-        max_post_age_minutes: int = 60,
+        max_post_age_minutes: str | None = None,
         settlement: Literal["none", "external", "treasury"] = "none",
         branding: str | None = None,
     ) -> str:
@@ -27737,14 +27748,14 @@ def register_generated_tools(mcp, _get_client):
             name: (required)
             brand_name: (required)
             economics: Object with keys: type (one of: cpm; required); ratePer1kCents (integer, required); minViewsToEarn (integer, required); maxPayoutPerClipCents (integer); budgetCents (integer, required) (required)
-            caps: Omitted, the campaign starts with authenticityThreshold 40 and no other caps. Object with keys: maxParticipants (integer) - Invites and joins past this count answer 403.; maxSubmissionsPerParticipantPerDay (integer) - Posts one participant can submit to this campaign per UTC day, counting every submission whatever its status. The next submit that day answers 409 ...; maxAccountsPerParticipant (integer) - Accounts a participant can use in this campaign. Connecting a new account past it answers 400; only the first accounts connected, up to this count, can submit ...; authenticityThreshold (number, required) - A submission whose authenticity score falls below this is flagged `low_authenticity`. It is never rejected automatically. Defaults to 40 on create.
-            platforms: Platforms creators may post on. At least one is needed to activate.
+            caps: Omitted, the campaign starts with authenticityThreshold 40 and no other caps. Object with keys: maxParticipants (integer) - Invites and joins past this count answer 403.; maxSubmissionsPerParticipantPerDay (integer) - Posts one participant can submit to this campaign per UTC day, counting every submission whatever its status. The next submit that day answers 409 ...; maxAccountsPerParticipant (integer) - Accounts a participant can use in this campaign. Connecting a new account past it answers 400; only the first accounts connected, up to this count, can submit ...; maxXReadSpendCents (integer) - X campaigns only: what tracking X posts may cost in X reads, in cents. Unset means 5000 ($50). X bills one read per tracked post per UTC day, and you pay it ...; authenticityThreshold (number, required) - A submission whose authenticity score falls below this is flagged `low_authenticity`. It is never rejected automatically. Defaults to 40 on create.
+            platforms: Platforms creators may post on. At least one is needed to activate. `twitter` (X) needs usage-based billing: X reads are billed at cost, up to `caps.maxXReadSpendCents`, and X views are the post's impressions. `facebook` takes Page reels and videos only.
             content_rules
             starts_at
             ends_at
             tracking_days
             hold_days
-            max_post_age_minutes
+            max_post_age_minutes: Optional maximum age in minutes of a post when it is submitted. Null or omitted (the default) accepts any age. Posts published before the campaign started are always refused.
             settlement
             branding"""
         client = _get_client()
@@ -27839,13 +27850,24 @@ def register_generated_tools(mcp, _get_client):
         campaign_id: str,
         name: str | None = None,
         brand_name: str | None = None,
-        platforms: list[Literal["tiktok", "instagram", "youtube"]] | None = None,
+        platforms: list[
+            Literal[
+                "tiktok",
+                "instagram",
+                "youtube",
+                "threads",
+                "pinterest",
+                "facebook",
+                "twitter",
+            ]
+        ]
+        | None = None,
         content_rules: str | None = None,
         starts_at: str | None = None,
         ends_at: str | None = None,
         tracking_days: int | None = None,
         hold_days: int | None = None,
-        max_post_age_minutes: int | None = None,
+        max_post_age_minutes: str | None = None,
         settlement: Literal["none", "external", "treasury"] | None = None,
         economics: dict[str, Any] | None = None,
         caps: dict[str, Any] | None = None,
@@ -27868,10 +27890,10 @@ def register_generated_tools(mcp, _get_client):
             ends_at
             tracking_days
             hold_days
-            max_post_age_minutes
+            max_post_age_minutes: Null removes the limit.
             settlement
             economics: Object with keys: type (one of: cpm; required); ratePer1kCents (integer, required); minViewsToEarn (integer, required); maxPayoutPerClipCents (integer); budgetCents (integer, required)
-            caps: Object with keys: maxParticipants (integer) - Invites and joins past this count answer 403.; maxSubmissionsPerParticipantPerDay (integer) - Posts one participant can submit to this campaign per UTC day, counting every submission whatever its status. The next submit that day answers 409 ...; maxAccountsPerParticipant (integer) - Accounts a participant can use in this campaign. Connecting a new account past it answers 400; only the first accounts connected, up to this count, can submit ...; authenticityThreshold (number, required) - A submission whose authenticity score falls below this is flagged `low_authenticity`. It is never rejected automatically. Defaults to 40 on create.
+            caps: Object with keys: maxParticipants (integer) - Invites and joins past this count answer 403.; maxSubmissionsPerParticipantPerDay (integer) - Posts one participant can submit to this campaign per UTC day, counting every submission whatever its status. The next submit that day answers 409 ...; maxAccountsPerParticipant (integer) - Accounts a participant can use in this campaign. Connecting a new account past it answers 400; only the first accounts connected, up to this count, can submit ...; maxXReadSpendCents (integer) - X campaigns only: what tracking X posts may cost in X reads, in cents. Unset means 5000 ($50). X bills one read per tracked post per UTC day, and you pay it ...; authenticityThreshold (number, required) - A submission whose authenticity score falls below this is flagged `low_authenticity`. It is never rejected automatically. Defaults to 40 on create.
             branding"""
         client = _get_client()
         try:
@@ -28174,7 +28196,8 @@ def register_generated_tools(mcp, _get_client):
         """Remove campaign participant
 
         Removes the participant from the campaign. Their earnings stay in the ledger. Removing an
-        already removed participant returns it unchanged.
+        `invited` participant revokes their invite: the link stops working. Removing an already
+        removed participant returns it unchanged.
 
         Args:
             campaign_id: Campaign ID. (required)
@@ -28182,6 +28205,38 @@ def register_generated_tools(mcp, _get_client):
         client = _get_client()
         try:
             response = client.creator_campaigns.remove_campaign_participant(
+                campaign_id=campaign_id, participant_id=participant_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Resend campaign participant invite",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def creator_campaigns_resend_campaign_participant_invite(
+        campaign_id: str, participant_id: str
+    ) -> str:
+        """Resend campaign participant invite
+
+        Emails an `invited` participant their personal invite link again. The link does not change,
+        so a link you already sent keeps working. The email counts toward the daily invite email cap
+        of your workspace.
+
+        Answers 409 when the participant has already joined, was suspended or removed, has no email,
+        or the campaign is closed.
+
+        Args:
+            campaign_id: Campaign ID. (required)
+            participant_id: Participant ID. (required)"""
+        client = _get_client()
+        try:
+            response = client.creator_campaigns.resend_campaign_participant_invite(
                 campaign_id=campaign_id, participant_id=participant_id
             )
             return _format_response(response)
@@ -28252,34 +28307,36 @@ def register_generated_tools(mcp, _get_client):
     def creator_campaigns_create_campaign_payout_batch(
         participant_ids: list[str] | None = None,
         exclude_participant_ids: list[str] | None = None,
+        payment_method_id: str | None = None,
     ) -> str:
         """Pay creators with one card payment
 
-        Pays exactly what is owed to the creators of a `treasury` campaign, through one Stripe Checkout card payment.
+        Pays exactly what is owed to the creators of a `treasury` campaign by charging the billing owner's saved card, with no redirect.
 
         ### How it works
 
         1. Every payable creator who finished payout setup (or only `participantIds`, minus `excludeParticipantIds`) is held in `settling`.
-        2. The response carries a Stripe Checkout `url` for the total plus the fee (4% per creator, 50 cent minimum).
-        3. Once the card payment completes, each creator gets a transfer funded by that charge, and the batch ends `paid` or `partially_failed`.
+        2. The saved card (the default one, or `paymentMethodId`) is charged the total plus the fee (4% per creator, 50 cent minimum) while the payer is present.
+        3. Once the charge succeeds, each creator gets a transfer funded by it, and the batch ends `paid` or `partially_failed`.
 
-        A creator whose payouts were disabled before the payment landed is skipped and stays payable. If the Checkout expires unpaid (24 hours), every amount is payable again.
+        A creator whose payouts were disabled before the payment landed is skipped and stays payable.
 
-        ### Limits and errors
+        ### 3D Secure
 
-        - 402: card payouts are limited to $2,000.00 gross per rolling 30 days by default. Over it the call answers \"Over your instant payout limit. Top up your balance to pay more this month, or contact support to raise the limit.\"
-        - 400: nothing payable (\"Nothing is payable.\").
+        `payment.status: requires_action` means the bank asked the payer to confirm. Complete it with Stripe.js `handleNextAction({ clientSecret })`, then call `POST /v1/payout-batches/{batchId}/confirm`.
 
-        ### Access and retries ...
+        One left unfinished is cancelled after 30 minutes and every amount is payable again. Cancel it sooner with `POST ...
 
         Args:
             participant_ids: Pay only these participants. Defaults to every payable participant who is ready.
-            exclude_participant_ids: Leave these participants out."""
+            exclude_participant_ids: Leave these participants out.
+            payment_method_id: A saved card of the billing owner's (`pm_...`). Defaults to the default payment method."""
         client = _get_client()
         try:
             response = client.creator_campaigns.create_campaign_payout_batch(
                 participant_ids=participant_ids,
                 exclude_participant_ids=exclude_participant_ids,
+                payment_method_id=payment_method_id,
             )
             return _format_response(response)
         except Exception as e:
@@ -28369,9 +28426,19 @@ def register_generated_tools(mcp, _get_client):
             "post_deleted",
             "account_restricted",
             "low_authenticity",
+            "x_read_cap",
         ]
         | None = None,
-        platform: Literal["tiktok", "instagram", "youtube"] | None = None,
+        platform: Literal[
+            "tiktok",
+            "instagram",
+            "youtube",
+            "threads",
+            "pinterest",
+            "facebook",
+            "twitter",
+        ]
+        | None = None,
         min_score: int | None = None,
         max_score: int | None = None,
         q: str | None = None,
@@ -42290,11 +42357,11 @@ def register_generated_tools(mcp, _get_client):
         Returns your team's balance:
 
         - the balance you can transfer
-        - card top-ups still on hold
+        - the part of it that cannot be paid out to creators yet (`payoutLockedCents`, `payoutLocks`)
         - top-ups still waiting for payment
         - your latest top-ups
 
-        Card top-ups become available after 7 days.
+        A card top-up is in `availableCents` as soon as it is paid. Transfers to payees can use it from 7 days after the charge, so a stolen card cannot be turned straight into payouts.
 
         A transfer debits its amount plus the fee added on top; the payee receives the full amount.
 
@@ -42317,19 +42384,35 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def treasury_create_topup(
-        amount_cents: int, method: Literal["card", "bank_transfer"]
+        amount_cents: int,
+        method: Literal["card", "bank_transfer"],
+        payment_method_id: str | None = None,
     ) -> str:
         """Create a top-up
 
-        Starts a Stripe Checkout session to fund your balance by card. Card top-ups pay Stripe's processing fee and become available after 7 days. Bank transfers are not available yet; `method: bank_transfer` returns 400. Needs an owner, admin or billing admin, signed in or through a full-access key they created.
+        Charges the billing owner's saved card (the default one, or `paymentMethodId`) for `amountCents` while the payer is present.
+
+        - `status: succeeded`: the card was charged. The top-up is credited to `availableCents` within seconds, net of Stripe's processing fee. Transfers to payees can use it from 7 days after the charge.
+        - `status: requires_action`: the bank asked for 3D Secure. Complete it with Stripe.js `handleNextAction({ clientSecret })`, then call `POST /v1/balance/top-ups/{topupId}/confirm`. One left unconfirmed is cancelled after 30 minutes.
+
+        ### Errors
+
+        - 402 `payment_required`: no saved card.
+        - 402 `card_declined`: the bank's reason.
+        - 400: `method: bank_transfer` (bank transfers are not available yet).
+
+        Needs an owner, admin or billing admin, signed in or through a full-access key they created.
 
         Args:
             amount_cents: Amount in cents, minimum $10 (required)
-            method: Only card is available. bank_transfer returns 400 "Bank transfers are not available yet." (required)"""
+            method: Only card is available. bank_transfer returns 400 "Bank transfers are not available yet." (required)
+            payment_method_id: A saved card of the billing owner's (`pm_...`). Defaults to the default payment method."""
         client = _get_client()
         try:
             response = client.treasury.create_topup(
-                amount_cents=amount_cents, method=method
+                amount_cents=amount_cents,
+                method=method,
+                payment_method_id=payment_method_id,
             )
             return _format_response(response)
         except Exception as e:
@@ -42374,6 +42457,62 @@ def register_generated_tools(mcp, _get_client):
         client = _get_client()
         try:
             response = client.treasury.get_topup_receipt(topup_id=topup_id)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Confirm a top-up",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def treasury_confirm_topup(topup_id: str) -> str:
+        """Confirm a top-up
+
+        Call after 3D Secure. Reads the payment from Stripe, then:
+
+        - `succeeded`: paid, the top-up is credited.
+        - `failed`: the bank refused it.
+        - `pending`: Stripe is still settling the charge.
+
+        Safe to repeat. Needs an owner, admin or billing admin, signed in or through a full-access key they created.
+
+        Args:
+            topup_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.treasury.confirm_topup(topup_id=topup_id)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Cancel a top-up",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def treasury_cancel_topup(topup_id: str) -> str:
+        """Cancel a top-up
+
+        Ends the payment of a pending top-up (3D Secure left unfinished), so it stops counting toward `pendingTopupCents`, and returns it as `expired`.
+
+        - When Stripe reports it already paid, the top-up is credited and comes back `succeeded`.
+        - A top-up that is no longer pending comes back unchanged.
+        - A creator payout payment (`purpose: payout_batch`) answers 409; cancel it from its campaign.
+
+        Needs an owner, admin or billing admin, signed in or through a full-access key they created.
+
+        Args:
+            topup_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.treasury.cancel_topup(topup_id=topup_id)
             return _format_response(response)
         except Exception as e:
             return f"Error: {e}"
@@ -42447,12 +42586,11 @@ def register_generated_tools(mcp, _get_client):
         - 402: the balance does not cover the amount plus the fee.
         - 402: the balance is negative after a dispute or refund of a card top-up (\"Your balance is negative after a dispute or refund of a card top-up. Add funds to cover it before sending transfers.\").
         - 409: the payee has not finished onboarding, or the Idempotency-Key is still processing.
+        - 409 `payout_funds_locked`: money from a card top-up can be transferred from 7 days after the charge. The message names the amount and the day (\"$100.00 from your card top-up on Oct 29 can be paid out from Nov 5.\").
 
         ### Retries
 
-        A same-key retry never makes the transfer twice within Stripe's 24-hour idempotency window. It answers 409 while another request is still waiting on Stripe for it.
-
-        A transfer Stripe has not confirmed after 24 hours answers 409 until the daily reconciliation ...
+        A same-key retry never makes the transfer ...
 
         Args:
             payee_id: 24-character payee id (required)
@@ -42532,6 +42670,34 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="Confirm a payout batch payment",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def treasury_confirm_payout_batch(batch_id: str) -> str:
+        """Confirm a payout batch payment
+
+        Call after 3D Secure. Reads the batch's payment from Stripe, then:
+
+        - charge succeeded: pays the creators (`paying`, then `paid`).
+        - bank refused: ends the batch (`failed`) and makes every amount payable again.
+        - still settling: leaves it `awaiting_payment`.
+
+        Safe to repeat. Needs an owner, admin or billing admin, signed in or through a full-access key they created.
+
+        Args:
+            batch_id: Payout batch ID. (required)"""
+        client = _get_client()
+        try:
+            response = client.treasury.confirm_payout_batch(batch_id=batch_id)
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="Cancel an unpaid payout batch",
             readOnlyHint=False,
             destructiveHint=True,
@@ -42541,10 +42707,12 @@ def register_generated_tools(mcp, _get_client):
     def treasury_cancel_payout_batch(batch_id: str) -> str:
         """Cancel an unpaid payout batch
 
-        Ends the Stripe Checkout of a batch that is still `awaiting_payment` and makes every amount
-        payable again right away, instead of after Stripe's 24-hour expiry. A batch that was already
-        paid is returned unchanged. Needs an owner, admin or billing admin, signed in or through a
-        full-access key they created.
+        Ends the payment of a batch that is still `awaiting_payment` (3D Secure left unfinished) and makes every amount payable again right away.
+
+        - When Stripe reports the charge already made, the batch is paid out instead.
+        - A batch that was already paid is returned unchanged.
+
+        Needs an owner, admin or billing admin, signed in or through a full-access key they created.
 
         Args:
             batch_id: Payout batch ID. (required)"""

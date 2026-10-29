@@ -78,12 +78,18 @@ class TreasuryResource:
         return self._client._get("/v1/balance")
 
     def create_topup(
-        self, amount_cents: int, method: str, *, idempotency_key: str | None = None
+        self,
+        amount_cents: int,
+        method: str,
+        *,
+        idempotency_key: str | None = None,
+        payment_method_id: str | None = None,
     ) -> dict[str, Any]:
         """Create a top-up"""
         payload = self._build_payload(
             amount_cents=amount_cents,
             method=method,
+            payment_method_id=payment_method_id,
         )
         headers: dict[str, str] = {}
         if idempotency_key is not None:
@@ -103,6 +109,14 @@ class TreasuryResource:
     def get_topup_receipt(self, topup_id: str) -> dict[str, Any]:
         """Get a top-up receipt"""
         return self._client._get(f"/v1/balance/top-ups/{topup_id}/receipt")
+
+    def confirm_topup(self, topup_id: str) -> dict[str, Any]:
+        """Confirm a top-up"""
+        return self._client._post(f"/v1/balance/top-ups/{topup_id}/confirm")
+
+    def cancel_topup(self, topup_id: str) -> dict[str, Any]:
+        """Cancel a top-up"""
+        return self._client._post(f"/v1/balance/top-ups/{topup_id}/cancel")
 
     def list_payees(self) -> dict[str, Any]:
         """List payees"""
@@ -149,6 +163,10 @@ class TreasuryResource:
         """Get a payout batch"""
         return self._client._get(f"/v1/payout-batches/{batch_id}")
 
+    def confirm_payout_batch(self, batch_id: str) -> dict[str, Any]:
+        """Confirm a payout batch payment"""
+        return self._client._post(f"/v1/payout-batches/{batch_id}/confirm")
+
     def cancel_payout_batch(self, batch_id: str) -> dict[str, Any]:
         """Cancel an unpaid payout batch"""
         return self._client._post(f"/v1/payout-batches/{batch_id}/cancel")
@@ -158,12 +176,18 @@ class TreasuryResource:
         return await self._client._aget("/v1/balance")
 
     async def acreate_topup(
-        self, amount_cents: int, method: str, *, idempotency_key: str | None = None
+        self,
+        amount_cents: int,
+        method: str,
+        *,
+        idempotency_key: str | None = None,
+        payment_method_id: str | None = None,
     ) -> dict[str, Any]:
         """Create a top-up (async)"""
         payload = self._build_payload(
             amount_cents=amount_cents,
             method=method,
+            payment_method_id=payment_method_id,
         )
         headers: dict[str, str] = {}
         if idempotency_key is not None:
@@ -185,6 +209,14 @@ class TreasuryResource:
     async def aget_topup_receipt(self, topup_id: str) -> dict[str, Any]:
         """Get a top-up receipt (async)"""
         return await self._client._aget(f"/v1/balance/top-ups/{topup_id}/receipt")
+
+    async def aconfirm_topup(self, topup_id: str) -> dict[str, Any]:
+        """Confirm a top-up (async)"""
+        return await self._client._apost(f"/v1/balance/top-ups/{topup_id}/confirm")
+
+    async def acancel_topup(self, topup_id: str) -> dict[str, Any]:
+        """Cancel a top-up (async)"""
+        return await self._client._apost(f"/v1/balance/top-ups/{topup_id}/cancel")
 
     async def alist_payees(self) -> dict[str, Any]:
         """List payees (async)"""
@@ -230,6 +262,10 @@ class TreasuryResource:
     async def aget_payout_batch(self, batch_id: str) -> dict[str, Any]:
         """Get a payout batch (async)"""
         return await self._client._aget(f"/v1/payout-batches/{batch_id}")
+
+    async def aconfirm_payout_batch(self, batch_id: str) -> dict[str, Any]:
+        """Confirm a payout batch payment (async)"""
+        return await self._client._apost(f"/v1/payout-batches/{batch_id}/confirm")
 
     async def acancel_payout_batch(self, batch_id: str) -> dict[str, Any]:
         """Cancel an unpaid payout batch (async)"""

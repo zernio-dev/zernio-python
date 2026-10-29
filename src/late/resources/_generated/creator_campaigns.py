@@ -88,7 +88,7 @@ class CreatorCampaignsResource:
         ends_at: Any | None = None,
         tracking_days: int | None = 30,
         hold_days: int | None = 10,
-        max_post_age_minutes: int | None = 60,
+        max_post_age_minutes: Any | None = None,
         settlement: str | None = "none",
         branding: Any | None = None,
     ) -> dict[str, Any]:
@@ -151,7 +151,7 @@ class CreatorCampaignsResource:
         ends_at: Any | None = None,
         tracking_days: int | None = None,
         hold_days: int | None = None,
-        max_post_age_minutes: int | None = None,
+        max_post_age_minutes: Any | None = None,
         settlement: str | None = None,
         economics: Any | None = None,
         caps: Any | None = None,
@@ -273,6 +273,22 @@ class CreatorCampaignsResource:
             f"/v1/creator-campaigns/{campaign_id}/participants/{participant_id}/remove"
         )
 
+    def resend_campaign_participant_invite(
+        self,
+        campaign_id: str,
+        participant_id: str,
+        *,
+        idempotency_key: str | None = None,
+    ) -> dict[str, Any]:
+        """Resend campaign participant invite"""
+        headers: dict[str, str] = {}
+        if idempotency_key is not None:
+            headers["Idempotency-Key"] = idempotency_key
+        return self._client._post(
+            f"/v1/creator-campaigns/{campaign_id}/participants/{participant_id}/resend-invite",
+            headers=headers,
+        )
+
     def settle_campaign_participant(
         self,
         campaign_id: str,
@@ -304,11 +320,13 @@ class CreatorCampaignsResource:
         idempotency_key: str | None = None,
         participant_ids: list[str] | None = None,
         exclude_participant_ids: list[str] | None = None,
+        payment_method_id: str | None = None,
     ) -> dict[str, Any]:
         """Pay creators with one card payment"""
         payload = self._build_payload(
             participant_ids=participant_ids,
             exclude_participant_ids=exclude_participant_ids,
+            payment_method_id=payment_method_id,
         )
         headers: dict[str, str] = {}
         if idempotency_key is not None:
@@ -497,7 +515,7 @@ class CreatorCampaignsResource:
         ends_at: Any | None = None,
         tracking_days: int | None = 30,
         hold_days: int | None = 10,
-        max_post_age_minutes: int | None = 60,
+        max_post_age_minutes: Any | None = None,
         settlement: str | None = "none",
         branding: Any | None = None,
     ) -> dict[str, Any]:
@@ -560,7 +578,7 @@ class CreatorCampaignsResource:
         ends_at: Any | None = None,
         tracking_days: int | None = None,
         hold_days: int | None = None,
-        max_post_age_minutes: int | None = None,
+        max_post_age_minutes: Any | None = None,
         settlement: str | None = None,
         economics: Any | None = None,
         caps: Any | None = None,
@@ -686,6 +704,22 @@ class CreatorCampaignsResource:
             f"/v1/creator-campaigns/{campaign_id}/participants/{participant_id}/remove"
         )
 
+    async def aresend_campaign_participant_invite(
+        self,
+        campaign_id: str,
+        participant_id: str,
+        *,
+        idempotency_key: str | None = None,
+    ) -> dict[str, Any]:
+        """Resend campaign participant invite (async)"""
+        headers: dict[str, str] = {}
+        if idempotency_key is not None:
+            headers["Idempotency-Key"] = idempotency_key
+        return await self._client._apost(
+            f"/v1/creator-campaigns/{campaign_id}/participants/{participant_id}/resend-invite",
+            headers=headers,
+        )
+
     async def asettle_campaign_participant(
         self,
         campaign_id: str,
@@ -717,11 +751,13 @@ class CreatorCampaignsResource:
         idempotency_key: str | None = None,
         participant_ids: list[str] | None = None,
         exclude_participant_ids: list[str] | None = None,
+        payment_method_id: str | None = None,
     ) -> dict[str, Any]:
         """Pay creators with one card payment (async)"""
         payload = self._build_payload(
             participant_ids=participant_ids,
             exclude_participant_ids=exclude_participant_ids,
+            payment_method_id=payment_method_id,
         )
         headers: dict[str, str] = {}
         if idempotency_key is not None:
