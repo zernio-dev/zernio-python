@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.397.1"
+  version: "1.398.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -77832,13 +77832,33 @@ paths:
           application/json:
             schema:
               type: object
-              required: [accountId, adAccountId, spec]
+              required: [accountId, adAccountId]
               properties:
                 accountId: { type: string, description: "Zernio account ID on the target ad platform (the estimate runs against its platform)." }
                 adAccountId: { type: string, description: "Required. The platform ad-account ID the reach call runs against (Meta act_..., LinkedIn numeric sponsoredAccount ID, Pinterest ad-account ID, X account ID) - every backing reach API is scoped to one ad account. Get it from GET /v1/ads/accounts." }
                 spec:
                   allOf: [{ $ref: '#/components/schemas/TargetingSpec' }]
-                  description: "The targeting spec to estimate. Same shape used by POST /v1/ads/create."
+                  description: "The targeting spec to estimate. Same shape used by POST /v1/ads/create. Required unless `rawTargeting` is sent; with `rawTargeting` it can be omitted or minimal."
+                rawTargeting:
+                  type: object
+                  additionalProperties: true
+                  description: |
+                    Meta only. A Meta-native targeting spec (snake_case: `geo_locations`, `age_min`,
+                    `flexible_spec`, `excluded_custom_audiences`, `user_os`, ...), the same field
+                    `POST /v1/ads/create` accepts, so the estimate covers the exact audience the ad
+                    set will use. For layered targeting, send `flexible_spec` here: entries AND
+                    together, ids inside one entry OR.
+
+                    It uses the same merge rules as `POST /v1/ads/create`: rawTargeting is the BASE
+                    layer and `spec`, converted to Meta's wire shape, is merged on top key by key,
+                    with `spec` winning on collision. The merge goes one level deep inside
+                    `geo_locations` and `excluded_geo_locations` (spec sub-keys win, raw-only
+                    sub-keys such as `location_types` survive). Array values (`flexible_spec`, ...)
+                    are replaced as a whole key when `spec` builds them, never element-merged, so
+                    `spec.interests` or `spec.behaviors` replace a raw `flexible_spec`. The result is
+                    sent to Meta `delivery_estimate` as `targeting_spec`.
+
+                    Sending it for an account on another platform returns 400 naming `rawTargeting`.
                 optimizationGoal:
                   type: string
                   description: |

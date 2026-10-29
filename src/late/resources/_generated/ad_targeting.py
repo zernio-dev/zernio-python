@@ -129,8 +129,9 @@ class AdTargetingResource:
         self,
         account_id: str,
         ad_account_id: str,
-        spec: Any,
         *,
+        spec: Any | None = None,
+        raw_targeting: dict[str, Any] | None = None,
         optimization_goal: str | None = None,
     ) -> dict[str, Any]:
         """Estimate audience reach"""
@@ -138,6 +139,7 @@ class AdTargetingResource:
             account_id=account_id,
             ad_account_id=ad_account_id,
             spec=spec,
+            raw_targeting=raw_targeting,
             optimization_goal=optimization_goal,
         )
         return self._client._post("/v1/ads/targeting/reach-estimate", data=payload)
@@ -266,8 +268,9 @@ class AdTargetingResource:
         self,
         account_id: str,
         ad_account_id: str,
-        spec: Any,
         *,
+        spec: Any | None = None,
+        raw_targeting: dict[str, Any] | None = None,
         optimization_goal: str | None = None,
     ) -> dict[str, Any]:
         """Estimate audience reach (async)"""
@@ -275,6 +278,7 @@ class AdTargetingResource:
             account_id=account_id,
             ad_account_id=ad_account_id,
             spec=spec,
+            raw_targeting=raw_targeting,
             optimization_goal=optimization_goal,
         )
         return await self._client._apost(
