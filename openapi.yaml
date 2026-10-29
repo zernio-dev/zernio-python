@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.408.0"
+  version: "1.408.1"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -10984,7 +10984,7 @@ components:
           description: Target LinkedIn Organization URN (e.g. "urn:li:organization:123456789"). If omitted, uses the default org. Use GET /v1/accounts/{id}/linkedin-organizations to list orgs.
         firstComment:
           type: string
-          description: Optional first comment to add after the post is created
+          description: "Optional first comment to add after the post is created. Mention a profile or Page with @[Name](urn:li:person:ID) or @[Org](urn:li:organization:ID); the name must match LinkedIn's exactly (case-sensitive) or it renders as plain text. The profile-URL form is not resolved in comments, and an unknown person URN posts the plain name."
         disableLinkPreview:
           type: boolean
           description: Set to true to disable automatic link previews for URLs in the post content (default is false)
@@ -48706,7 +48706,7 @@ paths:
               required: [accountId, message]
               properties:
                 accountId: { type: string }
-                message: { type: string }
+                message: { type: string, description: "Reply text. On LinkedIn, mention with @[Name](urn:li:person:ID) or @[Org](urn:li:organization:ID); the name must match LinkedIn's exactly (case-sensitive) or it renders as plain text. The profile-URL form is not resolved in comments, and an unknown person URN posts the plain name." }
                 attachmentUrl:
                   type: string
                   format: uri
