@@ -24334,6 +24334,7 @@ def register_generated_tools(mcp, _get_client):
         label: str,
         client_id: str,
         client_secret: str,
+        slack_signing_secret: str | None = None,
         scope_areas: list[Literal["posting", "analytics", "comments", "messaging"]]
         | None = None,
     ) -> str:
@@ -24355,6 +24356,7 @@ def register_generated_tools(mcp, _get_client):
             label: (required)
             client_id: (required)
             client_secret: (required)
+            slack_signing_secret: Slack only: the signing secret from the app's Basic Information page. Needed to receive events from your Slack app; any other platform is a 400.
             scope_areas: Areas this app requests. Defaults to every area the platform supports; an area the platform cannot request separately is a 400."""
         client = _get_client()
         try:
@@ -24363,6 +24365,7 @@ def register_generated_tools(mcp, _get_client):
                 label=label,
                 client_id=client_id,
                 client_secret=client_secret,
+                slack_signing_secret=slack_signing_secret,
                 scope_areas=scope_areas,
             )
             return _format_response(response)
@@ -24397,6 +24400,7 @@ def register_generated_tools(mcp, _get_client):
     def connect_update_o_auth_app(
         label: str | None = None,
         client_secret: str | None = None,
+        slack_signing_secret: str | None = None,
         scope_areas: list[Literal["posting", "analytics", "comments", "messaging"]]
         | None = None,
     ) -> str:
@@ -24411,11 +24415,15 @@ def register_generated_tools(mcp, _get_client):
         Args:
             label
             client_secret
+            slack_signing_secret: Slack only: saves or replaces the signing secret from the app's Basic Information page; any other platform is a 400.
             scope_areas: Replaces the areas new connects request. Accounts already connected keep what they were granted until they reconnect."""
         client = _get_client()
         try:
             response = client.connect.update_o_auth_app(
-                label=label, client_secret=client_secret, scope_areas=scope_areas
+                label=label,
+                client_secret=client_secret,
+                slack_signing_secret=slack_signing_secret,
+                scope_areas=scope_areas,
             )
             return _format_response(response)
         except Exception as e:

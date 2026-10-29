@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.409.1"
+  version: "1.410.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -1709,6 +1709,17 @@ components:
           type: [string, "null"]
           format: uri
           description: 'TikTok only: set this as the webhook callback URL in your TikTok developer app. TikTok uses it to report when a video finishes publishing; Zernio also checks the publish status itself, so posting works without it. Null on other platforms.'
+        hasSlackSigningSecret: { type: boolean, description: 'Slack only: whether the signing secret of your Slack app is saved. Without it Zernio refuses every event sent to `slackEvents.requestUrl`.' }
+        slackEvents:
+          type: [object, "null"]
+          description: |
+            Slack only; null on other platforms. Slack delivers messages and mentions to your app's own Request URL.
+
+            Save the app's signing secret first (`slackSigningSecret`), then set this Request URL under Event Subscriptions and subscribe the listed bot events. Zernio checks each delivery against that secret.
+          required: [requestUrl, botEvents]
+          properties:
+            requestUrl: { type: string, format: uri }
+            botEvents: { type: array, items: { type: string }, description: 'Subscribe the app to these bot events.' }
         createdAt: { type: string, format: date-time }
     OAuthAppWebhookObject:
       type: string
@@ -36392,6 +36403,7 @@ paths:
                 label: { type: string, minLength: 1, maxLength: 80 }
                 clientId: { type: string, minLength: 1, maxLength: 500 }
                 clientSecret: { type: string, minLength: 1, maxLength: 1000 }
+                slackSigningSecret: { type: string, minLength: 1, maxLength: 1000, description: 'Slack only: the signing secret from the app''s Basic Information page. Needed to receive events from your Slack app; any other platform is a 400.' }
                 scopeAreas:
                   type: array
                   items: { type: string, enum: [posting, analytics, comments, messaging] }
@@ -36471,6 +36483,7 @@ paths:
               properties:
                 label: { type: string, minLength: 1, maxLength: 80 }
                 clientSecret: { type: string, minLength: 1, maxLength: 1000 }
+                slackSigningSecret: { type: string, minLength: 1, maxLength: 1000, description: 'Slack only: saves or replaces the signing secret from the app''s Basic Information page; any other platform is a 400.' }
                 scopeAreas:
                   type: array
                   items: { type: string, enum: [posting, analytics, comments, messaging] }

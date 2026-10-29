@@ -461,6 +461,7 @@ class ConnectResource:
         client_id: str,
         client_secret: str,
         *,
+        slack_signing_secret: str | None = None,
         scope_areas: list[str] | None = None,
     ) -> dict[str, Any]:
         """Add an OAuth app"""
@@ -469,6 +470,7 @@ class ConnectResource:
             label=label,
             client_id=client_id,
             client_secret=client_secret,
+            slack_signing_secret=slack_signing_secret,
             scope_areas=scope_areas,
         )
         return self._client._post("/v1/connect/oauth-apps", data=payload)
@@ -482,12 +484,14 @@ class ConnectResource:
         *,
         label: str | None = None,
         client_secret: str | None = None,
+        slack_signing_secret: str | None = None,
         scope_areas: list[str] | None = None,
     ) -> dict[str, Any]:
         """Update an OAuth app"""
         payload = self._build_payload(
             label=label,
             client_secret=client_secret,
+            slack_signing_secret=slack_signing_secret,
             scope_areas=scope_areas,
         )
         return self._client._patch("/v1/connect/oauth-apps/{appId}", data=payload)
@@ -1532,6 +1536,7 @@ class ConnectResource:
         client_id: str,
         client_secret: str,
         *,
+        slack_signing_secret: str | None = None,
         scope_areas: list[str] | None = None,
     ) -> dict[str, Any]:
         """Add an OAuth app (async)"""
@@ -1540,6 +1545,7 @@ class ConnectResource:
             label=label,
             client_id=client_id,
             client_secret=client_secret,
+            slack_signing_secret=slack_signing_secret,
             scope_areas=scope_areas,
         )
         return await self._client._apost("/v1/connect/oauth-apps", data=payload)
@@ -1553,12 +1559,14 @@ class ConnectResource:
         *,
         label: str | None = None,
         client_secret: str | None = None,
+        slack_signing_secret: str | None = None,
         scope_areas: list[str] | None = None,
     ) -> dict[str, Any]:
         """Update an OAuth app (async)"""
         payload = self._build_payload(
             label=label,
             client_secret=client_secret,
+            slack_signing_secret=slack_signing_secret,
             scope_areas=scope_areas,
         )
         return await self._client._apatch(
