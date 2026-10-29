@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.401.0"
+  version: "1.402.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -16401,6 +16401,31 @@ components:
             custom_event_type: { type: string }
             pixel_id: { type: string }
             page_id: { type: string }
+        destinationType:
+          type: [string, "null"]
+          description: "Meta only. Where the ad set sends people (Meta `destination_type`), e.g. WEBSITE, MESSENGER, WHATSAPP, INSTAGRAM_DIRECT, ON_AD. Meta answers UNDEFINED for an ad set with no explicit destination. As of the last sync; null on other platforms and for ad sets not yet synced."
+          example: WEBSITE
+        attributionSpec:
+          type: [array, "null"]
+          description: "Meta only. The ad set's conversion attribution windows (Meta `attribution_spec`), in the same shape `attributionSpec` takes on ad creation so a clone can send it back unchanged. As of the last sync; null on other platforms, for ad sets not yet synced and when Meta reports none."
+          items:
+            type: object
+            properties:
+              eventType: { type: string, enum: [CLICK_THROUGH, VIEW_THROUGH, ENGAGED_VIDEO_VIEW] }
+              windowDays: { type: integer, enum: [1, 7, 28] }
+          example:
+            - { eventType: CLICK_THROUGH, windowDays: 7 }
+            - { eventType: VIEW_THROUGH, windowDays: 1 }
+        regionalRegulatedCategories:
+          type: [array, "null"]
+          description: "Meta only. Regional regulated categories declared on the ad set (Meta `regional_regulated_categories`), e.g. AUSTRALIA_FINSERV, TAIWAN_UNIVERSAL, SINGAPORE_UNIVERSAL or VOLUNTARY_VERIFICATION. As of the last sync; null on other platforms, for ad sets not yet synced and when Meta reports none."
+          items: { type: string }
+          example: [AUSTRALIA_FINSERV]
+        regionalRegulationIdentities:
+          type: [object, "null"]
+          description: "Meta only. Verified identity IDs per regional regulation role (Meta `regional_regulation_identities`), keyed by Meta's role name. IDs are strings because they can exceed a JSON number's precision. As of the last sync; null on other platforms, for ad sets not yet synced and when Meta reports none."
+          additionalProperties: { type: string }
+          example: { australia_finserv_beneficiary: "28663624249921857", australia_finserv_payer: "28663624249921857" }
         ads:
           type: array
           items: { $ref: '#/components/schemas/Ad' }
