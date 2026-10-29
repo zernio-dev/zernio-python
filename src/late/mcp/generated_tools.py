@@ -12895,7 +12895,7 @@ def register_generated_tools(mcp, _get_client):
             Response shape matches /v1/analytics/instagram/account-insights so the same client
             handling works. Requires yt-analytics.readonly scope (412 with reauthorizeUrl if
             missing). Data has a 2-3 day delay (endDate is clamped accordingly). Max 89 days,
-            defaults to last 30 days. Requires the Analytics add-on.
+            defaults to last 30 days.
 
             NOT exposed: impressions (Studio thumbnail impressions) and impressionsClickThroughRate.
             YouTube Analytics API v2 does not expose these for any principal type, not channel
@@ -12965,7 +12965,7 @@ def register_generated_tools(mcp, _get_client):
             organizationalEntityFollowerStatistics, and organizationPageStatistics endpoints.
 
             Response shape matches /v1/analytics/instagram/account-insights. Max 89 days,
-            defaults to last 30 days. Requires the Analytics add-on.
+            defaults to last 30 days.
 
             Scope requirements: r_organization_social, r_organization_followers, and
             r_organization_admin must all be present on the account. Accounts connected before
@@ -12977,7 +12977,8 @@ def register_generated_tools(mcp, _get_client):
                 response would be meaningless).
               - Date range capped at 89 days.
 
-            LinkedIn-side platform limits (not re-enforced here, but ...
+            LinkedIn-side platform limits (not re-enforced here, but worth knowing for larger
+            ranges ...
 
             Args:
                 account_id: The Zernio SocialAccount ID for the LinkedIn organization account. (required)
@@ -13050,7 +13051,7 @@ def register_generated_tools(mcp, _get_client):
             time series joined from Zernio's daily snapshotter (AccountStats).
 
             Response shape matches /v1/analytics/instagram/account-insights. Max 89 days,
-            defaults to last 30 days. Requires the Analytics add-on and the user.info.stats
+            defaults to last 30 days. Requires the user.info.stats
             scope on the account (412 if missing).
 
             Scope intentionally narrow: this ACCOUNT-level endpoint exposes only the four
@@ -13065,7 +13066,7 @@ def register_generated_tools(mcp, _get_client):
 
             PER-VIDEO is a different story on the Business lane. An account connected through
             the TikTok for Business app reports profile views, website clicks, follows,
-            full-watched rate, watch time, impression ...
+            full-watched rate, watch time, impression sources, viewer types ...
 
             Args:
                 account_id: The Zernio SocialAccount ID for the TikTok account. (required)
@@ -13234,7 +13235,7 @@ def register_generated_tools(mcp, _get_client):
             below. Because Meta did not provide direct adds/removes replacements, Zernio synthesizes
             followers_gained / followers_lost from the daily follower snapshotter.
 
-            Max 89 days, defaults to last 30 days. Requires the Analytics add-on.
+            Max 89 days, defaults to last 30 days.
 
             Args:
                 account_id: The Zernio SocialAccount ID for the connected Facebook Page. (required)
@@ -13313,7 +13314,7 @@ def register_generated_tools(mcp, _get_client):
         """Get Facebook post monetization earnings
 
             Returns lifetime monetization earnings for ONE Facebook post, read live from Meta on every
-            request. Requires the Analytics add-on.
+            request.
 
             Earnings are CUMULATIVE since the post was published, not earnings within a date range, so
             this endpoint takes no since/until and the totals must not be summed across dates or across
@@ -13326,7 +13327,7 @@ def register_generated_tools(mcp, _get_client):
             Amounts are the platform's raw numbers in the stated \"unit\" and are never rescaled by Zernio.
             Breakdown dimensions are not exposed and a \"breakdown\" param is rejected with 400. So are
             \"since\", \"until\", \"period\", and \"metricType\": scoping this endpoint to a window is not
-            possible, and silently returning the lifetime total ...
+            possible, and silently returning the lifetime total for one would let a caller sum a ...
 
             Args:
                 account_id: The Zernio SocialAccount ID for the connected Facebook Page. (required)
@@ -13373,7 +13374,7 @@ def register_generated_tools(mcp, _get_client):
             Returns account-level Instagram insights such as reach, views, accounts engaged, and total interactions.
             These metrics reflect the entire account's performance across all content surfaces (feed, stories, explore, profile),
             and are fundamentally different from post-level metrics. Data may be delayed up to 48 hours.
-            Max 90 days, defaults to last 30 days. Requires the Analytics add-on.
+            Max 90 days, defaults to last 30 days.
 
             Args:
                 account_id: The Zernio SocialAccount ID for the Instagram account (required)
@@ -13433,7 +13434,7 @@ def register_generated_tools(mcp, _get_client):
             via any public API.
 
             Response envelope matches /v1/analytics/instagram/account-insights so the same client
-            handling works. Max 89 days, defaults to last 30 days. Requires the Analytics add-on.
+            handling works. Max 89 days, defaults to last 30 days.
 
             Args:
                 account_id: The Zernio SocialAccount ID for the Instagram account. (required)
@@ -13478,7 +13479,7 @@ def register_generated_tools(mcp, _get_client):
             Returns the follower breakdown of a connected Facebook Page by country and/or city, from Meta's latest daily snapshot.
             Country keys are ISO 3166-1 alpha-2 codes; city keys are \"City, Region, Country\" strings as Meta returns them.
             Meta removed age and gender demographics for Pages (page_fans_gender_age) on November 15 2025 with no replacement, so only country and city are available.
-            Meta reports small counts at a privacy floor, so the long tail can show identical low values. Requires the Analytics add-on.
+            Meta reports small counts at a privacy floor, so the long tail can show identical low values.
 
             Args:
                 account_id: The Zernio SocialAccount ID for the Facebook account (required)
@@ -13544,7 +13545,7 @@ def register_generated_tools(mcp, _get_client):
 
             Returns audience demographic insights for an Instagram account, broken down by age, city, country, and/or gender.
             Requires at least 100 followers. Returns top 45 entries per dimension.
-            Data may be delayed up to 48 hours. Requires the Analytics add-on.
+            Data may be delayed up to 48 hours.
 
             Args:
                 account_id: The Zernio SocialAccount ID for the Instagram account (required)
@@ -13578,7 +13579,7 @@ def register_generated_tools(mcp, _get_client):
         Returns how many of an Instagram account's followers were online in each hour, for every day of the last 30 days that Meta has data for.
         Hour keys are \"0\" to \"23\" as Meta returns them. endTime is the end_time Meta returns for that day. Meta does not document the timezone of the hour keys.
         Data is delayed up to 48 hours, so the most recent days are left out until Meta fills them.
-        Requires at least 100 followers; for smaller accounts days is empty. Requires the Analytics add-on.
+        Requires at least 100 followers; for smaller accounts days is empty.
 
         Args:
             account_id: The Zernio SocialAccount ID for the Instagram account (required)"""
@@ -13615,7 +13616,6 @@ def register_generated_tools(mcp, _get_client):
             Age and gender values are viewer percentages (0-100). Country values are view counts.
             Data is based on signed-in viewers only, with a 2-3 day delay. YouTube suppresses demographics
             for videos with too few signed-in views, so low-traffic videos can return empty breakdowns.
-            Requires the Analytics add-on.
 
             Args:
                 account_id: The Zernio SocialAccount ID for the YouTube account (required)
@@ -13667,7 +13667,7 @@ def register_generated_tools(mcp, _get_client):
 
             Returns daily aggregated analytics metrics and a per-platform breakdown.
             Each day includes post count, platform distribution, and summed metrics (impressions, reach, likes, comments, shares, saves, clicks, views).
-            Defaults to the last 180 days. Requires the Analytics add-on.
+            Defaults to the last 180 days.
 
             Args:
                 platform: Filter by platform (e.g. "instagram", "tiktok"). Omit for all platforms.
@@ -13716,7 +13716,7 @@ def register_generated_tools(mcp, _get_client):
         Everything an analytics dashboard needs in one call: window totals, follower growth, a per-day series, top posts, recent posts and, optionally, the same figures for the previous period.
         Daily and total metrics use received attribution: each day holds the engagement that arrived that day, on any post, so `totals` is always the sum of `daily`.
         `topPosts` and `recentPosts` list posts published in the window with their lifetime metrics. A post cross-posted to several platforms appears once per platform.
-        All dates are UTC days. Requires the Analytics add-on.
+        All dates are UTC days.
 
         Args:
             profile_id: Profile ID, or "all" for every profile you can access.
@@ -13759,7 +13759,7 @@ def register_generated_tools(mcp, _get_client):
 
         Returns the best times to post based on historical engagement data.
         Groups all published posts by day of week and hour (UTC), calculating average engagement per slot.
-        Use this to auto-schedule posts at optimal times. Requires the Analytics add-on.
+        Use this to auto-schedule posts at optimal times.
 
         Args:
             platform: Filter by platform (e.g. "instagram", "tiktok"). Omit for all platforms.
@@ -13797,7 +13797,6 @@ def register_generated_tools(mcp, _get_client):
         Returns how engagement accumulates over time after a post is published.
         Each bucket shows what percentage of the post's total engagement had been reached by that time window.
         Useful for understanding content lifespan (e.g. \"posts reach 78% of total engagement within 24 hours\").
-        Requires the Analytics add-on.
 
         Args:
             platform: Filter by platform (e.g. "instagram", "tiktok"). Omit for all platforms.
@@ -13835,7 +13834,6 @@ def register_generated_tools(mcp, _get_client):
         Returns the correlation between posting frequency (posts per week) and engagement rate, broken down by platform.
         Helps find the optimal posting cadence for each platform. Each row represents a specific (platform, posts_per_week) combination
         with the average engagement rate observed across all weeks matching that frequency.
-        Requires the Analytics add-on.
 
         Args:
             platform: Filter by platform (e.g. "instagram", "tiktok"). Omit for all platforms.
@@ -13869,7 +13867,7 @@ def register_generated_tools(mcp, _get_client):
 
            Returns a daily timeline of analytics metrics for a specific post, showing how impressions, likes,
            and other metrics evolved day-by-day since publishing. Each row represents one day of data per platform.
-           For multi-platform Zernio posts, returns separate rows for each platform. Requires the Analytics add-on.
+           For multi-platform Zernio posts, returns separate rows for each platform.
 
            Args:
                post_id: The post to fetch timeline for. Accepts an ExternalPost ID, a platformPostId, or a Zernio Post ID.
@@ -14042,7 +14040,7 @@ def register_generated_tools(mcp, _get_client):
         ends with one final read, after which the `post.tracking_completed` webhook fires. Identify the post
         with `postId` (an external post id from Zernio), or with `accountId` together with the post's `url`.
         Opening a window for a post that is already tracked returns the existing window with `200`. A new
-        window returns `201`. Requires the Analytics add-on.
+        window returns `201`.
 
         Platforms: instagram, facebook, tiktok, youtube, twitter, threads, pinterest, reddit, bluesky, googlebusiness, linkedin
 
@@ -14082,7 +14080,7 @@ def register_generated_tools(mcp, _get_client):
         """List tracking windows
 
         Lists the tracking windows you can see, newest first. Each window carries the latest verified
-        numbers we read from the platform. Requires the Analytics add-on.
+        numbers we read from the platform.
 
         Platforms: instagram, facebook, tiktok, youtube, twitter, threads, pinterest, reddit, bluesky, googlebusiness, linkedin
 
@@ -14112,7 +14110,7 @@ def register_generated_tools(mcp, _get_client):
         """Get a tracking window
 
         Returns one tracking window with the latest verified numbers we read from the platform. Once the window
-        has completed, `finalReadAt` and `completionReason` say how it closed. Requires the Analytics add-on.
+        has completed, `finalReadAt` and `completionReason` say how it closed.
 
         Platforms: instagram, facebook, tiktok, youtube, twitter, threads, pinterest, reddit, bluesky, googlebusiness, linkedin
 
@@ -14138,7 +14136,7 @@ def register_generated_tools(mcp, _get_client):
 
         Stops tracking and returns the window with its final status. A window that already completed keeps its
         `completed` status and its final read. A cancelled window gets no final read and fires no
-        `post.tracking_completed` webhook. Requires the Analytics add-on.
+        `post.tracking_completed` webhook.
 
         Platforms: instagram, facebook, tiktok, youtube, twitter, threads, pinterest, reddit, bluesky, googlebusiness, linkedin
 
@@ -14171,7 +14169,7 @@ def register_generated_tools(mcp, _get_client):
         views and engagement as the platform reported them at `syncedAt`. Zernio only stores what it fetched from
         the platform, so nothing here was self-reported. `shares` and `saves` are null on platforms that do not
         return that counter, which is different from a real zero. `watchSeconds` and `completionRate` are null
-        when the platform gives no watch signal. Requires the Analytics add-on.
+        when the platform gives no watch signal.
 
         Platforms: instagram, facebook, tiktok, youtube, twitter, threads, pinterest, reddit, bluesky, googlebusiness, linkedin
 
@@ -14205,7 +14203,7 @@ def register_generated_tools(mcp, _get_client):
         samples we fetched from the platform, never from anything the creator or caller reported, and `reasons`
         lists each factor that lowered it with its weight in points. `confidence` (0 to 1) says how much data
         the score rests on. A stored score newer than 30 minutes is returned as is, otherwise it is recomputed.
-        The `post.authenticity_changed` webhook fires when a score crosses 40. Requires the Analytics add-on.
+        The `post.authenticity_changed` webhook fires when a score crosses 40.
 
         Platforms: instagram, facebook, tiktok, youtube, twitter, threads, pinterest, reddit, bluesky, googlebusiness, linkedin
 
@@ -14289,7 +14287,6 @@ def register_generated_tools(mcp, _get_client):
             Metrics include impressions (Maps/Search, desktop/mobile), website clicks,
             call clicks, direction requests, conversations, bookings, and food orders.
             Data may be delayed 2-3 days. Max 18 months of historical data.
-            Requires the Analytics add-on.
 
             Args:
                 account_id: The Zernio SocialAccount ID for the Google Business Profile account. (required)
@@ -14335,7 +14332,7 @@ def register_generated_tools(mcp, _get_client):
         Returns search keywords that triggered impressions for a Google Business Profile location.
         Data is aggregated monthly. Keywords Google reports only as below a threshold have `impressions` 0 and `impressionsThreshold` set to that threshold.
         Returns up to 100 keywords per page. When `nextPageToken` is not null, pass it as `pageToken` with the same `startMonth` and `endMonth` to get the next page.
-        Max 18 months of historical data. Requires the Analytics add-on.
+        Max 18 months of historical data.
 
         Args:
             account_id: The Zernio SocialAccount ID for the Google Business Profile account. (required)
