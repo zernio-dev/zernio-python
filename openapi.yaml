@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.398.0"
+  version: "1.399.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -1736,6 +1736,10 @@ components:
             verifyToken: { type: string }
             object: { $ref: '#/components/schemas/OAuthAppWebhookObject' }
             fields: { type: array, items: { type: string }, description: 'Subscribe the app to these fields.' }
+        sharedWebhookUrl:
+          type: [string, "null"]
+          format: uri
+          description: 'TikTok only: set this as the webhook callback URL in your TikTok developer app. TikTok uses it to report when a video finishes publishing; Zernio also checks the publish status itself, so posting works without it. Null on other platforms.'
         createdAt: { type: string, format: date-time }
     OAuthAppWebhookObject:
       type: string
