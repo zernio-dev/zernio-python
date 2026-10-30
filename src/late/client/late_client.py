@@ -14,6 +14,7 @@ from ..resources import (
     AccountsResource,
     AdAccountsResource,
     AdAudiencesResource,
+    AdCampaignResultsResource,
     AdCampaignsResource,
     AdCreativesResource,
     AdInsightsResource,
@@ -173,6 +174,7 @@ class Zernio(BaseClient):
         self.accounts = AccountsResource(self)
         self.ad_accounts = AdAccountsResource(self)
         self.ad_audiences = AdAudiencesResource(self)
+        self.ad_campaign_results = AdCampaignResultsResource(self)
         self.ad_campaigns = AdCampaignsResource(self)
         self.ad_creatives = AdCreativesResource(self)
         self.ad_insights = AdInsightsResource(self)

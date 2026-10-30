@@ -7,6 +7,7 @@ from .account_settings import AccountSettingsResource
 from .accounts import AccountsResource
 from .ad_accounts import AdAccountsResource
 from .ad_audiences import AdAudiencesResource
+from .ad_campaign_results import AdCampaignResultsResource
 from .ad_campaigns import AdCampaignsResource
 from .ad_creatives import AdCreativesResource
 from .ad_insights import AdInsightsResource
@@ -87,6 +88,7 @@ __all__ = [
     "AccountsResource",
     "AdAccountsResource",
     "AdAudiencesResource",
+    "AdCampaignResultsResource",
     "AdCampaignsResource",
     "AdCreativesResource",
     "AdInsightsResource",

@@ -5875,6 +5875,163 @@ def register_generated_tools(mcp, _get_client):
         except Exception as e:
             raise ToolError(f"Error: {e}") from e
 
+    # AD_CAMPAIGN_RESULTS
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Upload your results per campaign",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def ad_campaign_results_upload_campaign_results(
+        rows: list[dict[str, Any]] | None,
+    ) -> str:
+        """Upload your results per campaign
+
+        Sends your own daily numbers per campaign (qualified leads, sales, revenue...) so rules and reports can use them next to spend.
+
+        Name each row's campaign by `campaignId`, `utmCampaign` or `campaignName`. Rows are matched in the background: the `202` returns an `uploadId`, and `Location` points to `GET /v1/ads/campaign-results/uploads/{uploadId}`.
+
+        Re-sending a day replaces it. Send an `Idempotency-Key` to retry safely. Limits per team: 60 requests and 20,000 rows per hour, 512 KB per request.
+
+        Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit
+
+        Args:
+            rows: Each item is an object with keys: date (string, required) - The day, at most 400 days ago.; campaignId (string) - The platform campaign id.; utmCampaign (string) - The `utm_campaign` value on the campaign's ads.; campaignName (string) - The campaign's name, matched case-insensitively.; adAccountId (string) - Platform ad account id. Narrows matching to one ad account.; values (object, required) - Metric key (snake_case, up to 40 characters) to a non-negative number. 1 to 20 per row. (required)"""
+        client = _get_client()
+        try:
+            response = client.ad_campaign_results.upload_campaign_results(rows=rows)
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List your results per campaign",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def ad_campaign_results_list_campaign_results(
+        from_date: str,
+        to_date: str,
+        campaign_ids: str | None = None,
+        limit: int = 100,
+        cursor: str | None = None,
+    ) -> str:
+        """List your results per campaign
+
+        Your results summed per campaign over a date range, one entry per campaign with every metric it has, for the ad accounts your key can see. Each day counts its newest value only.
+
+        Paginated by campaign: pass `nextCursor` back as `cursor` until it is null.
+
+        Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit
+
+        Args:
+            from_date: (required)
+            to_date: Inclusive. At most 400 days after `fromDate`. (required)
+            campaign_ids: Comma-separated platform campaign ids, at most 500. Omit for all campaigns.
+            limit: Campaigns per page.
+            cursor: `nextCursor` from the previous page."""
+        client = _get_client()
+        try:
+            response = client.ad_campaign_results.list_campaign_results(
+                from_date=from_date,
+                to_date=to_date,
+                campaign_ids=campaign_ids,
+                limit=limit,
+                cursor=cursor,
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Check a results upload",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def ad_campaign_results_get_campaign_results_upload(upload_id: str) -> str:
+        """Check a results upload
+
+        How an upload was matched: rows matched and unmatched, and up to 100 unmatched rows with why (`no_campaign` or `ambiguous`).
+
+        `status` turns `done` once every row is processed, usually within seconds. Uploads are kept for 30 days.
+
+        Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit
+
+        Args:
+            upload_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.ad_campaign_results.get_campaign_results_upload(
+                upload_id=upload_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List your result metrics",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def ad_campaign_results_list_campaign_result_metrics() -> str:
+        """List your result metrics
+
+        The metric keys your team has sent, with their label and kind. A new key appears as a `count` labelled from the key; name it with `PUT /v1/ads/campaign-results/metrics/{key}`.
+
+        Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit"""
+        client = _get_client()
+        try:
+            response = client.ad_campaign_results.list_campaign_result_metrics()
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Name a result metric",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def ad_campaign_results_set_campaign_result_metric(
+        key: str,
+        label: str,
+        kind: Literal["count", "money"],
+        currency: str | None = None,
+    ) -> str:
+        """Name a result metric
+
+        Sets a metric key's label and kind: `count` for things you count (leads, sales) or `money` with its currency (revenue).
+
+        Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit
+
+        Args:
+            key: (required)
+            label: (required)
+            kind: (required)
+            currency: ISO 4217, money metrics only."""
+        client = _get_client()
+        try:
+            response = client.ad_campaign_results.set_campaign_result_metric(
+                key=key, label=label, kind=kind, currency=currency
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
     # AD_CAMPAIGNS
 
     @mcp.tool(
