@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.419.0"
+  version: "1.420.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -14248,7 +14248,7 @@ components:
       type: object
       properties:
         id: { type: string, description: "Stable for the same problem on the same entity. Pass it to POST /v1/ads/alerts/{alertId}/dismiss." }
-        kind: { type: string, enum: [ad_rejected, delivery_issue, payment, budget_limited, spend_no_results] }
+        kind: { type: string, enum: [ad_rejected, delivery_issue, payment, budget_limited, spend_no_results, connection_lost, sync_failing] }
         severity: { type: string, enum: [error, warning, info] }
         title: { type: string }
         message: { type: string, description: "What happened, in plain words. For a rejection or delivery issue, the platform's own reason when it gave one." }
@@ -14261,14 +14261,15 @@ components:
             id: { type: string, description: The platform id of the entity. }
             name: { type: [string, "null"] }
         adId: { type: string, description: "The Zernio ad id when the entity is an ad, for GET /v1/ads/{adId}." }
+        accountId: { type: string, description: "The Zernio ads connection, on connection_lost and sync_failing alerts." }
         currency: { type: [string, "null"] }
         detectedAt: { type: string, format: date-time }
         fix:
           type: object
-          description: Where to fix it on the platform, when there is such a place.
+          description: "Where to fix it: a page on the platform, or for connection_lost the Zernio dashboard path (starting with /) where the connection is reconnected."
           properties:
             label: { type: string }
-            url: { type: string, format: uri }
+            url: { type: string, format: uri-reference }
         dismissed: { type: boolean }
     AdTreeResponse:
       type: object
@@ -70671,6 +70672,8 @@ paths:
         - Meta ad accounts with a failed or overdue payment, or disabled while holding live ads
         - campaigns that spent on 3 or more of the last 7 days without a result (conversion, lead, purchase or conversation goals)
         - budgets spent to their daily cap yesterday
+        - ads connections that need reconnecting while they still hold live ads
+        - ad accounts whose sync has been failing
 
         Built from stored data and the last 7 days of synced metrics, so it costs no platform call.
 
@@ -70679,6 +70682,7 @@ paths:
         - bearerAuth: []
       parameters:
         - { name: accountId, in: query, schema: { type: string }, description: "Only alerts of this ads connection (sibling-expanded like /v1/ads/tree). Omit for every ad account the API key can reach." }
+        - { name: profileId, in: query, schema: { type: string }, description: "Only alerts of the ads connections on this profile. Omit for every profile the API key can reach." }
         - { name: includeDismissed, in: query, schema: { type: boolean, default: false }, description: "Also return dismissed alerts, with `dismissed: true`." }
       responses:
         '200':

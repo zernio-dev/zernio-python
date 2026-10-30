@@ -9170,7 +9170,9 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def ad_campaigns_list_ads_alerts(
-        account_id: str | None = None, include_dismissed: bool = False
+        account_id: str | None = None,
+        profile_id: str | None = None,
+        include_dismissed: bool = False,
     ) -> str:
         """List ads that need attention
 
@@ -9181,6 +9183,8 @@ def register_generated_tools(mcp, _get_client):
         - Meta ad accounts with a failed or overdue payment, or disabled while holding live ads
         - campaigns that spent on 3 or more of the last 7 days without a result (conversion, lead, purchase or conversation goals)
         - budgets spent to their daily cap yesterday
+        - ads connections that need reconnecting while they still hold live ads
+        - ad accounts whose sync has been failing
 
         Built from stored data and the last 7 days of synced metrics, so it costs no platform call.
 
@@ -9190,11 +9194,14 @@ def register_generated_tools(mcp, _get_client):
 
         Args:
             account_id: Only alerts of this ads connection (sibling-expanded like /v1/ads/tree). Omit for every ad account the API key can reach.
+            profile_id: Only alerts of the ads connections on this profile. Omit for every profile the API key can reach.
             include_dismissed: Also return dismissed alerts, with `dismissed: true`."""
         client = _get_client()
         try:
             response = client.ad_campaigns.list_ads_alerts(
-                account_id=account_id, include_dismissed=include_dismissed
+                account_id=account_id,
+                profile_id=profile_id,
+                include_dismissed=include_dismissed,
             )
             return _format_response(response)
         except Exception as e:

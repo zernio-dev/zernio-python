@@ -1170,11 +1170,16 @@ class AdCampaignsResource:
         return self._client._get(f"/v1/ads/{ad_id}/tiktok-smart-plus-review")
 
     def list_ads_alerts(
-        self, *, account_id: str | None = None, include_dismissed: bool | None = False
+        self,
+        *,
+        account_id: str | None = None,
+        profile_id: str | None = None,
+        include_dismissed: bool | None = False,
     ) -> dict[str, Any]:
         """List ads that need attention"""
         params = self._build_params(
             account_id=account_id,
+            profile_id=profile_id,
             include_dismissed=include_dismissed,
         )
         return self._client._get("/v1/ads/alerts", params=params)
@@ -2872,11 +2877,16 @@ class AdCampaignsResource:
         return await self._client._aget(f"/v1/ads/{ad_id}/tiktok-smart-plus-review")
 
     async def alist_ads_alerts(
-        self, *, account_id: str | None = None, include_dismissed: bool | None = False
+        self,
+        *,
+        account_id: str | None = None,
+        profile_id: str | None = None,
+        include_dismissed: bool | None = False,
     ) -> dict[str, Any]:
         """List ads that need attention (async)"""
         params = self._build_params(
             account_id=account_id,
+            profile_id=profile_id,
             include_dismissed=include_dismissed,
         )
         return await self._client._aget("/v1/ads/alerts", params=params)
