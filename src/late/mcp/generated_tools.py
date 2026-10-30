@@ -12849,7 +12849,7 @@ def register_generated_tools(mcp, _get_client):
         name: str,
         account_id: str,
         ad_account_id: str,
-        level: Literal["campaign", "adset"],
+        level: Literal["campaign", "adset", "ad"],
         conditions: dict[str, Any] | None,
         actions: list[dict[str, Any]] | None,
         campaign_ids: list[str] | None = None,
@@ -12912,6 +12912,29 @@ def register_generated_tools(mcp, _get_client):
                 cooldown_minutes=cooldown_minutes,
                 enabled=enabled,
             )
+            return _format_response(response)
+        except Exception as e:
+            return f"Error: {e}"
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List ready-made ad rules",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def ad_rules_list_ad_rule_templates() -> str:
+        """List ready-made ad rules
+
+        Common rules to start from: stop losers, scale winners, pause ads with no conversions, creative fatigue and spend spike alerts.
+
+        Each template is a complete rule body. Add `name`, `accountId` and `adAccountId`, adjust the thresholds to the ad account, and send it to `POST /v1/ads/rules`. Amounts are in the ad account currency. `platforms` lists the networks a template works on, or is null for all of them.
+
+        Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit"""
+        client = _get_client()
+        try:
+            response = client.ad_rules.list_ad_rule_templates()
             return _format_response(response)
         except Exception as e:
             return f"Error: {e}"
@@ -12994,7 +13017,7 @@ def register_generated_tools(mcp, _get_client):
     )
     def ad_rules_update_ad_rule(
         name: str | None = None,
-        level: Literal["campaign", "adset"] | None = None,
+        level: Literal["campaign", "adset", "ad"] | None = None,
         campaign_ids: str | None = None,
         conditions: dict[str, Any] | None = None,
         actions: list[dict[str, Any]] | None = None,

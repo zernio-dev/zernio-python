@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.423.0"
+  version: "1.424.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -209,7 +209,7 @@ x-documentation:
     - `campaign.budget.depleted` - A campaign Zernio already tracked ran out of budget (TikTok, the only network that reports it on the ad)
     - `ad_account.status_changed` - An ad account Zernio already tracked became `active`, `restricted`, `disabled` or `closed` (Meta, Google, TikTok, X)
     - `ad.video.processed` - Meta finished processing a video uploaded with `POST /v1/ads/videos` and `async: true`. `video.status` is `ready` (usable as `video.id`) or `error`
-    - `ad_rule.triggered` - A scheduled ad rule run found campaigns or ad sets meeting every condition, once per object per cooldown. `objects` lists the objects acted on
+    - `ad_rule.triggered` - A scheduled ad rule run found campaigns, ad sets or ads meeting every condition, once per object per cooldown. `objects` lists the objects acted on
     - `whatsapp.template.status_updated` - WhatsApp Business template completed (re)review by Meta. `template.status` carries the new state (APPROVED, REJECTED, PENDING, PAUSED, DISABLED, IN_APPEAL, PENDING_DELETION); `template.reason` is Meta's free-form reason or "NONE".
     - `whatsapp.template.category_updated` - Meta reclassified a WhatsApp Business template's category (drives tariff and marketing opt-out applicability). `template.changeType` is `scheduled` (24h advance notice) or `applied`; `template.category` is always the category right now.
     - `whatsapp.account.name_status_updated` - Meta finished reviewing a WhatsApp display-name change. `name.status` carries the outcome (APPROVED, DECLINED, PENDING_REVIEW). Fires only on a review outcome; a name applied without review (`name_status: AVAILABLE_WITHOUT_REVIEW`) produces no event.
@@ -9106,7 +9106,7 @@ components:
       description: |
         Webhook payload for the `ad_rule.triggered` event.
 
-        Fires when a scheduled run of a rule with a `notify` action finds campaigns or ad sets that meet every condition of the rule.
+        Fires when a scheduled run of a rule with a `notify` action finds campaigns, ad sets or ads that meet every condition of the rule.
 
         Each object is announced at most once per rule cooldown, so `objects` lists only the objects the run acted on, never the ones still in cooldown. A run where every matching object is still in cooldown sends nothing.
 
@@ -9130,7 +9130,7 @@ components:
           properties:
             id: { type: string, description: Zernio ad rule ID. }
             name: { type: string }
-            level: { type: string, enum: [campaign, adset], description: Whether the rule evaluates campaigns or ad sets. }
+            level: { type: string, enum: [campaign, adset, ad], description: 'Whether the rule evaluates campaigns, ad sets or ads.' }
             platformAdAccountId: { type: string, description: Platform-native ad account ID the rule watches. }
         run:
           type: object
@@ -9144,7 +9144,7 @@ components:
             currency: { type: [string, "null"], description: "ISO 4217 currency of the ad account, which money metrics (`spend`, `cpc`, `cpm`, `cpa`) and condition values are in. Null when unknown." }
         objects:
           type: array
-          description: The campaigns or ad sets this run acted on, at the rule's `level`, including those whose action failed. Objects still in cooldown are left out.
+          description: The campaigns, ad sets or ads this run acted on, at the rule's `level`, including those whose action failed. Objects still in cooldown are left out.
           items:
             type: object
             required: [platformId, name, platformCampaignId, conditions, actions]
@@ -9173,7 +9173,7 @@ components:
                   properties:
                     type: { type: string, enum: [pause, activate, adjust_budget] }
                     status: { type: string, enum: [done, skipped, failed], description: "Action result.\n\n- `skipped`: the action could not or need not apply (already paused or active, budget at its limit, a budget that is unknown, not daily or set at another level, no live ads, or a permanent refusal from the platform).\n- `failed`: it errored and will be retried on the next run." }
-                    reason: { type: [string, "null"], description: "Why the action was skipped or failed: `already_paused`, `already_active`, `at_limit`, `budget_unknown`, `budget_not_daily`, `budget_level_mismatch`, `no_live_ads`, `ads_allowance_exceeded` (a reactivation or budget increase for a team past its free live-ads allowance), or the platform's message. Null when done." }
+                    reason: { type: [string, "null"], description: "Why the action was skipped or failed: `already_paused`, `already_active`, `at_limit`, `budget_unknown`, `budget_not_daily`, `budget_level_mismatch`, `no_live_ads`, `daily_limit_reached` (held back by the action's `maxChangesPerDay`), `ads_allowance_exceeded` (a reactivation or budget increase for a team past its free live-ads allowance), or the platform's message. Null when done." }
                     previousDailyBudget: { type: [number, "null"], description: "On `adjust_budget`, the daily budget before the change, in the ad account currency. Null otherwise." }
                     newDailyBudget: { type: [number, "null"], description: "On `adjust_budget`, the daily budget after the change. Null when nothing changed." }
         timestamp:
@@ -16837,16 +16837,16 @@ components:
         conversionActionIds: { type: array, items: { type: string } }
     AdRuleLevel:
       type: string
-      enum: [campaign, adset]
-      description: Whether the rule checks campaigns or ad sets. Each one is evaluated on its own.
+      enum: [campaign, adset, ad]
+      description: Whether the rule checks campaigns, ad sets or single ads. Each one is evaluated on its own.
     AdRuleCondition:
       type: object
       required: [metric, window, op, value]
       properties:
         metric:
           type: string
-          enum: [spend, impressions, clicks, conversions, ctr, cpc, cpm, cpa, roas]
-          description: '`ctr` is a percentage. `spend`, `cpc`, `cpm` and `cpa` are in the ad account currency.'
+          enum: [spend, impressions, clicks, conversions, ctr, cpc, cpm, cpa, roas, reach, frequency]
+          description: '`ctr` is a percentage. `spend`, `cpc`, `cpm` and `cpa` are in the ad account currency. `reach` and `frequency` use the platform''s de-duplicated reach, so they are accepted on Meta and TikTok only.'
         window:
           type: string
           enum: [today, yesterday, last_3d, last_7d, last_14d, last_30d]
@@ -16872,18 +16872,21 @@ components:
         - type: object
           required: [type]
           properties:
-            type: { type: string, enum: [pause], description: Pause the campaign or ad set. }
+            type: { type: string, enum: [pause], description: 'Pause the campaign, ad set or ad.' }
+            maxChangesPerDay: { type: integer, minimum: 1, maximum: 100, description: 'At most this many objects changed in any 24 hours, across runs. Matches over the limit are skipped with `daily_limit_reached` and tried again later.' }
         - type: object
           required: [type]
           properties:
-            type: { type: string, enum: [activate], description: 'Reactivate a campaign or ad set a rule paused, once `cooldownMinutes` has passed since the pause. Objects you paused yourself are never touched.' }
+            type: { type: string, enum: [activate], description: 'Reactivate a campaign, ad set or ad a rule paused, once `cooldownMinutes` has passed since the pause. Objects you paused yourself are never touched.' }
+            maxChangesPerDay: { type: integer, minimum: 1, maximum: 100, description: 'At most this many objects changed in any 24 hours, across runs. Matches over the limit are skipped with `daily_limit_reached` and tried again later.' }
         - type: object
           required: [type, direction, percent, limit]
           properties:
-            type: { type: string, enum: [adjust_budget], description: "Change the daily budget. Google ad groups have no budget of their own, so on Google it needs a campaign-level rule." }
+            type: { type: string, enum: [adjust_budget], description: "Change the daily budget. Not on ad-level rules (an ad has no budget), and on Google it needs a campaign-level rule (ad groups have no budget of their own)." }
             direction: { type: string, enum: [increase, decrease] }
             percent: { type: integer, minimum: 1, maximum: 100, description: 'Change in percent: up to 100 for an increase, up to 90 for a decrease.' }
             limit: { type: number, exclusiveMinimum: 0, description: 'The budget never goes above this on an increase, or below it on a decrease, in the ad account currency.' }
+            maxChangesPerDay: { type: integer, minimum: 1, maximum: 100, description: 'At most this many objects changed in any 24 hours, across runs. Matches over the limit are skipped with `daily_limit_reached` and tried again later.' }
     AdRuleActions:
       type: array
       minItems: 1
@@ -64835,6 +64838,44 @@ paths:
           $ref: '#/components/responses/AccountUnavailable'
         '409':
           $ref: '#/components/responses/AccountConnectionRequired'
+  /v1/ads/rules/templates:
+    get:
+      x-resource-group: ads
+      operationId: listAdRuleTemplates
+      tags: [Ad Rules]
+      x-platforms: [meta, google, tiktok, linkedin, pinterest, x, reddit]
+      summary: List ready-made ad rules
+      description: |
+        Common rules to start from: stop losers, scale winners, pause ads with no conversions, creative fatigue and spend spike alerts.
+
+        Each template is a complete rule body. Add `name`, `accountId` and `adAccountId`, adjust the thresholds to the ad account, and send it to `POST /v1/ads/rules`. Amounts are in the ad account currency. `platforms` lists the networks a template works on, or is null for all of them.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: The templates.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [templates]
+                properties:
+                  templates:
+                    type: array
+                    items:
+                      type: object
+                      required: [id, name, description, level, conditions, actions, schedule, cooldownMinutes, platforms]
+                      properties:
+                        id: { type: string, example: stop_losers }
+                        name: { type: string }
+                        description: { type: string }
+                        level: { $ref: '#/components/schemas/AdRuleLevel' }
+                        conditions: { $ref: '#/components/schemas/AdRuleConditions' }
+                        actions: { $ref: '#/components/schemas/AdRuleActions' }
+                        schedule: { $ref: '#/components/schemas/AdRuleSchedule' }
+                        cooldownMinutes: { type: integer }
+                        platforms: { type: [array, "null"], items: { type: string } }
+        '401': { $ref: '#/components/responses/Unauthorized' }
   /v1/ads/rules/activity:
     get:
       x-resource-group: ads

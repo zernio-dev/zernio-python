@@ -121,6 +121,10 @@ class AdRulesResource:
         )
         return self._client._post("/v1/ads/rules", data=payload)
 
+    def list_ad_rule_templates(self) -> dict[str, Any]:
+        """List ready-made ad rules"""
+        return self._client._get("/v1/ads/rules/templates")
+
     def list_ad_rule_activity(
         self,
         *,
@@ -236,6 +240,10 @@ class AdRulesResource:
             enabled=enabled,
         )
         return await self._client._apost("/v1/ads/rules", data=payload)
+
+    async def alist_ad_rule_templates(self) -> dict[str, Any]:
+        """List ready-made ad rules (async)"""
+        return await self._client._aget("/v1/ads/rules/templates")
 
     async def alist_ad_rule_activity(
         self,
