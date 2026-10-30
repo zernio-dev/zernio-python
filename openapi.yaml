@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.422.0"
+  version: "1.423.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -23371,12 +23371,13 @@ paths:
       tags: [Analytics]
       summary: Get LinkedIn organization follower demographics
       description: |
-        Returns the lifetime follower breakdown of a connected LinkedIn organization page by job function, seniority, industry and company size.
+        Returns the lifetime follower breakdown of a connected LinkedIn organization page by job function, seniority, industry, company size, country and region. Without `breakdown` it returns function, seniority, industry and company size; country and region are returned only when requested.
 
         ### Labels
 
         - Function, seniority and industry are labelled with LinkedIn's standardized names (English) and keep the LinkedIn URN in `id`.
         - Company size is labelled as a range such as `2-10` or `10001+`.
+        - Country and region are labelled with LinkedIn's geo names (English) and keep `urn:li:geo:*` in `id`. A region is a LinkedIn market area, for example New York City Metropolitan Area.
 
         LinkedIn returns at most the top 100 values per breakdown and leaves out followers whose profile lacks that field, so a breakdown does not add up to the follower count.
 
@@ -23395,8 +23396,8 @@ paths:
           in: query
           schema: { type: string }
           description: |
-            Comma-separated list of demographic dimensions: function, seniority, industry, company_size.
-            Defaults to all four if omitted.
+            Comma-separated list of demographic dimensions: function, seniority, industry, company_size, country, region.
+            Defaults to function, seniority, industry and company_size if omitted. Country and region are returned only when requested.
       responses:
         '200':
           description: Follower demographics for the organization page
@@ -23418,7 +23419,7 @@ paths:
                         type: object
                         properties:
                           dimension: { type: string, description: 'Readable label, or the LinkedIn URN when LinkedIn returns no name for it' }
-                          id: { type: string, description: 'LinkedIn URN (urn:li:function:8) or staff count range (SIZE_2_TO_10)' }
+                          id: { type: string, description: 'LinkedIn URN (urn:li:function:8 or urn:li:geo:103644278) or staff count range (SIZE_2_TO_10)' }
                           value: { type: integer, description: 'Followers (organic plus paid)' }
                   note: { type: string }
               examples:
@@ -23439,6 +23440,10 @@ paths:
                         - { dimension: "Software Development", id: "urn:li:industry:4", value: 590 }
                       company_size:
                         - { dimension: "2-10", id: "SIZE_2_TO_10", value: 690 }
+                      country:
+                        - { dimension: "United States", id: "urn:li:geo:103644278", value: 820 }
+                      region:
+                        - { dimension: "New York City Metropolitan Area", id: "urn:li:geo:90000070", value: 310 }
                     note: "Lifetime breakdown of the organization page followers. LinkedIn returns at most the top 100 values per breakdown and leaves out followers whose profile lacks that field, so a breakdown does not add up to the follower count."
         '400':
           $ref: '#/components/responses/BadRequest'

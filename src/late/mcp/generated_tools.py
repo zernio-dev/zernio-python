@@ -14292,25 +14292,25 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Get LinkedIn organization follower demographics
 
-            Returns the lifetime follower breakdown of a connected LinkedIn organization page by job function, seniority, industry and company size.
+            Returns the lifetime follower breakdown of a connected LinkedIn organization page by job function, seniority, industry, company size, country and region. Without `breakdown` it returns function, seniority, industry and company size; country and region are returned only when requested.
 
             ### Labels
 
             - Function, seniority and industry are labelled with LinkedIn's standardized names (English) and keep the LinkedIn URN in `id`.
             - Company size is labelled as a range such as `2-10` or `10001+`.
+            - Country and region are labelled with LinkedIn's geo names (English) and keep `urn:li:geo:*` in `id`. A region is a LinkedIn market area, for example New York City Metropolitan Area.
 
             LinkedIn returns at most the top 100 values per breakdown and leaves out followers whose profile lacks that field, so a breakdown does not add up to the follower count.
 
             ### Requirements
 
             - Organization accounts only: a personal LinkedIn account answers 400 `personal_account_not_supported`.
-            - Requires the r_organization_social, r_organization_followers and r_organization_admin scopes (412 otherwise).
-            - Requires the Analytics add-on.
+            - Requires the ...
 
             Args:
                 account_id: The Zernio SocialAccount ID of the LinkedIn organization account (required)
-                breakdown: Comma-separated list of demographic dimensions: function, seniority, industry, company_size.
-        Defaults to all four if omitted."""
+                breakdown: Comma-separated list of demographic dimensions: function, seniority, industry, company_size, country, region.
+        Defaults to function, seniority, industry and company_size if omitted. Country and region are returned only when requested."""
         client = _get_client()
         try:
             response = client.analytics.get_linked_in_demographics(
