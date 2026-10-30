@@ -13569,10 +13569,10 @@ def register_generated_tools(mcp, _get_client):
         Their lifetime metrics refresh about hourly, with a final reading shortly ...
 
         Args:
-            post_id: Returns analytics for a single post. Accepts both Zernio Post IDs and External Post IDs. Zernio IDs are auto-resolved to External Post analytics.
+            post_id: Returns analytics for a single post. Accepts Zernio Post IDs, External Post IDs and the platform's native post ID. Zernio IDs are auto-resolved to External Post analytics.
             platform: Filter by platform (default "all")
-            profile_id: Filter by profile ID (default "all")
-            account_id: Filter by account ID
+            profile_id: Filter by profile ID (default "all"). With a native postId, selects that profile's copy of the post.
+            account_id: Filter by account ID. With a native postId, selects that account's copy of the post.
             source: Filter by post source: late (posted via Zernio API), external (synced from platform), all (default)
             from_date: Inclusive lower bound (YYYY-MM-DD). Defaults to 90 days ago if omitted. Max range is 366 days.
             to_date: Inclusive upper bound (YYYY-MM-DD). Defaults to today if omitted.

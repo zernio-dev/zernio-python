@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.420.0"
+  version: "1.420.1"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -21726,7 +21726,7 @@ paths:
         - name: postId
           in: query
           schema: { type: string }
-          description: Returns analytics for a single post. Accepts both Zernio Post IDs and External Post IDs. Zernio IDs are auto-resolved to External Post analytics.
+          description: Returns analytics for a single post. Accepts Zernio Post IDs, External Post IDs and the platform's native post ID. Zernio IDs are auto-resolved to External Post analytics.
         - name: platform
           in: query
           schema: { type: string }
@@ -21734,11 +21734,11 @@ paths:
         - name: profileId
           in: query
           schema: { type: string }
-          description: Filter by profile ID (default "all")
+          description: 'Filter by profile ID (default "all"). With a native postId, selects that profile''s copy of the post.'
         - name: accountId
           in: query
           schema: { type: string }
-          description: Filter by account ID
+          description: Filter by account ID. With a native postId, selects that account's copy of the post.
         - name: source
           in: query
           schema: { type: string, enum: [all, late, external], default: all }
