@@ -892,6 +892,7 @@ class AdCampaignsResource:
         time_increment: int | None = None,
         daily_level: str | None = "campaign",
         compare: str | None = None,
+        results: bool | None = None,
     ) -> dict[str, Any]:
         """Get campaign tree"""
         params = self._build_params(
@@ -915,6 +916,7 @@ class AdCampaignsResource:
             time_increment=time_increment,
             daily_level=daily_level,
             compare=compare,
+            results=results,
         )
         return self._client._get("/v1/ads/tree", params=params)
 
@@ -2593,6 +2595,7 @@ class AdCampaignsResource:
         time_increment: int | None = None,
         daily_level: str | None = "campaign",
         compare: str | None = None,
+        results: bool | None = None,
     ) -> dict[str, Any]:
         """Get campaign tree (async)"""
         params = self._build_params(
@@ -2616,6 +2619,7 @@ class AdCampaignsResource:
             time_increment=time_increment,
             daily_level=daily_level,
             compare=compare,
+            results=results,
         )
         return await self._client._aget("/v1/ads/tree", params=params)
 

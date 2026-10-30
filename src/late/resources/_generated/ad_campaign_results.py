@@ -110,18 +110,36 @@ class AdCampaignResultsResource:
         """Check a results upload"""
         return self._client._get(f"/v1/ads/campaign-results/uploads/{upload_id}")
 
+    def get_campaign_results_totals(
+        self, from_date: str, to_date: str, *, ad_account_ids: str | None = None
+    ) -> dict[str, Any]:
+        """Get your results totals"""
+        params = self._build_params(
+            from_date=from_date,
+            to_date=to_date,
+            ad_account_ids=ad_account_ids,
+        )
+        return self._client._get("/v1/ads/campaign-results/totals", params=params)
+
     def list_campaign_result_metrics(self) -> dict[str, Any]:
         """List your result metrics"""
         return self._client._get("/v1/ads/campaign-results/metrics")
 
     def set_campaign_result_metric(
-        self, key: str, label: str, kind: str, *, currency: Any | None = None
+        self,
+        key: str,
+        label: str,
+        kind: str,
+        *,
+        currency: Any | None = None,
+        formula: Any | None = None,
     ) -> dict[str, Any]:
-        """Name a result metric"""
+        """Name a result metric or define a formula"""
         payload = self._build_payload(
             label=label,
             kind=kind,
             currency=currency,
+            formula=formula,
         )
         return self._client._put(
             f"/v1/ads/campaign-results/metrics/{key}", data=payload
@@ -164,18 +182,38 @@ class AdCampaignResultsResource:
         """Check a results upload (async)"""
         return await self._client._aget(f"/v1/ads/campaign-results/uploads/{upload_id}")
 
+    async def aget_campaign_results_totals(
+        self, from_date: str, to_date: str, *, ad_account_ids: str | None = None
+    ) -> dict[str, Any]:
+        """Get your results totals (async)"""
+        params = self._build_params(
+            from_date=from_date,
+            to_date=to_date,
+            ad_account_ids=ad_account_ids,
+        )
+        return await self._client._aget(
+            "/v1/ads/campaign-results/totals", params=params
+        )
+
     async def alist_campaign_result_metrics(self) -> dict[str, Any]:
         """List your result metrics (async)"""
         return await self._client._aget("/v1/ads/campaign-results/metrics")
 
     async def aset_campaign_result_metric(
-        self, key: str, label: str, kind: str, *, currency: Any | None = None
+        self,
+        key: str,
+        label: str,
+        kind: str,
+        *,
+        currency: Any | None = None,
+        formula: Any | None = None,
     ) -> dict[str, Any]:
-        """Name a result metric (async)"""
+        """Name a result metric or define a formula (async)"""
         payload = self._build_payload(
             label=label,
             kind=kind,
             currency=currency,
+            formula=formula,
         )
         return await self._client._aput(
             f"/v1/ads/campaign-results/metrics/{key}", data=payload

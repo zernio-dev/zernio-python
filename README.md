@@ -557,8 +557,9 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 |--------|-------------|
 | `ad_campaign_results.list_campaign_result_metrics()` | List your result metrics |
 | `ad_campaign_results.list_campaign_results()` | List your results per campaign |
+| `ad_campaign_results.get_campaign_results_totals()` | Get your results totals |
 | `ad_campaign_results.get_campaign_results_upload()` | Check a results upload |
-| `ad_campaign_results.set_campaign_result_metric()` | Name a result metric |
+| `ad_campaign_results.set_campaign_result_metric()` | Name a result metric or define a formula |
 | `ad_campaign_results.upload_campaign_results()` | Upload your results per campaign |
 
 ### Ad Campaigns

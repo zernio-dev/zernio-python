@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.428.0"
+  version: "1.429.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -14314,6 +14314,10 @@ components:
           properties:
             fromDate: { type: string, format: date }
             toDate: { type: string, format: date }
+        resultMetrics:
+          type: array
+          description: Only with `results=true`. Your metrics and formulas, to label each campaign's `results`.
+          items: { $ref: '#/components/schemas/CampaignResultMetric' }
         backfillPending:
           type: boolean
           description: Meta only. Present and true while historical data is being backfilled.
@@ -16585,6 +16589,11 @@ components:
       type: object
       description: Campaign with nested ad sets and rolled-up metrics
       properties:
+        results:
+          type: object
+          additionalProperties: { type: number }
+          description: Only with `results=true`. The values you sent for this campaign over the range, plus each formula they allow, by metric key. A metric with no value is absent.
+          example: { revenue: 7800, sales: 4, cac_percent: 31.2, cost_per_sale: 608.5 }
         platformCampaignId: { type: string }
         platform: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit] }
         campaignName: { type: string }
@@ -16866,12 +16875,14 @@ components:
         conversionActionIds: { type: array, items: { type: string } }
     CampaignResultMetric:
       type: object
-      required: [key, label, kind, currency]
+      required: [key, label, kind, currency, formula, builtIn]
       properties:
         key: { type: string, example: qualified_leads }
         label: { type: string, example: Qualified leads }
-        kind: { type: string, enum: [count, money] }
+        kind: { type: string, enum: [count, money, percent, ratio], description: 'How the value reads: `percent` values are already multiplied by 100.' }
         currency: { type: [string, "null"] }
+        formula: { type: [string, "null"], description: 'Null for a number you send. For a computed metric, the formula over `spend`, `impressions`, `clicks`, `conversions`, `purchase_value` and the metrics you send, e.g. `spend / revenue * 100`.', example: null }
+        builtIn: { type: boolean, description: 'One of the formulas every team has (`cac_percent`, `cost_per_sale`, `cost_per_qualified_lead`, `lead_to_sale`). Setting the same key replaces it for your team.' }
     AdRuleLevel:
       type: string
       enum: [campaign, adset, ad]
@@ -16882,12 +16893,18 @@ components:
       properties:
         metric:
           type: string
-          enum: [spend, impressions, clicks, conversions, ctr, cpc, cpm, cpa, roas, reach, frequency]
-          description: '`ctr` is a percentage. `spend`, `cpc`, `cpm` and `cpa` are in the ad account currency. `reach` and `frequency` use the platform''s de-duplicated reach, so they are accepted on Meta and TikTok only.'
+          anyOf:
+            - enum: [spend, impressions, clicks, conversions, ctr, cpc, cpm, cpa, roas, reach, frequency]
+            - pattern: '^result:[a-z][a-z0-9_]{0,39}$'
+          description: |
+            `ctr` is a percentage. `spend`, `cpc`, `cpm` and `cpa` are in the ad account currency. `reach` and `frequency` use the platform's de-duplicated reach, so they are accepted on Meta and TikTok only.
+
+            `result:<key>` reads one of your own results (see [Campaign results](/guides/campaign-results)), on campaign rules only: the values you sent for the window, or a formula over them and the platform's numbers. A campaign with no value for it never matches.
+          example: 'result:cac_percent'
         window:
           type: string
           enum: [today, yesterday, last_3d, last_7d, last_14d, last_30d]
-          description: "Days in the ad account's own timezone. `last_7d` includes today."
+          description: "Days in the ad account's own timezone. `last_7d` is the 7 full days before today; only `today` reads the day in progress."
         op: { type: string, enum: ['>', '>=', '<', '<='] }
         value: { type: number, minimum: 0 }
     AdRuleConditions:
@@ -65331,6 +65348,37 @@ paths:
                   completedAt: { type: [string, "null"], format: date-time }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
+  /v1/ads/campaign-results/totals:
+    get:
+      x-resource-group: ads
+      operationId: getCampaignResultsTotals
+      tags: ["Ad Campaign Results"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "reddit"]
+      summary: Get your results totals
+      description: |
+        Each metric you send summed over a date range across every campaign of the ad accounts your key can see, or of the ones you name. Each day counts its newest value only.
+
+        Formulas are not computed here, since they also read the platform's numbers: apply one to these totals and the account's spend for the same range, or read it per campaign from `GET /v1/ads/tree?results=true`.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: fromDate, in: query, required: true, schema: { type: string, format: date } }
+        - { name: toDate, in: query, required: true, schema: { type: string, format: date }, description: 'Inclusive. At most 400 days after `fromDate`.' }
+        - { name: adAccountIds, in: query, schema: { type: string }, description: 'Comma-separated platform ad account ids, at most 100. Omit for every ad account your key can see.' }
+      responses:
+        '200':
+          description: The totals by metric key.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [fromDate, toDate, totals]
+                properties:
+                  fromDate: { type: string, format: date }
+                  toDate: { type: string, format: date }
+                  totals: { type: object, additionalProperties: { type: number }, example: { qualified_leads: 140, sales: 23, revenue: 41200 } }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
   /v1/ads/campaign-results/metrics:
     get:
       x-resource-group: ads
@@ -65339,7 +65387,7 @@ paths:
       x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "reddit"]
       summary: List your result metrics
       description: |
-        The metric keys your team has sent, with their label and kind. A new key appears as a `count` labelled from the key; name it with `PUT /v1/ads/campaign-results/metrics/{key}`.
+        The metric keys your team has sent, with their label and kind, then the formulas: your own and the built-in ones (`cac_percent`, `cost_per_sale`, `cost_per_qualified_lead`, `lead_to_sale`). A new key appears as a `count` labelled from the key; name it, or define a formula, with `PUT /v1/ads/campaign-results/metrics/{key}`.
       security:
         - bearerAuth: []
       responses:
@@ -65361,9 +65409,13 @@ paths:
       operationId: setCampaignResultMetric
       tags: ["Ad Campaign Results"]
       x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "reddit"]
-      summary: Name a result metric
+      summary: Name a result metric or define a formula
       description: |
-        Sets a metric key's label and kind: `count` for things you count (leads, sales) or `money` with its currency (revenue).
+        Sets a metric key's label and kind: `count` for things you count (leads, sales), `money` with its currency (revenue), `percent` or `ratio`.
+
+        Send `formula` to make it a computed metric: `+ - * /` and parentheses over `spend`, `impressions`, `clicks`, `conversions`, `purchase_value` and the metrics you send, at most 200 characters. A formula cannot read another formula.
+
+        It is computed per campaign over the summed values of the range, and has no value when an input is missing or a division is by zero.
       security:
         - bearerAuth: []
       parameters:
@@ -65377,8 +65429,9 @@ paths:
               required: [label, kind]
               properties:
                 label: { type: string, maxLength: 80, example: Qualified leads }
-                kind: { type: string, enum: [count, money] }
+                kind: { type: string, enum: [count, money, percent, ratio] }
                 currency: { type: [string, "null"], description: 'ISO 4217, money metrics only.', example: EUR }
+                formula: { type: [string, "null"], maxLength: 200, description: 'Makes it a computed metric. Null or absent for a number you send.', example: 'spend / sales' }
       responses:
         '200':
           description: The metric.
@@ -67941,6 +67994,7 @@ paths:
         - { name: timeIncrement, in: query, schema: { type: integer, enum: [1] }, description: "Set to `1` to also return a daily breakdown (mirrors Meta Insights' `time_increment=1`). Only `1` (daily) is supported. See `dailyLevel` to control which levels carry it.\n\nEach node gains a `daily[]` array of per-day metrics (same fields as the aggregated `metrics`) next to the range total, so you get per-entity daily trends in ONE call instead of one tree call per day.\n\nThe daily series covers the same date range and source data as `metrics`, except `reach` on Meta and TikTok: the range total is the platform's de-duplicated value, so daily reach does not sum to it." }
         - { name: dailyLevel, in: query, schema: { type: string, enum: [campaign, adset, ad], default: campaign }, description: "Which tree levels get the `daily[]` series when `timeIncrement=1`. Ignored when `timeIncrement` is unset.\n\n- `campaign` (default): on campaign nodes only. The common per-campaign-trend case, and the smallest payload.\n- `adset`: on ad sets too.\n- `ad`: on every ad in `ads[]` as well. Heaviest (a long range × up to 100 ads per ad set); scope with `campaignId` to keep responses small." }
         - { name: compare, in: query, schema: { type: string, enum: [previous] }, description: "Set to `previous` to also read the period of the same length that ends the day before `fromDate`. Every campaign, ad set and ad gains `previousMetrics` (same fields as `metrics`) and the response gains `previousRange`, so a table can show the change against the previous period in one call." }
+        - { name: results, in: query, schema: { type: boolean }, description: "Set to `true` to add your own results (see [Campaign results](/guides/campaign-results)): every campaign gains `results`, the values you sent for the range plus each formula they allow, and the response gains `resultMetrics` to label them." }
       responses:
         '200':
           description: Nested campaign tree with pagination

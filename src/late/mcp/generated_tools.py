@@ -5979,6 +5979,38 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="Get your results totals",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def ad_campaign_results_get_campaign_results_totals(
+        from_date: str, to_date: str, ad_account_ids: str | None = None
+    ) -> str:
+        """Get your results totals
+
+        Each metric you send summed over a date range across every campaign of the ad accounts your key can see, or of the ones you name. Each day counts its newest value only.
+
+        Formulas are not computed here, since they also read the platform's numbers: apply one to these totals and the account's spend for the same range, or read it per campaign from `GET /v1/ads/tree?results=true`.
+
+        Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit
+
+        Args:
+            from_date: (required)
+            to_date: Inclusive. At most 400 days after `fromDate`. (required)
+            ad_account_ids: Comma-separated platform ad account ids, at most 100. Omit for every ad account your key can see."""
+        client = _get_client()
+        try:
+            response = client.ad_campaign_results.get_campaign_results_totals(
+                from_date=from_date, to_date=to_date, ad_account_ids=ad_account_ids
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="List your result metrics",
             readOnlyHint=True,
             destructiveHint=False,
@@ -5988,7 +6020,7 @@ def register_generated_tools(mcp, _get_client):
     def ad_campaign_results_list_campaign_result_metrics() -> str:
         """List your result metrics
 
-        The metric keys your team has sent, with their label and kind. A new key appears as a `count` labelled from the key; name it with `PUT /v1/ads/campaign-results/metrics/{key}`.
+        The metric keys your team has sent, with their label and kind, then the formulas: your own and the built-in ones (`cac_percent`, `cost_per_sale`, `cost_per_qualified_lead`, `lead_to_sale`). A new key appears as a `count` labelled from the key; name it, or define a formula, with `PUT /v1/ads/campaign-results/metrics/{key}`.
 
         Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit"""
         client = _get_client()
@@ -6000,7 +6032,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
-            title="Name a result metric",
+            title="Name a result metric or define a formula",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
@@ -6009,12 +6041,17 @@ def register_generated_tools(mcp, _get_client):
     def ad_campaign_results_set_campaign_result_metric(
         key: str,
         label: str,
-        kind: Literal["count", "money"],
+        kind: Literal["count", "money", "percent", "ratio"],
         currency: str | None = None,
+        formula: str | None = None,
     ) -> str:
-        """Name a result metric
+        """Name a result metric or define a formula
 
-        Sets a metric key's label and kind: `count` for things you count (leads, sales) or `money` with its currency (revenue).
+        Sets a metric key's label and kind: `count` for things you count (leads, sales), `money` with its currency (revenue), `percent` or `ratio`.
+
+        Send `formula` to make it a computed metric: `+ - * /` and parentheses over `spend`, `impressions`, `clicks`, `conversions`, `purchase_value` and the metrics you send, at most 200 characters. A formula cannot read another formula.
+
+        It is computed per campaign over the summed values of the range, and has no value when an input is missing or a division is by zero.
 
         Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit
 
@@ -6022,11 +6059,12 @@ def register_generated_tools(mcp, _get_client):
             key: (required)
             label: (required)
             kind: (required)
-            currency: ISO 4217, money metrics only."""
+            currency: ISO 4217, money metrics only.
+            formula: Makes it a computed metric. Null or absent for a number you send."""
         client = _get_client()
         try:
             response = client.ad_campaign_results.set_campaign_result_metric(
-                key=key, label=label, kind=kind, currency=currency
+                key=key, label=label, kind=kind, currency=currency, formula=formula
             )
             return _format_response(response)
         except Exception as e:
@@ -8478,6 +8516,7 @@ def register_generated_tools(mcp, _get_client):
         time_increment: int | None = None,
         daily_level: Literal["campaign", "adset", "ad"] = "campaign",
         compare: Literal["previous"] | None = None,
+        results: bool | None = None,
     ) -> str:
         """Get campaign tree
 
@@ -8545,7 +8584,8 @@ def register_generated_tools(mcp, _get_client):
         - `campaign` (default): on campaign nodes only. The common per-campaign-trend case, and the smallest payload.
         - `adset`: on ad sets too.
         - `ad`: on every ad in `ads[]` as well. Heaviest (a long range × up to 100 ads per ad set); scope with `campaignId` to keep responses small.
-                compare: Set to `previous` to also read the period of the same length that ends the day before `fromDate`. Every campaign, ad set and ad gains `previousMetrics` (same fields as `metrics`) and the response gains `previousRange`, so a table can show the change against the previous period in one call."""
+                compare: Set to `previous` to also read the period of the same length that ends the day before `fromDate`. Every campaign, ad set and ad gains `previousMetrics` (same fields as `metrics`) and the response gains `previousRange`, so a table can show the change against the previous period in one call.
+                results: Set to `true` to add your own results (see [Campaign results](/guides/campaign-results)): every campaign gains `results`, the values you sent for the range plus each formula they allow, and the response gains `resultMetrics` to label them."""
         client = _get_client()
         try:
             response = client.ad_campaigns.get_ad_tree(
@@ -8569,6 +8609,7 @@ def register_generated_tools(mcp, _get_client):
                 time_increment=time_increment,
                 daily_level=daily_level,
                 compare=compare,
+                results=results,
             )
             return _format_response(response)
         except Exception as e:
