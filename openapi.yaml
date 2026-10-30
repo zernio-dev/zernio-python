@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.417.0"
+  version: "1.418.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -36727,6 +36727,8 @@ paths:
                 label: { type: string, minLength: 1, maxLength: 80 }
                 clientId: { type: string, minLength: 1, maxLength: 500 }
                 clientSecret: { type: string, minLength: 1, maxLength: 1000 }
+                metaAppId: { type: string, pattern: '^\d{1,32}$', description: 'Instagram only: the numeric ID of the Meta app your Instagram app lives in. Zernio uses it with `metaAppSecret` to register the webhook. Send both or neither.' }
+                metaAppSecret: { type: string, minLength: 1, maxLength: 1000, description: 'Instagram only: the secret of that Meta app. Never returned.' }
                 slackSigningSecret: { type: string, minLength: 1, maxLength: 1000, description: 'Slack only: the signing secret from the app''s Basic Information page. Needed to receive events from your Slack app; any other platform is a 400.' }
                 scopeAreas:
                   type: array
@@ -36807,6 +36809,8 @@ paths:
               properties:
                 label: { type: string, minLength: 1, maxLength: 80 }
                 clientSecret: { type: string, minLength: 1, maxLength: 1000 }
+                metaAppId: { type: string, pattern: '^\d{1,32}$', description: 'Instagram only: the numeric ID of the Meta app your Instagram app lives in. Zernio uses it with `metaAppSecret` to register the webhook. Send both or neither.' }
+                metaAppSecret: { type: string, minLength: 1, maxLength: 1000, description: 'Instagram only: the secret of that Meta app. Never returned.' }
                 slackSigningSecret: { type: string, minLength: 1, maxLength: 1000, description: 'Slack only: saves or replaces the signing secret from the app''s Basic Information page; any other platform is a 400.' }
                 scopeAreas:
                   type: array

@@ -24343,6 +24343,8 @@ def register_generated_tools(mcp, _get_client):
         label: str,
         client_id: str,
         client_secret: str,
+        meta_app_id: str | None = None,
+        meta_app_secret: str | None = None,
         slack_signing_secret: str | None = None,
         scope_areas: list[Literal["posting", "analytics", "comments", "messaging"]]
         | None = None,
@@ -24365,6 +24367,8 @@ def register_generated_tools(mcp, _get_client):
             label: (required)
             client_id: (required)
             client_secret: (required)
+            meta_app_id: Instagram only: the numeric ID of the Meta app your Instagram app lives in. Zernio uses it with `metaAppSecret` to register the webhook. Send both or neither.
+            meta_app_secret: Instagram only: the secret of that Meta app. Never returned.
             slack_signing_secret: Slack only: the signing secret from the app's Basic Information page. Needed to receive events from your Slack app; any other platform is a 400.
             scope_areas: Areas this app requests. Defaults to every area the platform supports; an area the platform cannot request separately is a 400."""
         client = _get_client()
@@ -24374,6 +24378,8 @@ def register_generated_tools(mcp, _get_client):
                 label=label,
                 client_id=client_id,
                 client_secret=client_secret,
+                meta_app_id=meta_app_id,
+                meta_app_secret=meta_app_secret,
                 slack_signing_secret=slack_signing_secret,
                 scope_areas=scope_areas,
             )
@@ -24409,6 +24415,8 @@ def register_generated_tools(mcp, _get_client):
     def connect_update_o_auth_app(
         label: str | None = None,
         client_secret: str | None = None,
+        meta_app_id: str | None = None,
+        meta_app_secret: str | None = None,
         slack_signing_secret: str | None = None,
         scope_areas: list[Literal["posting", "analytics", "comments", "messaging"]]
         | None = None,
@@ -24424,6 +24432,8 @@ def register_generated_tools(mcp, _get_client):
         Args:
             label
             client_secret
+            meta_app_id: Instagram only: the numeric ID of the Meta app your Instagram app lives in. Zernio uses it with `metaAppSecret` to register the webhook. Send both or neither.
+            meta_app_secret: Instagram only: the secret of that Meta app. Never returned.
             slack_signing_secret: Slack only: saves or replaces the signing secret from the app's Basic Information page; any other platform is a 400.
             scope_areas: Replaces the areas new connects request. Accounts already connected keep what they were granted until they reconnect."""
         client = _get_client()
@@ -24431,6 +24441,8 @@ def register_generated_tools(mcp, _get_client):
             response = client.connect.update_o_auth_app(
                 label=label,
                 client_secret=client_secret,
+                meta_app_id=meta_app_id,
+                meta_app_secret=meta_app_secret,
                 slack_signing_secret=slack_signing_secret,
                 scope_areas=scope_areas,
             )

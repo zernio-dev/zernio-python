@@ -461,6 +461,8 @@ class ConnectResource:
         client_id: str,
         client_secret: str,
         *,
+        meta_app_id: str | None = None,
+        meta_app_secret: str | None = None,
         slack_signing_secret: str | None = None,
         scope_areas: list[str] | None = None,
     ) -> dict[str, Any]:
@@ -470,6 +472,8 @@ class ConnectResource:
             label=label,
             client_id=client_id,
             client_secret=client_secret,
+            meta_app_id=meta_app_id,
+            meta_app_secret=meta_app_secret,
             slack_signing_secret=slack_signing_secret,
             scope_areas=scope_areas,
         )
@@ -484,6 +488,8 @@ class ConnectResource:
         *,
         label: str | None = None,
         client_secret: str | None = None,
+        meta_app_id: str | None = None,
+        meta_app_secret: str | None = None,
         slack_signing_secret: str | None = None,
         scope_areas: list[str] | None = None,
     ) -> dict[str, Any]:
@@ -491,6 +497,8 @@ class ConnectResource:
         payload = self._build_payload(
             label=label,
             client_secret=client_secret,
+            meta_app_id=meta_app_id,
+            meta_app_secret=meta_app_secret,
             slack_signing_secret=slack_signing_secret,
             scope_areas=scope_areas,
         )
@@ -1536,6 +1544,8 @@ class ConnectResource:
         client_id: str,
         client_secret: str,
         *,
+        meta_app_id: str | None = None,
+        meta_app_secret: str | None = None,
         slack_signing_secret: str | None = None,
         scope_areas: list[str] | None = None,
     ) -> dict[str, Any]:
@@ -1545,6 +1555,8 @@ class ConnectResource:
             label=label,
             client_id=client_id,
             client_secret=client_secret,
+            meta_app_id=meta_app_id,
+            meta_app_secret=meta_app_secret,
             slack_signing_secret=slack_signing_secret,
             scope_areas=scope_areas,
         )
@@ -1559,6 +1571,8 @@ class ConnectResource:
         *,
         label: str | None = None,
         client_secret: str | None = None,
+        meta_app_id: str | None = None,
+        meta_app_secret: str | None = None,
         slack_signing_secret: str | None = None,
         scope_areas: list[str] | None = None,
     ) -> dict[str, Any]:
@@ -1566,6 +1580,8 @@ class ConnectResource:
         payload = self._build_payload(
             label=label,
             client_secret=client_secret,
+            meta_app_id=meta_app_id,
+            meta_app_secret=meta_app_secret,
             slack_signing_secret=slack_signing_secret,
             scope_areas=scope_areas,
         )
