@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.427.0"
+  version: "1.428.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -257,7 +257,7 @@ x-documentation:
     - `support.run.completed` - The Support Assistant finished a question. `run.status` is `completed`, or `needs_human` when the assistant handed the question to a person; `run.answer` holds the answer. The `run` object is exactly what `GET /v1/support/runs/{runId}` answers
     - `support.run.failed` - A Support Assistant question failed or expired. Failed runs are not billed, so `run.costUsd` is 0
     - `campaign_submission.received` - A creator submitted a post to a campaign and its tracking window opened
-    - `campaign_submission.flagged` - A submission gained a fraud flag it did not carry before, at submission (for example `duplicate_post` or `duplicate_media`) or on a later sync (`view_spike`, `low_authenticity`, `account_restricted`, `unreachable`, `post_deleted`, `x_read_cap`); `submission.flags` lists every flag it carries
+    - `campaign_submission.flagged` - A submission gained a fraud flag it did not carry before, at submission (for example `duplicate_post` or `duplicate_media`) or on a later sync (`view_spike`, `low_authenticity`, `account_restricted`, `unreachable`, `post_deleted`, `x_read_cap`, `paid_views`, `organic_unverified`); `submission.flags` lists every flag it carries
     - `campaign_submission.pending_review` - A submission is ready for review: a CPM submission reached `minViewsToEarn` or a pool submission `minViewsToQualify`; per-post submissions on the first accrual pass after submission
     - `creator_campaign.budget_exhausted` - A campaign's earnings reached its budget; nothing more accrues until budget is freed. Fires once per campaign
     - `campaign_submission.approved` - An operator approved a submission; what it earned so far moves to owed with the campaign's hold, and later earnings post straight to owed
@@ -1408,6 +1408,7 @@ components:
             type: { type: string, enum: [cpm] }
             metric: { type: string, enum: [views, engagements], description: 'What the rate pays on. Missing means views.' }
             engagementTypes: { type: array, items: { type: string, enum: [likes, comments, shares, saves] }, description: 'The engagements that count. Missing means all four.' }
+            organicViewsOnly: { type: boolean, description: 'Only organic views count; views from ads do not.' }
             ratePer1kCents: { type: integer }
             minViewsToEarn: { type: integer }
             maxPayoutPerClipCents: { type: integer }
@@ -1425,9 +1426,10 @@ components:
             type: { type: string, enum: [pool] }
             poolCents: { type: integer }
             minViewsToQualify: { type: integer }
+            organicViewsOnly: { type: boolean, description: 'Only organic views count; views from ads do not.' }
     CreatorPortalSubmission:
       type: object
-      required: [id, platform, postId, url, status, submittedAt, publishedAt, views, engagements, earnedCents, rejectReason, flags, trackingEndsAt]
+      required: [id, platform, postId, url, status, submittedAt, publishedAt, views, engagements, viewsFromAds, earnedCents, rejectReason, flags, trackingEndsAt]
       properties:
         id: { type: string }
         platform: { type: string }
@@ -1438,6 +1440,7 @@ components:
         publishedAt: { type: [string, "null"], format: date-time }
         views: { type: integer, description: 'Latest view count read for the post.' }
         engagements: { type: [integer, "null"], description: 'The campaign engagement types summed at the latest read. Null until the post is read.' }
+        viewsFromAds: { type: [integer, "null"], description: 'Views that came from ads the creator ran, on YouTube and X. Null where the platform does not report them or before the first read.' }
         earnedCents: { type: integer }
         rejectReason: { type: [string, "null"] }
         flags:
@@ -5688,7 +5691,7 @@ components:
             displayName: { type: string }
         submission:
           type: object
-          required: [id, platform, platformPostId, platformPostUrl, status, viewsAtSubmission, viewsEligible, engagementsLatest, flags]
+          required: [id, platform, platformPostId, platformPostUrl, status, viewsAtSubmission, viewsEligible, engagementsLatest, viewsPaid, flags]
           properties:
             id: { type: string }
             platform: { type: string, example: tiktok }
@@ -5698,6 +5701,7 @@ components:
             viewsAtSubmission: { type: [integer, "null"] }
             viewsEligible: { type: [integer, "null"], description: 'Views that count toward earnings at the latest read.' }
             engagementsLatest: { type: [integer, "null"], description: 'The campaign engagement types summed at the latest read. An engagements campaign earns on this count.' }
+            viewsPaid: { type: [integer, "null"], description: 'Views from ads, on YouTube and X. Null elsewhere or before the first read.' }
             flags:
               type: array
               items:
@@ -5885,6 +5889,7 @@ components:
           minItems: 1
           items: { type: string, enum: [likes, comments, shares, saves] }
           description: 'With `metric: engagements`, the engagements that count. Missing means all four, and sending it on a views campaign answers 400. YouTube reports likes and comments only, Facebook and Threads have no saves, and Pinterest reports saves only.'
+        organicViewsOnly: { type: boolean, default: false, description: 'Count only organic views: views from ads the creator ran do not earn. Every campaign platform must be YouTube or X, which report ad views per post, or the request answers 400. A post earns nothing until its ad views were first read.' }
         ratePer1kCents: { type: integer, minimum: 1 }
         minViewsToEarn: { type: integer, minimum: 0, description: 'The count a post must reach before it earns, in the campaign metric (views or engagements).' }
         maxPayoutPerClipCents: { type: integer, minimum: 1 }
@@ -5906,6 +5911,7 @@ components:
         type: { type: string, enum: [pool] }
         budgetCents: { type: integer, minimum: 0 }
         minViewsToQualify: { type: integer, minimum: 0 }
+        organicViewsOnly: { type: boolean, default: false, description: 'Count only organic views: views from ads the creator ran do not earn. Every campaign platform must be YouTube or X, which report ad views per post, or the request answers 400. A post earns nothing until its ad views were first read.' }
     CreatorCampaignCaps:
       type: object
       required: [authenticityThreshold]
@@ -6105,12 +6111,12 @@ components:
       properties:
         code:
           type: string
-          enum: [duplicate_media, duplicate_post, view_spike, linked_accounts, cross_operator, unreachable, post_deleted, account_restricted, low_authenticity, x_read_cap]
+          enum: [duplicate_media, duplicate_post, view_spike, linked_accounts, cross_operator, unreachable, post_deleted, account_restricted, low_authenticity, x_read_cap, paid_views, organic_unverified]
         detail: { type: string }
         raisedAt: { type: string, format: date-time }
     CampaignSubmission:
       type: object
-      required: [id, campaignId, participantId, creatorId, accountId, platform, platformPostId, platformPostUrl, externalPostId, trackingWindowId, mediaHash, submittedAt, postPublishedAt, status, rejectReason, reviewRound, reviewedBy, reviewedAt, viewsAtSubmission, viewsLatest, viewsEligible, engagementsLatest, lastAccruedViews, accruedCents, approvedCents, authenticityScore, authenticityConfidence, flags, createdAt, updatedAt, creator, authenticity, earnedCents, releasedCents, paidOutCents, window, post]
+      required: [id, campaignId, participantId, creatorId, accountId, platform, platformPostId, platformPostUrl, externalPostId, trackingWindowId, mediaHash, submittedAt, postPublishedAt, status, rejectReason, reviewRound, reviewedBy, reviewedAt, viewsAtSubmission, viewsLatest, viewsEligible, engagementsLatest, viewsPaid, paidViewsReadAt, lastAccruedViews, accruedCents, approvedCents, authenticityScore, authenticityConfidence, flags, createdAt, updatedAt, creator, authenticity, earnedCents, releasedCents, paidOutCents, window, post]
       properties:
         id: { type: string }
         campaignId: { type: string }
@@ -6136,6 +6142,8 @@ components:
         viewsLatest: { type: [integer, "null"], description: 'Latest view count read for the post, frozen at the tracking window end.' }
         viewsEligible: { type: [integer, "null"], description: 'Views that count toward earnings: every view the platform reports for the post, including those before submission, read at the tracking window end at the latest: once the window completes or is cancelled, the last read at or before its end is final and this value stops moving.' }
         engagementsLatest: { type: [integer, "null"], description: 'The campaign engagement types summed at the latest read (all four on a views campaign), frozen at the tracking window end like `viewsEligible`. An `engagements` campaign earns on this count.' }
+        viewsPaid: { type: [integer, "null"], description: 'Views from ads the creator ran: YouTube views from the advertising traffic source, X impressions beyond the organic ones. Null on other platforms and before the first read. On an organic-only campaign `viewsEligible` is the latest views minus these.' }
+        paidViewsReadAt: { type: [string, "null"], format: date-time, description: 'When `viewsPaid` was last read. YouTube refreshes every 6 hours and reports ad views up to 2 days late; X about once a day while the post is under 30 days old.' }
         lastAccruedViews: { type: integer }
         accruedCents: { type: integer }
         approvedCents: { type: integer }
@@ -6271,10 +6279,11 @@ components:
         views:
           type: object
           description: 'Summed over submissions that are not rejected or withdrawn.'
-          required: [eligible, total]
+          required: [eligible, total, paid]
           properties:
             eligible: { type: integer, description: 'Views that count toward earnings.' }
             total: { type: integer, description: 'Latest view counts.' }
+            paid: { type: integer, description: 'Views from ads, on YouTube and X posts.' }
         engagements: { type: integer, description: 'The campaign engagement types summed over the same submissions.' }
         submissions: { $ref: '#/components/schemas/CampaignSubmissionCounts' }
         participants:
@@ -92545,7 +92554,7 @@ paths:
           schema: { type: string }
         - name: flag
           in: query
-          schema: { type: string, enum: [duplicate_media, duplicate_post, view_spike, linked_accounts, cross_operator, unreachable, post_deleted, account_restricted, low_authenticity, x_read_cap] }
+          schema: { type: string, enum: [duplicate_media, duplicate_post, view_spike, linked_accounts, cross_operator, unreachable, post_deleted, account_restricted, low_authenticity, x_read_cap, paid_views, organic_unverified] }
         - name: platform
           in: query
           schema: { type: string, enum: [tiktok, instagram, youtube, threads, pinterest, facebook, twitter] }
