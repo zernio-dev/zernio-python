@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.416.0"
+  version: "1.417.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -199,6 +199,8 @@ x-documentation:
     - `comment.received` - New comment received on a post (Instagram, Facebook, Threads, YouTube, LinkedIn, Bluesky, Reddit, TikTok). X/Twitter does NOT fire this event
     - `review.new` - New review posted on a connected account (Google Business Profile)
     - `review.updated` - A Google Business Profile reviewer edited their review text or rating, or a reply was posted through `POST /v1/inbox/reviews/{reviewId}/reply`. A reply written directly in Google's own interface does NOT fire this event, because Google emits no notification for it.
+    - `review.deleted` - Google Business Profile stopped returning this review, for example after Google's spam filter removed it. Detected by polling: fires usually 6 to 12 hours after the review disappears, only for locations covered by a webhook subscribed to `review.deleted` or `review.restored`. If the review comes back, `review.restored` fires. May arrive for a review id you never received `review.new` for. A review hidden and restored by Google may produce `review.deleted` followed by `review.restored`, and a `review.updated` can arrive for a review previously reported by `review.deleted` (it is restored on the next check).
+    - `review.restored` - A review reported by `review.deleted` is returned by Google again. Same payload as `review.new`.
     - `lead.received` - New lead submitted against a Meta Lead Gen (Instant) Form. `lead.fields` is the question-key → answer map; `lead.formId`/`lead.adId` give provenance.
     - `ad.status_changed` - Ad, ad set, or campaign changed status on the ad platform (Meta: `in_process_ad_objects` entry/exit and `with_issues_ad_objects` violations)
     - `ad.review.approved` - An ad Zernio already tracked passed platform review, or a rejection was overturned (every ad network)
@@ -677,7 +679,7 @@ tags:
       - Accounts and analytics: `account.connected`, `account.disconnected`, `account.permissions_changed`, `account.ads.initial_sync_completed`, `account.ads.sync_failed`, `account.ads.sync_recovered`, `account.rate_limited`, `analytics.synced`
       - Messages: `message.received`, `message.sent`, `message.edited`, `message.deleted`, `message.delivered`, `message.read`, `message.played`, `message.failed`, `reaction.received`, `referral.received`, `conversation.started`, `conversation.control_changed`
       - Calls: `call.received`, `call.ended`, `call.failed`, `call.permission_request`
-      - Engagement and leads: `comment.received`, `review.new`, `review.updated`, `lead.received`
+      - Engagement and leads: `comment.received`, `review.new`, `review.updated`, `review.deleted`, `review.restored`, `lead.received`
       - Ads: `ad.status_changed`, `ad.review.approved`, `ad.review.rejected`, `ad.delivery_issue`, `campaign.budget.depleted`, `ad_account.status_changed`, `ad.video.processed`, `ad_rule.triggered`
       - WhatsApp: `whatsapp.template.status_updated`, `whatsapp.template.category_updated`, `whatsapp.account.name_status_updated`, `whatsapp.account.quality_updated`, `whatsapp.account.status_updated`, `whatsapp.account.alert_received`, `whatsapp.contact.identity_changed`, `whatsapp.automatic_event`
       - WhatsApp numbers: `whatsapp.number.activated`, `whatsapp.number.declined`, `whatsapp.number.action_required`, `whatsapp.number.verification_required`, `whatsapp.number.suspended`, `whatsapp.number.reactivated`, `whatsapp.number.released`, `whatsapp.number.kyc_submitted`
@@ -4881,7 +4883,7 @@ components:
           type: array
           items:
             type: string
-            enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.permissions_changed, account.ads.initial_sync_completed, account.ads.sync_failed, account.ads.sync_recovered, analytics.synced, post.tracking_completed, post.authenticity_changed, message.received, conversation.started, conversation.control_changed, call.received, call.ended, call.failed, call.permission_request, message.sent, message.edited, message.deleted, message.delivered, message.read, message.played, message.failed, reaction.received, referral.received, comment.received, review.new, review.updated, lead.received, ad.status_changed, ad.review.approved, ad.review.rejected, ad.delivery_issue, campaign.budget.depleted, ad_account.status_changed, ad.video.processed, ad_rule.triggered, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.account.quality_updated, whatsapp.account.status_updated, whatsapp.account.alert_received, whatsapp.contact.identity_changed, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, phone_number.stock_available, verification.approved, verification.failed, api.changelog.published, sms.registration.action_required, sms.registration.status_updated, branded_calling.identity.status_updated, branded_calling.identity.action_required, branded_calling.number.status_updated, rcs.agent.status_updated, commerce.product.created, commerce.product.updated, commerce.product.deleted, commerce.order.created, commerce.order.updated, commerce.order.refunded, contact.tag_added, contact.tag_removed, contact.field_changed, sequence.enrolled, sequence.exited, workflow.run.started, workflow.run.completed, workflow.run.failed, support.run.completed, support.run.failed, campaign_submission.received, campaign_submission.flagged, campaign_submission.pending_review, campaign_submission.approved, campaign_submission.rejected, creator_campaign.budget_exhausted, creator_campaign.closed, campaign_payout.payable, campaign_payout.settled, campaign_payout.failed, campaign_participant.joined, campaign_participant.suspended, campaign_participant.removed, account.rate_limited, calendar.event.created, calendar.event.updated, calendar.event.deleted, file.created, file.updated, file.deleted, file.picked, contact.updated, contact.deleted]
+            enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.permissions_changed, account.ads.initial_sync_completed, account.ads.sync_failed, account.ads.sync_recovered, analytics.synced, post.tracking_completed, post.authenticity_changed, message.received, conversation.started, conversation.control_changed, call.received, call.ended, call.failed, call.permission_request, message.sent, message.edited, message.deleted, message.delivered, message.read, message.played, message.failed, reaction.received, referral.received, comment.received, review.new, review.updated, review.deleted, review.restored, lead.received, ad.status_changed, ad.review.approved, ad.review.rejected, ad.delivery_issue, campaign.budget.depleted, ad_account.status_changed, ad.video.processed, ad_rule.triggered, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.account.quality_updated, whatsapp.account.status_updated, whatsapp.account.alert_received, whatsapp.contact.identity_changed, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, phone_number.stock_available, verification.approved, verification.failed, api.changelog.published, sms.registration.action_required, sms.registration.status_updated, branded_calling.identity.status_updated, branded_calling.identity.action_required, branded_calling.number.status_updated, rcs.agent.status_updated, commerce.product.created, commerce.product.updated, commerce.product.deleted, commerce.order.created, commerce.order.updated, commerce.order.refunded, contact.tag_added, contact.tag_removed, contact.field_changed, sequence.enrolled, sequence.exited, workflow.run.started, workflow.run.completed, workflow.run.failed, support.run.completed, support.run.failed, campaign_submission.received, campaign_submission.flagged, campaign_submission.pending_review, campaign_submission.approved, campaign_submission.rejected, creator_campaign.budget_exhausted, creator_campaign.closed, campaign_payout.payable, campaign_payout.settled, campaign_payout.failed, campaign_participant.joined, campaign_participant.suspended, campaign_participant.removed, account.rate_limited, calendar.event.created, calendar.event.updated, calendar.event.deleted, file.created, file.updated, file.deleted, file.picked, contact.updated, contact.deleted]
           description: Events subscribed to
         isActive:
           type: boolean
@@ -6812,7 +6814,7 @@ components:
           description: 'UTC time at which Zernio generated this event (set once when the event payload is built, before delivery is queued). Retries and redeliveries keep the original value, so it reflects the event, not the delivery attempt.'
     ReviewWebhookReview:
       type: object
-      description: Review data shared by review.new and review.updated payloads.
+      description: Review data shared by review.new, review.updated and review.restored payloads.
       required: [id, platform, rating, text, reviewer, createdAt, hasReply]
       properties:
         id:
@@ -6913,6 +6915,101 @@ components:
         event:
           type: string
           enum: [review.updated]
+        review:
+          $ref: '#/components/schemas/ReviewWebhookReview'
+        account:
+          type: object
+          required: [id, platform, username]
+          properties:
+            id:
+              type: string
+            accountId:
+              type: string
+              description: Account ID (same as id); canonical field for account filtering.
+            platform:
+              type: string
+            username:
+              type: string
+        timestamp:
+          type: string
+          format: date-time
+          description: 'UTC time at which Zernio generated this event (set once when the event payload is built, before delivery is queued). Retries and redeliveries keep the original value, so it reflects the event, not the delivery attempt.'
+    WebhookPayloadReviewDeleted:
+      type: object
+      description: |
+        Webhook payload for the review.deleted event.
+
+        Google Business Profile stopped returning this review, for example after Google's spam filter removed it. Detected by polling: fires usually 6 to 12 hours after the review disappears, only for locations covered by a webhook subscribed to review.deleted or review.restored. If the review comes back, review.restored fires. May arrive for a review id you never received review.new for. A review hidden and restored by Google may produce review.deleted followed by review.restored, and a review.updated can arrive for a review previously reported by review.deleted (it is restored on the next check).
+      required: [id, event, review, account, timestamp]
+      properties:
+        id:
+          type: string
+          description: 'Stable webhook event ID: the dedupe key, also sent as the X-Zernio-Event-Id header and identical on every retry and redelivery. It identifies the event only, never an account or other resource.'
+        profiles: { $ref: '#/components/schemas/WebhookProfiles' }
+        test:
+          type: boolean
+          description: 'Always true when present: only a sample sent by POST /v1/webhooks/test with an event carries it. Real deliveries never do.'
+        event:
+          type: string
+          enum: [review.deleted]
+        review:
+          type: object
+          required: [id, platform, rating, createdAt, lastSeenAt]
+          properties:
+            id:
+              type: string
+              description: Full review name, matching review.id on the review.new event ("accounts/123/locations/456/reviews/789").
+            platform:
+              type: string
+              enum: [googlebusiness]
+            rating:
+              type: [integer, "null"]
+              minimum: 1
+              maximum: 5
+              description: Star rating the reviewer gave. Null when it was never recorded.
+            createdAt:
+              type: [string, "null"]
+              format: date-time
+              description: When the reviewer posted the review. Null when it was never recorded.
+            lastSeenAt:
+              type: string
+              format: date-time
+              description: Last time Zernio saw Google return this review.
+        account:
+          type: object
+          required: [id, platform, username]
+          properties:
+            id:
+              type: string
+            accountId:
+              type: string
+              description: Account ID (same as id); canonical field for account filtering.
+            platform:
+              type: string
+            username:
+              type: string
+        timestamp:
+          type: string
+          format: date-time
+          description: 'UTC time at which Zernio generated this event (set once when the event payload is built, before delivery is queued). Retries and redeliveries keep the original value, so it reflects the event, not the delivery attempt.'
+    WebhookPayloadReviewRestored:
+      type: object
+      description: |
+        Webhook payload for the review.restored event. Same shape as review.new.
+
+        A review reported by review.deleted is returned by Google again.
+      required: [id, event, review, account, timestamp]
+      properties:
+        id:
+          type: string
+          description: 'Stable webhook event ID: the dedupe key, also sent as the X-Zernio-Event-Id header and identical on every retry and redelivery. It identifies the event only, never an account or other resource.'
+        profiles: { $ref: '#/components/schemas/WebhookProfiles' }
+        test:
+          type: boolean
+          description: 'Always true when present: only a sample sent by POST /v1/webhooks/test with an event carries it. Real deliveries never do.'
+        event:
+          type: string
+          enum: [review.restored]
         review:
           $ref: '#/components/schemas/ReviewWebhookReview'
         account:
@@ -19458,6 +19555,42 @@ webhooks:
           application/json:
             schema:
               $ref: '#/components/schemas/WebhookPayloadReviewUpdated'
+      responses:
+        '200':
+          description: Webhook received successfully
+  review.deleted:
+    post:
+      operationId: onReviewDeleted
+      summary: Review deleted event
+      description: |
+        Google Business Profile stopped returning this review, for example after Google's spam filter removed it.
+        Detected by polling: fires usually 6 to 12 hours after the review disappears, only for locations covered
+        by a webhook subscribed to review.deleted or review.restored. If the review comes back, review.restored
+        fires. May arrive for a review id you never received review.new for. A review hidden and restored by Google may produce review.deleted followed by review.restored, and a review.updated can arrive for a review previously reported by review.deleted (it is restored on the next check). Requires the Inbox add-on.
+      tags: [Webhook Events]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebhookPayloadReviewDeleted'
+      responses:
+        '200':
+          description: Webhook received successfully
+  review.restored:
+    post:
+      operationId: onReviewRestored
+      summary: Review restored event
+      description: |
+        A review reported by review.deleted is returned by Google again. Same payload as review.new.
+        Requires the Inbox add-on.
+      tags: [Webhook Events]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebhookPayloadReviewRestored'
       responses:
         '200':
           description: Webhook received successfully
@@ -43154,7 +43287,7 @@ paths:
                   minItems: 1
                   items:
                     type: string
-                    enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.permissions_changed, account.ads.initial_sync_completed, account.ads.sync_failed, account.ads.sync_recovered, analytics.synced, post.tracking_completed, post.authenticity_changed, message.received, conversation.started, conversation.control_changed, call.received, call.ended, call.failed, call.permission_request, message.sent, message.edited, message.deleted, message.delivered, message.read, message.played, message.failed, reaction.received, referral.received, comment.received, review.new, review.updated, lead.received, ad.status_changed, ad.review.approved, ad.review.rejected, ad.delivery_issue, campaign.budget.depleted, ad_account.status_changed, ad.video.processed, ad_rule.triggered, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.account.quality_updated, whatsapp.account.status_updated, whatsapp.account.alert_received, whatsapp.contact.identity_changed, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, phone_number.stock_available, verification.approved, verification.failed, api.changelog.published, sms.registration.action_required, sms.registration.status_updated, branded_calling.identity.status_updated, branded_calling.identity.action_required, branded_calling.number.status_updated, rcs.agent.status_updated, commerce.product.created, commerce.product.updated, commerce.product.deleted, commerce.order.created, commerce.order.updated, commerce.order.refunded, contact.tag_added, contact.tag_removed, contact.field_changed, sequence.enrolled, sequence.exited, workflow.run.started, workflow.run.completed, workflow.run.failed, support.run.completed, support.run.failed, campaign_submission.received, campaign_submission.flagged, campaign_submission.pending_review, campaign_submission.approved, campaign_submission.rejected, creator_campaign.budget_exhausted, creator_campaign.closed, campaign_payout.payable, campaign_payout.settled, campaign_payout.failed, campaign_participant.joined, campaign_participant.suspended, campaign_participant.removed]
+                    enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.permissions_changed, account.ads.initial_sync_completed, account.ads.sync_failed, account.ads.sync_recovered, analytics.synced, post.tracking_completed, post.authenticity_changed, message.received, conversation.started, conversation.control_changed, call.received, call.ended, call.failed, call.permission_request, message.sent, message.edited, message.deleted, message.delivered, message.read, message.played, message.failed, reaction.received, referral.received, comment.received, review.new, review.updated, review.deleted, review.restored, lead.received, ad.status_changed, ad.review.approved, ad.review.rejected, ad.delivery_issue, campaign.budget.depleted, ad_account.status_changed, ad.video.processed, ad_rule.triggered, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.account.quality_updated, whatsapp.account.status_updated, whatsapp.account.alert_received, whatsapp.contact.identity_changed, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, phone_number.stock_available, verification.approved, verification.failed, api.changelog.published, sms.registration.action_required, sms.registration.status_updated, branded_calling.identity.status_updated, branded_calling.identity.action_required, branded_calling.number.status_updated, rcs.agent.status_updated, commerce.product.created, commerce.product.updated, commerce.product.deleted, commerce.order.created, commerce.order.updated, commerce.order.refunded, contact.tag_added, contact.tag_removed, contact.field_changed, sequence.enrolled, sequence.exited, workflow.run.started, workflow.run.completed, workflow.run.failed, support.run.completed, support.run.failed, campaign_submission.received, campaign_submission.flagged, campaign_submission.pending_review, campaign_submission.approved, campaign_submission.rejected, creator_campaign.budget_exhausted, creator_campaign.closed, campaign_payout.payable, campaign_payout.settled, campaign_payout.failed, campaign_participant.joined, campaign_participant.suspended, campaign_participant.removed]
                   description: Events to subscribe to (at least one required)
                 isActive:
                   type: boolean
@@ -43321,7 +43454,7 @@ paths:
                   minItems: 1
                   items:
                     type: string
-                    enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.permissions_changed, account.ads.initial_sync_completed, account.ads.sync_failed, account.ads.sync_recovered, analytics.synced, post.tracking_completed, post.authenticity_changed, message.received, conversation.started, conversation.control_changed, call.received, call.ended, call.failed, call.permission_request, message.sent, message.edited, message.deleted, message.delivered, message.read, message.played, message.failed, reaction.received, referral.received, comment.received, review.new, review.updated, lead.received, ad.status_changed, ad.review.approved, ad.review.rejected, ad.delivery_issue, campaign.budget.depleted, ad_account.status_changed, ad.video.processed, ad_rule.triggered, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.account.quality_updated, whatsapp.account.status_updated, whatsapp.account.alert_received, whatsapp.contact.identity_changed, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, phone_number.stock_available, verification.approved, verification.failed, api.changelog.published, sms.registration.action_required, sms.registration.status_updated, branded_calling.identity.status_updated, branded_calling.identity.action_required, branded_calling.number.status_updated, rcs.agent.status_updated, commerce.product.created, commerce.product.updated, commerce.product.deleted, commerce.order.created, commerce.order.updated, commerce.order.refunded, contact.tag_added, contact.tag_removed, contact.field_changed, sequence.enrolled, sequence.exited, workflow.run.started, workflow.run.completed, workflow.run.failed, support.run.completed, support.run.failed, campaign_submission.received, campaign_submission.flagged, campaign_submission.pending_review, campaign_submission.approved, campaign_submission.rejected, creator_campaign.budget_exhausted, creator_campaign.closed, campaign_payout.payable, campaign_payout.settled, campaign_payout.failed, campaign_participant.joined, campaign_participant.suspended, campaign_participant.removed]
+                    enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.permissions_changed, account.ads.initial_sync_completed, account.ads.sync_failed, account.ads.sync_recovered, analytics.synced, post.tracking_completed, post.authenticity_changed, message.received, conversation.started, conversation.control_changed, call.received, call.ended, call.failed, call.permission_request, message.sent, message.edited, message.deleted, message.delivered, message.read, message.played, message.failed, reaction.received, referral.received, comment.received, review.new, review.updated, review.deleted, review.restored, lead.received, ad.status_changed, ad.review.approved, ad.review.rejected, ad.delivery_issue, campaign.budget.depleted, ad_account.status_changed, ad.video.processed, ad_rule.triggered, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.account.quality_updated, whatsapp.account.status_updated, whatsapp.account.alert_received, whatsapp.contact.identity_changed, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, phone_number.stock_available, verification.approved, verification.failed, api.changelog.published, sms.registration.action_required, sms.registration.status_updated, branded_calling.identity.status_updated, branded_calling.identity.action_required, branded_calling.number.status_updated, rcs.agent.status_updated, commerce.product.created, commerce.product.updated, commerce.product.deleted, commerce.order.created, commerce.order.updated, commerce.order.refunded, contact.tag_added, contact.tag_removed, contact.field_changed, sequence.enrolled, sequence.exited, workflow.run.started, workflow.run.completed, workflow.run.failed, support.run.completed, support.run.failed, campaign_submission.received, campaign_submission.flagged, campaign_submission.pending_review, campaign_submission.approved, campaign_submission.rejected, creator_campaign.budget_exhausted, creator_campaign.closed, campaign_payout.payable, campaign_payout.settled, campaign_payout.failed, campaign_participant.joined, campaign_participant.suspended, campaign_participant.removed]
                   description: Events to subscribe to. Must contain at least one event if provided.
                 isActive:
                   type: boolean
@@ -43728,6 +43861,8 @@ paths:
                     - comment.received
                     - review.new
                     - review.updated
+                    - review.deleted
+                    - review.restored
                     - ad.status_changed
                     - ad.review.approved
                     - ad.review.rejected
