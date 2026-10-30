@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.424.0"
+  version: "1.426.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -1403,6 +1403,8 @@ components:
           required: [type, ratePer1kCents, minViewsToEarn]
           properties:
             type: { type: string, enum: [cpm] }
+            metric: { type: string, enum: [views, engagements], description: 'What the rate pays on. Missing means views.' }
+            engagementTypes: { type: array, items: { type: string, enum: [likes, comments, shares, saves] }, description: 'The engagements that count. Missing means all four.' }
             ratePer1kCents: { type: integer }
             minViewsToEarn: { type: integer }
             maxPayoutPerClipCents: { type: integer }
@@ -1422,7 +1424,7 @@ components:
             minViewsToQualify: { type: integer }
     CreatorPortalSubmission:
       type: object
-      required: [id, platform, postId, url, status, submittedAt, publishedAt, views, earnedCents, rejectReason, flags, trackingEndsAt]
+      required: [id, platform, postId, url, status, submittedAt, publishedAt, views, engagements, earnedCents, rejectReason, flags, trackingEndsAt]
       properties:
         id: { type: string }
         platform: { type: string }
@@ -1432,6 +1434,7 @@ components:
         submittedAt: { type: string, format: date-time }
         publishedAt: { type: [string, "null"], format: date-time }
         views: { type: integer, description: 'Latest view count read for the post.' }
+        engagements: { type: [integer, "null"], description: 'The campaign engagement types summed at the latest read. Null until the post is read.' }
         earnedCents: { type: integer }
         rejectReason: { type: [string, "null"] }
         flags:
@@ -5682,7 +5685,7 @@ components:
             displayName: { type: string }
         submission:
           type: object
-          required: [id, platform, platformPostId, platformPostUrl, status, viewsAtSubmission, flags]
+          required: [id, platform, platformPostId, platformPostUrl, status, viewsAtSubmission, viewsEligible, engagementsLatest, flags]
           properties:
             id: { type: string }
             platform: { type: string, example: tiktok }
@@ -5690,6 +5693,8 @@ components:
             platformPostUrl: { type: [string, "null"] }
             status: { type: string, example: tracking }
             viewsAtSubmission: { type: [integer, "null"] }
+            viewsEligible: { type: [integer, "null"], description: 'Views that count toward earnings at the latest read.' }
+            engagementsLatest: { type: [integer, "null"], description: 'The campaign engagement types summed at the latest read. An engagements campaign earns on this count.' }
             flags:
               type: array
               items:
@@ -5848,7 +5853,7 @@ components:
 
         Every type carries `budgetCents`, the most the campaign can pay out in total. Once earnings reach it, the campaign stops accruing and `creator_campaign.budget_exhausted` fires.
 
-        - `cpm`: `ratePer1kCents` per 1,000 eligible views, earned from `minViewsToEarn` views on, capped per post by `maxPayoutPerClipCents`.
+        - `cpm`: `ratePer1kCents` per 1,000 of the counted `metric` (views by default), earned once a post reaches `minViewsToEarn` of it, capped per post by `maxPayoutPerClipCents`.
         - `per_post`: `perApprovedPostCents` for each approved post, at most `maxPostsPerParticipant` per participant.
         - `pool`: `budgetCents` is split at close among approved posts by eligible views; a post needs `minViewsToQualify` views to share.
       oneOf:
@@ -5867,8 +5872,18 @@ components:
       required: [type, ratePer1kCents, minViewsToEarn, budgetCents]
       properties:
         type: { type: string, enum: [cpm] }
+        metric:
+          type: string
+          enum: [views, engagements]
+          default: views
+          description: 'What the rate pays on. `engagements` counts the `engagementTypes` as each platform reports them, and `minViewsToEarn` then applies to engagements. Fixed once the campaign leaves draft.'
+        engagementTypes:
+          type: array
+          minItems: 1
+          items: { type: string, enum: [likes, comments, shares, saves] }
+          description: 'With `metric: engagements`, the engagements that count. Missing means all four, and sending it on a views campaign answers 400. YouTube reports likes and comments only, Facebook and Threads have no saves, and Pinterest reports saves only.'
         ratePer1kCents: { type: integer, minimum: 1 }
-        minViewsToEarn: { type: integer, minimum: 0 }
+        minViewsToEarn: { type: integer, minimum: 0, description: 'The count a post must reach before it earns, in the campaign metric (views or engagements).' }
         maxPayoutPerClipCents: { type: integer, minimum: 1 }
         budgetCents: { type: integer, minimum: 0 }
     CreatorCampaignEconomicsPerPost:
@@ -6092,7 +6107,7 @@ components:
         raisedAt: { type: string, format: date-time }
     CampaignSubmission:
       type: object
-      required: [id, campaignId, participantId, creatorId, accountId, platform, platformPostId, platformPostUrl, externalPostId, trackingWindowId, mediaHash, submittedAt, postPublishedAt, status, rejectReason, reviewRound, reviewedBy, reviewedAt, viewsAtSubmission, viewsLatest, viewsEligible, lastAccruedViews, accruedCents, approvedCents, authenticityScore, authenticityConfidence, flags, createdAt, updatedAt, creator, authenticity, earnedCents, releasedCents, paidOutCents, window, post]
+      required: [id, campaignId, participantId, creatorId, accountId, platform, platformPostId, platformPostUrl, externalPostId, trackingWindowId, mediaHash, submittedAt, postPublishedAt, status, rejectReason, reviewRound, reviewedBy, reviewedAt, viewsAtSubmission, viewsLatest, viewsEligible, engagementsLatest, lastAccruedViews, accruedCents, approvedCents, authenticityScore, authenticityConfidence, flags, createdAt, updatedAt, creator, authenticity, earnedCents, releasedCents, paidOutCents, window, post]
       properties:
         id: { type: string }
         campaignId: { type: string }
@@ -6117,6 +6132,7 @@ components:
         viewsAtSubmission: { type: [integer, "null"], description: 'Views when the post was submitted. They count toward earnings like every later view.' }
         viewsLatest: { type: [integer, "null"], description: 'Latest view count read for the post, frozen at the tracking window end.' }
         viewsEligible: { type: [integer, "null"], description: 'Views that count toward earnings: every view the platform reports for the post, including those before submission, read at the tracking window end at the latest: once the window completes or is cancelled, the last read at or before its end is final and this value stops moving.' }
+        engagementsLatest: { type: [integer, "null"], description: 'The campaign engagement types summed at the latest read (all four on a views campaign), frozen at the tracking window end like `viewsEligible`. An `engagements` campaign earns on this count.' }
         lastAccruedViews: { type: integer }
         accruedCents: { type: integer }
         approvedCents: { type: integer }
@@ -6240,7 +6256,7 @@ components:
         createdAt: { type: string, format: date-time }
     CampaignReport:
       type: object
-      required: [spend, views, submissions, participants, authenticity]
+      required: [spend, views, engagements, submissions, participants, authenticity]
       properties:
         spend:
           type: object
@@ -6256,6 +6272,7 @@ components:
           properties:
             eligible: { type: integer, description: 'Views that count toward earnings.' }
             total: { type: integer, description: 'Latest view counts.' }
+        engagements: { type: integer, description: 'The campaign engagement types summed over the same submissions.' }
         submissions: { $ref: '#/components/schemas/CampaignSubmissionCounts' }
         participants:
           type: array
@@ -92324,7 +92341,7 @@ paths:
           description: Only submissions whose creator name or post link contains this text, ignoring case.
         - name: sort
           in: query
-          schema: { type: string, enum: [submittedAt, viewsEligible, earnedCents, authenticityScore], default: submittedAt }
+          schema: { type: string, enum: [submittedAt, viewsEligible, engagementsLatest, earnedCents, authenticityScore], default: submittedAt }
           description: What to sort by. Posts with no value to sort by (not read yet, not scored) come last in either direction.
         - name: order
           in: query

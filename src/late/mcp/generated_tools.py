@@ -12938,7 +12938,7 @@ def register_generated_tools(mcp, _get_client):
             response = client.ad_rules.list_ad_rule_templates()
             return _format_response(response)
         except Exception as e:
-            return f"Error: {e}"
+            raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
         annotations=ToolAnnotations(
@@ -27817,7 +27817,7 @@ def register_generated_tools(mcp, _get_client):
             profile_id: Profile the campaign lives in. Creator accounts connect into the same workspace. (required)
             name: (required)
             brand_name: (required)
-            economics: Object with keys: type (one of: cpm; required); ratePer1kCents (integer, required); minViewsToEarn (integer, required); maxPayoutPerClipCents (integer); budgetCents (integer, required) (required)
+            economics: Object with keys: type (one of: cpm; required); metric (one of: views, engagements) - What the rate pays on. `engagements` counts the `engagementTypes` as each platform reports them, and `minViewsToEarn` then applies to engagements. Fixed once ...; engagementTypes (list of string) - With `metric: engagements`, the engagements that count. Missing means all four, and sending it on a views campaign answers 400. YouTube reports likes and ...; ratePer1kCents (integer, required); minViewsToEarn (integer, required) - The count a post must reach before it earns, in the campaign metric (views or engagements).; maxPayoutPerClipCents (integer); budgetCents (integer, required) (required)
             caps: Omitted, the campaign starts with authenticityThreshold 40 and no other caps. Object with keys: maxParticipants (integer) - Invites and joins past this count answer 403.; maxSubmissionsPerParticipantPerDay (integer) - Posts one participant can submit to this campaign per UTC day, counting every submission whatever its status. The next submit that day answers 409 ...; maxAccountsPerParticipant (integer) - Accounts a participant can use in this campaign. Connecting a new account past it answers 400; only the first accounts connected, up to this count, can submit ...; maxXReadSpendCents (integer) - X campaigns only: what tracking X posts may cost in X reads, in cents. Unset means 5000 ($50). X bills one read per tracked post per UTC day, and you pay it ...; authenticityThreshold (number, required) - A submission whose authenticity score falls below this is flagged `low_authenticity`. It is never rejected automatically. Defaults to 40 on create.
             platforms: Platforms creators may post on. At least one is needed to activate. `twitter` (X) needs usage-based billing: X reads are billed at cost, up to `caps.maxXReadSpendCents`, and X views are the post's impressions. `facebook` takes Page reels and videos only.
             content_rules
@@ -27962,7 +27962,7 @@ def register_generated_tools(mcp, _get_client):
             hold_days
             max_post_age_minutes: Null removes the limit.
             settlement
-            economics: Object with keys: type (one of: cpm; required); ratePer1kCents (integer, required); minViewsToEarn (integer, required); maxPayoutPerClipCents (integer); budgetCents (integer, required)
+            economics: Object with keys: type (one of: cpm; required); metric (one of: views, engagements) - What the rate pays on. `engagements` counts the `engagementTypes` as each platform reports them, and `minViewsToEarn` then applies to engagements. Fixed once ...; engagementTypes (list of string) - With `metric: engagements`, the engagements that count. Missing means all four, and sending it on a views campaign answers 400. YouTube reports likes and ...; ratePer1kCents (integer, required); minViewsToEarn (integer, required) - The count a post must reach before it earns, in the campaign metric (views or engagements).; maxPayoutPerClipCents (integer); budgetCents (integer, required)
             caps: Object with keys: maxParticipants (integer) - Invites and joins past this count answer 403.; maxSubmissionsPerParticipantPerDay (integer) - Posts one participant can submit to this campaign per UTC day, counting every submission whatever its status. The next submit that day answers 409 ...; maxAccountsPerParticipant (integer) - Accounts a participant can use in this campaign. Connecting a new account past it answers 400; only the first accounts connected, up to this count, can submit ...; maxXReadSpendCents (integer) - X campaigns only: what tracking X posts may cost in X reads, in cents. Unset means 5000 ($50). X bills one read per tracked post per UTC day, and you pay it ...; authenticityThreshold (number, required) - A submission whose authenticity score falls below this is flagged `low_authenticity`. It is never rejected automatically. Defaults to 40 on create.
             branding"""
         client = _get_client()
@@ -28311,7 +28311,7 @@ def register_generated_tools(mcp, _get_client):
             )
             return _format_response(response)
         except Exception as e:
-            return f"Error: {e}"
+            raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
         annotations=ToolAnnotations(
@@ -28513,7 +28513,11 @@ def register_generated_tools(mcp, _get_client):
         max_score: int | None = None,
         q: str | None = None,
         sort: Literal[
-            "submittedAt", "viewsEligible", "earnedCents", "authenticityScore"
+            "submittedAt",
+            "viewsEligible",
+            "engagementsLatest",
+            "earnedCents",
+            "authenticityScore",
         ] = "submittedAt",
         order: Literal["asc", "desc"] = "desc",
         limit: int = 50,
@@ -42562,7 +42566,7 @@ def register_generated_tools(mcp, _get_client):
             response = client.treasury.confirm_topup(topup_id=topup_id)
             return _format_response(response)
         except Exception as e:
-            return f"Error: {e}"
+            raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
         annotations=ToolAnnotations(
@@ -42590,7 +42594,7 @@ def register_generated_tools(mcp, _get_client):
             response = client.treasury.cancel_topup(topup_id=topup_id)
             return _format_response(response)
         except Exception as e:
-            return f"Error: {e}"
+            raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
         annotations=ToolAnnotations(
@@ -42769,7 +42773,7 @@ def register_generated_tools(mcp, _get_client):
             response = client.treasury.confirm_payout_batch(batch_id=batch_id)
             return _format_response(response)
         except Exception as e:
-            return f"Error: {e}"
+            raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
         annotations=ToolAnnotations(
