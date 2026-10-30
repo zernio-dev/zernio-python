@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.420.1"
+  version: "1.421.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -32859,6 +32859,32 @@ paths:
             - Persisted server-side; the latest call wins. De-scoped ad accounts have their synced ads, campaigns, ad sets and keywords removed.
             - On Meta only the scoped ad accounts get webhook subscriptions, including when the call starts a fresh OAuth.
             - Omitting both `adAccountId` and `adAccountIds` keeps any previously persisted scope unchanged (no scope means every reachable ad account).
+        - name: welcome
+          in: query
+          schema: { type: boolean }
+          description: |
+            When `true`, `authUrl` opens on the Zernio-hosted welcome screen with your brand, as on GET /v1/connect/{platform}, naming the ads platform ("<brandName> wants to connect to your Meta Ads").
+
+            - With no `redirect_url`, the flow ends on the branded result page instead of the Zernio dashboard.
+            - Shown only with `welcome=true`: the workspace's saved "on by default" (`PUT /v1/connect/welcome-screen`) applies to GET /v1/connect/{platform} only, so ads links behave as before unless you opt in. The saved brand still fills in what the call leaves out.
+            - Cannot be combined with `headless=true` (400 `INVALID_FIELD_VALUE`).
+            - Responses with `alreadyConnected: true` carry no `authUrl`, so they show no screen.
+        - name: brandName
+          in: query
+          schema: { type: string, minLength: 1, maxLength: 60 }
+          description: 'Welcome screen only: your product name in its heading. Same rules as on GET /v1/connect/{platform}.'
+        - name: logoUrl
+          in: query
+          schema: { type: string, format: uri, maxLength: 2048 }
+          description: 'Welcome screen only: https URL of your square logo. Rejected with 400 `INVALID_FIELD_VALUE` when the welcome screen is not shown.'
+        - name: primaryColor
+          in: query
+          schema: { type: string, pattern: '^#[0-9a-fA-F]{6}$' }
+          description: 'Welcome screen only: hex colour (`#RRGGBB`) of its button.'
+        - name: welcomeTheme
+          in: query
+          schema: { type: string, maxLength: 4000 }
+          description: 'Welcome screen only: a URL-encoded JSON object restyling and rewording the welcome screen and the result page, with the keys documented on GET /v1/connect/{platform}. Rejected when the welcome screen is not shown.'
       security:
         - bearerAuth: []
       responses:

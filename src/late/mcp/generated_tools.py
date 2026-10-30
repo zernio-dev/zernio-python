@@ -23333,6 +23333,11 @@ def register_generated_tools(mcp, _get_client):
         force: bool = False,
         ad_account_id: str | None = None,
         ad_account_ids: list[str] | None = None,
+        welcome: bool | None = None,
+        brand_name: str | None = None,
+        logo_url: str | None = None,
+        primary_color: str | None = None,
+        welcome_theme: str | None = None,
     ) -> str:
         """Connect ads for a platform
 
@@ -23430,7 +23435,17 @@ def register_generated_tools(mcp, _get_client):
 
         - Persisted server-side; the latest call wins. De-scoped ad accounts have their synced ads, campaigns, ad sets and keywords removed.
         - On Meta only the scoped ad accounts get webhook subscriptions, including when the call starts a fresh OAuth.
-        - Omitting both `adAccountId` and `adAccountIds` keeps any previously persisted scope unchanged (no scope means every reachable ad account)."""
+        - Omitting both `adAccountId` and `adAccountIds` keeps any previously persisted scope unchanged (no scope means every reachable ad account).
+                welcome: When `true`, `authUrl` opens on the Zernio-hosted welcome screen with your brand, as on GET /v1/connect/{platform}, naming the ads platform ("<brandName> wants to connect to your Meta Ads").
+
+        - With no `redirect_url`, the flow ends on the branded result page instead of the Zernio dashboard.
+        - Shown only with `welcome=true`: the workspace's saved "on by default" (`PUT /v1/connect/welcome-screen`) applies to GET /v1/connect/{platform} only, so ads links behave as before unless you opt in. The saved brand still fills in what the call leaves out.
+        - Cannot be combined with `headless=true` (400 `INVALID_FIELD_VALUE`).
+        - Responses with `alreadyConnected: true` carry no `authUrl`, so they show no screen.
+                brand_name: Welcome screen only: your product name in its heading. Same rules as on GET /v1/connect/{platform}.
+                logo_url: Welcome screen only: https URL of your square logo. Rejected with 400 `INVALID_FIELD_VALUE` when the welcome screen is not shown.
+                primary_color: Welcome screen only: hex colour (`#RRGGBB`) of its button.
+                welcome_theme: Welcome screen only: a URL-encoded JSON object restyling and rewording the welcome screen and the result page, with the keys documented on GET /v1/connect/{platform}. Rejected when the welcome screen is not shown."""
         client = _get_client()
         try:
             response = client.connect.connect_ads(
@@ -23445,6 +23460,11 @@ def register_generated_tools(mcp, _get_client):
                 force=force,
                 ad_account_id=ad_account_id,
                 ad_account_ids=ad_account_ids,
+                welcome=welcome,
+                brand_name=brand_name,
+                logo_url=logo_url,
+                primary_color=primary_color,
+                welcome_theme=welcome_theme,
             )
             return _format_response(response)
         except Exception as e:

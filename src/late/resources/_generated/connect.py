@@ -148,6 +148,11 @@ class ConnectResource:
         force: bool | None = False,
         ad_account_id: str | None = None,
         ad_account_ids: list[str] | None = None,
+        welcome: bool | None = None,
+        brand_name: str | None = None,
+        logo_url: str | None = None,
+        primary_color: str | None = None,
+        welcome_theme: str | None = None,
     ) -> dict[str, Any]:
         """Connect ads for a platform"""
         params = self._build_params(
@@ -161,6 +166,11 @@ class ConnectResource:
             force=force,
             ad_account_id=ad_account_id,
             ad_account_ids=ad_account_ids,
+            welcome=welcome,
+            brand_name=brand_name,
+            logo_url=logo_url,
+            primary_color=primary_color,
+            welcome_theme=welcome_theme,
         )
         return self._client._get(f"/v1/connect/{platform}/ads", params=params)
 
@@ -1227,6 +1237,11 @@ class ConnectResource:
         force: bool | None = False,
         ad_account_id: str | None = None,
         ad_account_ids: list[str] | None = None,
+        welcome: bool | None = None,
+        brand_name: str | None = None,
+        logo_url: str | None = None,
+        primary_color: str | None = None,
+        welcome_theme: str | None = None,
     ) -> dict[str, Any]:
         """Connect ads for a platform (async)"""
         params = self._build_params(
@@ -1240,6 +1255,11 @@ class ConnectResource:
             force=force,
             ad_account_id=ad_account_id,
             ad_account_ids=ad_account_ids,
+            welcome=welcome,
+            brand_name=brand_name,
+            logo_url=logo_url,
+            primary_color=primary_color,
+            welcome_theme=welcome_theme,
         )
         return await self._client._aget(f"/v1/connect/{platform}/ads", params=params)
 
