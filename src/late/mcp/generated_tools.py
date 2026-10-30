@@ -748,6 +748,7 @@ def register_generated_tools(mcp, _get_client):
         order: Literal["asc", "desc"] = "asc",
         include_over_limit: bool = False,
         exclude_hidden: bool = False,
+        ad_account_rows: bool = False,
         include_creator_accounts: bool = False,
         include_sandbox: bool = False,
         include_status_counts: bool = False,
@@ -783,6 +784,9 @@ def register_generated_tools(mcp, _get_client):
         - the internal `sms` and `phone` accounts behind each phone number.
 
         Applied before pagination, so page totals and `statusCounts` count only the remaining accounts. Sandbox accounts added by `includeSandbox` are appended after this filter. Accepts `true` or `false` in any letter case; any other value returns 400.
+                ad_account_rows: When true, lists every ads account row, one per ad account. By default an API key or OAuth app sees each ads login once per profile and platform, as the single ads connection it had before rows per ad account: its oldest row.
+
+        Only changes the result once ads are connected as one row per ad account; until then the two shapes are the same. Applied before pagination. Accepts `true` or `false` in any letter case; any other value returns 400.
                 include_creator_accounts: When true, also lists the accounts creators connected to your creator campaigns. They sit on creator profiles, which `GET /v1/profiles` does not list, and are left out by default.
 
         Asking for one creator profile by `profileId` lists its accounts either way. Applied before pagination. Accepts `true` or `false` in any letter case; any other value returns 400.
@@ -809,6 +813,7 @@ def register_generated_tools(mcp, _get_client):
                 order=order,
                 include_over_limit=include_over_limit,
                 exclude_hidden=exclude_hidden,
+                ad_account_rows=ad_account_rows,
                 include_creator_accounts=include_creator_accounts,
                 include_sandbox=include_sandbox,
                 include_status_counts=include_status_counts,
