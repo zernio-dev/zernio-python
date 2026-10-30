@@ -596,7 +596,7 @@ def generate_tool_handler(
     lines.append(f"        response = client.{resource}.{sdk_method}({', '.join(sdk_args)})")
     lines.append("        return _format_response(response)")
     lines.append("    except Exception as e:")
-    lines.append("        return f'Error: {e}'")
+    lines.append("        raise ToolError(f'Error: {e}') from e")
 
     return "\n".join(lines)
 
@@ -683,6 +683,7 @@ def main() -> int:
         "import base64",
         "from typing import Any, Literal",
         "",
+        "from fastmcp.exceptions import ToolError",
         "from mcp.types import ToolAnnotations",
         "",
         "",
