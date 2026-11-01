@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.429.2"
+  version: "1.430.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -10699,6 +10699,10 @@ components:
         firstComment:
           type: string
           description: Optional first comment to post immediately after publishing (feed posts and reels, not stories). Skipped when facebookSettings.draft is true.
+        isAiGenerated:
+          type: boolean
+          default: false
+          description: 'When true, Facebook shows its AI-disclosure label on the post. Forwarded as is_ai_generated on Reels (contentType=reel) and video Stories (contentType=story with a video). Meta documents no such parameter for feed posts, feed videos or photo Stories, so the flag is accepted with a warning and no label there.'
         pageId:
           type: string
           description: Target Facebook Page ID for multi-page posting. If omitted, uses the default page. Use GET /v1/accounts/{id}/facebook-page to list pages.
