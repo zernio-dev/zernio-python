@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.429.1"
+  version: "1.429.2"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -31201,6 +31201,7 @@ paths:
 
         - When the Meta link is dead, `platformConnection.status` is `disconnected` and the overall `status` is `error`.
         - When Meta reports that the number's inbound message webhook does not reach Zernio, or subscribing the number's WhatsApp Business Account to Zernio's webhooks failed at connect, `platformConnection.inboundWebhookSubscribed` is `false`, an entry is added to `issues`, and the overall `status` is at least `warning`.
+        - When `platformConnection.phoneStatus` is anything other than `CONNECTED`, an entry is added to `issues` and the overall `status` is at least `warning`; `BANNED` makes it `error`. `disconnectReason` stays null, since reconnecting does not lift a Meta status.
 
         ### Standalone ads connections (`googleads`, `redditads`)
 
@@ -31278,7 +31279,7 @@ paths:
                             scope: { type: string }
                             granted: { type: boolean }
                             required: { type: boolean }
-                      canPost: { type: boolean }
+                      canPost: { type: boolean, description: 'Whether the granted OAuth scopes allow posting. Scopes only: for WhatsApp, whether Meta lets the number send is `platformConnection.phoneStatus` and the overall `status`.' }
                       canFetchAnalytics: { type: boolean }
                       missingRequired: { type: array, items: { type: string } }
                   issues:
@@ -31290,9 +31291,9 @@ paths:
                     items: { type: string }
                     description: Actionable recommendations to fix issues
                   ownerUserId: { type: string, description: 'User id of the profile owner, not necessarily the team member who connected the account.' }
-                  disconnectReason: { type: [string, "null"], description: 'Why the connection is broken or its token refresh is failing, from the most recent current cause. Null when the connection is healthy, including when the account is unhealthy for another reason (analytics, messaging restriction, missing analytics scopes), or when no cause is stored.' }
+                  disconnectReason: { type: [string, "null"], description: 'Why the connection is broken or its token refresh is failing, from the most recent current cause. Null when the connection is healthy, including when the account is unhealthy for another reason (analytics, messaging restriction, missing analytics scopes, Meta phone status), or when no cause is stored.' }
                   disconnectionType: { type: [string, "null"], enum: [intentional, unintentional, null], description: 'intentional: deliberately disconnected by the user or by Zernio (for example a plan downgrade), not a token failure. unintentional: token expired or revoked, or an auth failure. Null when disconnectReason is null.' }
-                  unhealthySince: { type: [string, "null"], format: date-time, description: 'When the earliest current stored cause was recorded (the start of the outage); for an intentional disconnect, when it was disconnected. Null when the connection is healthy, including when the account is unhealthy for another reason (analytics, messaging restriction, missing analytics scopes), or when the time is unknown.' }
+                  unhealthySince: { type: [string, "null"], format: date-time, description: 'When the earliest current stored cause was recorded (the start of the outage); for an intentional disconnect, when it was disconnected. Null when the connection is healthy, including when the account is unhealthy for another reason (analytics, messaging restriction, missing analytics scopes, Meta phone status), or when unknown.' }
                   analyticsSync:
                     type: object
                     description: 'Absent on platforms without analytics sync. failing: several consecutive sync attempts failed. stalled: a sync was requested over 6 hours ago and never completed. never_synced: no sync has completed yet. Failing and stalled raise the account status to at least warning.'
@@ -31333,7 +31334,7 @@ paths:
                         description: When this live probe ran (always the current request; never cached)
                       phoneStatus:
                         type: [string, "null"]
-                        description: 'Meta''s own `status` field from the phone-number node (for example CONNECTED), when the object was readable'
+                        description: 'Meta''s own `status` field from the phone-number node (for example CONNECTED), when the object was readable. Anything other than CONNECTED adds an issue and raises `status` (BANNED: error, others: warning).'
                       metaError:
                         type: [object, "null"]
                         description: Set only when status is `disconnected`
