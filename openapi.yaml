@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.430.0"
+  version: "1.431.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -10708,6 +10708,23 @@ components:
           description: Target Facebook Page ID for multi-page posting. If omitted, uses the default page. Use GET /v1/accounts/{id}/facebook-page to list pages.
         geoRestriction:
           $ref: '#/components/schemas/GeoRestriction'
+        collaborators:
+          type: array
+          items:
+            type: string
+          description: 'Facebook Page IDs (numeric, up to 10 unique) to invite as collaborators. Reels only (contentType=reel), sent after the Reel is published, never for drafts. Each Page must accept. Meta allows 10 invites per Page per 24 hours; rejected invites are listed in failedCollaborators. Other values are ignored with a warning.'
+        failedCollaborators:
+          type: array
+          readOnly: true
+          items:
+            type: object
+            required: [pageId, reason]
+            properties:
+              pageId:
+                type: string
+              reason:
+                type: string
+          description: 'Output only. Collaborator invites Facebook rejected after the Reel was published. The Reel itself stays published.'
         facebookSettings:
           $ref: '#/components/schemas/FacebookSettings'
       description: |
@@ -10789,7 +10806,7 @@ components:
         collaborators:
           type: array
           items: { type: string }
-          description: Up to 3 Instagram usernames to invite as collaborators (feed/Reels only)
+          description: 'Up to 3 Instagram usernames to invite as collaborators (feed/Reels only). Collaborators are supported on Instagram and Facebook Page Reels only. TikTok, YouTube, Threads, LinkedIn, X and Pinterest do not expose collaborators in their public APIs.'
         droppedCollaborators:
           type: array
           readOnly: true
