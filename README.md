@@ -126,8 +126,8 @@ print("Analytics:", data)
 ```python
 data = client.accounts.list()
 
-for account in data["accounts"]:
-    print(f"{account['platform']}: @{account['username']}")
+for account in data.accounts:
+    print(f"{account.platform.value}: @{account.username}")
 ```
 
 ### Async Support
