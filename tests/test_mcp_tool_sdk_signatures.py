@@ -54,9 +54,7 @@ def _sdk_calls() -> list[tuple[str, str, str, int, list[str]]]:
 
 
 # Known mismatches left as-is; strict=True flags an entry once it starts passing.
-KNOWN_FAILURES = {
-    "tools_download_tik_tok_video": "ToolsResource does not expose the generated method",
-}
+KNOWN_FAILURES: dict[str, str] = {}
 
 SDK_CALLS = _sdk_calls()
 

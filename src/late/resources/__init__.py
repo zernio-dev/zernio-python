@@ -84,7 +84,6 @@ from .media import MediaResource
 from .posts import PostsResource
 from .profiles import ProfilesResource
 from .queue import QueueResource
-from .tools import ToolsResource
 from .users import UsersResource
 
 __all__ = [
@@ -151,7 +150,6 @@ __all__ = [
     "SlackResource",
     "SmsResource",
     "SupportAssistantResource",
-    "ToolsResource",
     "TrackingTagsResource",
     "TreasuryResource",
     "TwitterEngagementResource",

@@ -281,17 +281,7 @@ class DayOfWeek(int, Enum):
 
 
 class CaptionTone(str, Enum):
-    """
-    Tones for AI-generated captions.
-
-    Example:
-        >>> from late import Late, CaptionTone
-        >>> client = Late(api_key="...")
-        >>> result = client.tools.generate_caption(
-        ...     image_url="https://example.com/image.jpg",
-        ...     tone=CaptionTone.PROFESSIONAL,
-        ... )
-    """
+    """Tones for AI-generated captions."""
 
     PROFESSIONAL = "professional"
     """Formal, business-appropriate tone"""

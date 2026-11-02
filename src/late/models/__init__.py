@@ -59,14 +59,7 @@ from ._generated.models import (
 
 # SDK-specific models (not from OpenAPI) — intentionally override generated stubs
 from .responses import (  # type: ignore[assignment]
-    CaptionResponse,
-    DownloadFormat,
-    DownloadResponse,
-    HashtagCheckResponse,
-    HashtagInfo,
     MediaLargeUploadResponse,
-    TranscriptResponse,
-    TranscriptSegment,
 )
 
 __all__ = [
@@ -113,13 +106,6 @@ __all__ = [
     "QueueDeleteResponse",
     "QueuePreviewResponse",
     "QueueNextSlotResponse",
-    "DownloadResponse",
-    "DownloadFormat",
-    "TranscriptResponse",
-    "TranscriptSegment",
-    "HashtagCheckResponse",
-    "HashtagInfo",
-    "CaptionResponse",
     "User",
     "UsersListResponse",
     "UserGetResponse",

@@ -37,7 +37,6 @@ class TestLateClient:
         assert hasattr(client, "users")
         assert hasattr(client, "media")
         assert hasattr(client, "analytics")
-        assert hasattr(client, "tools")
         assert hasattr(client, "queue")
 
 
