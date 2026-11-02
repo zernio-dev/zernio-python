@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.433.2"
+  version: "1.434.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -27,18 +27,18 @@ info:
   x-logo:
     url: https://zernio.com/icon.png?v=3
   x-long-description: |
-    Zernio is the social media API that replaces 28 integrations. Schedule posts, retrieve analytics,
+    Zernio is the social media API that replaces 29 integrations. Schedule posts, retrieve analytics,
     manage DMs, comments, and reviews across X, Instagram, WhatsApp, TikTok, LinkedIn,
     Facebook, YouTube, Threads, Pinterest, Bluesky, Telegram, Google Business Profile, Snapchat,
     Discord, Slack, and iMessage, all from a single REST API. Run paid ads on Meta (Facebook + Instagram), Google,
-    TikTok, LinkedIn, Pinterest, X, OpenAI, and Reddit from the same account.
+    TikTok, LinkedIn, Pinterest, X, OpenAI, Reddit, and Microsoft from the same account.
 
     Connect Shopify, WordPress and Wix as blog accounts to list sites and manage
     articles, drafts, featured images, tags, authors, and native scheduling.
 
-    Key features: Unified posting to 16 platforms, ads management on 8 ad networks (via /v1/ads), aggregated analytics, unified inbox (DMs, comments, reviews), webhooks, OAuth connect, queue scheduling, and white-label support for agencies managing unlimited accounts.
+    Key features: Unified posting to 16 platforms, ads management on 9 ad networks (via /v1/ads), aggregated analytics, unified inbox (DMs, comments, reviews), webhooks, OAuth connect, queue scheduling, and white-label support for agencies managing unlimited accounts.
 
-    Supported posting platforms: X, Instagram, WhatsApp, Facebook, LinkedIn, TikTok, YouTube, Pinterest, Bluesky, Threads, Google Business Profile, Telegram, Snapchat, Discord, Slack. Supported ad platforms: Meta Ads, Google Ads, TikTok Ads, LinkedIn Ads, Pinterest Ads, X Ads, OpenAI Ads, Reddit Ads. Snapchat is a closed beta with no public release date: connections are gated behind approval and return 403 `PLATFORM_BETA_RESTRICTED` until then. Organic Reddit is temporarily unavailable: Reddit has blocked third-party apps from its API, so Reddit posting, messages, analytics and the Reddit endpoints return 503 `PLATFORM_DISABLED` until Reddit restores access. Your Reddit accounts stay connected. Reddit Ads is not affected.
+    Supported posting platforms: X, Instagram, WhatsApp, Facebook, LinkedIn, TikTok, YouTube, Pinterest, Bluesky, Threads, Google Business Profile, Telegram, Snapchat, Discord, Slack. Supported ad platforms: Meta Ads, Google Ads, TikTok Ads, LinkedIn Ads, Pinterest Ads, X Ads, OpenAI Ads, Reddit Ads, Microsoft Ads. Snapchat is a closed beta with no public release date: connections are gated behind approval and return 403 `PLATFORM_BETA_RESTRICTED` until then. Organic Reddit is temporarily unavailable: Reddit has blocked third-party apps from its API, so Reddit posting, messages, analytics and the Reddit endpoints return 503 `PLATFORM_DISABLED` until Reddit restores access. Your Reddit accounts stay connected. Reddit Ads is not affected.
   x-category: Social
   x-website: https://zernio.com
   x-thumbnail: https://rapidapi-prod-apis.s3.amazonaws.com/b24d3df5-563c-4a50-9e1e-1ad3eb1fce69.png
@@ -70,7 +70,7 @@ x-documentation:
   readme: |
     # Zernio API
 
-    The social media API that replaces 28 integrations. Build social media and blog publishing features into your app in minutes, not months.
+    The social media API that replaces 29 integrations. Build social media and blog publishing features into your app in minutes, not months.
 
     ## Quick Start
 
@@ -16186,7 +16186,7 @@ components:
       properties:
         _id: { type: string }
         name: { type: string }
-        platform: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit] }
+        platform: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit, microsoft] }
         profileId: { type: string, description: 'Profile the row belongs to: the profile of its owning connection (`accountId`); when that connection no longer exists, the requested profile (`profileId` filter) that reaches the row ad account, else the profile of the oldest connection of the row owner that reaches it.' }
         status: { allOf: [{ $ref: '#/components/schemas/AdStatus' }], description: "Delivery status. Derived from the platform `effective_status`, so it inherits ancestor pauses (an ACTIVE ad under a PAUSED campaign reads `paused`). For the ad's own on/off toggle use `configuredStatus`; for the review state use `reviewStatus`." }
         configuredStatus:
@@ -16624,7 +16624,7 @@ components:
           description: Only with `results=true`. The values you sent for this campaign over the range, plus each formula they allow, by metric key. A metric with no value is absent.
           example: { revenue: 7800, sales: 4, cac_percent: 31.2, cost_per_sale: 608.5 }
         platformCampaignId: { type: string }
-        platform: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit] }
+        platform: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit, microsoft] }
         campaignName: { type: string }
         createdTime:
           type: [string, "null"]
@@ -16731,7 +16731,7 @@ components:
       type: object
       properties:
         platformCampaignId: { type: string }
-        platform: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit] }
+        platform: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit, microsoft] }
         campaignName: { type: string }
         status: { allOf: [{ $ref: '#/components/schemas/AdStatus' }], description: "Delivery status derived from child ad statuses. Distinct from `reviewStatus`." }
         reviewStatus:
@@ -30905,7 +30905,7 @@ paths:
           description: Filter by platform
           schema:
             type: string
-            enum: [facebook, instagram, linkedin, twitter, tiktok, youtube, threads, pinterest, reddit, bluesky, googlebusiness, telegram, snapchat, discord, slack, whatsapp, shopify, wordpress, wix, linkedinads, metaads, pinterestads, tiktokads, xads, googleads, openaiads, redditads, whopads, hubspot, webflow, googleanalytics]
+            enum: [facebook, instagram, linkedin, twitter, tiktok, youtube, threads, pinterest, reddit, bluesky, googlebusiness, telegram, snapchat, discord, slack, whatsapp, shopify, wordpress, wix, linkedinads, metaads, pinterestads, tiktokads, xads, googleads, openaiads, redditads, microsoftads, whopads, hubspot, webflow, googleanalytics]
         - name: status
           in: query
           description: Filter by health status
@@ -31220,7 +31220,7 @@ paths:
         - When Meta reports that the number's inbound message webhook does not reach Zernio, or subscribing the number's WhatsApp Business Account to Zernio's webhooks failed at connect, `platformConnection.inboundWebhookSubscribed` is `false`, an entry is added to `issues`, and the overall `status` is at least `warning`.
         - When `platformConnection.phoneStatus` is anything other than `CONNECTED`, an entry is added to `issues` and the overall `status` is at least `warning`; `BANNED` makes it `error`. `disconnectReason` stays null, since reconnecting does not lift a Meta status.
 
-        ### Standalone ads connections (`googleads`, `redditads`)
+        ### Standalone ads connections (`googleads`, `redditads`, `microsoftads`)
 
         A connection that cannot serve requests until a fresh OAuth repairs it adds an entry to `issues`. It also adds a recommendation to call `GET /v1/connect/{platform}/ads`, whose `authUrl` reconnects the same account.
 
@@ -32424,12 +32424,13 @@ paths:
             - TikTok Ads (platform=tiktokads): `tiktok_ads_auth_failed`, `tiktok_ads_invalid_state`, `tiktok_ads_access_denied`, `tiktok_ads_config_error`, `tiktok_ads_token_failed`, `tiktok_ads_account_not_found`, `tiktok_ads_callback_error`.
             - X Ads (platform=xads): `x_ads_denied`, `x_ads_auth_failed`, `x_ads_config_error`, `x_ads_account_not_found`, `x_ads_state_error`, `x_ads_token_failed`, `x_ads_token_missing`, `x_ads_callback_error`.
             - Reddit Ads (platform=redditads): `reddit_ads_auth_failed`, `reddit_ads_invalid_state`, `reddit_ads_access_denied`, `reddit_ads_scope_not_granted`, `reddit_ads_no_ad_accounts`, `reddit_ads_callback_error`.
+            - Microsoft Ads (platform=microsoftads): `microsoft_ads_auth_failed`, `microsoft_ads_invalid_state`, `microsoft_ads_access_denied`, `microsoft_ads_scope_not_granted`, `microsoft_ads_unknown_user`, `microsoft_ads_no_ad_accounts`, `microsoft_ads_callback_error`.
             - Shopify (platform=shopify): `shopify_auth_failed`, `shopify_config_error`, `shopify_invalid_state`, `shopify_invalid_hmac`, `shopify_invalid_shop`, `shopify_missing_scopes`, `shopify_callback_error`.
 
             Notes:
 
             1. On this endpoint every upstream OAuth error collapses into `oauth_denied`, with the provider's values in the `platform_error*` params. The dedicated ads flows differ: they use their own denial slugs, and `google_ads_auth_failed` and `tiktok_ads_auth_failed` may carry the provider's raw error string in `error_message`.
-            2. On the tiktok and twitter ads flows `platform` carries the ads platform id (`tiktokads`, `xads`), not the value in the request path. The googleads, redditads and shopify flows report `googleads`, `redditads` and `shopify`.
+            2. On the tiktok and twitter ads flows `platform` carries the ads platform id (`tiktokads`, `xads`), not the value in the request path. The googleads, redditads, microsoftads and shopify flows report `googleads`, `redditads`, `microsoftads` and `shopify`.
             3. `missing_tiktok_permissions`: the TikTok authorization left out a permission the already-connected account needs, so nothing changed and it keeps working as before. User-fixable: connect again and accept every permission on TikTok's screen.
             4. `instagram_login_method_mismatch`: an Instagram Login authorization landed on a profile whose Instagram account is connected through Facebook Login, so nothing changed. To refresh it, connect again with `loginMethod=facebook_login`. To move it to Instagram Login, disconnect it first.
         - name: scopes
@@ -32821,7 +32822,28 @@ paths:
         - `error=reddit_ads_no_ad_accounts`: the user reaches no Reddit ad account
 
         Without `redirect_url` the browser lands on the Zernio dashboard's ad account picker for the new connection.
+
+        ### Standalone platforms (microsoftads)
+
+        Starts the Microsoft Advertising OAuth flow and creates a standalone ads SocialAccount (microsoftads) with no parent. It is reached only as `microsoftads` in the path.
+
+        Microsoft Advertising users sign in with a Microsoft account by default. A user who signs in to ads.microsoft.com with Google passes `identityProvider=google`, and the flow runs on Google's consent screen instead.
+
+        If an active Microsoft Ads connection already exists on the profile, is not flagged needsReconnection and was signed in with the same identity provider, returns alreadyConnected: true. Otherwise it returns an authUrl; completing it reconnects the same account (same accountId).
+
+        Discovery lists every Microsoft Advertising ad account the user can reach. The callback redirects with `platform=microsoftads` and:
+
+        - `error=microsoft_ads_scope_not_granted`: the user declines the Microsoft Advertising permission (nothing is saved)
+        - `error=microsoft_ads_unknown_user`: the account that signed in is not a Microsoft Advertising user, for example a Google user connecting without `identityProvider=google` (nothing is saved)
+        - `error=microsoft_ads_no_ad_accounts`: the user reaches no Microsoft Advertising ad account
+
+        Without `redirect_url` the browser lands on the Zernio dashboard's ad account picker for the new connection.
       parameters:
+        - name: identityProvider
+          in: query
+          schema: { type: string, enum: [microsoft, google], default: microsoft }
+          description: "Microsoft Ads only. How the user signs in to Microsoft Advertising: `google` for a Microsoft Advertising login that is a Google account. `google` on any other platform returns 400 `invalid_field_value`."
+          example: google
         - name: loginMode
           in: query
           schema: { type: string, enum: [classic, business], default: classic }
@@ -32848,7 +32870,7 @@ paths:
           required: true
           schema:
             type: string
-            enum: [facebook, instagram, linkedin, tiktok, twitter, pinterest, googleads, redditads]
+            enum: [facebook, instagram, linkedin, tiktok, twitter, pinterest, googleads, redditads, microsoftads]
           description: |
             Platform to connect ads for. Only platforms with ads support are accepted.
 
@@ -32869,7 +32891,7 @@ paths:
             - `twitter` (X Ads): required.
             - `tiktok`: optional. Omit it for ads-only mode (no TikTok posting account linked; ad creation uses a Brand Identity instead of a TT_USER).
             - Same-token platforms (`facebook`, `instagram`, `linkedin`, `pinterest`): picks which posting account the ads connection uses when the profile holds several of that platform. With one, it can be omitted.
-            - Standalone platforms (`googleads`, `redditads`): ignored.
+            - Standalone platforms (`googleads`, `redditads`, `microsoftads`): ignored.
 
             On same-token platforms, an id that names no active account of the platform on the profile is ignored. Exception: with `force=true`, when it names the posting account the profile's ads connection hangs off, that account is no longer connected.
 
@@ -32878,19 +32900,19 @@ paths:
           in: query
           schema: { type: string, format: uri }
           description: |
-            Custom URL the browser is sent to once the OAuth flow finishes. When omitted, the browser lands on the Zernio dashboard. Honored on every ads platform, including the separate-token (`tiktok`, `twitter`) and standalone (`googleads`, `redditads`) flows.
+            Custom URL the browser is sent to once the OAuth flow finishes. When omitted, the browser lands on the Zernio dashboard. Honored on every ads platform, including the separate-token (`tiktok`, `twitter`) and standalone (`googleads`, `redditads`, `microsoftads`) flows.
 
             MUST be an absolute http(s) URL or a custom app scheme for mobile deeplinks (e.g. myapp://callback). A relative path is rejected with 400 INVALID_REDIRECT_URL.
 
             On success:
 
             - `tiktok`: lands on the URL unchanged.
-            - `twitter`, `googleads` and `redditads`: append `connected` (the ads platform id: `xads`, `googleads` or `redditads`), `profileId`, `accountId` (the ads connection) and `username`.
+            - `twitter`, `googleads`, `redditads` and `microsoftads`: append `connected` (the ads platform id: `xads`, `googleads`, `redditads` or `microsoftads`), `profileId`, `accountId` (the ads connection) and `username`.
             - Same-token platforms (`facebook`, `instagram`, `linkedin`, `pinterest`): append `connected`, `profileId`, `accountId`, `username` and, on API-key calls, `connect_token`.
 
             On failure the same error contract applies as on GET /v1/connect/{platform}: `error` and `platform` are always appended, other params are optional, and the value list there is not exhaustive.
 
-            On the tiktok, twitter, googleads and redditads flows, `platform` carries the ads platform id (`tiktokads`, `xads`, `googleads`, `redditads`), not the value used in the request path.
+            On the tiktok, twitter, googleads, redditads and microsoftads flows, `platform` carries the ads platform id (`tiktokads`, `xads`, `googleads`, `redditads`, `microsoftads`), not the value used in the request path.
         - name: headless
           in: query
           schema: { type: boolean, default: false }
@@ -32918,6 +32940,7 @@ paths:
             - `linkedin`: bare numeric sponsored-account id.
             - `googleads`: bare customer id digits.
             - `redditads`: Reddit ad account id, `a2_<id>` or `t2_<id>`.
+            - `microsoftads`: bare numeric account id (the Id, not the account number).
             - `twitter` (X Ads): base36 account id.
 
             `tiktok` scopes advertisers at OAuth and `pinterest` has no ads discovery, so both ignore it.
@@ -32932,7 +32955,7 @@ paths:
 
             **Through OAuth**: on Meta the scope is kept when this call returns an `authUrl`, so the Meta Ads account created after OAuth is scoped (only its scoped ad accounts synced and subscribed) from the start.
 
-            On `googleads` and `redditads` it is kept through OAuth when `redirect_url` is set, so the new connection syncs only scoped ad accounts from the first sync.
+            On `googleads`, `redditads` and `microsoftads` it is kept through OAuth when `redirect_url` is set, so the new connection syncs only scoped ad accounts from the first sync.
 
             **Reconnects**: business-login reconnects preserve the existing scope; supplied IDs are checked against the new grant. To change the scope after migration, call this endpoint with the IDs and omit loginMode.
           example: act_1330190928038136
@@ -63908,7 +63931,7 @@ paths:
       x-resource-group: "ads"
       operationId: listAds
       tags: ["Ad Campaigns"]
-      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "reddit"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "reddit", "microsoft"]
       summary: List ads
       description: |
         Lists your ads with their performance over a date range, including ads created directly in each platform's ads manager.
@@ -63938,7 +63961,7 @@ paths:
         - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 500, default: 50 } }
         - { name: source, in: query, schema: { type: string, enum: [zernio, all], default: all }, description: "all (default) = Zernio-created + platform-discovered ads. zernio = restrict to Zernio-created only." }
         - { name: status, in: query, schema: { $ref: '#/components/schemas/AdStatus' } }
-        - { name: platform, in: query, schema: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit] } }
+        - { name: platform, in: query, schema: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit, microsoft] } }
         - { name: accountId, in: query, schema: { type: string }, description: Account ID }
         - { name: adAccountId, in: query, schema: { type: string }, description: "Platform ad account ID (e.g. act_123 for Meta). Mirrors the same filter on /v1/ads/campaigns and /v1/ads/tree." }
         - { name: pageId, in: query, schema: { type: string }, description: "Meta only: Facebook Page ID. Returns only ads whose creative is backed by this Page (a Meta ad account serves ads for every Page in the Business Manager). Matches each ad's `creative.pageId`; ads with no page signal (rare IG-only creatives) never match. Mirrors the same filter on /v1/ads/campaigns and /v1/ads/tree." }
@@ -65477,7 +65500,7 @@ paths:
       x-resource-group: "ads"
       operationId: listAdCampaigns
       tags: ["Ad Campaigns"]
-      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "reddit"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "reddit", "microsoft"]
       summary: List campaigns
       description: |
         Lists your campaigns with spend, impressions and clicks summed across their ads, plus each campaign's status and budget.
@@ -65520,7 +65543,7 @@ paths:
         - $ref: '#/components/parameters/PageParam'
         - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 20 } }
         - { name: source, in: query, schema: { type: string, enum: [zernio, all], default: all }, description: "`all` (default) returns both Zernio-created ads and those discovered from the platform's ad manager. Matches the web UI's default view. Pass `zernio` to restrict to isExternal=false only. Status is NOT filtered by default; use the `status` param for that." }
-        - { name: platform, in: query, schema: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit] } }
+        - { name: platform, in: query, schema: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit, microsoft] } }
         - { name: status, in: query, schema: { $ref: '#/components/schemas/AdStatus' }, description: Filter by derived campaign status (post-aggregation) }
         - { name: adAccountId, in: query, schema: { type: string }, description: Platform ad account ID (e.g. act_123 for Meta) }
         - { name: campaignId, in: query, schema: { type: string }, description: "Platform campaign ID (the `platformCampaignId` on each returned campaign). Returns only that campaign, or an empty list when it is not visible to the caller. Mirrors the same filter on /v1/ads and /v1/ads/tree." }
@@ -65727,7 +65750,7 @@ paths:
       x-resource-group: "ads"
       operationId: updateAdCampaignStatus
       tags: ["Ad Campaigns"]
-      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "openai", "reddit"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "openai", "reddit", "microsoft"]
       summary: Pause or resume a campaign
       description: |
         Pauses or resumes a campaign, leaving the on/off switches of its ad sets and ads as they are.
@@ -65768,7 +65791,7 @@ paths:
               required: [status, platform]
               properties:
                 status: { type: string, enum: [active, paused] }
-                platform: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit] }
+                platform: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit, microsoft] }
       responses:
         '200':
           description: Campaign status updated
@@ -66079,7 +66102,7 @@ paths:
       x-resource-group: "ads"
       operationId: updateAdCampaign
       tags: ["Ad Campaigns"]
-      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "openai", "reddit"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "openai", "reddit", "microsoft"]
       summary: Update a campaign
       description: |
         Changes a campaign's settings, such as its name, budget, bidding or tracking URLs.
@@ -66163,7 +66186,7 @@ paths:
               type: object
               required: [platform]
               properties:
-                platform: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit], description: "Required: platform campaign IDs are not globally unique." }
+                platform: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit, microsoft], description: "Required: platform campaign IDs are not globally unique." }
                 accountId: { type: string, description: "**Meta only.** Zernio SocialAccount id owning the ad account. Needed only for an EMPTY campaign (zero ads); ignored otherwise." }
                 bidStrategy:
                   allOf: [{ $ref: '#/components/schemas/BidStrategy' }]
@@ -66245,7 +66268,7 @@ paths:
       x-resource-group: "ads"
       operationId: deleteAdCampaign
       tags: ["Ad Campaigns"]
-      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "openai", "reddit"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "openai", "reddit", "microsoft"]
       summary: Delete a campaign
       description: |
         Deletes a campaign on its platform, including a campaign that never got any ads.
@@ -66302,7 +66325,7 @@ paths:
               type: object
               required: [platform]
               properties:
-                platform: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit] }
+                platform: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit, microsoft] }
                 accountId: { type: string, description: "Zernio SocialAccount id owning the ad account. Required only to delete an EMPTY campaign (zero ads), which has no local Ad documents to resolve a token from." }
                 adAccountId: { type: string, pattern: '^[0-9a-z]{1,32}$', description: "X only, for an EMPTY campaign that was never synced: the X ad account id the campaign belongs to (lowercase letters and digits). The synced campaign's ad account wins when there is one. Also accepted on the query string." }
       responses:
@@ -66477,7 +66500,7 @@ paths:
       x-resource-group: "ads"
       operationId: bulkUpdateAdCampaignStatus
       tags: ["Ad Campaigns"]
-      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "reddit"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "reddit", "microsoft"]
       summary: Pause or resume many campaigns
       description: |
         Pauses or resumes up to 50 campaigns in one call, with a separate result per campaign so one failure does not block the rest.
@@ -66506,7 +66529,7 @@ paths:
                     required: [platformCampaignId, platform]
                     properties:
                       platformCampaignId: { type: string, description: "The campaign id on the ad platform (e.g. the numeric Google campaign id), not a Zernio id." }
-                      platform: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit, googleads, tiktokads, linkedinads, pinterestads, xads, openaiads, redditads], description: "The ad platform, e.g. `google` for Google Ads. The ads connection slug (`googleads`, `tiktokads`, ...) is accepted as an alias. `metaads` is not: send `facebook` or `instagram`." }
+                      platform: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit, microsoft, googleads, tiktokads, linkedinads, pinterestads, xads, openaiads, redditads, microsoftads], description: "The ad platform, e.g. `google` for Google Ads. The ads connection slug (`googleads`, `tiktokads`, ...) is accepted as an alias. `metaads` is not: send `facebook` or `instagram`." }
             example:
               status: paused
               campaigns:
@@ -66960,7 +66983,7 @@ paths:
       x-resource-group: "ads"
       operationId: listAdSets
       tags: ["Ad Campaigns"]
-      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "openai", "reddit"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "openai", "reddit", "microsoft"]
       summary: List ad sets
       description: |
         Lists ad sets (ad groups on Google) with their targeting, bidding and optimization settings, optionally for one campaign.
@@ -67885,7 +67908,7 @@ paths:
       x-resource-group: "ads"
       operationId: updateAdSetStatus
       tags: ["Ad Campaigns"]
-      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "openai", "reddit"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "openai", "reddit", "microsoft"]
       summary: Pause or resume a single ad set
       description: |
         Pauses or resumes one ad set without touching its campaign, its sibling ad sets or the switches of its ads.
@@ -67933,7 +67956,7 @@ paths:
               required: [status, platform]
               properties:
                 status: { type: string, enum: [active, paused] }
-                platform: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit] }
+                platform: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit, microsoft] }
       responses:
         '200':
           description: Ad set status updated
@@ -67967,7 +67990,7 @@ paths:
       x-resource-group: "ads"
       operationId: getAdTree
       tags: ["Ad Campaigns"]
-      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "reddit"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "reddit", "microsoft"]
       summary: Get campaign tree
       description: |
         Shows your campaigns with their ad sets and ads nested inside, with spend and results rolled up at every level.
@@ -68005,7 +68028,7 @@ paths:
         - $ref: '#/components/parameters/PageParam'
         - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 20 }, description: Campaigns per page }
         - { name: source, in: query, schema: { type: string, enum: [zernio, all], default: all }, description: "`all` (default) returns both Zernio-created ads and those discovered from the platform's ad manager. Matches the web UI's default view. Pass `zernio` to restrict to isExternal=false only. Status is NOT filtered by default; use the `status` param for that." }
-        - { name: platform, in: query, schema: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit] } }
+        - { name: platform, in: query, schema: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit, microsoft] } }
         - { name: status, in: query, schema: { $ref: '#/components/schemas/AdStatus' }, description: Filter by derived campaign status (post-aggregation) }
         - { name: adAccountId, in: query, schema: { type: string }, description: "One or more platform ad account IDs to scope the tree to (agency profiles connect a whole Business Manager, but a team usually cares about a subset).\n\n- Comma-separate for multiple (`?adAccountId=act_1,act_2,act_3`); a single value keeps its old shape.\n- Max 50 accounts per request.\n- The plural aliases `adAccountIds` and `platformAdAccountIds` are rejected with a 400, so they cannot silently return the unfiltered fleet." }
         - { name: pageId, in: query, schema: { type: string }, description: "Meta only: Facebook Page ID. Prunes the tree to ads whose creative is backed by this Page: campaigns and ad sets with no ad on the Page drop out, and rolled-up metrics cover only the Page's ads. Mirrors the same filter on /v1/ads and /v1/ads/campaigns." }
@@ -68052,7 +68075,7 @@ paths:
       x-resource-group: "ads"
       operationId: getAdsTimeline
       tags: ["Ad Campaigns"]
-      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "reddit"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "reddit", "microsoft"]
       summary: Get daily account metrics
       description: |
         Returns an ads account's spend, results and other metrics day by day, ready for a daily performance chart.
@@ -68081,7 +68104,7 @@ paths:
         - { name: adAccountId, in: query, schema: { type: string }, description: "Optional platform-native ad account ID (e.g. Meta `act_…`, TikTok advertiser ID). Use when the connection wraps multiple platform ad accounts and the chart should show one only. Note: rows ingested before 2026-05-13 don't carry this column; the recurring 7-day re-sync repopulates them naturally." }
         - { name: fromDate, in: query, schema: { type: string, format: date }, description: "Inclusive start of metrics range (YYYY-MM-DD). Defaults to 90 days ago." }
         - { name: toDate, in: query, schema: { type: string, format: date }, description: "Inclusive end of metrics range (YYYY-MM-DD). Defaults to today. Max 730-day range." }
-        - { name: platform, in: query, schema: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit] }, description: Restrict to one platform. }
+        - { name: platform, in: query, schema: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit, microsoft] }, description: Restrict to one platform. }
         - { name: compare, in: query, schema: { type: string, enum: [previous] }, description: "Set to `previous` to also return `previousRows` for the period of the same length that ends the day before `fromDate`, with that period as `previousRange`. Needs a `fromDate` (sent or defaulted); `toDate` alone answers 400." }
       responses:
         '200':
@@ -68114,7 +68137,7 @@ paths:
       x-resource-group: "ads"
       operationId: getAd
       tags: ["Ad Campaigns"]
-      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "reddit"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "reddit", "microsoft"]
       summary: Get ad details
       description: |
         Shows one ad with its creative, targeting, status and performance metrics.
@@ -68233,7 +68256,7 @@ paths:
       x-resource-group: "ads"
       operationId: updateAd
       tags: ["Ad Campaigns"]
-      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "reddit"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "reddit", "microsoft"]
       summary: Update ad
       description: |
         Changes an ad's status, budget, targeting or creative and applies the change on the platform.
@@ -68602,7 +68625,7 @@ paths:
       x-resource-group: "ads"
       operationId: deleteAd
       tags: ["Ad Campaigns"]
-      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "reddit"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "reddit", "microsoft"]
       summary: Cancel an ad
       description: |
         Deletes an ad on the platform while keeping its history, and removes empty parents only when they were created through this API.
@@ -68663,7 +68686,7 @@ paths:
       x-resource-group: "ads"
       operationId: updateAdStatus
       tags: ["Ad Campaigns"]
-      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "reddit"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "reddit", "microsoft"]
       summary: Pause or resume a single ad
       description: |
         Pauses or resumes a single ad without touching its ad set, campaign or sibling ads.
@@ -69587,7 +69610,7 @@ paths:
       x-resource-group: "ads"
       operationId: getCampaignAnalytics
       tags: ["Ad Insights"]
-      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "reddit"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "reddit", "microsoft"]
       summary: Get campaign analytics
       description: |
         Returns a campaign's performance summary and daily timeline, with optional breakdowns by age, gender and other audience dimensions.
@@ -70443,7 +70466,7 @@ paths:
       x-resource-group: "ads"
       operationId: getAdAnalytics
       tags: ["Ad Insights"]
-      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "reddit"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "reddit", "microsoft"]
       summary: Get ad analytics
       description: |
         Returns one ad's performance summary and daily timeline, with optional audience breakdowns on Meta, TikTok and LinkedIn.
@@ -76236,7 +76259,7 @@ paths:
       x-resource-group: "ads"
       operationId: listAdAccounts
       tags: ["Ad Accounts"]
-      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "reddit"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "reddit", "microsoft"]
       summary: List ad accounts
       description: |
         Lists the ad accounts a connection can manage, such as Meta ad accounts, TikTok advertisers or Google Ads customers.
@@ -77546,7 +77569,7 @@ paths:
       x-resource-group: "ads"
       operationId: createStandaloneAd
       tags: ["Ad Campaigns"]
-      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "openai", "reddit"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "openai", "reddit", "microsoft"]
       summary: Create standalone ad
       description: |
         Creates a paid ad with your own creative, building the campaign and ad set it needs or adding it to existing ones.
@@ -77682,6 +77705,17 @@ paths:
         Only the legacy single-creative shape is available: `creatives[]`, `adSetId`, `existingCampaignId` and `validateOnly` are refused.
 
         Reddit throttling surfaces as 429 `rate_limited` with `platform: reddit`; retry after a delay. To promote an existing Reddit post, use POST /v1/ads/boost.
+
+        ### Microsoft Ads
+
+        Use the `accountId` of a `microsoftads` connection and its numeric `adAccountId`. Zernio creates a Search campaign carrying the daily budget and the countries, an ad group carrying the schedule, a responsive search ad and the `keywords`.
+
+        - `goal` is `traffic`; `budgetType` must be `daily`.
+        - `headline`, `body` and `linkUrl` are required. `additionalHeadlines` and `additionalDescriptions` complete the ad to 3 to 15 headlines (30 characters) and 2 to 4 descriptions (90 characters); missing ones are filled from `name` and the link's host.
+        - `countries` (or `targeting.countries`) is required; no other targeting field applies.
+        - Bid fields, `negativeKeywords`, `campaignNegativeKeywords`, sitelinks, callouts, structured snippets, `businessName`, `longHeadline` and a `campaignType` other than `search` return 422.
+
+        Without `status`, every level is switched on and the campaign spends once Microsoft approves the ad: send `status: PAUSED` to create it paused. A failed step deletes the campaign the call created.
 
         ### Idempotency
 

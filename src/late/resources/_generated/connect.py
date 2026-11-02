@@ -139,6 +139,7 @@ class ConnectResource:
         platform: str,
         profile_id: str,
         *,
+        identity_provider: str | None = "microsoft",
         login_mode: str | None = "classic",
         permission_level: str | None = "full",
         page_id: str | None = None,
@@ -156,6 +157,7 @@ class ConnectResource:
     ) -> dict[str, Any]:
         """Connect ads for a platform"""
         params = self._build_params(
+            identity_provider=identity_provider,
             login_mode=login_mode,
             permission_level=permission_level,
             page_id=page_id,
@@ -1228,6 +1230,7 @@ class ConnectResource:
         platform: str,
         profile_id: str,
         *,
+        identity_provider: str | None = "microsoft",
         login_mode: str | None = "classic",
         permission_level: str | None = "full",
         page_id: str | None = None,
@@ -1245,6 +1248,7 @@ class ConnectResource:
     ) -> dict[str, Any]:
         """Connect ads for a platform (async)"""
         params = self._build_params(
+            identity_provider=identity_provider,
             login_mode=login_mode,
             permission_level=permission_level,
             page_id=page_id,
