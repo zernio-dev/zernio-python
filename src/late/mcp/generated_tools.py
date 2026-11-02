@@ -14698,6 +14698,8 @@ def register_generated_tools(mcp, _get_client):
             Each day includes post count, platform distribution, and summed metrics (impressions, reach, likes, comments, shares, saves, clicks, views).
             Defaults to the last 180 days.
 
+            `totals` sums the whole range for the applied filters (pass `accountId` for one account). With attribution \"publish\" they are the lifetime metrics of posts published in the range, with \"received\" the engagement that arrived in the range.
+
             Args:
                 platform: Filter by platform (e.g. "instagram", "tiktok"). Omit for all platforms.
                 profile_id: Filter by profile ID. Omit for all profiles.

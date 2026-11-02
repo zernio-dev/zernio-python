@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.438.0"
+  version: "1.439.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -23950,6 +23950,8 @@ paths:
         Returns daily aggregated analytics metrics and a per-platform breakdown.
         Each day includes post count, platform distribution, and summed metrics (impressions, reach, likes, comments, shares, saves, clicks, views).
         Defaults to the last 180 days.
+
+        `totals` sums the whole range for the applied filters (pass `accountId` for one account). With attribution "publish" they are the lifetime metrics of posts published in the range, with "received" the engagement that arrived in the range.
       parameters:
         - name: platform
           in: query
@@ -24034,6 +24036,20 @@ paths:
                         saves: { type: integer }
                         clicks: { type: integer }
                         views: { type: integer }
+                  totals:
+                    type: object
+                    description: 'Sums of the whole range for the applied filters.'
+                    properties:
+                      postCount: { type: integer }
+                      impressions: { type: integer }
+                      reach: { type: integer, description: 'Sum of per-post reach, not unique accounts.' }
+                      likes: { type: integer }
+                      comments: { type: integer }
+                      shares: { type: integer }
+                      saves: { type: integer }
+                      clicks: { type: integer }
+                      views: { type: integer }
+                      engagement: { type: integer, description: 'Likes, comments, shares and saves (interactions).' }
               examples:
                 success:
                   value:
@@ -24061,6 +24077,17 @@ paths:
                         saves: 2103
                         clicks: 3402
                         views: 45200
+                    totals:
+                      postCount: 142
+                      impressions: 89400
+                      reach: 62100
+                      likes: 8930
+                      comments: 1204
+                      shares: 567
+                      saves: 2103
+                      clicks: 3402
+                      views: 45200
+                      engagement: 12804
         '401': { $ref: '#/components/responses/Unauthorized' }
         '402':
           description: Analytics access required. Legacy plans need the Analytics add-on; included by default on usage-based plans.
