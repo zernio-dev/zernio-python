@@ -273,6 +273,18 @@ class CreatorCampaignsResource:
             f"/v1/creator-campaigns/{campaign_id}/participants/{participant_id}/remove"
         )
 
+    def move_campaign_participant(
+        self, campaign_id: str, participant_id: str, target_campaign_id: str
+    ) -> dict[str, Any]:
+        """Move participant to another campaign"""
+        payload = self._build_payload(
+            target_campaign_id=target_campaign_id,
+        )
+        return self._client._post(
+            f"/v1/creator-campaigns/{campaign_id}/participants/{participant_id}/move",
+            data=payload,
+        )
+
     def resend_campaign_participant_invite(
         self,
         campaign_id: str,
@@ -702,6 +714,18 @@ class CreatorCampaignsResource:
         """Remove campaign participant (async)"""
         return await self._client._apost(
             f"/v1/creator-campaigns/{campaign_id}/participants/{participant_id}/remove"
+        )
+
+    async def amove_campaign_participant(
+        self, campaign_id: str, participant_id: str, target_campaign_id: str
+    ) -> dict[str, Any]:
+        """Move participant to another campaign (async)"""
+        payload = self._build_payload(
+            target_campaign_id=target_campaign_id,
+        )
+        return await self._client._apost(
+            f"/v1/creator-campaigns/{campaign_id}/participants/{participant_id}/move",
+            data=payload,
         )
 
     async def aresend_campaign_participant_invite(

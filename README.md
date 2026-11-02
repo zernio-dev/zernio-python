@@ -1006,6 +1006,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `creator_campaigns.activate_creator_campaign()` | Activate creator campaign |
 | `creator_campaigns.approve_campaign_submission()` | Approve campaign submission |
 | `creator_campaigns.close_creator_campaign()` | Close creator campaign |
+| `creator_campaigns.move_campaign_participant()` | Move participant to another campaign |
 | `creator_campaigns.pause_creator_campaign()` | Pause creator campaign |
 | `creator_campaigns.raise_creator_campaign_budget()` | Raise creator campaign budget |
 | `creator_campaigns.reinstate_campaign_participant()` | Reinstate campaign participant |

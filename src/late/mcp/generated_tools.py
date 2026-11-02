@@ -28496,6 +28496,47 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="Move participant to another campaign",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def creator_campaigns_move_campaign_participant(
+        campaign_id: str, participant_id: str, target_campaign_id: str
+    ) -> str:
+        """Move participant to another campaign
+
+        Moves a creator invited or joined into the wrong campaign to another campaign of the same
+        owner. The participant keeps its id, status and portal link, which now opens the target.
+
+        Posts that fit the target (platform accepted, published after it started) move with it.
+        Undecided posts that do not fit are rejected in this campaign with the reason; decided ones stay.
+
+        Answers 409 when the target is closed or full, the creator is already in it, the participant
+        was removed, or any money touched the participation (ledger entries, a payout batch or a
+        transfer). Money never moves between campaigns.
+
+        Fires `campaign_participant.removed` here and, for a creator who joined,
+        `campaign_participant.joined` on the target.
+
+        Args:
+            campaign_id: Campaign the participant is in now. (required)
+            participant_id: Participant ID. (required)
+            target_campaign_id: Campaign to move the participant to. Same owner, not closed. (required)"""
+        client = _get_client()
+        try:
+            response = client.creator_campaigns.move_campaign_participant(
+                campaign_id=campaign_id,
+                participant_id=participant_id,
+                target_campaign_id=target_campaign_id,
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="Resend campaign participant invite",
             readOnlyHint=False,
             destructiveHint=True,

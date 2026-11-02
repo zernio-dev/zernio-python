@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.436.0"
+  version: "1.437.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -92423,6 +92423,67 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { $ref: '#/components/responses/CreatorCampaignForbidden' }
         '404': { $ref: '#/components/responses/CreatorCampaignNotFound' }
+  /v1/creator-campaigns/{campaignId}/participants/{participantId}/move:
+    post:
+      x-resource-group: "creator_campaigns"
+      operationId: moveCampaignParticipant
+      tags: [Creator Campaigns]
+      summary: Move participant to another campaign
+      description: |
+        Moves a creator invited or joined into the wrong campaign to another campaign of the same
+        owner. The participant keeps its id, status and portal link, which now opens the target.
+
+        Posts that fit the target (platform accepted, published after it started) move with it.
+        Undecided posts that do not fit are rejected in this campaign with the reason; decided ones stay.
+
+        Answers 409 when the target is closed or full, the creator is already in it, the participant
+        was removed, or any money touched the participation (ledger entries, a payout batch or a
+        transfer). Money never moves between campaigns.
+
+        Fires `campaign_participant.removed` here and, for a creator who joined,
+        `campaign_participant.joined` on the target.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: campaignId
+          in: path
+          required: true
+          schema: { type: string }
+          description: Campaign the participant is in now.
+        - name: participantId
+          in: path
+          required: true
+          schema: { type: string }
+          description: Participant ID.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [targetCampaignId]
+              properties:
+                targetCampaignId: { type: string, description: 'Campaign to move the participant to. Same owner, not closed.' }
+      responses:
+        '200':
+          description: Participant moved
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [participant, submissions]
+                properties:
+                  participant: { $ref: '#/components/schemas/CampaignParticipant' }
+                  submissions:
+                    type: object
+                    required: [moved, rejected]
+                    properties:
+                      moved: { type: integer, description: Posts that moved to the target. }
+                      rejected: { type: integer, description: 'Undecided posts rejected in this campaign because they did not fit the target.' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/CreatorCampaignForbidden' }
+        '404': { $ref: '#/components/responses/CreatorCampaignNotFound' }
+        '409': { $ref: '#/components/responses/CreatorCampaignConflict' }
   /v1/creator-campaigns/{campaignId}/participants/{participantId}/resend-invite:
     post:
       x-resource-group: "creator_campaigns"
