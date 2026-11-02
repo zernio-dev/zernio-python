@@ -196,3 +196,58 @@ def test_referenced_path_parameter_reaches_the_tool_and_the_sdk_call(generator):
     asyncio.run(mcp.call_tool("probe_tool", {"account_id": "acc_1"}))
 
     client.probe.probe.assert_called_once_with(account_id="acc_1")
+
+
+def test_nullable_integer_param_accepts_an_int(generator):
+    operation = {
+        "summary": "Create the probe",
+        "requestBody": {
+            "content": {
+                "application/json": {
+                    "schema": {
+                        "type": "object",
+                        "properties": {"dedupeHours": {"type": ["integer", "null"]}},
+                    }
+                }
+            }
+        },
+    }
+    client = Mock()
+    mcp = _register_probe(generator, operation, client=client)
+
+    asyncio.run(mcp.call_tool("probe_tool", {"dedupe_hours": 720}))
+
+    client.probe.probe.assert_called_once_with(dedupe_hours=720)
+
+
+def test_nullable_oneof_object_param_is_a_dict(generator):
+    operation = {
+        "summary": "Create the probe",
+        "requestBody": {
+            "content": {
+                "application/json": {
+                    "schema": {
+                        "type": "object",
+                        "properties": {
+                            "dmMedia": {
+                                "oneOf": [
+                                    {"type": "object", "properties": {"url": {"type": "string"}}},
+                                    {"type": "null"},
+                                ]
+                            }
+                        },
+                    }
+                }
+            }
+        },
+    }
+    client = Mock()
+    mcp = _register_probe(generator, operation, spec={}, client=client)
+
+    asyncio.run(mcp.call_tool("probe_tool", {"dm_media": {"url": "https://example.com/a.png"}}))
+
+    client.probe.probe.assert_called_once_with(dm_media={"url": "https://example.com/a.png"})
+
+
+def test_a_mixed_type_list_keeps_the_string_fallback(generator):
+    assert generator.get_python_type({"type": ["integer", "string"]}, False) == ("str | None", "None")
