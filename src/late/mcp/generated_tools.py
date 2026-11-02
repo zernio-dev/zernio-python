@@ -14234,7 +14234,7 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Get Facebook Page insights
 
-            Returns page-level Facebook insights (media views, views, post engagements, video metrics, follower counts). The response shape matches /v1/analytics/instagram/account-insights, so the same client handling works across platforms.
+            Returns page-level Facebook insights (media views, reach, views, post engagements, reaction counts, video metrics, follower counts). The response shape matches /v1/analytics/instagram/account-insights, so the same client handling works across platforms.
 
             Max 89 days, defaults to last 30 days.
 
@@ -14247,7 +14247,9 @@ def register_generated_tools(mcp, _get_client):
             - page_fan_adds
             - page_fan_removes
 
-            Use the replacements below. Because Meta did not provide direct adds/removes replacements, Zernio synthesizes followers_gained / followers_lost from the daily follower snapshotter.
+            page_impressions_unique is deprecated above Graph API v25 and is not accepted; use page_total_media_view_unique. Meta's Page Insights reference (https://developers.facebook.com/docs/graph-api/reference/insights) also deprecates a number of Page Insights metrics for all API versions by June 15, 2026.
+
+            Use the replacements below. Because Meta did not provide direct adds/removes replacements, Zernio synthesizes followers_gained / ...
 
             Args:
                 account_id: The Zernio SocialAccount ID for the connected Facebook Page. (required)
@@ -14256,11 +14258,13 @@ def register_generated_tools(mcp, _get_client):
         **Live Meta metrics** (current names, post-Nov-2025):
 
         - page_media_view (replaces deprecated page_impressions)
+        - page_total_media_view_unique (reach: unique viewers, replaces deprecated page_impressions_unique). The reach total sums daily unique viewers, not unique people over the range: a viewer seen on several days counts once per day. For a range of exactly 28 days it is Meta's 28-day unique viewers when Meta returns them.
         - page_views_total
-        - page_post_engagements
+        - page_post_engagements (content interactions: reactions, comments, shares and more)
         - page_video_views
         - page_video_view_time
         - page_follows (replaces deprecated page_fans)
+        - page_actions_post_reactions_like_total, page_actions_post_reactions_love_total, page_actions_post_reactions_wow_total, page_actions_post_reactions_haha_total, page_actions_post_reactions_sorry_total, page_actions_post_reactions_anger_total (reactions by type; like includes care)
 
         **Zernio-synthesized** from daily follower snapshots (filling the Nov-2025 gap left by the page_fan_adds / page_fan_removes deprecation):
 
