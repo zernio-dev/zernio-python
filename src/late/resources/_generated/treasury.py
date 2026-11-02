@@ -106,6 +106,15 @@ class TreasuryResource:
         )
         return self._client._get("/v1/balance/top-ups", params=params)
 
+    def get_topup_card_fee(
+        self, *, payment_method_id: str | None = None
+    ) -> dict[str, Any]:
+        """Get the card fee for a top-up"""
+        params = self._build_params(
+            payment_method_id=payment_method_id,
+        )
+        return self._client._get("/v1/balance/top-ups/card-fee", params=params)
+
     def get_topup_receipt(self, topup_id: str) -> dict[str, Any]:
         """Get a top-up receipt"""
         return self._client._get(f"/v1/balance/top-ups/{topup_id}/receipt")
@@ -205,6 +214,15 @@ class TreasuryResource:
             skip=skip,
         )
         return await self._client._aget("/v1/balance/top-ups", params=params)
+
+    async def aget_topup_card_fee(
+        self, *, payment_method_id: str | None = None
+    ) -> dict[str, Any]:
+        """Get the card fee for a top-up (async)"""
+        params = self._build_params(
+            payment_method_id=payment_method_id,
+        )
+        return await self._client._aget("/v1/balance/top-ups/card-fee", params=params)
 
     async def aget_topup_receipt(self, topup_id: str) -> dict[str, Any]:
         """Get a top-up receipt (async)"""
