@@ -4557,9 +4557,12 @@ components:
           type: string
           format: date
           description: 'Present only when the range reaches into YouTube''s ~3-day processing window: the first date whose numbers are provisional and may still be revised by YouTube.'
+        segmentMetricsAvailable:
+          type: boolean
+          description: 'Whether YouTube returned startedWatching and stoppedWatching for this curve. When false, both are 0 placeholders in every point, not measured values.'
         retentionCurve:
           type: array
-          description: 'Up to 100 points covering the video timeline, aggregated over the date range. Can be empty when YouTube has no retention data for the video in the given range.'
+          description: 'Up to 100 points covering the video timeline, aggregated over the date range. Contains only the buckets YouTube reports for that range and is never zero-filled, so it can end before 1.0, skip positions, or be empty.'
           items:
             type: object
             properties:
@@ -4574,10 +4577,10 @@ components:
                 description: Retention vs videos of similar length (0 = worst, 0.5 = median, 1 = best)
               startedWatching:
                 type: integer
-                description: 'Viewers who started watching in this segment. 0 when YouTube has no segment-level data for the video.'
+                description: 'Viewers who started watching in this segment. A 0 placeholder when segmentMetricsAvailable is false.'
               stoppedWatching:
                 type: integer
-                description: 'Viewers who stopped watching in this segment. 0 when YouTube has no segment-level data for the video.'
+                description: 'Viewers who stopped watching in this segment. A 0 placeholder when segmentMetricsAvailable is false.'
               totalSegmentImpressions:
                 type: integer
                 description: Total views of this segment, including rewatches
@@ -22722,10 +22725,16 @@ paths:
         - Up to 100 points (elapsedVideoTimeRatio 0.01-1.0), aggregated over the whole date range. YouTube does not support per-day retention breakdowns.
         - audienceWatchRatio: the absolute share of viewers watching at that point in the video. It can exceed 1 (rewinds and looping, common on Shorts).
         - relativeRetentionPerformance: compares against videos of similar length (0 = worst, 0.5 = median, 1 = best).
+        - Zernio returns exactly the buckets YouTube reports for the requested range and fills none in. A curve that ends before 1.0, or skips a position, means YouTube returned no row there for that range.
+        - The range ends at toDate (default 3 days ago), so recent views are included only with a later toDate.
 
         ### Empty curves
 
         YouTube returns an empty curve for videos with very few views or before analytics processing completes (2-3 day delay).
+
+        ### startedWatching and stoppedWatching
+
+        YouTube does not return segment-level data for every video. Zernio then fetches the curve without it: `segmentMetricsAvailable` is `false` and both fields are `0` placeholders in every point. When it is `true`, a `0` is the value YouTube reported.
       parameters:
         - name: videoId
           in: query
@@ -22792,6 +22801,7 @@ paths:
                         startedWatching: 385
                         stoppedWatching: 11790
                         totalSegmentImpressions: 473492
+                    segmentMetricsAvailable: true
                     scopeStatus:
                       hasAnalyticsScope: true
         '400':

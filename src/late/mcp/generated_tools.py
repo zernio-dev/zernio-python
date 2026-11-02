@@ -14184,10 +14184,12 @@ def register_generated_tools(mcp, _get_client):
             - Up to 100 points (elapsedVideoTimeRatio 0.01-1.0), aggregated over the whole date range. YouTube does not support per-day retention breakdowns.
             - audienceWatchRatio: the absolute share of viewers watching at that point in the video. It can exceed 1 (rewinds and looping, common on Shorts).
             - relativeRetentionPerformance: compares against videos of similar length (0 = worst, 0.5 = median, 1 = best).
+            - Zernio returns exactly the buckets YouTube reports for the requested range and fills none in. A curve that ends before 1.0, or skips a position, means YouTube returned no row there for that range.
+            - The range ends at toDate (default 3 days ago), so recent views are included only with a later toDate.
 
             ### Empty curves
 
-            YouTube returns an empty curve for videos with very few views or before analytics processing completes (2-3 day delay).
+            YouTube returns an empty curve for videos with very few ...
 
             Args:
                 video_id: The YouTube video ID (e.g., "dQw4w9WgXcQ") (required)
