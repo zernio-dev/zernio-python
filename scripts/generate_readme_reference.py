@@ -53,7 +53,6 @@ PREFERRED_ORDER: list[str] = [
     "webhooks",
     "api_keys",
     "media",
-    "tools",
     "users",
     "usage",
     "logs",

@@ -101,15 +101,6 @@ class TestClientResources:
         assert hasattr(client, "analytics")
         assert isinstance(client.analytics, AnalyticsResource)
 
-    def test_client_has_tools_resource(self, api_key: str):
-        """Test tools resource exists."""
-        from late import Late
-        from late.resources import ToolsResource
-
-        client = Late(api_key=api_key)
-        assert hasattr(client, "tools")
-        assert isinstance(client.tools, ToolsResource)
-
     def test_client_has_queue_resource(self, api_key: str):
         """Test queue resource exists."""
         from late import Late
@@ -1073,111 +1064,6 @@ class TestQueueResourceMethods:
 
 # ============================================================================
 # TOOLS RESOURCE TESTS
-# ============================================================================
-
-
-class TestToolsResourceMethods:
-    """Test ToolsResource has all expected methods."""
-
-    def test_tools_has_youtube_download_method(self, api_key: str):
-        """Test tools resource has youtube_download method."""
-        from late import Late
-
-        client = Late(api_key=api_key)
-        assert hasattr(client.tools, "youtube_download")
-        assert callable(client.tools.youtube_download)
-
-    def test_tools_has_youtube_transcript_method(self, api_key: str):
-        """Test tools resource has youtube_transcript method."""
-        from late import Late
-
-        client = Late(api_key=api_key)
-        assert hasattr(client.tools, "youtube_transcript")
-        assert callable(client.tools.youtube_transcript)
-
-    def test_tools_has_instagram_download_method(self, api_key: str):
-        """Test tools resource has instagram_download method."""
-        from late import Late
-
-        client = Late(api_key=api_key)
-        assert hasattr(client.tools, "instagram_download")
-        assert callable(client.tools.instagram_download)
-
-    def test_tools_has_instagram_hashtag_check_method(self, api_key: str):
-        """Test tools resource has instagram_hashtag_check method."""
-        from late import Late
-
-        client = Late(api_key=api_key)
-        assert hasattr(client.tools, "instagram_hashtag_check")
-        assert callable(client.tools.instagram_hashtag_check)
-
-    def test_tools_has_tiktok_download_method(self, api_key: str):
-        """Test tools resource has tiktok_download method."""
-        from late import Late
-
-        client = Late(api_key=api_key)
-        assert hasattr(client.tools, "tiktok_download")
-        assert callable(client.tools.tiktok_download)
-
-    def test_tools_has_twitter_download_method(self, api_key: str):
-        """Test tools resource has twitter_download method."""
-        from late import Late
-
-        client = Late(api_key=api_key)
-        assert hasattr(client.tools, "twitter_download")
-        assert callable(client.tools.twitter_download)
-
-    def test_tools_has_facebook_download_method(self, api_key: str):
-        """Test tools resource has facebook_download method."""
-        from late import Late
-
-        client = Late(api_key=api_key)
-        assert hasattr(client.tools, "facebook_download")
-        assert callable(client.tools.facebook_download)
-
-    def test_tools_has_linkedin_download_method(self, api_key: str):
-        """Test tools resource has linkedin_download method."""
-        from late import Late
-
-        client = Late(api_key=api_key)
-        assert hasattr(client.tools, "linkedin_download")
-        assert callable(client.tools.linkedin_download)
-
-    def test_tools_has_bluesky_download_method(self, api_key: str):
-        """Test tools resource has bluesky_download method."""
-        from late import Late
-
-        client = Late(api_key=api_key)
-        assert hasattr(client.tools, "bluesky_download")
-        assert callable(client.tools.bluesky_download)
-
-    def test_tools_has_generate_caption_method(self, api_key: str):
-        """Test tools resource has generate_caption method."""
-        from late import Late
-
-        client = Late(api_key=api_key)
-        assert hasattr(client.tools, "generate_caption")
-        assert callable(client.tools.generate_caption)
-
-    def test_tools_has_async_methods(self, api_key: str):
-        """Test tools resource has async methods."""
-        from late import Late
-
-        client = Late(api_key=api_key)
-        assert hasattr(client.tools, "ayoutube_download")
-        assert hasattr(client.tools, "ayoutube_transcript")
-        assert hasattr(client.tools, "ainstagram_download")
-        assert hasattr(client.tools, "ainstagram_hashtag_check")
-        assert hasattr(client.tools, "atiktok_download")
-        assert hasattr(client.tools, "atwitter_download")
-        assert hasattr(client.tools, "afacebook_download")
-        assert hasattr(client.tools, "alinkedin_download")
-        assert hasattr(client.tools, "abluesky_download")
-        assert hasattr(client.tools, "agenerate_caption")
-
-
-# ============================================================================
-# PROFILES RESOURCE METHODS TESTS
 # ============================================================================
 
 

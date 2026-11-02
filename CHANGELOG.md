@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Removed
+- **`client.tools` and its response models.** The Zernio API no longer serves the Tools endpoints (video downloaders, YouTube transcript, Instagram hashtag checker, caption generator; the last of them were removed on November 1, 2026), so every `client.tools.*` call now gets a 404. `ToolsResource`, `DownloadResponse`, `DownloadFormat`, `TranscriptResponse`, `TranscriptSegment`, `HashtagCheckResponse`, `HashtagInfo`, `CaptionResponse` and `examples/05_download_tools.py` are gone. `client.validate` is unaffected.
+
 ### Fixed
 - **The ChatGPT MCP server hid Threads accounts.** `_is_posting_account` dropped every platform ending in "ads" to keep ad connections out, and "threads" ends in "ads", so `list_social_accounts` omitted Threads accounts and `validate_post`, `schedule_post` and `publish_post_now` rejected their ids with "Unknown account id". Ad platforms are now an explicit list.
 - **DELETE operations with a request body sent no body.** The generator emitted `_delete(path, params=...)` for every DELETE and dropped the body kwargs, so calls like `remove_campaign_assets(...)` reached the API empty and failed with `invalid_json_body`. DELETE methods now build the payload and send it as JSON (`_delete` / `_adelete` take `data`).
