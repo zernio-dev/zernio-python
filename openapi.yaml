@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.434.0"
+  version: "1.434.1"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -13609,7 +13609,7 @@ components:
         isExternal: { type: boolean }
         syncStatus: { type: string, enum: [synced, pending, partial, unavailable], description: 'Overall sync state across all platforms' }
         message: { type: [string, "null"], description: 'Human-readable status message for pending, partial, or failed states' }
-        thumbnailUrl: { type: [string, "null"], format: uri, description: "Cover image URL. Facebook and Instagram covers whose Meta CDN link expired are re-read from Meta and served from Zernio storage, so that URL does not expire and can be cached." }
+        thumbnailUrl: { type: [string, "null"], format: uri, description: "Cover image URL. Facebook, Instagram and TikTok covers whose platform CDN link expired are re-read from the platform and served from Zernio storage, so that URL does not expire and can be cached." }
         mediaType: { type: [string, "null"], enum: [image, video, carousel, text] }
         mediaItems:
           type: array
@@ -13688,7 +13688,7 @@ components:
 
                   TikTok exposes no ad flag of its own. A video created by an uploaded-asset (non-Spark) TikTok ad is posted to the profile with a fresh organic id and cannot be detected, so those still report false.
               profileId: { type: [string, "null"] }
-              thumbnailUrl: { type: string, format: uri, description: "Cover image URL. Facebook and Instagram covers whose Meta CDN link expired are re-read from Meta and served from Zernio storage, so that URL does not expire and can be cached." }
+              thumbnailUrl: { type: string, format: uri, description: "Cover image URL. Facebook, Instagram and TikTok covers whose platform CDN link expired are re-read from the platform and served from Zernio storage, so that URL does not expire and can be cached." }
               mediaType: { type: string, enum: [image, video, gif, document, carousel, text] }
               mediaItems:
                 type: array
