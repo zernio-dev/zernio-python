@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.433.1"
+  version: "1.433.2"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -23128,7 +23128,7 @@ paths:
         These metrics reflect the entire account's performance across all content surfaces (feed, stories, explore, profile), and are fundamentally different from post-level metrics.
 
         - Data may be delayed up to 48 hours.
-        - Max 90 days, defaults to last 30 days.
+        - Max 90 days (30 for accounts connected through Facebook Login), defaults to last 30 days.
       parameters:
         - name: accountId
           in: query
