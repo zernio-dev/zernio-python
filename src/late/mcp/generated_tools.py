@@ -9714,7 +9714,7 @@ def register_generated_tools(mcp, _get_client):
 
             Args:
                 creative_features
-                post_id: Zernio post ID (provide this or platformPostId)
+                post_id: The Zernio post id (24 hex characters) returned when the post was created through Zernio. Send this or platformPostId. A value that is not a Zernio id is boosted as the platform post id, the same as platformPostId; a Zernio id that matches no post is a 404 on postId.
                 platform_post_id: Platform post ID (alternative to postId).
 
         - Reddit: the post id, with or without the `t3_` prefix.
@@ -9722,7 +9722,7 @@ def register_generated_tools(mcp, _get_client):
         - Meta Ads business-login connection (platform metaads): the id is resolved live. An Instagram media id is boosted as that media, running as the Instagram account that owns it.
                 account_id: Zernio account id. Normally the connected posting account (facebook, instagram, tiktok, linkedin, pinterest, twitter), a googleads account or a redditads account.
 
-        TikTok: the TikTok Ads connection (platform tiktokads) is also accepted when the post brings its own authorization (sparkAuthCode or sparkPosts), so Spark ads need no organic TikTok account connected. Such a call must use platformPostId, not postId. (required)
+        TikTok: the TikTok Ads connection (platform tiktokads) is also accepted when the post brings its own authorization (sparkAuthCode or sparkPosts), so Spark ads need no organic TikTok account connected. Such a call cannot use a Zernio postId: send the TikTok item id (as platformPostId, or in postId). (required)
                 ad_account_id: Platform ad account ID (required)
                 name: (required)
                 campaign_name: Exact name for the campaign this boost provisions. Omitted keeps the default `<name> - Campaign`. Every platform: on LinkedIn it names the campaign group. Ignored on the Meta attach shape (`adSetId`), which creates no campaign.
