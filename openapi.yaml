@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.437.0"
+  version: "1.438.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -3725,6 +3725,23 @@ components:
         paymentMethodRequired: { type: boolean, description: "Always true. The account has no billing until it is set up in Google Ads." }
         nextSteps: { type: string, description: "Billing setup instructions for the user." }
         validateOnly: { type: boolean, description: "Always false on a 201." }
+    CommentAttachment:
+      type: object
+      description: |
+        Facebook only. The media on a comment (sticker, GIF, photo, shared link or video). One attachment per
+        comment, a single object. URLs are expiring Meta CDN links (oe= expiry), so fetch promptly. Instagram
+        comments carry no media.
+      required: [type]
+      properties:
+        type:
+          type: string
+          description: 'Attachment type as Facebook reports it, for example sticker, animated_image_share, photo, image_share, share or video_inline.'
+        imageUrl:
+          type: string
+          description: Rendered image/preview URL (from attachment.media.image.src).
+        url:
+          type: string
+          description: 'Source URL (from attachment.url). For GIFs this is an l.facebook.com redirect.'
     LinkedInMentionIssue:
       type: object
       description: 'One LinkedIn mention that could not be resolved, listed under `details.mentions[]` of the error.'
@@ -6717,22 +6734,12 @@ components:
                   type: boolean
                   description: 'Facebook only: true when the post is an unpublished ad creative (dark post), false for a boosted organic post.'
             attachment:
-              type: object
+              allOf:
+                - $ref: '#/components/schemas/CommentAttachment'
               description: |
-                Facebook only. Present on graphic-only comments (sticker, GIF, photo) that
-                carry no text. URLs are ephemeral and may expire for Meta platforms (oe= expiry),
-                so fetch promptly. Instagram comments do not support attachments.
-              required: [type]
-              properties:
-                type:
-                  type: string
-                  description: 'Attachment type: sticker, animated_image_share, or photo.'
-                imageUrl:
-                  type: string
-                  description: Rendered image/preview URL (from attachment.media.image.src).
-                url:
-                  type: string
-                  description: 'Source URL (from attachment.url). For GIFs this is an l.facebook.com redirect.'
+                Facebook only. Present on graphic-only comments (sticker, GIF, photo) that carry no text:
+                the webhook only includes it when the comment has no text. The REST comments API returns it
+                whenever Facebook returns one, text or not.
         post:
           type: object
           required: [id, platformPostId, content, imageUrl, permalink]
@@ -49199,6 +49206,10 @@ paths:
                         canLike: { type: boolean, description: "Whether this comment can be liked (Facebook, X, Bluesky, Reddit, LinkedIn)" }
                         isHidden: { type: boolean, description: "Whether the comment is currently hidden. On Instagram accounts connected through Facebook Login, Meta leaves hidden comments (and their replies) out of the list entirely, so they never appear with isHidden true; Instagram Login accounts and Facebook Pages return them with isHidden true." }
                         isLiked: { type: boolean, description: Whether the current user has liked this comment }
+                        attachment:
+                          allOf:
+                            - $ref: '#/components/schemas/CommentAttachment'
+                          description: "Facebook only. The comment's sticker, GIF, photo, share or video, whenever Facebook returns one (replies included). Absent when the comment has no media and on every other platform."
                         likeUri: { type: [string, "null"], description: Bluesky like URI for unliking }
                         cid: { type: [string, "null"], description: Bluesky content identifier }
                         parentId: { type: [string, "null"], description: "ID of the parent comment.\n\n- Facebook and Instagram: present on entries inside replies[]; omitted on top-level entries.\n- X: present inside replies[] and on top-level entries, where it holds the ID of the post replied to.\n- Every other platform: omitted; the parent relationship is expressed only through replies[] nesting.\n\nWhen omitted, the key is absent, not null." }
