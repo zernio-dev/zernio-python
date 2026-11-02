@@ -29487,7 +29487,7 @@ def register_generated_tools(mcp, _get_client):
         Args:
             account_id: (required)
             webhook_username: Custom display name for the webhook (1-80 chars). Empty string resets to default ("Zernio"). Cannot contain "clyde" or "discord".
-            webhook_avatar_url: Custom avatar URL. Empty string resets to default bot avatar.
+            webhook_avatar_url: Custom avatar URL. Empty string resets to default bot avatar. Zernio upload URLs (temp/) are copied to permanent storage; an expired one returns 400.
             channel_id: Switch to a different channel in the same guild. Must be a text (0), announcement (5), or forum (15) channel."""
         client = _get_client()
         try:
