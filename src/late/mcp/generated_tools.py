@@ -41375,40 +41375,6 @@ def register_generated_tools(mcp, _get_client):
         except Exception as e:
             raise ToolError(f"Error: {e}") from e
 
-    # TOOLS
-
-    @mcp.tool(
-        annotations=ToolAnnotations(
-            title="Download a TikTok video",
-            readOnlyHint=True,
-            destructiveHint=False,
-            openWorldHint=False,
-        )
-    )
-    def tools_download_tik_tok_video(
-        url: str,
-        action: Literal["download", "formats"] = "download",
-        format_id: str | None = None,
-    ) -> str:
-        """Download a TikTok video
-
-        Get a download URL or list available formats for a TikTok video. Requires Tools API access and uses the Tools API rate limit. Provider gateway failures and provider-side access blocks return 503; an unavailable video returns 404.
-
-        Platforms: tiktok
-
-        Args:
-            url: TikTok video URL or numeric video ID. (required)
-            action: Return a download URL or the available formats.
-            format_id: Format ID from the formats response. Omit to select the first available format."""
-        client = _get_client()
-        try:
-            response = client.tools.download_tik_tok_video(
-                url=url, action=action, format_id=format_id
-            )
-            return _format_response(response)
-        except Exception as e:
-            raise ToolError(f"Error: {e}") from e
-
     # TRACKING_TAGS
 
     @mcp.tool(

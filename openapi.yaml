@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.432.1"
+  version: "1.433.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -308,8 +308,6 @@ servers:
   - url: http://localhost:3000/api
     description: Local
 tags:
-  - name: Tools
-    description: "Media tools for authenticated API consumers."
   - name: Ledger
     description: "Read-only access to double-entry ledger balances and entries for your team. Every operation belongs to the `money` resource group."
   - name: Creator Campaigns
@@ -21498,8 +21496,6 @@ webhooks:
 security:
   - bearerAuth: []
 paths:
-  # NOTE: Tools download endpoints (/v1/tools/{platform}/download, /transcript, /hashtag-checker) removed from docs but still functional for existing customers
-
   # ============================================
   # Validate
   # ============================================
@@ -91601,72 +91597,6 @@ paths:
         "409": *a5
         "422":
           description: 'The advertiser Instagram Business Account could not be resolved.'
-  /v1/tools/tiktok/download:
-    get:
-      x-resource-group: "publishing"
-      operationId: downloadTikTokVideo
-      tags: [Tools]
-      x-platforms: ["tiktok"]
-      summary: Download a TikTok video
-      description: 'Get a download URL or list available formats for a TikTok video. Requires Tools API access and uses the Tools API rate limit. Provider gateway failures and provider-side access blocks return 503; an unavailable video returns 404.'
-      parameters:
-        - name: url
-          in: query
-          required: true
-          schema: { type: string }
-          description: 'TikTok video URL or numeric video ID.'
-          example: 'https://www.tiktok.com/@example/video/7412345678901234567'
-        - name: action
-          in: query
-          schema: { type: string, enum: [download, formats], default: download }
-          description: 'Return a download URL or the available formats.'
-        - name: formatId
-          in: query
-          schema: { type: string }
-          description: 'Format ID from the formats response. Omit to select the first available format.'
-      responses:
-        '200':
-          description: 'Download URL or available formats.'
-          content:
-            application/json:
-              schema:
-                type: object
-                required: [success, title]
-                properties:
-                  success: { type: boolean }
-                  title: { type: string }
-                  format: { type: string, description: 'Selected format label for action=download.' }
-                  downloadUrl: { type: string, description: 'Media download URL for action=download.' }
-                  duration: { type: number, description: 'Duration in seconds for action=formats.' }
-                  cover: { type: string, description: 'Thumbnail URL for action=formats.' }
-                  formats:
-                    type: array
-                    description: 'Available formats for action=formats.'
-                    items:
-                      type: object
-                      properties:
-                        id: { type: string }
-                        label: { type: string }
-                        ext: { type: string }
-                        type: { type: string }
-                        height: { type: number }
-                        width: { type: number }
-                        fps: { type: number }
-                        hasAudio: { type: boolean }
-                        hasVideo: { type: boolean }
-              example:
-                success: true
-                title: 'TikTok by @example'
-                format: 'MP4 • No watermark'
-                downloadUrl: 'https://example.com/video.mp4'
-        '400': { description: 'Missing or invalid url, action, or formatId.' }
-        '401': { $ref: '#/components/responses/Unauthorized' }
-        '403': { description: 'Tools API access is required.' }
-        '404': { description: 'The video or a downloadable format was not found.' }
-        '429': { $ref: '#/components/responses/RateLimited' }
-        '502': { $ref: '#/components/responses/UpstreamFailure' }
-        '503': { $ref: '#/components/responses/TemporarilyUnavailable' }
-
   /v1/media/prepare:
     post:
       x-resource-group: "publishing"

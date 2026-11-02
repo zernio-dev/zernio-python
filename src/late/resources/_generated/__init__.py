@@ -64,7 +64,6 @@ from .sequences import SequencesResource
 from .slack import SlackResource
 from .sms import SmsResource
 from .support_assistant import SupportAssistantResource
-from .tools import ToolsResource
 from .tracking_tags import TrackingTagsResource
 from .treasury import TreasuryResource
 from .twitter_engagement import TwitterEngagementResource
@@ -145,7 +144,6 @@ __all__ = [
     "SlackResource",
     "SmsResource",
     "SupportAssistantResource",
-    "ToolsResource",
     "TrackingTagsResource",
     "TreasuryResource",
     "TwitterEngagementResource",

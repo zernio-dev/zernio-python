@@ -329,11 +329,6 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `media.upload_large_bytes()` | Upload large file from bytes |
 | `media.upload_multiple()` | Upload multiple files |
 
-### Tools
-| Method | Description |
-|--------|-------------|
-| `tools.download_tik_tok_video()` | Download a TikTok video |
-
 ### Users
 | Method | Description |
 |--------|-------------|
