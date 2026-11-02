@@ -5090,14 +5090,18 @@ def register_generated_tools(mcp, _get_client):
         - the Page's Lead Ads terms
         - the newest pixel event
         - the WhatsApp number linked to the Page
+        - the last refusal Meta gave a create or boost for a reason only the account owner can fix (`last_refusal`, see below)
 
         Each check reads on its own: one this connection cannot see comes back `unknown` instead of failing the request.
 
-        ### Reading the result
+        ### Remembered refusals
 
-        - `status` is `blocked` when any check is `error` (ads will be refused), `attention` when one is `warning`, else `ok`.
-        - `missing` marks an optional asset that is not set up (a pixel, a WhatsApp number): only the ads that need it are affected.
-        - A `fix.url` is either a Meta page or a Zernio dashboard path (starting with `/`).
+        Meta cannot be asked about a code 31 security check up front. So `last_refusal` reports the last refusal of this kind that a create or boost met:
+
+        - a code 31 security check or a temporary block, remembered for the connection (`accountId`)
+        - a payment method, the non-discrimination policy or a disabled account, remembered for the ad account
+
+        It stays until a later create succeeds, or for 7 days (1 day for a ...
 
         Platforms: meta
 
@@ -9929,6 +9933,7 @@ def register_generated_tools(mcp, _get_client):
 
         - Idempotency-Key storage and the duplicate-boost guard are bypassed.
         - Counts toward the 30 Meta writes per ad account per 5 minutes.
+        - Runs the account status and payment checks of GET /v1/ads/accounts/health first: an ad account that is not ready answers its blocker `code` (`ad_account_unusable`, `ad_account_payment_required`) with `details.hint` and `details.fix`, and Meta is not called.
         - With `adSetId`, only the ad is dry-run.
         - An Instagram video Meta refuses as a direct reference (subcode 1815279) comes back as `unverified` nodes, because the copy a real boost makes cannot be dry-run.
 
@@ -10734,6 +10739,8 @@ def register_generated_tools(mcp, _get_client):
         **Google Performance Max**: validates the complete atomic campaign and asset group, with no resource creation or local persistence. Validation still downloads image URLs and consumes quota.
 
         **Meta**: validates the inline campaign, ad set, creative and ad with execution_options validate_only. Nothing is uploaded or created; validation bypasses Idempotency-Key storage. Success returns 200 with per-node results; a Meta rejection returns an error.
+
+        Before the dry run, Meta validateOnly runs the account status and payment checks of GET /v1/ads/accounts/health: an ad account that is not ready answers its blocker `code` (`ad_account_unusable`, `ad_account_payment_required`) with `details.hint` and `details.fix`, and Meta is not called.
 
         - Supported: a single image or existing video.id (each also with bodies[] / headlines[] Multiple Text Options), all-image placementAssets with per-rule copy and text pools, or existingCreativeId.
         - Return 400: dynamicCreative, translations, carouselCards, placement videos, new video uploads, creatives[], adSetId, RESERVED buying.
