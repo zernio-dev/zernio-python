@@ -29195,6 +29195,31 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="Remove a connected account",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def creator_portal_remove_creator_account() -> str:
+        """Remove a connected account
+
+        Disconnects one of the creator's accounts. The account belongs to the creator, not to one campaign, so it stops
+        counting in every campaign of this brand they joined.
+
+        What its posts already earned stays: accrued, approved and paid amounts are not touched.
+
+        Refused while a post from the account is still counting views, because those views are read through the
+        account. It can be removed once their tracking ends."""
+        client = _get_client()
+        try:
+            response = client.creator_portal.remove_creator_account()
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="List a creator's earnings history",
             readOnlyHint=True,
             destructiveHint=False,

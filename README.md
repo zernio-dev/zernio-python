@@ -1025,6 +1025,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `creator_portal.get_creator_portal()` | Read a creator invite or participant page |
 | `creator_portal.join_creator_campaign()` | Join a campaign |
 | `creator_portal.recover_creator_portal_links()` | Email a creator their campaign links |
+| `creator_portal.remove_creator_account()` | Remove a connected account |
 | `creator_portal.start_creator_connect()` | Start connecting a creator account |
 | `creator_portal.start_creator_payouts()` | Start payout onboarding |
 | `creator_portal.submit_creator_post()` | Submit a post |

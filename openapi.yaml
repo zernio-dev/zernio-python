@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.434.1"
+  version: "1.435.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -1379,7 +1379,7 @@ components:
     CreatorPortalCampaign:
       type: object
       description: 'The campaign as a creator sees it: terms, never the budget.'
-      required: [id, name, brandName, logoUrl, theme, status, platforms, contentRules, startsAt, endsAt, currency, economics, maxPostAgeMinutes, holdDays, trackingDays]
+      required: [id, name, brandName, logoUrl, theme, status, platforms, contentRules, startsAt, endsAt, startedAt, currency, economics, maxPostAgeMinutes, holdDays, trackingDays, maxAccountsPerParticipant]
       properties:
         id: { type: string, description: 'The campaign id, as in a link-recovery URL.' }
         name: { type: string }
@@ -1391,11 +1391,13 @@ components:
         contentRules: { type: [string, "null"] }
         startsAt: { type: [string, "null"], format: date-time }
         endsAt: { type: [string, "null"], format: date-time }
+        startedAt: { type: string, format: date-time, description: 'Posts published before this moment do not count: `startsAt`, else when the campaign went live.' }
         currency: { type: string }
         economics: { $ref: '#/components/schemas/CreatorPortalEconomics' }
         maxPostAgeMinutes: { type: [integer, "null"], description: 'A post must be submitted within this many minutes of publishing. Null means any age. Either way, only posts published after the campaign started are accepted.' }
         holdDays: { type: integer, description: 'Days approved earnings stay owed before they become payable.' }
         trackingDays: { type: integer, description: 'Days each submitted post is tracked for views.' }
+        maxAccountsPerParticipant: { type: [integer, "null"], description: 'How many connected accounts can submit posts. Null means no limit.' }
     CreatorPortalEconomics:
       description: 'How the campaign pays, without its budget. Amounts in cents. A pool campaign shows the pool size as `poolCents`.'
       oneOf:
@@ -1448,11 +1450,12 @@ components:
         trackingEndsAt: { type: [string, "null"], format: date-time }
     CreatorPortalPayoutSetup:
       type: object
-      required: [mode, status, country, transfers]
+      required: [mode, status, country, suggestedCountry, transfers]
       properties:
-        mode: { type: string, enum: [none, external, treasury], description: 'How the campaign pays: treasury means through Zernio, so the creator onboards for payouts.' }
+        mode: { type: string, enum: [none, external, treasury], description: 'How the campaign pays: treasury means through Zernio, so the creator onboards for payouts, which they can do from the moment they join. Earnings wait until it is done.' }
         status: { type: string, enum: [not_started, pending, enabled, not_applicable] }
         country: { type: [string, "null"] }
+        suggestedCountry: { type: [string, "null"], description: 'The country the request came from, to preselect before payout setup starts. Null once the payout account has a country, and outside treasury mode.' }
         transfers:
           type: array
           description: 'Treasury payouts sent to the creator.'
@@ -1498,12 +1501,14 @@ components:
           description: 'Verified accounts on the campaign''s platforms.'
           items:
             type: object
-            required: [platform, username, displayName, avatarUrl]
+            required: [id, platform, username, displayName, avatarUrl, counts]
             properties:
+              id: { type: string, description: 'Pass to `DELETE /public/creator-campaigns/{token}/accounts/{accountId}` to remove the account.' }
               platform: { type: string }
               username: { type: string }
               displayName: { type: [string, "null"] }
               avatarUrl: { type: [string, "null"] }
+              counts: { type: boolean, description: 'False for an account connected past `maxAccountsPerParticipant`: posts from it are refused until another account is removed.' }
         submissions:
           type: array
           description: 'The latest 100 submissions.'
@@ -25152,6 +25157,7 @@ paths:
             The post cannot be submitted: 400 `invalid_field_value`.
 
             - `param: url`: the link is not a post of an accepted platform, or the post was published before the campaign started or longer ago than the campaign accepts.
+            - TikTok and X post ids carry their creation time, so a post from before the campaign is refused as such even when no connected account has it.
             - The post is from an account past the campaign's `caps.maxAccountsPerParticipant` ("This campaign allows 2 connected accounts."). Only the first accounts the creator connected, up to that count, can submit.
           content:
             application/json:
@@ -25162,7 +25168,11 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/ErrorResponse' }
         '404':
-          description: 'The link is invalid or expired, or the post is not from an account the creator connected (`resource_not_found`).'
+          description: |
+            The link is invalid or expired, or no connected account has the post (`resource_not_found`, `param: url`).
+
+            - When the link names its author (TikTok, Instagram, Threads, X) and that is not one of the creator's accounts, the message names both handles.
+            - Otherwise it says the post was not found yet, for example because it was published moments ago.
           content:
             application/json:
               schema: { $ref: '#/components/schemas/ErrorResponse' }
@@ -25172,6 +25182,49 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/ErrorResponse' }
         '429': { $ref: '#/components/responses/CreatorPortalRateLimited' }
+  /public/creator-campaigns/{token}/accounts/{accountId}:
+    parameters:
+      - $ref: '#/components/parameters/CreatorPortalToken'
+      - name: accountId
+        in: path
+        required: true
+        description: 'The `id` of one of the participant''s `accounts`.'
+        schema: { type: string }
+    delete:
+      x-resource-group: "public"
+      operationId: removeCreatorAccount
+      tags: [Creator Portal]
+      summary: Remove a connected account
+      security: []
+      description: |
+        Disconnects one of the creator's accounts. The account belongs to the creator, not to one campaign, so it stops
+        counting in every campaign of this brand they joined.
+
+        What its posts already earned stays: accrued, approved and paid amounts are not touched.
+
+        Refused while a post from the account is still counting views, because those views are read through the
+        account. It can be removed once their tracking ends.
+      responses:
+        '200':
+          description: Removed.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [removed]
+                properties:
+                  removed: { type: boolean, description: 'Always true.' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '404':
+          description: 'The link is invalid or expired, or the account is not one of the participant''s accounts on the campaign''s platforms (`resource_not_found`).'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+        '409':
+          description: 'A post from the account is still counting views (`invalid_resource_state`; the message says how many).'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
   /public/creator-campaigns/{token}/payouts:
     parameters:
       - $ref: '#/components/parameters/CreatorPortalToken'

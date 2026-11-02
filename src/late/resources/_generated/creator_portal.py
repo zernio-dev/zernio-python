@@ -117,6 +117,12 @@ class CreatorPortalResource:
             "/public/creator-campaigns/{token}/submissions", data=payload
         )
 
+    def remove_creator_account(self) -> dict[str, Any]:
+        """Remove a connected account"""
+        return self._client._delete(
+            "/public/creator-campaigns/{token}/accounts/{accountId}"
+        )
+
     def get_creator_payouts(
         self, *, limit: int | None = 50, skip: int | None = 0
     ) -> dict[str, Any]:
@@ -195,6 +201,12 @@ class CreatorPortalResource:
         )
         return await self._client._apost(
             "/public/creator-campaigns/{token}/submissions", data=payload
+        )
+
+    async def aremove_creator_account(self) -> dict[str, Any]:
+        """Remove a connected account (async)"""
+        return await self._client._adelete(
+            "/public/creator-campaigns/{token}/accounts/{accountId}"
         )
 
     async def aget_creator_payouts(
