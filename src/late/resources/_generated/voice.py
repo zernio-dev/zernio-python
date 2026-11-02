@@ -156,6 +156,7 @@ class VoiceResource:
         to: str,
         *,
         from_: str | None = None,
+        forward_to: str | None = None,
         minutes: int | None = 1,
         recording: bool | None = None,
         transcription: bool | None = None,
@@ -164,6 +165,7 @@ class VoiceResource:
         params = self._build_params(
             to=to,
             from_=from_,
+            forward_to=forward_to,
             minutes=minutes,
             recording=recording,
             transcription=transcription,
@@ -366,6 +368,7 @@ class VoiceResource:
         to: str,
         *,
         from_: str | None = None,
+        forward_to: str | None = None,
         minutes: int | None = 1,
         recording: bool | None = None,
         transcription: bool | None = None,
@@ -374,6 +377,7 @@ class VoiceResource:
         params = self._build_params(
             to=to,
             from_=from_,
+            forward_to=forward_to,
             minutes=minutes,
             recording=recording,
             transcription=transcription,
