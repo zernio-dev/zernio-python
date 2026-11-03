@@ -5969,6 +5969,8 @@ def register_generated_tools(mcp, _get_client):
 
         `status` turns `done` once every row is processed, usually within seconds. Uploads are kept for 30 days.
 
+        A `failed` upload says why in `failureReason`. Send it again: re-sending a day replaces it, so nothing is counted twice.
+
         Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit
 
         Args:

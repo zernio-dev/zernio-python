@@ -65654,6 +65654,8 @@ paths:
         How an upload was matched: rows matched and unmatched, and up to 100 unmatched rows with why (`no_campaign` or `ambiguous`).
 
         `status` turns `done` once every row is processed, usually within seconds. Uploads are kept for 30 days.
+
+        A `failed` upload says why in `failureReason`. Send it again: re-sending a day replaces it, so nothing is counted twice.
       security:
         - bearerAuth: []
       parameters:
@@ -65665,7 +65667,7 @@ paths:
             application/json:
               schema:
                 type: object
-                required: [uploadId, status, source, rowsReceived, rowsMatched, rowsUnmatched, unmatched, createdAt, completedAt]
+                required: [uploadId, status, source, rowsReceived, rowsMatched, rowsUnmatched, unmatched, failureReason, createdAt, completedAt]
                 properties:
                   uploadId: { type: string }
                   status: { type: string, enum: [queued, done, failed] }
@@ -65681,6 +65683,10 @@ paths:
                         index: { type: integer, description: "The row's position in the request." }
                         campaign: { type: string, description: 'The campaign id, UTM or name the row gave.' }
                         reason: { type: string, enum: [no_campaign, ambiguous] }
+                  failureReason:
+                    type: [string, "null"]
+                    enum: [queue_unavailable, processing_failed, null]
+                    description: "Set when `status` is `failed`. `queue_unavailable`: the upload could not be queued. `processing_failed`: its rows could not be stored after several retries. Both are on our side."
                   createdAt: { type: string, format: date-time }
                   completedAt: { type: [string, "null"], format: date-time }
         '401': { $ref: '#/components/responses/Unauthorized' }
