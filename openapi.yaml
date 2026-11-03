@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.445.1"
+  version: "1.446.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -14423,6 +14423,10 @@ components:
               allConversions:
                 type: number
                 description: 'All conversions, including actions excluded from the Conversions column (Google metrics.all_conversions). 0 on platforms without the concept.'
+              conversionsByType:
+                type: object
+                additionalProperties: { type: number }
+                description: "`conversions` split by what was counted. Keys are the Meta action_type (e.g. `offsite_conversion.fb_pixel_purchase`) or the Google conversion action name, so a goal change shows as one key ending and another starting. Meta and Google only; empty before 2026-11."
               costPerConversion: { type: number }
               actions:
                 type: object
