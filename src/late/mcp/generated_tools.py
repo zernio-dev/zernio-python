@@ -13216,7 +13216,7 @@ def register_generated_tools(mcp, _get_client):
             ad_account_id: Platform ad account ID, from `GET /v1/ads/accounts`. (required)
             level: (required)
             campaign_ids: Only check these platform campaign IDs (or their ad sets). Leave out to check the whole ad account.
-            conditions: Object with keys: all (list of objects with keys metric, window, op, value, required) (required)
+            conditions: Object with keys: all (list of objects with keys metric, window, op, value, compareTo, required) (required)
             actions: Each item is an object with keys: type (one of: notify; required) - Send the `ad_rule.triggered` webhook. (required)
             schedule: Leave it out to run every 60 minutes. Object with keys: everyMinutes (one of: 60, 180, 360, 720, 1440; required) - How often the rule runs, in minutes.
             cooldown_minutes: How long the rule leaves an object alone after acting on it.
@@ -13360,7 +13360,7 @@ def register_generated_tools(mcp, _get_client):
             name
             level
             campaign_ids
-            conditions: Object with keys: all (list of objects with keys metric, window, op, value, required)
+            conditions: Object with keys: all (list of objects with keys metric, window, op, value, compareTo, required)
             actions: Each item is an object with keys: type (one of: notify; required) - Send the `ad_rule.triggered` webhook.
             schedule: Object with keys: everyMinutes (one of: 60, 180, 360, 720, 1440; required) - How often the rule runs, in minutes.
             cooldown_minutes

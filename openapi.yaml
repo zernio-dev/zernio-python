@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.453.0"
+  version: "1.456.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -17098,19 +17098,36 @@ components:
         metric:
           type: string
           anyOf:
-            - enum: [spend, impressions, clicks, conversions, ctr, cpc, cpm, cpa, roas, reach, frequency]
+            - enum: [spend, impressions, clicks, conversions, ctr, cpc, cpm, cpa, roas, reach, frequency, daily_budget, budget_used]
             - pattern: '^result:[a-z][a-z0-9_]{0,39}$'
           description: |
             `ctr` is a percentage. `spend`, `cpc`, `cpm` and `cpa` are in the ad account currency. `reach` and `frequency` use the platform's de-duplicated reach, so they are accepted on Meta and TikTok only.
+
+            `daily_budget` is the object's synced daily budget. `budget_used` is spend over the window as a percent of that budget for each day of the window: `today` `>=` 200 means twice the budget spent.
+
+            Both read campaigns and ad sets with a daily budget of their own. A lifetime budget never matches.
 
             `result:<key>` reads one of your own results (see [Campaign results](/guides/campaign-results)), on campaign rules only: the values you sent for the window, or a formula over them and the platform's numbers. A campaign with no value for it never matches.
           example: 'result:cac_percent'
         window:
           type: string
-          enum: [today, yesterday, last_3d, last_7d, last_14d, last_30d]
-          description: "Days in the ad account's own timezone. `last_7d` is the 7 full days before today; only `today` reads the day in progress."
+          anyOf:
+            - enum: [today, yesterday, last_3d, last_7d, last_14d, last_30d]
+            - pattern: '^[0-9]{1,2}_to_[0-9]{1,2}_days_ago$'
+          description: |
+            Days in the ad account's own timezone. `last_7d` is the 7 full days before today; only `today` reads the day in progress.
+
+            `<from>_to_<to>_days_ago` is any range of full days, both ends included, such as `8_to_2_days_ago` to skip the 2 most recent days while their conversions still arrive. `from` is at least `to` and at most 90.
+          example: last_7d
         op: { type: string, enum: ['>', '>=', '<', '<='] }
         value: { type: number, minimum: 0 }
+        compareTo:
+          type: string
+          description: |
+            Makes the condition relative: `value` becomes a ratio of the metric over `window` to the same metric over this window. `previous_period` is the same number of days just before `window`; any other value is a window, such as `30_to_2_days_ago`.
+
+            Spend, impressions, clicks, conversions and reach are compared per day, so windows of different lengths compare fairly; rates such as `cpc` compare as they are. A comparison window with no value never matches.
+          example: previous_period
     AdRuleConditions:
       description: |
         A group: `all` (every item must hold) or `any` (one is enough). An item is a condition or another group, nested up to 3 levels, with at most 10 conditions in total. A rate with no denominator (a CPA with no conversions) never matches.
