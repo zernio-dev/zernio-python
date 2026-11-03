@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.452.2"
+  version: "1.452.3"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -3143,7 +3143,7 @@ components:
               items: { type: string, enum: [mobile, desktop] }
               description: "Restrict by device. Omit to deliver on both mobile and desktop."
         gender: { type: string, enum: [all, male, female], description: "Restrict the audience by gender (Meta `genders`). Omit or send all for everyone; all is ignored in adSetId attach mode. Stored on the ad and read back in `targeting.gender`." }
-        languages: { type: array, items: { type: string }, description: "Audience languages (Meta `locales`). A bare ISO 639-1 code targets all regional variants (\"en\" = all English), a region-qualified code a specific one (\"en_GB\", \"pt_BR\"); unknown codes are rejected." }
+        languages: { type: array, items: { type: string }, description: "Audience languages (Meta `locales`). A bare ISO 639-1 code targets all regional variants (\"en\" = all English), a region-qualified code a specific one (\"en_GB\", \"pt_BR\"). Meta numeric locale ids (e.g. \"24\" for English UK) are also accepted. Unknown values are rejected. Same format as `targeting.languages` on POST /v1/ads/boost." }
         places: { type: array, items: { type: object, required: [key], properties: { key: { type: string } } }, description: "Meta place keys (from GET /v1/ads/targeting/search)." }
         neighborhoods: { type: array, items: { type: object, required: [key], properties: { key: { type: string } } }, description: "Meta neighborhood keys (from GET /v1/ads/targeting/search)." }
         excludedLocations:
@@ -6760,11 +6760,11 @@ components:
 
                 **Facebook**: populated from a Graph API lookup of the parent post. Present when the post is an ad dark post (isDarkPost true, whatever its promotionStatus) or an organic post that is or was boosted (promotionStatus "active", "extendable" or "finished").
 
-                Meta does not link a dark post back to its ad, so on Facebook id is set only when exactly one ad on the Page, created before the dark post, carries the same copy as the post. title is never set on Facebook.
+                Meta does not link a dark post to its ad, so on Facebook id is set only when a Meta Ads account is connected and exactly one of its ads has the same text as the post. title is never set on Facebook.
               properties:
                 id:
                   type: string
-                  description: 'Meta ad ID. Instagram: from the webhook. Facebook: only on a dark post matched to a single ad by its copy.'
+                  description: 'Meta ad ID. Instagram: from the webhook. Facebook: only when a connected Meta Ads account has one ad with the same text.'
                 title:
                   type: string
                   description: Ad creative title (Instagram only).
@@ -15566,7 +15566,7 @@ components:
             tiers on Google, and any income tier on LinkedIn / X / Pinterest, are rejected.
             On Meta, income/zip targeting requires the relevant `specialAdCategories` to be
             unset (housing/employment/credit ads cannot use it).
-        languages: { type: array, items: { type: string }, description: "Language codes restricting the audience by language. Applied on Meta, Google, TikTok, LinkedIn, X, Pinterest and Reddit; rejected with 400 on OpenAI. A code the platform cannot target returns 400 listing the ones it can.\n\nOn Meta: ISO 639-1 codes (e.g. ['en']). A bare code targets all regional variants (\"en\" = all English); use a region-qualified code (\"en_GB\", \"pt_BR\") for a specific one. Unknown codes are rejected." }
+        languages: { type: array, items: { type: string }, description: "Language codes restricting the audience by language. Applied on Meta, Google, TikTok, LinkedIn, X, Pinterest and Reddit; rejected with 400 on OpenAI. A code the platform cannot target returns 400 listing the ones it can.\n\nOn Meta: ISO 639-1 codes (e.g. ['en']). A bare code targets all regional variants (\"en\" = all English); use a region-qualified code (\"en_GB\", \"pt_BR\") for a specific one. Meta numeric locale ids (e.g. \"24\" for English UK) are also accepted. Unknown values are rejected.\n\nPOST /v1/ads/create and POST /v1/ads/boost take the same format." }
         interests:
           type: array
           description: |
@@ -77146,7 +77146,7 @@ paths:
                     ageMin: { type: integer, minimum: 13, maximum: 65 }
                     ageMax: { type: integer, minimum: 13, maximum: 65 }
                     gender: { type: string, enum: [all, male, female], description: "Applied on Meta, TikTok, Pinterest and Reddit. Ignored on Google, LinkedIn and X." }
-                    languages: { type: array, items: { type: string }, description: "Meta locale ids (numeric), passed through as given. Reddit: language codes (e.g. `en`)." }
+                    languages: { type: array, items: { type: string }, description: "Language codes, the same format as `languages` on POST /v1/ads/create.\n\n- Meta: ISO 639-1 codes. A bare code targets all regional variants (\"en\" = all English); use a region-qualified code for a specific one (\"en_GB\", \"pt_BR\"). Meta numeric locale ids (e.g. \"24\" for English UK) are also accepted. Unknown values are rejected.\n- Reddit: ISO 639-1 codes (e.g. `en`)." }
                     countries: { type: array, items: { type: string }, description: "ISO country codes. Required for TikTok boosts (TikTok's ad group requires location_ids); optional on other platforms." }
                     regions:
                       type: array
@@ -78690,7 +78690,7 @@ paths:
                     Normalized household-income tier. Meta and TikTok express all four; Google maps only
                     `top_10`; rejected on LinkedIn, X, and Pinterest. On Meta, income targeting is incompatible
                     with housing/employment/credit `specialAdCategories`.
-                languages: { type: array, items: { type: string }, description: "Language codes, e.g. [\"en\",\"es\"].\n\n- Google: campaign language targeting (language_constant) using Google's language codes (ISO 639-1, plus variants such as `zh_CN`). Unknown codes return 400.\n- Meta: a bare code targets all regional variants (\"en\" = all English); use a region-qualified code for a specific one (\"en_GB\", \"pt_BR\", \"zh_TW\"). Unknown codes are rejected.\n- Other ad platforms use their own language-code systems." }
+                languages: { type: array, items: { type: string }, description: "Language codes, e.g. [\"en\",\"es\"].\n\n- Google: campaign language targeting (language_constant) using Google's language codes (ISO 639-1, plus variants such as `zh_CN`). Unknown codes return 400.\n- Meta: a bare code targets all regional variants (\"en\" = all English); use a region-qualified code for a specific one (\"en_GB\", \"pt_BR\", \"zh_TW\"). Meta numeric locale ids (e.g. \"24\" for English UK) are also accepted. Unknown values are rejected. POST /v1/ads/boost takes the same format in `targeting.languages`.\n- Other ad platforms use their own language-code systems." }
                 placements:
                   type: object
                   description: |
