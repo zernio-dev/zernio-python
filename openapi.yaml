@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.451.1"
+  version: "1.452.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -175,7 +175,7 @@ x-documentation:
     - `post.external.updated` - A tracked native post's text or media changed on the platform. Edits are detected by comparing text/media structure and (where the platform exposes it) the platform's own edit timestamp; media-URL-only refreshes do not fire this.
     - `post.external.deleted` - A tracked native post was detected as removed from the platform. `post.deletedAt` carries the detection time. Coverage is bounded to the most recent posts the platform listing returns, and detection is a diff against posts a prior sync already indexed, so an account for which no post has ever been indexed never emits it.
     - `account.connected` - Account connected
-    - `account.disconnected` - Account disconnected (token expired)
+    - `account.disconnected` - Account disconnected: deactivated after its token was revoked or rejected (or the platform refused it, e.g. a Facebook Page left out of a later authorization), or flagged as needing reconnection. Not sent again while the account stays deactivated
     - `account.permissions_changed` - An account connected through your own OAuth app lost a permission area (for example posting) while staying connected
     - `account.rate_limited` - A Google or Microsoft mailbox entered a sending cooldown; sends answer 429 until `account.resetsAt`
     - `account.ads.initial_sync_completed` - Initial ads sync (discovery + 90-day backfill) completed for an ads-enabled account
@@ -1038,6 +1038,29 @@ components:
             type: not_found
             code: account_not_found
             param: accountId
+    AccountDisconnected:
+      description: |-
+        The account exists but is disconnected (deactivated, or flagged as needing reconnection). Code `account_disconnected`.
+
+        `details` names the account (`accountId`, `platform`, `username`) with its `disconnectReason`, `disconnectionType`, `unhealthySince` and `action: reconnect`.
+
+        Reconnect the account (its accountId stays the same), then retry. The disconnect is also sent as the `account.disconnected` webhook.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorResponse' }
+          example:
+            error: 'The facebook account "Acme Fitness" (6abf72d1fca017c1078db5ab) is disconnected: Facebook tokens expired. Please reconnect your Facebook account. Reconnect this account, then retry with the same accountId.'
+            type: invalid_request_error
+            code: account_disconnected
+            param: accountId
+            details:
+              accountId: 6abf72d1fca017c1078db5ab
+              platform: facebook
+              username: Acme Fitness
+              disconnectReason: 'Facebook tokens expired. Please reconnect your Facebook account.'
+              disconnectionType: unintentional
+              unhealthySince: '2026-10-18T08:59:31.000Z'
+              action: reconnect
     AccountConnectionRequired:
       description: 'The account exists but is inactive or needs reconnection. Reconnect it, then read GET /v1/accounts for its current account ID before retrying. Code: ads_connection_required.'
       content:
@@ -16460,6 +16483,10 @@ components:
 
             Source: facebook-business-sdk-codegen api_specs/specs/AdCampaignBidConstraint.json.
           example: 2.0
+        specialAdCategories:
+          type: array
+          items: { type: string }
+          description: "Special ad categories declared when Zernio created this ad (`specialAdCategories` on POST /v1/ads/create or /v1/ads/boost), e.g. [\"HOUSING\"]. Empty or absent when none was declared or the ad was created outside Zernio."
         promotedObject:
           type: [object, "null"]
           description: "Meta promoted object containing conversion event details. Structure varies by objective. Only present for Meta ads."
@@ -16860,6 +16887,10 @@ components:
             custom_event_type: { type: string }
             pixel_id: { type: string }
             page_id: { type: string }
+        specialAdCategories:
+          type: array
+          items: { type: string }
+          description: "Special ad categories declared when Zernio created the campaign, read from the ad that created it (its earliest ad), e.g. [\"HOUSING\"]. Absent when none was declared or the campaign was created outside Zernio."
         adSets:
           type: array
           items: { $ref: '#/components/schemas/AdTreeAdSet' }
@@ -16970,6 +17001,10 @@ components:
             custom_event_type: { type: string }
             pixel_id: { type: string }
             page_id: { type: string }
+        specialAdCategories:
+          type: array
+          items: { type: string }
+          description: "Special ad categories declared when Zernio created the campaign, read from the ad that created it (its earliest ad), e.g. [\"HOUSING\"]. Absent when none was declared or the campaign was created outside Zernio."
         earliestAd: { type: string, format: date-time }
         latestAd: { type: string, format: date-time }
     GoogleAdLabel:
@@ -19267,7 +19302,12 @@ webhooks:
     post:
       operationId: onAccountDisconnected
       summary: Account disconnected event
-      description: Fired when a connected account becomes disconnected.
+      description: |-
+        Fired when a connected account becomes disconnected: deactivated after an auth error, or flagged as needing reconnection (`needsReconnection: true` on GET /v1/accounts).
+
+        A flagged account that is later deactivated sends it again with the new reason. A deactivated account does not send it again until it is reconnected.
+
+        Requests that need the account answer 409 `account_disconnected` until then. A webhook only receives the events it lists, so subscribe to this one explicitly.
       tags: [Webhook Events]
       requestBody:
         required: true
@@ -77232,7 +77272,14 @@ paths:
                           value: { type: string }
                 specialAdCategories:
                   type: array
-                  description: "Meta only. Required for housing, employment, credit, or political ads."
+                  description: |
+                    Special ad category of the campaign the boost creates. Required for housing, employment, credit, or political ads.
+
+                    - Meta: every value.
+                    - TikTok: HOUSING, EMPLOYMENT and CREDIT, sent as the campaign's `special_industries` (TikTok requires one for these ads aimed at the US or Canada). Other values return 400.
+                    - TikTok targeting: a 400 names the field for ZIP codes (`targeting.locations.zips`), gender, ages under 18 (`targeting.ageMin`), interest keywords (`keyword:` ids in `targeting.interests`) and hashtag behaviors.
+                    - TikTok also refuses Smart Targeting (`smartTargeting`) and lookalike audiences (`targeting.audienceInclude` / `targeting.audienceExclude`). Without an age, the ad group targets 18+.
+                    - TikTok sets the category when the campaign is created, so it is a 400 with `smartPlus` or `existingCampaignId`.
                   items: { type: string, enum: [HOUSING, EMPLOYMENT, CREDIT, FINANCIAL_PRODUCTS_SERVICES, ISSUES_ELECTIONS_POLITICS, ONLINE_GAMBLING_AND_GAMING] }
                 specialAdCategoryCountry:
                   type: array
@@ -78696,9 +78743,21 @@ paths:
                 specialAdCategories:
                   type: array
                   description: |
-                    Meta only. Declares the ad's special category, required for housing, employment, credit, or
-                    political/social-issue ads (Meta enforces restricted targeting for these). Note: setting a special
-                    category disables income/zip targeting on Meta.
+                    Declares the ad's special category, required for housing, employment, credit, or
+                    political/social-issue ads.
+
+                    - Meta: every value. Setting a housing, employment or credit category disables income/zip
+                      targeting on Meta.
+                    - TikTok: HOUSING, EMPLOYMENT and CREDIT, sent as the new campaign's `special_industries`
+                      (TikTok requires one for these ads aimed at the US or Canada). Other values return 400.
+                    - TikTok targeting: the create (and `validateOnly`) returns 400 naming the field for ZIP codes
+                      (`targeting.zips`), gender, ages under 18 (`targeting.ageMin`), interest keywords (`keyword:`
+                      ids in `targeting.interests`) and hashtag behaviors.
+                    - TikTok also refuses Smart Targeting (`smartTargeting`) and lookalike audiences
+                      (`targeting.audienceInclude` / `targeting.audienceExclude`). Without an age, the ad group
+                      targets 18+.
+                    - TikTok sets the category when the campaign is created, so it is a 400 with `smartPlus`,
+                      `existingCampaignId` or `adSetId`.
                   items: { type: string, enum: [HOUSING, EMPLOYMENT, CREDIT, FINANCIAL_PRODUCTS_SERVICES, ISSUES_ELECTIONS_POLITICS, ONLINE_GAMBLING_AND_GAMING] }
                 specialAdCategoryCountry:
                   type: array
@@ -79662,6 +79721,7 @@ paths:
                   pagination: { type: object, properties: { hasMore: { type: boolean }, cursor: { type: [string, "null"] } } }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '409': { $ref: '#/components/responses/AccountDisconnected' }
         '403': { description: Ads add-on required. }
     post:
       x-resource-group: "ads"
@@ -79847,6 +79907,7 @@ paths:
                   form: { type: object, properties: { id: { type: string }, name: { type: string } } }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '409': { $ref: '#/components/responses/AccountDisconnected' }
         '403': { description: "Forbidden. One of:\n\n- Ads add-on required.\n- Code `ad_account_not_selected`: the connection has selected ad accounts and the ad account this request targets is not among them. `details` carries `accountId`, `adAccountId` and `selectedAdAccountIds`.\n\nTo fix `ad_account_not_selected`, add the ad account to the selection (GET /v1/connect/{platform}/ads with adAccountIds, which replaces the selection) or use a connection that has it selected." }
         '422': { description: "Meta rejected the lead form. Code 3 is Meta's generic app-capability error and does not name a field; when the request set isPhoneSmsVerifyEnabled, the response names that field as the one to drop first." }
 
@@ -79892,6 +79953,7 @@ paths:
                       - type: object
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '409': { $ref: '#/components/responses/AccountDisconnected' }
         '404': { description: "No lead form with that id on the Page this account manages." }
     delete:
       x-resource-group: "ads"
@@ -79914,6 +79976,7 @@ paths:
               schema: { type: object, properties: { status: { type: string }, formId: { type: string }, archived: { type: boolean } } }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '409': { $ref: '#/components/responses/AccountDisconnected' }
         '403': { $ref: '#/components/responses/AdAccountNotSelected' }
         '404': { description: "No lead form with that id on the Page this account manages." }
 
@@ -79950,7 +80013,7 @@ paths:
         - { name: cursor, in: query, schema: { type: string } }
         - { name: since, in: query, schema: { type: integer }, description: Unix seconds. }
       responses:
-        '409': { $ref: '#/components/responses/AccountConnectionRequired' }
+        '409': { $ref: '#/components/responses/AccountDisconnected' }
         '404': { $ref: '#/components/responses/AccountUnavailable' }
         '200':
           description: Leads for the form.
@@ -80029,6 +80092,7 @@ paths:
               schema: { type: object, properties: { status: { type: string }, testLead: { type: object, properties: { id: { type: string } } } } }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '409': { $ref: '#/components/responses/AccountDisconnected' }
     delete:
       x-resource-group: "contacts"
       operationId: deleteTestLead
@@ -80054,6 +80118,7 @@ paths:
               schema: { type: object, properties: { status: { type: string }, deleted: { type: array, items: { type: string }, description: 'Ids of the test leads removed.' } } }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '409': { $ref: '#/components/responses/AccountDisconnected' }
         '404': { description: 'The form has no test lead.' }
 
   /v1/ads/images:
