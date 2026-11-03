@@ -920,6 +920,29 @@ class AdCampaignsResource:
         )
         return self._client._get("/v1/ads/tree", params=params)
 
+    def list_ads_by_performance(
+        self,
+        account_id: str,
+        from_date: str,
+        to_date: str,
+        *,
+        ad_account_id: str | None = None,
+        platform: str | None = None,
+        sort_by: str | None = "spend",
+        limit: int | None = 50,
+    ) -> dict[str, Any]:
+        """Rank ads by performance"""
+        params = self._build_params(
+            account_id=account_id,
+            ad_account_id=ad_account_id,
+            from_date=from_date,
+            to_date=to_date,
+            platform=platform,
+            sort_by=sort_by,
+            limit=limit,
+        )
+        return self._client._get("/v1/ads/performance", params=params)
+
     def get_ads_timeline(
         self,
         account_id: str,
@@ -2622,6 +2645,29 @@ class AdCampaignsResource:
             results=results,
         )
         return await self._client._aget("/v1/ads/tree", params=params)
+
+    async def alist_ads_by_performance(
+        self,
+        account_id: str,
+        from_date: str,
+        to_date: str,
+        *,
+        ad_account_id: str | None = None,
+        platform: str | None = None,
+        sort_by: str | None = "spend",
+        limit: int | None = 50,
+    ) -> dict[str, Any]:
+        """Rank ads by performance (async)"""
+        params = self._build_params(
+            account_id=account_id,
+            ad_account_id=ad_account_id,
+            from_date=from_date,
+            to_date=to_date,
+            platform=platform,
+            sort_by=sort_by,
+            limit=limit,
+        )
+        return await self._client._aget("/v1/ads/performance", params=params)
 
     async def aget_ads_timeline(
         self,

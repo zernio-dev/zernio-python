@@ -8633,6 +8633,72 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="Rank ads by performance",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def ad_campaigns_list_ads_by_performance(
+        account_id: str,
+        from_date: str,
+        to_date: str,
+        ad_account_id: str | None = None,
+        platform: Literal[
+            "facebook",
+            "instagram",
+            "tiktok",
+            "linkedin",
+            "pinterest",
+            "google",
+            "twitter",
+            "openai",
+            "reddit",
+            "microsoft",
+        ]
+        | None = None,
+        sort_by: Literal[
+            "spend", "impressions", "clicks", "conversions", "roas"
+        ] = "spend",
+        limit: int = 50,
+    ) -> str:
+        """Rank ads by performance
+
+        Returns an ads account's ads ranked by spend, impressions, clicks, results or ROAS over a date range, each with its creative (type, thumbnail, headline, body, link) and campaign.
+
+        Use it to see which creatives perform best. `accountId` is sibling-expanded like `/v1/ads/timeline`.
+
+        Money is ranked by its raw amount, so pass `adAccountId` when the connection's ad accounts bill in different currencies.
+
+        A Meta range older than the imported history answers `202` with `backfillPending: true` and the covered part; repeat the request until it returns 200.
+
+        Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit, microsoft
+
+        Args:
+            account_id: Account ID. Sibling-expanded to its linked posting and ads pair. An id the API key cannot reach answers 404. (required)
+            ad_account_id: Optional platform-native ad account ID (e.g. Meta `act_…`) to rank one ad account only.
+            from_date: Inclusive start of the range (YYYY-MM-DD). (required)
+            to_date: Inclusive end of the range (YYYY-MM-DD). Max 730-day range. (required)
+            platform: Restrict to one platform.
+            sort_by: Metric the ads are ranked by, highest first.
+            limit: How many ads to return."""
+        client = _get_client()
+        try:
+            response = client.ad_campaigns.list_ads_by_performance(
+                account_id=account_id,
+                ad_account_id=ad_account_id,
+                from_date=from_date,
+                to_date=to_date,
+                platform=platform,
+                sort_by=sort_by,
+                limit=limit,
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="Get daily account metrics",
             readOnlyHint=True,
             destructiveHint=False,

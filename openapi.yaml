@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.449.0"
+  version: "1.450.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -14391,6 +14391,46 @@ components:
         backfillPending:
           type: boolean
           description: Meta only. Present and true while historical data is being backfilled.
+    AdsPerformanceResponse:
+      type: object
+      required: [ads]
+      properties:
+        ads:
+          type: array
+          items:
+            type: object
+            properties:
+              adId: { type: string, description: Zernio ad ID. }
+              platformAdId: { type: [string, "null"] }
+              platform: { type: string }
+              name: { type: string }
+              status: { type: [string, "null"] }
+              campaignName: { type: [string, "null"] }
+              adSetName: { type: [string, "null"] }
+              currency: { type: [string, "null"], description: ISO 4217 code of the ad's money metrics. }
+              creative:
+                type: object
+                properties:
+                  type: { type: [string, "null"], enum: [image, video, carousel, document, null] }
+                  thumbnailUrl: { type: [string, "null"] }
+                  headline: { type: [string, "null"] }
+                  body: { type: [string, "null"] }
+                  linkUrl: { type: [string, "null"] }
+              metrics:
+                type: object
+                properties:
+                  spend: { type: number, description: In the ad's currency. }
+                  impressions: { type: integer }
+                  clicks: { type: integer }
+                  ctr: { type: number, description: Percent. }
+                  conversions: { type: number, description: "Results over the range (see AdMetrics.conversions)." }
+                  costPerConversion: { type: number }
+                  purchaseValue: { type: number }
+                  roas: { type: number }
+                  conversionsByType:
+                    type: object
+                    additionalProperties: { type: number }
+                    description: "`conversions` split by what was counted (Meta action_type or Google conversion action name)."
     AdsTimelineResponse:
       type: object
       properties:
@@ -68291,6 +68331,56 @@ paths:
         '403':
           description: Ads access required. Legacy plans need the Ads add-on; included by default on usage-based plans.
 
+  /v1/ads/performance:
+    get:
+      x-resource-group: "ads"
+      operationId: listAdsByPerformance
+      tags: ["Ad Campaigns"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "reddit", "microsoft"]
+      summary: Rank ads by performance
+      description: |
+        Returns an ads account's ads ranked by spend, impressions, clicks, results or ROAS over a date range, each with its creative (type, thumbnail, headline, body, link) and campaign.
+
+        Use it to see which creatives perform best. `accountId` is sibling-expanded like `/v1/ads/timeline`.
+
+        Money is ranked by its raw amount, so pass `adAccountId` when the connection's ad accounts bill in different currencies.
+
+        A Meta range older than the imported history answers `202` with `backfillPending: true` and the covered part; repeat the request until it returns 200.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: accountId, in: query, required: true, schema: { type: string }, description: 'Account ID. Sibling-expanded to its linked posting and ads pair. An id the API key cannot reach answers 404.' }
+        - { name: adAccountId, in: query, schema: { type: string }, description: "Optional platform-native ad account ID (e.g. Meta `act_…`) to rank one ad account only." }
+        - { name: fromDate, in: query, required: true, schema: { type: string, format: date }, description: "Inclusive start of the range (YYYY-MM-DD)." }
+        - { name: toDate, in: query, required: true, schema: { type: string, format: date }, description: "Inclusive end of the range (YYYY-MM-DD). Max 730-day range." }
+        - { name: platform, in: query, schema: { type: string, enum: [facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit, microsoft] }, description: Restrict to one platform. }
+        - { name: sortBy, in: query, schema: { type: string, enum: [spend, impressions, clicks, conversions, roas], default: spend }, description: "Metric the ads are ranked by, highest first." }
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 50 }, description: "How many ads to return." }
+      responses:
+        '200':
+          description: Ads ranked by `sortBy`. Ads with no delivery in the range are left out.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AdsPerformanceResponse' }
+        '202':
+          description: Meta only. Historical data is incomplete and backfill remains pending.
+          headers:
+            Retry-After:
+              $ref: '#/components/headers/BackfillRetryAfter'
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - { $ref: '#/components/schemas/AdsPerformanceResponse' }
+                  - type: object
+                    required: [backfillPending]
+                    properties:
+                      backfillPending: { type: boolean, description: 'Always true on this response. Retry until the request returns 200.' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403':
+          description: Ads access required. Legacy plans need the Ads add-on; included by default on usage-based plans.
+        '404': { $ref: '#/components/responses/AccountUnavailable' }
   /v1/ads/timeline:
     get:
       x-resource-group: "ads"
