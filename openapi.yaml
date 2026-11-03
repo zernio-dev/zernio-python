@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.450.2"
+  version: "1.451.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -14161,13 +14161,32 @@ components:
       type: object
       properties:
         message: { type: string }
+    InboundActivity:
+      type: object
+      required: [firstMessageAt, lastMessageAt, firstCommentAt, lastCommentAt]
+      description: 'When inbound messages and comments were first and last seen for the account. Only events matched to this account count. WhatsApp delivery statuses for outbound messages do not count, so the stamps of a number that only sends stay null. The stamps reset on every connect.'
+      properties:
+        firstMessageAt: { type: [string, "null"], format: date-time, description: 'First inbound message since the latest connect, or since tracking began for an account connected before it. Null when none yet.' }
+        lastMessageAt: { type: [string, "null"], format: date-time, description: 'Latest inbound message, precise to about one hour. Null when none yet.' }
+        firstCommentAt: { type: [string, "null"], format: date-time, description: 'First inbound comment since the latest connect, or since tracking began for an account connected before it. Null when none yet.' }
+        lastCommentAt: { type: [string, "null"], format: date-time, description: 'Latest inbound comment, precise to about one hour. Null when none yet.' }
+    ListedAccount:
+      allOf:
+        - $ref: '#/components/schemas/SocialAccount'
+        - type: object
+          properties:
+            inboundActivity:
+              anyOf:
+                - $ref: '#/components/schemas/InboundActivity'
+                - type: "null"
+              description: 'Present only on WhatsApp, Instagram and Facebook accounts. All four stamps are null when no inbound event has been seen since the latest connect. Null for an account connected before tracking shipped until its first inbound event or its next connect.'
     AccountsListResponse:
       type: object
       required: [accounts, hasAnalyticsAccess]
       properties:
         accounts:
           type: array
-          items: { $ref: '#/components/schemas/SocialAccount' }
+          items: { $ref: '#/components/schemas/ListedAccount' }
         hasAnalyticsAccess:
           type: boolean
           description: Whether user has analytics add-on access
@@ -31173,6 +31192,11 @@ paths:
                           properties:
                             status: { type: string, enum: [ok, failing, stalled, never_synced] }
                             lastSyncedAt: { type: [string, "null"], format: date-time, description: 'Last successful sync. Null when never synced or the latest attempt failed.' }
+                        inboundActivity:
+                          anyOf:
+                            - $ref: '#/components/schemas/InboundActivity'
+                            - type: "null"
+                          description: 'Present on WhatsApp, Instagram and Facebook accounts. An active WhatsApp number with no inbound message or comment 24 hours after its latest connect gets an entry in issues, which never changes status. Null for accounts connected before tracking shipped, until their first inbound event or next connect.'
                         messagingRestriction:
                           type: [object, "null"]
                           description: |
@@ -31525,6 +31549,11 @@ paths:
                     properties:
                       status: { type: string, enum: [ok, failing, stalled, never_synced] }
                       lastSyncedAt: { type: [string, "null"], format: date-time, description: 'Last successful sync. Null when never synced or the latest attempt failed.' }
+                  inboundActivity:
+                    anyOf:
+                      - $ref: '#/components/schemas/InboundActivity'
+                      - type: "null"
+                    description: 'Present on WhatsApp, Instagram and Facebook accounts. An active WhatsApp number with no inbound message or comment 24 hours after its latest connect gets an entry in issues, which never changes status. Null for accounts connected before tracking shipped, until their first inbound event or next connect.'
                   messagingRestriction:
                     type: [object, "null"]
                     description: |
