@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.452.3"
+  version: "1.453.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -17112,15 +17112,35 @@ components:
         op: { type: string, enum: ['>', '>=', '<', '<='] }
         value: { type: number, minimum: 0 }
     AdRuleConditions:
-      type: object
-      required: [all]
-      description: Every condition must hold for an object to match. A rate with no denominator (a CPA with no conversions) never matches.
-      properties:
-        all:
-          type: array
-          minItems: 1
-          maxItems: 10
-          items: { $ref: '#/components/schemas/AdRuleCondition' }
+      description: |
+        A group: `all` (every item must hold) or `any` (one is enough). An item is a condition or another group, nested up to 3 levels, with at most 10 conditions in total. A rate with no denominator (a CPA with no conversions) never matches.
+      oneOf:
+        - type: object
+          required: [all]
+          additionalProperties: false
+          properties:
+            all:
+              type: array
+              minItems: 1
+              items: { $ref: '#/components/schemas/AdRuleConditionItem' }
+        - type: object
+          required: [any]
+          additionalProperties: false
+          properties:
+            any:
+              type: array
+              minItems: 1
+              items: { $ref: '#/components/schemas/AdRuleConditionItem' }
+      example:
+        any:
+          - { metric: cpc, window: today, op: '>', value: 2 }
+          - all:
+              - { metric: spend, window: today, op: '>=', value: 50 }
+              - { metric: conversions, window: today, op: '<', value: 1 }
+    AdRuleConditionItem:
+      oneOf:
+        - { $ref: '#/components/schemas/AdRuleCondition' }
+        - { $ref: '#/components/schemas/AdRuleConditions' }
     AdRuleAction:
       oneOf:
         - type: object
