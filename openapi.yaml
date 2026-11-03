@@ -205,7 +205,7 @@ x-documentation:
     - `ad.status_changed` - Ad, ad set, or campaign changed status on the ad platform (Meta: `in_process_ad_objects` entry/exit and `with_issues_ad_objects` violations)
     - `ad.review.approved` - An ad Zernio already tracked passed platform review, or a rejection was overturned (every ad network)
     - `ad.review.rejected` - An ad Zernio already tracked was rejected in platform review (every ad network). `review.reasons` carries the platform's reason when it gives one
-    - `ad.delivery_issue` - An ad Zernio already tracked stopped delivering for a platform reason (Meta `WITH_ISSUES`, TikTok account or balance problems, LinkedIn removals). `issue.reasons` carries Meta's messages
+    - `ad.delivery_issue` - An ad Zernio already tracked stopped delivering for a platform reason (Meta `WITH_ISSUES`, TikTok account or balance problems). `issue.reasons` carries Meta's messages
     - `campaign.budget.depleted` - A campaign Zernio already tracked ran out of budget (TikTok, the only network that reports it on the ad)
     - `ad_account.status_changed` - An ad account Zernio already tracked became `active`, `restricted`, `disabled` or `closed` (Meta, Google, TikTok, X)
     - `ad.video.processed` - Meta finished processing a video uploaded with `POST /v1/ads/videos` and `async: true`. `video.status` is `ready` (usable as `video.id`) or `error`
@@ -8986,14 +8986,18 @@ components:
     WebhookPayloadAdReview:
       type: object
       description: |
-        Webhook payload for the `ad.review.approved` and `ad.review.rejected` events. Emitted for every ad network Zernio syncs (Meta, Google, TikTok, LinkedIn, Pinterest, X and the rest).
+        Webhook payload for the `ad.review.approved` and `ad.review.rejected` events. Emitted for every ad network Zernio syncs (Meta, Google, TikTok, LinkedIn, Pinterest, X, Reddit and the rest).
 
         Fires when an ad Zernio already tracked changes review outcome:
 
         - `approved`: it leaves review as deliverable, or a rejection is overturned.
         - `rejected`: the platform rejects it.
 
-        Ads seen for the first time by a sync, including the history loaded when an account is connected, never fire it. An ad that leaves review paused (for example its ad set is paused) sends no `approved` event.
+        Ads seen for the first time by a sync, including the history loaded when an account is connected, never fire it.
+
+        On X, Pinterest and LinkedIn, Zernio reads the review apart from the delivery status. An ad that leaves review while paused (for example under a paused campaign) still sends `approved`.
+
+        On the other networks the review shows only in the delivery status, so an ad that leaves review paused sends no `approved` event.
 
         Detected by Zernio's own ad sync (and, for Meta, the review poll), so it arrives within one sync cycle of the platform's decision, not instantly. Each outcome is delivered at most once per ad per 24 hours.
       required: [id, event, account, adObject, review, timestamp]
@@ -9026,7 +9030,7 @@ components:
             raw: { type: string, description: "Platform-native status string, forwarded verbatim (Meta `ACTIVE` / `DISAPPROVED`, TikTok `DISABLE`, ...)." }
             reasons:
               type: array
-              description: "Why the platform rejected the ad, when it says. Always empty on `approved`. Most networks only return a generic message today."
+              description: "Why the platform rejected the ad, when it says. Always empty on `approved`. Pinterest, LinkedIn and Reddit send their own reasons, X sends none, and most other networks only return a generic message."
               items:
                 type: object
                 required: [message]
@@ -9043,7 +9047,6 @@ components:
 
         - Meta `WITH_ISSUES` (payment, policy and account problems)
         - TikTok account punishment or missing balance
-        - LinkedIn removals
         - any platform status Zernio does not recognize yet (check `issue.raw`)
 
         Ads seen for the first time by a sync never fire it.
