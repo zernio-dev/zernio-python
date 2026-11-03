@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.448.0"
+  version: "1.449.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -81757,6 +81757,7 @@ paths:
                           description: "Present (and the only meaningful payload) when `type` is `saved_targeting`. Null for uploaded/derived audience types."
                         platform: { type: string }
                         size: { type: integer }
+                        summary: { type: string, description: "Who the audience contains, in one line (e.g. '1% lookalike of Customers in US' or 'All website visitors, last 30 days'). Meta only." }
                         status: { type: string }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403':
