@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.450.0"
+  version: "1.450.1"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -198,7 +198,7 @@ x-documentation:
     - `referral.received` - Someone opened an existing Instagram/Messenger thread through an ig.me/m.me `ref` link or a returning Messenger ad click; carries Meta's referral object (a referral that rides an inbound message arrives on `message.received` under `metadata.referral` instead)
     - `comment.received` - New comment received on a post (Instagram, Facebook, Threads, YouTube, LinkedIn, Bluesky, Reddit, TikTok). X/Twitter does NOT fire this event
     - `review.new` - New review posted on a connected account (Google Business Profile)
-    - `review.updated` - A Google Business Profile reviewer edited their review text or rating, or a reply was posted through `POST /v1/inbox/reviews/{reviewId}/reply`. A reply written directly in Google's own interface does NOT fire this event, because Google emits no notification for it.
+    - `review.updated` - A Google Business Profile reviewer edited their review text or rating, or a reply was added, edited or removed. A reply posted through `POST /v1/inbox/reviews/{reviewId}/reply` fires immediately, and the periodic check reports it again with the full review payload, so expect a second delivery. A reply removed through the API, or written or removed in Google's own interface, is reported by the periodic check: for replies written in Google, usually within 6 hours for reviews updated in the last 30 days and usually within about 7 days for older ones. Only teams with a webhook subscribed to `review.updated` are checked. A removed reply fires with `hasReply: false`.
     - `review.deleted` - Google Business Profile stopped returning this review, for example after Google's spam filter removed it. Detected by polling: fires usually 6 to 12 hours after the review disappears, only for locations covered by a webhook subscribed to `review.deleted` or `review.restored`. If the review comes back, `review.restored` fires. May arrive for a review id you never received `review.new` for. A review hidden and restored by Google may produce `review.deleted` followed by `review.restored`, and a `review.updated` can arrive for a review previously reported by `review.deleted` (it is restored on the next check).
     - `review.restored` - A review reported by `review.deleted` is returned by Google again. Same payload as `review.new`.
     - `lead.received` - New lead submitted against a Meta Lead Gen (Instant) Form. `lead.fields` is the question-key → answer map; `lead.formId`/`lead.adId` give provenance.
@@ -6963,9 +6963,18 @@ components:
       description: |
         Webhook payload for the review.updated event. Same shape as review.new.
 
-        Fired when the reviewer edits their text or rating, or when a reply is posted through POST /v1/inbox/reviews/{reviewId}/reply.
+        Fired when the reviewer edits their text or rating, or when a reply is added, edited or removed.
 
-        A reply written directly in Google's own interface does NOT fire it: Google emits no notification when a reviewReply is written.
+        A reply posted through POST /v1/inbox/reviews/{reviewId}/reply fires immediately. The periodic check then reports it again with the full review payload, so expect a second delivery.
+
+
+        Replies written or removed in Google's own interface, and replies removed through the API, are reported by the periodic check.
+
+
+        For replies written in Google, that is usually within 6 hours for reviews updated in the last 30 days, and usually within about 7 days for older ones.
+
+
+        Only teams with a webhook subscribed to review.updated are checked. A removed reply fires with hasReply false.
 
         When a reply is present, review.hasReply is true and review.reply is populated.
       required: [id, event, review, account, timestamp]
@@ -19747,11 +19756,13 @@ webhooks:
       operationId: onReviewUpdated
       summary: Review updated event
       description: |
-        Fired when a Google Business Profile reviewer edits their review text or rating,
-        or when a reply is posted through POST /v1/inbox/reviews/{reviewId}/reply.
-        A reply written directly in Google's own interface does NOT fire this event,
-        because Google emits no notification for it. Payload shape matches review.new.
-        Requires the Inbox add-on.
+        Fired when a Google Business Profile reviewer edits their review text or rating, or when a reply is added, edited or removed. Payload shape matches review.new. Requires the Inbox add-on.
+
+        A reply posted through POST /v1/inbox/reviews/{reviewId}/reply fires immediately. The periodic check then reports it again with the full review payload, so expect a second delivery.
+
+        Replies written or removed in Google's own interface, and replies removed through the API, are reported by the periodic check.
+
+        For replies written in Google, that is usually within 6 hours for reviews updated in the last 30 days, and usually within about 7 days for older ones. Only locations covered by a webhook subscribed to review.updated are checked. A removed reply fires with hasReply false.
       tags: [Webhook Events]
       requestBody:
         required: true
