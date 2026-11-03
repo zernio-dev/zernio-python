@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.456.0"
+  version: "1.457.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -9261,7 +9261,7 @@ components:
                   properties:
                     metric: { type: string, description: "`spend`, `impressions`, `clicks`, `conversions`, `ctr`, `cpc`, `cpm`, `cpa` or `roas`. New values may be added." }
                     window: { type: string, description: "`today`, `yesterday`, `last_3d`, `last_7d`, `last_14d` or `last_30d`, in the account's calendar (see `run.today`). New values may be added." }
-                    op: { type: string, enum: ['>', '>=', '<', '<='] }
+                    op: { type: string, description: "`>`, `>=`, `<`, `<=`, or `top` and `bottom` for a rank condition, whose `actual` is the object's position (1 first)." }
                     value: { type: number, description: The threshold set on the rule. }
                     actual: { type: [number, "null"], description: "The object's value for the metric over the window. Null when it cannot be computed, for example a cost per action with no actions." }
               actions:
@@ -17119,7 +17119,10 @@ components:
 
             `<from>_to_<to>_days_ago` is any range of full days, both ends included, such as `8_to_2_days_ago` to skip the 2 most recent days while their conversions still arrive. `from` is at least `to` and at most 90.
           example: last_7d
-        op: { type: string, enum: ['>', '>=', '<', '<='] }
+        op:
+          type: string
+          enum: ['>', '>=', '<', '<=', top, bottom]
+          description: '`top` and `bottom` rank the rule''s objects by the metric over the window, highest first for `top`, and match the first `value` (a whole number from 1 to 100). Objects with no value are not ranked; the run history shows each one''s position.'
         value: { type: number, minimum: 0 }
         compareTo:
           type: string
