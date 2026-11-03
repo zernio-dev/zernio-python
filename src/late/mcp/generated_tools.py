@@ -6839,6 +6839,8 @@ def register_generated_tools(mcp, _get_client):
         - At most 20 platform objects are read per request.
         - Where a read fails (credentials, platform error, no reader on that platform), stored values come back with `statusReadAt: null`.
 
+        **On GET /v1/ads/{adId} for a TikTok ad** the creative is read live too: ad text, call to action, landing page, video, format and identity, returned over the stored creative and never stored. See "Status freshness" in GET /v1/ads/{adId}.
+
         **On X** the budget is read live too:
 
         - GET /v1/ads/{adId}: `budget`, `adSetBudget`, `campaignBudget` and `budgetLevel` are the line item and campaign budgets X holds now (stored like the switches).
@@ -7849,6 +7851,8 @@ def register_generated_tools(mcp, _get_client):
         - At most 20 platform objects are read per request.
         - Where a read fails (credentials, platform error, no reader on that platform), stored values come back with `statusReadAt: null`.
 
+        **On GET /v1/ads/{adId} for a TikTok ad** the creative is read live too: ad text, call to action, landing page, video, format and identity, returned over the stored creative and never stored. See "Status freshness" in GET /v1/ads/{adId}.
+
         **On X** the budget is read live too:
 
         - GET /v1/ads/{adId}: `budget`, `adSetBudget`, `campaignBudget` and `budgetLevel` are the line item and campaign budgets X holds now (stored like the switches).
@@ -8737,6 +8741,8 @@ def register_generated_tools(mcp, _get_client):
         - The fresh values are stored (later reads return them too), and the response carries `statusReadAt`, the time of the read.
         - At most 20 platform objects are read per request.
         - Where a read fails (credentials, platform error, no reader on that platform), stored values come back with `statusReadAt: null`.
+
+        **On GET /v1/ads/{adId} for a TikTok ad** the creative is read live too: ad text, call to action, landing page, video, format and identity, returned over the stored creative and never stored. See "Status freshness" in GET /v1/ads/{adId}.
 
         **On X** the budget is read live too:
 
@@ -10734,7 +10740,7 @@ def register_generated_tools(mcp, _get_client):
         - Omitted: leaves Meta's default.
 
         Applied to each new creative (standalone, creatives[] and attach shapes) and preserved when a creative is rebuilt. This sets the disclosure on the ad; whether and when the viewer-facing label renders is Meta's decision.
-                validate_only: Validate the request without creating anything. Any other platform, or a Google campaignType other than pmax or demand_gen, returns 501 `feature_not_available`.
+                validate_only: Validate the request without creating anything. Supported on Meta, TikTok, ChatGPT (OpenAI) and Google Performance Max / Demand Gen. Any other platform, or a Google campaignType other than pmax or demand_gen, returns 501 `feature_not_available`.
 
         **Google Performance Max**: validates the complete atomic campaign and asset group, with no resource creation or local persistence. Validation still downloads image URLs and consumes quota.
 
@@ -10750,6 +10756,16 @@ def register_generated_tools(mcp, _get_client):
         - Code 100 subcode 2446880 "WhatsApp number required" on an ad that does not message on WhatsApp (intermittent). If the creative's own dry run also asks for a WhatsApp number, the creative is unverified too. Messaging ads still fail on 2446880.
 
         **ChatGPT (OpenAI)**: no platform dry-run. Zernio runs every check it knows (creative lengths, budget, bid strategy, targeting) plus live lookups of the conversion event and target countries, and uploads or creates nothing. OpenAI's own checks (image fetch, currency-specific minimums, ad review) run only on a real create.
+
+        **TikTok**: TikTok has no dry-run. Zernio runs the input checks and the read-only TikTok calls a real create makes. It uploads or creates nothing: no video, Brand Identity, campaign, ad group or ad. A failure returns the same 4xx a real create would.
+
+        - Advertiser: `message` names its currency when TikTok returns it.
+        - Identity: `identityId` is authorized on the advertiser (the `identity` node). `message` names the identity and type the ad would run as.
+        - `existingCampaignId`: exists and is not an Upgraded Smart+ campaign.
+        - Pixel and optimization event resolve on the advertiser, and the schedule and targeting build.
+        - Not checked (marked `unverified` with the reason): the video (format, size, length, cover), the ad group as TikTok would create it (the budget minimum for the advertiser currency, location and audience ids, bid), a new campaign, and TikTok's review of the ad text, call to action and landing page.
+        - A Brand Identity a real create would make from `brandIdentity` is not made: the `identity` node is `unverified`.
+        - Supported: the single standalone video ad. `smartPlus` and `adSetId` return 400.
                 budget_amount: Budget in WHOLE currency units (USD: 50 = $50.00), NOT cents. Meta's own Marketing API takes this number in minor units, an easy and expensive mix-up.
 
         Required on legacy, multi-creative and Performance Max shapes. Inherited on attach.
@@ -44130,7 +44146,11 @@ def register_generated_tools(mcp, _get_client):
 
         Pre-call cost estimate for a PSTN call: the carrier leg plus optional recording and transcription add-ons.
 
-        It uses the same billing formula as the post-call invoice, so the quote and the final charge can't disagree. The carrier figure follows the carrier's per-destination rate card: a call dialed from a number in the destination country uses the local mobile rate, and a `tel:` forward destination is quoted as a second carrier leg billed from the same number. The real cost comes from the settled carrier record after the call.
+        It uses the same billing formula as the post-call invoice, so the quote and the final charge can't disagree.
+
+        The carrier figure follows the carrier's per-destination rate card: a call dialed from a number in the destination country uses the local mobile rate, and a `tel:` forward destination is quoted as a second carrier leg billed from the same number.
+
+        The real cost comes from the settled carrier record after the call.
 
         Parity endpoint of `GET /v1/whatsapp/calls/estimate`, minus the Meta line. PSTN calls have no separate Meta bill, so `totalCostUSD` equals `billableCostUSD`.
 

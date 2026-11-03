@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.444.0"
+  version: "1.445.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -887,6 +887,8 @@ components:
         - The fresh values are stored (later reads return them too), and the response carries `statusReadAt`, the time of the read.
         - At most 20 platform objects are read per request.
         - Where a read fails (credentials, platform error, no reader on that platform), stored values come back with `statusReadAt: null`.
+
+        **On GET /v1/ads/{adId} for a TikTok ad** the creative is read live too: ad text, call to action, landing page, video, format and identity, returned over the stored creative and never stored. See "Status freshness" in GET /v1/ads/{adId}.
 
         **On X** the budget is read live too:
 
@@ -16414,7 +16416,11 @@ components:
               items: { type: string }
               description: "Meta: every primary text variation of the creative (`asset_feed_spec.bodies`), the same shape as the `bodies` create input. Present only with 2 or more texts; a single text is `body`."
             description: { type: string, description: "Meta: the creative's description under the title (`link_data.description`, `video_data.link_description`, or the first `asset_feed_spec.descriptions` entry)." }
-            callToAction: { type: string, description: "Meta: the call to action type (`call_to_action.type`, or the first `asset_feed_spec.call_to_action_types` entry), e.g. LEARN_MORE or SIGN_UP.", example: SIGN_UP }
+            callToAction: { type: string, description: "Meta: the call to action type (`call_to_action.type`, or the first `asset_feed_spec.call_to_action_types` entry), e.g. LEARN_MORE or SIGN_UP. TikTok: the ad's `call_to_action`.", example: SIGN_UP }
+            identityId: { type: string, description: "TikTok only, with `live=true` on GET /v1/ads/{adId}: the identity the ad runs as (`identity_id`), the same id GET /v1/ads/tiktok-identities lists." }
+            identityType: { type: string, description: "TikTok only, with `live=true`: the identity type (`identity_type`), e.g. TT_USER, BC_AUTH_TT, CUSTOMIZED_USER or AUTH_CODE." }
+            identityAuthorizedBcId: { type: string, description: "TikTok only, with `live=true`: the Business Center that authorized a BC_AUTH_TT identity (`identity_authorized_bc_id`)." }
+            tiktokItemId: { type: string, description: "TikTok only, with `live=true`: the TikTok post a Spark ad runs (`tiktok_item_id`)." }
             leadGenFormId: { type: string, description: "Meta: the instant form the call to action opens (`call_to_action.value.lead_gen_form_id`, or the asset feed's `call_to_actions` on a dynamic creative), the same value as the `leadGenFormId` create input. Absent on ads without a lead form." }
             imageHash: { type: string, description: "Meta: the ad image hash (`image_hash`), reusable as `imageHash` on POST /v1/ads/create within the same ad account. `thumbnailUrl` and `mediaUrls` carry its stable full resolution permalink when Meta resolves it." }
             urlTags: { type: [string, "null"], description: "Meta: the creative's `url_tags` query string appended to the destination URL." }
@@ -16446,7 +16452,7 @@ components:
                     type: object
                     properties:
                       resourceName: { type: string, description: "Google asset resource name, for example customers/1234567890/assets/124." }
-            videoId: { type: [string, "null"], description: "Meta video ID for VIDEO-type ads. Null for non-video ads. Callers that need an embeddable MP4 can call GET /{videoId}?fields=source with the page access token." }
+            videoId: { type: [string, "null"], description: "Meta video ID for VIDEO-type ads (TikTok: the ad library `video_id`). Null for non-video ads. Callers that need an embeddable MP4 can call GET /{videoId}?fields=source with the page access token." }
             videoUrl: { type: [string, "null"], description: "Public Facebook watch URL for VIDEO-type ads (https://www.facebook.com/watch/?v={videoId}). Null for non-video ads." }
             creativeId: { type: [string, "null"], description: "Meta ad creative id backing this ad, refreshed from Meta on every sync. Reusable via existingCreativeId on POST /v1/ads/create, and readable raw through GET /v1/ads/creatives/{creativeId}. Ads synced from Meta also carry it as the legacy `id` key." }
             creativeFeatures:
@@ -16496,7 +16502,7 @@ components:
                   callToAction: { type: string, description: 'Card call to action type (Meta `call_to_action.type`), e.g. SHOP_NOW or WATCH_MORE.', example: 'SHOP_NOW' }
                   videoId: { type: string, description: 'Meta video id when the card is a video (`video_id`).' }
             isServing: { type: [boolean, "null"], description: "LinkedIn only. Whether LinkedIn is currently serving this specific creative. Complements the ad-level `servingStatuses`, which describes the parent campaign." }
-            adFormat: { type: [string, "null"], description: "LinkedIn only. The LinkedIn ad format, in LinkedIn's own vocabulary: STANDARD_UPDATE, SINGLE_VIDEO, CAROUSEL, NATIVE_DOCUMENT, EVENT, TEXT_AD, SPOTLIGHT, FOLLOW_COMPANY, JOBS, SPONSORED_INMAILS and others. The list is open, so treat an unrecognized value as valid.\n\n- On an ad Zernio created: the format it was created as.\n- On an ad synced from Campaign Manager: the parent campaign's raw `format`, which is what LinkedIn actually enforces on its creatives.\n\nAbsent on LinkedIn ads not yet re-synced, and on every other platform." }
+            adFormat: { type: [string, "null"], description: "LinkedIn (and TikTok with `live=true`). The LinkedIn ad format, in LinkedIn's own vocabulary: STANDARD_UPDATE, SINGLE_VIDEO, CAROUSEL, NATIVE_DOCUMENT, EVENT, TEXT_AD, SPOTLIGHT, FOLLOW_COMPANY, JOBS, SPONSORED_INMAILS and others. The list is open, so treat an unrecognized value as valid.\n\n- On an ad Zernio created: the format it was created as.\n- On an ad synced from Campaign Manager: the parent campaign's raw `format`, which is what LinkedIn actually enforces on its creatives.\n\nAbsent on LinkedIn ads not yet re-synced. On TikTok with `live=true`: the ad's `ad_format` (e.g. SINGLE_VIDEO). Absent on every other platform." }
             servingHoldReasons:
               type: array
               items: { type: string }
@@ -52611,7 +52617,11 @@ paths:
       description: |
         Pre-call cost estimate for a PSTN call: the carrier leg plus optional recording and transcription add-ons.
 
-        It uses the same billing formula as the post-call invoice, so the quote and the final charge can't disagree. The carrier figure follows the carrier's per-destination rate card: a call dialed from a number in the destination country uses the local mobile rate, and a `tel:` forward destination is quoted as a second carrier leg billed from the same number. The real cost comes from the settled carrier record after the call.
+        It uses the same billing formula as the post-call invoice, so the quote and the final charge can't disagree.
+
+        The carrier figure follows the carrier's per-destination rate card: a call dialed from a number in the destination country uses the local mobile rate, and a `tel:` forward destination is quoted as a second carrier leg billed from the same number.
+
+        The real cost comes from the settled carrier record after the call.
 
         Parity endpoint of `GET /v1/whatsapp/calls/estimate`, minus the Meta line. PSTN calls have no separate Meta bill, so `totalCostUSD` equals `billableCostUSD`.
       security:
@@ -68367,6 +68377,9 @@ paths:
         - the ad's own switch (`configuredStatus`)
         - its delivery status (`status`, `platformStatus`)
         - its ad set and campaign switches (`platformAdSetStatus`, `platformCampaignStatus`)
+        - on TikTok, the creative TikTok holds now: `creative.body` (ad text), `creative.callToAction`, `creative.linkUrl` (landing page), `creative.videoId`, `creative.adFormat`, `creative.identityId`, `creative.identityType`, `creative.identityAuthorizedBcId` and, on a Spark ad, `creative.tiktokItemId`.
+
+        The TikTok creative comes from the same TikTok call as the switches. It replaces the stored values in the response only and is never stored. A key TikTok leaves empty keeps its stored value.
 
         ### Meta ads that are not synced yet
 
@@ -78067,7 +78080,7 @@ paths:
                 validateOnly:
                   type: boolean
                   description: |
-                    Validate the request without creating anything. Any other platform, or a Google campaignType other than pmax or demand_gen, returns 501 `feature_not_available`.
+                    Validate the request without creating anything. Supported on Meta, TikTok, ChatGPT (OpenAI) and Google Performance Max / Demand Gen. Any other platform, or a Google campaignType other than pmax or demand_gen, returns 501 `feature_not_available`.
 
                     **Google Performance Max**: validates the complete atomic campaign and asset group, with no resource creation or local persistence. Validation still downloads image URLs and consumes quota.
 
@@ -78083,6 +78096,16 @@ paths:
                     - Code 100 subcode 2446880 "WhatsApp number required" on an ad that does not message on WhatsApp (intermittent). If the creative's own dry run also asks for a WhatsApp number, the creative is unverified too. Messaging ads still fail on 2446880.
 
                     **ChatGPT (OpenAI)**: no platform dry-run. Zernio runs every check it knows (creative lengths, budget, bid strategy, targeting) plus live lookups of the conversion event and target countries, and uploads or creates nothing. OpenAI's own checks (image fetch, currency-specific minimums, ad review) run only on a real create.
+
+                    **TikTok**: TikTok has no dry-run. Zernio runs the input checks and the read-only TikTok calls a real create makes. It uploads or creates nothing: no video, Brand Identity, campaign, ad group or ad. A failure returns the same 4xx a real create would.
+
+                    - Advertiser: `message` names its currency when TikTok returns it.
+                    - Identity: `identityId` is authorized on the advertiser (the `identity` node). `message` names the identity and type the ad would run as.
+                    - `existingCampaignId`: exists and is not an Upgraded Smart+ campaign.
+                    - Pixel and optimization event resolve on the advertiser, and the schedule and targeting build.
+                    - Not checked (marked `unverified` with the reason): the video (format, size, length, cover), the ad group as TikTok would create it (the budget minimum for the advertiser currency, location and audience ids, bid), a new campaign, and TikTok's review of the ad text, call to action and landing page.
+                    - A Brand Identity a real create would make from `brandIdentity` is not made: the `identity` node is `unverified`.
+                    - Supported: the single standalone video ad. `smartPlus` and `adSetId` return 400.
                 budgetAmount: { type: number, description: "Budget in WHOLE currency units (USD: 50 = $50.00), NOT cents. Meta's own Marketing API takes this number in minor units, an easy and expensive mix-up.\n\nRequired on legacy, multi-creative and Performance Max shapes. Inherited on attach.\n\n**OpenAI Ads:** in the ad account currency, minimum 1. OpenAI can require a higher daily minimum for some currencies and names it in the error." }
                 budgetType: { type: string, enum: [daily, lifetime], description: "Defaults to daily when `budgetAmount` is sent without it (reported in `appliedDefaults.budgetType`). Inherited on attach.\n\n- **OpenAI Ads:** accepts both as the campaign's single spend cap. A lifetime cap can later switch to daily with PUT /v1/ads/campaigns/{campaignId}, but never daily back to lifetime (422). Automatic bidding (Maximize Results) needs a daily budget.\n- **Reddit Ads:** the ad group's daily or lifetime spend goal." }
                 status:
@@ -79223,9 +79246,9 @@ paths:
                     items:
                       type: object
                       properties:
-                        node: { type: string, enum: [campaign, adSet, creative, ad, performanceMaxCampaign] }
+                        node: { type: string, enum: [campaign, adSet, creative, ad, performanceMaxCampaign, identity], description: '`identity` is TikTok only: the identity the ad would run as.' }
                         status: { type: string, enum: [validated, skipped, unverified] }
-                        reason: { type: string, description: "Explanation for the node's result:\n\n- On skipped: why the node could not be validated.\n- On unverified: why Meta could not dry-run it although the other nodes passed.\n- On validated: what the dry run could not check, and what the request would do as sent. For example, a Performance Max validation with no location targeting reports here that the campaign would run worldwide." }
+                        reason: { type: string, description: "Explanation for the node's result:\n\n- On skipped: why the node could not be validated.\n- On unverified: why the platform could not dry-run it although the other nodes passed (Meta), or what only a real create checks (TikTok).\n- On validated: what the dry run could not check, and what the request would do as sent. For example, a Performance Max validation with no location targeting reports here that the campaign would run worldwide." }
                   message: { type: string }
         '201':
           description: Ad(s) created
@@ -79284,8 +79307,8 @@ paths:
             - On Reddit, with code `invalid_resource_state`: a pixel that never received the event the ad group optimizes toward.
         '501':
           description: |
-            The requested option is not supported on this platform: `validateOnly` outside Meta
-            and Google Performance Max, or a shape the adapter does not implement. Carries code
+            The requested option is not supported on this platform: `validateOnly` outside Meta,
+            TikTok, ChatGPT and Google Performance Max / Demand Gen, or a shape the adapter does not implement. Carries code
             `feature_not_available`.
         '502':
           description: |
