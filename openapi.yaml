@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.481.3"
+  version: "1.482.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -17593,14 +17593,33 @@ components:
     AdRuleFilters:
       type: array
       maxItems: 10
-      description: 'Narrows the objects the rule checks. Every filter must hold. Text compares without case, and a missing field reads as empty.'
+      description: 'Narrows the objects the rule checks. Every filter must hold. A campaign rule reads `name`, `campaign_id`, `goal` and `days_live`; an ad set rule also `campaign_name` and `adset_id`; an ad rule also `adset_name` and `ad_id`.'
       items:
-        type: object
-        required: [field, op, value]
-        properties:
-          field: { type: string, enum: [name, campaign_name, adset_name, goal], description: 'The object''s own name, its campaign''s or ad set''s name, or the campaign goal (objective) as the platform reports it.' }
-          op: { type: string, enum: [contains, not_contains, equals, not_equals, starts_with] }
-          value: { type: string, minLength: 1, maxLength: 200 }
+        oneOf:
+          - type: object
+            title: Name or goal
+            required: [field, op, value]
+            description: 'Compares without case; a missing name reads as empty.'
+            properties:
+              field: { type: string, enum: [name, campaign_name, adset_name, goal], description: 'The object''s own name, its campaign''s or ad set''s name, or the campaign goal (objective) as the platform reports it.' }
+              op: { type: string, enum: [contains, not_contains, equals, not_equals, starts_with] }
+              value: { type: string, minLength: 1, maxLength: 200 }
+          - type: object
+            title: Ids
+            required: [field, op, values]
+            description: 'Picks (`in`) or leaves out (`not_in`) campaigns, ad sets or ads by their platform ids.'
+            properties:
+              field: { type: string, enum: [campaign_id, adset_id, ad_id] }
+              op: { type: string, enum: [in, not_in] }
+              values: { type: array, minItems: 1, maxItems: 100, items: { type: string, minLength: 1 } }
+          - type: object
+            title: Days live
+            required: [field, op, value]
+            description: 'Days since the object''s first ad was created on the platform. An object without that date never passes.'
+            properties:
+              field: { type: string, enum: [days_live] }
+              op: { type: string, enum: ['>=', '<'] }
+              value: { type: integer, minimum: 0, maximum: 3650 }
     AdRuleSchedule:
       type: object
       description: 'Either `everyMinutes` or `times`. Sending a schedule replaces the rule''s whole timing. Without one, a new rule runs every 60 minutes.'
