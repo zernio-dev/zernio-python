@@ -73,6 +73,25 @@ class ConnectResource:
                 result[to_camel(k)] = v
         return result
 
+    def create_platform_invite(
+        self,
+        profile_id: str,
+        platform: str,
+        *,
+        account_id: str | None = None,
+        login_method: str | None = None,
+        expires_in_days: int | None = 7,
+    ) -> dict[str, Any]:
+        """Create a connect link"""
+        payload = self._build_payload(
+            profile_id=profile_id,
+            platform=platform,
+            account_id=account_id,
+            login_method=login_method,
+            expires_in_days=expires_in_days,
+        )
+        return self._client._post("/v1/platform-invites", data=payload)
+
     def get_connect_url(
         self,
         platform: str,
@@ -1163,6 +1182,25 @@ class ConnectResource:
             redirect_url=redirect_url,
         )
         return self._client._get("/v1/connect/microsoft/admin-consent", params=params)
+
+    async def acreate_platform_invite(
+        self,
+        profile_id: str,
+        platform: str,
+        *,
+        account_id: str | None = None,
+        login_method: str | None = None,
+        expires_in_days: int | None = 7,
+    ) -> dict[str, Any]:
+        """Create a connect link (async)"""
+        payload = self._build_payload(
+            profile_id=profile_id,
+            platform=platform,
+            account_id=account_id,
+            login_method=login_method,
+            expires_in_days=expires_in_days,
+        )
+        return await self._client._apost("/v1/platform-invites", data=payload)
 
     async def aget_connect_url(
         self,

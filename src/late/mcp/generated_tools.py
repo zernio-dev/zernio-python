@@ -23441,6 +23441,59 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="Create a connect link",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def connect_create_platform_invite(
+        profile_id: str,
+        platform: Literal[
+            "facebook",
+            "instagram",
+            "linkedin",
+            "twitter",
+            "threads",
+            "tiktok",
+            "youtube",
+            "pinterest",
+            "reddit",
+            "bluesky",
+            "snapchat",
+            "googlebusiness",
+        ],
+        account_id: str | None = None,
+        login_method: Literal["instagram_login", "facebook_login"] | None = None,
+        expires_in_days: int = 7,
+    ) -> str:
+        """Create a connect link
+
+        Create a single-use link that lets someone else connect their account to one of your profiles, without a Zernio login.
+
+        For Instagram, choose how they sign in with loginMethod. With facebook_login they sign in with Facebook and pick the Page linked to their Instagram account.
+
+        Args:
+            profile_id: The profile the account is connected to. (required)
+            platform: (required)
+            account_id: Reconnect this existing account instead of adding a new one. It must belong to the profile and platform.
+            login_method: Instagram only. instagram_login (the default) uses Instagram Login, facebook_login uses Facebook Login. A reconnect link keeps the method the account was connected with.
+            expires_in_days: Days until the link expires."""
+        client = _get_client()
+        try:
+            response = client.connect.create_platform_invite(
+                profile_id=profile_id,
+                platform=platform,
+                account_id=account_id,
+                login_method=login_method,
+                expires_in_days=expires_in_days,
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="Get OAuth connect URL",
             readOnlyHint=True,
             destructiveHint=False,

@@ -366,6 +366,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `connect.list_whats_app_phone_numbers()` | List numbers for selection |
 | `connect.create_o_auth_app()` | Add an OAuth app |
 | `connect.create_pinterest_board()` | Create Pinterest board |
+| `connect.create_platform_invite()` | Create a connect link |
 | `connect.create_youtube_playlist()` | Create YouTube playlist |
 | `connect.get_connect_handoff()` | Get a phone handoff |
 | `connect.get_connect_url()` | Get OAuth connect URL |

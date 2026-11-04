@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.493.0"
+  version: "1.494.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -33785,6 +33785,76 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { $ref: '#/components/responses/ResourceGroupForbidden' }
 
+  /v1/platform-invites:
+    post:
+      x-resource-group: "accounts"
+      operationId: createPlatformInvite
+      tags: [Connect]
+      summary: Create a connect link
+      description: |
+        Create a single-use link that lets someone else connect their account to one of your profiles, without a Zernio login.
+
+        For Instagram, choose how they sign in with loginMethod. With facebook_login they sign in with Facebook and pick the Page linked to their Instagram account.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [profileId, platform]
+              properties:
+                profileId: { type: string, description: The profile the account is connected to. }
+                platform:
+                  type: string
+                  enum: [facebook, instagram, linkedin, twitter, threads, tiktok, youtube, pinterest, reddit, bluesky, snapchat, googlebusiness]
+                accountId:
+                  type: string
+                  description: Reconnect this existing account instead of adding a new one. It must belong to the profile and platform.
+                loginMethod:
+                  type: string
+                  enum: [instagram_login, facebook_login]
+                  description: 'Instagram only. instagram_login (the default) uses Instagram Login, facebook_login uses Facebook Login. A reconnect link keeps the method the account was connected with.'
+                expiresInDays:
+                  type: integer
+                  minimum: 1
+                  maximum: 30
+                  default: 7
+                  description: Days until the link expires.
+            example:
+              profileId: "64f0a1b2c3d4e5f6a7b8c9d0"
+              platform: "instagram"
+              loginMethod: "facebook_login"
+              expiresInDays: 14
+      responses:
+        '200':
+          description: Connect link created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  invite:
+                    type: object
+                    properties:
+                      _id: { type: string }
+                      platform: { type: string }
+                      loginMethod: { type: [string, "null"], enum: [instagram_login, facebook_login, null] }
+                      accountId: { type: [string, "null"] }
+                      expiresAt: { type: string, format: date-time }
+                      inviteUrl: { type: string, format: uri }
+              example:
+                invite:
+                  _id: "64f0a1b2c3d4e5f6a7b8c9d2"
+                  platform: "instagram"
+                  loginMethod: "facebook_login"
+                  accountId: null
+                  expiresAt: "2026-11-17T10:30:00Z"
+                  inviteUrl: "https://zernio.com/api/v1/platform-invites/3f9a0c.../connect"
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/ResourceGroupForbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '429': { $ref: '#/components/responses/RateLimited' }
   /v1/connect/{platform}:
     get:
       x-resource-group: "accounts"
@@ -35801,8 +35871,12 @@ paths:
         '403': { description: User does not have access to the specified profile }
         '404': { description: Selected page not found among the pages this token can manage }
         '409':
-          x-summary: "The selected Instagram account is not the account the connect was started for, so nothing was written: select the expected account."
-          description: "The connect was started with `expectedPlatformUserId` or `expectedUsername` (carried on redirect_url) and the selected Page's Instagram account is not that account. Nothing is written. Standard error envelope with `code: account_mismatch`; with pageIds the mismatching Pages are listed in `failed` instead."
+          x-summary: "Nothing was written: the selected Instagram account is not the one the connect was started for, or an Instagram Login account on the profile whose access expired cannot be confirmed as the same account."
+          description: |
+            Nothing is written. Standard error envelope, with one of these codes:
+
+            - `account_mismatch`: the connect was started with `expectedPlatformUserId` or `expectedUsername` (carried on redirect_url) and the selected Page's Instagram account is not that account. With pageIds the mismatching Pages are listed in `failed` instead.
+            - `instagram_identity_unconfirmed`: the profile holds an Instagram account connected with Instagram Login whose access expired, so Zernio cannot confirm whether it is the account being connected through Facebook. Reconnect it with Instagram Login or disconnect it, then retry.
           content:
             application/json:
               schema: { $ref: '#/components/schemas/ErrorResponse' }
