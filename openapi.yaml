@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.483.1"
+  version: "1.484.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -17533,12 +17533,14 @@ components:
           properties:
             type: { type: string, enum: [pause], description: 'Pause the campaign, ad set or ad.' }
             maxChangesPerDay: { type: integer, minimum: 1, maximum: 100, description: 'At most this many objects changed in any 24 hours, across runs. Matches over the limit are skipped with `daily_limit_reached` and tried again later.' }
+            maxChangesPerObject: { type: integer, minimum: 1, maximum: 100, description: 'At most this many changes to one object by this rule, counted over the last 400 days. An object at the limit is left alone like one in cooldown.' }
         - type: object
           required: [type]
           properties:
             type: { type: string, enum: [activate], description: 'Reactivate a campaign, ad set or ad a rule paused, once `cooldownMinutes` has passed since the pause. Objects you paused yourself are left alone unless `includeManuallyPaused` is true.' }
             includeManuallyPaused: { type: boolean, description: 'Also reactivate paused objects that no rule paused, as soon as they match.' }
             maxChangesPerDay: { type: integer, minimum: 1, maximum: 100, description: 'At most this many objects changed in any 24 hours, across runs. Matches over the limit are skipped with `daily_limit_reached` and tried again later.' }
+            maxChangesPerObject: { type: integer, minimum: 1, maximum: 100, description: 'At most this many changes to one object by this rule, counted over the last 400 days. An object at the limit is left alone like one in cooldown.' }
         - type: object
           required: [type]
           properties:
@@ -17546,6 +17548,7 @@ components:
             status: { type: string, enum: [paused, active], description: 'How the copy starts. Defaults to `paused`.' }
             renameSuffix: { type: string, maxLength: 50, description: "Text added to the copy's name." }
             maxChangesPerDay: { type: integer, minimum: 1, maximum: 100, description: 'At most this many objects changed in any 24 hours, across runs. Matches over the limit are skipped with `daily_limit_reached` and tried again later.' }
+            maxChangesPerObject: { type: integer, minimum: 1, maximum: 100, description: 'At most this many changes to one object by this rule, counted over the last 400 days. An object at the limit is left alone like one in cooldown.' }
         - type: object
           required: [type]
           description: Either `amount`, or `direction`, `percent` and `limit`.
@@ -17556,6 +17559,7 @@ components:
             percent: { type: integer, minimum: 1, maximum: 100, description: 'Step size. A decrease is at most 90.' }
             limit: { type: number, exclusiveMinimum: 0, description: 'The cap never goes above this on an increase, or below it on a decrease.' }
             maxChangesPerDay: { type: integer, minimum: 1, maximum: 100, description: 'At most this many objects changed in any 24 hours, across runs. Matches over the limit are skipped with `daily_limit_reached` and tried again later.' }
+            maxChangesPerObject: { type: integer, minimum: 1, maximum: 100, description: 'At most this many changes to one object by this rule, counted over the last 400 days. An object at the limit is left alone like one in cooldown.' }
         - type: object
           required: [type]
           description: Exactly one of `add` and `remove`.
@@ -17565,12 +17569,14 @@ components:
             at: { type: string, enum: [start, end], description: 'Where `add` goes. Defaults to `start`.' }
             remove: { type: string, minLength: 1, maxLength: 50, description: 'Text to take out of the name, every copy of it.' }
             maxChangesPerDay: { type: integer, minimum: 1, maximum: 100, description: 'At most this many objects changed in any 24 hours, across runs. Matches over the limit are skipped with `daily_limit_reached` and tried again later.' }
+            maxChangesPerObject: { type: integer, minimum: 1, maximum: 100, description: 'At most this many changes to one object by this rule, counted over the last 400 days. An object at the limit is left alone like one in cooldown.' }
         - type: object
           required: [type, amount]
           properties:
             type: { type: string, enum: [adjust_budget], description: "Set the daily budget to an exact amount, such as a reset every midnight. Same level rules as the percent change." }
             amount: { type: number, exclusiveMinimum: 0, description: 'The daily budget to set, in the ad account currency. An object already at it is skipped with `already_at_amount`.' }
             maxChangesPerDay: { type: integer, minimum: 1, maximum: 100, description: 'At most this many objects changed in any 24 hours, across runs. Matches over the limit are skipped with `daily_limit_reached` and tried again later.' }
+            maxChangesPerObject: { type: integer, minimum: 1, maximum: 100, description: 'At most this many changes to one object by this rule, counted over the last 400 days. An object at the limit is left alone like one in cooldown.' }
         - type: object
           required: [type, direction, percent, limit]
           properties:
@@ -17579,6 +17585,7 @@ components:
             percent: { type: integer, minimum: 1, maximum: 100, description: 'Change in percent: up to 100 for an increase, up to 90 for a decrease.' }
             limit: { type: number, exclusiveMinimum: 0, description: 'The budget never goes above this on an increase, or below it on a decrease, in the ad account currency.' }
             maxChangesPerDay: { type: integer, minimum: 1, maximum: 100, description: 'At most this many objects changed in any 24 hours, across runs. Matches over the limit are skipped with `daily_limit_reached` and tried again later.' }
+            maxChangesPerObject: { type: integer, minimum: 1, maximum: 100, description: 'At most this many changes to one object by this rule, counted over the last 400 days. An object at the limit is left alone like one in cooldown.' }
     AdRuleActions:
       type: array
       minItems: 1
@@ -17594,7 +17601,7 @@ components:
     AdRuleFilters:
       type: array
       maxItems: 10
-      description: 'Narrows the objects the rule checks. Every filter must hold. A campaign rule reads `name`, `campaign_id`, `goal` and `days_live`; an ad set rule also `campaign_name` and `adset_id`; an ad rule also `adset_name` and `ad_id`.'
+      description: 'Narrows the objects the rule checks. Every filter must hold. A campaign rule reads `name`, `campaign_id`, `goal`, `days_live` and `budget_level`; an ad set rule also `campaign_name` and `adset_id`; an ad rule also `adset_name` and `ad_id`.'
       items:
         oneOf:
           - type: object
@@ -17613,6 +17620,14 @@ components:
               field: { type: string, enum: [campaign_id, adset_id, ad_id] }
               op: { type: string, enum: [in, not_in] }
               values: { type: array, minItems: 1, maxItems: 100, items: { type: string, minLength: 1 } }
+          - type: object
+            title: Budget level
+            required: [field, op, value]
+            description: 'Where the budget sits: on the campaign (Meta CBO, every Google campaign) or on each ad set (ABO). An object whose budget level is unknown never passes.'
+            properties:
+              field: { type: string, enum: [budget_level] }
+              op: { type: string, enum: [equals] }
+              value: { type: string, enum: [campaign, adset] }
           - type: object
             title: Days live
             required: [field, op, value]
