@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.485.0"
+  version: "1.486.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -8843,6 +8843,7 @@ components:
             transcriptionCostUSD: { type: number }
             metaCostUSD: { type: number, description: 'WhatsApp channel only. Meta per-minute charge, billed by Meta directly to your WABA. Display only; not billed by Zernio.' }
             telnyxCostUSD: { type: number }
+            recordingSeconds: { type: number, description: 'Seconds of the call that were recorded and billed as recording.' }
             recordingCostUSD: { type: number }
             billableCostUSD: { type: number, description: 'Amount Zernio bills you = telephony leg + recording + transcription (excludes any Meta portion).' }
             totalCostUSD: { type: number, description: 'Full cost incl. any Meta portion you pay directly. Display only.' }
@@ -53506,6 +53507,7 @@ paths:
                           properties:
                             metaCostUSD: { type: number, description: 'Meta per-minute charge, billed by Meta directly to your WABA. Display only; not billed by Zernio.' }
                             telnyxCostUSD: { type: number }
+                            recordingSeconds: { type: number, description: 'Seconds of the call that were recorded and billed as recording.' }
                             recordingCostUSD: { type: number }
                             billableCostUSD: { type: number, description: 'Amount Zernio bills you = Telnyx leg + recording (excludes Meta).' }
                             totalCostUSD: { type: number, description: 'Full cost incl. the Meta portion you pay directly. Display only.' }
