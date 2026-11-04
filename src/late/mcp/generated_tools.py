@@ -13330,9 +13330,9 @@ def register_generated_tools(mcp, _get_client):
     def ad_rules_undo_ad_rule_activity(activity_id: str) -> str:
         """Undo a change an ad rule made
 
-        Puts back a pause, a reactivation or a budget change a rule applied, as a new change recorded in the activity feed. The rule's cooldown then covers the object.
+        Puts back a pause, reactivation, budget or bid change, or name tag a rule applied, as a new change recorded in the activity feed. The rule's cooldown then covers the object.
 
-        It is refused (409 `invalid_resource_state`) when the change was not applied, was already undone, is a copy, or when the object changed since: delivering again after a pause, paused again after a reactivation, or on another budget.
+        It is refused (409 `invalid_resource_state`) when the change was not applied, was already undone, is a copy, or when the object changed since: delivering again after a pause, paused again after a reactivation, or on another budget, bid or name.
 
         Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit
 
