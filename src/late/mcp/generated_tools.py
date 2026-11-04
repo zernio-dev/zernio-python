@@ -13176,6 +13176,7 @@ def register_generated_tools(mcp, _get_client):
         conditions: dict[str, Any] | None,
         actions: list[dict[str, Any]] | None,
         campaign_ids: list[str] | None = None,
+        filters: list[dict[str, Any]] | None = None,
         schedule: dict[str, Any] | None = None,
         cooldown_minutes: int = 1440,
         enabled: bool = True,
@@ -13216,6 +13217,7 @@ def register_generated_tools(mcp, _get_client):
             ad_account_id: Platform ad account ID, from `GET /v1/ads/accounts`. (required)
             level: (required)
             campaign_ids: Only check these platform campaign IDs (or their ad sets). Leave out to check the whole ad account.
+            filters: Each item is an object with keys: field (one of: name, campaign_name, adset_name, goal; required) - The object's own name, its campaign's or ad set's name, or the campaign goal (objective) as the platform reports it.; op (one of: contains, not_contains, equals, not_equals, starts_with; required); value (string, required)
             conditions: Object with keys: all (list of objects with keys metric, window, op, value, compareTo, required) (required)
             actions: Each item is an object with keys: type (one of: notify; required) - Send the `ad_rule.triggered` webhook, and the alert to every `send` destination.; send (list of objects with keys accountId, channelId) - Also send a short alert through accounts you connected: what matched, the values and what the rule did. Up to 5 destinations, checked when the rule is saved. ... (required)
             schedule: Leave it out to run every 60 minutes. Object with keys: everyMinutes (one of: 15, 30, 60, 180, 360, 720, 1440) - How often the rule runs, in minutes. Null on a rule that runs at set times.; times (array or null) - Set weekly times in the ad account timezone, instead of an interval. A rule that changes ads needs a cooldown of at least the shortest gap between two times.; startsAt (string or null) - The rule runs from this time on.; endsAt (string or null) - The rule stops running after this time.
@@ -13229,6 +13231,7 @@ def register_generated_tools(mcp, _get_client):
                 ad_account_id=ad_account_id,
                 level=level,
                 campaign_ids=campaign_ids,
+                filters=filters,
                 conditions=conditions,
                 actions=actions,
                 schedule=schedule,
@@ -13342,6 +13345,7 @@ def register_generated_tools(mcp, _get_client):
         name: str | None = None,
         level: Literal["campaign", "adset", "ad"] | None = None,
         campaign_ids: str | None = None,
+        filters: list[dict[str, Any]] | None = None,
         conditions: dict[str, Any] | None = None,
         actions: list[dict[str, Any]] | None = None,
         schedule: dict[str, Any] | None = None,
@@ -13360,6 +13364,7 @@ def register_generated_tools(mcp, _get_client):
             name
             level
             campaign_ids
+            filters: Each item is an object with keys: field (one of: name, campaign_name, adset_name, goal; required) - The object's own name, its campaign's or ad set's name, or the campaign goal (objective) as the platform reports it.; op (one of: contains, not_contains, equals, not_equals, starts_with; required); value (string, required)
             conditions: Object with keys: all (list of objects with keys metric, window, op, value, compareTo, required)
             actions: Each item is an object with keys: type (one of: notify; required) - Send the `ad_rule.triggered` webhook, and the alert to every `send` destination.; send (list of objects with keys accountId, channelId) - Also send a short alert through accounts you connected: what matched, the values and what the rule did. Up to 5 destinations, checked when the rule is saved. ...
             schedule: Object with keys: everyMinutes (one of: 15, 30, 60, 180, 360, 720, 1440) - How often the rule runs, in minutes. Null on a rule that runs at set times.; times (array or null) - Set weekly times in the ad account timezone, instead of an interval. A rule that changes ads needs a cooldown of at least the shortest gap between two times.; startsAt (string or null) - The rule runs from this time on.; endsAt (string or null) - The rule stops running after this time.
@@ -13371,6 +13376,7 @@ def register_generated_tools(mcp, _get_client):
                 name=name,
                 level=level,
                 campaign_ids=campaign_ids,
+                filters=filters,
                 conditions=conditions,
                 actions=actions,
                 schedule=schedule,

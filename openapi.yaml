@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.463.0"
+  version: "1.464.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -17294,6 +17294,17 @@ components:
       minItems: 1
       items: { $ref: '#/components/schemas/AdRuleAction' }
       description: Each type at most once, and at most one of `pause`, `activate`, `adjust_budget` and `duplicate`.
+    AdRuleFilters:
+      type: array
+      maxItems: 10
+      description: 'Narrows the objects the rule checks. Every filter must hold. Text compares without case, and a missing field reads as empty.'
+      items:
+        type: object
+        required: [field, op, value]
+        properties:
+          field: { type: string, enum: [name, campaign_name, adset_name, goal], description: 'The object''s own name, its campaign''s or ad set''s name, or the campaign goal (objective) as the platform reports it.' }
+          op: { type: string, enum: [contains, not_contains, equals, not_equals, starts_with] }
+          value: { type: string, minLength: 1, maxLength: 200 }
     AdRuleSchedule:
       type: object
       description: 'Either `everyMinutes` or `times`. Sending a schedule replaces the rule''s whole timing. Without one, a new rule runs every 60 minutes.'
@@ -17314,7 +17325,7 @@ components:
         endsAt: { type: [string, 'null'], format: date-time, description: 'The rule stops running after this time.' }
     AdRule:
       type: object
-      required: [id, name, accountId, platform, adAccountId, level, campaignIds, conditions, actions, schedule, cooldownMinutes, enabled, lastRunAt, nextRunAt, createdAt, updatedAt]
+      required: [id, name, accountId, platform, adAccountId, level, campaignIds, filters, conditions, actions, schedule, cooldownMinutes, enabled, lastRunAt, nextRunAt, createdAt, updatedAt]
       properties:
         id: { type: string }
         name: { type: string }
@@ -17323,6 +17334,7 @@ components:
         adAccountId: { type: string, description: Platform ad account ID. }
         level: { $ref: '#/components/schemas/AdRuleLevel' }
         campaignIds: { type: [array, "null"], items: { type: string }, description: Platform campaign IDs the rule is limited to. Null checks the whole ad account. }
+        filters: { $ref: '#/components/schemas/AdRuleFilters' }
         conditions: { $ref: '#/components/schemas/AdRuleConditions' }
         actions: { $ref: '#/components/schemas/AdRuleActions' }
         schedule: { $ref: '#/components/schemas/AdRuleSchedule' }
@@ -65593,6 +65605,7 @@ paths:
                   maxItems: 100
                   items: { type: string }
                   description: Only check these platform campaign IDs (or their ad sets). Leave out to check the whole ad account.
+                filters: { $ref: '#/components/schemas/AdRuleFilters' }
                 conditions: { $ref: '#/components/schemas/AdRuleConditions' }
                 actions: { $ref: '#/components/schemas/AdRuleActions' }
                 schedule: { allOf: [{ $ref: '#/components/schemas/AdRuleSchedule' }], description: Leave it out to run every 60 minutes. }
@@ -65789,6 +65802,7 @@ paths:
                   minItems: 1
                   maxItems: 100
                   items: { type: string }
+                filters: { $ref: '#/components/schemas/AdRuleFilters' }
                 conditions: { $ref: '#/components/schemas/AdRuleConditions' }
                 actions: { $ref: '#/components/schemas/AdRuleActions' }
                 schedule: { $ref: '#/components/schemas/AdRuleSchedule' }
