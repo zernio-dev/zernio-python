@@ -749,6 +749,7 @@ def register_generated_tools(mcp, _get_client):
         order: Literal["asc", "desc"] = "asc",
         include_over_limit: bool = False,
         exclude_hidden: bool = False,
+        platforms: str | None = None,
         ad_account_rows: bool = False,
         include_creator_accounts: bool = False,
         include_sandbox: bool = False,
@@ -785,6 +786,7 @@ def register_generated_tools(mcp, _get_client):
         - the internal `sms` and `phone` accounts behind each phone number.
 
         Applied before pagination, so page totals and `statusCounts` count only the remaining accounts. Sandbox accounts added by `includeSandbox` are appended after this filter. Accepts `true` or `false` in any letter case; any other value returns 400.
+                platforms: Comma-separated platforms (up to 50) to list together, the several-platform form of `platform`. Applied before pagination.
                 ad_account_rows: When true, lists every ads account row, one per ad account. By default an API key or OAuth app sees each ads login once per profile and platform, as the single ads connection it had before rows per ad account: its oldest row.
 
         Only changes the result once ads are connected as one row per ad account; until then the two shapes are the same. Applied before pagination. Accepts `true` or `false` in any letter case; any other value returns 400.
@@ -815,6 +817,7 @@ def register_generated_tools(mcp, _get_client):
                 order=order,
                 include_over_limit=include_over_limit,
                 exclude_hidden=exclude_hidden,
+                platforms=platforms,
                 ad_account_rows=ad_account_rows,
                 include_creator_accounts=include_creator_accounts,
                 include_sandbox=include_sandbox,
