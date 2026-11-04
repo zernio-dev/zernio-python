@@ -13218,7 +13218,7 @@ def register_generated_tools(mcp, _get_client):
             campaign_ids: Only check these platform campaign IDs (or their ad sets). Leave out to check the whole ad account.
             conditions: Object with keys: all (list of objects with keys metric, window, op, value, compareTo, required) (required)
             actions: Each item is an object with keys: type (one of: notify; required) - Send the `ad_rule.triggered` webhook, and the alert to every `send` destination.; send (list of objects with keys accountId, channelId) - Also send a short alert through accounts you connected: what matched, the values and what the rule did. Up to 5 destinations, checked when the rule is saved. ... (required)
-            schedule: Leave it out to run every 60 minutes. Object with keys: everyMinutes (one of: 60, 180, 360, 720, 1440; required) - How often the rule runs, in minutes.
+            schedule: Leave it out to run every 60 minutes. Object with keys: everyMinutes (one of: 15, 30, 60, 180, 360, 720, 1440) - How often the rule runs, in minutes. Null on a rule that runs at set times.; times (array or null) - Set weekly times in the ad account timezone, instead of an interval. A rule that changes ads needs a cooldown of at least the shortest gap between two times.; startsAt (string or null) - The rule runs from this time on.; endsAt (string or null) - The rule stops running after this time.
             cooldown_minutes: How long the rule leaves an object alone after acting on it.
             enabled"""
         client = _get_client()
@@ -13362,7 +13362,7 @@ def register_generated_tools(mcp, _get_client):
             campaign_ids
             conditions: Object with keys: all (list of objects with keys metric, window, op, value, compareTo, required)
             actions: Each item is an object with keys: type (one of: notify; required) - Send the `ad_rule.triggered` webhook, and the alert to every `send` destination.; send (list of objects with keys accountId, channelId) - Also send a short alert through accounts you connected: what matched, the values and what the rule did. Up to 5 destinations, checked when the rule is saved. ...
-            schedule: Object with keys: everyMinutes (one of: 60, 180, 360, 720, 1440; required) - How often the rule runs, in minutes.
+            schedule: Object with keys: everyMinutes (one of: 15, 30, 60, 180, 360, 720, 1440) - How often the rule runs, in minutes. Null on a rule that runs at set times.; times (array or null) - Set weekly times in the ad account timezone, instead of an interval. A rule that changes ads needs a cooldown of at least the shortest gap between two times.; startsAt (string or null) - The rule runs from this time on.; endsAt (string or null) - The rule stops running after this time.
             cooldown_minutes
             enabled"""
         client = _get_client()
