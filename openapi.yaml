@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.476.0"
+  version: "1.476.1"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -31343,7 +31343,7 @@ paths:
             type: string
             minLength: 1
             maxLength: 100
-          description: 'Case-insensitive match on the account username, display name or platform user id, or an exact account id. Combine with page/limit to paginate the matches.'
+          description: 'Case-insensitive match on the account username, display name or platform user id. A 24-character hexadecimal value is read as an account id and matches only that exact account. Combine with page/limit to paginate the matches.'
         - name: category
           in: query
           schema:
