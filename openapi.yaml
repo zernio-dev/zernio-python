@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.484.0"
+  version: "1.485.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -17654,6 +17654,13 @@ components:
               at: { type: string, pattern: '^([01][0-9]|2[0-3]):[0-5][0-9]$', description: 'Wall-clock time, 24-hour `HH:MM`.', example: '09:00' }
         startsAt: { type: [string, 'null'], format: date-time, description: 'The rule runs from this time on.' }
         endsAt: { type: [string, 'null'], format: date-time, description: 'The rule stops running after this time.' }
+        quietHours:
+          type: [object, 'null']
+          required: [from, to]
+          description: 'A daily window in the ad account timezone when the rule does not run, like `{ "from": "22:00", "to": "06:00" }`. It may wrap past midnight; the first run after it comes on the next interval point or set time.'
+          properties:
+            from: { type: string, pattern: '^([01][0-9]|2[0-3]):[0-5][0-9]$', example: '22:00' }
+            to: { type: string, pattern: '^([01][0-9]|2[0-3]):[0-5][0-9]$', example: '06:00' }
     AdRule:
       type: object
       required: [id, name, accountId, platform, adAccountId, level, campaignIds, filters, lifecycle, conditions, actions, schedule, cooldownMinutes, enabled, lastRunAt, nextRunAt, createdAt, updatedAt]
