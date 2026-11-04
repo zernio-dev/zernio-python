@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.481.1"
+  version: "1.481.2"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -13109,7 +13109,7 @@ components:
         timestamp: { type: string, format: date-time }
     WebhookPayloadContact:
       type: object
-      description: 'Webhook payload for contact.updated and contact.deleted, fired after a provider contacts sync (Google Contacts, Outlook) changed a contact. Read the contact with `GET /v1/contacts/{id}`.'
+      description: 'Webhook payload for contact.updated and contact.deleted, fired after a provider contacts sync (Google Contacts, Outlook) changed a contact. contact.updated also fires after a WhatsApp coexistence address-book change (WhatsApp never fires contact.deleted). Read the contact with `GET /v1/contacts/{id}`.'
       required: [id, event, account, contact, timestamp]
       properties:
         id: { type: string }
@@ -19746,7 +19746,7 @@ webhooks:
     post:
       operationId: onContactUpdated
       summary: Contact updated
-      description: A provider contacts sync created or changed a contact.
+      description: A provider contacts sync (Google Contacts, Outlook) or a WhatsApp coexistence address-book change created or changed a contact.
       tags: [Webhook Events]
       requestBody:
         required: true
