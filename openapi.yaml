@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.459.0"
+  version: "1.461.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -17235,7 +17235,29 @@ components:
         - type: object
           required: [type]
           properties:
-            type: { type: string, enum: [notify], description: 'Send the `ad_rule.triggered` webhook.' }
+            type: { type: string, enum: [notify], description: 'Send the `ad_rule.triggered` webhook, and the alert to every `send` destination.' }
+            send:
+              type: array
+              minItems: 1
+              maxItems: 5
+              description: |
+                Also send a short alert through accounts you connected: what matched, the values and what the rule did. Up to 5 destinations, checked when the rule is saved.
+
+                A destination that fails is reported in the run's `notification`; it never undoes a change.
+              items:
+                oneOf:
+                  - type: object
+                    required: [accountId]
+                    additionalProperties: false
+                    properties:
+                      accountId: { type: string, description: 'A connected Slack account (`GET /v1/accounts`, platform `slack`).' }
+                      channelId: { type: string, description: "The Slack channel to post in. Defaults to the channel the account was connected with; the bot joins public channels on its own." }
+                  - type: object
+                    required: [accountId, to]
+                    additionalProperties: false
+                    properties:
+                      accountId: { type: string, description: 'A connected Gmail or Outlook mailbox with email access.' }
+                      to: { type: string, format: email, description: 'The address that receives the alert, sent as a new email from that mailbox.' }
         - type: object
           required: [type]
           properties:
@@ -17245,6 +17267,12 @@ components:
           required: [type]
           properties:
             type: { type: string, enum: [activate], description: 'Reactivate a campaign, ad set or ad a rule paused, once `cooldownMinutes` has passed since the pause. Objects you paused yourself are never touched.' }
+            maxChangesPerDay: { type: integer, minimum: 1, maximum: 100, description: 'At most this many objects changed in any 24 hours, across runs. Matches over the limit are skipped with `daily_limit_reached` and tried again later.' }
+        - type: object
+          required: [type, amount]
+          properties:
+            type: { type: string, enum: [adjust_budget], description: "Set the daily budget to an exact amount, such as a reset every midnight. Same level rules as the percent change." }
+            amount: { type: number, exclusiveMinimum: 0, description: 'The daily budget to set, in the ad account currency. An object already at it is skipped with `already_at_amount`.' }
             maxChangesPerDay: { type: integer, minimum: 1, maximum: 100, description: 'At most this many objects changed in any 24 hours, across runs. Matches over the limit are skipped with `daily_limit_reached` and tried again later.' }
         - type: object
           required: [type, direction, percent, limit]

@@ -13217,7 +13217,7 @@ def register_generated_tools(mcp, _get_client):
             level: (required)
             campaign_ids: Only check these platform campaign IDs (or their ad sets). Leave out to check the whole ad account.
             conditions: Object with keys: all (list of objects with keys metric, window, op, value, compareTo, required) (required)
-            actions: Each item is an object with keys: type (one of: notify; required) - Send the `ad_rule.triggered` webhook. (required)
+            actions: Each item is an object with keys: type (one of: notify; required) - Send the `ad_rule.triggered` webhook, and the alert to every `send` destination.; send (list of objects with keys accountId, channelId) - Also send a short alert through accounts you connected: what matched, the values and what the rule did. Up to 5 destinations, checked when the rule is saved. ... (required)
             schedule: Leave it out to run every 60 minutes. Object with keys: everyMinutes (one of: 60, 180, 360, 720, 1440; required) - How often the rule runs, in minutes.
             cooldown_minutes: How long the rule leaves an object alone after acting on it.
             enabled"""
@@ -13361,7 +13361,7 @@ def register_generated_tools(mcp, _get_client):
             level
             campaign_ids
             conditions: Object with keys: all (list of objects with keys metric, window, op, value, compareTo, required)
-            actions: Each item is an object with keys: type (one of: notify; required) - Send the `ad_rule.triggered` webhook.
+            actions: Each item is an object with keys: type (one of: notify; required) - Send the `ad_rule.triggered` webhook, and the alert to every `send` destination.; send (list of objects with keys accountId, channelId) - Also send a short alert through accounts you connected: what matched, the values and what the rule did. Up to 5 destinations, checked when the rule is saved. ...
             schedule: Object with keys: everyMinutes (one of: 60, 180, 360, 720, 1440; required) - How often the rule runs, in minutes.
             cooldown_minutes
             enabled"""
