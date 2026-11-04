@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.464.0"
+  version: "1.468.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -65665,7 +65665,7 @@ paths:
                     type: array
                     items:
                       type: object
-                      required: [id, name, description, level, conditions, actions, schedule, cooldownMinutes, platforms]
+                      required: [id, name, description, goal, level, conditions, actions, schedule, cooldownMinutes, platforms]
                       properties:
                         id: { type: string, example: stop_losers }
                         name: { type: string }
@@ -65673,6 +65673,7 @@ paths:
                         level: { $ref: '#/components/schemas/AdRuleLevel' }
                         conditions: { $ref: '#/components/schemas/AdRuleConditions' }
                         actions: { $ref: '#/components/schemas/AdRuleActions' }
+                        goal: { type: string, enum: [protect, scale, schedule, alert], description: 'What the template is for: stop waste, grow what works, act at set times, or only tell you.' }
                         schedule: { $ref: '#/components/schemas/AdRuleSchedule' }
                         cooldownMinutes: { type: integer }
                         platforms: { type: [array, "null"], items: { type: string } }
