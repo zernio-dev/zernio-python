@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.481.2"
+  version: "1.481.3"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -1363,7 +1363,7 @@ components:
                 type: string
                 format: uri
                 description: Link to the relevant documentation page.
-                example: https://docs.zernio.com/billing/payment-method-required
+                example: https://docs.zernio.com/pricing/payment-method-required
               dashboard_url:
                 type: string
                 format: uri
@@ -1408,7 +1408,7 @@ components:
                 error: 'Add a payment method to connect more than 2 accounts.'
                 code: PAYMENT_REQUIRED
                 reason: free_tier_exceeded
-                documentation_url: https://docs.zernio.com/billing/payment-method-required
+                documentation_url: https://docs.zernio.com/pricing/payment-method-required
                 dashboard_url: https://zernio.com/dashboard/billing?add_payment_method=1
                 details:
                   free_tier_account_limit: 2
@@ -1420,7 +1420,7 @@ components:
                 error: 'X (Twitter) requires a payment method due to API pass-through costs. Add a payment method to connect an X account.'
                 code: PAYMENT_REQUIRED
                 reason: twitter_passthrough
-                documentation_url: https://docs.zernio.com/billing/payment-method-required
+                documentation_url: https://docs.zernio.com/pricing/payment-method-required
                 dashboard_url: https://zernio.com/dashboard/billing?add_payment_method=1
                 details:
                   has_payment_method: false
@@ -1430,7 +1430,7 @@ components:
                 error: 'You have 2000 connected accounts, which reaches the 2,000-account limit on your contract. Contact us to raise it.'
                 code: PAYMENT_REQUIRED
                 reason: enterprise_required
-                documentation_url: https://docs.zernio.com/billing/payment-method-required
+                documentation_url: https://docs.zernio.com/pricing/payment-method-required
                 dashboard_url: https://zernio.com/enterprise
                 details:
                   effective_account_limit: 2000
