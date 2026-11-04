@@ -85109,6 +85109,7 @@ paths:
                     multi: '#/components/schemas/CtwaMultiResponse'
         '400': { description: Invalid input }
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '429': { $ref: '#/components/responses/MetaAdAccountWriteLimited' }
         '403':
           description: |
             Returned with these codes:
@@ -85189,6 +85190,7 @@ paths:
                     multi: '#/components/schemas/CtwaMultiResponse'
         '400': { description: Invalid input }
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '429': { $ref: '#/components/responses/MetaAdAccountWriteLimited' }
         '403':
           description: |
             Returned with one of these codes:
@@ -85315,6 +85317,7 @@ paths:
                     multi: '#/components/schemas/CtwaMultiResponse'
         '400': { description: Invalid body. }
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '429': { $ref: '#/components/responses/MetaAdAccountWriteLimited' }
         '403':
           description: |
             Forbidden. Also returned with these codes:
