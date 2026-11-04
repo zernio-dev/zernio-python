@@ -13177,6 +13177,7 @@ def register_generated_tools(mcp, _get_client):
         actions: list[dict[str, Any]] | None,
         campaign_ids: list[str] | None = None,
         filters: list[dict[str, Any]] | None = None,
+        lifecycle: dict[str, Any] | None = None,
         schedule: dict[str, Any] | None = None,
         cooldown_minutes: int = 1440,
         enabled: bool = True,
@@ -13218,6 +13219,7 @@ def register_generated_tools(mcp, _get_client):
             level: (required)
             campaign_ids: Only check these platform campaign IDs (or their ad sets). Leave out to check the whole ad account.
             filters: Each item is an object with keys: field (one of: name, campaign_name, adset_name, goal; required) - The object's own name, its campaign's or ad set's name, or the campaign goal (objective) as the platform reports it.; op (one of: contains, not_contains, equals, not_equals, starts_with; required); value (string, required)
+            lifecycle: Object with keys: confirmChecks (integer) - Matching runs in a row before acting. Defaults to 1.; hold (object with keys all) - Keeps an open alert open after the conditions stop matching.; critical (object with keys all) - Marks an open alert critical.
             conditions: Object with keys: all (list of objects with keys metric, window, op, value, compareTo, required) (required)
             actions: Each item is an object with keys: type (one of: notify; required) - Send the `ad_rule.triggered` webhook, and the alert to every `send` destination.; send (list of objects with keys accountId, channelId) - Also send a short alert through accounts you connected: what matched, the values and what the rule did. Up to 5 destinations, checked when the rule is saved. ... (required)
             schedule: Leave it out to run every 60 minutes. Object with keys: everyMinutes (one of: 15, 30, 60, 180, 360, 720, 1440) - How often the rule runs, in minutes. Null on a rule that runs at set times.; times (array or null) - Set weekly times in the ad account timezone, instead of an interval. A rule that changes ads needs a cooldown of at least the shortest gap between two times.; startsAt (string or null) - The rule runs from this time on.; endsAt (string or null) - The rule stops running after this time.
@@ -13232,6 +13234,7 @@ def register_generated_tools(mcp, _get_client):
                 level=level,
                 campaign_ids=campaign_ids,
                 filters=filters,
+                lifecycle=lifecycle,
                 conditions=conditions,
                 actions=actions,
                 schedule=schedule,
@@ -13276,7 +13279,9 @@ def register_generated_tools(mcp, _get_client):
     def ad_rules_list_ad_rule_activity(
         rule_id: str | None = None,
         account_id: str | None = None,
-        type: Literal["pause", "activate", "adjust_budget", "duplicate", "edit_name"]
+        type: Literal[
+            "pause", "activate", "adjust_budget", "adjust_bid", "duplicate", "edit_name"
+        ]
         | None = None,
         from_: str | None = None,
         to: str | None = None,
@@ -13372,6 +13377,7 @@ def register_generated_tools(mcp, _get_client):
         level: Literal["campaign", "adset", "ad"] | None = None,
         campaign_ids: str | None = None,
         filters: list[dict[str, Any]] | None = None,
+        lifecycle: str | None = None,
         conditions: dict[str, Any] | None = None,
         actions: list[dict[str, Any]] | None = None,
         schedule: dict[str, Any] | None = None,
@@ -13391,6 +13397,7 @@ def register_generated_tools(mcp, _get_client):
             level
             campaign_ids
             filters: Each item is an object with keys: field (one of: name, campaign_name, adset_name, goal; required) - The object's own name, its campaign's or ad set's name, or the campaign goal (objective) as the platform reports it.; op (one of: contains, not_contains, equals, not_equals, starts_with; required); value (string, required)
+            lifecycle: Null removes it; every matching run then acts and notifies again.
             conditions: Object with keys: all (list of objects with keys metric, window, op, value, compareTo, required)
             actions: Each item is an object with keys: type (one of: notify; required) - Send the `ad_rule.triggered` webhook, and the alert to every `send` destination.; send (list of objects with keys accountId, channelId) - Also send a short alert through accounts you connected: what matched, the values and what the rule did. Up to 5 destinations, checked when the rule is saved. ...
             schedule: Object with keys: everyMinutes (one of: 15, 30, 60, 180, 360, 720, 1440) - How often the rule runs, in minutes. Null on a rule that runs at set times.; times (array or null) - Set weekly times in the ad account timezone, instead of an interval. A rule that changes ads needs a cooldown of at least the shortest gap between two times.; startsAt (string or null) - The rule runs from this time on.; endsAt (string or null) - The rule stops running after this time.
@@ -13403,6 +13410,7 @@ def register_generated_tools(mcp, _get_client):
                 level=level,
                 campaign_ids=campaign_ids,
                 filters=filters,
+                lifecycle=lifecycle,
                 conditions=conditions,
                 actions=actions,
                 schedule=schedule,
@@ -13455,6 +13463,40 @@ def register_generated_tools(mcp, _get_client):
         client = _get_client()
         try:
             response = client.ad_rules.preview_ad_rule(rule_id=rule_id)
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List a rule's alerts",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def ad_rules_list_ad_rule_alerts(
+        rule_id: str,
+        state: Literal["pending", "open", "resolved"] | None = None,
+        limit: int = 50,
+        cursor: str | None = None,
+    ) -> str:
+        """List a rule's alerts
+
+        The alert episodes of a rule with a `lifecycle`, newest first. `pending` alerts are confirming, `open` ones were acted on, `resolved` ones ended, with `resolvedReason` saying why. Resolved alerts are kept 90 days.
+
+        Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit
+
+        Args:
+            rule_id: (required)
+            state
+            limit
+            cursor: `nextCursor` from the previous page."""
+        client = _get_client()
+        try:
+            response = client.ad_rules.list_ad_rule_alerts(
+                rule_id=rule_id, state=state, limit=limit, cursor=cursor
+            )
             return _format_response(response)
         except Exception as e:
             raise ToolError(f"Error: {e}") from e
@@ -44774,6 +44816,9 @@ def register_generated_tools(mcp, _get_client):
                 "automation.action.applied",
                 "automation.action.failed",
                 "automation.action.unknown",
+                "automation.alert.opened",
+                "automation.alert.escalated",
+                "automation.alert.resolved",
                 "whatsapp.template.status_updated",
                 "whatsapp.template.category_updated",
                 "whatsapp.account.name_status_updated",
@@ -44985,6 +45030,9 @@ def register_generated_tools(mcp, _get_client):
                 "automation.action.applied",
                 "automation.action.failed",
                 "automation.action.unknown",
+                "automation.alert.opened",
+                "automation.alert.escalated",
+                "automation.alert.resolved",
                 "whatsapp.template.status_updated",
                 "whatsapp.template.category_updated",
                 "whatsapp.account.name_status_updated",
@@ -45361,6 +45409,9 @@ def register_generated_tools(mcp, _get_client):
             "automation.action.applied",
             "automation.action.failed",
             "automation.action.unknown",
+            "automation.alert.opened",
+            "automation.alert.escalated",
+            "automation.alert.resolved",
             "lead.received",
             "whatsapp.template.status_updated",
             "whatsapp.template.category_updated",

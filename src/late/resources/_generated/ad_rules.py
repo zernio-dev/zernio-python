@@ -103,6 +103,7 @@ class AdRulesResource:
         *,
         campaign_ids: list[str] | None = None,
         filters: Any | None = None,
+        lifecycle: Any | None = None,
         schedule: Any | None = None,
         cooldown_minutes: int | None = 1440,
         enabled: bool | None = True,
@@ -115,6 +116,7 @@ class AdRulesResource:
             level=level,
             campaign_ids=campaign_ids,
             filters=filters,
+            lifecycle=lifecycle,
             conditions=conditions,
             actions=actions,
             schedule=schedule,
@@ -165,6 +167,7 @@ class AdRulesResource:
         level: Any | None = None,
         campaign_ids: Any | None = None,
         filters: Any | None = None,
+        lifecycle: Any | None = None,
         conditions: Any | None = None,
         actions: Any | None = None,
         schedule: Any | None = None,
@@ -177,6 +180,7 @@ class AdRulesResource:
             level=level,
             campaign_ids=campaign_ids,
             filters=filters,
+            lifecycle=lifecycle,
             conditions=conditions,
             actions=actions,
             schedule=schedule,
@@ -192,6 +196,22 @@ class AdRulesResource:
     def preview_ad_rule(self, rule_id: str) -> dict[str, Any]:
         """Preview an ad rule"""
         return self._client._post(f"/v1/ads/rules/{rule_id}/preview")
+
+    def list_ad_rule_alerts(
+        self,
+        rule_id: str,
+        *,
+        state: str | None = None,
+        limit: int | None = 50,
+        cursor: str | None = None,
+    ) -> dict[str, Any]:
+        """List a rule's alerts"""
+        params = self._build_params(
+            state=state,
+            limit=limit,
+            cursor=cursor,
+        )
+        return self._client._get(f"/v1/ads/rules/{rule_id}/alerts", params=params)
 
     def list_ad_rule_runs(
         self, rule_id: str, *, limit: int | None = 20, skip: int | None = 0
@@ -231,6 +251,7 @@ class AdRulesResource:
         *,
         campaign_ids: list[str] | None = None,
         filters: Any | None = None,
+        lifecycle: Any | None = None,
         schedule: Any | None = None,
         cooldown_minutes: int | None = 1440,
         enabled: bool | None = True,
@@ -243,6 +264,7 @@ class AdRulesResource:
             level=level,
             campaign_ids=campaign_ids,
             filters=filters,
+            lifecycle=lifecycle,
             conditions=conditions,
             actions=actions,
             schedule=schedule,
@@ -293,6 +315,7 @@ class AdRulesResource:
         level: Any | None = None,
         campaign_ids: Any | None = None,
         filters: Any | None = None,
+        lifecycle: Any | None = None,
         conditions: Any | None = None,
         actions: Any | None = None,
         schedule: Any | None = None,
@@ -305,6 +328,7 @@ class AdRulesResource:
             level=level,
             campaign_ids=campaign_ids,
             filters=filters,
+            lifecycle=lifecycle,
             conditions=conditions,
             actions=actions,
             schedule=schedule,
@@ -320,6 +344,24 @@ class AdRulesResource:
     async def apreview_ad_rule(self, rule_id: str) -> dict[str, Any]:
         """Preview an ad rule (async)"""
         return await self._client._apost(f"/v1/ads/rules/{rule_id}/preview")
+
+    async def alist_ad_rule_alerts(
+        self,
+        rule_id: str,
+        *,
+        state: str | None = None,
+        limit: int | None = 50,
+        cursor: str | None = None,
+    ) -> dict[str, Any]:
+        """List a rule's alerts (async)"""
+        params = self._build_params(
+            state=state,
+            limit=limit,
+            cursor=cursor,
+        )
+        return await self._client._aget(
+            f"/v1/ads/rules/{rule_id}/alerts", params=params
+        )
 
     async def alist_ad_rule_runs(
         self, rule_id: str, *, limit: int | None = 20, skip: int | None = 0
