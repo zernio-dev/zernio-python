@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.461.0"
+  version: "1.462.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -9273,7 +9273,7 @@ components:
                   type: object
                   required: [type, status, reason, previousDailyBudget, newDailyBudget]
                   properties:
-                    type: { type: string, enum: [pause, activate, adjust_budget] }
+                    type: { type: string, enum: [pause, activate, adjust_budget, duplicate] }
                     status: { type: string, enum: [done, skipped, failed], description: "Action result.\n\n- `skipped`: the action could not or need not apply (already paused or active, budget at its limit, a budget that is unknown, not daily or set at another level, no live ads, or a permanent refusal from the platform).\n- `failed`: it errored and will be retried on the next run." }
                     reason: { type: [string, "null"], description: "Why the action was skipped or failed: `already_paused`, `already_active`, `at_limit`, `budget_unknown`, `budget_not_daily`, `budget_level_mismatch`, `no_live_ads`, `daily_limit_reached` (held back by the action's `maxChangesPerDay`), `ads_allowance_exceeded` (a reactivation or budget increase for a team past its free live-ads allowance), or the platform's message. Null when done." }
                     previousDailyBudget: { type: [number, "null"], description: "On `adjust_budget`, the daily budget before the change, in the ad account currency. Null otherwise." }
@@ -17269,6 +17269,13 @@ components:
             type: { type: string, enum: [activate], description: 'Reactivate a campaign, ad set or ad a rule paused, once `cooldownMinutes` has passed since the pause. Objects you paused yourself are never touched.' }
             maxChangesPerDay: { type: integer, minimum: 1, maximum: 100, description: 'At most this many objects changed in any 24 hours, across runs. Matches over the limit are skipped with `daily_limit_reached` and tried again later.' }
         - type: object
+          required: [type]
+          properties:
+            type: { type: string, enum: [duplicate], description: 'Copy the campaign or ad set with its ads, on Meta and TikTok campaigns and ad sets and LinkedIn campaigns. Not on ad-level rules.' }
+            status: { type: string, enum: [paused, active], description: 'How the copy starts. Defaults to `paused`.' }
+            renameSuffix: { type: string, maxLength: 50, description: "Text added to the copy's name." }
+            maxChangesPerDay: { type: integer, minimum: 1, maximum: 100, description: 'At most this many objects changed in any 24 hours, across runs. Matches over the limit are skipped with `daily_limit_reached` and tried again later.' }
+        - type: object
           required: [type, amount]
           properties:
             type: { type: string, enum: [adjust_budget], description: "Set the daily budget to an exact amount, such as a reset every midnight. Same level rules as the percent change." }
@@ -17286,7 +17293,7 @@ components:
       type: array
       minItems: 1
       items: { $ref: '#/components/schemas/AdRuleAction' }
-      description: Each type at most once, and at most one of `pause`, `activate` and `adjust_budget`.
+      description: Each type at most once, and at most one of `pause`, `activate`, `adjust_budget` and `duplicate`.
     AdRuleSchedule:
       type: object
       required: [everyMinutes]
@@ -17390,7 +17397,7 @@ components:
                 required: [objectId, type, status]
                 properties:
                   objectId: { type: string }
-                  type: { type: string, enum: [pause, activate, adjust_budget] }
+                  type: { type: string, enum: [pause, activate, adjust_budget, duplicate] }
                   status: { type: string, enum: [done, skipped, failed] }
                   reason: { type: string, description: 'Why it was skipped or failed, for example `already_paused`.' }
                   previousDailyBudget: { type: number }
@@ -17421,7 +17428,7 @@ components:
         level: { type: string, enum: [campaign, adset] }
         objectId: { type: string, description: Platform ID of the campaign or ad set. }
         objectName: { type: [string, "null"], description: Its name when the rule acted. }
-        type: { type: string, enum: [pause, activate, adjust_budget] }
+        type: { type: string, enum: [pause, activate, adjust_budget, duplicate] }
         status: { type: string, enum: [done, skipped, failed] }
         reason: { type: [string, "null"], description: 'Why it was skipped or failed, for example `already_paused`.' }
         previousDailyBudget: { type: [number, "null"] }
@@ -65666,7 +65673,7 @@ paths:
           schema: { type: string }
         - name: type
           in: query
-          schema: { type: string, enum: [pause, activate, adjust_budget] }
+          schema: { type: string, enum: [pause, activate, adjust_budget, duplicate] }
         - name: from
           in: query
           description: 'ISO 8601 date-time, inclusive.'
