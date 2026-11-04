@@ -46,17 +46,35 @@ class AccountsResource(_GeneratedAccountsResource, BaseResource[AccountsListResp
     # Sync methods
     # -------------------------------------------------------------------------
 
-    def list(self, *, profile_id: str | None = None) -> AccountsListResponse:
+    def list(
+        self,
+        *,
+        profile_id: str | None = None,
+        platform: str | None = None,
+        search: str | None = None,
+        limit: int | None = None,
+        cursor: str | None = None,
+    ) -> AccountsListResponse:
         """
         List connected accounts.
 
         Args:
             profile_id: Optional profile ID to filter accounts
+            platform: Optional platform to filter accounts
+            search: Optional text matched against id, username, display name and platform user id
+            limit: Page size, up to 500. Turns on cursor paging
+            cursor: pagination.nextCursor of the previous page
 
         Returns:
-            AccountsListResponse with 'accounts' and 'hasAnalyticsAccess' attributes
+            AccountsListResponse with 'accounts', 'hasAnalyticsAccess' and, when paged, 'pagination'
         """
-        params = self._build_params(profile_id=profile_id)
+        params = self._build_params(
+            profile_id=profile_id,
+            platform=platform,
+            search=search,
+            limit=limit,
+            cursor=cursor,
+        )
         data = self._client._get(self._BASE_PATH, params=params or None)
         return AccountsListResponse.model_validate(data)
 
@@ -93,9 +111,23 @@ class AccountsResource(_GeneratedAccountsResource, BaseResource[AccountsListResp
     # Async methods
     # -------------------------------------------------------------------------
 
-    async def alist(self, *, profile_id: str | None = None) -> AccountsListResponse:
+    async def alist(
+        self,
+        *,
+        profile_id: str | None = None,
+        platform: str | None = None,
+        search: str | None = None,
+        limit: int | None = None,
+        cursor: str | None = None,
+    ) -> AccountsListResponse:
         """List connected accounts asynchronously."""
-        params = self._build_params(profile_id=profile_id)
+        params = self._build_params(
+            profile_id=profile_id,
+            platform=platform,
+            search=search,
+            limit=limit,
+            cursor=cursor,
+        )
         data = await self._client._aget(self._BASE_PATH, params=params or None)
         return AccountsListResponse.model_validate(data)
 

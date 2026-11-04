@@ -15,6 +15,7 @@ the Streamable HTTP endpoint.
 """
 
 import argparse
+import os
 import sys
 from contextlib import asynccontextmanager
 
@@ -46,6 +47,14 @@ from late.mcp.constants import (
     TRANSPORT_TYPE,
 )
 from late.mcp.server import mcp
+from late.mcp.telemetry import (
+    ToolTelemetryMiddleware,
+    init_sentry,
+    log_tool_calls_to_stdout,
+)
+
+mcp.add_middleware(ToolTelemetryMiddleware("mcp"))
+chatgpt_mcp.add_middleware(ToolTelemetryMiddleware("chatgpt"))
 
 
 @mcp.custom_route(ENDPOINT_ROOT, methods=["GET"])
@@ -77,6 +86,7 @@ async def handle_health(_request: Request) -> JSONResponse:
             "service": "zernio-mcp-http",
             "version": SERVICE_VERSION,
             "transport": TRANSPORT_TYPE,
+            "commit": os.getenv("RAILWAY_GIT_COMMIT_SHA"),
         }
     )
 
@@ -344,6 +354,8 @@ def main() -> None:
     args = parse_args()
     config = ServerConfig.from_env(host=args.host, port=args.port, debug=args.debug)
 
+    init_sentry()
+    log_tool_calls_to_stdout()
     app = build_app()
 
     print("Zernio MCP HTTP Server starting...", file=sys.stderr)

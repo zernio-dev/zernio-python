@@ -135,6 +135,10 @@ def _classify(status_code: int) -> Verification:
     return Verification.UNKNOWN
 
 
+def token_cache_key(token: str) -> str:
+    return hashlib.sha256(token.encode()).hexdigest()
+
+
 def _remember(token_key: str, now: float) -> None:
     _VERIFIED_AT[token_key] = now
     _VERIFIED_AT.move_to_end(token_key)
@@ -197,7 +201,7 @@ class ZernioTokenVerifier(TokenVerifier):
         self._client = client
 
     async def verify_token(self, token: str) -> AccessToken | None:
-        token_key = hashlib.sha256(token.encode()).hexdigest()
+        token_key = token_cache_key(token)
         now = time.monotonic()
         verified_at = _VERIFIED_AT.get(token_key)
 
