@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.492.0"
+  version: "1.493.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -13348,6 +13348,12 @@ components:
             - GET /v1/accounts still returns such accounts unless `excludeHidden=true` is passed.
             - They cannot be posted to (`ACCOUNT_NOT_ENABLED_FOR_POSTING`) and are not billed as connected accounts.
             - On an ads account (`metaads`, `googleads`, ...) the value does not hide the connection: ads accounts are listed whatever their `enabled` value and keep working for ads.
+        metaAdsSyncEnabled:
+          type: boolean
+          description: |
+            Facebook accounts only (absent on every other platform). Whether this Facebook account syncs the Meta ads of the ad accounts it reaches, the way a `metaads` connection does.
+
+            Off by default; set it with `PUT /v1/accounts/{accountId}`. Synced active ads count on the managed ads meter like ads from a Meta Ads connection.
         rateLimitedUntil:
           type: [string, "null"]
           format: date-time
@@ -32203,6 +32209,10 @@ paths:
         - When off, no analytics syncs or DM polling are performed for that account, and no API call is metered for those operations.
         - Publishing and deleting posts are always available regardless of these toggles.
         - Setting `xCapabilities` on a non-X account returns 400.
+
+        ### Meta ads sync
+
+        For Facebook accounts, also accepts `metaAdsSyncEnabled` to sync the Meta ads of the ad accounts the account reaches without a Meta Ads connection. See the field for what turning it on and off does.
       parameters:
         - name: accountId
           in: path
@@ -32240,6 +32250,27 @@ paths:
                         DM sends as `dm_interaction_create` (~$0.015/call), both
                         billed pass-through. DM sends fire only on user-initiated
                         actions; reads/polling fire only when this flag is true.
+                metaAdsSyncEnabled:
+                  type: boolean
+                  description: |
+                    Facebook only (400 `invalid_field_value` on any other platform). Off by default for every Facebook account.
+
+                    `true` makes this account sync the Meta ads of the ad accounts it reaches, like a `metaads` connection.
+
+                    - The first sync starts at once (14 days, then 90 days of history in the background) and fires `account.ads.initial_sync_completed` for this `accountId` with `platform: metaads`.
+                    - It then refreshes on the Meta Ads schedule.
+                    - Each switch from `false` to `true` runs another initial sync and fires the webhook again. Sending `true` while it is on changes nothing.
+                    - Needs `ads_management` and `ads_read` on the account (403 `reconnect_required` otherwise, with `details.requiredPermissions`).
+                    - Needs ads access (403 `ads_addon_required`) and room in the managed ads allowance (403 `ads_allowance_exceeded`).
+                    - While a `metaads` connection has this account as `parentAccountId`, that connection syncs the ads instead.
+
+                    Synced active ads count on the managed ads meter like ads from a Meta Ads
+                    connection.
+
+                    `false` stops the sync. Ads already synced are kept, never deleted: they
+                    stop updating and stop counting on the meter, and a `metaads` connection
+                    of yours that reaches the same ad account takes them over. Posting, inbox
+                    and comments on the account are not affected.
             example:
               displayName: "Acme Corporation Official"
               xCapabilities:
@@ -32264,6 +32295,9 @@ paths:
                     properties:
                       analytics: { type: boolean }
                       inbox: { type: boolean }
+                  metaAdsSyncEnabled:
+                    type: boolean
+                    description: The resulting setting, returned only when the request body included `metaAdsSyncEnabled`.
               example:
                 message: "Account updated successfully"
                 username: "@acmecorp"
@@ -32271,8 +32305,9 @@ paths:
                 xCapabilities:
                   analytics: true
                   inbox: false
-        '400': { description: Invalid request (e.g. xCapabilities on a non-X account) }
+        '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: '`metaAdsSyncEnabled: true` on a Facebook account without `ads_management` and `ads_read` (`reconnect_required`), without the Ads add-on (`ads_addon_required`) or over the managed ads allowance (`ads_allowance_exceeded`).' }
         '404': { $ref: '#/components/responses/NotFound' }
     patch:
       x-resource-group: "accounts"

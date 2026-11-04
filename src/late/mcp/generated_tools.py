@@ -892,25 +892,48 @@ def register_generated_tools(mcp, _get_client):
         username: str | None = None,
         display_name: str | None = None,
         x_capabilities: dict[str, Any] | None = None,
+        meta_ads_sync_enabled: bool | None = None,
     ) -> str:
         """Update account
 
-        Updates a connected account's display name or username override.
+            Updates a connected account's display name or username override.
 
-        ### X capabilities
+            ### X capabilities
 
-        For X accounts on usage-based billing, also accepts an `xCapabilities` object to toggle background API operations that incur X API pass-through costs.
+            For X accounts on usage-based billing, also accepts an `xCapabilities` object to toggle background API operations that incur X API pass-through costs.
 
-        - Both fields are opt-in (default `false`).
-        - When off, no analytics syncs or DM polling are performed for that account, and no API call is metered for those operations.
-        - Publishing and deleting posts are always available regardless of these toggles.
-        - Setting `xCapabilities` on a non-X account returns 400.
+            - Both fields are opt-in (default `false`).
+            - When off, no analytics syncs or DM polling are performed for that account, and no API call is metered for those operations.
+            - Publishing and deleting posts are always available regardless of these toggles.
+            - Setting `xCapabilities` on a non-X account returns 400.
 
-        Args:
-            account_id: (required)
-            username
-            display_name
-            x_capabilities: X only. Per-account opt-in toggles for background API operations that incur X API pass-through costs. Each call is billed at the X tier rate. Either field can be sent independently; omitted fields are unchanged. Object with keys: analytics (boolean) - Enable periodic analytics reads (impressions, likes, etc.) for this X account. Each X API call is metered as `posts_read` and billed pass-through ...; inbox (boolean) - Enable DM polling and inbox sync for this X account. DM reads are metered as `dm_event_read` (~$0.010/call) and DM sends as `dm_interaction_create` ..."""
+            ### Meta ads sync
+
+            For Facebook accounts, also accepts `metaAdsSyncEnabled` to sync the Meta ads of the ad accounts the account reaches without a Meta Ads connection. See the field for what turning it on and off does.
+
+            Args:
+                account_id: (required)
+                username
+                display_name
+                x_capabilities: X only. Per-account opt-in toggles for background API operations that incur X API pass-through costs. Each call is billed at the X tier rate. Either field can be sent independently; omitted fields are unchanged. Object with keys: analytics (boolean) - Enable periodic analytics reads (impressions, likes, etc.) for this X account. Each X API call is metered as `posts_read` and billed pass-through ...; inbox (boolean) - Enable DM polling and inbox sync for this X account. DM reads are metered as `dm_event_read` (~$0.010/call) and DM sends as `dm_interaction_create` ...
+                meta_ads_sync_enabled: Facebook only (400 `invalid_field_value` on any other platform). Off by default for every Facebook account.
+
+        `true` makes this account sync the Meta ads of the ad accounts it reaches, like a `metaads` connection.
+
+        - The first sync starts at once (14 days, then 90 days of history in the background) and fires `account.ads.initial_sync_completed` for this `accountId` with `platform: metaads`.
+        - It then refreshes on the Meta Ads schedule.
+        - Each switch from `false` to `true` runs another initial sync and fires the webhook again. Sending `true` while it is on changes nothing.
+        - Needs `ads_management` and `ads_read` on the account (403 `reconnect_required` otherwise, with `details.requiredPermissions`).
+        - Needs ads access (403 `ads_addon_required`) and room in the managed ads allowance (403 `ads_allowance_exceeded`).
+        - While a `metaads` connection has this account as `parentAccountId`, that connection syncs the ads instead.
+
+        Synced active ads count on the managed ads meter like ads from a Meta Ads
+        connection.
+
+        `false` stops the sync. Ads already synced are kept, never deleted: they
+        stop updating and stop counting on the meter, and a `metaads` connection
+        of yours that reaches the same ad account takes them over. Posting, inbox
+        and comments on the account are not affected."""
         client = _get_client()
         try:
             response = client.accounts.update_account(
@@ -918,6 +941,7 @@ def register_generated_tools(mcp, _get_client):
                 username=username,
                 display_name=display_name,
                 x_capabilities=x_capabilities,
+                meta_ads_sync_enabled=meta_ads_sync_enabled,
             )
             return _format_response(response)
         except Exception as e:
