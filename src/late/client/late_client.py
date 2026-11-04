@@ -144,7 +144,7 @@ class Zernio(BaseClient):
             base_url: Base URL (default: https://zernio.com/api)
             timeout: Request timeout in seconds
             max_retries: Maximum retries for failed requests
-            publish_timeout: Timeout in seconds for publishNow creates, which
+            publish_timeout: Timeout in seconds for publishNow creates and ad creates, which
                              publish synchronously and can outlast `timeout`
                              (default: 300)
 

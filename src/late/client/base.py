@@ -62,6 +62,16 @@ def _with_request_id(headers: dict[str, str] | None) -> dict[str, str]:
 # default JSON Content-Type.
 _OCTET_STREAM_HEADERS = {"Content-Type": "application/octet-stream"}
 
+_LONG_RUNNING_POST_PATHS = frozenset(
+    {
+        "/v1/ads/boost",
+        "/v1/ads/call",
+        "/v1/ads/create",
+        "/v1/ads/ctwa",
+        "/v1/ads/messaging",
+    }
+)
+
 
 class BaseClient:
     """
@@ -99,9 +109,9 @@ class BaseClient:
             base_url: Base URL for the API (default: https://zernio.com/api)
             timeout: Request timeout in seconds (default: 30)
             max_retries: Maximum retries for failed requests (default: 3)
-            publish_timeout: Timeout in seconds for publishNow creates, which
-                              publish synchronously and can outlast `timeout`
-                              (default: 300)
+            publish_timeout: Timeout in seconds for publishNow creates and ad
+                              creates, which do their work inside the request
+                              and can outlast `timeout` (default: 300)
         """
         if not api_key:
             raise ValueError("API key is required")
@@ -120,9 +130,10 @@ class BaseClient:
             "User-Agent": f"late-python-sdk/{self.SDK_VERSION}",
         }
 
-    def _resolve_timeout(self, data: dict[str, Any] | None) -> float:
+    def _resolve_timeout(self, path: str, data: dict[str, Any] | None) -> float:
         """
-        Pick the request timeout by sniffing publishNow out of the JSON body.
+        Pick the request timeout from the path and, for posts, by sniffing
+        publishNow out of the JSON body.
 
         Sniffing a domain field in the transport layer is a deliberate stopgap.
         It is the only place that covers all three publish callers at once - the
@@ -132,7 +143,9 @@ class BaseClient:
         timeout= on publish-capable operations; that needs a 58-file regen and is
         deliberately out of scope here.
         """
-        return self.publish_timeout if (data or {}).get("publishNow") else self.timeout
+        if path in _LONG_RUNNING_POST_PATHS or (data or {}).get("publishNow"):
+            return max(self.timeout, self.publish_timeout)
+        return self.timeout
 
     @property
     def rate_limit_info(self) -> dict[str, Any]:
@@ -329,7 +342,7 @@ class BaseClient:
                 json=data,
                 params=params,
                 headers=headers,
-                timeout=self._resolve_timeout(data),
+                timeout=self._resolve_timeout(path, data),
             )
 
     def _put(
@@ -515,7 +528,7 @@ class BaseClient:
                 json=data,
                 params=params,
                 headers=headers,
-                timeout=self._resolve_timeout(data),
+                timeout=self._resolve_timeout(path, data),
             )
 
     async def _aput(

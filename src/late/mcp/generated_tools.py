@@ -12,6 +12,8 @@ from typing import Any, Literal
 from fastmcp.exceptions import ToolError
 from mcp.types import ToolAnnotations
 
+from .idempotency import same_arguments_key
+
 
 def _decode_base64(value: str) -> bytes:
     """Decode a base64 tool argument, accepting a data: URL."""
@@ -10733,6 +10735,8 @@ def register_generated_tools(mcp, _get_client):
 
             Platforms: meta, google, tiktok, linkedin, pinterest, x, openai, reddit, microsoft
 
+            Safe to retry: an identical call within 24 hours returns the first result instead of creating a second one, and answers 409 while the first is still running. To create another on purpose, or if that 409 does not clear, change an argument such as the name.
+
             Args:
                 account_id: (required)
                 ad_account_id: (required)
@@ -11280,6 +11284,127 @@ def register_generated_tools(mcp, _get_client):
                 campaign_attribution: Meta ad-set attribution. Required as SKADNETWORK for iOS 14+ app promotion or a SKAdNetwork campaign. Requires AUCTION buying. Standalone Meta ad-set creation is not supported; use this field on /v1/ads/create.
                 promoted_object: Object with keys: pixelId (string) - Pixel ID. - **Meta:** Facebook Pixel ID, required for `goal: conversions`. Requires `customEventType` alongside it: Meta rejects any promoted_object carrying ...; customEventType (string) - The event the campaign/ad group optimises against. **Meta:** a standard event like `PURCHASE`, `LEAD`, `COMPLETE_REGISTRATION`, `ADD_TO_CART`. Uppercased ...; customEventStr (string) - Meta only. Pixel custom-event name to optimise against (Meta's `custom_event_str`), exactly as it appears in Events Manager and your CAPI payloads ...; pageId (string) - Facebook Page ID. Used by `goal: lead_generation`. Auto-filled from the connected Page when omitted.; applicationId (string) - App ID. Required for `goal: app_promotion`.; objectStoreUrl (string) - App Store / Play Store listing URL. Required for `goal: app_promotion`.; customConversionId (string) - Custom Conversion ID, when optimising against one instead of a standard event. Accepted alone by this API, without `pixelId` or `customEventType`. If ...; productCatalogId (string) - Optional catalog ID. If supplied with productSetId, the set must belong to this catalog (checked by Zernio when the Meta login carries catalog_management, by ...; productSetId (string) - Meta product SET ID, for example from GET /v1/ads/catalogs/{catalogId}/product-sets. Creating catalog ads needs only ads_management on the Meta login, not ...; offlineConversionDataSetId (string) - Meta only. Offline event set (dataset) to optimise toward. Post-merger these are datasets: the id is the dataset id (for pixel-backed datasets, the pixel id).; whatsappPhoneNumber (string) - Meta only. WhatsApp number on messaging-destination ad sets."""
         client = _get_client()
+        same_arguments: dict[str, Any] = {
+            "account_id": account_id,
+            "ad_account_id": ad_account_id,
+            "name": name,
+            "campaign_name": campaign_name,
+            "ad_set_name": ad_set_name,
+            "ad_name": ad_name,
+            "tracking": tracking,
+            "goal": goal,
+            "smart_targeting": smart_targeting,
+            "optimization_goal": optimization_goal,
+            "billing_event": billing_event,
+            "buying_type": buying_type,
+            "rf_prediction_id": rf_prediction_id,
+            "promotion": promotion,
+            "creative_features": creative_features,
+            "catalog_format": catalog_format,
+            "multi_advertiser": multi_advertiser,
+            "ai_disclosure": ai_disclosure,
+            "validate_only": validate_only,
+            "budget_amount": budget_amount,
+            "budget_type": budget_type,
+            "status": status,
+            "campaign_status": campaign_status,
+            "ad_set_status": ad_set_status,
+            "ad_status": ad_status,
+            "budget_level": budget_level,
+            "currency": currency,
+            "headline": headline,
+            "long_headline": long_headline,
+            "body": body,
+            "description": description,
+            "bodies": bodies,
+            "headlines": headlines,
+            "descriptions": descriptions,
+            "call_to_action": call_to_action,
+            "link_url": link_url,
+            "lead_gen_form_id": lead_gen_form_id,
+            "image_url": image_url,
+            "images": images,
+            "video": video,
+            "creatives": creatives,
+            "ad_set_id": ad_set_id,
+            "existing_campaign_id": existing_campaign_id,
+            "phone_number": phone_number,
+            "existing_creative_id": existing_creative_id,
+            "business_name": business_name,
+            "board_id": board_id,
+            "organization_id": organization_id,
+            "targeting": targeting,
+            "countries": countries,
+            "country_groups": country_groups,
+            "cities": cities,
+            "regions": regions,
+            "age_min": age_min,
+            "age_max": age_max,
+            "interests": interests,
+            "zips": zips,
+            "metros": metros,
+            "custom_locations": custom_locations,
+            "behaviors": behaviors,
+            "work_positions": work_positions,
+            "work_employers": work_employers,
+            "work_industries": work_industries,
+            "income_tier": income_tier,
+            "languages": languages,
+            "placements": placements,
+            "saved_targeting_id": saved_targeting_id,
+            "raw_targeting": raw_targeting,
+            "special_ad_categories": special_ad_categories,
+            "special_ad_category_country": special_ad_category_country,
+            "regional_regulated_categories": regional_regulated_categories,
+            "regional_regulation_identities": regional_regulation_identities,
+            "end_date": end_date,
+            "start_date": start_date,
+            "page_id": page_id,
+            "instagram_account_id": instagram_account_id,
+            "dynamic_creative": dynamic_creative,
+            "carousel_cards": carousel_cards,
+            "optimize_card_order": optimize_card_order,
+            "default_locale": default_locale,
+            "translations": translations,
+            "placement_assets": placement_assets,
+            "audience_id": audience_id,
+            "campaign_type": campaign_type,
+            "location_targeting_type": location_targeting_type,
+            "asset_group": asset_group,
+            "demand_gen": demand_gen,
+            "keywords": keywords,
+            "negative_keywords": negative_keywords,
+            "campaign_negative_keywords": campaign_negative_keywords,
+            "additional_headlines": additional_headlines,
+            "additional_descriptions": additional_descriptions,
+            "sitelinks": sitelinks,
+            "callouts": callouts,
+            "structured_snippets": structured_snippets,
+            "advantage_audience": advantage_audience,
+            "attribution_spec": attribution_spec,
+            "gender": gender,
+            "bid_strategy": bid_strategy,
+            "bid_amount": bid_amount,
+            "roas_average_floor": roas_average_floor,
+            "portfolio_bid_strategy_id": portfolio_bid_strategy_id,
+            "target_impression_share": target_impression_share,
+            "manual_cpc": manual_cpc,
+            "network_settings": network_settings,
+            "value_rule_set_id": value_rule_set_id,
+            "value_rules_applied": value_rules_applied,
+            "platform_specific_data": platform_specific_data,
+            "dsa_beneficiary": dsa_beneficiary,
+            "dsa_payor": dsa_payor,
+            "brand_identity": brand_identity,
+            "identity_id": identity_id,
+            "identity_type": identity_type,
+            "smart_plus": smart_plus,
+            "user_os": user_os,
+            "user_device": user_device,
+            "is_skadnetwork_attribution": is_skadnetwork_attribution,
+            "campaign_attribution": campaign_attribution,
+            "promoted_object": promoted_object,
+        }
         try:
             response = client.ad_campaigns.create_standalone_ad(
                 account_id=account_id,
@@ -11401,6 +11526,9 @@ def register_generated_tools(mcp, _get_client):
                 is_skadnetwork_attribution=is_skadnetwork_attribution,
                 campaign_attribution=campaign_attribution,
                 promoted_object=promoted_object,
+                idempotency_key=same_arguments_key(
+                    "ad_campaigns_create_standalone_ad", same_arguments
+                ),
             )
             return _format_response(response)
         except Exception as e:
@@ -35416,6 +35544,8 @@ def register_generated_tools(mcp, _get_client):
 
             Platforms: meta
 
+            Safe to retry: an identical call within 24 hours returns the first result instead of creating a second one, and answers 409 while the first is still running. To create another on purpose, or if that 409 does not clear, change an argument such as the name.
+
             Args:
                 creative_features: Meta enhancement settings for single or attached ads, and defaults for creatives[]. An item replaces the entire map, including with an empty object.
                 tracking: Object with keys: pixelId (string) - Meta Pixel ID to attach for offsite-conversion measurement, or the Reddit pixel of the new ad group.; urlTags (list of objects with keys key, value) - Click-URL params. - Meta: stored on the creative as `url_tags` and returned by GET /v1/ads/{adId}/tracking-tags. Dynamic macros ({{ad.id}}, {{campaign.id}}, ...; zernioTag (boolean) - POST /v1/ads/create on Meta and Google only. Opt-in: set `true` and the ad carries `zrn=<platform ad id>` on its landing URL, so orders and events tied to the ...
@@ -35620,6 +35750,86 @@ def register_generated_tools(mcp, _get_client):
 
         Success returns 200 with per-node results; a Meta rejection returns the Meta error."""
         client = _get_client()
+        same_arguments: dict[str, Any] = {
+            "creative_features": creative_features,
+            "tracking": tracking,
+            "account_id": account_id,
+            "ad_account_id": ad_account_id,
+            "name": name,
+            "campaign_name": campaign_name,
+            "ad_set_name": ad_set_name,
+            "platform_post_id": platform_post_id,
+            "existing_post_id": existing_post_id,
+            "object_story_id": object_story_id,
+            "page_id": page_id,
+            "whatsapp_phone_number": whatsapp_phone_number,
+            "headline": headline,
+            "body": body,
+            "description": description,
+            "image_url": image_url,
+            "video": video,
+            "welcome_message": welcome_message,
+            "carousel_cards": carousel_cards,
+            "optimize_card_order": optimize_card_order,
+            "creatives": creatives,
+            "ad_set_id": ad_set_id,
+            "existing_campaign_id": existing_campaign_id,
+            "budget_level": budget_level,
+            "budget_amount": budget_amount,
+            "budget_type": budget_type,
+            "currency": currency,
+            "start_date": start_date,
+            "end_date": end_date,
+            "countries": countries,
+            "cities": cities,
+            "regions": regions,
+            "zips": zips,
+            "metros": metros,
+            "country_groups": country_groups,
+            "custom_locations": custom_locations,
+            "age_min": age_min,
+            "age_max": age_max,
+            "interests": interests,
+            "audience_id": audience_id,
+            "placements": placements,
+            "gender": gender,
+            "languages": languages,
+            "places": places,
+            "neighborhoods": neighborhoods,
+            "excluded_locations": excluded_locations,
+            "behaviors": behaviors,
+            "work_positions": work_positions,
+            "work_employers": work_employers,
+            "work_industries": work_industries,
+            "income_tier": income_tier,
+            "user_os": user_os,
+            "user_device": user_device,
+            "audience_include": audience_include,
+            "audience_exclude": audience_exclude,
+            "saved_targeting_id": saved_targeting_id,
+            "targeting": targeting,
+            "raw_targeting": raw_targeting,
+            "special_ad_categories": special_ad_categories,
+            "special_ad_category_country": special_ad_category_country,
+            "advantage_audience": advantage_audience,
+            "objective": objective,
+            "status": status,
+            "campaign_status": campaign_status,
+            "ad_set_status": ad_set_status,
+            "ad_status": ad_status,
+            "bid_strategy": bid_strategy,
+            "bid_amount": bid_amount,
+            "roas_average_floor": roas_average_floor,
+            "dsa_beneficiary": dsa_beneficiary,
+            "dsa_payor": dsa_payor,
+            "regional_regulated_categories": regional_regulated_categories,
+            "regional_regulation_identities": regional_regulation_identities,
+            "destination": destination,
+            "destinations": destinations,
+            "placement_assets": placement_assets,
+            "workflow_id": workflow_id,
+            "validate_only": validate_only,
+        }
         try:
             response = client.messaging_ads.create_messaging_ad(
                 creative_features=creative_features,
@@ -35700,6 +35910,9 @@ def register_generated_tools(mcp, _get_client):
                 placement_assets=placement_assets,
                 workflow_id=workflow_id,
                 validate_only=validate_only,
+                idempotency_key=same_arguments_key(
+                    "messaging_ads_create_messaging_ad", same_arguments
+                ),
             )
             return _format_response(response)
         except Exception as e:
@@ -35851,6 +36064,8 @@ def register_generated_tools(mcp, _get_client):
             - If the first request is cut off mid-create (for example by a function timeout), ...
 
             Platforms: meta
+
+            Safe to retry: an identical call within 24 hours returns the first result instead of creating a second one, and answers 409 while the first is still running. To create another on purpose, or if that 409 does not clear, change an argument such as the name.
 
             Args:
                 creative_features: Meta enhancement settings for single or attached ads, and defaults for creatives[]. An item replaces the entire map, including with an empty object.
@@ -36041,6 +36256,83 @@ def register_generated_tools(mcp, _get_client):
                 phone_number: E.164 number the CALL_NOW CTA dials (e.g. +34600111222). (required)
                 link_url: Website shown as the creative's link. Required: Meta rejects tel: as link_data.link; the phone number rides only the CTA. (required)"""
         client = _get_client()
+        same_arguments: dict[str, Any] = {
+            "creative_features": creative_features,
+            "tracking": tracking,
+            "account_id": account_id,
+            "ad_account_id": ad_account_id,
+            "name": name,
+            "campaign_name": campaign_name,
+            "ad_set_name": ad_set_name,
+            "platform_post_id": platform_post_id,
+            "existing_post_id": existing_post_id,
+            "object_story_id": object_story_id,
+            "page_id": page_id,
+            "whatsapp_phone_number": whatsapp_phone_number,
+            "headline": headline,
+            "body": body,
+            "description": description,
+            "image_url": image_url,
+            "video": video,
+            "welcome_message": welcome_message,
+            "carousel_cards": carousel_cards,
+            "optimize_card_order": optimize_card_order,
+            "creatives": creatives,
+            "ad_set_id": ad_set_id,
+            "existing_campaign_id": existing_campaign_id,
+            "budget_level": budget_level,
+            "budget_amount": budget_amount,
+            "budget_type": budget_type,
+            "currency": currency,
+            "start_date": start_date,
+            "end_date": end_date,
+            "countries": countries,
+            "cities": cities,
+            "regions": regions,
+            "zips": zips,
+            "metros": metros,
+            "country_groups": country_groups,
+            "custom_locations": custom_locations,
+            "age_min": age_min,
+            "age_max": age_max,
+            "interests": interests,
+            "audience_id": audience_id,
+            "placements": placements,
+            "gender": gender,
+            "languages": languages,
+            "places": places,
+            "neighborhoods": neighborhoods,
+            "excluded_locations": excluded_locations,
+            "behaviors": behaviors,
+            "work_positions": work_positions,
+            "work_employers": work_employers,
+            "work_industries": work_industries,
+            "income_tier": income_tier,
+            "user_os": user_os,
+            "user_device": user_device,
+            "audience_include": audience_include,
+            "audience_exclude": audience_exclude,
+            "saved_targeting_id": saved_targeting_id,
+            "targeting": targeting,
+            "raw_targeting": raw_targeting,
+            "special_ad_categories": special_ad_categories,
+            "special_ad_category_country": special_ad_category_country,
+            "advantage_audience": advantage_audience,
+            "objective": objective,
+            "status": status,
+            "campaign_status": campaign_status,
+            "ad_set_status": ad_set_status,
+            "ad_status": ad_status,
+            "bid_strategy": bid_strategy,
+            "bid_amount": bid_amount,
+            "roas_average_floor": roas_average_floor,
+            "dsa_beneficiary": dsa_beneficiary,
+            "dsa_payor": dsa_payor,
+            "regional_regulated_categories": regional_regulated_categories,
+            "regional_regulation_identities": regional_regulation_identities,
+            "phone_number": phone_number,
+            "link_url": link_url,
+        }
         try:
             response = client.messaging_ads.create_call_ad(
                 creative_features=creative_features,
@@ -36118,6 +36410,9 @@ def register_generated_tools(mcp, _get_client):
                 regional_regulation_identities=regional_regulation_identities,
                 phone_number=phone_number,
                 link_url=link_url,
+                idempotency_key=same_arguments_key(
+                    "messaging_ads_create_call_ad", same_arguments
+                ),
             )
             return _format_response(response)
         except Exception as e:
@@ -36263,6 +36558,8 @@ def register_generated_tools(mcp, _get_client):
             - **Multi-creative**: supply a `creatives[]` array with N entries (each carrying fresh media and copy or an ...
 
             Platforms: meta
+
+            Safe to retry: an identical call within 24 hours returns the first result instead of creating a second one, and answers 409 while the first is still running. To create another on purpose, or if that 409 does not clear, change an argument such as the name.
 
             Args:
                 creative_features: Meta enhancement settings for single or attached ads, and defaults for creatives[]. An item replaces the entire map, including with an empty object.
@@ -36451,6 +36748,81 @@ def register_generated_tools(mcp, _get_client):
 
         When Meta rejects the ad set for a missing verified advertiser, the error carries param regionalRegulationIdentities, details.expectedIdentityKeys (keys the declared categories expect), details.suggestedCategories (markets Meta ties to that subcode) and Meta's metaCode, metaSubcode and fbtraceId."""
         client = _get_client()
+        same_arguments: dict[str, Any] = {
+            "creative_features": creative_features,
+            "tracking": tracking,
+            "account_id": account_id,
+            "ad_account_id": ad_account_id,
+            "name": name,
+            "campaign_name": campaign_name,
+            "ad_set_name": ad_set_name,
+            "platform_post_id": platform_post_id,
+            "existing_post_id": existing_post_id,
+            "object_story_id": object_story_id,
+            "page_id": page_id,
+            "whatsapp_phone_number": whatsapp_phone_number,
+            "headline": headline,
+            "body": body,
+            "description": description,
+            "image_url": image_url,
+            "video": video,
+            "welcome_message": welcome_message,
+            "carousel_cards": carousel_cards,
+            "optimize_card_order": optimize_card_order,
+            "creatives": creatives,
+            "ad_set_id": ad_set_id,
+            "existing_campaign_id": existing_campaign_id,
+            "budget_level": budget_level,
+            "budget_amount": budget_amount,
+            "budget_type": budget_type,
+            "currency": currency,
+            "start_date": start_date,
+            "end_date": end_date,
+            "countries": countries,
+            "cities": cities,
+            "regions": regions,
+            "zips": zips,
+            "metros": metros,
+            "country_groups": country_groups,
+            "custom_locations": custom_locations,
+            "age_min": age_min,
+            "age_max": age_max,
+            "interests": interests,
+            "audience_id": audience_id,
+            "placements": placements,
+            "gender": gender,
+            "languages": languages,
+            "places": places,
+            "neighborhoods": neighborhoods,
+            "excluded_locations": excluded_locations,
+            "behaviors": behaviors,
+            "work_positions": work_positions,
+            "work_employers": work_employers,
+            "work_industries": work_industries,
+            "income_tier": income_tier,
+            "user_os": user_os,
+            "user_device": user_device,
+            "audience_include": audience_include,
+            "audience_exclude": audience_exclude,
+            "saved_targeting_id": saved_targeting_id,
+            "targeting": targeting,
+            "raw_targeting": raw_targeting,
+            "special_ad_categories": special_ad_categories,
+            "special_ad_category_country": special_ad_category_country,
+            "advantage_audience": advantage_audience,
+            "objective": objective,
+            "status": status,
+            "campaign_status": campaign_status,
+            "ad_set_status": ad_set_status,
+            "ad_status": ad_status,
+            "bid_strategy": bid_strategy,
+            "bid_amount": bid_amount,
+            "roas_average_floor": roas_average_floor,
+            "dsa_beneficiary": dsa_beneficiary,
+            "dsa_payor": dsa_payor,
+            "regional_regulated_categories": regional_regulated_categories,
+            "regional_regulation_identities": regional_regulation_identities,
+        }
         try:
             response = client.messaging_ads.create_ctwa_ad(
                 creative_features=creative_features,
@@ -36526,6 +36898,9 @@ def register_generated_tools(mcp, _get_client):
                 dsa_payor=dsa_payor,
                 regional_regulated_categories=regional_regulated_categories,
                 regional_regulation_identities=regional_regulation_identities,
+                idempotency_key=same_arguments_key(
+                    "messaging_ads_create_ctwa_ad", same_arguments
+                ),
             )
             return _format_response(response)
         except Exception as e:

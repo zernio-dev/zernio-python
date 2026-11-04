@@ -24,7 +24,6 @@ Usage:
 from __future__ import annotations
 
 import asyncio
-import hashlib
 import json
 import os
 import re
@@ -43,6 +42,7 @@ from late import Late, MediaType, PostStatus
 from late.client.exceptions import LateAPIError, LateError, LateRateLimitError
 
 from .auth import build_auth_provider
+from .idempotency import same_arguments_key
 from .resources import register_resources
 from .tool_definitions import TOOL_DEFINITIONS
 
@@ -1158,11 +1158,6 @@ _SUPPORT_ERROR_HINTS = {
 }
 
 
-def _support_idempotency_key(body: dict[str, Any]) -> str:
-    # Same arguments -> same paid run: a re-call after a client timeout replays the run instead of billing a second one.
-    return "mcp-support-" + hashlib.sha256(json.dumps(body, sort_keys=True).encode()).hexdigest()[:40]
-
-
 @tool_def("support_ask")
 async def support_ask(
     question: str,
@@ -1191,7 +1186,7 @@ async def support_ask(
     try:
         run = await client.support_assistant.aask_support_question(
             message=body["message"],
-            idempotency_key=_support_idempotency_key(body),
+            idempotency_key=same_arguments_key("support", body),
             thread_id=body["threadId"],
             context=context,
             max_cost_usd=max_cost_usd,
