@@ -42,14 +42,26 @@ class ProfilesResource(_GeneratedProfilesResource, BaseResource[ProfilesListResp
     # Sync methods
     # -------------------------------------------------------------------------
 
-    def list(self) -> ProfilesListResponse:
+    def list(
+        self,
+        *,
+        name: str | None = None,
+        limit: int | None = None,
+        skip: int | None = None,
+    ) -> ProfilesListResponse:
         """
-        List all profiles.
+        List profiles.
+
+        Args:
+            name: Optional exact profile name
+            limit: Page size, up to 1000
+            skip: Offset of the page
 
         Returns:
-            ProfilesListResponse with 'profiles' attribute
+            ProfilesListResponse with 'profiles' and, when paged, 'total', 'skip' and 'limit'
         """
-        data = self._client._get(self._BASE_PATH)
+        params = self._build_params(name=name, limit=limit, skip=skip)
+        data = self._client._get(self._BASE_PATH, params=params or None)
         return ProfilesListResponse.model_validate(data)
 
     def get(self, profile_id: str) -> ProfileGetResponse:
@@ -141,9 +153,16 @@ class ProfilesResource(_GeneratedProfilesResource, BaseResource[ProfilesListResp
     # Async methods
     # -------------------------------------------------------------------------
 
-    async def alist(self) -> ProfilesListResponse:
-        """List all profiles asynchronously."""
-        data = await self._client._aget(self._BASE_PATH)
+    async def alist(
+        self,
+        *,
+        name: str | None = None,
+        limit: int | None = None,
+        skip: int | None = None,
+    ) -> ProfilesListResponse:
+        """List profiles asynchronously."""
+        params = self._build_params(name=name, limit=limit, skip=skip)
+        data = await self._client._aget(self._BASE_PATH, params=params or None)
         return ProfilesListResponse.model_validate(data)
 
     async def aget(self, profile_id: str) -> ProfileGetResponse:

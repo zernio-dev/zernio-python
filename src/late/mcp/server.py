@@ -29,6 +29,7 @@ import json
 import os
 import re
 from contextvars import ContextVar
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import TYPE_CHECKING, Any
 
@@ -55,6 +56,12 @@ _zernio_api_key: ContextVar[str | None] = ContextVar("zernio_api_key", default=N
 _docs_cache: dict[str, tuple[str, datetime]] = {}
 _DOCS_URL = "https://docs.zernio.com/llms-full.txt"
 _CACHE_TTL_HOURS = 24
+
+_ACCOUNT_CANDIDATES_SHOWN = 25
+_ACCOUNTS_PAGE_SIZE = 100
+_ACCOUNTS_MAX_PAGE_SIZE = 500
+_PROFILES_PAGE_SIZE = 100
+_PROFILES_MAX_PAGE_SIZE = 1000
 
 # Always-visible core: the 20 hand-written ergonomic tools (guardrails +
 # LLM-shaped args, preferred over their raw generated twins) plus the generated
@@ -159,8 +166,10 @@ MULTI-ACCOUNT WORKFLOW (agencies, multi-client setups):
 When a user has more than one account on the same platform, you MUST
 disambiguate before posting:
 
-  1. Call accounts_list (or profiles_list then accounts_list with a
-     profile_id filter) to discover account IDs.
+  1. Call accounts_list with a platform, profile_id or search filter to
+     discover account IDs. It returns one page at a time; follow its cursor
+     only when the filters cannot narrow the list further. Workspaces can
+     hold tens of thousands of accounts.
   2. Pass account_id to posts_create / posts_publish_now, or account_ids
      (parallel to platforms) to posts_cross_post.
 
@@ -309,6 +318,29 @@ def _platform_str(value: Any) -> str:
     return str(value).lower()
 
 
+@dataclass(frozen=True)
+class _AccountTarget:
+    field_id: str
+    platform: str
+    username: str = ""
+    displayName: str = ""
+
+
+def _next_cursor(response: Any) -> str | None:
+    return getattr(response.pagination, "nextCursor", None)
+
+
+def _no_account_message(client: Late, platform: str, profile_id: str) -> str:
+    if not profile_id:
+        return f"No {platform} account found. Call accounts_list to see the connected accounts."
+    pool = client.accounts.list(profile_id=profile_id, limit=_ACCOUNTS_PAGE_SIZE).accounts or []
+    available = sorted({_platform_str(a.platform) for a in pool if a.platform})
+    return (
+        f"No {platform} account found in profile {profile_id}. "
+        f"Available platforms: {', '.join(available) or '(none)'}."
+    )
+
+
 def _resolve_account(
     client: Late,
     platform: str,
@@ -318,9 +350,9 @@ def _resolve_account(
     """Resolve a single account for a given platform without silent guessing.
 
     Resolution order:
-      1. account_id  -> verify it exists and matches the requested platform.
-      2. profile_id  -> list accounts in that profile, filter by platform.
-      3. neither     -> list all accounts, filter by platform.
+      1. account_id -> used as given, with no lookup. POST /v1/posts rejects an
+         id the caller cannot reach or one on another platform.
+      2. otherwise  -> list this platform's accounts, scoped to profile_id if set.
 
     Raises ValueError with an LLM-readable message when the selection is
     ambiguous (>= 2 candidates) or empty. This is the load-bearing piece of
@@ -329,49 +361,33 @@ def _resolve_account(
     """
     platform_l = platform.lower()
 
-    # Path 1: explicit account_id. We still cross-check the platform so the
-    # LLM can't accidentally publish a tweet to a LinkedIn account.
     if account_id:
-        accounts = (client.accounts.list().accounts or [])
-        acc = next((a for a in accounts if a.field_id == account_id), None)
-        if not acc:
-            raise ValueError(
-                f"Account {account_id} not found or not accessible with this API key."
-            )
-        if _platform_str(acc.platform) != platform_l:
-            raise ValueError(
-                f"Account {account_id} is a {_platform_str(acc.platform)} "
-                f"account, not {platform_l}."
-            )
-        return acc
+        return _AccountTarget(field_id=account_id, platform=platform_l)
 
-    # Path 2 & 3: list (optionally scoped to a profile) then filter by platform.
-    pool = (
-        client.accounts.list(profile_id=profile_id).accounts
-        if profile_id else client.accounts.list().accounts
-    ) or []
-
-    matching = [
-        a for a in pool
-        if a.platform and _platform_str(a.platform) == platform_l
-    ]
+    response = client.accounts.list(
+        profile_id=profile_id or None,
+        platform=platform_l,
+        limit=_ACCOUNT_CANDIDATES_SHOWN,
+    )
+    matching = response.accounts or []
 
     if not matching:
-        scope = f" in profile {profile_id}" if profile_id else ""
-        available = sorted({_platform_str(a.platform) for a in pool if a.platform})
-        raise ValueError(
-            f"No {platform_l} account found{scope}. "
-            f"Available platforms: {', '.join(available) or '(none)'}."
-        )
+        raise ValueError(_no_account_message(client, platform_l, profile_id))
 
     if len(matching) > 1:
         listing = "\n".join(
             f"  - {a.username or a.displayName or a.field_id} (account_id: {a.field_id})"
             for a in matching
         )
+        truncated = (
+            f"\nThese are only the first {len(matching)}. Call accounts_list with "
+            f"platform={platform_l} and search or profile_id to find the right one."
+            if _next_cursor(response)
+            else ""
+        )
         raise ValueError(
             f"Multiple {platform_l} accounts available. Pass account_id "
-            f"(or profile_id to scope) and retry:\n{listing}"
+            f"(or profile_id to scope) and retry:\n{listing}{truncated}"
         )
 
     return matching[0]
@@ -383,18 +399,40 @@ def _resolve_account(
 
 
 @tool_def("accounts_list")
-def accounts_list() -> str:
+def accounts_list(
+    platform: str = "",
+    profile_id: str = "",
+    search: str = "",
+    limit: int = _ACCOUNTS_PAGE_SIZE,
+    cursor: str = "",
+) -> str:
     client = _get_client()
-    response = client.accounts.list()
+    response = client.accounts.list(
+        profile_id=profile_id or None,
+        platform=platform.lower() or None,
+        search=search.strip() or None,
+        limit=max(1, min(limit, _ACCOUNTS_MAX_PAGE_SIZE)),
+        cursor=cursor or None,
+    )
     accounts = response.accounts or []
 
     if not accounts:
+        if platform or profile_id or search or cursor:
+            return "No accounts match these filters."
         return "No accounts connected. Connect accounts at https://zernio.com"
 
-    lines = [f"Found {len(accounts)} connected account(s):\n"]
+    next_cursor = _next_cursor(response)
+    heading = "Showing" if next_cursor or cursor else "Found"
+    lines = [f"{heading} {len(accounts)} connected account(s):\n"]
     for acc in accounts:
         username = acc.username or acc.displayName or acc.field_id
         lines.append(f"- {_platform_str(acc.platform)}: {username} (ID: {acc.field_id})")
+
+    if next_cursor:
+        lines.append(
+            f'\nMore accounts exist. Narrow with platform, profile_id or search, '
+            f'or call accounts_list again with the same filters and cursor="{next_cursor}".'
+        )
 
     return "\n".join(lines)
 
@@ -408,7 +446,7 @@ def accounts_get(platform: str) -> str:
         # Surface ambiguity / missing-account errors to the LLM so it can
         # call accounts_list and retry with a specific ID. Previously this
         # path silently returned matching[0].
-        return str(e)
+        return f"\u274c {e}"
     return (
         f"Platform: {_platform_str(acc.platform)}\n"
         f"Username: {acc.username or 'N/A'}\n"
@@ -422,21 +460,30 @@ def accounts_get(platform: str) -> str:
 
 
 @tool_def("profiles_list")
-def profiles_list() -> str:
+def profiles_list(name: str = "", limit: int = _PROFILES_PAGE_SIZE, skip: int = 0) -> str:
     client = _get_client()
-    response = client.profiles.list()
+    response = client.profiles.list(
+        name=name or None,
+        limit=max(1, min(limit, _PROFILES_MAX_PAGE_SIZE)),
+        skip=max(0, skip) or None,
+    )
     profiles = response.profiles or []
 
     if not profiles:
         return "No profiles found."
 
-    lines = [f"Found {len(profiles)} profile(s):\n"]
+    total = response.total if response.total is not None else len(profiles)
+    next_skip = max(0, skip) + len(profiles)
+    lines = [f"Found {total} profile(s), showing {len(profiles)}:\n"]
     for profile in profiles:
         default = " (default)" if profile.isDefault else ""
         color = f" [{profile.color}]" if profile.color else ""
         lines.append(f"- {profile.name}{default}{color} (ID: {profile.field_id})")
         if profile.description:
             lines.append(f"  Description: {profile.description}")
+
+    if next_skip < total:
+        lines.append(f"\nMore profiles exist. Call profiles_list again with skip={next_skip}.")
 
     return "\n".join(lines)
 
@@ -671,7 +718,8 @@ def posts_create(
     response = client.posts.create(**params)
     post = response.post
 
-    username = account.username or account.displayName or account.field_id
+    handle = account.username or account.displayName
+    target_label = f"@{handle}" if handle else f"account {account.field_id}"
     media_info = (
         f" with {len(params.get('media_items', []))} media file(s)"
         if params.get("media_items")
@@ -680,12 +728,12 @@ def posts_create(
 
     post_id = post.field_id if post else "N/A"
     if is_draft:
-        return f"📝 Draft saved for {platform} (@{username}){media_info}\nPost ID: {post_id}\nStatus: draft"
+        return f"📝 Draft saved for {platform} ({target_label}){media_info}\nPost ID: {post_id}\nStatus: draft"
     elif publish_now:
-        return f"\u2705 Published to {platform} (@{username}){media_info}\nPost ID: {post_id}"
+        return f"\u2705 Published to {platform} ({target_label}){media_info}\nPost ID: {post_id}"
     else:
         scheduled = params["scheduled_for"].strftime("%Y-%m-%d %H:%M")
-        return f"\u2705 Scheduled for {platform} (@{username}){media_info}\nPost ID: {post_id}\nScheduled: {scheduled}"
+        return f"\u2705 Scheduled for {platform} ({target_label}){media_info}\nPost ID: {post_id}\nScheduled: {scheduled}"
 
 
 @tool_def("posts_publish_now")

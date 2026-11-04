@@ -51,6 +51,11 @@ TAG_TO_RESOURCE: dict[str, str] = {
     "Validate": "validate",
 }
 
+BOUNDED_LISTING_LIMITS = {
+    "listAccounts": "limit if limit is not None or sort is not None or per_profile is not None else 100",
+    "listProfiles": "limit if limit is not None else 100",
+}
+
 # Operations to SKIP (not useful for MCP)
 SKIP_OPERATIONS = {
     # OAuth redirect endpoints
@@ -365,6 +370,22 @@ def _with_nested_fields(description: str, schema: dict[str, Any], spec: dict[str
     return f"{base} {nested}" if base else nested
 
 
+def _with_bounded_limit(operation_id: str, params: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    bounded_limit = BOUNDED_LISTING_LIMITS.get(operation_id)
+    if bounded_limit is None:
+        return params
+    return [
+        {
+            **p,
+            "sdk_value": bounded_limit,
+            "description": f"{p['description']} Omitted, one page of 100 is returned.",
+        }
+        if p["name"] == "limit"
+        else p
+        for p in params
+    ]
+
+
 def extract_parameters(
     operation: dict[str, Any],
     spec: dict[str, Any] | None = None,
@@ -667,7 +688,7 @@ def main() -> int:
                 # Human-readable title for the annotation. First line of the
                 # OpenAPI summary, capped so it stays a short label.
                 "title": summary.split("\n")[0].strip()[:80],
-                "params": extract_parameters(operation, spec),
+                "params": _with_bounded_limit(operation_id, extract_parameters(operation, spec)),
             })
 
     # Generate output file

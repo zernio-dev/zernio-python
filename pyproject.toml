@@ -64,6 +64,7 @@ all = [
 mcp = [
     "fastmcp>=3.1.0",
     "mcp>=1.8.0",
+    "sentry-sdk>=2.43.0",
     "starlette>=0.42.0",
     "uvicorn[standard]>=0.32.0",
 ]

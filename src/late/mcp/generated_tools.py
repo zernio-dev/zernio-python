@@ -799,6 +799,7 @@ def register_generated_tools(mcp, _get_client):
         reconnection. Accepts `true` or `false` in any letter case; any other value returns 400.
                 page: Page number (1-based) for offset paging. Requires limit; omit page, limit and cursor for all accounts.
                 limit: Page size. With page, an offset page; alone or with cursor, a cursor page.
+         Omitted, one page of 100 is returned.
                 cursor: Opaque cursor from a previous response's `pagination.nextCursor`; returns the next page of `limit` accounts (500 when limit is omitted). A cursor we cannot parse returns 400. Cannot be combined with page.
                 profile_ids: Comma-separated profile IDs (up to 50) to preview, together with perProfile. The response then also carries `profileTotals`.
                 per_profile: Return a preview of each profile in profileIds: the newest account of every platform it has, topped up to at least N. Requires profileIds; cannot be combined with page, limit or cursor."""
@@ -819,7 +820,9 @@ def register_generated_tools(mcp, _get_client):
                 include_sandbox=include_sandbox,
                 include_status_counts=include_status_counts,
                 page=page,
-                limit=limit,
+                limit=limit
+                if limit is not None or sort is not None or per_profile is not None
+                else 100,
                 cursor=cursor,
                 profile_ids=profile_ids,
                 per_profile=per_profile,
@@ -39410,7 +39413,7 @@ def register_generated_tools(mcp, _get_client):
             include_over_limit: When true, includes over-limit profiles (marked with isOverLimit: true).
             name: Exact-match filter on the profile name. Useful to recover a profile id after an ambiguous create (timeout followed by a 409 on retry).
             external_id: Exact-match filter on the externalId you set on the profile, to find the profile of one of your tenants without storing its Zernio id. Team members can each own a profile with the same externalId, so the result is a list.
-            limit: Page size. When limit or skip is present, the response includes total and skip (and echoes limit).
+            limit: Page size. When limit or skip is present, the response includes total and skip (and echoes limit). Omitted, one page of 100 is returned.
             skip: Number of profiles to skip, applied after sorting and filtering."""
         client = _get_client()
         try:
@@ -39418,7 +39421,7 @@ def register_generated_tools(mcp, _get_client):
                 include_over_limit=include_over_limit,
                 name=name,
                 external_id=external_id,
-                limit=limit,
+                limit=limit if limit is not None else 100,
                 skip=skip,
             )
             return _format_response(response)

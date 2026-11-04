@@ -31,6 +31,9 @@ API_BASE = (
     or "https://zernio.com/api"
 ).rstrip("/")
 _TIMEOUT = 60.0
+_ACCOUNTS_PAGE_SIZE = 100
+_ACCOUNT_LOOKUP_LIMIT = 25
+_USERNAMES_PAGE_SIZE = 500
 _DAY_NAMES = [
     "Monday",
     "Tuesday",
@@ -71,6 +74,7 @@ class SocialAccount(BaseModel):
 
 class SocialAccountList(BaseModel):
     accounts: list[SocialAccount]
+    next_cursor: str | None = None
 
 
 class PostTarget(BaseModel):
@@ -308,9 +312,34 @@ def _shape_account(account: dict[str, Any]) -> SocialAccount:
     )
 
 
-async def _posting_accounts() -> list[dict[str, Any]]:
-    data = await _api("GET", "/v1/accounts")
-    return [a for a in data.get("accounts", []) if _is_posting_account(a)]
+async def _posting_accounts_page(
+    *,
+    platform: str | None = None,
+    cursor: str | None = None,
+    limit: int = _ACCOUNTS_PAGE_SIZE,
+) -> tuple[list[dict[str, Any]], str | None]:
+    params = {"limit": limit, "platform": platform, "cursor": cursor}
+    data = await _api(
+        "GET",
+        "/v1/accounts",
+        params={key: value for key, value in params.items() if value is not None},
+    )
+    accounts = [a for a in data.get("accounts", []) if _is_posting_account(a)]
+    return accounts, (data.get("pagination") or {}).get("nextCursor")
+
+
+async def _find_posting_account(account_id: str) -> dict[str, Any] | None:
+    data = await _api(
+        "GET", "/v1/accounts", params={"search": account_id, "limit": _ACCOUNT_LOOKUP_LIMIT}
+    )
+    return next(
+        (
+            a
+            for a in data.get("accounts", [])
+            if str(a["_id"]) == account_id and _is_posting_account(a)
+        ),
+        None,
+    )
 
 
 async def _resolve_targets(account_ids: list[str]) -> list[dict[str, str]]:
@@ -319,7 +348,11 @@ async def _resolve_targets(account_ids: list[str]) -> list[dict[str, str]]:
         raise ToolError(
             "account_ids is required. Call list_social_accounts and pass the ids the user chose."
         )
-    by_id = {str(a["_id"]): a for a in await _posting_accounts()}
+    by_id = {}
+    for account_id in dict.fromkeys(account_ids):
+        account = await _find_posting_account(account_id)
+        if account:
+            by_id[account_id] = account
     unknown = [i for i in account_ids if i not in by_id]
     if unknown:
         raise ToolError(
@@ -372,10 +405,21 @@ def _shape_post(post: dict[str, Any], usernames: dict[str, str]) -> Post:
     )
 
 
-async def _usernames() -> dict[str, str]:
+async def _usernames(posts: list[dict[str, Any]]) -> dict[str, str]:
+    has_unpopulated_target = any(
+        isinstance(target.get("accountId"), str)
+        for post in posts
+        for target in post.get("platforms") or []
+    )
+    if not has_unpopulated_target:
+        return {}
+    try:
+        accounts, _ = await _posting_accounts_page(limit=_USERNAMES_PAGE_SIZE)
+    except (ToolError, httpx.HTTPError):
+        return {}
     return {
         str(a["_id"]): a.get("username") or a.get("displayName") or ""
-        for a in await _posting_accounts()
+        for a in accounts
     }
 
 
@@ -525,12 +569,17 @@ async def list_social_accounts(
     platform: str | None = Field(
         default=None, description="Only return accounts on this platform"
     ),
+    cursor: str | None = Field(
+        default=None,
+        description="next_cursor of the previous page. Keep the same platform.",
+    ),
 ) -> ToolResult:
-    accounts = [_shape_account(a) for a in await _posting_accounts()]
-    if platform:
-        accounts = [a for a in accounts if a.platform == platform.lower()]
-    listing = SocialAccountList(accounts=accounts)
-    if not accounts:
+    rows, next_cursor = await _posting_accounts_page(
+        platform=platform.lower() if platform else None, cursor=cursor
+    )
+    accounts = [_shape_account(a) for a in rows]
+    listing = SocialAccountList(accounts=accounts, next_cursor=next_cursor)
+    if not accounts and not next_cursor:
         return _result(
             listing,
             "No connected social accounts match. Accounts are connected at zernio.com.",
@@ -539,8 +588,9 @@ async def list_social_accounts(
         f"- {a.platform} @{a.username or a.display_name or a.id} ({a.status}, id {a.id})"
         for a in accounts
     ]
+    more = f"\nMore accounts exist: pass cursor={next_cursor}." if next_cursor else ""
     return _result(
-        listing, f"{len(accounts)} connected account(s):\n" + "\n".join(lines)
+        listing, f"{len(accounts)} connected account(s):\n" + "\n".join(lines) + more
     )
 
 
@@ -574,7 +624,7 @@ async def list_posts(
     if account_id:
         params["accountId"] = account_id
     data = await _api("GET", "/v1/posts", params=params)
-    usernames = await _usernames()
+    usernames = await _usernames(data.get("posts", []))
     posts = [_shape_post(p, usernames) for p in data.get("posts", [])]
     total = int((data.get("pagination") or {}).get("total") or len(posts))
     listing = PostList(posts=posts, total=total)
@@ -606,7 +656,7 @@ async def list_posts(
 )
 async def get_post(post_id: str = Field(description="Zernio post id")) -> ToolResult:
     data = await _api("GET", f"/v1/posts/{post_id}")
-    post = _shape_post(data["post"], await _usernames())
+    post = _shape_post(data["post"], await _usernames([data["post"]]))
     return _result(PostResult(post=post), _describe_post(post, "Found"))
 
 
@@ -720,7 +770,7 @@ async def schedule_post(
     if title:
         body["title"] = title
     data = await _api("POST", "/v1/posts", json=body)
-    post = _shape_post(data["post"], await _usernames())
+    post = _shape_post(data["post"], await _usernames([data["post"]]))
     return _result(PostResult(post=post), _describe_post(post, "Scheduled"))
 
 
@@ -765,7 +815,7 @@ async def publish_post_now(
     if title:
         body["title"] = title
     data = await _api("POST", "/v1/posts", json=body)
-    post = _shape_post(data["post"], await _usernames())
+    post = _shape_post(data["post"], await _usernames([data["post"]]))
     return _result(PostResult(post=post), _describe_post(post, "Published"))
 
 
@@ -827,7 +877,7 @@ async def update_scheduled_post(
             "Nothing to change: pass content, scheduled_for, media_urls or title."
         )
     data = await _api("PUT", f"/v1/posts/{post_id}", json=body)
-    post = _shape_post(data["post"], await _usernames())
+    post = _shape_post(data["post"], await _usernames([data["post"]]))
     return _result(PostResult(post=post), _describe_post(post, "Updated"))
 
 
@@ -879,7 +929,7 @@ async def retry_failed_post(
     post_id: str = Field(description="Zernio post id of a failed post"),
 ) -> ToolResult:
     data = await _api("POST", f"/v1/posts/{post_id}/retry")
-    post = _shape_post(data["post"], await _usernames())
+    post = _shape_post(data["post"], await _usernames([data["post"]]))
     return _result(PostResult(post=post), _describe_post(post, "Retried"))
 
 

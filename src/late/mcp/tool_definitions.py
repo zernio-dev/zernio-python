@@ -117,12 +117,49 @@ def use_tool_def(tool_name: str) -> Callable[[Callable[..., Any]], Callable[...,
 
 ACCOUNTS_LIST = ToolDef(
     name="accounts_list",
-    summary="List all connected social media accounts.",
-    description="""List all connected social media accounts.
+    summary="List connected social media accounts, one page at a time.",
+    description="""List connected social media accounts, one page at a time.
 
-Returns the platform, username, and account ID for each connected account.
-Use this to find account IDs needed for creating posts.""",
-    params=[],
+Returns the platform, username, and account ID for each account on the page.
+Use this to find account IDs needed for creating posts. In a large workspace
+filter by platform, profile_id or search instead of paging through everything.""",
+    params=[
+        ParamDef(
+            name="platform",
+            type="str",
+            description="Only accounts on this platform (e.g., 'twitter')",
+            required=False,
+            default="",
+        ),
+        ParamDef(
+            name="profile_id",
+            type="str",
+            description="Only accounts in this profile",
+            required=False,
+            default="",
+        ),
+        ParamDef(
+            name="search",
+            type="str",
+            description="Text matched against account ID, username, display name and platform user ID",
+            required=False,
+            default="",
+        ),
+        ParamDef(
+            name="limit",
+            type="int",
+            description="Page size, up to 500",
+            required=False,
+            default=100,
+        ),
+        ParamDef(
+            name="cursor",
+            type="str",
+            description="Cursor returned by the previous page. Keep the same filters",
+            required=False,
+            default="",
+        ),
+    ],
 )
 
 ACCOUNTS_GET = ToolDef(
@@ -147,11 +184,33 @@ Returns username and ID for the first account matching the platform.""",
 
 PROFILES_LIST = ToolDef(
     name="profiles_list",
-    summary="List all profiles.",
-    description="""List all profiles.
+    summary="List profiles, one page at a time.",
+    description="""List profiles, one page at a time.
 
 Profiles group multiple social accounts together for easier management.""",
-    params=[],
+    params=[
+        ParamDef(
+            name="name",
+            type="str",
+            description="Only the profile with exactly this name",
+            required=False,
+            default="",
+        ),
+        ParamDef(
+            name="limit",
+            type="int",
+            description="Page size, up to 1000",
+            required=False,
+            default=100,
+        ),
+        ParamDef(
+            name="skip",
+            type="int",
+            description="How many profiles to skip, for the next page",
+            required=False,
+            default=0,
+        ),
+    ],
 )
 
 PROFILES_GET = ToolDef(

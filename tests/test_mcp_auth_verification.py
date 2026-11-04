@@ -185,3 +185,46 @@ async def test_verification_targets_the_auth_only_endpoint():
 
     assert seen == ["https://zernio.com/api/v1/auth/verify"]
     await client.aclose()
+
+
+async def test_a_fresh_verification_spends_one_upstream_call_and_stores_no_raw_token():
+    calls = 0
+
+    def counting_handler(_request: httpx.Request) -> httpx.Response:
+        nonlocal calls
+        calls += 1
+        return httpx.Response(200)
+
+    client = httpx.AsyncClient(transport=httpx.MockTransport(counting_handler))
+    verifier = ZernioTokenVerifier(client=client)
+    token = "sk-a-key-used-by-many-tool-calls"
+
+    for _ in range(50):
+        assert await verifier.verify_token(token) is not None
+
+    assert calls == 1
+    assert token not in auth._VERIFIED_AT
+    assert list(auth._VERIFIED_AT) == [hashlib.sha256(token.encode()).hexdigest()]
+
+    auth._VERIFIED_AT[auth.token_cache_key(token)] = time.monotonic() - (
+        auth._FRESH_TTL_SECONDS + 1
+    )
+    assert await verifier.verify_token(token) is not None
+    assert calls == 2
+    await client.aclose()
+
+
+@pytest.mark.parametrize(
+    "handler_result",
+    [httpx.Response(500), httpx.Response(503), httpx.ConnectTimeout("slow")],
+)
+async def test_a_5xx_or_timeout_never_answers_as_a_bad_token(handler_result):
+    def handler(_request: httpx.Request) -> httpx.Response:
+        if isinstance(handler_result, Exception):
+            raise handler_result
+        return handler_result
+
+    client = httpx.AsyncClient(transport=httpx.MockTransport(handler))
+    with pytest.raises(AuthenticationError):
+        await ZernioTokenVerifier(client=client).verify_token("unseen-token")
+    await client.aclose()

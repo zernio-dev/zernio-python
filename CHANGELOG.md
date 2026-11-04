@@ -7,7 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Tool call telemetry on the hosted MCP server.** One JSON log line per tool call (tool, latency, outcome, hashed caller), and with `SENTRY_DSN` one Sentry transaction per tool call. `/health` reports the deployed commit.
+
 ### Fixed
+- **The hosted MCP server failed on workspaces with tens of thousands of accounts.** `accounts_list`, `profiles_list`, `_resolve_account` and the ChatGPT surface asked for every account or profile on each call, which the API cannot serialize at that size. They now request one bounded page with server-side filters and hand back a cursor, and a post with an `account_id` no longer lists accounts first: `POST /v1/posts` already rejects an id on another platform or outside the caller's scope.
 - **The ChatGPT MCP server hid Threads accounts.** `_is_posting_account` dropped every platform ending in "ads" to keep ad connections out, and "threads" ends in "ads", so `list_social_accounts` omitted Threads accounts and `validate_post`, `schedule_post` and `publish_post_now` rejected their ids with "Unknown account id". Ad platforms are now an explicit list.
 - **DELETE operations with a request body sent no body.** The generator emitted `_delete(path, params=...)` for every DELETE and dropped the body kwargs, so calls like `remove_campaign_assets(...)` reached the API empty and failed with `invalid_json_body`. DELETE methods now build the payload and send it as JSON (`_delete` / `_adelete` take `data`).
 - **MCP tool parameters that take a list of objects (or an object) did not say which keys go inside.** `updates`, `campaigns` and similar were typed `list[dict[str, Any]]` with no keys, so agents had to guess. The parameter description now lists each key with its type, whether it is required and its description, one level of nested object keys included.

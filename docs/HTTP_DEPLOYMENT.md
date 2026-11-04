@@ -53,6 +53,12 @@ Optional variables:
 - `PORT` (default: 8080, Railway sets this automatically)
 - `MCP_PUBLIC_URL` (default: https://mcp.zernio.com) — the server's canonical public URL, used as the OAuth resource identifier in the discovery metadata. Set it for non-prod deployments (e.g. a Railway preview URL).
 - `MCP_ALLOWED_ORIGINS` — comma-separated hostnames appended to the browser Origin allowlist (DNS-rebinding protection).
+- `SENTRY_DSN` — sends one transaction per tool call (`tools/call <tool>`) and unexpected errors to Sentry. Unset, nothing is sent.
+- `SENTRY_TRACES_SAMPLE_RATE` (default: 1.0) — share of tool calls traced in Sentry.
+
+## Tool call logs
+
+Every tool call on the HTTP server prints one JSON line to stdout, whatever `SENTRY_DSN` says, with `event: "mcp_tool_call"`, `surface`, `tool`, `duration_ms`, `outcome` (`ok`, `rejected`, `cancelled` or `error`), `error_type`, `status_code` and `caller` (the first 12 characters of the SHA-256 of the bearer). Arguments and tokens are never logged. Tools reached through `call_tool` log two lines: the outer `call_tool` and the tool itself.
 
 ## Connecting Clients
 
