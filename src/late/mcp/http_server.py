@@ -15,13 +15,15 @@ the Streamable HTTP endpoint.
 """
 
 import argparse
+import logging
 import os
 import sys
 from contextlib import asynccontextmanager
 
+import anyio
 import uvicorn
 from starlette.applications import Starlette
-from starlette.requests import Request
+from starlette.requests import ClientDisconnect, Request
 from starlette.responses import JSONResponse, PlainTextResponse, RedirectResponse
 from starlette.types import ASGIApp, Receive, Scope, Send
 
@@ -46,6 +48,7 @@ from late.mcp.constants import (
     SERVICE_VERSION,
     TRANSPORT_TYPE,
 )
+from late.mcp.non_blocking_logging import install_non_blocking_logging
 from late.mcp.server import mcp
 from late.mcp.telemetry import (
     ToolTelemetryMiddleware,
@@ -55,6 +58,35 @@ from late.mcp.telemetry import (
 
 mcp.add_middleware(ToolTelemetryMiddleware("mcp"))
 chatgpt_mcp.add_middleware(ToolTelemetryMiddleware("chatgpt"))
+
+_DISCONNECT_EXC_TYPES = (ClientDisconnect, anyio.ClosedResourceError, anyio.BrokenResourceError)
+_EMPTY_STREAM_EXCEPTION_MESSAGE = "Received exception from stream: "
+
+
+def _is_client_disconnect(exc: BaseException | None) -> bool:
+    if exc is None:
+        return False
+    subexceptions = getattr(exc, "exceptions", None)
+    if subexceptions:
+        return all(_is_client_disconnect(sub) for sub in subexceptions)
+    return isinstance(exc, _DISCONNECT_EXC_TYPES)
+
+
+class ClientDisconnectLogFilter(logging.Filter):
+    def filter(self, record: logging.LogRecord) -> bool:
+        exc = record.exc_info[1] if record.exc_info else None
+        if exc is not None:
+            return not _is_client_disconnect(exc)
+        return record.getMessage() != _EMPTY_STREAM_EXCEPTION_MESSAGE
+
+
+_disconnect_filter = ClientDisconnectLogFilter()
+for _logger_name in (
+    "mcp.server.streamable_http",
+    "mcp.server.streamable_http_manager",
+    "mcp.server.lowlevel.server",
+):
+    logging.getLogger(_logger_name).addFilter(_disconnect_filter)
 
 
 @mcp.custom_route(ENDPOINT_ROOT, methods=["GET"])
@@ -362,12 +394,18 @@ def main() -> None:
     print(f"   Streamable HTTP: http://{config.host}:{config.port}{ENDPOINT_MCP}", file=sys.stderr)
     print(f"   Health check:    http://{config.host}:{config.port}{ENDPOINT_HEALTH}", file=sys.stderr)
 
-    uvicorn.run(
-        app,
-        host=config.host,
-        port=config.port,
-        log_level="debug" if config.debug else "info",
+    server = uvicorn.Server(
+        uvicorn.Config(
+            app,
+            host=config.host,
+            port=config.port,
+            log_level="debug" if config.debug else "info",
+        )
     )
+    install_non_blocking_logging()
+    server.run()
+    if not server.started:
+        sys.exit(1)
 
 
 if __name__ == "__main__":
