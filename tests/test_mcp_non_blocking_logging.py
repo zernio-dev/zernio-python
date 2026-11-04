@@ -106,7 +106,9 @@ def test_the_wrapper_keeps_the_level_of_the_handler_it_wraps(isolated_logger) ->
     assert stream.getvalue() == "shown\n"
 
 
-def test_a_handler_that_raises_does_not_stop_later_records(isolated_logger, monkeypatch) -> None:
+def test_a_handler_that_raises_does_not_stop_later_records(
+    isolated_logger, monkeypatch
+) -> None:
     monkeypatch.setattr(logging, "raiseExceptions", False)
     stream = io.StringIO()
 
@@ -129,34 +131,44 @@ def test_a_handler_that_raises_does_not_stop_later_records(isolated_logger, monk
     assert stream.getvalue() == "kept\n"
 
 
-def test_install_wraps_named_and_root_handlers_once() -> None:
+@pytest.fixture
+def restored_logging_handlers():
+    loggers = [logging.getLogger()] + [
+        logger
+        for logger in logging.Logger.manager.loggerDict.values()
+        if isinstance(logger, logging.Logger)
+    ]
+    saved = [(logger, list(logger.handlers)) for logger in loggers]
+    yield
+    for logger, handlers in saved:
+        logger.handlers = handlers
+
+
+def test_install_wraps_named_and_root_handlers_once(restored_logging_handlers) -> None:
     root = logging.getLogger()
     named = logging.getLogger("late.mcp.tests.install")
-    saved_root, saved_named = root.handlers, named.handlers
     root.handlers = [logging.StreamHandler(io.StringIO())]
     named.handlers = [logging.StreamHandler(io.StringIO())]
-    try:
-        pump = LogPump()
-        install_non_blocking_logging(pump)
-        first_pass = named.handlers[0]
-        install_non_blocking_logging(pump)
+    pump = LogPump()
 
-        assert isinstance(root.handlers[0], NonBlockingHandler)
-        assert isinstance(first_pass, NonBlockingHandler)
-        assert named.handlers[0] is first_pass
-    finally:
-        root.handlers, named.handlers = saved_root, saved_named
+    install_non_blocking_logging(pump)
+    first_pass = named.handlers[0]
+    install_non_blocking_logging(pump)
+
+    assert isinstance(root.handlers[0], NonBlockingHandler)
+    assert isinstance(first_pass, NonBlockingHandler)
+    assert named.handlers[0] is first_pass
 
 
-def test_install_gives_an_empty_root_a_non_blocking_handler() -> None:
+def test_install_gives_an_empty_root_a_non_blocking_handler(
+    restored_logging_handlers,
+) -> None:
     root = logging.getLogger()
-    saved = root.handlers
     root.handlers = []
-    try:
-        install_non_blocking_logging(LogPump())
-        assert [type(h) for h in root.handlers] == [NonBlockingHandler]
-    finally:
-        root.handlers = saved
+
+    install_non_blocking_logging(LogPump())
+
+    assert [type(h) for h in root.handlers] == [NonBlockingHandler]
 
 
 def _error_record(
