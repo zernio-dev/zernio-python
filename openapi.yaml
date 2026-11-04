@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.472.0"
+  version: "1.473.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -1272,7 +1272,12 @@ components:
         - runs creates for one Meta ad account one at a time (a parallel request waits up to 60 seconds for its turn);
         - allows at most 30 creates per ad account in any rolling 5 minutes, `validateOnly` included.
 
-        A 429 here means one of the two was hit: wait `Retry-After` seconds and send creates for that ad account sequentially. Other ad accounts are not affected.
+        A 429 here means one of the two was hit. `details.adAccountId` names the ad account and `details.reason` says which:
+
+        - `ad_account_busy`: another create on the ad account was still running after the 60-second wait (`Retry-After: 15`);
+        - `ad_account_write_cap`: the 30 creates in 5 minutes are used up (`Retry-After` counts down to the next free slot).
+
+        Wait `Retry-After` seconds and send creates for that ad account sequentially. Other ad accounts are not affected.
       headers:
         Retry-After:
           description: 'Seconds to wait before retrying a create on this ad account.'
@@ -9353,7 +9358,9 @@ components:
       description: |
         Webhook payload for `automation.alert.opened`, `automation.alert.escalated` and `automation.alert.resolved`: an alert episode of an automation with a lifecycle (an ad rule's `lifecycle`).
 
-        Sent as soon as the check records the change; a resolve that a pause or reactivation causes is sent once it applies. A streak that never opened sends nothing. Alerts closed outside a check (the rule turned off, deleted or its `lifecycle` removed between checks, or the daily cleanup) are not announced.
+        Sent as soon as the check records the change; a resolve that a pause or reactivation causes is sent once it applies. A streak that never opened sends nothing.
+
+        Alerts closed outside a check (the rule turned off, deleted or its `lifecycle` removed between checks, or the daily cleanup) are not announced.
       required: [id, event, automation, accountId, checkId, alert, timestamp]
       properties:
         id:
@@ -65895,6 +65902,7 @@ paths:
       summary: Undo a change an ad rule made
       description: |
         Puts back a pause, a reactivation or a budget change a rule applied, as a new change recorded in the activity feed. The rule's cooldown then covers the object.
+
         It is refused (409 `invalid_resource_state`) when the change was not applied, was already undone, is a copy, or when the object changed since: delivering again after a pause, paused again after a reactivation, or on another budget.
       security:
         - bearerAuth: []
