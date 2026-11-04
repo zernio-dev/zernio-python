@@ -2,12 +2,16 @@ from __future__ import annotations
 
 import io
 import logging
+import signal
+import subprocess
+import sys
 import threading
 import time
 
 import anyio
 import pytest
 from starlette.requests import ClientDisconnect
+from uvicorn.logging import AccessFormatter
 
 from late.mcp.http_server import ClientDisconnectLogFilter
 from late.mcp.non_blocking_logging import (
@@ -75,7 +79,7 @@ def test_records_reach_the_stream_in_order_once_it_recovers(isolated_logger) -> 
 def test_a_full_queue_drops_records_and_reports_how_many(isolated_logger) -> None:
     stream = _BlockedStream()
     target = logging.StreamHandler(stream)
-    pump = LogPump(capacity=3)
+    pump = LogPump(capacity=3, notice_handler=target)
     isolated_logger.addHandler(NonBlockingHandler(target, pump))
 
     isolated_logger.info("first")
@@ -90,6 +94,28 @@ def test_a_full_queue_drops_records_and_reports_how_many(isolated_logger) -> Non
     assert "line 0" in written
     assert "line 9" not in written
     assert "Dropped 7 log records" in written
+
+
+def test_the_drop_notice_survives_a_wrapped_handler_with_a_strict_format(
+    isolated_logger, capsys
+) -> None:
+    stream = _BlockedStream()
+    target = logging.StreamHandler(stream)
+    target.setFormatter(AccessFormatter())
+    notices = io.StringIO()
+    pump = LogPump(capacity=2, notice_handler=logging.StreamHandler(notices))
+    isolated_logger.addHandler(NonBlockingHandler(target, pump))
+
+    for _ in range(6):
+        isolated_logger.info(
+            '%s - "%s %s HTTP/%s" %d', "client", "GET", "/", "1.1", 200
+        )
+        assert stream.write_started.wait(5)
+    stream.unblocked.set()
+
+    assert pump.drain(5)
+    assert "Dropped" in notices.getvalue()
+    assert "Logging error" not in capsys.readouterr().err
 
 
 def test_the_wrapper_keeps_the_level_of_the_handler_it_wraps(isolated_logger) -> None:
@@ -169,6 +195,60 @@ def test_install_gives_an_empty_root_a_non_blocking_handler() -> None:
     install_non_blocking_logging(LogPump())
 
     assert [type(h) for h in root.handlers] == [NonBlockingHandler]
+
+
+_EXIT_ON_SIGTERM_SCRIPT = """
+import logging, os, signal, sys, time
+from late.mcp.non_blocking_logging import LogPump, NonBlockingHandler, exit_after_draining_on_signals
+
+class SlowHandler(logging.StreamHandler):
+    def emit(self, record):
+        time.sleep({write_seconds})
+        super().emit(record)
+
+pump = LogPump()
+exit_after_draining_on_signals(pump)
+logger = logging.getLogger("t")
+logger.setLevel(logging.INFO)
+logger.addHandler(NonBlockingHandler(SlowHandler(sys.stdout), pump))
+for i in range(5):
+    logger.info("line %s", i)
+os.kill(os.getpid(), signal.SIGTERM)
+time.sleep(30)
+print("survived the signal")
+"""
+
+
+def _run_exit_script(
+    write_seconds: float,
+) -> tuple[subprocess.CompletedProcess[str], float]:
+    started = time.perf_counter()
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-c",
+            _EXIT_ON_SIGTERM_SCRIPT.format(write_seconds=write_seconds),
+        ],
+        capture_output=True,
+        text=True,
+        timeout=25,
+    )
+    return result, time.perf_counter() - started
+
+
+def test_sigterm_writes_queued_records_before_the_process_exits() -> None:
+    result, _ = _run_exit_script(write_seconds=0.05)
+
+    assert result.returncode == -signal.SIGTERM
+    assert result.stdout.splitlines() == [f"line {i}" for i in range(5)]
+
+
+def test_sigterm_does_not_wait_forever_on_a_stuck_stream() -> None:
+    result, elapsed = _run_exit_script(write_seconds=120)
+
+    assert result.returncode == -signal.SIGTERM
+    assert "survived" not in result.stdout
+    assert elapsed < 15
 
 
 def _error_record(

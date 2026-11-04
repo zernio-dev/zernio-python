@@ -58,7 +58,7 @@ Optional variables:
 
 ## Logging
 
-Writing to stdout or stderr can block when the platform's log collector falls behind, and a blocked write on the event loop stops every request. The HTTP server therefore writes all logs from a background thread through a bounded queue. If the stream stays blocked the queue fills up, further records are dropped and counted, and a `Dropped N log records` line appears once the stream recovers. Client disconnects are not logged as errors.
+Writing to stdout or stderr can block when the platform's log collector falls behind, and a blocked write on the event loop stops every request. The HTTP server therefore writes all logs from a background thread through a bounded queue. If the stream stays blocked the queue fills up, further records are dropped and counted, and a `Dropped N log records` line appears once the stream recovers. On SIGTERM or SIGINT the server waits up to 2 seconds for queued logs before exiting. Client disconnects are not logged as errors.
 
 ## Tool call logs
 

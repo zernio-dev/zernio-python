@@ -1,18 +1,25 @@
 import atexit
 import logging
 import queue
+import signal
 import sys
 import threading
+from types import FrameType
 
 _LOG_QUEUE_CAPACITY = 10_000
 _DRAIN_ON_EXIT_SECONDS = 2.0
 
 
 class LogPump:
-    def __init__(self, capacity: int = _LOG_QUEUE_CAPACITY) -> None:
+    def __init__(
+        self,
+        capacity: int = _LOG_QUEUE_CAPACITY,
+        notice_handler: logging.Handler | None = None,
+    ) -> None:
         self._queue: queue.Queue[tuple[logging.Handler, logging.LogRecord]] = (
             queue.Queue(capacity)
         )
+        self._notice_handler = notice_handler or logging.StreamHandler(sys.stderr)
         self._dropped = 0
         threading.Thread(
             target=self._write_forever, name="log-pump", daemon=True
@@ -39,16 +46,16 @@ class LogPump:
             target, record = self._queue.get()
             try:
                 target.handle(record)
-                self._report_dropped(target)
+                self._report_dropped()
             except Exception:
                 target.handleError(record)
             finally:
                 self._queue.task_done()
 
-    def _report_dropped(self, target: logging.Handler) -> None:
+    def _report_dropped(self) -> None:
         dropped, self._dropped = self._dropped, 0
         if dropped:
-            target.handle(
+            self._notice_handler.handle(
                 logging.makeLogRecord(
                     {
                         "name": __name__,
@@ -90,3 +97,13 @@ def install_non_blocking_logging(pump: LogPump | None = None) -> LogPump:
             _wrap_handlers(logger, pump)
     atexit.register(pump.drain, _DRAIN_ON_EXIT_SECONDS)
     return pump
+
+
+def exit_after_draining_on_signals(pump: LogPump) -> None:
+    def drain_then_exit(signum: int, _frame: FrameType | None) -> None:
+        pump.drain(_DRAIN_ON_EXIT_SECONDS)
+        signal.signal(signum, signal.SIG_DFL)
+        signal.raise_signal(signum)
+
+    signal.signal(signal.SIGTERM, drain_then_exit)
+    signal.signal(signal.SIGINT, drain_then_exit)

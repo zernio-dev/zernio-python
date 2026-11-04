@@ -48,7 +48,10 @@ from late.mcp.constants import (
     SERVICE_VERSION,
     TRANSPORT_TYPE,
 )
-from late.mcp.non_blocking_logging import install_non_blocking_logging
+from late.mcp.non_blocking_logging import (
+    exit_after_draining_on_signals,
+    install_non_blocking_logging,
+)
 from late.mcp.server import mcp
 from late.mcp.telemetry import (
     ToolTelemetryMiddleware,
@@ -402,7 +405,7 @@ def main() -> None:
             log_level="debug" if config.debug else "info",
         )
     )
-    install_non_blocking_logging()
+    exit_after_draining_on_signals(install_non_blocking_logging())
     server.run()
     if not server.started:
         sys.exit(1)
