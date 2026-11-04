@@ -13276,7 +13276,8 @@ def register_generated_tools(mcp, _get_client):
     def ad_rules_list_ad_rule_activity(
         rule_id: str | None = None,
         account_id: str | None = None,
-        type: Literal["pause", "activate", "adjust_budget", "duplicate"] | None = None,
+        type: Literal["pause", "activate", "adjust_budget", "duplicate", "edit_name"]
+        | None = None,
         from_: str | None = None,
         to: str | None = None,
         limit: int = 50,

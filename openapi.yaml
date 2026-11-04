@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.469.0"
+  version: "1.470.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -9271,13 +9271,15 @@ components:
                 description: What the rule did to the object. Empty on a rule that only notifies.
                 items:
                   type: object
-                  required: [type, status, reason, previousDailyBudget, newDailyBudget]
+                  required: [type, status, reason, previousDailyBudget, newDailyBudget, previousName, newName]
                   properties:
-                    type: { type: string, enum: [pause, activate, adjust_budget, duplicate] }
+                    type: { type: string, enum: [pause, activate, adjust_budget, duplicate, edit_name] }
                     status: { type: string, enum: [done, skipped, failed], description: "Action result.\n\n- `skipped`: the action could not or need not apply (already paused or active, budget at its limit, a budget that is unknown, not daily or set at another level, no live ads, or a permanent refusal from the platform).\n- `failed`: it errored and will be retried on the next run." }
                     reason: { type: [string, "null"], description: "Why the action was skipped or failed: `already_paused`, `already_active`, `at_limit`, `budget_unknown`, `budget_not_daily`, `budget_level_mismatch`, `no_live_ads`, `daily_limit_reached` (held back by the action's `maxChangesPerDay`), `ads_allowance_exceeded` (a reactivation or budget increase for a team past its free live-ads allowance), or the platform's message. Null when done." }
                     previousDailyBudget: { type: [number, "null"], description: "On `adjust_budget`, the daily budget before the change, in the ad account currency. Null otherwise." }
                     newDailyBudget: { type: [number, "null"], description: "On `adjust_budget`, the daily budget after the change. Null when nothing changed." }
+                    previousName: { type: [string, "null"], description: "On `edit_name`, the object's name before the change. Null otherwise." }
+                    newName: { type: [string, "null"], description: "On `edit_name`, the name after the change. Null when nothing changed." }
         timestamp:
           type: string
           format: date-time
@@ -17276,6 +17278,15 @@ components:
             renameSuffix: { type: string, maxLength: 50, description: "Text added to the copy's name." }
             maxChangesPerDay: { type: integer, minimum: 1, maximum: 100, description: 'At most this many objects changed in any 24 hours, across runs. Matches over the limit are skipped with `daily_limit_reached` and tried again later.' }
         - type: object
+          required: [type]
+          description: Exactly one of `add` and `remove`.
+          properties:
+            type: { type: string, enum: [edit_name], description: 'Tag the object by its name. Meta, Google and LinkedIn campaigns and ad sets, and TikTok campaigns, ad groups and ads. An object whose name already has the tag (or lacks it, for `remove`) is skipped with `name_unchanged`.' }
+            add: { type: string, minLength: 1, maxLength: 50, description: 'Text to add, like `[WINNER]`. Compared without case.' }
+            at: { type: string, enum: [start, end], description: 'Where `add` goes. Defaults to `start`.' }
+            remove: { type: string, minLength: 1, maxLength: 50, description: 'Text to take out of the name, every copy of it.' }
+            maxChangesPerDay: { type: integer, minimum: 1, maximum: 100, description: 'At most this many objects changed in any 24 hours, across runs. Matches over the limit are skipped with `daily_limit_reached` and tried again later.' }
+        - type: object
           required: [type, amount]
           properties:
             type: { type: string, enum: [adjust_budget], description: "Set the daily budget to an exact amount, such as a reset every midnight. Same level rules as the percent change." }
@@ -17293,7 +17304,7 @@ components:
       type: array
       minItems: 1
       items: { $ref: '#/components/schemas/AdRuleAction' }
-      description: Each type at most once, and at most one of `pause`, `activate`, `adjust_budget` and `duplicate`.
+      description: Each type at most once, and at most one of `pause`, `activate`, `adjust_budget`, `duplicate` and `edit_name`.
     AdRuleFilters:
       type: array
       maxItems: 10
@@ -17422,11 +17433,13 @@ components:
                 required: [objectId, type, status]
                 properties:
                   objectId: { type: string }
-                  type: { type: string, enum: [pause, activate, adjust_budget, duplicate] }
+                  type: { type: string, enum: [pause, activate, adjust_budget, duplicate, edit_name] }
                   status: { type: string, enum: [done, skipped, failed] }
                   reason: { type: string, description: 'Why it was skipped or failed, for example `already_paused`.' }
                   previousDailyBudget: { type: number }
                   newDailyBudget: { type: number }
+                  previousName: { type: string }
+                  newName: { type: string }
             notification:
               type: object
               description: |
@@ -17441,7 +17454,7 @@ components:
         error: { type: [string, "null"] }
     AdRuleActivityEntry:
       type: object
-      required: [id, ranAt, ruleId, ruleName, platform, accountId, adAccountId, level, objectId, objectName, type, status, reason, previousDailyBudget, newDailyBudget, currency]
+      required: [id, ranAt, ruleId, ruleName, platform, accountId, adAccountId, level, objectId, objectName, type, status, reason, previousDailyBudget, newDailyBudget, previousName, newName, currency]
       properties:
         id: { type: string, description: Stable ID of this entry. }
         ranAt: { type: string, format: date-time }
@@ -17453,11 +17466,13 @@ components:
         level: { type: string, enum: [campaign, adset] }
         objectId: { type: string, description: Platform ID of the campaign or ad set. }
         objectName: { type: [string, "null"], description: Its name when the rule acted. }
-        type: { type: string, enum: [pause, activate, adjust_budget, duplicate] }
+        type: { type: string, enum: [pause, activate, adjust_budget, duplicate, edit_name] }
         status: { type: string, enum: [done, skipped, failed] }
         reason: { type: [string, "null"], description: 'Why it was skipped or failed, for example `already_paused`.' }
         previousDailyBudget: { type: [number, "null"] }
         newDailyBudget: { type: [number, "null"] }
+        previousName: { type: [string, "null"], description: 'The name before an `edit_name`.' }
+        newName: { type: [string, "null"], description: 'The name an applied `edit_name` set.' }
         currency: { type: [string, "null"] }
     AdKeyword:
       type: object
@@ -65700,7 +65715,7 @@ paths:
           schema: { type: string }
         - name: type
           in: query
-          schema: { type: string, enum: [pause, activate, adjust_budget, duplicate] }
+          schema: { type: string, enum: [pause, activate, adjust_budget, duplicate, edit_name] }
         - name: from
           in: query
           description: 'ISO 8601 date-time, inclusive.'
