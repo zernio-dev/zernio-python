@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.486.0"
+  version: "1.491.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -8843,7 +8843,6 @@ components:
             transcriptionCostUSD: { type: number }
             metaCostUSD: { type: number, description: 'WhatsApp channel only. Meta per-minute charge, billed by Meta directly to your WABA. Display only; not billed by Zernio.' }
             telnyxCostUSD: { type: number }
-            recordingSeconds: { type: number, description: 'Seconds of the call that were recorded and billed as recording.' }
             recordingCostUSD: { type: number }
             billableCostUSD: { type: number, description: 'Amount Zernio bills you = telephony leg + recording + transcription (excludes any Meta portion).' }
             totalCostUSD: { type: number, description: 'Full cost incl. any Meta portion you pay directly. Display only.' }
@@ -9499,7 +9498,7 @@ components:
                   required: [metric, window, op, value, actual]
                   properties:
                     metric: { type: string, description: "`spend`, `impressions`, `clicks`, `conversions`, `ctr`, `cpc`, `cpm`, `cpa` or `roas`. New values may be added." }
-                    window: { type: string, description: "`today`, `yesterday`, `last_3d`, `last_7d`, `last_14d` or `last_30d`, in the account's calendar (see `run.today`). New values may be added." }
+                    window: { type: string, description: "`today`, `yesterday`, `last_3d`, `last_7d`, `last_14d`, `last_30d`, `this_month`, `last_month` or a custom range, in the account's calendar (see `run.today`). New values may be added." }
                     op: { type: string, description: "`>`, `>=`, `<`, `<=`, or `top` and `bottom` for a rank condition, whose `actual` is the object's position (1 first)." }
                     value: { type: number, description: The threshold set on the rule. }
                     actual: { type: [number, "null"], description: "The object's value for the metric over the window. Null when it cannot be computed, for example a cost per action with no actions." }
@@ -17438,7 +17437,7 @@ components:
         metric:
           type: string
           anyOf:
-            - enum: [spend, impressions, clicks, conversions, ctr, cpc, cpm, cpa, roas, reach, frequency, daily_budget, budget_used]
+            - enum: [spend, impressions, clicks, conversions, ctr, cpc, cpm, cpa, roas, reach, frequency, daily_budget, budget_used, day_of_month, working_day_of_month]
             - pattern: '^result:[a-z][a-z0-9_]{0,39}$'
           description: |
             `ctr` is a percentage. `spend`, `cpc`, `cpm` and `cpa` are in the ad account currency. `reach` and `frequency` use the platform's de-duplicated reach, so they are accepted on Meta and TikTok only.
@@ -17447,15 +17446,19 @@ components:
 
             Both read campaigns and ad sets with a daily budget of their own. A lifetime budget never matches.
 
+            `day_of_month` and `working_day_of_month` read today's date in the ad account's timezone, the same for every object: `working_day_of_month` `>=` 5 holds from the fifth weekday of the month (Monday to Friday, holidays not counted). They take `window: today`, no `compareTo` and no `top` or `bottom`.
+
             `result:<key>` reads one of your own results (see [Campaign results](/guides/campaign-results)), on campaign rules only: the values you sent for the window, or a formula over them and the platform's numbers. A campaign with no value for it never matches.
           example: 'result:cac_percent'
         window:
           type: string
           anyOf:
-            - enum: [today, yesterday, last_3d, last_7d, last_14d, last_30d]
+            - enum: [today, yesterday, last_3d, last_7d, last_14d, last_30d, this_month, last_month]
             - pattern: '^[0-9]{1,2}_to_[0-9]{1,2}_days_ago$'
           description: |
-            Days in the ad account's own timezone. `last_7d` is the 7 full days before today; only `today` reads the day in progress.
+            Days in the ad account's own timezone. `last_7d` is the 7 full days before today; only `today` and `this_month` read the day in progress.
+
+            `this_month` runs from the 1st through today; `last_month` is the whole previous calendar month.
 
             `<from>_to_<to>_days_ago` is any range of full days, both ends included, such as `8_to_2_days_ago` to skip the 2 most recent days while their conversions still arrive. `from` is at least `to` and at most 90.
           example: last_7d
@@ -17467,7 +17470,9 @@ components:
         compareTo:
           type: string
           description: |
-            Makes the condition relative: `value` becomes a ratio of the metric over `window` to the same metric over this window. `previous_period` is the same number of days just before `window`; any other value is a window, such as `30_to_2_days_ago`.
+            Makes the condition relative: `value` becomes a ratio of the metric over `window` to the same metric over this window, such as `30_to_2_days_ago`.
+
+            `previous_period` is the same number of days just before `window`. For `this_month` it is the same days of last month, and for `last_month` the month before.
 
             Spend, impressions, clicks, conversions and reach are compared per day, so windows of different lengths compare fairly; rates such as `cpc` compare as they are. A comparison window with no value never matches.
           example: previous_period
@@ -17599,6 +17604,25 @@ components:
         confirmChecks: { type: integer, minimum: 1, maximum: 5, description: 'Matching runs in a row before acting. Defaults to 1.' }
         hold: { allOf: [{ $ref: '#/components/schemas/AdRuleConditions' }], description: 'Keeps an open alert open after the conditions stop matching.' }
         critical: { allOf: [{ $ref: '#/components/schemas/AdRuleConditions' }], description: 'Marks an open alert critical.' }
+    AdRuleGroups:
+      type: [array, "null"]
+      minItems: 1
+      maxItems: 20
+      description: |
+        Campaigns judged together, campaign rules only. Each group's numbers and your results are added up across its campaigns, and rates and formulas are computed on the totals: a group's `result:cac_percent` is its total spend over its total revenue.
+
+        The conditions are judged once per group, and a matching group acts on each of its campaigns, each with its own cooldown and daily cap. Paused campaigns count toward a group's totals; only the ones the rule may act on are changed.
+
+        A group with no filters holds every campaign the rule checks: the whole ad account. A campaign in several groups is acted on once per run, by the first matching group. Reach and frequency cannot be added up across campaigns, so a rule with groups cannot use them.
+
+        A campaign with no results sent for the window adds its spend and no results to its group. A result sent as a rate (kind `percent` or `ratio`, no formula) reads as unknown for a group; define it as a formula over counts.
+      items:
+        type: object
+        required: [name, filters]
+        properties:
+          name: { type: string, minLength: 1, maxLength: 60, description: 'Unique in the rule, ignoring case.' }
+          filters: { $ref: '#/components/schemas/AdRuleFilters' }
+      example: [{ name: MBA, filters: [{ field: name, op: contains, value: MBA }] }, { name: Account total, filters: [] }]
     AdRuleFilters:
       type: array
       maxItems: 10
@@ -17664,7 +17688,7 @@ components:
             to: { type: string, pattern: '^([01][0-9]|2[0-3]):[0-5][0-9]$', example: '06:00' }
     AdRule:
       type: object
-      required: [id, name, accountId, platform, adAccountId, level, campaignIds, filters, lifecycle, conditions, actions, schedule, cooldownMinutes, enabled, lastRunAt, nextRunAt, createdAt, updatedAt]
+      required: [id, name, accountId, platform, adAccountId, level, campaignIds, filters, groups, lifecycle, conditions, actions, schedule, cooldownMinutes, enabled, lastRunAt, nextRunAt, createdAt, updatedAt]
       properties:
         id: { type: string }
         name: { type: string }
@@ -17674,6 +17698,7 @@ components:
         level: { $ref: '#/components/schemas/AdRuleLevel' }
         campaignIds: { type: [array, "null"], items: { type: string }, description: Platform campaign IDs the rule is limited to. Null checks the whole ad account. }
         filters: { $ref: '#/components/schemas/AdRuleFilters' }
+        groups: { $ref: '#/components/schemas/AdRuleGroups' }
         lifecycle: { oneOf: [{ $ref: '#/components/schemas/AdRuleLifecycle' }, { type: 'null' }], description: 'Null when every matching run acts and notifies.' }
         conditions: { $ref: '#/components/schemas/AdRuleConditions' }
         actions: { $ref: '#/components/schemas/AdRuleActions' }
@@ -17692,6 +17717,7 @@ components:
         name: { type: string }
         campaignId: { type: [string, "null"] }
         matched: { type: boolean, description: True when every condition holds. }
+        group: { type: string, description: "For a rule with groups: the group this campaign was judged in. `matched` and `conditions` are the group's." }
         conditions:
           type: array
           items:
@@ -17716,6 +17742,17 @@ components:
           type: array
           description: Every delivering campaign or ad set in scope (for an `activate` rule, the rule-paused ones it may reactivate).
           items: { $ref: '#/components/schemas/AdRuleObjectEvaluation' }
+        groups:
+          type: [array, "null"]
+          description: Each group's totals, for a rule with groups. Null otherwise.
+          items:
+            type: object
+            required: [name, matched, conditions, campaignIds]
+            properties:
+              name: { type: string }
+              matched: { type: boolean }
+              conditions: { type: array, items: { type: object }, description: "Like an object's conditions, read on the group's totals." }
+              campaignIds: { type: array, items: { type: string }, description: 'Every campaign counted in the group, paused ones included.' }
     AdRuleRun:
       type: object
       required: [id, ranAt, outcome, objectsEvaluated, actedObjectIds, evaluation, error]
@@ -53507,7 +53544,6 @@ paths:
                           properties:
                             metaCostUSD: { type: number, description: 'Meta per-minute charge, billed by Meta directly to your WABA. Display only; not billed by Zernio.' }
                             telnyxCostUSD: { type: number }
-                            recordingSeconds: { type: number, description: 'Seconds of the call that were recorded and billed as recording.' }
                             recordingCostUSD: { type: number }
                             billableCostUSD: { type: number, description: 'Amount Zernio bills you = Telnyx leg + recording (excludes Meta).' }
                             totalCostUSD: { type: number, description: 'Full cost incl. the Meta portion you pay directly. Display only.' }
@@ -66479,6 +66515,7 @@ paths:
                   items: { type: string }
                   description: Only check these platform campaign IDs (or their ad sets). Leave out to check the whole ad account.
                 filters: { $ref: '#/components/schemas/AdRuleFilters' }
+                groups: { $ref: '#/components/schemas/AdRuleGroups' }
                 lifecycle: { $ref: '#/components/schemas/AdRuleLifecycle' }
                 conditions: { $ref: '#/components/schemas/AdRuleConditions' }
                 actions: { $ref: '#/components/schemas/AdRuleActions' }
@@ -66746,6 +66783,7 @@ paths:
                   maxItems: 100
                   items: { type: string }
                 filters: { $ref: '#/components/schemas/AdRuleFilters' }
+                groups: { allOf: [{ $ref: '#/components/schemas/AdRuleGroups' }], description: 'Null removes the groups; each campaign is then judged on its own.' }
                 lifecycle: { oneOf: [{ $ref: '#/components/schemas/AdRuleLifecycle' }, { type: 'null' }], description: 'Null removes it; every matching run then acts and notifies again.' }
                 conditions: { $ref: '#/components/schemas/AdRuleConditions' }
                 actions: { $ref: '#/components/schemas/AdRuleActions' }

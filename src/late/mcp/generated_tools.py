@@ -13184,6 +13184,7 @@ def register_generated_tools(mcp, _get_client):
         actions: list[dict[str, Any]] | None,
         campaign_ids: list[str] | None = None,
         filters: list[dict[str, Any]] | None = None,
+        groups: str | None = None,
         lifecycle: dict[str, Any] | None = None,
         schedule: dict[str, Any] | None = None,
         cooldown_minutes: int = 1440,
@@ -13226,6 +13227,7 @@ def register_generated_tools(mcp, _get_client):
             level: (required)
             campaign_ids: Only check these platform campaign IDs (or their ad sets). Leave out to check the whole ad account.
             filters: Each item is an object with keys: field (one of: name, campaign_name, adset_name, goal; required) - The object's own name, its campaign's or ad set's name, or the campaign goal (objective) as the platform reports it.; op (one of: contains, not_contains, equals, not_equals, starts_with; required); value (string, required)
+            groups
             lifecycle: Object with keys: confirmChecks (integer) - Matching runs in a row before acting. Defaults to 1.; hold (object with keys all) - Keeps an open alert open after the conditions stop matching.; critical (object with keys all) - Marks an open alert critical.
             conditions: Object with keys: all (list of objects with keys metric, window, op, value, compareTo, required) (required)
             actions: Each item is an object with keys: type (one of: notify; required) - Send the `ad_rule.triggered` webhook, and the alert to every `send` destination.; send (list of objects with keys accountId, channelId) - Also send a short alert through accounts you connected: what matched, the values and what the rule did. Up to 5 destinations, checked when the rule is saved. ... (required)
@@ -13241,6 +13243,7 @@ def register_generated_tools(mcp, _get_client):
                 level=level,
                 campaign_ids=campaign_ids,
                 filters=filters,
+                groups=groups,
                 lifecycle=lifecycle,
                 conditions=conditions,
                 actions=actions,
@@ -13385,6 +13388,7 @@ def register_generated_tools(mcp, _get_client):
         level: Literal["campaign", "adset", "ad"] | None = None,
         campaign_ids: str | None = None,
         filters: list[dict[str, Any]] | None = None,
+        groups: str | None = None,
         lifecycle: str | None = None,
         conditions: dict[str, Any] | None = None,
         actions: list[dict[str, Any]] | None = None,
@@ -13405,6 +13409,7 @@ def register_generated_tools(mcp, _get_client):
             level
             campaign_ids
             filters: Each item is an object with keys: field (one of: name, campaign_name, adset_name, goal; required) - The object's own name, its campaign's or ad set's name, or the campaign goal (objective) as the platform reports it.; op (one of: contains, not_contains, equals, not_equals, starts_with; required); value (string, required)
+            groups: Null removes the groups; each campaign is then judged on its own.
             lifecycle: Null removes it; every matching run then acts and notifies again.
             conditions: Object with keys: all (list of objects with keys metric, window, op, value, compareTo, required)
             actions: Each item is an object with keys: type (one of: notify; required) - Send the `ad_rule.triggered` webhook, and the alert to every `send` destination.; send (list of objects with keys accountId, channelId) - Also send a short alert through accounts you connected: what matched, the values and what the rule did. Up to 5 destinations, checked when the rule is saved. ...
@@ -13418,6 +13423,7 @@ def register_generated_tools(mcp, _get_client):
                 level=level,
                 campaign_ids=campaign_ids,
                 filters=filters,
+                groups=groups,
                 lifecycle=lifecycle,
                 conditions=conditions,
                 actions=actions,
