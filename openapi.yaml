@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.482.0"
+  version: "1.483.1"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -1605,6 +1605,7 @@ components:
         status: { type: string, enum: [pending, succeeded, failed, expired], description: '`pending` until the card is charged (or 3D Secure is finished) and credited. `expired` means it ended unpaid: cancelled, or 3D Secure left unfinished for 30 minutes. Only `pending` counts toward pendingTopupCents.' }
         createdAt: { type: string, format: date-time }
         succeededAt: { type: [string, "null"], format: date-time }
+        hasInvoice: { type: boolean, description: 'A Stripe invoice exists for this payment (Checkout payments). Every paid payment has a card receipt; see getTopupReceipt.' }
     PayoutBatchItem:
       type: object
       required: [id, participantId, creator, amountCents, feeCents, totalCents, status, failureReason, transferId]
@@ -25974,6 +25975,8 @@ paths:
                 properties:
                   url: { type: string, format: uri }
                   format: { type: string, enum: [pdf, page] }
+                  invoiceUrl: { type: [string, "null"], format: uri, description: 'The invoice PDF; null when the payment made no invoice.' }
+                  receiptUrl: { type: [string, "null"], format: uri, description: "Stripe's card receipt page for the charge." }
                   amountCents: { type: integer, description: 'As in the top-up list.' }
                   feeCents: { type: [integer, "null"], description: 'Card fee paid, as in the top-up list.' }
                   chargedCents: { type: integer, description: 'What the card was charged, the total on the receipt.' }
