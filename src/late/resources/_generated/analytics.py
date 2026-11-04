@@ -198,6 +198,16 @@ class AnalyticsResource:
         )
         return self._client._get("/v1/analytics/tiktok/account-insights", params=params)
 
+    def get_tik_tok_demographics(
+        self, account_id: str, *, breakdown: str | None = None
+    ) -> dict[str, Any]:
+        """Get TikTok follower demographics"""
+        params = self._build_params(
+            account_id=account_id,
+            breakdown=breakdown,
+        )
+        return self._client._get("/v1/analytics/tiktok/demographics", params=params)
+
     def get_you_tube_daily_views(
         self,
         video_id: str,
@@ -924,6 +934,18 @@ class AnalyticsResource:
         )
         return await self._client._aget(
             "/v1/analytics/tiktok/account-insights", params=params
+        )
+
+    async def aget_tik_tok_demographics(
+        self, account_id: str, *, breakdown: str | None = None
+    ) -> dict[str, Any]:
+        """Get TikTok follower demographics (async)"""
+        params = self._build_params(
+            account_id=account_id,
+            breakdown=breakdown,
+        )
+        return await self._client._aget(
+            "/v1/analytics/tiktok/demographics", params=params
         )
 
     async def aget_you_tube_daily_views(

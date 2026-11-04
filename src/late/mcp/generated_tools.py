@@ -14179,19 +14179,23 @@ def register_generated_tools(mcp, _get_client):
 
             ### Why the scope is narrow
 
-            This ACCOUNT-level endpoint intentionally exposes only the four counter metrics below. These account-level figures are not on any public TikTok API, for any account type:
+            This ACCOUNT-level endpoint intentionally exposes only the four counter metrics below. It does not return:
 
             - account-level impressions / reach
             - follower inflow / outflow breakdown
-            - account-level watch time and audience demographics
+            - account-level watch time
 
-            TikTok's Research API doesn't expose them either, and is restricted to non-commercial academic use per TikTok's eligibility policy.
+            Follower age, gender, country and city are on GET /v1/analytics/tiktok/demographics.
 
             ### Per-video metrics
 
             PER-VIDEO is a different story on the Business lane. An account connected through the TikTok for Business app reports these per video on GET /v1/analytics?postId=...:
 
-            - profile views, ...
+            - profile views, website clicks, follows
+            - full-watched rate, watch time
+            - impression sources, viewer types and viewer countries
+
+            They arrive roughly ...
 
             Args:
                 account_id: The Zernio SocialAccount ID for the TikTok account. (required)
@@ -14223,6 +14227,44 @@ def register_generated_tools(mcp, _get_client):
                 since=since,
                 until=until,
                 metric_type=metric_type,
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get TikTok follower demographics",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def analytics_get_tik_tok_demographics(
+        account_id: str, breakdown: str | None = None
+    ) -> str:
+        """Get TikTok follower demographics
+
+        Returns the share of a TikTok account's followers by age, gender, country and city. Without `breakdown` it returns all four.
+
+        - Each value is a share of followers from 0 to 1, and each list is sorted largest first. It is not a follower count.
+        - Age, gender and country lists add up to 1. The city list can add up to less, because TikTok does not place every follower in a listed city.
+        - These are followers of the account, not the viewers of its videos. Viewer countries per video are on GET /v1/analytics?postId=...
+        - TikTok updates this data every 24-48 hours.
+
+        ### Requirements
+
+        - The account needs at least 100 followers (400 `tiktok_insufficient_followers` otherwise).
+        - The account owner must turn on Analytics in the TikTok app and have published at least one video. Until then an account with enough followers gets empty lists.
+        - Requires the user.insights scope, which an account gets by connecting through the TikTok for Business app (412 `tiktok_insights_scope_missing` otherwise). ...
+
+        Args:
+            account_id: The Zernio SocialAccount ID for the TikTok account. (required)
+            breakdown: Comma-separated list of demographic dimensions: age, gender, country, city. Defaults to all four."""
+        client = _get_client()
+        try:
+            response = client.analytics.get_tik_tok_demographics(
+                account_id=account_id, breakdown=breakdown
             )
             return _format_response(response)
         except Exception as e:

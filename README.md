@@ -270,6 +270,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `analytics.get_post_timeline()` | Get post analytics timeline |
 | `analytics.get_posting_frequency()` | Get frequency vs engagement |
 | `analytics.get_tik_tok_account_insights()` | Get TikTok account-level insights |
+| `analytics.get_tik_tok_demographics()` | Get TikTok follower demographics |
 | `analytics.get_tracking_window()` | Get a tracking window |
 | `analytics.get_you_tube_channel_insights()` | Get YouTube channel insights |
 | `analytics.get_you_tube_daily_views()` | Get YouTube daily views |
