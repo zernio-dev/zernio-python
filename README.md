@@ -686,6 +686,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `ad_rules.update_ad_rule()` | Update an ad rule |
 | `ad_rules.delete_ad_rule()` | Delete an ad rule |
 | `ad_rules.preview_ad_rule()` | Preview an ad rule |
+| `ad_rules.undo_ad_rule_activity()` | Undo a change an ad rule made |
 
 ### Ad Targeting
 | Method | Description |

@@ -150,6 +150,10 @@ class AdRulesResource:
         )
         return self._client._get("/v1/ads/rules/activity", params=params)
 
+    def undo_ad_rule_activity(self, activity_id: str) -> dict[str, Any]:
+        """Undo a change an ad rule made"""
+        return self._client._post(f"/v1/ads/rules/activity/{activity_id}/undo")
+
     def get_ad_rule(self) -> dict[str, Any]:
         """Get an ad rule"""
         return self._client._get("/v1/ads/rules/{ruleId}")
@@ -273,6 +277,10 @@ class AdRulesResource:
             cursor=cursor,
         )
         return await self._client._aget("/v1/ads/rules/activity", params=params)
+
+    async def aundo_ad_rule_activity(self, activity_id: str) -> dict[str, Any]:
+        """Undo a change an ad rule made (async)"""
+        return await self._client._apost(f"/v1/ads/rules/activity/{activity_id}/undo")
 
     async def aget_ad_rule(self) -> dict[str, Any]:
         """Get an ad rule (async)"""

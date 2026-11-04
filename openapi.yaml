@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.468.0"
+  version: "1.469.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -65735,6 +65735,70 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           description: Ads access required (code `ads_addon_required`). Legacy plans need the Ads add-on; included by default on usage-based plans.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /v1/ads/rules/activity/{activityId}/undo:
+    post:
+      x-resource-group: ads
+      operationId: undoAdRuleActivity
+      tags: [Ad Rules]
+      x-platforms: [meta, google, tiktok, linkedin, pinterest, x, reddit]
+      summary: Undo a change an ad rule made
+      description: |
+        Puts back a pause, a reactivation or a budget change a rule applied, as a new change recorded in the activity feed. The rule's cooldown then covers the object.
+        It is refused (409 `invalid_resource_state`) when the change was not applied, was already undone, is a copy, or when the object changed since: delivering again after a pause, paused again after a reactivation, or on another budget.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: activityId
+          in: path
+          required: true
+          description: The `id` of an entry from `GET /v1/ads/rules/activity`.
+          schema: { type: string, pattern: '^[0-9a-f]{24}-[0-9]+$' }
+      responses:
+        '200':
+          description: The undo was recorded and attempted
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [undo]
+                properties:
+                  undo:
+                    type: object
+                    required: [id, status, reason]
+                    properties:
+                      id: { type: string, description: The undo's own activity entry id. }
+                      status: { type: string, enum: [applied, skipped, unknown], description: '`skipped` when the object was already as it was before the change.' }
+                      reason: { type: [string, 'null'] }
+        '202':
+          description: The platform did not answer; `undo.status` is `unknown` and the rule's next run reads back whether it went through.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: Ads access required (code `ads_addon_required`).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '502':
+          description: The platform refused the undo (code `platform_api_error`). The change can be undone again.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: No such activity entry in the profiles the key can reach.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: The change cannot be undone (code `invalid_resource_state`); `error` says why.
           content:
             application/json:
               schema:
