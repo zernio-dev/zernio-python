@@ -56,6 +56,19 @@ BOUNDED_LISTING_LIMITS = {
     "listProfiles": "limit if limit is not None else 100",
 }
 
+SAME_ARGUMENTS_IDEMPOTENT_OPERATIONS = {
+    "createCallAd",
+    "createCtwaAd",
+    "createMessagingAd",
+    "createStandaloneAd",
+}
+
+SAME_ARGUMENTS_IDEMPOTENT_NOTE = (
+    "Safe to retry: an identical call within 24 hours returns the first result instead of "
+    "creating a second one, and answers 409 while the first is still running. To create "
+    "another on purpose, or if that 409 does not clear, change an argument such as the name."
+)
+
 # Operations to SKIP (not useful for MCP)
 SKIP_OPERATIONS = {
     # OAuth redirect endpoints
@@ -552,6 +565,7 @@ def generate_tool_handler(
     title: str,
     description: str = "",
     platforms: list[str] | None = None,
+    idempotency_scope: str | None = None,
 ) -> str:
     """Generate a complete tool handler function."""
     lines = []
@@ -571,6 +585,8 @@ def generate_tool_handler(
 
     # Docstring - strip trailing whitespace from all lines
     doc_lines = build_tool_description_lines(summary, description, platforms or [])
+    if idempotency_scope:
+        doc_lines.extend(["", SAME_ARGUMENTS_IDEMPOTENT_NOTE])
     if params:
         doc_lines.append("")
         doc_lines.append("Args:")
@@ -608,13 +624,15 @@ def generate_tool_handler(
     lines.append("    client = _get_client()")
 
     # Build SDK call - always use keyword args for clarity
-    sdk_args = []
-    for p in params:
-        sdk_name = p.get("sdk_name", p["name"])
-        sdk_args.append(f"{sdk_name}={p.get('sdk_value', p['name'])}")
+    sdk_args = [(p.get("sdk_name", p["name"]), p.get("sdk_value", p["name"])) for p in params]
+    call_args = [f"{name}={value}" for name, value in sdk_args]
+    if idempotency_scope:
+        entries = ", ".join(f'"{name}": {value}' for name, value in sdk_args)
+        lines.append(f"    same_arguments: dict[str, Any] = {{{entries}}}")
+        call_args.append(f'idempotency_key=same_arguments_key("{idempotency_scope}", same_arguments)')
 
     lines.append("    try:")
-    lines.append(f"        response = client.{resource}.{sdk_method}({', '.join(sdk_args)})")
+    lines.append(f"        response = client.{resource}.{sdk_method}({', '.join(call_args)})")
     lines.append("        return _format_response(response)")
     lines.append("    except Exception as e:")
     lines.append("        raise ToolError(f'Error: {e}') from e")
@@ -689,6 +707,7 @@ def main() -> int:
                 # OpenAPI summary, capped so it stays a short label.
                 "title": summary.split("\n")[0].strip()[:80],
                 "params": _with_bounded_limit(operation_id, extract_parameters(operation, spec)),
+                "idempotency_scope": tool_name if operation_id in SAME_ARGUMENTS_IDEMPOTENT_OPERATIONS else None,
             })
 
     # Generate output file
@@ -706,6 +725,8 @@ def main() -> int:
         "",
         "from fastmcp.exceptions import ToolError",
         "from mcp.types import ToolAnnotations",
+        "",
+        "from .idempotency import same_arguments_key",
         "",
         "",
         "def _decode_base64(value: str) -> bytes:",
@@ -803,6 +824,7 @@ def main() -> int:
                 op["title"],
                 op["description"],
                 op["platforms"],
+                op["idempotency_scope"],
             )
             # Indent for being inside register function
             handler_lines = handler.split("\n")
