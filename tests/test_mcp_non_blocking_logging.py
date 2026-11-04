@@ -144,7 +144,8 @@ def restored_logging_handlers():
         logger.handlers = handlers
 
 
-def test_install_wraps_named_and_root_handlers_once(restored_logging_handlers) -> None:
+@pytest.mark.usefixtures("restored_logging_handlers")
+def test_install_wraps_named_and_root_handlers_once() -> None:
     root = logging.getLogger()
     named = logging.getLogger("late.mcp.tests.install")
     root.handlers = [logging.StreamHandler(io.StringIO())]
@@ -160,9 +161,8 @@ def test_install_wraps_named_and_root_handlers_once(restored_logging_handlers) -
     assert named.handlers[0] is first_pass
 
 
-def test_install_gives_an_empty_root_a_non_blocking_handler(
-    restored_logging_handlers,
-) -> None:
+@pytest.mark.usefixtures("restored_logging_handlers")
+def test_install_gives_an_empty_root_a_non_blocking_handler() -> None:
     root = logging.getLogger()
     root.handlers = []
 
