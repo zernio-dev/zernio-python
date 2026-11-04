@@ -964,7 +964,11 @@ def register_generated_tools(mcp, _get_client):
     def accounts_delete_account(account_id: str) -> str:
         """Disconnect account
 
-        Disconnects and removes a connected account. Repeating the call for an account already disconnected returns 404, the account stays in its 1h grace window and the disconnect is not re-run.
+        Disconnects and removes a connected account, and fires account.disconnected with disconnectionType intentional.
+
+        The account is kept for a 1h grace window. Reconnecting the same account within it restores it with the same accountId and its scheduled posts. After that it is deleted permanently.
+
+        Repeating the call for an account already disconnected returns 404, the account stays in its 1h grace window and the disconnect is not re-run.
 
         Args:
             account_id: (required)"""
@@ -37829,7 +37833,7 @@ def register_generated_tools(mcp, _get_client):
                 source: Which collection to read. `zernio` (default) returns posts authored through Zernio. `external` returns posts synced from the platform (existing/historical posts that were published outside Zernio). Combine with `accountId` and paginate via `page`/`limit` to walk the full synced history (we keep up to the last ~12 months per account).
                 status
                 platform
-                profile_id: Filter posts to a specific profile (24-char hex ObjectId). Omit it, or send `all` or an empty value, to list posts across every profile.
+                profile_id: Filter posts to a specific profile (24-char hex ObjectId), including drafts filed under it without platforms. Omit it, or send `all` or an empty value, to list posts across every profile.
                 created_by: Filter posts to those created by a specific team user (24-char hex ObjectId).
                 from_date: Zero-padded YYYY-MM-DD, or a full ISO 8601 datetime. An empty value means no date filter; any other malformed value returns 400. The same name the other date-window filters use (ads, analytics).
                 to_date: Zero-padded YYYY-MM-DD, or a full ISO 8601 datetime. An empty value means no date filter; any other malformed value returns 400. The same name the other date-window filters use (ads, analytics).
@@ -37897,6 +37901,7 @@ def register_generated_tools(mcp, _get_client):
         recycling: dict[str, Any] | None = None,
         queued_from_profile: str | None = None,
         queue_id: str | None = None,
+        profile_id: str | None = None,
     ) -> str:
         """Create post
 
@@ -37971,7 +37976,8 @@ def register_generated_tools(mcp, _get_client):
                 queued_from_profile: Profile ID to schedule via queue. When provided without scheduledFor, the post is auto-assigned to the next available slot. Do not call /v1/queue/next-slot and use that time in scheduledFor, as that bypasses queue locking.
                 queue_id: Specific queue ID to use when scheduling via queue.
         Only used when queuedFromProfile is also provided.
-        If omitted, uses the profile's default queue."""
+        If omitted, uses the profile's default queue.
+                profile_id: Files a draft with no platforms under this profile so it lists under ?profileId= and profile-scoped API keys. Ignored when platforms are set. When promoting the draft via PUT, send platforms, isDraft false and scheduledFor again."""
         client = _get_client()
         try:
             response = client.posts.create_post(
@@ -37995,6 +38001,7 @@ def register_generated_tools(mcp, _get_client):
                 recycling=recycling,
                 queued_from_profile=queued_from_profile,
                 queue_id=queue_id,
+                profile_id=profile_id,
             )
             return _format_response(response)
         except Exception as e:

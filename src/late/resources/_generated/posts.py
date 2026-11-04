@@ -149,6 +149,7 @@ class PostsResource:
         recycling: Any | None = None,
         queued_from_profile: str | None = None,
         queue_id: str | None = None,
+        profile_id: str | None = None,
     ) -> dict[str, Any]:
         """Create post"""
         payload = self._build_payload(
@@ -172,6 +173,7 @@ class PostsResource:
             recycling=recycling,
             queued_from_profile=queued_from_profile,
             queue_id=queue_id,
+            profile_id=profile_id,
         )
         headers: dict[str, str] = {}
         if idempotency_key is not None:
@@ -410,6 +412,7 @@ class PostsResource:
         recycling: Any | None = None,
         queued_from_profile: str | None = None,
         queue_id: str | None = None,
+        profile_id: str | None = None,
     ) -> dict[str, Any]:
         """Create post (async)"""
         payload = self._build_payload(
@@ -433,6 +436,7 @@ class PostsResource:
             recycling=recycling,
             queued_from_profile=queued_from_profile,
             queue_id=queue_id,
+            profile_id=profile_id,
         )
         headers: dict[str, str] = {}
         if idempotency_key is not None:
