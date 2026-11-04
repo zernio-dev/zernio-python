@@ -56,6 +56,10 @@ Optional variables:
 - `SENTRY_DSN` — sends one transaction per tool call (`tools/call <tool>`) and unexpected errors to Sentry. Unset, nothing is sent.
 - `SENTRY_TRACES_SAMPLE_RATE` (default: 1.0) — share of tool calls traced in Sentry.
 
+## Logging
+
+Writing to stdout or stderr can block when the platform's log collector falls behind, and a blocked write on the event loop stops every request. The HTTP server therefore writes all logs from a background thread through a bounded queue. If the stream stays blocked the queue fills up, further records are dropped and counted, and a `Dropped N log records` line appears once the stream recovers. On SIGTERM or SIGINT the server waits up to 2 seconds for queued logs before exiting. Client disconnects are not logged as errors.
+
 ## Tool call logs
 
 Every tool call on the HTTP server prints one JSON line to stdout, whatever `SENTRY_DSN` says, with `event: "mcp_tool_call"`, `surface`, `tool`, `duration_ms`, `outcome` (`ok`, `rejected`, `cancelled` or `error`), `error_type`, `status_code` and `caller` (the first 12 characters of the SHA-256 of the bearer). Arguments and tokens are never logged. Tools reached through `call_tool` log two lines: the outer `call_tool` and the tool itself.
