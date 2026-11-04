@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.476.1"
+  version: "1.480.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -203,6 +203,10 @@ x-documentation:
     - `review.restored` - A review reported by `review.deleted` is returned by Google again. Same payload as `review.new`.
     - `lead.received` - New lead submitted against a Meta Lead Gen (Instant) Form. `lead.fields` is the question-key → answer map; `lead.formId`/`lead.adId` give provenance.
     - `ad.status_changed` - Ad, ad set, or campaign changed status on the ad platform (Meta: `in_process_ad_objects` entry/exit and `with_issues_ad_objects` violations)
+    - `ad.created` - An ad was created through Zernio (`source` is `zernio`) or detected by the sync (`source` is `platform`). Never for history loaded when an account connects, nor for ads older than 7 days
+    - `ad.updated` - An ad was edited through Zernio (API, MCP or dashboard) or outside it. `changes` lists the edited fields. `source` is `zernio` for edits through Zernio, `platform` for edits the sync detected outside Zernio, up to one sync interval late. From the sync, `changes` covers only `name` and `status`. Budget, bid, schedule and targeting edits made outside Zernio are not announced on the ad. Never for history loaded when an account connects
+    - `campaign.created` - A campaign was created through Zernio (`source` is `zernio`) or detected by the sync (`source` is `platform`). Never for history loaded when an account connects, nor for campaigns older than 7 days
+    - `campaign.updated` - A campaign was edited through Zernio (API, MCP or dashboard) or outside it. `changes` lists the edited fields. `source` is `zernio` for edits through Zernio, `platform` for edits the sync detected outside Zernio, up to one sync interval late. From the sync, `changes` covers only `name`, `status` and `schedule` (schedule only on Google, LinkedIn, Pinterest and OpenAI Ads), sent only to the user whose sync saw it. Budget edits made outside Zernio are not announced. Never for history loaded when an account connects
     - `ad.review.approved` - An ad Zernio already tracked passed platform review, or a rejection was overturned (every ad network)
     - `ad.review.rejected` - An ad Zernio already tracked was rejected in platform review (every ad network). `review.reasons` carries the platform's reason when it gives one
     - `ad.delivery_issue` - An ad Zernio already tracked stopped delivering for a platform reason (Meta `WITH_ISSUES`, TikTok account or balance problems). `issue.reasons` carries Meta's messages
@@ -684,7 +688,7 @@ tags:
       - Messages: `message.received`, `message.sent`, `message.edited`, `message.deleted`, `message.delivered`, `message.read`, `message.played`, `message.failed`, `reaction.received`, `referral.received`, `conversation.started`, `conversation.control_changed`
       - Calls: `call.received`, `call.ended`, `call.failed`, `call.permission_request`
       - Engagement and leads: `comment.received`, `review.new`, `review.updated`, `review.deleted`, `review.restored`, `lead.received`
-      - Ads: `ad.status_changed`, `ad.review.approved`, `ad.review.rejected`, `ad.delivery_issue`, `campaign.budget.depleted`, `ad_account.status_changed`, `ad.video.processed`, `ad_rule.triggered`
+      - Ads: `ad.status_changed`, `ad.created`, `ad.updated`, `campaign.created`, `campaign.updated`, `ad.review.approved`, `ad.review.rejected`, `ad.delivery_issue`, `campaign.budget.depleted`, `ad_account.status_changed`, `ad.video.processed`, `ad_rule.triggered`
       - WhatsApp: `whatsapp.template.status_updated`, `whatsapp.template.category_updated`, `whatsapp.account.name_status_updated`, `whatsapp.account.quality_updated`, `whatsapp.account.status_updated`, `whatsapp.account.alert_received`, `whatsapp.contact.identity_changed`, `whatsapp.automatic_event`
       - WhatsApp numbers: `whatsapp.number.activated`, `whatsapp.number.declined`, `whatsapp.number.action_required`, `whatsapp.number.verification_required`, `whatsapp.number.suspended`, `whatsapp.number.reactivated`, `whatsapp.number.released`, `whatsapp.number.kyc_submitted`
       - Telephony: `phone_number.stock_available`, `verification.approved`, `verification.failed`, `sms.registration.action_required`, `sms.registration.status_updated`, `branded_calling.identity.status_updated`, `branded_calling.identity.action_required`, `branded_calling.number.status_updated`, `rcs.agent.status_updated`
@@ -4969,7 +4973,7 @@ components:
           type: array
           items:
             type: string
-            enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.permissions_changed, account.ads.initial_sync_completed, account.ads.sync_failed, account.ads.sync_recovered, analytics.synced, post.tracking_completed, post.authenticity_changed, message.received, conversation.started, conversation.control_changed, call.received, call.ended, call.failed, call.permission_request, message.sent, message.edited, message.deleted, message.delivered, message.read, message.played, message.failed, reaction.received, referral.received, comment.received, review.new, review.updated, review.deleted, review.restored, lead.received, ad.status_changed, ad.review.approved, ad.review.rejected, ad.delivery_issue, campaign.budget.depleted, ad_account.status_changed, ad.video.processed, ad_rule.triggered, automation.check.completed, automation.action.applied, automation.action.failed, automation.action.unknown, automation.alert.opened, automation.alert.escalated, automation.alert.resolved, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.account.quality_updated, whatsapp.account.status_updated, whatsapp.account.alert_received, whatsapp.contact.identity_changed, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, phone_number.stock_available, verification.approved, verification.failed, api.changelog.published, sms.registration.action_required, sms.registration.status_updated, branded_calling.identity.status_updated, branded_calling.identity.action_required, branded_calling.number.status_updated, rcs.agent.status_updated, commerce.product.created, commerce.product.updated, commerce.product.deleted, commerce.order.created, commerce.order.updated, commerce.order.refunded, contact.tag_added, contact.tag_removed, contact.field_changed, sequence.enrolled, sequence.exited, workflow.run.started, workflow.run.completed, workflow.run.failed, support.run.completed, support.run.failed, campaign_submission.received, campaign_submission.flagged, campaign_submission.pending_review, campaign_submission.approved, campaign_submission.rejected, creator_campaign.budget_exhausted, creator_campaign.closed, campaign_payout.payable, campaign_payout.settled, campaign_payout.failed, campaign_participant.joined, campaign_participant.suspended, campaign_participant.removed, account.rate_limited, calendar.event.created, calendar.event.updated, calendar.event.deleted, file.created, file.updated, file.deleted, file.picked, contact.updated, contact.deleted]
+            enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.permissions_changed, account.ads.initial_sync_completed, account.ads.sync_failed, account.ads.sync_recovered, analytics.synced, post.tracking_completed, post.authenticity_changed, message.received, conversation.started, conversation.control_changed, call.received, call.ended, call.failed, call.permission_request, message.sent, message.edited, message.deleted, message.delivered, message.read, message.played, message.failed, reaction.received, referral.received, comment.received, review.new, review.updated, review.deleted, review.restored, lead.received, ad.status_changed, ad.created, ad.updated, campaign.created, campaign.updated, ad.review.approved, ad.review.rejected, ad.delivery_issue, campaign.budget.depleted, ad_account.status_changed, ad.video.processed, ad_rule.triggered, automation.check.completed, automation.action.applied, automation.action.failed, automation.action.unknown, automation.alert.opened, automation.alert.escalated, automation.alert.resolved, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.account.quality_updated, whatsapp.account.status_updated, whatsapp.account.alert_received, whatsapp.contact.identity_changed, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, phone_number.stock_available, verification.approved, verification.failed, api.changelog.published, sms.registration.action_required, sms.registration.status_updated, branded_calling.identity.status_updated, branded_calling.identity.action_required, branded_calling.number.status_updated, rcs.agent.status_updated, commerce.product.created, commerce.product.updated, commerce.product.deleted, commerce.order.created, commerce.order.updated, commerce.order.refunded, contact.tag_added, contact.tag_removed, contact.field_changed, sequence.enrolled, sequence.exited, workflow.run.started, workflow.run.completed, workflow.run.failed, support.run.completed, support.run.failed, campaign_submission.received, campaign_submission.flagged, campaign_submission.pending_review, campaign_submission.approved, campaign_submission.rejected, creator_campaign.budget_exhausted, creator_campaign.closed, campaign_payout.payable, campaign_payout.settled, campaign_payout.failed, campaign_participant.joined, campaign_participant.suspended, campaign_participant.removed, account.rate_limited, calendar.event.created, calendar.event.updated, calendar.event.deleted, file.created, file.updated, file.deleted, file.picked, contact.updated, contact.deleted]
           description: Events subscribed to
         isActive:
           type: boolean
@@ -9019,6 +9023,208 @@ components:
             status: { type: string, enum: [ready, error], description: "`ready`: usable as `video.id` on the create endpoints. `error`: Meta could not process it; upload again." }
             error: { type: [string, "null"], description: "Meta's processing error when status is `error`, otherwise null." }
             thumbnailUrl: { type: [string, "null"], description: "Meta's auto-generated poster when status is `ready` and Meta produced one, otherwise null." }
+        timestamp:
+          type: string
+          format: date-time
+          description: UTC time at which Zernio generated this event.
+    WebhookPayloadAdCreated:
+      type: object
+      description: |
+        Webhook payload for the `ad.created` event. Fires when an ad is created through Zernio (API, MCP or dashboard) or detected by the sync, once per ad, after its campaign and ad set are recorded so `GET /v1/ads/{adId}` finds them.
+
+        `source` is `zernio` for ads created through Zernio and `platform` for ads our sync detected, up to one sync interval later (Meta ads entering review usually arrive within minutes). History loaded when an account connects, and ads created more than 7 days ago, are never announced.
+
+        An ad is announced at most once per 24 hours.
+      required: [id, event, account, adObject, source, timestamp]
+      properties:
+        id:
+          type: string
+          description: 'Stable webhook event ID: the dedupe key, also sent as the X-Zernio-Event-Id header and identical on every retry and redelivery.'
+        profiles: { $ref: '#/components/schemas/WebhookProfiles' }
+        test:
+          type: boolean
+          description: 'Always true when present: only a sample sent by POST /v1/webhooks/test with an event carries it. Real deliveries never do.'
+        event:
+          type: string
+          enum: [ad.created]
+        account: { $ref: '#/components/schemas/WebhookAdsAccount' }
+        adObject:
+          type: object
+          required: [level, platformId, platformAdAccountId, adId, name, campaign, adSet]
+          properties:
+            level: { type: string, enum: [AD], description: Always `AD`. }
+            platformId: { type: string, description: Platform-native ad ID. }
+            platformAdAccountId: { type: string, description: Platform-native ad account ID. }
+            adId: { type: string, description: "Zernio ad ID, usable with GET /v1/ads/{adId}." }
+            name: { type: string }
+            campaign:
+              type: [object, "null"]
+              description: The campaign the ad belongs to, or null when the platform has none.
+              required: [platformCampaignId, name]
+              properties:
+                platformCampaignId: { type: string }
+                name: { type: [string, "null"] }
+            adSet:
+              type: [object, "null"]
+              description: The ad set the ad belongs to, or null when the platform has none.
+              required: [platformAdSetId, name]
+              properties:
+                platformAdSetId: { type: string }
+                name: { type: [string, "null"] }
+        source:
+          type: string
+          enum: [zernio, platform]
+          description: Where the ad was created. `zernio` for ads created through Zernio, `platform` for ads the sync detected.
+        timestamp:
+          type: string
+          format: date-time
+          description: UTC time at which Zernio generated this event.
+    WebhookPayloadAdUpdated:
+      type: object
+      description: |
+        Webhook payload for the `ad.updated` event. Fires when an ad is edited through Zernio (API, MCP or dashboard), after the platform and Zernio both accepted the edit, or when the sync detects an edit made outside Zernio. It is sent once, to the owner of the edited ad.
+
+        `source` is `zernio` for edits through Zernio, `platform` for edits the sync detected outside Zernio, up to one sync interval late. From the sync, `changes` covers only `name` and `status`.
+
+        Budget, bid, schedule and targeting edits made outside Zernio are not announced on the ad. Never for history loaded when an account connects. Tracking tag edits are not announced, and an ad rule that changes an ad arrives as `ad_rule.triggered`.
+
+        `platformId` can change when a LinkedIn creative is replaced, while `adId` stays stable.
+
+        `changes` names the edited fields and never their values: read the ad with `GET /v1/ads/{adId}` for the current state. Ignore values you do not know, new ones can be added.
+
+        Events are not deduplicated: every edit is announced. Use the event `id` to drop repeats.
+      required: [id, event, account, adObject, changes, source, timestamp]
+      properties:
+        id:
+          type: string
+          description: 'Stable webhook event ID: the dedupe key, also sent as the X-Zernio-Event-Id header and identical on every retry and redelivery.'
+        profiles: { $ref: '#/components/schemas/WebhookProfiles' }
+        test:
+          type: boolean
+          description: 'Always true when present: only a sample sent by POST /v1/webhooks/test with an event carries it. Real deliveries never do.'
+        event:
+          type: string
+          enum: [ad.updated]
+        account: { $ref: '#/components/schemas/WebhookAdsAccount' }
+        adObject:
+          type: object
+          required: [level, platformId, platformAdAccountId, adId, name, campaign, adSet]
+          properties:
+            level: { type: string, enum: [AD], description: Always `AD`. }
+            platformId: { type: string, description: Platform-native ad ID. }
+            platformAdAccountId: { type: string, description: Platform-native ad account ID. }
+            adId: { type: string, description: "Zernio ad ID, usable with GET /v1/ads/{adId}." }
+            name: { type: string }
+            campaign:
+              type: [object, "null"]
+              description: The campaign the ad belongs to, or null when the platform has none.
+              required: [platformCampaignId, name]
+              properties:
+                platformCampaignId: { type: string }
+                name: { type: [string, "null"] }
+            adSet:
+              type: [object, "null"]
+              description: The ad set the ad belongs to, or null when the platform has none.
+              required: [platformAdSetId, name]
+              properties:
+                platformAdSetId: { type: string }
+                name: { type: [string, "null"] }
+        changes:
+          type: array
+          description: Fields edited by this request. `status` is the ad's own on/off switch. Ignore values you do not know.
+          items:
+            type: string
+            enum: [name, status, budget, bid, schedule, targeting, creative, settings]
+        source:
+          type: string
+          enum: [zernio, platform]
+          description: Where the edit was made. `zernio` for edits through Zernio, `platform` for edits the sync detected outside Zernio.
+        timestamp:
+          type: string
+          format: date-time
+          description: UTC time at which Zernio generated this event.
+    WebhookPayloadCampaignCreated:
+      type: object
+      description: |
+        Webhook payload for the `campaign.created` event. Fires when a campaign is created through Zernio (API, MCP or dashboard) or detected by the sync, once per campaign, after its row is recorded so `GET /v1/ads/campaigns/{campaignId}` finds it.
+
+        `source` is `zernio` for campaigns created through Zernio and `platform` for campaigns our sync detected, up to one sync interval later. History loaded when an account connects, and campaigns created more than 7 days ago, are never announced.
+
+        A campaign is announced at most once per 24 hours.
+      required: [id, event, account, adObject, source, timestamp]
+      properties:
+        id:
+          type: string
+          description: 'Stable webhook event ID: the dedupe key, also sent as the X-Zernio-Event-Id header and identical on every retry and redelivery.'
+        profiles: { $ref: '#/components/schemas/WebhookProfiles' }
+        test:
+          type: boolean
+          description: 'Always true when present: only a sample sent by POST /v1/webhooks/test with an event carries it. Real deliveries never do.'
+        event:
+          type: string
+          enum: [campaign.created]
+        account: { $ref: '#/components/schemas/WebhookAdsAccount' }
+        adObject:
+          type: object
+          required: [level, platformId, platformAdAccountId, name]
+          properties:
+            level: { type: string, enum: [CAMPAIGN], description: Always `CAMPAIGN`. }
+            platformId: { type: string, description: "Platform-native campaign ID, usable as campaignId with /v1/ads/campaigns/{campaignId}." }
+            platformAdAccountId: { type: string, description: Platform-native ad account ID. }
+            name: { type: [string, "null"] }
+        source:
+          type: string
+          enum: [zernio, platform]
+          description: Where the campaign was created. `zernio` for campaigns created through Zernio, `platform` for campaigns the sync detected.
+        timestamp:
+          type: string
+          format: date-time
+          description: UTC time at which Zernio generated this event.
+    WebhookPayloadCampaignUpdated:
+      type: object
+      description: |
+        Webhook payload for the `campaign.updated` event. Fires when a campaign is edited through Zernio (API, MCP or dashboard), after the platform and Zernio both accepted the edit, once per user who can see the campaign. It also fires when the sync detects an edit made outside Zernio.
+
+        `source` is `zernio` for edits through Zernio, `platform` for edits the sync detected outside Zernio, up to one sync interval late, sent only to the user whose sync saw it.
+
+        From the sync, `changes` covers only `name`, `status` and `schedule` (schedule only on Google, LinkedIn, Pinterest and OpenAI Ads). Budget edits made outside Zernio are not announced. Never for history loaded when an account connects. An ad rule that changes a campaign arrives as `ad_rule.triggered`.
+
+        Ad set edits and Google sub-resource edits (ad schedule, targeting, negative keywords, conversion goals, assets, asset groups, listing group filters) are not announced.
+
+        `changes` names the edited fields and never their values: read the campaign with `GET /v1/ads/campaigns/{campaignId}` for the current state. Ignore values you do not know, new ones can be added.
+
+        Events are not deduplicated: every edit is announced. Use the event `id` to drop repeats.
+      required: [id, event, account, adObject, changes, source, timestamp]
+      properties:
+        id:
+          type: string
+          description: 'Stable webhook event ID: the dedupe key, also sent as the X-Zernio-Event-Id header and identical on every retry and redelivery.'
+        profiles: { $ref: '#/components/schemas/WebhookProfiles' }
+        test:
+          type: boolean
+          description: 'Always true when present: only a sample sent by POST /v1/webhooks/test with an event carries it. Real deliveries never do.'
+        event:
+          type: string
+          enum: [campaign.updated]
+        account: { $ref: '#/components/schemas/WebhookAdsAccount' }
+        adObject:
+          type: object
+          required: [level, platformId, platformAdAccountId, name]
+          properties:
+            level: { type: string, enum: [CAMPAIGN], description: Always `CAMPAIGN`. }
+            platformId: { type: string, description: "Platform-native campaign ID, usable as campaignId with /v1/ads/campaigns/{campaignId}." }
+            platformAdAccountId: { type: string, description: Platform-native ad account ID. }
+            name: { type: [string, "null"] }
+        changes:
+          type: array
+          description: Fields edited by this request. `status` is the campaign's own on/off switch. Ignore values you do not know.
+          items:
+            type: string
+            enum: [name, status, budget, bid, schedule, targeting, creative, settings]
+        source:
+          type: string
+          enum: [zernio, platform]
+          description: Where the edit was made. `zernio` for edits through Zernio, `platform` for edits the sync detected outside Zernio.
         timestamp:
           type: string
           format: date-time
@@ -20279,6 +20485,166 @@ webhooks:
                   status:
                     raw: WITH_ISSUES
                   timestamp: "2026-05-08T04:22:35.821Z"
+      responses:
+        '200':
+          description: Webhook received successfully
+  ad.created:
+    post:
+      operationId: onAdCreated
+      summary: Ad created event
+      description: |
+        Fired when an ad is created through Zernio (`source: "zernio"`) or detected by the sync (`source: "platform"`).
+        Never for history loaded when an account connects, nor for ads older than 7 days. See `WebhookPayloadAdCreated`.
+      tags: [Webhook Events]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebhookPayloadAdCreated'
+            examples:
+              sample:
+                summary: TikTok ad created
+                value:
+                  id: "01J7K3P4N5Q6R7S8T9V0W1X2Z2"
+                  event: ad.created
+                  account:
+                    accountId: "65c8f7e2a1b3c4d5e6f7a8b9"
+                    profileId: "65c8f7e2a1b3c4d5e6f7a800"
+                    platform: tiktokads
+                    username: acme-ads
+                    displayName: Acme Ads
+                  adObject:
+                    level: AD
+                    platformId: "1870423675882786"
+                    platformAdAccountId: "7505325609036365841"
+                    adId: "65c8f7e2a1b3c4d5e6f7a8c1"
+                    name: Spring promo
+                    campaign:
+                      platformCampaignId: "1870423600000001"
+                      name: Spring campaign
+                    adSet:
+                      platformAdSetId: "1870423600000002"
+                      name: Spring audience
+                  source: zernio
+                  timestamp: "2026-10-22T09:12:03.120Z"
+      responses:
+        '200':
+          description: Webhook received successfully
+  ad.updated:
+    post:
+      operationId: onAdUpdated
+      summary: Ad updated event
+      description: |
+        Fired when an ad is edited through Zernio (`source: "zernio"`) or when the sync detects an edit made outside Zernio (`source: "platform"`).
+        `changes` lists the edited fields. See `WebhookPayloadAdUpdated`.
+      tags: [Webhook Events]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebhookPayloadAdUpdated'
+            examples:
+              sample:
+                summary: Ad renamed and creative replaced
+                value:
+                  id: "01J7K3P4N5Q6R7S8T9V0W1X2Z5"
+                  event: ad.updated
+                  account:
+                    accountId: "65c8f7e2a1b3c4d5e6f7a8b9"
+                    profileId: "65c8f7e2a1b3c4d5e6f7a800"
+                    platform: tiktokads
+                    username: acme-ads
+                    displayName: Acme Ads
+                  adObject:
+                    level: AD
+                    platformId: "1870423675882786"
+                    platformAdAccountId: "7505325609036365841"
+                    adId: "65c8f7e2a1b3c4d5e6f7a8c1"
+                    name: Spring promo
+                    campaign:
+                      platformCampaignId: "1870423600000001"
+                      name: Spring campaign
+                    adSet:
+                      platformAdSetId: "1870423600000002"
+                      name: Spring audience
+                  changes: [name, creative]
+                  source: zernio
+                  timestamp: "2026-10-22T09:12:03.120Z"
+      responses:
+        '200':
+          description: Webhook received successfully
+  campaign.created:
+    post:
+      operationId: onCampaignCreated
+      summary: Campaign created event
+      description: |
+        Fired when a campaign is created through Zernio (`source: "zernio"`) or detected by the sync (`source: "platform"`).
+        Never for history loaded when an account connects, nor for campaigns older than 7 days. See `WebhookPayloadCampaignCreated`.
+      tags: [Webhook Events]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebhookPayloadCampaignCreated'
+            examples:
+              sample:
+                summary: TikTok campaign created
+                value:
+                  id: "01J7K3P4N5Q6R7S8T9V0W1X2Z3"
+                  event: campaign.created
+                  account:
+                    accountId: "65c8f7e2a1b3c4d5e6f7a8b9"
+                    profileId: "65c8f7e2a1b3c4d5e6f7a800"
+                    platform: tiktokads
+                    username: acme-ads
+                    displayName: Acme Ads
+                  adObject:
+                    level: CAMPAIGN
+                    platformId: "1870423600000001"
+                    platformAdAccountId: "7505325609036365841"
+                    name: Spring campaign
+                  source: zernio
+                  timestamp: "2026-10-22T09:12:03.120Z"
+      responses:
+        '200':
+          description: Webhook received successfully
+  campaign.updated:
+    post:
+      operationId: onCampaignUpdated
+      summary: Campaign updated event
+      description: |
+        Fired when a campaign is edited through Zernio (`source: "zernio"`) or when the sync detects an edit made outside Zernio (`source: "platform"`).
+        `changes` lists the edited fields. See `WebhookPayloadCampaignUpdated`.
+      tags: [Webhook Events]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebhookPayloadCampaignUpdated'
+            examples:
+              sample:
+                summary: Campaign renamed and budget changed
+                value:
+                  id: "01J7K3P4N5Q6R7S8T9V0W1X2Z4"
+                  event: campaign.updated
+                  account:
+                    accountId: "65c8f7e2a1b3c4d5e6f7a8b9"
+                    profileId: "65c8f7e2a1b3c4d5e6f7a800"
+                    platform: tiktokads
+                    username: acme-ads
+                    displayName: Acme Ads
+                  adObject:
+                    level: CAMPAIGN
+                    platformId: "1870423600000001"
+                    platformAdAccountId: "7505325609036365841"
+                    name: Spring campaign
+                  changes: [name, budget]
+                  source: zernio
+                  timestamp: "2026-10-22T09:12:03.120Z"
       responses:
         '200':
           description: Webhook received successfully
@@ -44280,7 +44646,7 @@ paths:
                   minItems: 1
                   items:
                     type: string
-                    enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.permissions_changed, account.ads.initial_sync_completed, account.ads.sync_failed, account.ads.sync_recovered, analytics.synced, post.tracking_completed, post.authenticity_changed, message.received, conversation.started, conversation.control_changed, call.received, call.ended, call.failed, call.permission_request, message.sent, message.edited, message.deleted, message.delivered, message.read, message.played, message.failed, reaction.received, referral.received, comment.received, review.new, review.updated, review.deleted, review.restored, lead.received, ad.status_changed, ad.review.approved, ad.review.rejected, ad.delivery_issue, campaign.budget.depleted, ad_account.status_changed, ad.video.processed, ad_rule.triggered, automation.check.completed, automation.action.applied, automation.action.failed, automation.action.unknown, automation.alert.opened, automation.alert.escalated, automation.alert.resolved, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.account.quality_updated, whatsapp.account.status_updated, whatsapp.account.alert_received, whatsapp.contact.identity_changed, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, phone_number.stock_available, verification.approved, verification.failed, api.changelog.published, sms.registration.action_required, sms.registration.status_updated, branded_calling.identity.status_updated, branded_calling.identity.action_required, branded_calling.number.status_updated, rcs.agent.status_updated, commerce.product.created, commerce.product.updated, commerce.product.deleted, commerce.order.created, commerce.order.updated, commerce.order.refunded, contact.tag_added, contact.tag_removed, contact.field_changed, sequence.enrolled, sequence.exited, workflow.run.started, workflow.run.completed, workflow.run.failed, support.run.completed, support.run.failed, campaign_submission.received, campaign_submission.flagged, campaign_submission.pending_review, campaign_submission.approved, campaign_submission.rejected, creator_campaign.budget_exhausted, creator_campaign.closed, campaign_payout.payable, campaign_payout.settled, campaign_payout.failed, campaign_participant.joined, campaign_participant.suspended, campaign_participant.removed]
+                    enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.permissions_changed, account.ads.initial_sync_completed, account.ads.sync_failed, account.ads.sync_recovered, analytics.synced, post.tracking_completed, post.authenticity_changed, message.received, conversation.started, conversation.control_changed, call.received, call.ended, call.failed, call.permission_request, message.sent, message.edited, message.deleted, message.delivered, message.read, message.played, message.failed, reaction.received, referral.received, comment.received, review.new, review.updated, review.deleted, review.restored, lead.received, ad.status_changed, ad.created, ad.updated, campaign.created, campaign.updated, ad.review.approved, ad.review.rejected, ad.delivery_issue, campaign.budget.depleted, ad_account.status_changed, ad.video.processed, ad_rule.triggered, automation.check.completed, automation.action.applied, automation.action.failed, automation.action.unknown, automation.alert.opened, automation.alert.escalated, automation.alert.resolved, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.account.quality_updated, whatsapp.account.status_updated, whatsapp.account.alert_received, whatsapp.contact.identity_changed, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, phone_number.stock_available, verification.approved, verification.failed, api.changelog.published, sms.registration.action_required, sms.registration.status_updated, branded_calling.identity.status_updated, branded_calling.identity.action_required, branded_calling.number.status_updated, rcs.agent.status_updated, commerce.product.created, commerce.product.updated, commerce.product.deleted, commerce.order.created, commerce.order.updated, commerce.order.refunded, contact.tag_added, contact.tag_removed, contact.field_changed, sequence.enrolled, sequence.exited, workflow.run.started, workflow.run.completed, workflow.run.failed, support.run.completed, support.run.failed, campaign_submission.received, campaign_submission.flagged, campaign_submission.pending_review, campaign_submission.approved, campaign_submission.rejected, creator_campaign.budget_exhausted, creator_campaign.closed, campaign_payout.payable, campaign_payout.settled, campaign_payout.failed, campaign_participant.joined, campaign_participant.suspended, campaign_participant.removed]
                   description: Events to subscribe to (at least one required)
                 isActive:
                   type: boolean
@@ -44447,7 +44813,7 @@ paths:
                   minItems: 1
                   items:
                     type: string
-                    enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.permissions_changed, account.ads.initial_sync_completed, account.ads.sync_failed, account.ads.sync_recovered, analytics.synced, post.tracking_completed, post.authenticity_changed, message.received, conversation.started, conversation.control_changed, call.received, call.ended, call.failed, call.permission_request, message.sent, message.edited, message.deleted, message.delivered, message.read, message.played, message.failed, reaction.received, referral.received, comment.received, review.new, review.updated, review.deleted, review.restored, lead.received, ad.status_changed, ad.review.approved, ad.review.rejected, ad.delivery_issue, campaign.budget.depleted, ad_account.status_changed, ad.video.processed, ad_rule.triggered, automation.check.completed, automation.action.applied, automation.action.failed, automation.action.unknown, automation.alert.opened, automation.alert.escalated, automation.alert.resolved, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.account.quality_updated, whatsapp.account.status_updated, whatsapp.account.alert_received, whatsapp.contact.identity_changed, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, phone_number.stock_available, verification.approved, verification.failed, api.changelog.published, sms.registration.action_required, sms.registration.status_updated, branded_calling.identity.status_updated, branded_calling.identity.action_required, branded_calling.number.status_updated, rcs.agent.status_updated, commerce.product.created, commerce.product.updated, commerce.product.deleted, commerce.order.created, commerce.order.updated, commerce.order.refunded, contact.tag_added, contact.tag_removed, contact.field_changed, sequence.enrolled, sequence.exited, workflow.run.started, workflow.run.completed, workflow.run.failed, support.run.completed, support.run.failed, campaign_submission.received, campaign_submission.flagged, campaign_submission.pending_review, campaign_submission.approved, campaign_submission.rejected, creator_campaign.budget_exhausted, creator_campaign.closed, campaign_payout.payable, campaign_payout.settled, campaign_payout.failed, campaign_participant.joined, campaign_participant.suspended, campaign_participant.removed]
+                    enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.permissions_changed, account.ads.initial_sync_completed, account.ads.sync_failed, account.ads.sync_recovered, analytics.synced, post.tracking_completed, post.authenticity_changed, message.received, conversation.started, conversation.control_changed, call.received, call.ended, call.failed, call.permission_request, message.sent, message.edited, message.deleted, message.delivered, message.read, message.played, message.failed, reaction.received, referral.received, comment.received, review.new, review.updated, review.deleted, review.restored, lead.received, ad.status_changed, ad.created, ad.updated, campaign.created, campaign.updated, ad.review.approved, ad.review.rejected, ad.delivery_issue, campaign.budget.depleted, ad_account.status_changed, ad.video.processed, ad_rule.triggered, automation.check.completed, automation.action.applied, automation.action.failed, automation.action.unknown, automation.alert.opened, automation.alert.escalated, automation.alert.resolved, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.account.quality_updated, whatsapp.account.status_updated, whatsapp.account.alert_received, whatsapp.contact.identity_changed, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, phone_number.stock_available, verification.approved, verification.failed, api.changelog.published, sms.registration.action_required, sms.registration.status_updated, branded_calling.identity.status_updated, branded_calling.identity.action_required, branded_calling.number.status_updated, rcs.agent.status_updated, commerce.product.created, commerce.product.updated, commerce.product.deleted, commerce.order.created, commerce.order.updated, commerce.order.refunded, contact.tag_added, contact.tag_removed, contact.field_changed, sequence.enrolled, sequence.exited, workflow.run.started, workflow.run.completed, workflow.run.failed, support.run.completed, support.run.failed, campaign_submission.received, campaign_submission.flagged, campaign_submission.pending_review, campaign_submission.approved, campaign_submission.rejected, creator_campaign.budget_exhausted, creator_campaign.closed, campaign_payout.payable, campaign_payout.settled, campaign_payout.failed, campaign_participant.joined, campaign_participant.suspended, campaign_participant.removed]
                   description: Events to subscribe to. Must contain at least one event if provided.
                 isActive:
                   type: boolean
@@ -44857,6 +45223,10 @@ paths:
                     - review.deleted
                     - review.restored
                     - ad.status_changed
+                    - ad.created
+                    - ad.updated
+                    - campaign.created
+                    - campaign.updated
                     - ad.review.approved
                     - ad.review.rejected
                     - ad.delivery_issue
