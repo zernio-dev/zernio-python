@@ -31,6 +31,7 @@ import time
 from contextvars import ContextVar
 from dataclasses import dataclass
 from datetime import datetime, timedelta
+from functools import cached_property
 from typing import TYPE_CHECKING, Any
 
 import httpx
@@ -122,6 +123,13 @@ class _AnnotatedBM25SearchTransform(BM25SearchTransform):
     """
 
     def _make_search_tool(self) -> Tool:
+        return self._search_tool
+
+    def _make_call_tool(self) -> Tool:
+        return self._call_tool
+
+    @cached_property
+    def _search_tool(self) -> Tool:
         # Pure in-memory catalog search: no external calls, no state change.
         return super()._make_search_tool().model_copy(
             update={
@@ -134,7 +142,8 @@ class _AnnotatedBM25SearchTransform(BM25SearchTransform):
             }
         )
 
-    def _make_call_tool(self) -> Tool:
+    @cached_property
+    def _call_tool(self) -> Tool:
         # Dispatches to any hidden tool, including writes to external
         # platforms, so it must not claim to be read-only: that would bypass
         # client approval for every write reachable through the proxy.

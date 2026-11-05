@@ -5,6 +5,8 @@ FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim
 
 WORKDIR /app
 
+ENV MALLOC_ARENA_MAX=2
+
 # Copy dependency files
 COPY pyproject.toml uv.lock README.md ./
 COPY src ./src
