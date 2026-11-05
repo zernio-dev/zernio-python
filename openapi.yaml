@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.496.0"
+  version: "1.496.1"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -68506,7 +68506,9 @@ paths:
 
         ### Sync
 
-        The new hierarchy is asynchronous to materialize in our DB, and we trigger sync discovery automatically. Set `syncAfter: false` to skip and poll `/v1/ads/tree` on your own cadence.
+        The copy exists on the platform when this call returns. The new hierarchy reaches our DB through a sync discovery that starts automatically and runs after the response, usually within a few minutes.
+
+        Poll `/v1/ads/tree` until it appears; until then, calls that take a copied id return 404, so retry them. Set `syncAfter: false` to skip the sync; the copy then appears on a later scheduled sync.
       security:
         - bearerAuth: []
       parameters:
@@ -68576,7 +68578,15 @@ paths:
                     type: object
                     additionalProperties: { type: string }
                     description: "Meta only: source ad ID to copied ad ID, across every copied ad set. Empty when `deepCopy` is false."
-                  discovery: { type: string, enum: [triggered, skipped, failed] }
+                  discovery:
+                    type: string
+                    enum: [triggered, skipped, failed]
+                    description: |-
+                      The copy exists on the platform in all three cases.
+
+                      - `triggered`: an ads sync started and runs after this response, so the copy may not be readable through Zernio yet.
+                      - `skipped`: no sync started, so the copy appears on a later scheduled sync.
+                      - `failed`: the sync could not start. A sync that errors after the response is not reported here.
                   raw:
                     type: object
                     description: "Platform-native response from the copy (TikTok and LinkedIn). Absent on Meta, which returns `adSetIdMap` and `adIdMap` instead."
@@ -69135,7 +69145,7 @@ paths:
         - So an ad set with any number of ads copies: Meta refuses a single deep copy of 3 or more objects.
         - `statusOption` applies to the ad set and every ad.
         - If an ad copy fails, the partial ad set copy is deleted and the request fails with Meta's error.
-        - Sync discovery is triggered automatically (`syncAfter: false` to skip).
+        - A sync discovery starts automatically and runs after the response (`syncAfter: false` to skip). The copy is readable through Zernio once it finishes, usually within a few minutes. Until then, calls that take a copied id return 404, so retry them.
 
         TikTok: the ad group is read and recreated under the campaign with its targeting, bidding,
         budget and schedule (start reset to now); `deepCopy: true` recreates its ads too (default
@@ -69199,7 +69209,15 @@ paths:
                     type: object
                     additionalProperties: { type: string }
                     description: "Meta only: source ad ID to copied ad ID. Empty when `deepCopy` is false."
-                  discovery: { type: string, enum: [triggered, skipped, failed] }
+                  discovery:
+                    type: string
+                    enum: [triggered, skipped, failed]
+                    description: |-
+                      The copy exists on the platform in all three cases.
+
+                      - `triggered`: an ads sync started and runs after this response, so the copy may not be readable through Zernio yet.
+                      - `skipped`: no sync started, so the copy appears on a later scheduled sync.
+                      - `failed`: the sync could not start. A sync that errors after the response is not reported here.
                   raw: { type: object, description: "Platform-native response from the copy (TikTok). Absent on Meta, which returns `adIdMap` instead." }
         '400': { description: Invalid input }
         '401': { $ref: '#/components/responses/Unauthorized' }
@@ -69229,7 +69247,7 @@ paths:
 
         - `adSetId` retargets the copy into another ad set; omitted = the source's own ad set.
         - Accepts the Zernio ad id or the platform ad id.
-        - Sync discovery is triggered automatically (`syncAfter: false` to skip).
+        - A sync discovery starts automatically and runs after the response (`syncAfter: false` to skip). The copy is readable through Zernio once it finishes, usually within a few minutes. Until then, calls that take a copied id return 404, so retry them.
 
         ### Creative settings
 
@@ -69292,7 +69310,15 @@ paths:
                 type: object
                 properties:
                   copiedAdId: { type: string, description: Platform ID of the new ad }
-                  discovery: { type: string, enum: [triggered, skipped, failed] }
+                  discovery:
+                    type: string
+                    enum: [triggered, skipped, failed]
+                    description: |-
+                      The copy exists on the platform in all three cases.
+
+                      - `triggered`: an ads sync started and runs after this response, so the copy may not be readable through Zernio yet.
+                      - `skipped`: no sync started, so the copy appears on a later scheduled sync.
+                      - `failed`: the sync could not start. A sync that errors after the response is not reported here.
                   raw: { type: object }
         '400': { description: Invalid input }
         '401': { $ref: '#/components/responses/Unauthorized' }

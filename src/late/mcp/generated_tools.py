@@ -8047,10 +8047,7 @@ def register_generated_tools(mcp, _get_client):
             - So an ad set with any number of ads copies: Meta refuses a single deep copy of 3 or more objects.
             - `statusOption` applies to the ad set and every ad.
             - If an ad copy fails, the partial ad set copy is deleted and the request fails with Meta's error.
-            - Sync discovery is triggered automatically (`syncAfter: false` to skip).
-
-            TikTok: the ad group is read and recreated under the campaign with its targeting, bidding,
-            budget and schedule (start reset to now); `deepCopy: true` recreates its ads too (default ...
+            - A sync discovery starts automatically and runs after the response (`syncAfter: false` to skip). The copy is readable through Zernio once it finishes, usually within a few minutes. Until then, calls that take a copied id return 404, so retry them. ...
 
             Platforms: meta, tiktok
 
@@ -8118,7 +8115,7 @@ def register_generated_tools(mcp, _get_client):
 
             - `adSetId` retargets the copy into another ad set; omitted = the source's own ad set.
             - Accepts the Zernio ad id or the platform ad id.
-            - Sync discovery is triggered automatically (`syncAfter: false` to skip).
+            - A sync discovery starts automatically and runs after the response (`syncAfter: false` to skip). The copy is readable through Zernio once it finishes, usually within a few minutes. Until then, calls that take a copied id return 404, so retry them.
 
             ### Creative settings
 
@@ -8126,10 +8123,7 @@ def register_generated_tools(mcp, _get_client):
 
             ### Fallback rebuild
 
-            When Meta refuses the native copy with its capability error (code 3), which happens for some creatives built by other tools, the ad is rebuilt instead:
-
-            1. A new creative from the source's returned spec.
-            2. A new ad in the target ad set, carrying the source name, status option, rename options and tracking specs.
+            When Meta refuses the native copy with its capability error (code 3), which happens for some creatives built by other tools, the ad is rebuilt instead: ...
 
             Platforms: meta
 
