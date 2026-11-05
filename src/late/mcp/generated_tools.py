@@ -43432,19 +43432,23 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Create a top-up
 
-        Charges the billing owner's saved card (the default one, or `paymentMethodId`) `amountCents` plus the card fee, while the payer is present, and credits your balance what Stripe delivers.
+        Charges the billing owner's saved card (the default one, or `paymentMethodId`) exactly `amountCents`, while the payer is present, and credits your balance the same amount. There is no card fee.
 
-        The card fee is Stripe's own rate for the card, learned from its past charges (`GET /v1/balance/top-ups/card-fee` answers it).
+        Each top-up has a card receipt (`GET /v1/balance/top-ups/{topupId}/receipt`) and a top-up statement without VAT (`GET /v1/balance/top-ups/{topupId}/statement`): the balance is taxed when it is used, on your monthly invoice.
 
-        - When `feeIsExact` is true you receive exactly `amountCents`.
-        - When it is false (the first top-up on a card issued in the EEA, or Link, where Stripe prices by card product) the fee is the highest rate for the card's region.
-        - You then receive at least `amountCents`: if Stripe charges less, the difference is added to your balance.
+        - `status: succeeded`: the card was charged. `amountCents` is credited to `availableCents` within seconds. Transfers to payees can use it from 7 days after the charge.
+        - `status: requires_action`: the bank asked for 3D Secure. Complete it with Stripe.js `handleNextAction({ clientSecret })`, then call `POST /v1/balance/top-ups/{topupId}/confirm`. One left unconfirmed is cancelled after 30 minutes.
 
-        - `status: succeeded`: the card was charged. What Stripe delivered is credited to `availableCents` within seconds. Transfers to payees can use it from 7 days after the charge.
-        - `status: requires_action`: the bank asked for 3D Secure. Complete it with Stripe.js `handleNextAction({ clientSecret })`, then call `POST ...
+        ### Errors
+
+        - 402 `payment_required`: no saved card.
+        - 402 `card_declined`: the bank's reason.
+        - 400: `method: bank_transfer` (bank transfers are not available yet).
+
+        Needs an ...
 
         Args:
-            amount_cents: Amount to credit to your balance, in cents: $10 to $100,000. The card fee is charged on top. (required)
+            amount_cents: Amount to charge and credit to your balance, in cents: $5 to $100,000. No card fee. (required)
             method: Only card is available. bank_transfer returns 400 "Bank transfers are not available yet." (required)
             payment_method_id: A saved card of the billing owner's (`pm_...`). Defaults to the default payment method."""
         client = _get_client()
@@ -43481,36 +43485,6 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
-            title="Get the card fee for a top-up",
-            readOnlyHint=True,
-            destructiveHint=False,
-            openWorldHint=False,
-        )
-    )
-    def treasury_get_topup_card_fee(payment_method_id: str | None = None) -> str:
-        """Get the card fee for a top-up
-
-        The card fee a top-up on the billing owner's saved card pays: `feeBps` of the charge plus `fixedCents`. The card is charged the smallest amount that leaves `amountCents` once Stripe takes `round_half_up(charge * feeBps / 10000) + fixedCents`.
-
-        The rate is Stripe's own for the card, learned from its past charges.
-
-        `feeIsExact` is false for a card Zernio has not charged yet whose region Stripe prices by card product (EEA) or whose country is unknown (Link). The rate is then that region's highest, and the top-up credits at least the amount.
-
-        Needs an owner, admin or billing admin, signed in or through a full-access key they created.
-
-        Args:
-            payment_method_id: A saved card of the billing owner's (`pm_...`). Defaults to the default payment method."""
-        client = _get_client()
-        try:
-            response = client.treasury.get_topup_card_fee(
-                payment_method_id=payment_method_id
-            )
-            return _format_response(response)
-        except Exception as e:
-            raise ToolError(f"Error: {e}") from e
-
-    @mcp.tool(
-        annotations=ToolAnnotations(
             title="Get a top-up receipt",
             readOnlyHint=True,
             destructiveHint=False,
@@ -43520,13 +43494,40 @@ def register_generated_tools(mcp, _get_client):
     def treasury_get_topup_receipt(topup_id: str) -> str:
         """Get a top-up receipt
 
-        The receipt for a paid top-up or creator payout payment (`purpose: payout_batch`). `format: pdf` is the Stripe invoice PDF; `format: page` is Stripe's receipt page, for payments that have no invoice. The link is short-lived, so fetch it when you need it. A profile-scoped key answers 403.
+        The receipt for a paid top-up or creator payout payment (`purpose: payout_batch`). `format: pdf` is the Checkout invoice PDF (payments before 2026-10-29); `format: page` is Stripe's card receipt page. A top-up's statement is at getTopupStatement. The link is short-lived, so fetch it when you need it. A profile-scoped key answers 403.
 
         Args:
             topup_id: (required)"""
         client = _get_client()
         try:
             response = client.treasury.get_topup_receipt(topup_id=topup_id)
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get a top-up statement",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def treasury_get_topup_statement(topup_id: str) -> str:
+        """Get a top-up statement
+
+        The statement for a paid balance top-up: the PDF of the Stripe invoice it was paid through. It shows the amount added to your balance and no VAT: money added to the balance is taxed when it is used, on your monthly invoice.
+
+        - `format: pdf` is the statement PDF; `format: page` is its Stripe-hosted page when the PDF is not ready.
+        - 404 before the top-up is paid, and for a payment with no statement (top-ups before 2026-11-05, creator payout payments). Its card receipt is at getTopupReceipt.
+
+        The link is short-lived, so fetch it when you need it. A profile-scoped key answers 403.
+
+        Args:
+            topup_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.treasury.get_topup_statement(topup_id=topup_id)
             return _format_response(response)
         except Exception as e:
             raise ToolError(f"Error: {e}") from e

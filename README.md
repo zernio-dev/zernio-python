@@ -1452,8 +1452,8 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `treasury.create_transfer()` | Create a transfer |
 | `treasury.get_balance()` | Get balance |
 | `treasury.get_payout_batch()` | Get a payout batch |
-| `treasury.get_topup_card_fee()` | Get the card fee for a top-up |
 | `treasury.get_topup_receipt()` | Get a top-up receipt |
+| `treasury.get_topup_statement()` | Get a top-up statement |
 | `treasury.get_transfer()` | Get a transfer |
 | `treasury.cancel_payout_batch()` | Cancel an unpaid payout batch |
 | `treasury.cancel_topup()` | Cancel a top-up |

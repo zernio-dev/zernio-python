@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.500.1"
+  version: "1.501.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -1637,16 +1637,16 @@ components:
           properties:
             id: { type: string }
             campaignId: { type: [string, "null"] }
-        feeCoveredByZernio: { type: boolean, description: 'True for a `payout_batch` payment: Zernio pays the Stripe processing fee out of its transfer fee, so you are credited the whole charge.' }
-        amountCents: { type: integer, description: 'The amount you asked for. A top-up charges the card fee on top of it and credits what Stripe delivers, at least this amount. Older top-ups charged this amount and credited it minus the fee.' }
-        feeCents: { type: [integer, "null"], description: 'Card fee. Once paid, the fee Stripe took (chargedCents minus netCents). Before, the fee charged on top, or null on an older top-up. 0 when Zernio covers it (`payout_batch`).' }
-        chargedCents: { type: integer, description: 'What your card was charged: amountCents plus the card fee charged on top, or amountCents on an older top-up and on a `payout_batch` payment.' }
+        feeCoveredByZernio: { type: boolean, description: 'True for a balance top-up (there is no card fee) and a `payout_batch` payment: Zernio pays the Stripe processing fee, so you are credited the whole charge. False on a top-up made before 2026-11-05.' }
+        amountCents: { type: integer, description: 'The amount you asked for. A top-up charges exactly this and credits it whole. Top-ups from 2026-11-02 to 2026-11-05 charged a card fee on top and credited what Stripe delivered; older ones charged this amount and credited it minus the fee.' }
+        feeCents: { type: [integer, "null"], description: 'Card fee you paid: 0 when Zernio covers it (feeCoveredByZernio). On an older top-up, the fee Stripe took once paid, the fee charged on top before, or null.' }
+        chargedCents: { type: integer, description: 'What your card was charged: amountCents, or amountCents plus the card fee on a top-up from 2026-11-02 to 2026-11-05.' }
         stripeFeeCents: { type: [integer, "null"], description: 'feeCents once the top-up is paid; null before. Kept for older clients: read feeCents.' }
-        netCents: { type: [integer, "null"], description: 'Amount credited to your balance, what Stripe delivered; null until paid. At least amountCents on a top-up that charged the fee on top, and amountCents on `payout_batch` payments.' }
+        netCents: { type: [integer, "null"], description: 'Amount credited to your balance; null until paid. amountCents when feeCoveredByZernio; on an older top-up, what Stripe delivered.' }
         status: { type: string, enum: [pending, succeeded, failed, expired], description: '`pending` until the card is charged (or 3D Secure is finished) and credited. `expired` means it ended unpaid: cancelled, or 3D Secure left unfinished for 30 minutes. Only `pending` counts toward pendingTopupCents.' }
         createdAt: { type: string, format: date-time }
         succeededAt: { type: [string, "null"], format: date-time }
-        hasInvoice: { type: boolean, description: 'A Stripe invoice exists for this payment (Checkout payments). Every paid payment has a card receipt; see getTopupReceipt.' }
+        hasInvoice: { type: boolean, description: 'A Checkout invoice exists for this payment (Checkout payments before 2026-10-29). Every paid payment has a card receipt (getTopupReceipt); a paid top-up has a statement (getTopupStatement).' }
     PayoutBatchItem:
       type: object
       required: [id, participantId, creator, amountCents, feeCents, totalCents, status, failureReason, transferId]
@@ -25955,15 +25955,11 @@ paths:
       tags: [Treasury]
       summary: Create a top-up
       description: |
-        Charges the billing owner's saved card (the default one, or `paymentMethodId`) `amountCents` plus the card fee, while the payer is present, and credits your balance what Stripe delivers.
+        Charges the billing owner's saved card (the default one, or `paymentMethodId`) exactly `amountCents`, while the payer is present, and credits your balance the same amount. There is no card fee.
 
-        The card fee is Stripe's own rate for the card, learned from its past charges (`GET /v1/balance/top-ups/card-fee` answers it).
+        Each top-up has a card receipt (`GET /v1/balance/top-ups/{topupId}/receipt`) and a top-up statement without VAT (`GET /v1/balance/top-ups/{topupId}/statement`): the balance is taxed when it is used, on your monthly invoice.
 
-        - When `feeIsExact` is true you receive exactly `amountCents`.
-        - When it is false (the first top-up on a card issued in the EEA, or Link, where Stripe prices by card product) the fee is the highest rate for the card's region.
-        - You then receive at least `amountCents`: if Stripe charges less, the difference is added to your balance.
-
-        - `status: succeeded`: the card was charged. What Stripe delivered is credited to `availableCents` within seconds. Transfers to payees can use it from 7 days after the charge.
+        - `status: succeeded`: the card was charged. `amountCents` is credited to `availableCents` within seconds. Transfers to payees can use it from 7 days after the charge.
         - `status: requires_action`: the bank asked for 3D Secure. Complete it with Stripe.js `handleNextAction({ clientSecret })`, then call `POST /v1/balance/top-ups/{topupId}/confirm`. One left unconfirmed is cancelled after 30 minutes.
 
         ### Errors
@@ -25983,7 +25979,7 @@ paths:
               type: object
               required: [amountCents, method]
               properties:
-                amountCents: { type: integer, minimum: 1000, maximum: 10000000, description: 'Amount to credit to your balance, in cents: $10 to $100,000. The card fee is charged on top.' }
+                amountCents: { type: integer, minimum: 500, maximum: 10000000, description: 'Amount to charge and credit to your balance, in cents: $5 to $100,000. No card fee.' }
                 method: { type: string, enum: [card, bank_transfer], description: 'Only card is available. bank_transfer returns 400 "Bank transfers are not available yet."' }
                 paymentMethodId: { type: string, description: "A saved card of the billing owner's (`pm_...`). Defaults to the default payment method." }
       responses:
@@ -25996,10 +25992,10 @@ paths:
                 required: [topupId, status, clientSecret, amountCents, feeCents, chargedCents, feeIsExact]
                 properties:
                   topupId: { type: string }
-                  amountCents: { type: integer, description: 'Credited to your balance once paid: exactly this when feeIsExact, else at least this.' }
-                  feeCents: { type: integer, description: 'Card fee, charged on top of amountCents.' }
-                  chargedCents: { type: integer, description: 'What the card is charged: amountCents plus feeCents.' }
-                  feeIsExact: { type: boolean, description: "True when feeCents is exactly Stripe's fee for this card. False when it is the region's highest rate, so Stripe may take less and the difference is added to your balance." }
+                  amountCents: { type: integer, description: 'Charged and credited to your balance once paid.' }
+                  feeCents: { type: integer, description: 'Always 0: there is no card fee. Kept for older clients.' }
+                  chargedCents: { type: integer, description: 'What the card is charged: amountCents. Kept for older clients.' }
+                  feeIsExact: { type: boolean, description: 'Always true. Kept for older clients.' }
                   status: { type: string, enum: [succeeded, processing, requires_action] }
                   clientSecret: { type: [string, "null"], description: 'PaymentIntent client secret for Stripe.js handleNextAction; set only when status is requires_action' }
         '400':
@@ -26045,54 +26041,13 @@ paths:
         '402':
           $ref: '#/components/responses/PaymentRequired'
         '403': { $ref: '#/components/responses/ResourceGroupForbidden' }
-  /v1/balance/top-ups/card-fee:
-    get:
-      x-resource-group: "money"
-      operationId: getTopupCardFee
-      tags: [Treasury]
-      summary: Get the card fee for a top-up
-      description: |
-        The card fee a top-up on the billing owner's saved card pays: `feeBps` of the charge plus `fixedCents`. The card is charged the smallest amount that leaves `amountCents` once Stripe takes `round_half_up(charge * feeBps / 10000) + fixedCents`.
-
-        The rate is Stripe's own for the card, learned from its past charges.
-
-        `feeIsExact` is false for a card Zernio has not charged yet whose region Stripe prices by card product (EEA) or whose country is unknown (Link). The rate is then that region's highest, and the top-up credits at least the amount.
-
-        Needs an owner, admin or billing admin, signed in or through a full-access key they created.
-      parameters:
-        - name: paymentMethodId
-          in: query
-          description: "A saved card of the billing owner's (`pm_...`). Defaults to the default payment method."
-          schema: { type: string }
-      responses:
-        '200':
-          description: The card fee
-          content:
-            application/json:
-              schema:
-                type: object
-                required: [feeBps, fixedCents, feeIsExact]
-                properties:
-                  feeBps: { type: integer, description: 'Percentage of the charge, in basis points (315 is 3.15%).' }
-                  fixedCents: { type: integer, description: 'Fixed part of the fee, in cents.' }
-                  feeIsExact: { type: boolean, description: "True when this is exactly Stripe's rate for the card." }
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '402':
-          description: 'No saved card (code `payment_required`), or a billing gate.'
-          content:
-            application/json:
-              schema: { $ref: '#/components/schemas/ErrorResponse' }
-        '403': { $ref: '#/components/responses/MoneyForbidden' }
-        '404':
-          $ref: '#/components/responses/NotFound'
   /v1/balance/top-ups/{topupId}/receipt:
     get:
       x-resource-group: "money"
       operationId: getTopupReceipt
       tags: [Treasury]
       summary: Get a top-up receipt
-      description: "The receipt for a paid top-up or creator payout payment (`purpose: payout_batch`). `format: pdf` is the Stripe invoice PDF; `format: page` is Stripe's receipt page, for payments that have no invoice. The link is short-lived, so fetch it when you need it. A profile-scoped key answers 403."
+      description: "The receipt for a paid top-up or creator payout payment (`purpose: payout_batch`). `format: pdf` is the Checkout invoice PDF (payments before 2026-10-29); `format: page` is Stripe's card receipt page. A top-up's statement is at getTopupStatement. The link is short-lived, so fetch it when you need it. A profile-scoped key answers 403."
       parameters:
         - name: topupId
           in: path
@@ -26114,6 +26069,45 @@ paths:
                   amountCents: { type: integer, description: 'As in the top-up list.' }
                   feeCents: { type: [integer, "null"], description: 'Card fee paid, as in the top-up list.' }
                   chargedCents: { type: integer, description: 'What the card was charged, the total on the receipt.' }
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '402':
+          $ref: '#/components/responses/PaymentRequired'
+        '403': { $ref: '#/components/responses/ResourceGroupForbidden' }
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /v1/balance/top-ups/{topupId}/statement:
+    get:
+      x-resource-group: "money"
+      operationId: getTopupStatement
+      tags: [Treasury]
+      summary: Get a top-up statement
+      description: |
+        The statement for a paid balance top-up: the PDF of the Stripe invoice it was paid through. It shows the amount added to your balance and no VAT: money added to the balance is taxed when it is used, on your monthly invoice.
+
+        - `format: pdf` is the statement PDF; `format: page` is its Stripe-hosted page when the PDF is not ready.
+        - 404 before the top-up is paid, and for a payment with no statement (top-ups before 2026-11-05, creator payout payments). Its card receipt is at getTopupReceipt.
+
+        The link is short-lived, so fetch it when you need it. A profile-scoped key answers 403.
+      parameters:
+        - name: topupId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Statement link
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [url, format, pdfUrl, pageUrl, amountCents]
+                properties:
+                  url: { type: string, format: uri }
+                  format: { type: string, enum: [pdf, page] }
+                  pdfUrl: { type: [string, "null"], format: uri, description: 'The statement PDF.' }
+                  pageUrl: { type: [string, "null"], format: uri, description: "The statement's Stripe-hosted page." }
+                  amountCents: { type: integer, description: 'Amount added to your balance, as in the top-up list.' }
         '400':
           $ref: '#/components/responses/BadRequest'
         '402':
