@@ -9987,7 +9987,7 @@ def register_generated_tools(mcp, _get_client):
         - New campaign: held paused with its ad set and ad on. One PUT /v1/ads/campaigns/{campaignId}/status with `active` brings it live.
         - Into an existing campaign (TikTok `existingCampaignId`): the new ad set is held paused.
         - Attached to an existing ad set (`adSetId`): the new ad itself is paused.
-        - LinkedIn: the held campaign group is PAUSED, its campaign and creative ACTIVE.
+        - LinkedIn: every object the boost creates is held. A new campaign group is PAUSED, and its campaign and creative stay DRAFT. Resume each held object top-down to go live.
         - X: has no per-ad switch, so its lowest level is the line item.
 
         `campaignStatus`, `adSetStatus` and `adStatus` set one level each and always win for that level. `status: PAUSED` adds a hold of its own only when none of them is PAUSED. To create every object paused, send all three as PAUSED.
@@ -10901,7 +10901,7 @@ def register_generated_tools(mcp, _get_client):
 
         **Platform notes:**
 
-        - LinkedIn: a held campaign group is PAUSED with its campaign and creative ACTIVE. A new campaign in an existing group stays DRAFT. A held creative (with `adSetId`) is created DRAFT, as LinkedIn refuses PAUSED until its review is APPROVED.
+        - LinkedIn: every object the call creates is held. A new campaign group is PAUSED. A new campaign or creative stays DRAFT, as LinkedIn refuses PAUSED on a creative until its review is APPROVED. Resume each held object top-down to go live.
         - X: no per-ad switch, so its lowest level is the line item.
         - Google Performance Max and Demand Gen: accept PAUSED only (the campaign is created paused).
                 campaign_status: Every platform. Sets the switch of the new campaign alone (LinkedIn: the campaign group) and overrides `status` for it. Omitted, it follows `status`. Ignored when the request creates no campaign (`existingCampaignId` or `adSetId`).
