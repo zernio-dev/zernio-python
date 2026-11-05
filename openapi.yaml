@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.494.0"
+  version: "1.494.1"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -29621,7 +29621,7 @@ paths:
             - { title: Per platform, note: "inside each platforms[] entry", fields: ["platforms[].customContent", "platforms[].customMedia", "platforms[].scheduledFor", "platforms[].platformSpecificData"] }
             - { title: Platform defaults, note: "merged into each matching platforms[] entry", fields: [tiktokSettings, facebookSettings] }
             - { title: Scheduling, fields: [timezone, requiresApproval, queueId, recycling] }
-            - { title: Organizing, fields: [title, tags, hashtags, mentions, metadata, crosspostingEnabled] }
+            - { title: Organizing, fields: [title, profileId, tags, hashtags, mentions, metadata, crosspostingEnabled] }
             - { title: Testing, fields: [dryRun] }
         responses:
           "400": { retry: false }
