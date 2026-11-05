@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.503.0"
+  version: "1.504.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -1572,7 +1572,7 @@ components:
       required: [id, kind, amountCents, fromBucket, toBucket, holdUntil, createdAt]
       properties:
         id: { type: string }
-        kind: { type: string, enum: [accrual, approval, hold_release, adjustment, settling, settlement, reversal, topup, transfer, fee] }
+        kind: { type: string, enum: [accrual, approval, hold_release, adjustment, settling, settlement, reversal, topup, transfer, fee, usage, grant] }
         amountCents: { type: integer }
         fromBucket: { type: [string, "null"], description: 'The participant bucket the money left; null when it came from outside the participant.' }
         toBucket: { type: [string, "null"], description: 'The participant bucket the money entered; null when it left the participant.' }
@@ -6361,7 +6361,7 @@ components:
       required: [id, kind, amountCents, debit, credit, holdUntil, releasedByEntryId, reversesEntryId, referenceType, referenceId, cause, externalReference, actor, createdAt]
       properties:
         id: { type: string }
-        kind: { type: string, enum: [accrual, approval, hold_release, adjustment, settling, settlement, reversal, topup, transfer, fee] }
+        kind: { type: string, enum: [accrual, approval, hold_release, adjustment, settling, settlement, reversal, topup, transfer, fee, usage, grant] }
         amountCents: { type: integer, description: 'Always positive; direction is given by debit and credit.' }
         debit: { $ref: '#/components/schemas/LedgerAccountSide' }
         credit: { $ref: '#/components/schemas/LedgerAccountSide' }
@@ -25839,7 +25839,7 @@ paths:
           schema: { type: string }
         - name: kind
           in: query
-          schema: { type: string, enum: [accrual, approval, hold_release, adjustment, settling, settlement, reversal, topup, transfer, fee] }
+          schema: { type: string, enum: [accrual, approval, hold_release, adjustment, settling, settlement, reversal, topup, transfer, fee, usage, grant] }
         - name: referenceType
           in: query
           schema: { type: string }
@@ -25866,7 +25866,7 @@ paths:
                       type: object
                       properties:
                         id: { type: string }
-                        kind: { type: string, enum: [accrual, approval, hold_release, adjustment, settling, settlement, reversal, topup, transfer, fee] }
+                        kind: { type: string, enum: [accrual, approval, hold_release, adjustment, settling, settlement, reversal, topup, transfer, fee, usage, grant] }
                         amountCents: { type: integer, description: "Always positive; direction is given by debit and credit" }
                         debit: { $ref: '#/components/schemas/LedgerAccountSide' }
                         credit: { $ref: '#/components/schemas/LedgerAccountSide' }
@@ -25916,7 +25916,7 @@ paths:
               schema:
                 type: object
                 properties:
-                  availableCents: { type: integer, description: 'Your balance, including card top-ups paid in the last 7 days (see payoutLockedCents). Negative after a dispute or refund of a top-up that was already spent; transfers are refused while it is negative.' }
+                  availableCents: { type: integer, description: 'Your balance, including card top-ups paid in the last 7 days (see payoutLockedCents). Negative after a dispute or refund of a top-up that was already spent, or, on balance billing, when pay-per-use already in flight (a connected call, an SMS already with the carrier) lands past zero; the next top-up covers it. Transfers are refused while it is negative.' }
                   payoutLockedCents: { type: integer, description: 'Part of availableCents from card top-ups charged in the last 7 days, net of refunds and disputes. Transfers to payees cannot use it yet; a transfer that needs it answers 409 `payout_funds_locked` with the day it can be sent.' }
                   payoutLocks:
                     type: array
@@ -95354,7 +95354,7 @@ paths:
           description: List only this participant's entries.
         - name: kind
           in: query
-          schema: { type: string, enum: [accrual, approval, hold_release, adjustment, settling, settlement, reversal, topup, transfer, fee] }
+          schema: { type: string, enum: [accrual, approval, hold_release, adjustment, settling, settlement, reversal, topup, transfer, fee, usage, grant] }
         - name: limit
           in: query
           schema: { type: integer, minimum: 1, maximum: 200, default: 50 }

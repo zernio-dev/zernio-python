@@ -29499,6 +29499,8 @@ def register_generated_tools(mcp, _get_client):
             "topup",
             "transfer",
             "fee",
+            "usage",
+            "grant",
         ]
         | None = None,
         limit: int = 50,
@@ -33953,6 +33955,8 @@ def register_generated_tools(mcp, _get_client):
             "topup",
             "transfer",
             "fee",
+            "usage",
+            "grant",
         ]
         | None = None,
         reference_type: str | None = None,
