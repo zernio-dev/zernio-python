@@ -144,9 +144,9 @@ class Zernio(BaseClient):
             base_url: Base URL (default: https://zernio.com/api)
             timeout: Request timeout in seconds
             max_retries: Maximum retries for failed requests
-            publish_timeout: Timeout in seconds for publishNow creates and ad creates, which
-                             publish synchronously and can outlast `timeout`
-                             (default: 300)
+            publish_timeout: Timeout in seconds for writes that do their work inside the
+                             request and can outlast `timeout`, such as publishNow
+                             creates and ad creates and updates (default: 300)
 
         Raises:
             ValueError: If no API key is provided and neither ZERNIO_API_KEY
