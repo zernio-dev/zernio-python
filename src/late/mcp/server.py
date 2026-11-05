@@ -24,10 +24,10 @@ Usage:
 from __future__ import annotations
 
 import asyncio
-import hashlib
 import json
 import os
 import re
+import time
 from contextvars import ContextVar
 from dataclasses import dataclass
 from datetime import datetime, timedelta
@@ -43,6 +43,7 @@ from late import Late, MediaType, PostStatus
 from late.client.exceptions import LateAPIError, LateError, LateRateLimitError
 
 from .auth import build_auth_provider
+from .idempotency import same_arguments_key
 from .resources import register_resources
 from .tool_definitions import TOOL_DEFINITIONS
 
@@ -62,6 +63,7 @@ _ACCOUNTS_PAGE_SIZE = 100
 _ACCOUNTS_MAX_PAGE_SIZE = 500
 _PROFILES_PAGE_SIZE = 100
 _PROFILES_MAX_PAGE_SIZE = 1000
+_RETRY_ALL_BUDGET_SECONDS = 300.0
 
 # Always-visible core: the 20 hand-written ergonomic tools (guardrails +
 # LLM-shaped args, preferred over their raw generated twins) plus the generated
@@ -940,8 +942,15 @@ def posts_retry_all_failed() -> str:
     results = []
     success_count = 0
     fail_count = 0
+    deadline = time.monotonic() + _RETRY_ALL_BUDGET_SECONDS
 
-    for post in posts:
+    for attempted, post in enumerate(posts):
+        if time.monotonic() >= deadline:
+            not_attempted = len(posts) - attempted
+            results.append(
+                f"\u26a0\ufe0f {not_attempted} post(s) not attempted, out of time. Call this tool again."
+            )
+            break
         try:
             client.posts.retry(post.field_id)
             success_count += 1
@@ -952,6 +961,7 @@ def posts_retry_all_failed() -> str:
     summary = f"\u2705 Retried {success_count} post(s)"
     if fail_count > 0:
         summary += f"\n\u274c Failed to retry {fail_count} post(s)"
+    if results:
         summary += "\n" + "\n".join(results)
 
     return summary
@@ -1158,11 +1168,6 @@ _SUPPORT_ERROR_HINTS = {
 }
 
 
-def _support_idempotency_key(body: dict[str, Any]) -> str:
-    # Same arguments -> same paid run: a re-call after a client timeout replays the run instead of billing a second one.
-    return "mcp-support-" + hashlib.sha256(json.dumps(body, sort_keys=True).encode()).hexdigest()[:40]
-
-
 @tool_def("support_ask")
 async def support_ask(
     question: str,
@@ -1191,7 +1196,7 @@ async def support_ask(
     try:
         run = await client.support_assistant.aask_support_question(
             message=body["message"],
-            idempotency_key=_support_idempotency_key(body),
+            idempotency_key=same_arguments_key("support", body),
             thread_id=body["threadId"],
             context=context,
             max_cost_usd=max_cost_usd,
