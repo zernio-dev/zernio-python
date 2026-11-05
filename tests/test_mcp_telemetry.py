@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+from datetime import datetime
 from types import SimpleNamespace
 from typing import TYPE_CHECKING
 
@@ -17,7 +18,12 @@ from sentry_sdk.transport import Transport
 
 from late.client.exceptions import LateAPIError
 from late.mcp import telemetry
-from late.mcp.telemetry import ToolTelemetryMiddleware, init_sentry
+from late.mcp.telemetry import (
+    ServerErrorAccessLogFilter,
+    ToolTelemetryMiddleware,
+    init_sentry,
+    quiet_routine_logs,
+)
 from late.models import AccountsListResponse
 
 if TYPE_CHECKING:
@@ -114,6 +120,7 @@ async def test_every_tool_call_logs_its_outcome_and_latency(
     assert line["surface"] == "mcp"
     assert line["tool"] == tool
     assert isinstance(line["duration_ms"], int)
+    assert datetime.fromisoformat(line["ts"]).tzinfo is not None
     assert fields.items() <= line.items()
 
 
@@ -263,3 +270,116 @@ async def test_the_bearer_token_never_reaches_logs_or_sentry(
     )
     assert "sk-secret-token" not in sent
     assert "sk-secret-token" not in json.dumps(_logged(caplog))
+
+
+class _RecordingHandler(logging.Handler):
+    def __init__(self) -> None:
+        super().__init__()
+        self.records: list[logging.LogRecord] = []
+
+    def emit(self, record: logging.LogRecord) -> None:
+        self.records.append(record)
+
+
+@pytest.fixture
+def quieted_fastmcp_logs():
+    root = logging.getLogger("fastmcp")
+    server_logger = logging.getLogger("fastmcp.server.server")
+    access_logger = logging.getLogger("uvicorn.access")
+    saved = (root.level, list(server_logger.filters), list(access_logger.filters))
+    handler = _RecordingHandler()
+    server_logger.addHandler(handler)
+    quiet_routine_logs()
+    yield handler
+    server_logger.removeHandler(handler)
+    root.setLevel(saved[0])
+    server_logger.filters = saved[1]
+    access_logger.filters = saved[2]
+
+
+async def test_expected_tool_failures_write_nothing_beyond_the_tool_call_line(
+    quieted_fastmcp_logs,
+) -> None:
+    server = _server()
+
+    @server.tool
+    def raw_api_failure() -> str:
+        raise LateAPIError("nope", status_code=400)
+
+    async with Client(server) as client:
+        await client.call_tool("raw_api_failure", {}, raise_on_error=False)
+        await client.call_tool("api_failure", {}, raise_on_error=False)
+
+    assert quieted_fastmcp_logs.records == []
+
+
+async def test_a_tool_bug_keeps_its_traceback(quieted_fastmcp_logs) -> None:
+    async with Client(_server()) as client:
+        await client.call_tool("bug", {}, raise_on_error=False)
+
+    [record] = quieted_fastmcp_logs.records
+    assert record.getMessage() == "Error calling tool 'bug'"
+    assert record.exc_info[0] is KeyError
+
+
+async def test_invalid_arguments_name_the_field_but_never_log_its_value(
+    quieted_fastmcp_logs,
+) -> None:
+    server = _server()
+
+    @server.tool
+    def takes_a_number(count: int) -> str:
+        return str(count)
+
+    async with Client(server) as client:
+        await client.call_tool(
+            "takes_a_number", {"count": "customer-secret"}, raise_on_error=False
+        )
+
+    [record] = quieted_fastmcp_logs.records
+    assert record.getMessage() == (
+        "Invalid arguments for tool 'takes_a_number': count: int_parsing"
+    )
+
+
+async def test_an_sdk_model_that_rejects_a_response_stays_in_the_logs(
+    quieted_fastmcp_logs,
+) -> None:
+    server = _server()
+
+    @server.tool
+    def rejects_response() -> str:
+        AccountsListResponse.model_validate({"accounts": "nope"})
+        return "unreachable"
+
+    async with Client(server) as client:
+        await client.call_tool("rejects_response", {}, raise_on_error=False)
+
+    [record] = quieted_fastmcp_logs.records
+    assert "accounts: list_type" in record.getMessage()
+
+
+@pytest.mark.usefixtures("quieted_fastmcp_logs")
+def test_fastmcp_info_lines_such_as_auth_errors_are_silenced() -> None:
+    auth_logger = logging.getLogger("fastmcp.server.auth.middleware")
+
+    assert not auth_logger.isEnabledFor(logging.INFO)
+    assert auth_logger.isEnabledFor(logging.WARNING)
+
+
+@pytest.mark.parametrize(
+    "status_code,kept",
+    [(200, False), (202, False), (401, False), (405, False), (500, True), (503, True)],
+)
+def test_access_lines_survive_only_for_server_errors(status_code, kept) -> None:
+    record = logging.LogRecord(
+        name="uvicorn.access",
+        level=logging.INFO,
+        pathname=__file__,
+        lineno=1,
+        msg='%s - "%s %s HTTP/%s" %d',
+        args=("127.0.0.1:1", "POST", "/mcp", "1.1", status_code),
+        exc_info=None,
+    )
+
+    assert ServerErrorAccessLogFilter().filter(record) is kept

@@ -5,6 +5,7 @@ import os
 import sys
 import time
 from collections.abc import Callable
+from datetime import datetime, timezone
 from typing import Any
 
 import sentry_sdk
@@ -21,6 +22,8 @@ from late.mcp.constants import SERVICE_VERSION
 
 _TOOL_TRANSACTION_OP = "mcp.tool"
 _REJECTED_RESULT_PREFIX = "❌"
+_TOOL_ERROR_LOG_PREFIX = "Error calling tool"
+_INVALID_ARGUMENTS_LOG_PREFIX = "Invalid arguments for tool"
 
 _SENTRY_STATUS_BY_OUTCOME = {
     "ok": "ok",
@@ -65,6 +68,40 @@ def log_tool_calls_to_stdout() -> None:
     _tool_logger.addHandler(handler)
     _tool_logger.setLevel(logging.INFO)
     _tool_logger.propagate = False
+
+
+class ServerErrorAccessLogFilter(logging.Filter):
+    def filter(self, record: logging.LogRecord) -> bool:
+        *_, status_code = record.args
+        return status_code >= 500
+
+
+def _argument_errors_without_input(detail: Any) -> str:
+    if not isinstance(detail, list):
+        return "details omitted"
+    return ", ".join(
+        f"{'.'.join(str(part) for part in error['loc'])}: {error['type']}"
+        for error in detail
+    )
+
+
+class ToolFailureLogFilter(logging.Filter):
+    def filter(self, record: logging.LogRecord) -> bool:
+        message = str(record.msg)
+        if message.startswith(_INVALID_ARGUMENTS_LOG_PREFIX):
+            tool, detail = record.args
+            record.args = (tool, _argument_errors_without_input(detail))
+            return True
+        if not message.startswith(_TOOL_ERROR_LOG_PREFIX):
+            return True
+        exc = record.exc_info[1] if record.exc_info else None
+        return isinstance(exc, Exception) and not _is_expected_failure(exc)
+
+
+def quiet_routine_logs() -> None:
+    logging.getLogger("uvicorn.access").addFilter(ServerErrorAccessLogFilter())
+    logging.getLogger("fastmcp").setLevel(logging.WARNING)
+    logging.getLogger("fastmcp.server.server").addFilter(ToolFailureLogFilter())
 
 
 def _caller_key() -> str | None:
@@ -134,6 +171,9 @@ class ToolTelemetryMiddleware(Middleware):
                     json.dumps(
                         {
                             "event": "mcp_tool_call",
+                            "ts": datetime.now(timezone.utc).isoformat(
+                                timespec="milliseconds"
+                            ),
                             "surface": self._surface,
                             "tool": tool,
                             "duration_ms": round(

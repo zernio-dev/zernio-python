@@ -57,6 +57,7 @@ from late.mcp.telemetry import (
     ToolTelemetryMiddleware,
     init_sentry,
     log_tool_calls_to_stdout,
+    quiet_routine_logs,
 )
 
 mcp.add_middleware(ToolTelemetryMiddleware("mcp"))
@@ -391,6 +392,8 @@ def main() -> None:
 
     init_sentry()
     log_tool_calls_to_stdout()
+    if not config.debug:
+        quiet_routine_logs()
     app = build_app()
 
     print("Zernio MCP HTTP Server starting...", file=sys.stderr)
