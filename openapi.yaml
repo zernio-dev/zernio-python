@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.499.2"
+  version: "1.500.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -151,11 +151,13 @@ x-documentation:
 
     Reads that integrations tend to poll have an extra cap of 1,800 requests per hour per team, on a sliding window, counted separately for each group: inbox comments (`GET /v1/inbox/comments` and `GET /v1/inbox/comments/{postId}`), ad comments (`GET /v1/ads/{adId}/comments`) and Google Business reviews (`GET /v1/accounts/{accountId}/gmb-reviews` and `POST /v1/accounts/{accountId}/gmb-reviews/batch`). Past it the API answers 429 with `details.scope` naming the group. Subscribe to the `comment.received`, `review.new` and `review.updated` webhooks instead of polling these routes.
 
+    Analytics reads made with an API key have a cap per team on a 30-second sliding window, on top of the limits above and counted separately for each group: 120 requests for campaign analytics (`GET /v1/ads/campaigns/{campaignId}/analytics`), 300 for ad analytics (`GET /v1/ads/{adId}/analytics`), 150 for ads listings (`GET /v1/ads`, `/v1/ads/tree`, `/v1/ads/timeline`, `/v1/ads/campaigns`, `/v1/ads/performance` and `/v1/ads/alerts`) and 300 for post and inbox analytics (the `/v1/analytics` routes that read stored metrics; the live platform routes such as `/v1/analytics/instagram/*` are not included). Past a cap the API answers 429 with `Retry-After`, `details.scope` naming the group and `details.window`. Read many ads or campaigns in one request with `GET /v1/ads/tree` instead of one request each. Requests from the Zernio dashboard do not count.
+
     Posts themselves are unlimited on every connected account; the rate limit applies only to API request throughput. Zernio also applies per-account daily publish caps as an anti-abuse safeguard (Instagram 100/day, Facebook 100/day, Google Business 100/day, Threads 250/day, X 50/day plus 200 replies for unverified accounts and 2,400 posts a day for verified X accounts, Pinterest 25/day, 50/day for every other platform), plus a 25-posts-per-hour per-account velocity cap.
 
     TikTok caps accounts connected through the TikTok for Business app lower than any of those: 15 videos and 15 photo posts per account per day, counted separately. Zernio enforces it as a trailing 24 hour window rather than a calendar day, and a post over the cap is not rejected. It is held and published automatically once the oldest post of the same kind leaves the window, so `scheduledFor` on that platform entry moves to the time it will go out.
 
-    All responses include `X-RateLimit-Limit`, `X-RateLimit-Remaining`, and `X-RateLimit-Reset` headers. Read these instead of hard-coding limits, since your tier may be configured higher than the default.
+    All responses include `X-RateLimit-Limit`, `X-RateLimit-Remaining`, and `X-RateLimit-Reset` headers, describing whichever limit that applies to the request has the fewest requests left. Read these instead of hard-coding limits, since your tier may be configured higher than the default.
 
     ## Webhooks
 
@@ -1287,6 +1289,45 @@ components:
       content:
         application/json:
           schema: { $ref: '#/components/schemas/ErrorResponse' }
+    AnalyticsRateLimited:
+      x-summary: "Too many requests: wait `Retry-After` seconds, then spread the calls out."
+      description: |
+        A limit on your request rate was reached: your plan's API limit, or the team's analytics read cap on a 30-second sliding window. `details.scope` names the capped group (`campaign-analytics`, `ad-analytics`, `ads-listings` or `post-analytics`) and is absent for the API limit.
+      headers:
+        Retry-After:
+          description: Seconds to wait before retrying.
+          schema: { type: integer }
+        X-RateLimit-Limit:
+          description: The ceiling of the limit that was reached.
+          schema: { type: integer }
+        X-RateLimit-Remaining:
+          description: Requests remaining in the window.
+          schema: { type: integer }
+        X-RateLimit-Reset:
+          description: Unix timestamp (seconds since epoch) when the next slot frees up.
+          schema: { type: integer }
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error: { type: string }
+              details:
+                type: object
+                properties:
+                  currentCount: { type: integer }
+                  limit: { type: integer }
+                  retryAfterSeconds: { type: integer }
+                  scope: { type: string, enum: [campaign-analytics, ad-analytics, ads-listings, post-analytics] }
+                  window: { type: string }
+          example:
+            error: 'Limit of 120 requests per 30 s reached for campaign-analytics reads. Read many campaigns in one request with GET /v1/ads/tree instead of one request each. Please retry after 12 seconds.'
+            details:
+              currentCount: 121
+              limit: 120
+              retryAfterSeconds: 12
+              scope: campaign-analytics
+              window: 30 s
     MetaAdAccountWriteLimited:
       x-summary: "The Meta ad account hit its create limit: wait `Retry-After` seconds, then send creates for that account one at a time."
       description: |
@@ -23157,6 +23198,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '429': { $ref: '#/components/responses/AnalyticsRateLimited' }
 
   /v1/analytics/delta:
     get:
@@ -23336,6 +23378,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '429': { $ref: '#/components/responses/AnalyticsRateLimited' }
 
   /v1/analytics/youtube/channel-insights:
     get:
@@ -25347,6 +25390,7 @@ paths:
                 properties:
                   error: { type: string, example: "Analytics add-on required" }
                   code: { type: string, example: "analytics_addon_required" }
+        '429': { $ref: '#/components/responses/AnalyticsRateLimited' }
 
   /v1/analytics/dashboard:
     get:
@@ -25466,6 +25510,7 @@ paths:
           description: The profile is not accessible, or is beyond your plan's profile limit (PROFILE_OVER_LIMIT).
         '404':
           description: Profile not found or not accessible with this API key.
+        '429': { $ref: '#/components/responses/AnalyticsRateLimited' }
 
   /v1/analytics/best-time:
     get:
@@ -25541,6 +25586,7 @@ paths:
                 properties:
                   error: { type: string, example: "Analytics add-on required" }
                   requiresAddon: { type: boolean, example: true }
+        '429': { $ref: '#/components/responses/AnalyticsRateLimited' }
 
   /v1/analytics/content-decay:
     get:
@@ -25633,6 +25679,7 @@ paths:
                 properties:
                   error: { type: string, example: "Analytics add-on required" }
                   requiresAddon: { type: boolean, example: true }
+        '429': { $ref: '#/components/responses/AnalyticsRateLimited' }
 
   /v1/analytics/posting-frequency:
     get:
@@ -25712,6 +25759,7 @@ paths:
                 properties:
                   error: { type: string, example: "Analytics add-on required" }
                   requiresAddon: { type: boolean, example: true }
+        '429': { $ref: '#/components/responses/AnalyticsRateLimited' }
 
   /v1/ledger/balances:
     get:
@@ -27007,6 +27055,7 @@ paths:
                 type: object
                 properties:
                   error: { type: string, example: "Post not found" }
+        '429': { $ref: '#/components/responses/AnalyticsRateLimited' }
 
   /v1/analytics/googleanalytics/report:
     post:
@@ -27317,6 +27366,7 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/ErrorResponse' }
+        '429': { $ref: '#/components/responses/AnalyticsRateLimited' }
   /v1/analytics/tracking/{windowId}:
     get:
       x-resource-group: "analytics"
@@ -27350,6 +27400,7 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/ErrorResponse' }
+        '429': { $ref: '#/components/responses/AnalyticsRateLimited' }
     delete:
       x-resource-group: "analytics"
       operationId: cancelTrackingWindow
@@ -27443,6 +27494,7 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/ErrorResponse' }
+        '429': { $ref: '#/components/responses/AnalyticsRateLimited' }
   /v1/posts/{postId}/authenticity:
     get:
       x-resource-group: "analytics"
@@ -27898,6 +27950,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '429': { $ref: '#/components/responses/AnalyticsRateLimited' }
 
   /v1/analytics/inbox/heatmap:
     get:
@@ -27973,6 +28026,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '429': { $ref: '#/components/responses/AnalyticsRateLimited' }
 
   /v1/analytics/inbox/source-breakdown:
     get:
@@ -28049,6 +28103,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '429': { $ref: '#/components/responses/AnalyticsRateLimited' }
 
   /v1/analytics/inbox/response-time:
     get:
@@ -28132,6 +28187,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '429': { $ref: '#/components/responses/AnalyticsRateLimited' }
 
   /v1/analytics/inbox/top-accounts:
     get:
@@ -28208,6 +28264,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '429': { $ref: '#/components/responses/AnalyticsRateLimited' }
 
   /v1/analytics/inbox/conversations:
     get:
@@ -28314,6 +28371,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '429': { $ref: '#/components/responses/AnalyticsRateLimited' }
 
   /v1/analytics/inbox/conversations/{conversationId}:
     get:
@@ -28413,6 +28471,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+        '429': { $ref: '#/components/responses/AnalyticsRateLimited' }
 
   /v1/account-groups:
     get:
@@ -65738,6 +65797,7 @@ paths:
         '403':
           x-summary: "Ads access is required: legacy plans need the Ads add-on, and usage-based plans include it by default."
           description: Ads access required. Legacy plans need the Ads add-on; included by default on usage-based plans.
+        '429': { $ref: '#/components/responses/AnalyticsRateLimited' }
 
   /v1/ads/search-terms:
     get:
@@ -67478,6 +67538,7 @@ paths:
         '403':
           x-summary: "Ads access is required: legacy plans need the Ads add-on, and usage-based plans include it by default."
           description: Ads access required. Legacy plans need the Ads add-on; included by default on usage-based plans.
+        '429': { $ref: '#/components/responses/AnalyticsRateLimited' }
 
     post:
       x-resource-group: "ads"
@@ -70017,6 +70078,7 @@ paths:
         '403':
           x-summary: "Ads access is required: legacy plans need the Ads add-on, and usage-based plans include it by default."
           description: Ads access required. Legacy plans need the Ads add-on; included by default on usage-based plans.
+        '429': { $ref: '#/components/responses/AnalyticsRateLimited' }
 
   /v1/ads/performance:
     get:
@@ -70071,6 +70133,7 @@ paths:
           x-summary: "Ads access is required: legacy plans need the Ads add-on, and usage-based plans include it by default."
           description: Ads access required. Legacy plans need the Ads add-on; included by default on usage-based plans.
         '404': { $ref: '#/components/responses/AccountUnavailable' }
+        '429': { $ref: '#/components/responses/AnalyticsRateLimited' }
   /v1/ads/timeline:
     get:
       x-resource-group: "ads"
@@ -70135,6 +70198,7 @@ paths:
           x-summary: "Ads access is required: legacy plans need the Ads add-on, and usage-based plans include it by default."
           description: Ads access required. Legacy plans need the Ads add-on; included by default on usage-based plans.
         '404': { $ref: '#/components/responses/AccountUnavailable' }
+        '429': { $ref: '#/components/responses/AnalyticsRateLimited' }
 
   /v1/ads/{adId}:
     get:
@@ -71778,7 +71842,7 @@ paths:
 
             To fix `ad_account_not_selected`, add the ad account to the selection (GET /v1/connect/{platform}/ads with adAccountIds, which replaces the selection) or use a connection that has it selected.
         '404': { $ref: '#/components/responses/NotFound' }
-        '429': { description: "Google operations budget or quota exhausted without a cached impression-share result." }
+        '429': { description: "The team's analytics read cap was reached (`details.scope` is `campaign-analytics`), or the Google operations budget or quota is exhausted without a cached impression-share result." }
 
   /v1/ads/preview:
     post:
@@ -72602,6 +72666,7 @@ paths:
           x-summary: "Ads access is required: legacy plans need the Ads add-on, and usage-based plans include it by default."
           description: Ads access required. Legacy plans need the Ads add-on; included by default on usage-based plans.
         '404': { $ref: '#/components/responses/NotFound' }
+        '429': { $ref: '#/components/responses/AnalyticsRateLimited' }
 
   /v1/ads/{adId}/tracking-tags:
     get:
@@ -73223,6 +73288,7 @@ paths:
         '403':
           x-summary: "Ads access is required: legacy plans need the Ads add-on, and usage-based plans include it by default."
           description: Ads access required. Legacy plans need the Ads add-on; included by default on usage-based plans.
+        '429': { $ref: '#/components/responses/AnalyticsRateLimited' }
 
   /v1/ads/alerts/{alertId}/dismiss:
     post:
