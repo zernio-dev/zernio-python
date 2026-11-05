@@ -1638,15 +1638,16 @@ components:
             id: { type: string }
             campaignId: { type: [string, "null"] }
         feeCoveredByZernio: { type: boolean, description: 'True for a balance top-up (there is no card fee) and a `payout_batch` payment: Zernio pays the Stripe processing fee, so you are credited the whole charge. False on a top-up made before 2026-11-05.' }
-        amountCents: { type: integer, description: 'The amount you asked for. A top-up charges exactly this and credits it whole. Top-ups from 2026-11-02 to 2026-11-05 charged a card fee on top and credited what Stripe delivered; older ones charged this amount and credited it minus the fee.' }
+        amountCents: { type: integer, description: 'The amount you asked for. A top-up credits exactly this and charges it plus tax (taxCents). Top-ups from 2026-11-02 to 2026-11-05 charged a card fee on top and credited what Stripe delivered; older ones charged this amount and credited it minus the fee.' }
         feeCents: { type: [integer, "null"], description: 'Card fee you paid: 0 when Zernio covers it (feeCoveredByZernio). On an older top-up, the fee Stripe took once paid, the fee charged on top before, or null.' }
-        chargedCents: { type: integer, description: 'What your card was charged: amountCents, or amountCents plus the card fee on a top-up from 2026-11-02 to 2026-11-05.' }
+        taxCents: { type: integer, description: 'Tax charged on top of amountCents once paid (VAT where it applies, since 2026-11-05); 0 before payment, when reverse charged, outside the EU, and on older top-ups.' }
+        chargedCents: { type: integer, description: 'What your card was charged: amountCents plus taxCents, or amountCents plus the card fee on a top-up from 2026-11-02 to 2026-11-05.' }
         stripeFeeCents: { type: [integer, "null"], description: 'feeCents once the top-up is paid; null before. Kept for older clients: read feeCents.' }
         netCents: { type: [integer, "null"], description: 'Amount credited to your balance; null until paid. amountCents when feeCoveredByZernio; on an older top-up, what Stripe delivered.' }
         status: { type: string, enum: [pending, succeeded, failed, expired], description: '`pending` until the card is charged (or 3D Secure is finished) and credited. `expired` means it ended unpaid: cancelled, or 3D Secure left unfinished for 30 minutes. Only `pending` counts toward pendingTopupCents.' }
         createdAt: { type: string, format: date-time }
         succeededAt: { type: [string, "null"], format: date-time }
-        hasInvoice: { type: boolean, description: 'A Checkout invoice exists for this payment (Checkout payments before 2026-10-29). Every paid payment has a card receipt (getTopupReceipt); a paid top-up has a statement (getTopupStatement).' }
+        hasInvoice: { type: boolean, description: 'The paid payment has an invoice (getTopupInvoice): every balance top-up paid since 2026-11-05 (unless charged without one for a Stripe credit balance), and Checkout payments before 2026-10-29. Every paid payment has a card receipt (getTopupReceipt).' }
     PayoutBatchItem:
       type: object
       required: [id, participantId, creator, amountCents, feeCents, totalCents, status, failureReason, transferId]
@@ -25955,9 +25956,13 @@ paths:
       tags: [Treasury]
       summary: Create a top-up
       description: |
-        Charges the billing owner's saved card (the default one, or `paymentMethodId`) exactly `amountCents`, while the payer is present, and credits your balance the same amount. There is no card fee.
+        Charges the billing owner's saved card (the default one, or `paymentMethodId`) `amountCents` plus tax, while the payer is present, and credits your balance `amountCents`. There is no card fee.
 
-        Each top-up has a card receipt (`GET /v1/balance/top-ups/{topupId}/receipt`) and a top-up statement without VAT (`GET /v1/balance/top-ups/{topupId}/statement`): the balance is taxed when it is used, on your monthly invoice.
+        Tax is added on top of the amount (`taxCents`, `totalCents`): VAT at 21% in Spain, at the customer's country rate for EU consumers; an EU business with a valid VAT id is reverse charged (no VAT, `reverseCharge: true`); outside the EU there is none.
+
+        Usage paid from the balance carries no further VAT. Get the figures before paying with `POST /v1/balance/top-ups/preview`.
+
+        Each top-up has an invoice, with VAT where it applies (`GET /v1/balance/top-ups/{topupId}/invoice`), and a card receipt (`GET /v1/balance/top-ups/{topupId}/receipt`).
 
         - `status: succeeded`: the card was charged. `amountCents` is credited to `availableCents` within seconds. Transfers to payees can use it from 7 days after the charge.
         - `status: requires_action`: the bank asked for 3D Secure. Complete it with Stripe.js `handleNextAction({ clientSecret })`, then call `POST /v1/balance/top-ups/{topupId}/confirm`. One left unconfirmed is cancelled after 30 minutes.
@@ -25967,6 +25972,7 @@ paths:
         - 402 `payment_required`: no saved card.
         - 402 `card_declined`: the bank's reason.
         - 400: `method: bank_transfer` (bank transfers are not available yet).
+        - 400 `invalid_billing_address`: the billing address gives no tax location. Add it in Billing, then retry.
 
         Needs an owner, admin or billing admin, signed in or through a full-access key they created.
       parameters:
@@ -25979,7 +25985,7 @@ paths:
               type: object
               required: [amountCents, method]
               properties:
-                amountCents: { type: integer, minimum: 500, maximum: 10000000, description: 'Amount to charge and credit to your balance, in cents: $5 to $100,000. No card fee.' }
+                amountCents: { type: integer, minimum: 500, maximum: 10000000, description: 'Amount to credit to your balance, in cents: $5 to $100,000. Tax is charged on top; no card fee.' }
                 method: { type: string, enum: [card, bank_transfer], description: 'Only card is available. bank_transfer returns 400 "Bank transfers are not available yet."' }
                 paymentMethodId: { type: string, description: "A saved card of the billing owner's (`pm_...`). Defaults to the default payment method." }
       responses:
@@ -25989,12 +25995,16 @@ paths:
             application/json:
               schema:
                 type: object
-                required: [topupId, status, clientSecret, amountCents, feeCents, chargedCents, feeIsExact]
+                required: [topupId, status, clientSecret, amountCents, taxCents, totalCents, taxLabel, reverseCharge, feeCents, chargedCents, feeIsExact]
                 properties:
                   topupId: { type: string }
-                  amountCents: { type: integer, description: 'Charged and credited to your balance once paid.' }
+                  amountCents: { type: integer, description: 'Credited to your balance once paid.' }
+                  taxCents: { type: integer, description: 'Tax added on top of amountCents (VAT where it applies). 0 when reverse charged or outside the EU.' }
+                  totalCents: { type: integer, description: 'What the card is charged: amountCents + taxCents.' }
+                  taxLabel: { type: [string, "null"], description: 'The tax and its rate, for example "VAT 21%". Null when no tax is charged.' }
+                  reverseCharge: { type: boolean, description: 'True for an EU business with a valid VAT id: no VAT is charged and the invoice says reverse charge.' }
                   feeCents: { type: integer, description: 'Always 0: there is no card fee. Kept for older clients.' }
-                  chargedCents: { type: integer, description: 'What the card is charged: amountCents. Kept for older clients.' }
+                  chargedCents: { type: integer, description: 'Same as totalCents. Kept for older clients.' }
                   feeIsExact: { type: boolean, description: 'Always true. Kept for older clients.' }
                   status: { type: string, enum: [succeeded, processing, requires_action] }
                   clientSecret: { type: [string, "null"], description: 'PaymentIntent client secret for Stripe.js handleNextAction; set only when status is requires_action' }
@@ -26041,13 +26051,53 @@ paths:
         '402':
           $ref: '#/components/responses/PaymentRequired'
         '403': { $ref: '#/components/responses/ResourceGroupForbidden' }
+  /v1/balance/top-ups/preview:
+    post:
+      x-resource-group: "money"
+      operationId: previewTopup
+      tags: [Treasury]
+      summary: Preview a top-up's tax
+      description: |
+        The tax a top-up of `amountCents` will carry and the total the card is charged, calculated by Stripe Tax from the billing owner's billing address and tax ids, as the top-up's invoice will be. Charges nothing.
+
+        - 400 `invalid_billing_address`: the billing address gives no tax location, so a top-up would be refused too.
+
+        Needs a full-access key or a signed-in session; a profile-scoped key answers 403.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [amountCents]
+              properties:
+                amountCents: { type: integer, minimum: 500, maximum: 10000000, description: 'Amount to credit to your balance, in cents.' }
+      responses:
+        '200':
+          description: Tax and total for the amount
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [amountCents, taxCents, totalCents, taxLabel, reverseCharge]
+                properties:
+                  amountCents: { type: integer, description: 'Credited to your balance.' }
+                  taxCents: { type: integer, description: 'Tax added on top (VAT where it applies).' }
+                  totalCents: { type: integer, description: 'What the card would be charged: amountCents + taxCents.' }
+                  taxLabel: { type: [string, "null"], description: 'The tax and its rate, for example "VAT 21%". Null when no tax is charged.' }
+                  reverseCharge: { type: boolean, description: 'True for an EU business with a valid VAT id: no VAT, reverse charge.' }
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '402':
+          $ref: '#/components/responses/PaymentRequired'
+        '403': { $ref: '#/components/responses/ResourceGroupForbidden' }
   /v1/balance/top-ups/{topupId}/receipt:
     get:
       x-resource-group: "money"
       operationId: getTopupReceipt
       tags: [Treasury]
       summary: Get a top-up receipt
-      description: "The receipt for a paid top-up or creator payout payment (`purpose: payout_batch`). `format: pdf` is the Checkout invoice PDF (payments before 2026-10-29); `format: page` is Stripe's card receipt page. A top-up's statement is at getTopupStatement. The link is short-lived, so fetch it when you need it. A profile-scoped key answers 403."
+      description: "The receipt for a paid top-up or creator payout payment (`purpose: payout_batch`). `url` is the payment's invoice PDF when it has one (`format: pdf`), else Stripe's card receipt page (`format: page`); `invoiceUrl` and `receiptUrl` give each on its own.\n\nThe invoice alone is at getTopupInvoice. The link is short-lived, so fetch it when you need it. A profile-scoped key answers 403."
       parameters:
         - name: topupId
           in: path
@@ -26068,7 +26118,51 @@ paths:
                   receiptUrl: { type: [string, "null"], format: uri, description: "Stripe's card receipt page for the charge." }
                   amountCents: { type: integer, description: 'As in the top-up list.' }
                   feeCents: { type: [integer, "null"], description: 'Card fee paid, as in the top-up list.' }
-                  chargedCents: { type: integer, description: 'What the card was charged, the total on the receipt.' }
+                  taxCents: { type: integer, description: 'Tax charged on top of amountCents, as in the top-up list.' }
+                  chargedCents: { type: integer, description: 'What the card was charged, tax included: the total on the receipt.' }
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '402':
+          $ref: '#/components/responses/PaymentRequired'
+        '403': { $ref: '#/components/responses/ResourceGroupForbidden' }
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /v1/balance/top-ups/{topupId}/invoice:
+    get:
+      x-resource-group: "money"
+      operationId: getTopupInvoice
+      tags: [Treasury]
+      summary: Get a top-up invoice
+      description: |
+        The invoice for a paid balance top-up: the PDF of the Stripe invoice it was paid through.
+
+        It shows the amount added to your balance and the tax charged on top: VAT where it applies, or a reverse charge note for an EU business with a valid VAT id. Usage paid from the balance carries no further VAT.
+
+        - `format: pdf` is the invoice PDF; `format: page` is its Stripe-hosted page when the PDF is not ready.
+        - 404 before the top-up is paid, and for a payment with no invoice (top-ups before 2026-11-05, creator payout payments). Its card receipt is at getTopupReceipt.
+
+        The link is short-lived, so fetch it when you need it. A profile-scoped key answers 403.
+      parameters:
+        - name: topupId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Invoice link
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [url, format, pdfUrl, pageUrl, amountCents, taxCents, chargedCents]
+                properties:
+                  url: { type: string, format: uri }
+                  format: { type: string, enum: [pdf, page] }
+                  pdfUrl: { type: [string, "null"], format: uri, description: 'The invoice PDF.' }
+                  pageUrl: { type: [string, "null"], format: uri, description: "The invoice's Stripe-hosted page." }
+                  amountCents: { type: integer, description: 'Amount added to your balance, as in the top-up list.' }
+                  taxCents: { type: integer, description: 'Tax charged on top of amountCents.' }
+                  chargedCents: { type: integer, description: 'What the card was charged, tax included.' }
         '400':
           $ref: '#/components/responses/BadRequest'
         '402':
@@ -26081,12 +26175,17 @@ paths:
       x-resource-group: "money"
       operationId: getTopupStatement
       tags: [Treasury]
-      summary: Get a top-up statement
+      summary: Get a top-up invoice (alias)
+      deprecated: true
       description: |
-        The statement for a paid balance top-up: the PDF of the Stripe invoice it was paid through. It shows the amount added to your balance and no VAT: money added to the balance is taxed when it is used, on your monthly invoice.
+        Alias of getTopupInvoice, kept for clients written against its first name.
 
-        - `format: pdf` is the statement PDF; `format: page` is its Stripe-hosted page when the PDF is not ready.
-        - 404 before the top-up is paid, and for a payment with no statement (top-ups before 2026-11-05, creator payout payments). Its card receipt is at getTopupReceipt.
+        The invoice for a paid balance top-up: the PDF of the Stripe invoice it was paid through.
+
+        It shows the amount added to your balance and the tax charged on top: VAT where it applies, or a reverse charge note for an EU business with a valid VAT id. Usage paid from the balance carries no further VAT.
+
+        - `format: pdf` is the invoice PDF; `format: page` is its Stripe-hosted page when the PDF is not ready.
+        - 404 before the top-up is paid, and for a payment with no invoice (top-ups before 2026-11-05, creator payout payments). Its card receipt is at getTopupReceipt.
 
         The link is short-lived, so fetch it when you need it. A profile-scoped key answers 403.
       parameters:
@@ -26096,18 +26195,20 @@ paths:
           schema: { type: string }
       responses:
         '200':
-          description: Statement link
+          description: Invoice link
           content:
             application/json:
               schema:
                 type: object
-                required: [url, format, pdfUrl, pageUrl, amountCents]
+                required: [url, format, pdfUrl, pageUrl, amountCents, taxCents, chargedCents]
                 properties:
                   url: { type: string, format: uri }
                   format: { type: string, enum: [pdf, page] }
-                  pdfUrl: { type: [string, "null"], format: uri, description: 'The statement PDF.' }
-                  pageUrl: { type: [string, "null"], format: uri, description: "The statement's Stripe-hosted page." }
+                  pdfUrl: { type: [string, "null"], format: uri, description: 'The invoice PDF.' }
+                  pageUrl: { type: [string, "null"], format: uri, description: "The invoice's Stripe-hosted page." }
                   amountCents: { type: integer, description: 'Amount added to your balance, as in the top-up list.' }
+                  taxCents: { type: integer, description: 'Tax charged on top of amountCents.' }
+                  chargedCents: { type: integer, description: 'What the card was charged, tax included.' }
         '400':
           $ref: '#/components/responses/BadRequest'
         '402':

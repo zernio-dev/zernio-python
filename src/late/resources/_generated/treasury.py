@@ -106,12 +106,23 @@ class TreasuryResource:
         )
         return self._client._get("/v1/balance/top-ups", params=params)
 
+    def preview_topup(self, amount_cents: int) -> dict[str, Any]:
+        """Preview a top-up's tax"""
+        payload = self._build_payload(
+            amount_cents=amount_cents,
+        )
+        return self._client._post("/v1/balance/top-ups/preview", data=payload)
+
     def get_topup_receipt(self, topup_id: str) -> dict[str, Any]:
         """Get a top-up receipt"""
         return self._client._get(f"/v1/balance/top-ups/{topup_id}/receipt")
 
+    def get_topup_invoice(self, topup_id: str) -> dict[str, Any]:
+        """Get a top-up invoice"""
+        return self._client._get(f"/v1/balance/top-ups/{topup_id}/invoice")
+
     def get_topup_statement(self, topup_id: str) -> dict[str, Any]:
-        """Get a top-up statement"""
+        """Get a top-up invoice (alias)"""
         return self._client._get(f"/v1/balance/top-ups/{topup_id}/statement")
 
     def confirm_topup(self, topup_id: str) -> dict[str, Any]:
@@ -210,12 +221,23 @@ class TreasuryResource:
         )
         return await self._client._aget("/v1/balance/top-ups", params=params)
 
+    async def apreview_topup(self, amount_cents: int) -> dict[str, Any]:
+        """Preview a top-up's tax (async)"""
+        payload = self._build_payload(
+            amount_cents=amount_cents,
+        )
+        return await self._client._apost("/v1/balance/top-ups/preview", data=payload)
+
     async def aget_topup_receipt(self, topup_id: str) -> dict[str, Any]:
         """Get a top-up receipt (async)"""
         return await self._client._aget(f"/v1/balance/top-ups/{topup_id}/receipt")
 
+    async def aget_topup_invoice(self, topup_id: str) -> dict[str, Any]:
+        """Get a top-up invoice (async)"""
+        return await self._client._aget(f"/v1/balance/top-ups/{topup_id}/invoice")
+
     async def aget_topup_statement(self, topup_id: str) -> dict[str, Any]:
-        """Get a top-up statement (async)"""
+        """Get a top-up invoice (alias) (async)"""
         return await self._client._aget(f"/v1/balance/top-ups/{topup_id}/statement")
 
     async def aconfirm_topup(self, topup_id: str) -> dict[str, Any]:
