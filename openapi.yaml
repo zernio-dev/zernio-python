@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.496.1"
+  version: "1.496.2"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -78486,7 +78486,7 @@ paths:
                         timezoneName: { type: string, description: "IANA timezone of the ad account (Meta only). Drives daily-budget reset and Insights day boundaries." }
                         timezoneOffsetHoursUtc: { type: number, description: "Signed UTC offset in hours, reflecting current DST (Meta only)." }
                         minimumDailyBudget: { type: number, description: "Meta only. Minimum daily budget for the account, in the account currency's major units. This is the impressions-billed minimum; other billing events have higher minimums. Absent when the connected token cannot read it." }
-                        fundingSource: { type: string, description: "Meta only. Meta's `funding_source` ID for the ad account, forwarded unchanged. ABSENT both when this connection's token cannot see billing and when the account has no payment method; read `billingStatus` to tell the two apart." }
+                        fundingSource: { type: string, description: "Meta only. Meta's `funding_source` ID for the ad account, forwarded unchanged. ABSENT when this connection's token cannot see billing, when the account has no payment method, and for accounts paid through Business Billing Hub, which still create ads. Absence alone is not a missing payment method." }
                         fundingSourceDetails:
                           type: object
                           description: |
@@ -78504,10 +78504,10 @@ paths:
                           description: |
                             Meta only. Whether the ad account has a payment method:
 
-                            - `missing`: `accountStatus` is `3` (UNSETTLED) or `9` (IN_GRACE_PERIOD), `disableReason` is `3` (RISK_PAYMENT), or the connected person has the MANAGE task on the account (admin, who always sees billing) and Meta returns no funding source.
+                            - `missing`: `accountStatus` is `3` (UNSETTLED) or `9` (IN_GRACE_PERIOD), or `disableReason` is `3` (RISK_PAYMENT).
                             - `missing`, effect: ad creation fails at the ad step with Meta code 100 / subcode 1359188. Add a payment method in Meta's Billing & payments center.
                             - `ok`: Meta returns a funding source. This is presence, not validity: Meta can still refuse the card or balance at ad creation.
-                            - `unknown`: the connected person is not an admin of the account, or the token cannot read the billing fields.
+                            - `unknown`: Meta returns no funding source. The token may not see billing, the account may have no payment method, or it is paid through Business Billing Hub (Meta omits the funding source there even for admins). Meta decides at ad creation.
                         selectable: { type: boolean, description: "Meta and X only. Whether the account can create/run ads now. Always present on every Meta and X account. Absent (treat as true) on other platforms." }
                         unusableReason: { type: [string, "null"], description: "Meta and X only. Always present on every Meta and X account. Human-readable reason when selectable is false; null when selectable." }
                         selected: { type: boolean, description: "Always present. True when the ad account is in this connection's ad-account selection, or when the connection has no selection (then every ad account is usable).\n\n- For a posting account (e.g. facebook, twitter), the selection of its ads connection applies.\n- Unrelated to `selectable`, which is the platform's own status.\n- Writes to an ad account with `selected: false` answer 403 `ad_account_not_selected`.\n- `inScopeOnly=true` lists only the selected ones." }
