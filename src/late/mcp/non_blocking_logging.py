@@ -4,10 +4,12 @@ import queue
 import signal
 import sys
 import threading
+import time
 from types import FrameType
 
 _LOG_QUEUE_CAPACITY = 10_000
 _DRAIN_ON_EXIT_SECONDS = 2.0
+_MAX_WRITES_PER_SECOND = 100
 
 
 class LogPump:
@@ -21,6 +23,7 @@ class LogPump:
         )
         self._notice_handler = notice_handler or logging.StreamHandler(sys.stderr)
         self._dropped = 0
+        self._draining = threading.Event()
         threading.Thread(
             target=self._write_forever, name="log-pump", daemon=True
         ).start()
@@ -32,6 +35,7 @@ class LogPump:
             self._dropped += 1
 
     def drain(self, timeout: float) -> bool:
+        self._draining.set()
         finished = threading.Event()
 
         def wait_for_queue() -> None:
@@ -51,6 +55,8 @@ class LogPump:
                 target.handleError(record)
             finally:
                 self._queue.task_done()
+            if not self._draining.is_set():
+                time.sleep(1 / _MAX_WRITES_PER_SECOND)
 
     def _report_dropped(self) -> None:
         dropped, self._dropped = self._dropped, 0
