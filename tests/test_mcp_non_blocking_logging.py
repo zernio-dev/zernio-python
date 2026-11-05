@@ -15,6 +15,7 @@ from uvicorn.logging import AccessFormatter
 
 from late.mcp.http_server import ClientDisconnectLogFilter
 from late.mcp.non_blocking_logging import (
+    _MAX_WRITES_PER_SECOND,
     LogPump,
     NonBlockingHandler,
     install_non_blocking_logging,
@@ -74,6 +75,37 @@ def test_records_reach_the_stream_in_order_once_it_recovers(isolated_logger) -> 
 
     assert pump.drain(5)
     assert stream.getvalue().splitlines() == [f"line {i}" for i in range(5)]
+
+
+def test_a_backlog_reaches_the_stream_at_a_bounded_rate(isolated_logger) -> None:
+    stream = io.StringIO()
+    target = logging.StreamHandler(stream)
+    pump = LogPump()
+    isolated_logger.addHandler(NonBlockingHandler(target, pump))
+    records = _MAX_WRITES_PER_SECOND // 5
+
+    started = time.perf_counter()
+    for i in range(records):
+        isolated_logger.info("line %s", i)
+    while len(stream.getvalue().splitlines()) < records:
+        time.sleep(0.005)
+    elapsed = time.perf_counter() - started
+
+    assert elapsed >= (records - 1) / _MAX_WRITES_PER_SECOND
+
+
+def test_draining_is_not_held_back_by_the_write_rate(isolated_logger) -> None:
+    stream = io.StringIO()
+    target = logging.StreamHandler(stream)
+    pump = LogPump()
+    isolated_logger.addHandler(NonBlockingHandler(target, pump))
+    records = _MAX_WRITES_PER_SECOND * 2
+
+    for i in range(records):
+        isolated_logger.info("line %s", i)
+
+    assert pump.drain(1)
+    assert len(stream.getvalue().splitlines()) == records
 
 
 def test_a_full_queue_drops_records_and_reports_how_many(isolated_logger) -> None:

@@ -77,6 +77,19 @@ _LONG_RUNNING_POST_PATHS = frozenset(
 _LONG_RUNNING_POST_PATH_PATTERN = re.compile(
     r"/v1/(?:ads/(?:ad-sets/|campaigns/)?[^/]+/duplicate|posts/[^/]+/retry)"
 )
+_LONG_RUNNING_UPDATE_PREFIX = "/v1/ads/"
+
+
+def _runs_long_inside_request(
+    method: str, path: str, data: dict[str, Any] | None
+) -> bool:
+    if isinstance(data, dict) and data.get("publishNow"):
+        return True
+    if method == "POST":
+        return path in _LONG_RUNNING_POST_PATHS or bool(
+            _LONG_RUNNING_POST_PATH_PATTERN.fullmatch(path)
+        )
+    return method in ("PUT", "PATCH") and path.startswith(_LONG_RUNNING_UPDATE_PREFIX)
 
 
 class BaseClient:
@@ -115,10 +128,11 @@ class BaseClient:
             base_url: Base URL for the API (default: https://zernio.com/api)
             timeout: Request timeout in seconds (default: 30)
             max_retries: Maximum retries for failed requests (default: 3)
-            publish_timeout: Timeout in seconds for POSTs that do their work
+            publish_timeout: Timeout in seconds for writes that do their work
                               inside the request and can outlast `timeout`:
-                              publishNow creates, post retries, ad creates and
-                              duplicates, ad video uploads and media prepares
+                              publishNow creates and updates, post retries, ad
+                              creates, updates and duplicates, ad video uploads
+                              and media prepares
                               (default: 300)
         """
         if not api_key:
@@ -138,7 +152,9 @@ class BaseClient:
             "User-Agent": f"late-python-sdk/{self.SDK_VERSION}",
         }
 
-    def _resolve_timeout(self, path: str, data: dict[str, Any] | None) -> float:
+    def _resolve_timeout(
+        self, method: str, path: str, data: dict[str, Any] | None
+    ) -> float:
         """
         Pick the request timeout from the path and, for posts, by sniffing
         publishNow out of the JSON body.
@@ -151,11 +167,7 @@ class BaseClient:
         timeout= on publish-capable operations; that needs a 58-file regen and is
         deliberately out of scope here.
         """
-        if (
-            path in _LONG_RUNNING_POST_PATHS
-            or _LONG_RUNNING_POST_PATH_PATTERN.fullmatch(path)
-            or (data or {}).get("publishNow")
-        ):
+        if _runs_long_inside_request(method, path, data):
             return max(self.timeout, self.publish_timeout)
         return self.timeout
 
@@ -268,17 +280,19 @@ class BaseClient:
                 raise
 
             except httpx.TimeoutException as e:
-                if method.upper() == "POST":
+                if method.upper() == "POST" or _runs_long_inside_request(
+                    method.upper(), path, kwargs.get("json")
+                ):
                     last_error = LateTimeoutError(
-                        f"POST {path} timed out and was NOT retried: the request may have "
-                        f"completed server-side. Check before retrying; retrying may create "
-                        f"a duplicate. ({e})"
+                        f"{method.upper()} {path} timed out and was NOT retried: the request may "
+                        f"have completed server-side. Check before retrying; retrying may repeat "
+                        f"it or create a duplicate. ({e})"
                     )
                     # A POST that timed out client-side may have fully succeeded server-side:
                     # replaying it creates a second live post. The server keys idempotency on
                     # x-request-id, but its content-hash dedup runs first and answers 409 while
-                    # the original is still publishing, so the window is unreachable. PUT,
-                    # PATCH and DELETE stay retryable - they are idempotent by contract.
+                    # the original is still publishing, so the window is unreachable. Other
+                    # PUT, PATCH and DELETE stay retryable - they are idempotent by contract.
                     raise last_error from e
                 last_error = LateTimeoutError(f"Request timed out: {e}")
 
@@ -354,7 +368,7 @@ class BaseClient:
                 json=data,
                 params=params,
                 headers=headers,
-                timeout=self._resolve_timeout(path, data),
+                timeout=self._resolve_timeout("POST", path, data),
             )
 
     def _put(
@@ -373,7 +387,12 @@ class BaseClient:
         """
         with self._sync_client() as client:
             return self._request_with_retry(
-                client, "PUT", path, json=data, params=params
+                client,
+                "PUT",
+                path,
+                json=data,
+                params=params,
+                timeout=self._resolve_timeout("PUT", path, data),
             )
 
     def _patch(
@@ -390,7 +409,12 @@ class BaseClient:
         """
         with self._sync_client() as client:
             return self._request_with_retry(
-                client, "PATCH", path, json=data, params=params
+                client,
+                "PATCH",
+                path,
+                json=data,
+                params=params,
+                timeout=self._resolve_timeout("PATCH", path, data),
             )
 
     def _delete(
@@ -456,17 +480,19 @@ class BaseClient:
                 raise
 
             except httpx.TimeoutException as e:
-                if method.upper() == "POST":
+                if method.upper() == "POST" or _runs_long_inside_request(
+                    method.upper(), path, kwargs.get("json")
+                ):
                     last_error = LateTimeoutError(
-                        f"POST {path} timed out and was NOT retried: the request may have "
-                        f"completed server-side. Check before retrying; retrying may create "
-                        f"a duplicate. ({e})"
+                        f"{method.upper()} {path} timed out and was NOT retried: the request may "
+                        f"have completed server-side. Check before retrying; retrying may repeat "
+                        f"it or create a duplicate. ({e})"
                     )
                     # A POST that timed out client-side may have fully succeeded server-side:
                     # replaying it creates a second live post. The server keys idempotency on
                     # x-request-id, but its content-hash dedup runs first and answers 409 while
-                    # the original is still publishing, so the window is unreachable. PUT,
-                    # PATCH and DELETE stay retryable - they are idempotent by contract.
+                    # the original is still publishing, so the window is unreachable. Other
+                    # PUT, PATCH and DELETE stay retryable - they are idempotent by contract.
                     raise last_error from e
                 last_error = LateTimeoutError(f"Request timed out: {e}")
 
@@ -540,7 +566,7 @@ class BaseClient:
                 json=data,
                 params=params,
                 headers=headers,
-                timeout=self._resolve_timeout(path, data),
+                timeout=self._resolve_timeout("POST", path, data),
             )
 
     async def _aput(
@@ -559,7 +585,12 @@ class BaseClient:
         """
         async with self._async_client() as client:
             return await self._arequest_with_retry(
-                client, "PUT", path, json=data, params=params
+                client,
+                "PUT",
+                path,
+                json=data,
+                params=params,
+                timeout=self._resolve_timeout("PUT", path, data),
             )
 
     async def _apatch(
@@ -576,7 +607,12 @@ class BaseClient:
         """
         async with self._async_client() as client:
             return await self._arequest_with_retry(
-                client, "PATCH", path, json=data, params=params
+                client,
+                "PATCH",
+                path,
+                json=data,
+                params=params,
+                timeout=self._resolve_timeout("PATCH", path, data),
             )
 
     async def _adelete(
