@@ -34063,7 +34063,7 @@ def register_generated_tools(mcp, _get_client):
         or `api_request` for your API request logs (method, path, status, latency).
                 status: Filter by status
                 platform: Filter by platform
-                action: Filter by action (e.g., post.published, message.sent, account.connected, webhook.delivered)
+                action: Filter by action (e.g., post.published, message.sent, message.media_download_failed, account.connected, webhook.delivered)
                 search: Free-text search across log fields
                 days: Number of days to look back (max 90)
                 limit: Maximum number of logs to return (max 100)

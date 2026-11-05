@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.501.0"
+  version: "1.501.1"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -45854,7 +45854,7 @@ paths:
             enum: [tiktok, instagram, whatsapp, facebook, youtube, linkedin, twitter, threads, pinterest, reddit, bluesky, googlebusiness, telegram, snapchat, all]
         - name: action
           in: query
-          description: Filter by action (e.g., post.published, message.sent, account.connected, webhook.delivered)
+          description: Filter by action (e.g., post.published, message.sent, message.media_download_failed, account.connected, webhook.delivered)
           schema:
             type: string
         - name: search
