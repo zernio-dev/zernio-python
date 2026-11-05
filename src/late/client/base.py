@@ -4,6 +4,7 @@ Base HTTP client with sync/async support.
 
 from __future__ import annotations
 
+import re
 import time
 import uuid
 from contextlib import asynccontextmanager, contextmanager
@@ -69,7 +70,12 @@ _LONG_RUNNING_POST_PATHS = frozenset(
         "/v1/ads/create",
         "/v1/ads/ctwa",
         "/v1/ads/messaging",
+        "/v1/ads/videos",
+        "/v1/media/prepare",
     }
+)
+_LONG_RUNNING_POST_PATH_PATTERN = re.compile(
+    r"/v1/(?:ads/(?:ad-sets/|campaigns/)?[^/]+/duplicate|posts/[^/]+/retry)"
 )
 
 
@@ -109,9 +115,11 @@ class BaseClient:
             base_url: Base URL for the API (default: https://zernio.com/api)
             timeout: Request timeout in seconds (default: 30)
             max_retries: Maximum retries for failed requests (default: 3)
-            publish_timeout: Timeout in seconds for publishNow creates and ad
-                              creates, which do their work inside the request
-                              and can outlast `timeout` (default: 300)
+            publish_timeout: Timeout in seconds for POSTs that do their work
+                              inside the request and can outlast `timeout`:
+                              publishNow creates, post retries, ad creates and
+                              duplicates, ad video uploads and media prepares
+                              (default: 300)
         """
         if not api_key:
             raise ValueError("API key is required")
@@ -143,7 +151,11 @@ class BaseClient:
         timeout= on publish-capable operations; that needs a 58-file regen and is
         deliberately out of scope here.
         """
-        if path in _LONG_RUNNING_POST_PATHS or (data or {}).get("publishNow"):
+        if (
+            path in _LONG_RUNNING_POST_PATHS
+            or _LONG_RUNNING_POST_PATH_PATTERN.fullmatch(path)
+            or (data or {}).get("publishNow")
+        ):
             return max(self.timeout, self.publish_timeout)
         return self.timeout
 

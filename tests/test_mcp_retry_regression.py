@@ -23,6 +23,7 @@ assert the exact wire format.
 from __future__ import annotations
 
 import json
+from types import SimpleNamespace
 from typing import Any
 
 import httpx
@@ -151,3 +152,28 @@ class TestIssue1PostsRetry:
         assert "is not in failed status" in result
         assert "(current: scheduled)" in result
         assert "Status" not in result.replace("failed status", "")
+
+    def test_posts_retry_all_failed_stops_when_out_of_time(
+        self, fake_api: FakeZernioAPI, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        now = {"seconds": 0.0}
+        monkeypatch.setattr(
+            mcp_server, "time", SimpleNamespace(monotonic=lambda: now["seconds"])
+        )
+        posts = [dict(FAILED_POST, _id=post_id) for post_id in ("p1", "p2", "p3")]
+        original = fake_api.handler
+
+        def handler(request: httpx.Request) -> httpx.Response:
+            if request.method == "GET" and request.url.path == "/api/v1/posts":
+                return FakeZernioAPI._json({"posts": posts, "pagination": {}})
+            if request.method == "POST":
+                now["seconds"] += mcp_server._RETRY_ALL_BUDGET_SECONDS
+            return original(request)
+
+        monkeypatch.setattr(fake_api, "handler", handler)
+
+        result = mcp_server.posts_retry_all_failed()
+
+        assert fake_api.retried == ["p1"]
+        assert "Retried 1 post(s)" in result
+        assert "2 post(s) not attempted" in result

@@ -27,6 +27,7 @@ import asyncio
 import json
 import os
 import re
+import time
 from contextvars import ContextVar
 from dataclasses import dataclass
 from datetime import datetime, timedelta
@@ -62,6 +63,7 @@ _ACCOUNTS_PAGE_SIZE = 100
 _ACCOUNTS_MAX_PAGE_SIZE = 500
 _PROFILES_PAGE_SIZE = 100
 _PROFILES_MAX_PAGE_SIZE = 1000
+_RETRY_ALL_BUDGET_SECONDS = 300.0
 
 # Always-visible core: the 20 hand-written ergonomic tools (guardrails +
 # LLM-shaped args, preferred over their raw generated twins) plus the generated
@@ -940,8 +942,15 @@ def posts_retry_all_failed() -> str:
     results = []
     success_count = 0
     fail_count = 0
+    deadline = time.monotonic() + _RETRY_ALL_BUDGET_SECONDS
 
-    for post in posts:
+    for attempted, post in enumerate(posts):
+        if time.monotonic() >= deadline:
+            not_attempted = len(posts) - attempted
+            results.append(
+                f"\u26a0\ufe0f {not_attempted} post(s) not attempted, out of time. Call this tool again."
+            )
+            break
         try:
             client.posts.retry(post.field_id)
             success_count += 1
@@ -952,6 +961,7 @@ def posts_retry_all_failed() -> str:
     summary = f"\u2705 Retried {success_count} post(s)"
     if fail_count > 0:
         summary += f"\n\u274c Failed to retry {fail_count} post(s)"
+    if results:
         summary += "\n" + "\n".join(results)
 
     return summary

@@ -1,4 +1,4 @@
-"""Ad creates outlive the default timeout, and an agent's retry must not create a second ad."""
+"""Long POSTs outlive the default timeout, and an agent's retry must not create a second ad."""
 
 from __future__ import annotations
 
@@ -22,6 +22,12 @@ LONG_RUNNING_PATHS = [
     "/v1/ads/create",
     "/v1/ads/ctwa",
     "/v1/ads/messaging",
+    "/v1/ads/videos",
+    "/v1/media/prepare",
+    "/v1/ads/120/duplicate",
+    "/v1/ads/ad-sets/120/duplicate",
+    "/v1/ads/campaigns/120/duplicate",
+    "/v1/posts/p1/retry",
 ]
 STANDALONE_AD = {"account_id": "acc_1", "ad_account_id": "act_1", "name": "Spring"}
 
@@ -59,7 +65,7 @@ def create_ad_route(monkeypatch: pytest.MonkeyPatch):
 
 @pytest.mark.parametrize("path", LONG_RUNNING_PATHS)
 @respx.mock
-def test_ad_creates_wait_for_the_publish_timeout(client: Late, path: str) -> None:
+def test_long_posts_wait_for_the_publish_timeout(client: Late, path: str) -> None:
     route = respx.post(f"{API}{path}").mock(return_value=httpx.Response(201, json={}))
 
     client._post(path, data={"name": "Spring"})
@@ -69,7 +75,7 @@ def test_ad_creates_wait_for_the_publish_timeout(client: Late, path: str) -> Non
 
 @pytest.mark.parametrize("path", LONG_RUNNING_PATHS)
 @respx.mock
-async def test_async_ad_creates_wait_for_the_publish_timeout(
+async def test_async_long_posts_wait_for_the_publish_timeout(
     client: Late, path: str
 ) -> None:
     route = respx.post(f"{API}{path}").mock(return_value=httpx.Response(201, json={}))
@@ -79,13 +85,20 @@ async def test_async_ad_creates_wait_for_the_publish_timeout(
     assert _read_timeout(route) == client.publish_timeout
 
 
+@pytest.mark.parametrize(
+    "path",
+    [
+        "/v1/ads/campaigns",
+        "/v1/inbox/comments/post_1",
+        "/v1/workflows/w1/duplicate",
+        "/v1/posts/p1/unpublish",
+    ],
+)
 @respx.mock
-def test_other_posts_keep_the_default_timeout(client: Late) -> None:
-    route = respx.post(f"{API}/v1/ads/campaigns").mock(
-        return_value=httpx.Response(201, json={})
-    )
+def test_other_posts_keep_the_default_timeout(client: Late, path: str) -> None:
+    route = respx.post(f"{API}{path}").mock(return_value=httpx.Response(201, json={}))
 
-    client._post("/v1/ads/campaigns", data={"name": "Spring"})
+    client._post(path, data={"name": "Spring"})
 
     assert _read_timeout(route) == client.timeout
 
