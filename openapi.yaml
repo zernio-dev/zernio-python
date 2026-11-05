@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.494.1"
+  version: "1.495.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -70608,7 +70608,12 @@ paths:
             - `ad_account_not_selected`: the connection has selected ad accounts and the targeted ad account is not among them. `details` carries `accountId`, `adAccountId` and `selectedAdAccountIds`.
 
             To fix `ad_account_not_selected`, add the ad account to the selection (GET /v1/connect/{platform}/ads with adAccountIds, which replaces the selection) or use a connection that has it selected.
-        '404': { $ref: '#/components/responses/NotFound' }
+        '404':
+          description: "Ad not found (`ad_not_found`), or `account_not_found` when the ad's connection is on a profile this API key can't access."
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '429': { x-summary: "Meta allows one write per 30 seconds to this object and Zernio already retried: retry in 30 seconds.", description: "Meta admits one write per 30 seconds to a metered object, ad creatives above all. Zernio waits out two of those windows and replays the call before surfacing this, so it only appears when the object is being edited faster than that. Retry in 30 seconds." }
         '422': { x-summary: "The ad cannot take this edit as sent: fix the field named in `param`, or finish the ad's setup on the platform.", description: "The edit cannot be applied. One of:\n\n- A Meta creative edit that cannot be applied in place: a partial edit of a SHARE / page-post / dark post creative, an image, video or call-to-action change that an asset_feed creative holds in its feed, or a text count that does not match the asset feed (`param` names the field).\n- The ad has no campaign or ad group on the platform yet.\n- The Google targeting edit asks for something that is create-only (`locations.customLocations`).\n- A creative field the ad's channel cannot carry: assetGroup on a non-Performance-Max ad, a Google Display field on a Search ad, a pinnedField on a Display headline, or any Google-only field on another platform.\n- A Google creative edit cannot reach Google at all (the ad has no `platformAdId`, or its ad account cannot be loaded). This returns 422 rather than a 200 that changed nothing." }
         '501': { description: "targeting or creative not supported on the platform (supported on Meta, TikTok, and LinkedIn)" }
@@ -70671,7 +70676,12 @@ paths:
                   message: { type: string }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { $ref: '#/components/responses/AdAccountNotSelected' }
-        '404': { $ref: '#/components/responses/NotFound' }
+        '404':
+          description: "Ad not found (`ad_not_found`), or `account_not_found` when the ad's connection is on a profile this API key can't access."
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
   /v1/ads/{adId}/status:
     put:
@@ -70758,7 +70768,12 @@ paths:
             - `ad_account_not_selected`: the connection has selected ad accounts and the ad account this request targets is not among them. `details` carries `accountId`, `adAccountId` and `selectedAdAccountIds`.
 
             To fix `ad_account_not_selected`, add the ad account to the selection (GET /v1/connect/{platform}/ads with adAccountIds, which replaces the selection) or use a connection that has it selected.
-        '404': { description: Ad not found }
+        '404':
+          description: "Ad not found (`ad_not_found`), or `account_not_found` when the ad's connection is on a profile this API key can't access."
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
   /v1/ads/campaigns/{campaignId}/assets:
     get:
