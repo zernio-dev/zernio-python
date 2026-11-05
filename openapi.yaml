@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.496.2"
+  version: "1.497.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -66629,7 +66629,7 @@ paths:
               properties:
                 name: { type: string, minLength: 1, maxLength: 200 }
                 accountId: { type: string, description: The ads connection (account ID from `GET /v1/accounts`). }
-                adAccountId: { type: string, description: 'Platform ad account ID, from `GET /v1/ads/accounts`.' }
+                adAccountId: { type: string, maxLength: 64, description: 'Platform ad account ID, from `GET /v1/ads/accounts`.' }
                 level: { $ref: '#/components/schemas/AdRuleLevel' }
                 campaignIds:
                   type: array
