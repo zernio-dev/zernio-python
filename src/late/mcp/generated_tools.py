@@ -14170,6 +14170,7 @@ def register_generated_tools(mcp, _get_client):
         - fromDate defaults to 90 days ago if omitted, max range 366 days.
         - Single post lookups may return 202 (sync pending) or 424 (all platforms failed).
         - For follower stats, use /v1/accounts/follower-stats.
+        - Accounts creators connected to your creator campaigns are left out, here and in every other analytics, follower-stats, account health, inbox and external posts read, unless the request names their profileId or accountId.
 
         ### LinkedIn personal accounts
 
@@ -14177,9 +14178,7 @@ def register_generated_tools(mcp, _get_client):
 
         ### Facebook Page stories
 
-        Stories on a connected Page, published through Zernio or natively, are collected while they are live and returned like any other post (platformPostUrl points to the story). Metrics for a story published through Zernio are available on its Zernio post ID.
-
-        Their lifetime metrics refresh about hourly, with a final reading shortly ...
+        Stories on a connected Page, published through Zernio or natively, are collected while they are live and ...
 
         Args:
             post_id: Returns analytics for a single post. Accepts Zernio Post IDs, External Post IDs and the platform's native post ID. Zernio IDs are auto-resolved to External Post analytics.
