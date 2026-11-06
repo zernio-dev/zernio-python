@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.515.0"
+  version: "1.516.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -72134,6 +72134,15 @@ paths:
 
         The ad group is created WITHOUT an ad (Google Ads compliance row C.190). Ads join it later via `adSetId` on POST /v1/ads/create. Supports Google Ads and Reddit Ads; every other platform returns 501.
 
+        **Google Ads** (`platform: google`)
+
+        - The ad group type follows the campaign: a standard ad group under a Search or Display campaign, a Demand Gen ad group under a Demand Gen campaign.
+        - On a Demand Gen campaign the ad group is always created PAUSED, and `maxCpc` or `status: ACTIVE` returns 400 (Demand Gen bids at the campaign).
+        - `targeting` sets a Demand Gen ad group's locations and languages (`countries`, `regions`, `cities`, `zips`, `metros`, `languages`), created atomically with the ad group. Without it the ad group serves worldwide.
+        - `targeting` returns 400 for any other targeting field, and on campaigns that keep geo on the campaign: Search, Display, and Demand Gen campaigns migrated from Discovery. Edit those with PUT /v1/ads/campaigns/{campaignId}/targeting.
+        - Any other campaign type returns 400 (Performance Max has asset groups instead of ad groups).
+        - A campaign that is not in the ad account, or was removed, returns 404.
+
         **Reddit Ads** (`platform: reddit`)
 
         - `adAccountId` (the Reddit ad account id) is required and must be a selected ad account of the connection (403 otherwise).
@@ -72144,7 +72153,7 @@ paths:
         - The ad group must start no earlier than a future campaign start and end no later than the campaign end (400 otherwise).
         - `targeting` takes the same targeting object as the other ad endpoints (no geo defaults to the US).
         - A campaign of another ad account returns 404, a Reddit Max campaign 422.
-        - `maxCpc` and `customerId` are Google only (400 on Reddit), and the Reddit fields return 400 on Google.
+        - `maxCpc` and `customerId` are Google only (400 on Reddit), and the other Reddit fields return 400 on Google.
 
         ### After creation
 
@@ -72188,7 +72197,9 @@ paths:
                 budgetType: { type: string, enum: [daily, lifetime], description: "Reddit only. Sent together with budgetAmount." }
                 startDate: { type: string, description: "Reddit only. ISO 8601 start of the ad group. Defaults to now, or to the campaign start when it is in the future." }
                 endDate: { type: string, description: "Reddit only. ISO 8601 end of the ad group. Defaults to the campaign end." }
-                targeting: { $ref: '#/components/schemas/TargetingSpec' }
+                targeting:
+                  allOf: [{ $ref: '#/components/schemas/TargetingSpec' }]
+                  description: "Reddit: the full targeting object. Google: locations and languages only, on a Demand Gen campaign."
                 promotedObject:
                   type: object
                   description: "Reddit only. The pixel and the conversion event the ad group optimizes toward."
@@ -82346,14 +82357,12 @@ paths:
                     Under a conversions or traffic goal, Meta also wants a website URL on the options, taken from `linkUrl` (send it with a `callToAction`). Engagement boosts need none.
                 retryOnServerError:
                   type: boolean
-                  default: true
                   description: |
                     Meta only (a 400 elsewhere). When Meta answers a create with a 5xx and reading the parent back by name finds no such object, Zernio sends the create again (at most 3 POSTs per object, never for an object created ACTIVE) and reports it in `recoveredWrites`.
 
                     `false` never sends it again: the request fails with 502 and `details.unconfirmedWrite`, so you can check the parent yourself. One object found by name is still reused.
                 rehostOnInstagramVideoRejection:
                   type: boolean
-                  default: true
                   description: |
                     Meta only (a 400 elsewhere). Controls the fallback when Meta refuses an existing Instagram video as the ad (subcode 1815279).
 
@@ -82405,7 +82414,6 @@ paths:
                     Verified against Meta on Facebook posts; Instagram posts are accepted but not yet verified.
                 validateOnly:
                   type: boolean
-                  default: false
                   description: |
                     Meta only (facebook, instagram and Meta ads connections). Dry-runs the boost with Meta's execution_options validate_only: the campaign, ad set, creative (the post reference) and ad are checked as sent, everything PAUSED, and nothing is created or stored on Meta or in Zernio.
 
@@ -82572,6 +82580,8 @@ paths:
         Adds an asset group with its assets and optional product targeting to a Performance Max campaign, or just validates it without creating anything.
 
         The group, any new assets, their links and an optional listing-group tree are created in one atomic request, so Google checks the asset minimums (for non-retail campaigns) against the whole set. Created PAUSED unless status is ENABLED. validateOnly: true runs Google's validation without creating anything.
+
+        A campaign that is not Performance Max returns 400 on campaignId (add an ad group with POST /v1/ads/ad-sets instead). A missing or removed campaign returns 404.
       parameters:
         - { name: campaignId, in: path, required: true, schema: { type: string, pattern: '^\d+$' }, description: "Google Ads campaign id." }
       requestBody:
@@ -83130,7 +83140,6 @@ paths:
                     Applied to each new creative (standalone, creatives[] and attach shapes) and preserved when a creative is rebuilt. This sets the disclosure on the ad; whether and when the viewer-facing label renders is Meta's decision.
                 retryOnServerError:
                   type: boolean
-                  default: true
                   description: |
                     Meta only (a 400 elsewhere). When Meta answers a create with a 5xx and reading the parent back by name finds no such object, Zernio sends the create again (at most 3 POSTs per object, never for an object created ACTIVE) and reports it in `recoveredWrites`.
 
@@ -83216,16 +83225,17 @@ paths:
                 budgetLevel:
                   type: string
                   enum: [adset, campaign]
-                  default: adset
                   description: |
                     Meta only. Where the budget lives, which selects the Meta budget model:
 
-                    - `adset` (default): ABO (Ad-set Budget Optimization). The budget is set on the ad set. Back-compatible; omit this field to keep it.
+                    - `adset` (used when omitted): ABO (Ad-set Budget Optimization). The budget is set on the ad set.
                     - `campaign`: CBO (Campaign Budget Optimization / Advantage Campaign Budget). The budget AND `bidStrategy` are set on the CAMPAIGN, and Meta distributes spend across ad sets automatically.
 
                     The returned ad stores the applied `budgetLevel`, and the budget in `campaignBudget` (CBO) or `adSetBudget` (ABO). Edit CBO budgets with `PUT /v1/ads/campaigns/{campaignId}` and ABO budgets with `PUT /v1/ads/ad-sets/{adSetId}`.
 
-                    Meta requires the budget at exactly one level, never both. Non-Meta platforms ignore this field. Ignored on the attach shape (`adSetId`), which inherits the existing budget.
+                    Meta requires the budget at exactly one level, never both. Ignored on the Meta attach shape (`adSetId`), which inherits the existing budget.
+
+                    Google Demand Gen also reads it. A new Demand Gen campaign accepts only `campaign` or no value. With `existingCampaignId` or `adSetId`, omit it: the budget stays on the existing campaign. Other platforms ignore it.
                 currency: { type: string, minLength: 3, maxLength: 3, description: "ISO 4217 currency code matching the ad account's currency (e.g. `USD`). Meta only. Optional: Zernio resolves it from the ad account when omitted. The value selects the minor-unit exponent Zernio converts budget/bid amounts by before calling Meta (most currencies are cents; zero-decimal currencies like JPY/KRW are sent as-is)." }
                 headline: { type: string, description: "Ad headline. Required for Meta, Google, Pinterest, LinkedIn, OpenAI Ads and Reddit Ads on legacy + attach shapes (for multi-creative, skip it and use `creatives[].headline`). Ignored for TikTok.\n\nMax length: Meta=255, Google=30, Pinterest=100, LinkedIn=400, OpenAI=50 (min 3), Reddit=300.\n\n- LinkedIn: the ad's headline (the bold text on the creative); for traffic ads, the link card title.\n- OpenAI Ads: the chat card's title.\n- Reddit: the promoted post's title.\n- X: the website card title (needs imageUrl and linkUrl, max 70)." }
                 longHeadline: { type: string, maxLength: 90, description: "Google Display only. Defaults to `headline` if omitted. On LinkedIn, reused as the optional secondary description text on traffic (link) ads; omitted if not provided." }
@@ -83845,7 +83855,7 @@ paths:
                     - Image mode: `defaultImageUrl` + `rules[].imageUrl`.
                     - Video mode: `defaultVideoUrl` or `defaultVideoId` + `rules[].videoUrl` or `rules[].videoId`, with optional `thumbnailUrl`/`defaultThumbnailUrl` posters (Meta auto-generates them when omitted). An id reuses a video already on the ad account and wins over a URL in the same slot; the two can mix across slots.
                 audienceId: { type: string, description: Custom audience ID for targeting }
-                campaignType: { type: string, enum: [display, search, pmax, demand_gen], default: display, description: "Google only. Performance Max requires assetGroup and Demand Gen requires demandGen; both are always created PAUSED. With `adSetId` it defaults to the ad group's own campaign type instead of display." }
+                campaignType: { type: string, enum: [display, search, pmax, demand_gen], description: "Google only. Omitted, it is display on a new campaign, and the existing campaign's own type with `existingCampaignId` or `adSetId` (Search, Display or Demand Gen; other types return 422). Performance Max requires assetGroup and Demand Gen requires demandGen; both are always created PAUSED." }
                 locationTargetingType:
                   allOf: [{ $ref: '#/components/schemas/GoogleLocationTargetingType' }]
                   description: "Google only (400 elsewhere). Set on the new campaign; a request that joins an existing campaign (`existingCampaignId` or `adSetId`) returns 400, change that campaign with PUT /v1/ads/campaigns/{campaignId}/targeting instead. `presence` reaches only people in or regularly in the targeted locations."
