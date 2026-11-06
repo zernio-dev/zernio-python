@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.511.0"
+  version: "1.512.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -18171,6 +18171,19 @@ components:
           type: string
           format: uri
           description: URL where the conversion originated (used by Meta).
+        campaign:
+          type: object
+          additionalProperties: false
+          description: 'The ad campaign behind the event, when you know it. Read only by `POST /v1/events`, which ties the event to the campaign named by `campaign.id`, then by the `utm_campaign` of `sourceUrl`, then by `campaign.name`. See its Storage notes for how the event then counts.'
+          properties:
+            id:
+              type: string
+              maxLength: 64
+              description: Platform campaign ID.
+            name:
+              type: string
+              maxLength: 300
+              description: Campaign name as it appears on the ad platform (case-insensitive).
         actionSource:
           type: string
           enum: [web, app, offline, crm, phone_call, system_generated, business_messaging]
@@ -67511,7 +67524,7 @@ paths:
       x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "reddit"]
       summary: List your results per campaign
       description: |
-        Your results summed per campaign over a date range, one entry per campaign with every metric it has, for the ad accounts your key can see. Each day counts its newest value only.
+        Your results summed per campaign over a date range, one entry per campaign with every metric it has, for the ad accounts your key can see. Each day counts its newest uploaded value only, plus the events sent to `POST /v1/events` that are tied to the campaign (`sales`, `revenue`, `leads`, `qualified_leads`).
 
         Paginated by campaign: pass `nextCursor` back as `cursor` until it is null.
       security:
@@ -67602,7 +67615,7 @@ paths:
       x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "reddit"]
       summary: Get your results totals
       description: |
-        Each metric you send summed over a date range across every campaign of the ad accounts your key can see, or of the ones you name. Each day counts its newest value only.
+        Each metric you send summed over a date range across every campaign of the ad accounts your key can see, or of the ones you name. Each day counts its newest uploaded value only, plus the events sent to `POST /v1/events` that are tied to a campaign.
 
         Formulas are not computed here, since they also read the platform's numbers: apply one to these totals and the account's spend for the same range, or read it per campaign from `GET /v1/ads/tree?results=true`.
       security:
@@ -85664,6 +85677,8 @@ paths:
         - Email, phone and `externalId` are stored only as SHA-256 hashes.
         - `sourceUrl` keeps only its origin, path and attribution parameters (`utm_*`, `gclid`, `fbclid`, `ttclid`, `li_fat_id`, `epik`, `rdt_cid`, `gbraid`, `wbraid`).
         - Events sent with `testCode` are forwarded but not stored.
+        - Sending an event again with the same `eventId` replaces the stored one.
+        - A stored `Purchase`, `Lead` or `QualifiedLead` tied to one of your campaigns (see `campaign` on each event) counts in `GET /v1/ads/campaign-results` and in ad rules as `sales` and `revenue`, `leads` or `qualified_leads`.
       security:
         - bearerAuth: []
       requestBody:
