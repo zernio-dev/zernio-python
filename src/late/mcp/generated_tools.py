@@ -6859,7 +6859,7 @@ def register_generated_tools(mcp, _get_client):
                 limit
                 source: `all` (default) returns both Zernio-created ads and those discovered from the platform's ad manager. Matches the web UI's default view. Pass `zernio` to restrict to isExternal=false only. Status is NOT filtered by default; use the `status` param for that.
                 platform
-                status: Filter by derived campaign status (post-aggregation)
+                status: Filter by derived campaign status (post-aggregation). `not_deleted` keeps every status except `cancelled`.
                 ad_account_id: Platform ad account ID (e.g. act_123 for Meta)
                 campaign_id: Platform campaign ID (the `platformCampaignId` on each returned campaign). Returns only that campaign, or an empty list when it is not visible to the caller. Mirrors the same filter on /v1/ads and /v1/ads/tree.
                 page_id: Meta only: Facebook Page ID. Campaigns have no Page of their own, so this keeps campaigns having at least one ad backed by this Page, with adCount and metrics computed over those ads only. Mirrors the same filter on /v1/ads and /v1/ads/tree.
@@ -8593,7 +8593,7 @@ def register_generated_tools(mcp, _get_client):
                 limit: Campaigns per page
                 source: `all` (default) returns both Zernio-created ads and those discovered from the platform's ad manager. Matches the web UI's default view. Pass `zernio` to restrict to isExternal=false only. Status is NOT filtered by default; use the `status` param for that.
                 platform
-                status: Filter by derived campaign status (post-aggregation)
+                status: Filter by derived campaign status (post-aggregation). `not_deleted` keeps every status except `cancelled`.
                 ad_account_id: One or more platform ad account IDs to scope the tree to (agency profiles connect a whole Business Manager, but a team usually cares about a subset).
 
         - Comma-separate for multiple (`?adAccountId=act_1,act_2,act_3`); a single value keeps its old shape.
