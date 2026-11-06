@@ -13242,7 +13242,9 @@ def register_generated_tools(mcp, _get_client):
 
         **Meta coverage.** Political and social-issue ads are searchable worldwide. Every other ad is in the archive only if it was delivered to the EU or UK within the last year, so a US-only commercial advertiser is invisible.
 
-        Spend, impressions and demographics are political-only fields and are left out of the default projection; request them via `fields`. All customers share Zernio's ...
+        Spend, impressions and demographics are political-only fields and are left out of the default projection; request them via `fields`.
+
+        **Meta rate limit.** Meta ...
 
         Platforms: meta, linkedin
 

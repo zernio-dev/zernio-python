@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.508.1"
+  version: "1.508.2"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -979,6 +979,8 @@ components:
         - Key still processing: 409.
 
         A request cut off mid-handler (e.g. by a function timeout) can leave its key in progress, answering 409 until the key expires after 24 hours.
+
+        On the Ads create, boost and duplicate endpoints, a same-body retry runs again once the cut-off request started more than 15 minutes ago.
   headers:
     BackfillRetryAfter:
       description: Recommended delay before retrying, in seconds.
@@ -82898,7 +82900,9 @@ paths:
 
         **Meta coverage.** Political and social-issue ads are searchable worldwide. Every other ad is in the archive only if it was delivered to the EU or UK within the last year, so a US-only commercial advertiser is invisible.
 
-        Spend, impressions and demographics are political-only fields and are left out of the default projection; request them via `fields`. All customers share Zernio's Meta quota, so a `429` means back off for a minute.
+        Spend, impressions and demographics are political-only fields and are left out of the default projection; request them via `fields`.
+
+        **Meta rate limit.** Meta searches are capped at 30 requests per hour per team, because all customers share Zernio's Meta quota. Meta can also throttle that shared quota. Either way you get a `429` with `Retry-After`: wait that long before retrying.
 
         **LinkedIn coverage.** Ads served after June 1 2023, worldwide, kept for a year after their last impression. EU-delivered ads carry impression ranges and the disclosed targeting facets.
 
@@ -83006,6 +83010,7 @@ paths:
           x-summary: "Ads access is missing or no payment method is on file: enable Ads access or add a card."
           description: "Ads access required (legacy plans need the Ads add-on; included on usage-based plans), or `payment_required`: the billing owner has no payment method on file and no legacy paid plan. Searches are free; the card keeps the shared archive quota for real accounts."
         '404': { $ref: '#/components/responses/AccountUnavailable' }
+        '429': { $ref: '#/components/responses/RateLimited' }
 
         '501': { description: Only supported on Meta and LinkedIn accounts }
         '503': { description: "Meta's Ad Library is unavailable on Zernio's side (`PLATFORM_DISABLED`); LinkedIn searches are unaffected." }
