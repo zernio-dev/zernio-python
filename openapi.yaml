@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.513.0"
+  version: "1.513.1"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -1340,6 +1340,8 @@ components:
       x-summary: "The Meta ad account hit its create limit: wait `Retry-After` seconds, then send creates for that account one at a time."
       description: |
         Meta only (code `rate_limited`). Meta puts a security hold lasting days (code 31, subcode 3858385, "Please authenticate your account") on ad accounts that receive bursts of ad writes, and it counts `validateOnly` checks as writes.
+
+        Creates here are every request that creates ad objects on the ad account: `POST /v1/ads/create`, `/boost`, `/campaigns`, `/messaging`, `/ctwa` and `/call` (each including `validateOnly`), the three duplicate routes, and a creative rebuilt by `PUT /v1/ads/{adId}` or `PATCH /v1/ads/{adId}/tracking-tags`. One request counts as one create, however many objects it writes.
 
         To keep integrations out of that hold, Zernio:
 
@@ -67990,6 +67992,7 @@ paths:
                   status: { type: string, enum: [ACTIVE, PAUSED] }
         '400': { description: "Invalid input, or Meta rejected the create" }
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '429': { $ref: '#/components/responses/MetaAdAccountWriteLimited' }
         '501': { x-summary: "The request needs a feature this platform lacks, such as validateOnly outside Meta or campaign-only creation: remove that option.", description: '`validateOnly: true` outside Meta, or campaign-only creation on a platform that does not support it. Carries code `feature_not_available`.' }
 
   /v1/ads/campaigns/{campaignId}/status:
@@ -68965,6 +68968,7 @@ paths:
                     description: "Platform-native response from the copy (TikTok and LinkedIn). Absent on Meta, which returns `adSetIdMap` and `adIdMap` instead."
         '400': { description: Invalid input }
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '429': { $ref: '#/components/responses/MetaAdAccountWriteLimited' }
         '403':
           x-summary: "The free live ads limit is reached without a card, or the account is not selected: add a card or select it."
           description: |
@@ -69594,6 +69598,7 @@ paths:
                   raw: { type: object, description: "Platform-native response from the copy (TikTok). Absent on Meta, which returns `adIdMap` instead." }
         '400': { description: Invalid input }
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '429': { $ref: '#/components/responses/MetaAdAccountWriteLimited' }
         '403':
           x-summary: "The free live ads limit is reached without a card, or the account is not selected: add a card or select it."
           description: |
@@ -69695,6 +69700,7 @@ paths:
                   raw: { type: object }
         '400': { description: Invalid input }
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '429': { $ref: '#/components/responses/MetaAdAccountWriteLimited' }
         '403':
           x-summary: "The free live ads limit is reached without a card, or the account is not selected: add a card or select it."
           description: |
@@ -71016,7 +71022,13 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-        '429': { x-summary: "Meta allows one write per 30 seconds to this object and Zernio already retried: retry in 30 seconds.", description: "Meta admits one write per 30 seconds to a metered object, ad creatives above all. Zernio waits out two of those windows and replays the call before surfacing this, so it only appears when the object is being edited faster than that. Retry in 30 seconds." }
+        '429':
+          x-summary: "Meta allows one write per 30 seconds to this object, or the Meta ad account write guard refused a creative rebuild: wait `Retry-After` (or 30 seconds) and retry."
+          description: |
+            Two causes, both code `rate_limited`:
+
+            - Meta admits one write per 30 seconds to a metered object, ad creatives above all. Zernio waits out two of those windows and replays the call before surfacing this, so it only appears when the object is being edited faster than that. Retry in 30 seconds.
+            - A Meta `creative` replace creates a new creative, so it takes the Meta ad account write guard (see `MetaAdAccountWriteLimited`): `details.reason` is `ad_account_busy` (another write held the ad account past a 60-second wait) or `ad_account_write_cap` (30 creates in 5 minutes), with `details.adAccountId`. Wait `Retry-After` seconds.
         '422': { x-summary: "The ad cannot take this edit as sent: fix the field named in `param`, or finish the ad's setup on the platform.", description: "The edit cannot be applied. One of:\n\n- A Meta creative edit that cannot be applied in place: a partial edit of a SHARE / page-post / dark post creative, an image, video or call-to-action change that an asset_feed creative holds in its feed, or a text count that does not match the asset feed (`param` names the field).\n- The ad has no campaign or ad group on the platform yet.\n- The Google targeting edit asks for something that is create-only (`locations.customLocations`).\n- A creative field the ad's channel cannot carry: assetGroup on a non-Performance-Max ad, a Google Display field on a Search ad, a pinnedField on a Display headline, or any Google-only field on another platform.\n- A Google creative edit cannot reach Google at all (the ad has no `platformAdId`, or its ad account cannot be loaded). This returns 422 rather than a 200 that changed nothing." }
         '501': { description: "targeting or creative not supported on the platform (supported on Meta, TikTok, and LinkedIn)" }
         '502': { x-summary: "Meta failed to produce the media, or the current targeting could not be read and nothing was written: retry the request.", description: "Meta accepted the request then failed to produce the media (upload session, chunk transfer, processing timeout, or a response with no image hash). Inspect `platformError.reason`. Also returned with code `platform_api_error` when a Meta or LinkedIn targeting update cannot read the current targeting: nothing is written, so retry the request." }
@@ -73085,6 +73097,7 @@ paths:
                   platform: { type: string }
                 additionalProperties: true
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '429': { $ref: '#/components/responses/MetaAdAccountWriteLimited' }
         '403':
           x-summary: "The free live ads limit is reached without a card, or the account is not selected: add a card or select it."
           description: |
