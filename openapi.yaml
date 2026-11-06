@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.513.1"
+  version: "1.514.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -13246,6 +13246,7 @@ components:
         - syncContacts
         - logMessages
         - reportDeals
+        - useDealsAsResults
       properties:
         _id:
           type: string
@@ -13273,6 +13274,9 @@ components:
         reportDeals:
           type: boolean
           description: Whether Zernio sends closed-won deals as Purchase events to the profile's event destinations.
+        useDealsAsResults:
+          type: boolean
+          description: Whether closed-won deals count as sales on the ad campaign that brought their contact, in campaign results and ad rules.
     GoogleAnalyticsReport:
       type: object
       description: >-
@@ -43757,6 +43761,12 @@ paths:
                     Send each deal that becomes closed won as a Purchase to the profile's event destinations, about
                     once an hour. Requires the portal to have granted `crm.objects.deals.read`; otherwise 400.
                     Deals closed before it was turned on are not sent.
+                useDealsAsResults:
+                  type: boolean
+                  description: >-
+                    Count each closed-won deal as a sale with its amount on the ad campaign that brought its contact,
+                    in `GET /v1/ads/campaign-results` and ad rules. Requires `crm.objects.deals.read`; otherwise 400.
+                    Turning it on fills in the deals of the last 90 days, never sent to the ad platforms.
       responses:
         '200':
           description: Updated settings
