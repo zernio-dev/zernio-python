@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.518.1"
+  version: "1.518.2"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -27348,7 +27348,7 @@ paths:
                   code:
                     type: string
                     enum: [MEDIA_UNDECODABLE, MEDIA_URL_UNREACHABLE, MEDIA_URL_NOT_ALLOWED]
-                    description: 'Stable reason when valid is false. MEDIA_UNDECODABLE: the bytes are not a valid image, video or PDF. MEDIA_URL_UNREACHABLE: HTTP error, timeout or network failure. MEDIA_URL_NOT_ALLOWED: not a public HTTP(S) URL.'
+                    description: 'Stable reason when valid is false. MEDIA_UNDECODABLE: the bytes are not a valid image, video or PDF. MEDIA_URL_UNREACHABLE: HTTP error, timeout, network failure, or a web page served instead of the file. MEDIA_URL_NOT_ALLOWED: not a public HTTP(S) URL.'
                   contentType: { type: string, example: "image/jpeg", description: "Content-Type header the server sent (may disagree with the detected format)" }
                   size: { type: [integer, "null"], description: "File size in bytes" }
                   sizeFormatted: { type: string, example: "245 KB" }
