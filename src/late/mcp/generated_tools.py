@@ -9788,6 +9788,7 @@ def register_generated_tools(mcp, _get_client):
         budget_level: Literal["adset", "campaign"] | None = None,
         attribution_spec: list[dict[str, Any]] | None = None,
         bodies: list[str] | None = None,
+        retry_on_server_error: bool = True,
         rehost_on_instagram_video_rejection: bool = True,
         smart_targeting: dict[str, Any] | None = None,
         optimization_goal: str | None = None,
@@ -10008,6 +10009,9 @@ def register_generated_tools(mcp, _get_client):
                 bodies: Meta only. Extra primary-text options Meta rotates on the boosted post (asset_feed_spec.bodies with DEGREES_OF_FREEDOM). The post keeps its own text as one of the options. Works for Facebook posts and Instagram media.
 
         Under a conversions or traffic goal, Meta also wants a website URL on the options, taken from `linkUrl` (send it with a `callToAction`). Engagement boosts need none.
+                retry_on_server_error: Meta only (a 400 elsewhere). When Meta answers a create with a 5xx and reading the parent back by name finds no such object, Zernio sends the create again (at most 3 POSTs per object, never for an object created ACTIVE) and reports it in `recoveredWrites`.
+
+        `false` never sends it again: the request fails with 502 and `details.unconfirmedWrite`, so you can check the parent yourself. One object found by name is still reused.
                 rehost_on_instagram_video_rejection: Meta only (a 400 elsewhere). Controls the fallback when Meta refuses an existing Instagram video as the ad (subcode 1815279).
 
         - First, Zernio copies the video into the ad account and retries on the original post.
@@ -10107,6 +10111,7 @@ def register_generated_tools(mcp, _get_client):
                 budget_level=budget_level,
                 attribution_spec=attribution_spec,
                 bodies=bodies,
+                retry_on_server_error=retry_on_server_error,
                 rehost_on_instagram_video_rejection=rehost_on_instagram_video_rejection,
                 smart_targeting=smart_targeting,
                 optimization_goal=optimization_goal,
@@ -10465,6 +10470,7 @@ def register_generated_tools(mcp, _get_client):
         | None = None,
         multi_advertiser: Literal["OPT_IN", "OPT_OUT"] | None = None,
         ai_disclosure: Literal["OPT_IN", "OPT_OUT"] | None = None,
+        retry_on_server_error: bool = True,
         validate_only: bool | None = None,
         budget_amount: float | None = None,
         budget_type: Literal["daily", "lifetime"] | None = None,
@@ -10848,6 +10854,9 @@ def register_generated_tools(mcp, _get_client):
         - Omitted: leaves Meta's default.
 
         Applied to each new creative (standalone, creatives[] and attach shapes) and preserved when a creative is rebuilt. This sets the disclosure on the ad; whether and when the viewer-facing label renders is Meta's decision.
+                retry_on_server_error: Meta only (a 400 elsewhere). When Meta answers a create with a 5xx and reading the parent back by name finds no such object, Zernio sends the create again (at most 3 POSTs per object, never for an object created ACTIVE) and reports it in `recoveredWrites`.
+
+        `false` never sends it again: the request fails with 502 and `details.unconfirmedWrite`, so you can check the parent yourself. One object found by name is still reused.
                 validate_only: Validate the request without creating anything. Supported on Meta, TikTok, ChatGPT (OpenAI) and Google Performance Max / Demand Gen. Any other platform, or a Google campaignType other than pmax or demand_gen, returns 501 `feature_not_available`.
 
         **Google Performance Max**: validates the complete atomic campaign and asset group, with no resource creation or local persistence. Validation still downloads image URLs and consumes quota.
@@ -11321,6 +11330,7 @@ def register_generated_tools(mcp, _get_client):
             "catalog_format": catalog_format,
             "multi_advertiser": multi_advertiser,
             "ai_disclosure": ai_disclosure,
+            "retry_on_server_error": retry_on_server_error,
             "validate_only": validate_only,
             "budget_amount": budget_amount,
             "budget_type": budget_type,
@@ -11443,6 +11453,7 @@ def register_generated_tools(mcp, _get_client):
                 catalog_format=catalog_format,
                 multi_advertiser=multi_advertiser,
                 ai_disclosure=ai_disclosure,
+                retry_on_server_error=retry_on_server_error,
                 validate_only=validate_only,
                 budget_amount=budget_amount,
                 budget_type=budget_type,
@@ -35483,6 +35494,7 @@ def register_generated_tools(mcp, _get_client):
         account_id: str,
         ad_account_id: str,
         name: str,
+        retry_on_server_error: bool = True,
         creative_features: dict[str, Any] | None = None,
         tracking: dict[str, Any] | None = None,
         campaign_name: str | None = None,
@@ -35631,6 +35643,9 @@ def register_generated_tools(mcp, _get_client):
             Safe to retry: an identical call within 24 hours returns the first result instead of creating a second one, and answers 409 while the first is still running. To create another on purpose, or if that 409 does not clear, change an argument such as the name.
 
             Args:
+                retry_on_server_error: When Meta answers a create with a 5xx and reading the parent back by name finds no such object, Zernio sends the create again (at most 3 POSTs per object, never for an object created ACTIVE) and reports it in `recoveredWrites`.
+
+        `false` never sends it again: the request fails with 502 and `details.unconfirmedWrite`, so you can check the parent yourself. One object found by name is still reused.
                 creative_features: Meta enhancement settings for single or attached ads, and defaults for creatives[]. An item replaces the entire map, including with an empty object.
                 tracking: Object with keys: pixelId (string) - Meta Pixel ID to attach for offsite-conversion measurement, or the Reddit pixel of the new ad group.; urlTags (list of objects with keys key, value) - Click-URL params. - Meta: stored on the creative as `url_tags` and returned by GET /v1/ads/{adId}/tracking-tags. Dynamic macros ({{ad.id}}, {{campaign.id}}, ...; zernioTag (boolean) - POST /v1/ads/create on Meta and Google only. Opt-in: set `true` and the ad carries `zrn=<platform ad id>` on its landing URL, so orders and events tied to the ...
                 account_id: Facebook or Instagram SocialAccount ID. (required)
@@ -35835,6 +35850,7 @@ def register_generated_tools(mcp, _get_client):
         Success returns 200 with per-node results; a Meta rejection returns the Meta error."""
         client = _get_client()
         same_arguments: dict[str, Any] = {
+            "retry_on_server_error": retry_on_server_error,
             "creative_features": creative_features,
             "tracking": tracking,
             "account_id": account_id,
@@ -35916,6 +35932,7 @@ def register_generated_tools(mcp, _get_client):
         }
         try:
             response = client.messaging_ads.create_messaging_ad(
+                retry_on_server_error=retry_on_server_error,
                 creative_features=creative_features,
                 tracking=tracking,
                 account_id=account_id,
@@ -36016,6 +36033,7 @@ def register_generated_tools(mcp, _get_client):
         name: str,
         phone_number: str,
         link_url: str,
+        retry_on_server_error: bool = True,
         creative_features: dict[str, Any] | None = None,
         tracking: dict[str, Any] | None = None,
         campaign_name: str | None = None,
@@ -36152,6 +36170,9 @@ def register_generated_tools(mcp, _get_client):
             Safe to retry: an identical call within 24 hours returns the first result instead of creating a second one, and answers 409 while the first is still running. To create another on purpose, or if that 409 does not clear, change an argument such as the name.
 
             Args:
+                retry_on_server_error: When Meta answers a create with a 5xx and reading the parent back by name finds no such object, Zernio sends the create again (at most 3 POSTs per object, never for an object created ACTIVE) and reports it in `recoveredWrites`.
+
+        `false` never sends it again: the request fails with 502 and `details.unconfirmedWrite`, so you can check the parent yourself. One object found by name is still reused.
                 creative_features: Meta enhancement settings for single or attached ads, and defaults for creatives[]. An item replaces the entire map, including with an empty object.
                 tracking: Object with keys: pixelId (string) - Meta Pixel ID to attach for offsite-conversion measurement, or the Reddit pixel of the new ad group.; urlTags (list of objects with keys key, value) - Click-URL params. - Meta: stored on the creative as `url_tags` and returned by GET /v1/ads/{adId}/tracking-tags. Dynamic macros ({{ad.id}}, {{campaign.id}}, ...; zernioTag (boolean) - POST /v1/ads/create on Meta and Google only. Opt-in: set `true` and the ad carries `zrn=<platform ad id>` on its landing URL, so orders and events tied to the ...
                 account_id: Facebook or Instagram SocialAccount ID. (required)
@@ -36341,6 +36362,7 @@ def register_generated_tools(mcp, _get_client):
                 link_url: Website shown as the creative's link. Required: Meta rejects tel: as link_data.link; the phone number rides only the CTA. (required)"""
         client = _get_client()
         same_arguments: dict[str, Any] = {
+            "retry_on_server_error": retry_on_server_error,
             "creative_features": creative_features,
             "tracking": tracking,
             "account_id": account_id,
@@ -36419,6 +36441,7 @@ def register_generated_tools(mcp, _get_client):
         }
         try:
             response = client.messaging_ads.create_call_ad(
+                retry_on_server_error=retry_on_server_error,
                 creative_features=creative_features,
                 tracking=tracking,
                 account_id=account_id,
@@ -36514,6 +36537,7 @@ def register_generated_tools(mcp, _get_client):
         account_id: str,
         ad_account_id: str,
         name: str,
+        retry_on_server_error: bool = True,
         creative_features: dict[str, Any] | None = None,
         tracking: dict[str, Any] | None = None,
         campaign_name: str | None = None,
@@ -36646,6 +36670,9 @@ def register_generated_tools(mcp, _get_client):
             Safe to retry: an identical call within 24 hours returns the first result instead of creating a second one, and answers 409 while the first is still running. To create another on purpose, or if that 409 does not clear, change an argument such as the name.
 
             Args:
+                retry_on_server_error: When Meta answers a create with a 5xx and reading the parent back by name finds no such object, Zernio sends the create again (at most 3 POSTs per object, never for an object created ACTIVE) and reports it in `recoveredWrites`.
+
+        `false` never sends it again: the request fails with 502 and `details.unconfirmedWrite`, so you can check the parent yourself. One object found by name is still reused.
                 creative_features: Meta enhancement settings for single or attached ads, and defaults for creatives[]. An item replaces the entire map, including with an empty object.
                 tracking: Object with keys: pixelId (string) - Meta Pixel ID to attach for offsite-conversion measurement, or the Reddit pixel of the new ad group.; urlTags (list of objects with keys key, value) - Click-URL params. - Meta: stored on the creative as `url_tags` and returned by GET /v1/ads/{adId}/tracking-tags. Dynamic macros ({{ad.id}}, {{campaign.id}}, ...; zernioTag (boolean) - POST /v1/ads/create on Meta and Google only. Opt-in: set `true` and the ad carries `zrn=<platform ad id>` on its landing URL, so orders and events tied to the ...
                 account_id: Facebook or Instagram SocialAccount ID. (required)
@@ -36833,6 +36860,7 @@ def register_generated_tools(mcp, _get_client):
         When Meta rejects the ad set for a missing verified advertiser, the error carries param regionalRegulationIdentities, details.expectedIdentityKeys (keys the declared categories expect), details.suggestedCategories (markets Meta ties to that subcode) and Meta's metaCode, metaSubcode and fbtraceId."""
         client = _get_client()
         same_arguments: dict[str, Any] = {
+            "retry_on_server_error": retry_on_server_error,
             "creative_features": creative_features,
             "tracking": tracking,
             "account_id": account_id,
@@ -36909,6 +36937,7 @@ def register_generated_tools(mcp, _get_client):
         }
         try:
             response = client.messaging_ads.create_ctwa_ad(
+                retry_on_server_error=retry_on_server_error,
                 creative_features=creative_features,
                 tracking=tracking,
                 account_id=account_id,

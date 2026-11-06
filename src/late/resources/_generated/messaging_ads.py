@@ -80,6 +80,7 @@ class MessagingAdsResource:
         name: str,
         *,
         idempotency_key: str | None = None,
+        retry_on_server_error: bool | None = True,
         creative_features: Any | None = None,
         tracking: Any | None = None,
         campaign_name: str | None = None,
@@ -158,6 +159,7 @@ class MessagingAdsResource:
     ) -> dict[str, Any]:
         """Create messaging ad"""
         payload = self._build_payload(
+            retry_on_server_error=retry_on_server_error,
             creative_features=creative_features,
             tracking=tracking,
             account_id=account_id,
@@ -251,6 +253,7 @@ class MessagingAdsResource:
         link_url: str,
         *,
         idempotency_key: str | None = None,
+        retry_on_server_error: bool | None = True,
         creative_features: Any | None = None,
         tracking: Any | None = None,
         campaign_name: str | None = None,
@@ -324,6 +327,7 @@ class MessagingAdsResource:
     ) -> dict[str, Any]:
         """Create Click-to-Call ad"""
         payload = self._build_payload(
+            retry_on_server_error=retry_on_server_error,
             creative_features=creative_features,
             tracking=tracking,
             account_id=account_id,
@@ -412,6 +416,7 @@ class MessagingAdsResource:
         name: str,
         *,
         idempotency_key: str | None = None,
+        retry_on_server_error: bool | None = True,
         creative_features: Any | None = None,
         tracking: Any | None = None,
         campaign_name: str | None = None,
@@ -485,6 +490,7 @@ class MessagingAdsResource:
     ) -> dict[str, Any]:
         """Create CTWA ad (deprecated)"""
         payload = self._build_payload(
+            retry_on_server_error=retry_on_server_error,
             creative_features=creative_features,
             tracking=tracking,
             account_id=account_id,
@@ -571,6 +577,7 @@ class MessagingAdsResource:
         name: str,
         *,
         idempotency_key: str | None = None,
+        retry_on_server_error: bool | None = True,
         creative_features: Any | None = None,
         tracking: Any | None = None,
         campaign_name: str | None = None,
@@ -649,6 +656,7 @@ class MessagingAdsResource:
     ) -> dict[str, Any]:
         """Create messaging ad (async)"""
         payload = self._build_payload(
+            retry_on_server_error=retry_on_server_error,
             creative_features=creative_features,
             tracking=tracking,
             account_id=account_id,
@@ -744,6 +752,7 @@ class MessagingAdsResource:
         link_url: str,
         *,
         idempotency_key: str | None = None,
+        retry_on_server_error: bool | None = True,
         creative_features: Any | None = None,
         tracking: Any | None = None,
         campaign_name: str | None = None,
@@ -817,6 +826,7 @@ class MessagingAdsResource:
     ) -> dict[str, Any]:
         """Create Click-to-Call ad (async)"""
         payload = self._build_payload(
+            retry_on_server_error=retry_on_server_error,
             creative_features=creative_features,
             tracking=tracking,
             account_id=account_id,
@@ -905,6 +915,7 @@ class MessagingAdsResource:
         name: str,
         *,
         idempotency_key: str | None = None,
+        retry_on_server_error: bool | None = True,
         creative_features: Any | None = None,
         tracking: Any | None = None,
         campaign_name: str | None = None,
@@ -978,6 +989,7 @@ class MessagingAdsResource:
     ) -> dict[str, Any]:
         """Create CTWA ad (deprecated) (async)"""
         payload = self._build_payload(
+            retry_on_server_error=retry_on_server_error,
             creative_features=creative_features,
             tracking=tracking,
             account_id=account_id,
