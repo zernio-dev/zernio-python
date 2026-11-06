@@ -38918,6 +38918,8 @@ def register_generated_tools(mcp, _get_client):
         made_for_kids: bool | None = None,
         contains_synthetic_media: bool | None = None,
         playlist_id: str | None = None,
+        default_language: str | None = None,
+        default_audio_language: str | None = None,
     ) -> str:
         """Update post metadata
 
@@ -38947,7 +38949,9 @@ def register_generated_tools(mcp, _get_client):
         - 500: any other temporary YouTube or network failure; can be retried.
                 made_for_kids: COPPA compliance flag. Set true for child-directed content (restricts comments, notifications, ad targeting).
                 contains_synthetic_media: AI-generated content disclosure. Set true if the video contains synthetic content that could be mistaken for real. YouTube may add a label.
-                playlist_id: YouTube playlist ID to add the video to (e.g. 'PLxxxxxxxxxxxxx'). Use GET /v1/accounts/{id}/youtube-playlists to list available playlists. Only playlists owned by the channel are supported."""
+                playlist_id: YouTube playlist ID to add the video to (e.g. 'PLxxxxxxxxxxxxx'). Use GET /v1/accounts/{id}/youtube-playlists to list available playlists. Only playlists owned by the channel are supported.
+                default_language: Language of the title and description (BCP-47, e.g. ko).
+                default_audio_language: Spoken language of the video (BCP-47, e.g. ko). When a video has no audio language, YouTube may set en-US once its metadata is updated."""
         client = _get_client()
         try:
             response = client.posts.update_post_metadata(
@@ -38964,6 +38968,8 @@ def register_generated_tools(mcp, _get_client):
                 made_for_kids=made_for_kids,
                 contains_synthetic_media=contains_synthetic_media,
                 playlist_id=playlist_id,
+                default_language=default_language,
+                default_audio_language=default_audio_language,
             )
             return _format_response(response)
         except Exception as e:

@@ -320,6 +320,8 @@ class PostsResource:
         made_for_kids: bool | None = None,
         contains_synthetic_media: bool | None = None,
         playlist_id: str | None = None,
+        default_language: str | None = None,
+        default_audio_language: str | None = None,
     ) -> dict[str, Any]:
         """Update post metadata"""
         payload = self._build_payload(
@@ -335,6 +337,8 @@ class PostsResource:
             made_for_kids=made_for_kids,
             contains_synthetic_media=contains_synthetic_media,
             playlist_id=playlist_id,
+            default_language=default_language,
+            default_audio_language=default_audio_language,
         )
         return self._client._post(f"/v1/posts/{post_id}/update-metadata", data=payload)
 
@@ -585,6 +589,8 @@ class PostsResource:
         made_for_kids: bool | None = None,
         contains_synthetic_media: bool | None = None,
         playlist_id: str | None = None,
+        default_language: str | None = None,
+        default_audio_language: str | None = None,
     ) -> dict[str, Any]:
         """Update post metadata (async)"""
         payload = self._build_payload(
@@ -600,6 +606,8 @@ class PostsResource:
             made_for_kids=made_for_kids,
             contains_synthetic_media=contains_synthetic_media,
             playlist_id=playlist_id,
+            default_language=default_language,
+            default_audio_language=default_audio_language,
         )
         return await self._client._apost(
             f"/v1/posts/{post_id}/update-metadata", data=payload
