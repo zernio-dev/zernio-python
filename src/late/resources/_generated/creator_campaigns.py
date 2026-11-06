@@ -361,6 +361,22 @@ class CreatorCampaignsResource:
             "/v1/creator-campaigns/{campaignId}/payout-batches", params=params
         )
 
+    def preview_campaign_payout_batch(
+        self,
+        campaign_id: str,
+        *,
+        participant_ids: list[str] | None = None,
+        exclude_participant_ids: list[str] | None = None,
+    ) -> dict[str, Any]:
+        """Preview a payout batch"""
+        payload = self._build_payload(
+            participant_ids=participant_ids,
+            exclude_participant_ids=exclude_participant_ids,
+        )
+        return self._client._post(
+            f"/v1/creator-campaigns/{campaign_id}/payout-batches/preview", data=payload
+        )
+
     def create_campaign_invite_link(self, campaign_id: str) -> dict[str, Any]:
         """Create campaign invite link"""
         return self._client._post(f"/v1/creator-campaigns/{campaign_id}/invite-link")
@@ -802,6 +818,22 @@ class CreatorCampaignsResource:
         )
         return await self._client._aget(
             "/v1/creator-campaigns/{campaignId}/payout-batches", params=params
+        )
+
+    async def apreview_campaign_payout_batch(
+        self,
+        campaign_id: str,
+        *,
+        participant_ids: list[str] | None = None,
+        exclude_participant_ids: list[str] | None = None,
+    ) -> dict[str, Any]:
+        """Preview a payout batch (async)"""
+        payload = self._build_payload(
+            participant_ids=participant_ids,
+            exclude_participant_ids=exclude_participant_ids,
+        )
+        return await self._client._apost(
+            f"/v1/creator-campaigns/{campaign_id}/payout-batches/preview", data=payload
         )
 
     async def acreate_campaign_invite_link(self, campaign_id: str) -> dict[str, Any]:

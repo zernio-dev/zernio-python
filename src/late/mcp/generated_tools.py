@@ -30017,7 +30017,7 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Settle campaign participant
 
-        Records a payout of the participant's payable balance and fires `campaign_payout.settled`.
+        Records a payout of the participant's payable balance and fires `campaign_payout.settled`. No money moves through Zernio.
 
         Omit `amountCents` to settle the whole payable balance. An amount above it answers 400, and nothing payable answers 409. Send an `Idempotency-Key` so a retry never records the payout twice.
 
@@ -30025,21 +30025,14 @@ def register_generated_tools(mcp, _get_client):
 
         - `none` settlement: records a payout you made elsewhere.
         - `external` settlement: pay from your own rails when `campaign_payout.payable` fires, then call this with your payout id in `externalReference` (required in this mode).
-        - `treasury` settlement: transfers the amount from your Zernio balance to the creator's connected Stripe account, then records it with the Stripe transfer id as `externalReference`.
-
-        ### Treasury payouts
-
-        The transfer fee (4%, $0.50 minimum) is added on top: the creator receives the full amount and your balance is debited `totalCents`.
-
-        - The creator must have finished payout setup from their campaign page (409 otherwise).
-        - A balance that does not cover the ...
+        - `treasury` settlement: send `recordOnly: true` to record a payout you made yourself (the webhook then carries `recorded: true`). Without it the call answers 409: Zernio pays creators of these campaigns by card with `POST /v1/creator-campaigns/{campaignId}/payout-batches`, never from your balance.
 
         Args:
             campaign_id: Campaign ID. (required)
             participant_id: Participant ID. (required)
             amount_cents: Defaults to the whole payable balance.
             external_reference: Your payout id. Required when the campaign settles externally.
-            record_only: Treasury campaigns only: record a payout you already made outside Zernio, without moving money. Ignored on other settlement modes, which always record."""
+            record_only: Treasury campaigns only, and required there: record a payout you already made outside Zernio. Ignored on other settlement modes, which always record."""
         client = _get_client()
         try:
             response = client.creator_campaigns.settle_campaign_participant(
@@ -30068,21 +30061,17 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Pay creators with one card payment
 
-        Pays exactly what is owed to the creators of a `treasury` campaign by charging the billing owner's saved card, with no redirect.
+        Pays exactly what is owed to the creators of a `treasury` campaign by charging the billing owner's saved card, with no redirect. Payouts are never paid from your balance.
 
         ### How it works
 
         1. Every payable creator who finished payout setup (or only `participantIds`, minus `excludeParticipantIds`) is held in `settling`.
-        2. The saved card (the default one, or `paymentMethodId`) is charged the total plus the fee (4% per creator, 50 cent minimum) while the payer is present.
-        3. Once the charge succeeds, each creator gets a transfer funded by it, and the batch ends `paid` or `partially_failed`.
+        2. The saved card (the default one, or `paymentMethodId`) pays one invoice while the payer is present: the payouts, plus the fee (4% per creator, 50 cent minimum) and the VAT on the fee where it applies.
+        3. Card payments are held 7 days against chargebacks (`releasesAt`). Then each creator gets a transfer funded by the charge, and the batch ends `paid` or `partially_failed`.
 
-        A creator whose payouts were disabled before the payment landed is skipped and stays payable.
+        Zernio collects the payouts and pays each creator on your behalf and in your name, so the payouts carry no VAT.
 
-        ### 3D Secure
-
-        `payment.status: requires_action` means the bank asked the payer to confirm. Complete it with Stripe.js `handleNextAction({ clientSecret })`, then call `POST /v1/payout-batches/{batchId}/confirm`.
-
-        One left unfinished is cancelled after 30 minutes and every amount is payable again. Cancel it sooner with `POST ...
+        A creator whose payouts were disabled before the hold ended is skipped and stays payable. A charge refunded or disputed during the hold pays nobody: every amount is payable again. ...
 
         Args:
             participant_ids: Pay only these participants. Defaults to every payable participant who is ready.
@@ -30121,6 +30110,42 @@ def register_generated_tools(mcp, _get_client):
         try:
             response = client.creator_campaigns.list_campaign_payout_batches(
                 limit=limit, skip=skip
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Preview a payout batch",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def creator_campaigns_preview_campaign_payout_batch(
+        campaign_id: str,
+        participant_ids: list[str] | None = None,
+        exclude_participant_ids: list[str] | None = None,
+    ) -> str:
+        """Preview a payout batch
+
+        What `POST /v1/creator-campaigns/{campaignId}/payout-batches` with the same body would charge your card now. Holds and charges nothing.
+
+        The payouts carry no VAT. `taxCents` is the VAT on Zernio's fee where it applies, from Stripe Tax for your billing address: 21% in Spain, your country's rate for EU consumers, reverse charged (`reverseCharge: true`, no VAT) for EU businesses with a VAT id, none outside the EU.
+
+        Creators who have not finished payout setup are left out, as paying would.
+
+        Args:
+            campaign_id: Campaign ID. (required)
+            participant_ids: Preview only these participants. Defaults to every payable participant who is ready.
+            exclude_participant_ids: Leave these participants out."""
+        client = _get_client()
+        try:
+            response = client.creator_campaigns.preview_campaign_payout_batch(
+                campaign_id=campaign_id,
+                participant_ids=participant_ids,
+                exclude_participant_ids=exclude_participant_ids,
             )
             return _format_response(response)
         except Exception as e:
@@ -44394,16 +44419,13 @@ def register_generated_tools(mcp, _get_client):
 
         Returns your team's balance:
 
-        - the balance you can transfer
-        - the part of it that cannot be paid out to creators yet (`payoutLockedCents`, `payoutLocks`)
+        - the balance pay-per-use draws on
         - top-ups still waiting for payment
-        - your latest top-ups
+        - your latest top-ups and payout batch payments
 
-        A card top-up is in `availableCents` as soon as it is paid. Transfers to payees can use it from 7 days after the charge, so a stolen card cannot be turned straight into payouts.
+        A card top-up is in `availableCents` as soon as it is paid. The balance never pays creators: payouts are charged to your card per payout batch.
 
-        A transfer debits its amount plus the fee added on top; the payee receives the full amount.
-
-        A card dispute or refund on a top-up is debited from the available balance and can make it negative. Transfers are refused until it is positive again.
+        A card dispute or refund is debited from the available balance and can make it negative. New payout batches are refused until it is positive again.
 
         A profile-scoped key answers 403, since the balance belongs to the whole team."""
         client = _get_client()
@@ -44758,7 +44780,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
-            title="Create a transfer",
+            title="Create a transfer (removed)",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
@@ -44767,28 +44789,11 @@ def register_generated_tools(mcp, _get_client):
     def treasury_create_transfer(
         payee_id: str, amount_cents: int, reference: dict[str, Any] | None = None
     ) -> str:
-        """Create a transfer
+        """Create a transfer (removed)
 
-        Moves money from your balance to a payee.
+        Removed on 2026-11-06: the balance no longer pays creators. Every call answers 410.
 
-        ### Fee
-
-        The payee receives the full `amountCents`. Zernio's fee (4%, 50 cent minimum) is added on top, so your balance is debited `totalCents` = `amountCents` + `feeCents`.
-
-        ### Who can call it
-
-        Needs an owner, admin or billing admin, signed in or through a full-access key they created. A profile-scoped key answers 403.
-
-        ### Errors
-
-        - 402: the balance does not cover the amount plus the fee.
-        - 402: the balance is negative after a dispute or refund of a card top-up (\"Your balance is negative after a dispute or refund of a card top-up. Add funds to cover it before sending transfers.\").
-        - 409: the payee has not finished onboarding, or the Idempotency-Key is still processing.
-        - 409 `payout_funds_locked`: money from a card top-up can be transferred from 7 days after the charge. The message names the amount and the day (\"$100.00 from your card top-up on Oct 29 can be paid out from Nov 5.\").
-
-        ### Retries
-
-        A same-key retry never makes the transfer ...
+        Pay creators with one card payment per payout batch: `POST /v1/creator-campaigns/{campaignId}/payout-batches`. `GET /v1/transfers` still lists the transfers payout batches made.
 
         Args:
             payee_id: 24-character payee id (required)

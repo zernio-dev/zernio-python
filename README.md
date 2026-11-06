@@ -1048,6 +1048,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `creator_campaigns.close_creator_campaign()` | Close creator campaign |
 | `creator_campaigns.move_campaign_participant()` | Move participant to another campaign |
 | `creator_campaigns.pause_creator_campaign()` | Pause creator campaign |
+| `creator_campaigns.preview_campaign_payout_batch()` | Preview a payout batch |
 | `creator_campaigns.raise_creator_campaign_budget()` | Raise creator campaign budget |
 | `creator_campaigns.reinstate_campaign_participant()` | Reinstate campaign participant |
 | `creator_campaigns.reject_campaign_submission()` | Reject campaign submission |
@@ -1484,7 +1485,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `treasury.list_transfers()` | List transfers |
 | `treasury.create_payee_onboarding_link()` | Create a payee onboarding link |
 | `treasury.create_topup()` | Create a top-up |
-| `treasury.create_transfer()` | Create a transfer |
+| `treasury.create_transfer()` | Create a transfer (removed) |
 | `treasury.get_auto_recharge()` | Get auto-recharge settings |
 | `treasury.get_balance()` | Get balance |
 | `treasury.get_payout_batch()` | Get a payout batch |

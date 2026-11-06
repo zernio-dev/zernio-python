@@ -172,7 +172,7 @@ class TreasuryResource:
         idempotency_key: str | None = None,
         reference: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
-        """Create a transfer"""
+        """Create a transfer (removed)"""
         payload = self._build_payload(
             payee_id=payee_id,
             amount_cents=amount_cents,
@@ -310,7 +310,7 @@ class TreasuryResource:
         idempotency_key: str | None = None,
         reference: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
-        """Create a transfer (async)"""
+        """Create a transfer (removed) (async)"""
         payload = self._build_payload(
             payee_id=payee_id,
             amount_cents=amount_cents,

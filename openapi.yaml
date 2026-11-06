@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.520.0"
+  version: "1.521.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -325,7 +325,9 @@ tags:
     description: |
       Pay creators for verified performance. A campaign sets the economics (CPM, per post or pool), a budget and the platforms. Creators join through an invite link, connect their accounts read-only and submit their posts.
 
-      Zernio tracks each post through a tracking window, scores its authenticity, accrues earnings in a ledger and flags anything suspicious, never rejecting on its own. You review submissions, approve or reject them, and settle what is payable from your own rails (or, later, from your Zernio balance).
+      Zernio tracks each post through a tracking window, scores its authenticity, accrues earnings in a ledger and flags anything suspicious, never rejecting on its own. You review submissions, approve or reject them, and settle what is payable from your own rails.
+
+      Or pay creators through Zernio with one card payment per payout batch (never from your balance).
 
       Amounts are USD cents. Earnings move through four states per participant: accruing (earned, not approved), owed (approved, on hold for `holdDays`), payable and settled.
 
@@ -1719,7 +1721,7 @@ components:
         monthRechargedCents: { type: integer, description: 'Auto-recharge top-ups this calendar month (UTC), paid or being paid, before tax.' }
     PayoutBatchItem:
       type: object
-      required: [id, participantId, creator, amountCents, feeCents, totalCents, status, failureReason, transferId]
+      required: [id, participantId, creator, amountCents, feeCents, totalCents, status, failureReason, transferId, refundedCents]
       properties:
         id: { type: string }
         participantId: { type: string }
@@ -1733,28 +1735,30 @@ components:
         totalCents: { type: integer, description: 'amountCents plus feeCents.' }
         status:
           type: string
-          enum: [pending, paid, failed, skipped]
-          description: '`skipped`: not paid because payout setup was not finished, or the card payment never completed; the amount is payable again. `failed`: Stripe refused the transfer; the amount is payable again.'
+          enum: [pending, paid, failed, skipped, refunded]
+          description: '`skipped`: payout setup not finished, or the card payment never completed. `failed`: Stripe refused the transfer. `refunded`: failed or skipped after the card hold; its payout, fee and VAT on the fee went back to the card through a credit note. The amount is payable again in every case.'
         failureReason: { type: [string, "null"], description: 'Why the item was not paid, in plain words.' }
         transferId: { type: [string, "null"], description: 'The treasury transfer that paid this item.' }
+        refundedCents: { type: [integer, "null"], description: 'What went back to the card for a `refunded` item: payout, fee and VAT on the fee. Null otherwise.' }
     PayoutBatch:
       type: object
-      required: [id, campaignId, status, method, amountCents, feeCents, totalCents, items, paidAt, finishedAt, createdAt]
+      required: [id, campaignId, status, method, amountCents, feeCents, totalCents, items, paidAt, releasesAt, finishedAt, createdAt]
       properties:
         id: { type: string }
         campaignId: { type: [string, "null"] }
         status:
           type: string
           enum: [awaiting_payment, paying, paid, partially_failed, failed, expired]
-          description: '`awaiting_payment` until the card charge succeeds (3D Secure included); `paying` while transfers go out; then `paid`, `partially_failed` (some items failed or were skipped), `failed` (the card was declined, or none paid) or `expired` (the payment was cancelled unpaid, every amount is payable again).'
+          description: '`awaiting_payment` until the card charge succeeds (3D Secure included); `paying` during the 7-day card hold and while transfers go out; then `paid`, `partially_failed` (some items failed or were skipped), `failed` (the card was declined, or none paid) or `expired` (the payment was cancelled unpaid, every amount is payable again).'
         method: { type: string, enum: [card] }
         amountCents: { type: integer, description: 'Total the creators receive.' }
         feeCents: { type: integer, description: 'Total Zernio fee.' }
-        totalCents: { type: integer, description: 'The card charge: amountCents plus feeCents.' }
+        totalCents: { type: integer, description: 'amountCents plus feeCents. The card is charged this plus the VAT on the fee where it applies (see the batch invoice).' }
         items:
           type: array
           items: { $ref: '#/components/schemas/PayoutBatchItem' }
         paidAt: { type: [string, "null"], format: date-time }
+        releasesAt: { type: [string, "null"], format: date-time, description: 'When the 7-day card hold ends and the creators are paid. Null until the charge succeeds.' }
         finishedAt: { type: [string, "null"], format: date-time }
         createdAt: { type: string, format: date-time }
     TreasuryTransfer:
@@ -1766,7 +1770,7 @@ components:
         destinationType: { type: string, enum: [creator, ad_account] }
         amountCents: { type: integer, description: 'Amount the payee receives, in full' }
         feeCents: { type: integer, description: 'Zernio fee added on top, 4% with a 50 cent minimum' }
-        totalCents: { type: integer, description: 'Amount debited from your balance: amountCents plus feeCents' }
+        totalCents: { type: integer, description: 'amountCents plus feeCents, both paid by the payout batch card charge' }
         currency: { type: string }
         reference:
           type: object
@@ -6218,7 +6222,7 @@ components:
         settlement:
           type: string
           enum: [none, external, treasury]
-          description: 'none: settle records a payout made elsewhere. external: you pay from your own rails on campaign_payout.payable and settle with your reference. treasury: settle moves the money from your Zernio balance to the creator''s Stripe account, and the creator sets up payouts from their campaign page.'
+          description: 'none: settle records a payout made elsewhere. external: you pay from your own rails on campaign_payout.payable and settle with your reference. treasury: you pay by card with a payout batch and Zernio pays each creator in your name 7 days after the charge.'
         economics: { $ref: '#/components/schemas/CreatorCampaignEconomics' }
         caps: { $ref: '#/components/schemas/CreatorCampaignCaps' }
         branding:
@@ -27137,7 +27141,7 @@ webhooks:
       operationId: onCampaignPayoutFailed
       summary: Campaign payout failed event
       description: |
-        A payout through your Zernio balance did not reach the creator.
+        A payout through Zernio did not reach the creator.
 
         ### When it fires
 
@@ -30609,16 +30613,13 @@ paths:
       description: |
         Returns your team's balance:
 
-        - the balance you can transfer
-        - the part of it that cannot be paid out to creators yet (`payoutLockedCents`, `payoutLocks`)
+        - the balance pay-per-use draws on
         - top-ups still waiting for payment
-        - your latest top-ups
+        - your latest top-ups and payout batch payments
 
-        A card top-up is in `availableCents` as soon as it is paid. Transfers to payees can use it from 7 days after the charge, so a stolen card cannot be turned straight into payouts.
+        A card top-up is in `availableCents` as soon as it is paid. The balance never pays creators: payouts are charged to your card per payout batch.
 
-        A transfer debits its amount plus the fee added on top; the payee receives the full amount.
-
-        A card dispute or refund on a top-up is debited from the available balance and can make it negative. Transfers are refused until it is positive again.
+        A card dispute or refund is debited from the available balance and can make it negative. New payout batches are refused until it is positive again.
 
         A profile-scoped key answers 403, since the balance belongs to the whole team.
       responses:
@@ -30629,12 +30630,13 @@ paths:
               schema:
                 type: object
                 properties:
-                  availableCents: { type: integer, description: 'Your balance, including card top-ups paid in the last 7 days (see payoutLockedCents). It goes negative after a dispute or refund of a spent top-up, or when pay-per-use already in flight lands past zero. The next top-up covers it. Transfers are refused while it is negative.' }
+                  availableCents: { type: integer, description: 'Your balance. It goes negative after a dispute or refund of a spent top-up, or when pay-per-use already in flight lands past zero. The next top-up covers it. New payout batches are refused while it is negative.' }
                   promoCents: { type: integer, description: 'Balance billing only (absent otherwise). Promotional and support credit Zernio added to your balance. Pay-per-use spends it before availableCents. It is never paid out to payees and is not part of availableCents.' }
-                  payoutLockedCents: { type: integer, description: 'Part of availableCents from card top-ups charged in the last 7 days, net of refunds and disputes. Transfers to payees cannot use it yet; a transfer that needs it answers 409 `payout_funds_locked` with the day it can be sent.' }
+                  payoutLockedCents: { type: integer, deprecated: true, description: 'Always 0. The balance no longer pays creators, so none of it is locked from them.' }
                   payoutLocks:
                     type: array
-                    description: 'The card top-ups behind payoutLockedCents, soonest first.'
+                    deprecated: true
+                    description: 'Always empty. The balance no longer pays creators.'
                     items:
                       type: object
                       required: [topupId, amountCents, chargedAt, unlocksAt]
@@ -31118,30 +31120,12 @@ paths:
       x-resource-group: "money"
       operationId: createTransfer
       tags: [Treasury]
-      summary: Create a transfer
+      summary: Create a transfer (removed)
+      deprecated: true
       description: |
-        Moves money from your balance to a payee.
+        Removed on 2026-11-06: the balance no longer pays creators. Every call answers 410.
 
-        ### Fee
-
-        The payee receives the full `amountCents`. Zernio's fee (4%, 50 cent minimum) is added on top, so your balance is debited `totalCents` = `amountCents` + `feeCents`.
-
-        ### Who can call it
-
-        Needs an owner, admin or billing admin, signed in or through a full-access key they created. A profile-scoped key answers 403.
-
-        ### Errors
-
-        - 402: the balance does not cover the amount plus the fee.
-        - 402: the balance is negative after a dispute or refund of a card top-up ("Your balance is negative after a dispute or refund of a card top-up. Add funds to cover it before sending transfers.").
-        - 409: the payee has not finished onboarding, or the Idempotency-Key is still processing.
-        - 409 `payout_funds_locked`: money from a card top-up can be transferred from 7 days after the charge. The message names the amount and the day ("$100.00 from your card top-up on Oct 29 can be paid out from Nov 5.").
-
-        ### Retries
-
-        A same-key retry never makes the transfer twice within Stripe's 24-hour idempotency window. It answers 409 while another request is still waiting on Stripe for it.
-
-        A transfer Stripe has not confirmed after 24 hours answers 409 until the daily reconciliation marks it paid (Stripe made it) or failed (it did not).
+        Pay creators with one card payment per payout batch: `POST /v1/creator-campaigns/{campaignId}/payout-batches`. `GET /v1/transfers` still lists the transfers payout batches made.
       parameters:
         - $ref: '#/components/parameters/IdempotencyKeyHeader'
       requestBody:
@@ -31161,26 +31145,13 @@ paths:
                     type: { type: string }
                     id: { type: string }
       responses:
-        '201':
-          description: Transfer created
-          content:
-            application/json:
-              schema: { $ref: '#/components/schemas/TreasuryTransfer' }
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '402':
-          $ref: '#/components/responses/PaymentRequired'
-        '403': { $ref: '#/components/responses/MoneyForbidden' }
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '409':
-          x-summary: "The transfer cannot proceed yet because payout onboarding is unfinished or the request is still processing: wait and retry later."
-          description: Payee has not finished payout onboarding, the Idempotency-Key is still processing, another request is waiting on Stripe for this transfer, or Stripe has not confirmed it within 24 hours
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '410':
+          x-summary: "Transfers from the balance are no longer available: pay creators with a payout batch."
+          description: 'Transfers from the balance are no longer available (code `invalid_resource_state`). Pay creators with `POST /v1/creator-campaigns/{campaignId}/payout-batches`.'
           content:
             application/json:
               schema: { $ref: '#/components/schemas/ErrorResponse' }
-        '422':
-          $ref: '#/components/responses/IdempotencyKeyReused'
     get:
       x-resource-group: "money"
       operationId: listTransfers
@@ -101276,7 +101247,7 @@ paths:
       tags: [Creator Campaigns]
       summary: Settle campaign participant
       description: |
-        Records a payout of the participant's payable balance and fires `campaign_payout.settled`.
+        Records a payout of the participant's payable balance and fires `campaign_payout.settled`. No money moves through Zernio.
 
         Omit `amountCents` to settle the whole payable balance. An amount above it answers 400, and nothing payable answers 409. Send an `Idempotency-Key` so a retry never records the payout twice.
 
@@ -101284,33 +101255,7 @@ paths:
 
         - `none` settlement: records a payout you made elsewhere.
         - `external` settlement: pay from your own rails when `campaign_payout.payable` fires, then call this with your payout id in `externalReference` (required in this mode).
-        - `treasury` settlement: transfers the amount from your Zernio balance to the creator's connected Stripe account, then records it with the Stripe transfer id as `externalReference`.
-
-        ### Treasury payouts
-
-        The transfer fee (4%, $0.50 minimum) is added on top: the creator receives the full amount and your balance is debited `totalCents`.
-
-        - The creator must have finished payout setup from their campaign page (409 otherwise).
-        - A balance that does not cover the amount plus the fee answers 402.
-        - Money from a card top-up charged under 7 days ago cannot be paid out yet: a payout that needs it answers 409 `payout_funds_locked` with the day it can be sent.
-
-        Set `recordOnly: true` to record a payout you made yourself instead of moving money through the treasury (the webhook then carries `recorded: true`).
-
-        A treasury payout needs an owner, admin or billing admin, signed in or through a full-access key they created (403 otherwise). Recording with `recordOnly` does not.
-
-        #### While Stripe confirms the transfer
-
-        The amount sits in the participant's `settling` balance; a reject in that window cannot reverse it.
-
-        - If Stripe refuses the transfer, the amount returns to payable.
-        - If Stripe does not answer, the amount stays in `settling`. The next settle call for this participant finishes that payout first (even with nothing payable left).
-
-        #### Conflicts (409)
-
-        - A retry asking for a different `amountCents` than the payout in progress answers 409 with the amount in progress.
-        - A settle while another request is still waiting on Stripe for the same payout answers 409 ("This payout is being sent to Stripe right now. Try again in a minute.").
-        - A payout Stripe has not confirmed after 24 hours answers 409 ("This payout is being confirmed with Stripe. Try again after the next reconciliation (within 24 hours).") until the daily reconciliation finishes it: settled if Stripe made the transfer, returned to payable if it did not.
-        - A creator held by an unfinished payout batch answers 409 ("This creator is in a card payout that is not finished yet.").
+        - `treasury` settlement: send `recordOnly: true` to record a payout you made yourself (the webhook then carries `recorded: true`). Without it the call answers 409: Zernio pays creators of these campaigns by card with `POST /v1/creator-campaigns/{campaignId}/payout-batches`, never from your balance.
       security: [{ bearerAuth: [] }]
       parameters:
         - name: campaignId
@@ -101333,7 +101278,7 @@ paths:
               properties:
                 amountCents: { type: integer, minimum: 1, description: 'Defaults to the whole payable balance.' }
                 externalReference: { type: string, minLength: 1, maxLength: 200, description: 'Your payout id. Required when the campaign settles externally.' }
-                recordOnly: { type: boolean, description: 'Treasury campaigns only: record a payout you already made outside Zernio, without moving money. Ignored on other settlement modes, which always record.' }
+                recordOnly: { type: boolean, description: 'Treasury campaigns only, and required there: record a payout you already made outside Zernio. Ignored on other settlement modes, which always record.' }
       responses:
         '201':
           description: Settlement recorded
@@ -101349,19 +101294,7 @@ paths:
         '403': { $ref: '#/components/responses/CreatorCampaignForbidden' }
         '404': { $ref: '#/components/responses/CreatorCampaignNotFound' }
         '409': { $ref: '#/components/responses/CreatorCampaignConflict' }
-        '402':
-          x-summary: "Your balance does not cover the amount plus fee: top up and retry the settlement."
-          description: 'Your Zernio balance does not cover the amount plus the fee on top (code `payment_required`). Top up and retry.'
-          content:
-            application/json:
-              schema: { $ref: '#/components/schemas/ErrorResponse' }
         '422': { $ref: '#/components/responses/IdempotencyKeyReused' }
-        '502':
-          x-summary: "Stripe did not confirm the transfer: retry the settle call, which does not transfer twice within the idempotency window."
-          description: 'Stripe did not confirm the transfer (code `temporarily_unavailable`). Retry the settle call: the transfer is not made twice within Stripe''s 24-hour idempotency window; after that, retries answer 409 until the daily reconciliation settles the payout or returns it to payable.'
-          content:
-            application/json:
-              schema: { $ref: '#/components/schemas/ErrorResponse' }
   /v1/creator-campaigns/{campaignId}/payout-batches:
     parameters:
       - name: campaignId
@@ -101375,15 +101308,19 @@ paths:
       tags: [Creator Campaigns]
       summary: Pay creators with one card payment
       description: |
-        Pays exactly what is owed to the creators of a `treasury` campaign by charging the billing owner's saved card, with no redirect.
+        Pays exactly what is owed to the creators of a `treasury` campaign by charging the billing owner's saved card, with no redirect. Payouts are never paid from your balance.
 
         ### How it works
 
         1. Every payable creator who finished payout setup (or only `participantIds`, minus `excludeParticipantIds`) is held in `settling`.
-        2. The saved card (the default one, or `paymentMethodId`) is charged the total plus the fee (4% per creator, 50 cent minimum) while the payer is present.
-        3. Once the charge succeeds, each creator gets a transfer funded by it, and the batch ends `paid` or `partially_failed`.
+        2. The saved card (the default one, or `paymentMethodId`) pays one invoice while the payer is present: the payouts, plus the fee (4% per creator, 50 cent minimum) and the VAT on the fee where it applies.
+        3. Card payments are held 7 days against chargebacks (`releasesAt`). Then each creator gets a transfer funded by the charge, and the batch ends `paid` or `partially_failed`.
 
-        A creator whose payouts were disabled before the payment landed is skipped and stays payable.
+        Zernio collects the payouts and pays each creator on your behalf and in your name, so the payouts carry no VAT.
+
+        A creator whose payouts were disabled before the hold ended is skipped and stays payable. A charge refunded or disputed during the hold pays nobody: every amount is payable again.
+
+        Preview the charge with `POST /v1/creator-campaigns/{campaignId}/payout-batches/preview`.
 
         ### 3D Secure
 
@@ -101396,7 +101333,9 @@ paths:
         - 402 `payment_required`: no saved card. Nothing is held.
         - 402 `card_declined`: the bank's reason; every amount is payable again.
         - 402: card payouts are limited to $10,000.00 gross per rolling 30 days by default. Over it the call answers "Over your instant payout limit. Top up your balance to pay more this month, or contact support to raise the limit."
+        - 402: your balance is negative after a dispute or refund.
         - 400: nothing payable ("Nothing is payable.").
+        - 400 `invalid_billing_address`: Stripe cannot place your billing address, so it cannot tax the fee. Nothing is held.
 
         ### Access and retries
 
@@ -101472,6 +101411,54 @@ paths:
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/CreatorCampaignNotFound' }
+  /v1/creator-campaigns/{campaignId}/payout-batches/preview:
+    post:
+      x-resource-group: "creator_campaigns"
+      operationId: previewCampaignPayoutBatch
+      tags: [Creator Campaigns]
+      summary: Preview a payout batch
+      description: |
+        What `POST /v1/creator-campaigns/{campaignId}/payout-batches` with the same body would charge your card now. Holds and charges nothing.
+
+        The payouts carry no VAT. `taxCents` is the VAT on Zernio's fee where it applies, from Stripe Tax for your billing address: 21% in Spain, your country's rate for EU consumers, reverse charged (`reverseCharge: true`, no VAT) for EU businesses with a VAT id, none outside the EU.
+
+        Creators who have not finished payout setup are left out, as paying would.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: campaignId
+          in: path
+          required: true
+          schema: { type: string }
+          description: Campaign ID.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                participantIds: { type: array, items: { type: string }, minItems: 1, maxItems: 500, description: 'Preview only these participants. Defaults to every payable participant who is ready.' }
+                excludeParticipantIds: { type: array, items: { type: string }, minItems: 1, maxItems: 500, description: 'Leave these participants out.' }
+      responses:
+        '200':
+          description: The charge a payout batch would make now.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [payoutCount, amountCents, feeCents, taxCents, totalCents, taxLabel, reverseCharge]
+                properties:
+                  payoutCount: { type: integer, description: 'Creators who would be paid.' }
+                  amountCents: { type: integer, description: 'Total the creators receive.' }
+                  feeCents: { type: integer, description: 'Zernio fee: 4% per creator, 50 cent minimum.' }
+                  taxCents: { type: integer, description: 'VAT on the fee, 0 when none applies.' }
+                  totalCents: { type: integer, description: 'What the card would be charged: amountCents + feeCents + taxCents.' }
+                  taxLabel: { type: [string, "null"], description: 'For example "VAT 21%". Null when there is no tax.' }
+                  reverseCharge: { type: boolean, description: 'The fee is reverse charged: you account for the VAT.' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/CreatorCampaignNotFound' }
+        '409': { $ref: '#/components/responses/CreatorCampaignConflict' }
   /v1/creator-campaigns/{campaignId}/invite-link:
     post:
       x-resource-group: "creator_campaigns"
