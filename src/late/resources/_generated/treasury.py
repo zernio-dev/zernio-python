@@ -77,6 +77,29 @@ class TreasuryResource:
         """Get balance"""
         return self._client._get("/v1/balance")
 
+    def get_auto_recharge(self) -> dict[str, Any]:
+        """Get auto-recharge settings"""
+        return self._client._get("/v1/balance/auto-recharge")
+
+    def update_auto_recharge(
+        self,
+        *,
+        enabled: bool | None = None,
+        below_cents: int | None = None,
+        to_cents: int | None = None,
+        monthly_limit_cents: Any | None = None,
+        alert_below_cents: Any | None = None,
+    ) -> dict[str, Any]:
+        """Update auto-recharge settings"""
+        payload = self._build_payload(
+            enabled=enabled,
+            below_cents=below_cents,
+            to_cents=to_cents,
+            monthly_limit_cents=monthly_limit_cents,
+            alert_below_cents=alert_below_cents,
+        )
+        return self._client._patch("/v1/balance/auto-recharge", data=payload)
+
     def create_topup(
         self,
         amount_cents: int,
@@ -189,6 +212,29 @@ class TreasuryResource:
     async def aget_balance(self) -> dict[str, Any]:
         """Get balance (async)"""
         return await self._client._aget("/v1/balance")
+
+    async def aget_auto_recharge(self) -> dict[str, Any]:
+        """Get auto-recharge settings (async)"""
+        return await self._client._aget("/v1/balance/auto-recharge")
+
+    async def aupdate_auto_recharge(
+        self,
+        *,
+        enabled: bool | None = None,
+        below_cents: int | None = None,
+        to_cents: int | None = None,
+        monthly_limit_cents: Any | None = None,
+        alert_below_cents: Any | None = None,
+    ) -> dict[str, Any]:
+        """Update auto-recharge settings (async)"""
+        payload = self._build_payload(
+            enabled=enabled,
+            below_cents=below_cents,
+            to_cents=to_cents,
+            monthly_limit_cents=monthly_limit_cents,
+            alert_below_cents=alert_below_cents,
+        )
+        return await self._client._apatch("/v1/balance/auto-recharge", data=payload)
 
     async def acreate_topup(
         self,

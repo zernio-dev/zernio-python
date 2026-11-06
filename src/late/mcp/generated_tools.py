@@ -43423,6 +43423,80 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="Get auto-recharge settings",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def treasury_get_auto_recharge() -> str:
+        """Get auto-recharge settings
+
+        Your balance's auto-recharge rule: when the balance drops below `belowCents`, the billing owner's saved card is charged back up to `toCents`, tax added on top as for any top-up.
+
+        The first read gives the default rule, sized from your last 30 days of pay-per-use: below about a week of spend (at least $5), back up by about two more weeks (at least $20).
+
+        - 409 `balance_billing_required`: the account is not on the prepaid balance.
+
+        A profile-scoped key answers 403."""
+        client = _get_client()
+        try:
+            response = client.treasury.get_auto_recharge()
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Update auto-recharge settings",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def treasury_update_auto_recharge(
+        enabled: bool | None = None,
+        below_cents: int | None = None,
+        to_cents: int | None = None,
+        monthly_limit_cents: str | None = None,
+        alert_below_cents: str | None = None,
+    ) -> str:
+        """Update auto-recharge settings
+
+        Changes the auto-recharge rule. Omitted fields keep their value.
+
+        A declined recharge is retried 1 hour, 1 day and 3 days later, with an email each time. After the last retry fails, auto-recharge switches off (`disabledReason: payment_failed`) until the card is updated. A top-up you make yourself resets the retries.
+
+        A bank asking for 3D Secure counts as a decline: the charge happens while you are away, so the email asks you to top up in Billing.
+
+        When this month's auto-recharges plus the next one would pass `monthlyLimitCents`, the card is not charged and you get one email that month. At $0, pay-per-use then answers 402 `usage_limit_reached`.
+
+        - 400: a field is out of range, or `toCents` is not more than $5 above `belowCents`.
+        - 409 `balance_billing_required`: the account is not on the prepaid balance.
+
+        Needs an owner, admin or billing admin, signed in or through a full-access key they created.
+
+        Args:
+            enabled: Turns auto-recharge on or off. A rule switched off by failed charges stays off until the card is updated.
+            below_cents: Recharge when the balance drops below this, in cents. At least $5.
+            to_cents: Recharge back up to this, in cents. More than $5 above belowCents.
+            monthly_limit_cents: Most auto-recharge may add per calendar month (UTC), before tax. Null for no limit.
+            alert_below_cents: Email the billing owner once each time the balance drops below this. Null for no email."""
+        client = _get_client()
+        try:
+            response = client.treasury.update_auto_recharge(
+                enabled=enabled,
+                below_cents=below_cents,
+                to_cents=to_cents,
+                monthly_limit_cents=monthly_limit_cents,
+                alert_below_cents=alert_below_cents,
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="Create a top-up",
             readOnlyHint=False,
             destructiveHint=True,

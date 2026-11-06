@@ -1450,12 +1450,14 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `treasury.create_payee_onboarding_link()` | Create a payee onboarding link |
 | `treasury.create_topup()` | Create a top-up |
 | `treasury.create_transfer()` | Create a transfer |
+| `treasury.get_auto_recharge()` | Get auto-recharge settings |
 | `treasury.get_balance()` | Get balance |
 | `treasury.get_payout_batch()` | Get a payout batch |
 | `treasury.get_topup_invoice()` | Get a top-up invoice |
 | `treasury.get_topup_receipt()` | Get a top-up receipt |
 | `treasury.get_topup_statement()` | Get a top-up invoice (alias) |
 | `treasury.get_transfer()` | Get a transfer |
+| `treasury.update_auto_recharge()` | Update auto-recharge settings |
 | `treasury.cancel_payout_batch()` | Cancel an unpaid payout batch |
 | `treasury.cancel_topup()` | Cancel a top-up |
 | `treasury.confirm_payout_batch()` | Confirm a payout batch payment |
