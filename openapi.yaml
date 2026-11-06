@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.517.0"
+  version: "1.517.1"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -172,7 +172,7 @@ x-documentation:
     - `post.platform.published` - A single platform target inside a post finished publishing successfully. Fires once per platform-account as it terminates, without waiting for other platforms on the same post. Use this for incremental UIs; use `post.published` for the post-level rollup. A target that later fails background reconciliation (e.g. a Facebook video Meta accepted but never actually published) emits `post.platform.failed` afterward for the same target.
     - `post.platform.failed` - A single platform target inside a post failed permanently. Temporary/retryable failures do NOT fire this event, only permanent ones, so retry loops stay quiet. Can fire after this same target already emitted `post.platform.published`, when background reconciliation later discovers the publish never actually completed on the platform's side.
     - `post.platform.deleted` - A single platform target inside a post was detected as deleted on the platform after publishing (e.g. the user deleted the Instagram post natively). Detection is poll-driven via Zernio background sync (~hourly), not real-time. `platform.deletedAt` carries the detection time. Coverage is bounded to the posts the platform listing returns.
-    - `post.tiktok.url_resolved` - A published TikTok post's public URL became available. TikTok exposes the numeric video id asynchronously, so `post.published` / `post.platform.published` can carry an empty `publishedUrl` for TikTok; this event delivers the URL once resolved (at most once per platform target). Never fires for drafts or private posts, which have no public URL.
+    - `post.tiktok.url_resolved` - A published TikTok post's public URL became available. TikTok exposes the numeric video id asynchronously, so `post.published` / `post.platform.published` can carry an empty `publishedUrl` for TikTok; this event delivers the URL once resolved (at most once per platform target). Never fires for private posts, which have no public URL. For a draft, it fires when the creator posts the draft publicly from the TikTok app.
     - `post.external.created` - A native post authored outside Zernio (e.g. a Google Business Profile localPost created in the Google UI) was detected by our sync for the first time. Poll-driven (~hourly), not real-time. Payload carries `post.source: "external"`.
     - `post.external.updated` - A tracked native post's text or media changed on the platform. Edits are detected by comparing text/media structure and (where the platform exposes it) the platform's own edit timestamp; media-URL-only refreshes do not fire this.
     - `post.external.deleted` - A tracked native post was detected as removed from the platform. `post.deletedAt` carries the detection time. Coverage is bounded to the most recent posts the platform listing returns, and detection is a diff against posts a prior sync already indexed, so an account for which no post has ever been indexed never emits it.
@@ -12447,7 +12447,7 @@ components:
           description: Optional override. Defaults based on provided media items.
         videoCoverTimestampMs:
           type: integer
-          description: Optional for video posts. Timestamp in milliseconds to select which frame to use as thumbnail (defaults to 1000ms/1 second). Ignored when videoCoverImageUrl is provided.
+          description: Optional for video posts. Timestamp in milliseconds to select which frame to use as thumbnail (defaults to 1000ms/1 second). Ignored when the videoCoverImageUrl image becomes the cover, and used when Zernio skips that image (see videoCoverImageUrl).
           minimum: 0
         videoCoverImageUrl:
           type: string
@@ -12455,7 +12455,11 @@ components:
           description: |
             Optional for video posts. URL of a custom thumbnail image (JPG, PNG, or WebP, max 20MB). Any downloadable URL works: we rehost it ourselves. Overrides videoCoverTimestampMs when provided.
 
-            The image is stitched as a single frame at the start of the video to serve as the cover. Accounts connected through the TikTok for Business app instead hand it to TikTok as the cover, with no stitching, falling back to videoCoverTimestampMs without it.
+            The image is stitched as a single frame at the start of the video to serve as the cover.
+
+            When the image shape is far from the video shape (it would fill less than half of the frame, for example a landscape cover on a vertical video), or the stitch fails, Zernio skips the image and TikTok uses videoCoverTimestampMs.
+
+            Accounts connected through the TikTok for Business app instead hand it to TikTok as the cover, with no stitching, falling back to videoCoverTimestampMs without it.
         photoCoverIndex:
           type: integer
           description: Optional for photo carousels. Index of image to use as cover, 0-based (defaults to 0/first image).
@@ -21037,7 +21041,8 @@ webhooks:
         TikTok exposes the numeric video id asynchronously (often minutes after PUBLISH_COMPLETE), so the terminal events can carry an empty `publishedUrl` for TikTok. This event delivers `platform.publishedUrl` and the resolved `platform.platformPostId` once available.
 
         - Fires at most once per platform target.
-        - Never fires for drafts or private posts (no public URL exists).
+        - Never fires for private posts (no public URL exists).
+        - For a draft, fires when the creator posts the draft publicly from the TikTok app. A draft the creator never posts never fires it.
         - The payload shape is identical to `post.platform.published`.
       tags: [Webhook Events]
       requestBody:
