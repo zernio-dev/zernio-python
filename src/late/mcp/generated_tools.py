@@ -10775,7 +10775,7 @@ def register_generated_tools(mcp, _get_client):
         - Google Search and Display only: also works on `existingCampaignId`, where the new ad group's name is returned as `adSetName`. No line breaks, at most 255 characters, unique in the campaign (a taken name is a 400 naming this field).
         - Demand Gen names its ad group with `demandGen.adGroupName`, and Performance Max with `assetGroup.name`.
         - For per-ad names on the multi-creative shape, set `name` on each `creatives[]` entry.
-                ad_name: Meta only. Exact ad name (the single-creative ad object's name). Overrides the default, which is `name`. (For per-ad names on the multi-creative shape, set `name` on each `creatives[]` entry instead.)
+                ad_name: Meta only. Exact ad name, overriding the default `name`. On the multi-creative shape it names every ad, numbered `#1`, `#2`... when there are several, unless a `creatives[]` entry sets its own `name`.
                 tracking: Object with keys: pixelId (string) - Meta Pixel ID to attach for offsite-conversion measurement, or the Reddit pixel of the new ad group.; urlTags (list of objects with keys key, value) - Click-URL params. - Meta: stored on the creative as `url_tags` and returned by GET /v1/ads/{adId}/tracking-tags. Dynamic macros ({{ad.id}}, {{campaign.id}}, ...; zernioTag (boolean) - POST /v1/ads/create on Meta and Google only. Opt-in: set `true` and the ad carries `zrn=<platform ad id>` on its landing URL, so orders and events tied to the ...
                 goal: The ad's goal. Available goals vary by platform. When omitted, it is inferred from the ad (see `appliedDefaults.goal` in the response); the attach shape inherits it from the ad set.
 
@@ -11894,6 +11894,7 @@ def register_generated_tools(mcp, _get_client):
         image_url: str | None = None,
         image_hash: str | None = None,
         carousel_cards: list[dict[str, Any]] | None = None,
+        instagram_account_id: str | None = None,
         optimize_card_order: bool | None = None,
         url_tags: str | None = None,
         promotion: str | None = None,
@@ -11917,7 +11918,7 @@ def register_generated_tools(mcp, _get_client):
 
             ### Other fields
 
-            - The Page (and linked Instagram account, when present) is resolved from `accountId` as the story actor.
+            - The Page (and linked Instagram account, when present) is resolved from `accountId` as the story actor. `instagramAccountId` overrides the Instagram account.
             - `creativeFeatures` configures Advantage+ enhancements.
             - `promotion` is not supported and any object is rejected with 400.
 
@@ -11934,6 +11935,10 @@ def register_generated_tools(mcp, _get_client):
                 image_url: Publicly reachable image; uploaded to the account's library server-side.
                 image_hash: Existing library image hash (POST /v1/ads/images or GET /v1/ads/images).
                 carousel_cards: Each item is an object with keys: imageUrl (string, required); linkUrl (string, required); headline (string); description (string); callToAction (string)
+                instagram_account_id: Meta only. The Instagram account the creative runs as, mapped to `instagram_user_id`: an id from `GET /v1/ads/instagram-accounts`, including a Page-backed one.
+
+        - Given, it is never swapped. One the ad account cannot use returns 400 `insufficient_permissions` on `instagramAccountId`.
+        - Omitted, it uses the account linked to the Page. When the ad account has no access to that one, it retries once with an authorized Instagram account, or returns 422 on `instagramAccountId` when there is none.
                 optimize_card_order: Only with `carouselCards` (a 400 without them). Sets `link_data.multi_share_optimized`:
 
         - `false`: keeps the cards in the order given. Meta then takes at most 5 cards, so `false` with more than 5 cards is a 400.
@@ -11965,6 +11970,7 @@ def register_generated_tools(mcp, _get_client):
                 image_url=image_url,
                 image_hash=image_hash,
                 carousel_cards=carousel_cards,
+                instagram_account_id=instagram_account_id,
                 optimize_card_order=optimize_card_order,
                 url_tags=url_tags,
                 promotion=promotion,

@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.509.0"
+  version: "1.510.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -75074,7 +75074,7 @@ paths:
 
         ### Other fields
 
-        - The Page (and linked Instagram account, when present) is resolved from `accountId` as the story actor.
+        - The Page (and linked Instagram account, when present) is resolved from `accountId` as the story actor. `instagramAccountId` overrides the Instagram account.
         - `creativeFeatures` configures Advantage+ enhancements.
         - `promotion` is not supported and any object is rejected with 400.
       security:
@@ -75109,6 +75109,14 @@ paths:
                       headline: { type: string, maxLength: 255 }
                       description: { type: string, maxLength: 255 }
                       callToAction: { type: string }
+                instagramAccountId:
+                  type: string
+                  minLength: 1
+                  description: |
+                    Meta only. The Instagram account the creative runs as, mapped to `instagram_user_id`: an id from `GET /v1/ads/instagram-accounts`, including a Page-backed one.
+
+                    - Given, it is never swapped. One the ad account cannot use returns 400 `insufficient_permissions` on `instagramAccountId`.
+                    - Omitted, it uses the account linked to the Page. When the ad account has no access to that one, it retries once with an authorized Instagram account, or returns 422 on `instagramAccountId` when there is none.
                 optimizeCardOrder:
                   type: boolean
                   description: |
@@ -80222,7 +80230,7 @@ paths:
                 name: { type: string, maxLength: 255, description: 'Omitted, the ad is named `Ad <YYYY-MM-DD HH:MM:SS>` (UTC) and the response reports it in `appliedDefaults.name`.' }
                 campaignName: { type: string, maxLength: 255, description: "Meta, Reddit and Google. Exact campaign name; overrides the default `<name> - Campaign`. Ignored when the request joins an existing campaign or ad set.\n\nGoogle: no line breaks and at most 255 characters, checked before calling Google. Names are unique in the Google Ads account, and on Search and Display a taken name is a 400 naming this field." }
                 adSetName: { type: string, maxLength: 255, description: "Exact ad set name. Meta, Reddit and Google (the ad group).\n\n- Overrides the default `<name> - Ad Set` (Google Search and Display: `<name> - Ad Group`).\n- Ignored when the request joins an existing ad set (`adSetId`).\n- Google Search and Display only: also works on `existingCampaignId`, where the new ad group's name is returned as `adSetName`. No line breaks, at most 255 characters, unique in the campaign (a taken name is a 400 naming this field).\n- Demand Gen names its ad group with `demandGen.adGroupName`, and Performance Max with `assetGroup.name`.\n- For per-ad names on the multi-creative shape, set `name` on each `creatives[]` entry." }
-                adName: { type: string, maxLength: 255, description: "Meta only. Exact ad name (the single-creative ad object's name). Overrides the default, which is `name`. (For per-ad names on the multi-creative shape, set `name` on each `creatives[]` entry instead.)" }
+                adName: { type: string, maxLength: 255, description: "Meta only. Exact ad name, overriding the default `name`. On the multi-creative shape it names every ad, numbered `#1`, `#2`... when there are several, unless a `creatives[]` entry sets its own `name`." }
                 tracking: { $ref: '#/components/schemas/AdTracking' }
                 goal:
                   type: string
