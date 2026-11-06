@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.504.0"
+  version: "1.505.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -1203,6 +1203,12 @@ components:
 
         - `email_send_cap_reached`: today's cap for the mailbox is spent. `details.cap` names the limit and `resetsAt`; `retryAfterSeconds` counts to midnight UTC.
         - `rate_limited`: the mailbox is in a sending cooldown, either from a same-body burst to more than 50 recipients in an hour (`details.cap.kind: recipient_burst`) or an earlier trigger. `retryAfterSeconds` says when it lifts, and `account.rate_limited` fired when it started.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorResponse' }
+    BalanceRequired:
+      x-summary: 'Balance at $0: top up in Billing to continue.'
+      description: 'Balance billing only. The balance is at or below $0, so new pay-per-use is refused: code `insufficient_balance`, or `usage_limit_reached` when the auto-recharge monthly limit kept it there. Top up in Billing. Inbound traffic and calls already connected are never refused.'
       content:
         application/json:
           schema: { $ref: '#/components/schemas/ErrorResponse' }
@@ -48992,6 +48998,7 @@ paths:
                   enum: ['true']
                   description: WhatsApp-only. Set to "true" when the audio attachment is an in-browser voice recording; the server transcodes it to a WhatsApp-native container (ogg/Opus). Omit for regular audio file uploads.
       responses:
+        '402': { $ref: '#/components/responses/BalanceRequired' }
         '200':
           description: Message sent
           content:
@@ -51998,6 +52005,7 @@ paths:
                 accountId: { type: string, description: The account ID }
                 tweetId: { type: string, description: The ID of the tweet to retweet }
       responses:
+        '402': { $ref: '#/components/responses/BalanceRequired' }
         '200':
           description: Tweet retweeted
           content:
@@ -52070,6 +52078,7 @@ paths:
                 accountId: { type: string, description: The account ID }
                 tweetId: { type: string, description: The ID of the tweet to bookmark }
       responses:
+        '402': { $ref: '#/components/responses/BalanceRequired' }
         '200':
           description: Tweet bookmarked
           content:
@@ -52142,6 +52151,7 @@ paths:
                 accountId: { type: string, description: The account ID }
                 targetUserId: { type: string, description: The X ID of the user to follow }
       responses:
+        '402': { $ref: '#/components/responses/BalanceRequired' }
         '200':
           description: User followed or follow request sent
           content:
@@ -53774,6 +53784,7 @@ paths:
                     back in webhook payloads (SIP-first flow does not pass
                     through Meta's Graph API where Meta would echo this).
       responses:
+        '402': { $ref: '#/components/responses/BalanceRequired' }
         '200':
           description: Call originated; lifecycle continues asynchronously via webhooks.
           content:
@@ -54104,6 +54115,7 @@ paths:
                 voicemailDropMessage: { type: string, maxLength: 1000, description: "Spoken to a detected machine, then hang up (implies `amd`). For outbound voicemail drops." }
                 ringTimeoutSeconds: { type: integer, minimum: 5, maximum: 120, default: 30, description: "Seconds to let the callee's phone ring before the call ends as no_answer. The destination carrier can end it sooner." }
       responses:
+        '402': { $ref: '#/components/responses/BalanceRequired' }
         '200':
           description: Call originated; lifecycle continues asynchronously.
           content:
@@ -54400,6 +54412,7 @@ paths:
                 recordOverride: { type: boolean }
                 ringTimeoutSeconds: { type: integer, minimum: 5, maximum: 120, default: 30, description: "Seconds to let the callee's phone ring before the call ends as no_answer. The destination carrier can end it sooner." }
       responses:
+        '402': { $ref: '#/components/responses/BalanceRequired' }
         '200':
           description: Call originated; answer/bridge continue asynchronously.
           content:
@@ -54572,7 +54585,7 @@ paths:
                   sender: { $ref: '#/components/schemas/ImessageSenderLifecycle' }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '402': { x-summary: "A valid payment method is required, or a payment failed, and nothing was ordered: update the card in Billing, then order again.", description: 'A valid payment method is required (code: payment_method_required); the last payment failed and is still unpaid, or the card was declined for the first month (code: payment_required). Nothing is ordered; update the card in Billing, then order again.' }
+        '402': { x-summary: "A valid payment method is required, or a payment failed, and nothing was ordered: update the card in Billing, then order again.", description: 'Nothing is ordered. A valid payment method is required (code: payment_method_required), the last payment failed or the first month was declined (code: payment_required), or, on balance billing, the balance is at $0 (code: insufficient_balance or usage_limit_reached). Fix it in Billing, then order again.' }
         '403': { description: 'Sender limit reached (code: imessage_sender_limit)' }
         '404': { description: Profile not found or access denied }
         '409': { description: 'Billing setup is incomplete and support must finish it (code: billing_setup_incomplete).' }
@@ -56064,6 +56077,7 @@ paths:
                     email: { type: string, format: email, description: 'The carrier emails a 6-digit code here once the identity passes review.' }
                 references: { $ref: '#/components/schemas/BrandedCallingReferences' }
       responses:
+        '402': { $ref: '#/components/responses/BalanceRequired' }
         '201':
           description: Identity created, in review.
           content:
@@ -56537,6 +56551,7 @@ paths:
                     businessRegistrationType: { type: string, description: "e.g. EIN (US), Companies House (UK), ABN (AU)." }
                     businessRegistrationCountry: { type: string, description: ISO 3166-1 alpha-2. }
       responses:
+        '402': { $ref: '#/components/responses/BalanceRequired' }
         '200':
           description: Registration submitted.
           content:
@@ -58655,7 +58670,7 @@ paths:
                   country: { type: string }
                   numberType: { type: string, description: The type that will be ordered after KYC approval. }
                   kycUrl: { type: string }
-        '402': { x-summary: "A payment method is required because the usage-based account has no card on file: add a card, then retry.", description: 'Payment method required (usage-based billing account with no card on file). Response body carries code: PAYMENT_REQUIRED; add a card, then retry.' }
+        '402': { x-summary: "A payment method is required because the usage-based account has no card on file: add a card, then retry.", description: 'Payment method required (usage-based billing account with no card on file): code PAYMENT_REQUIRED, add a card, then retry. On balance billing with the balance at $0: code insufficient_balance or usage_limit_reached, top up in Billing, then retry.' }
         '422': { x-summary: "International numbers require usage-based billing, and legacy Stripe users are limited to the US: switch to usage-based billing.", description: 'International numbers require usage-based billing (legacy Stripe users are US-only). Response body code: USAGE_BILLING_REQUIRED.' }
 
   /v1/phone-numbers/claims/{claimId}:
@@ -59193,7 +59208,7 @@ paths:
                   country: { type: string }
                   numberType: { type: string, description: The type that will be ordered after KYC approval. }
                   kycUrl: { type: string }
-        '402': { x-summary: "A payment method is required because the usage-based account has no card on file: add a card, then retry.", description: 'Payment method required (usage-based billing account with no card on file). Response body carries code: PAYMENT_REQUIRED; add a card, then retry.' }
+        '402': { x-summary: "A payment method is required because the usage-based account has no card on file: add a card, then retry.", description: 'Payment method required (usage-based billing account with no card on file): code PAYMENT_REQUIRED, add a card, then retry. On balance billing with the balance at $0: code insufficient_balance or usage_limit_reached, top up in Billing, then retry.' }
         '422': { x-summary: "International numbers require usage-based billing, and legacy Stripe users are limited to the US: switch to usage-based billing.", description: 'International numbers require usage-based billing (legacy Stripe users are US-only). Response body code: USAGE_BILLING_REQUIRED.' }
 
   /v1/whatsapp/phone-numbers/countries:
@@ -60626,6 +60641,7 @@ paths:
                     administrative_area: { type: string }
                     postal_code: { type: string }
       responses:
+        '402': { $ref: '#/components/responses/BalanceRequired' }
         '200':
           description: KYC submitted (or already submitted); number pending review.
           content:
@@ -61236,6 +61252,7 @@ paths:
                 sipPort: { type: integer, minimum: 1, maximum: 65535, description: 'Defaults to 5061 for tls, 5060 otherwise.' }
                 transport: { type: string, enum: [tls, tcp, udp], description: 'Signaling transport toward sipHost. Default tls (with SRTP media).' }
       responses:
+        '402': { $ref: '#/components/responses/BalanceRequired' }
         '201':
           x-summary: "The trunk was created: save the digest password from this response because it is shown only here and on rotate."
           description: Trunk created. The digest password is shown only here and on rotate.
@@ -61422,6 +61439,7 @@ paths:
               properties:
                 trunkId: { type: string, description: 'SIP trunk ID (from POST /v1/phone-numbers/sip-trunks).' }
       responses:
+        '402': { $ref: '#/components/responses/BalanceRequired' }
         '200':
           description: Number attached (idempotent for the same trunk).
           content:
@@ -64234,7 +64252,7 @@ paths:
               example: { runId: '64f0a1b2c3d4e5f6a7b8c9d1', threadId: '64f0a1b2c3d4e5f6a7b8c9d2', status: queued, pollAfterSeconds: 5 }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '402': { x-summary: "A card is required or the last payment failed: add or update the card in Billing.", description: 'A card is required (code `payment_method_required`) or the last payment failed (code `payment_required`). Add or update the card in Billing.', content: { application/json: { schema: { $ref: '#/components/schemas/ErrorResponse' } } } }
+        '402': { x-summary: "A card is required or the last payment failed: add or update the card in Billing.", description: 'A card is required (code `payment_method_required`), the last payment failed (code `payment_required`), or, on balance billing, the balance is at $0 (code `insufficient_balance` or `usage_limit_reached`). Fix it in Billing.', content: { application/json: { schema: { $ref: '#/components/schemas/ErrorResponse' } } } }
         '403': { description: 'Code `insufficient_permissions`: the credential is not an unrestricted API key, or the user is read-only, restricted or profile-scoped.', content: { application/json: { schema: { $ref: '#/components/schemas/ErrorResponse' } } } }
         '404': { description: 'Code `support_thread_not_found` (`threadId`), `post_not_found`, `account_not_found` or `profile_not_found` (`context.*`).', content: { application/json: { schema: { $ref: '#/components/schemas/ErrorResponse' } } } }
         '409': { x-summary: "A run is already queued or running, or billing setup is incomplete: poll the existing run first, or contact support.", description: 'Code `support_run_in_progress`: the thread already has a run queued or running, so poll it first. Code `billing_setup_incomplete`: no billing customer to attach a card to, contact support. Also returned while a request with the same Idempotency-Key is still processing.', content: { application/json: { schema: { $ref: '#/components/schemas/ErrorResponse' } } } }
@@ -93717,6 +93735,7 @@ paths:
                 codeLength: { type: integer, minimum: 4, maximum: 8, default: 6 }
                 ttlMinutes: { type: integer, minimum: 1, maximum: 15, default: 10 }
       responses:
+        '402': { $ref: '#/components/responses/BalanceRequired' }
         '201':
           description: Verification created and the code sent.
           content:
