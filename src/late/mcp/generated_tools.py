@@ -13459,7 +13459,14 @@ def register_generated_tools(mcp, _get_client):
         rule_id: str | None = None,
         account_id: str | None = None,
         type: Literal[
-            "pause", "activate", "adjust_budget", "adjust_bid", "duplicate", "edit_name"
+            "pause",
+            "activate",
+            "adjust_budget",
+            "adjust_bid",
+            "adjust_target",
+            "reallocate_budget",
+            "duplicate",
+            "edit_name",
         ]
         | None = None,
         from_: str | None = None,

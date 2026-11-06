@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.512.0"
+  version: "1.513.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -9595,17 +9595,20 @@ components:
                 description: What the rule did to the object. Empty on a rule that only notifies.
                 items:
                   type: object
-                  required: [type, status, reason, previousDailyBudget, newDailyBudget, previousName, newName, previousBidAmount, newBidAmount]
+                  required: [type, status, reason, previousDailyBudget, newDailyBudget, previousName, newName, previousBidAmount, newBidAmount, targetMetric, previousTarget, newTarget]
                   properties:
-                    type: { type: string, enum: [pause, activate, adjust_budget, adjust_bid, duplicate, edit_name] }
+                    type: { type: string, enum: [pause, activate, adjust_budget, adjust_bid, adjust_target, reallocate_budget, duplicate, edit_name] }
                     status: { type: string, enum: [done, skipped, failed], description: "Action result.\n\n- `skipped`: the action could not or need not apply (already paused or active, budget at its limit, a budget that is unknown, not daily or set at another level, no live ads, or a permanent refusal from the platform).\n- `failed`: it errored and will be retried on the next run." }
-                    reason: { type: [string, "null"], description: "Why the action was skipped or failed: `already_paused`, `already_active`, `at_limit`, `budget_unknown`, `budget_not_daily`, `budget_level_mismatch`, `no_live_ads`, `daily_limit_reached` (held back by the action's `maxChangesPerDay`), `ads_allowance_exceeded` (a reactivation or budget increase for a team past its free live-ads allowance), or the platform's message. Null when done." }
+                    reason: { type: [string, "null"], description: "Why the action was skipped or failed: `already_paused`, `already_active`, `at_limit`, `budget_unknown`, `budget_not_daily`, `budget_level_mismatch`, `no_live_ads`, `daily_limit_reached` (held back by the action's `maxChangesPerDay`), `ads_allowance_exceeded` (a reactivation or budget increase for a team past its free live-ads allowance), `budget_shared`, `reallocation_incomplete` (failed: a receiver left alone because a giver's cut did not apply, tried again next run), `portfolio_bid_strategy`, `unsupported_bid_strategy`, `no_target_cpa`, `no_target_roas`, or the platform's message. Null when done." }
                     previousDailyBudget: { type: [number, "null"], description: "On `adjust_budget`, the daily budget before the change, in the ad account currency. Null otherwise." }
                     newDailyBudget: { type: [number, "null"], description: "On `adjust_budget`, the daily budget after the change. Null when nothing changed." }
                     previousName: { type: [string, "null"], description: "On `edit_name`, the object's name before the change. Null otherwise." }
                     newName: { type: [string, "null"], description: "On `edit_name`, the name after the change. Null when nothing changed." }
                     previousBidAmount: { type: [number, "null"], description: "On `adjust_bid`, the cap before the change. Null otherwise." }
                     newBidAmount: { type: [number, "null"], description: "On `adjust_bid`, the cap after the change. Null when nothing changed." }
+                    targetMetric: { type: [string, "null"], enum: [cpa, roas, null], description: "On `adjust_target`, which target moved. Null otherwise." }
+                    previousTarget: { type: [number, "null"], description: "On `adjust_target`, the target before the change. Null otherwise." }
+                    newTarget: { type: [number, "null"], description: "On `adjust_target`, the target after the change. Null when nothing changed." }
         timestamp:
           type: string
           format: date-time
@@ -17692,10 +17695,38 @@ components:
             maxChangesPerDay: { type: integer, minimum: 1, maximum: 100, description: 'At most this many objects changed in any 24 hours, across runs. Matches over the limit are skipped with `daily_limit_reached` and tried again later.' }
             maxChangesPerObject: { type: integer, minimum: 1, maximum: 100, description: 'At most this many changes to one object by this rule, counted over the last 400 days. An object at the limit is left alone like one in cooldown.' }
         - type: object
+          required: [type, target]
+          description: Either `amount`, or `direction`, `percent` and `limit`.
+          properties:
+            type: { type: string, enum: [adjust_target], description: "Move a Google campaign's target CPA or target ROAS inside the strategy it is on (Target CPA or Maximize conversions for `cpa`, Target ROAS or Maximize conversion value for `roas`), never switching strategies. Campaign rules on Google only. Skipped with `portfolio_bid_strategy` on a portfolio strategy, `unsupported_bid_strategy` on one with no target (Manual CPC, Maximize clicks), and `no_target_cpa` or `no_target_roas` when the strategy holds no such target. A target CPA in a zero-decimal currency is rounded to whole units." }
+            target: { type: string, enum: [cpa, roas], description: 'Which target moves: `cpa` in the ad account currency, `roas` as a ratio (3 is 300%).' }
+            amount: { type: number, exclusiveMinimum: 0, description: 'The target to set.' }
+            direction: { type: string, enum: [increase, decrease] }
+            percent: { type: integer, minimum: 1, maximum: 100, description: 'Step size. A decrease is at most 90.' }
+            limit: { type: number, exclusiveMinimum: 0, description: 'The target never goes above this on an increase, or below it on a decrease.' }
+            maxChangesPerDay: { type: integer, minimum: 1, maximum: 100, description: 'At most this many objects changed in any 24 hours, across runs. Matches over the limit are skipped with `daily_limit_reached` and tried again later.' }
+            maxChangesPerObject: { type: integer, minimum: 1, maximum: 100, description: 'At most this many changes to one object by this rule, counted over the last 400 days. An object at the limit is left alone like one in cooldown.' }
+        - type: object
+          required: [type, metric, window, from, to]
+          description: Exactly one of `percent` and `amount`.
+          properties:
+            type: { type: string, enum: [reallocate_budget], description: "Move daily budget from the matched objects ranked worst by `metric` to those ranked best, keeping the total the same. Campaign or ad set rules where the budget sits at that level: objects whose budget sits at another level (Meta CBO and ad set budgets), Google shared budgets and lifetime budgets are left out. Changes are reserved all at once: when `maxChangesPerDay` would hold back any of them, none is made. A receiver is raised only after every giver's cut applied (else it fails with `reallocation_incomplete` and the move is tried again next run). Amounts move in the currency's smallest unit (whole units for JPY or KRW). Counts as raising live spend for the free ads allowance. Not with `lifecycle` or `groups`." }
+            metric: { type: string, description: 'What objects are ranked by: any condition metric except `day_of_month` and `working_day_of_month`, or a result metric (`result:<key>`) on campaign rules. Objects without a value are not ranked, except one that spent with no result on a metric where lower is best (a CPA with no conversions): it ranks worst and only gives.' }
+            window: { type: string, description: 'The period the metric is read over, like a condition window.' }
+            best: { type: string, enum: [highest, lowest], description: 'Which end of the ranking is best. Defaults to `lowest` for `cpa`, `cpc`, `cpm`, `frequency` and result metrics whose formula has spend above the line (cost per sale, %CAC), `highest` otherwise.' }
+            from: { type: object, required: [count], properties: { count: { type: integer, minimum: 1, maximum: 10 } }, description: 'How many of the worst-ranked objects give budget.' }
+            to: { type: object, required: [count], properties: { count: { type: integer, minimum: 1, maximum: 10 } }, description: 'How many of the best-ranked objects receive it. With fewer ranked objects than `from` plus `to`, givers take at most half and no object is on both sides.' }
+            percent: { type: integer, minimum: 1, maximum: 90, description: "The share of each giver's daily budget it gives." }
+            amount: { type: number, exclusiveMinimum: 0, description: 'The total to move each run, in the ad account currency, taken evenly from the givers.' }
+            minBudget: { type: number, exclusiveMinimum: 0, description: 'A giver never goes below this daily budget. A giver also always keeps a tenth of its budget.' }
+            maxBudget: { type: number, exclusiveMinimum: 0, description: 'A receiver never goes above this daily budget; what receivers cannot take stays with the givers.' }
+            maxChangesPerDay: { type: integer, minimum: 1, maximum: 100, description: 'At most this many objects changed in any 24 hours, across runs. Matches over the limit are skipped with `daily_limit_reached` and tried again later.' }
+            maxChangesPerObject: { type: integer, minimum: 1, maximum: 100, description: 'At most this many changes to one object by this rule, counted over the last 400 days. An object at the limit is left alone like one in cooldown.' }
+        - type: object
           required: [type]
           description: Exactly one of `add` and `remove`.
           properties:
-            type: { type: string, enum: [edit_name], description: 'Tag the object by its name. Meta, Google and LinkedIn campaigns and ad sets, and TikTok campaigns, ad groups and ads. An object whose name already has the tag (or lacks it, for `remove`) is skipped with `name_unchanged`.' }
+            type: { type: string, enum: [edit_name], description: 'Tag the object by its name. Meta, TikTok and Reddit campaigns, ad sets and ads, and Google, LinkedIn and Pinterest campaigns and ad sets. An object whose name already has the tag (or lacks it, for `remove`) is skipped with `name_unchanged`.' }
             add: { type: string, minLength: 1, maxLength: 50, description: 'Text to add, like `[WINNER]`. Compared without case.' }
             at: { type: string, enum: [start, end], description: 'Where `add` goes. Defaults to `start`.' }
             remove: { type: string, minLength: 1, maxLength: 50, description: 'Text to take out of the name, every copy of it.' }
@@ -17721,7 +17752,7 @@ components:
       type: array
       minItems: 1
       items: { $ref: '#/components/schemas/AdRuleAction' }
-      description: Each type at most once, and at most one of `pause`, `activate`, `adjust_budget`, `adjust_bid`, `duplicate` and `edit_name`.
+      description: Each type at most once, and at most one of `pause`, `activate`, `adjust_budget`, `adjust_bid`, `adjust_target`, `reallocate_budget`, `duplicate` and `edit_name`.
     AdRuleLifecycle:
       type: object
       description: 'Turns matches into alerts. An object acts and notifies only after `confirmChecks` matching runs in a row; its alert stays open while it matches or `hold` holds, turns critical when `critical` holds, and resolves on its own. Cooldown and caps still decide repeat actions.'
@@ -17924,7 +17955,7 @@ components:
                 required: [objectId, type, status]
                 properties:
                   objectId: { type: string }
-                  type: { type: string, enum: [pause, activate, adjust_budget, adjust_bid, duplicate, edit_name] }
+                  type: { type: string, enum: [pause, activate, adjust_budget, adjust_bid, adjust_target, reallocate_budget, duplicate, edit_name] }
                   status: { type: string, enum: [done, skipped, failed] }
                   reason: { type: string, description: 'Why it was skipped or failed, for example `already_paused`.' }
                   previousDailyBudget: { type: number }
@@ -17933,6 +17964,9 @@ components:
                   newName: { type: string }
                   previousBidAmount: { type: number }
                   newBidAmount: { type: number }
+                  targetMetric: { type: string, enum: [cpa, roas] }
+                  previousTarget: { type: number }
+                  newTarget: { type: number }
             notification:
               type: object
               description: |
@@ -17947,7 +17981,7 @@ components:
         error: { type: [string, "null"] }
     AdRuleActivityEntry:
       type: object
-      required: [id, ranAt, ruleId, ruleName, platform, accountId, adAccountId, level, objectId, objectName, type, status, reason, previousDailyBudget, newDailyBudget, previousName, newName, previousBidAmount, newBidAmount, currency]
+      required: [id, ranAt, ruleId, ruleName, platform, accountId, adAccountId, level, objectId, objectName, type, status, reason, previousDailyBudget, newDailyBudget, previousName, newName, previousBidAmount, newBidAmount, targetMetric, previousTarget, newTarget, currency]
       properties:
         id: { type: string, description: Stable ID of this entry. }
         ranAt: { type: string, format: date-time }
@@ -17959,7 +17993,7 @@ components:
         level: { type: string, enum: [campaign, adset] }
         objectId: { type: string, description: Platform ID of the campaign or ad set. }
         objectName: { type: [string, "null"], description: Its name when the rule acted. }
-        type: { type: string, enum: [pause, activate, adjust_budget, adjust_bid, duplicate, edit_name] }
+        type: { type: string, enum: [pause, activate, adjust_budget, adjust_bid, adjust_target, reallocate_budget, duplicate, edit_name] }
         status: { type: string, enum: [done, skipped, failed] }
         reason: { type: [string, "null"], description: 'Why it was skipped or failed, for example `already_paused`.' }
         previousDailyBudget: { type: [number, "null"] }
@@ -17968,6 +18002,9 @@ components:
         newName: { type: [string, "null"], description: 'The name an applied `edit_name` set.' }
         previousBidAmount: { type: [number, "null"], description: 'The bid cap or cost cap before an `adjust_bid`.' }
         newBidAmount: { type: [number, "null"], description: 'The cap an applied `adjust_bid` set.' }
+        targetMetric: { type: [string, "null"], enum: [cpa, roas, null], description: 'Which target an `adjust_target` moved.' }
+        previousTarget: { type: [number, "null"], description: 'The target CPA or target ROAS before an `adjust_target`.' }
+        newTarget: { type: [number, "null"], description: 'The target an applied `adjust_target` set.' }
         currency: { type: [string, "null"] }
     AdKeyword:
       type: object
@@ -67070,7 +67107,7 @@ paths:
           schema: { type: string }
         - name: type
           in: query
-          schema: { type: string, enum: [pause, activate, adjust_budget, adjust_bid, duplicate, edit_name] }
+          schema: { type: string, enum: [pause, activate, adjust_budget, adjust_bid, adjust_target, reallocate_budget, duplicate, edit_name] }
         - name: from
           in: query
           description: 'ISO 8601 date-time, inclusive.'
