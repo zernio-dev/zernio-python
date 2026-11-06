@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.514.3"
+  version: "1.515.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -570,6 +570,11 @@ tags:
     description: |
       Rules that check campaigns or ad sets on a schedule and pause, reactivate, rebudget or notify
       when their metrics cross a threshold. Requires the Ads add-on.
+  - name: Automations
+    description: |
+      One API for every automation: ad rules that check ads on a schedule, event automations that run when something happens in Zernio, and scheduled automations that check posts. Each has a `trigger`, the `subjects` it checks, the `steps` it takes and its `limits`.
+
+      An ad rule is also readable under `/v1/ads/rules` with the same id. Creating, editing, activating and previewing an ad rule needs ads access; nothing else does.
   - name: Ad Campaign Results
     description: |
       Your own results per campaign and day (qualified leads, sales, revenue), uploaded by API or file, so rules and reports use them next to spend. Requires the Ads add-on.
@@ -981,6 +986,15 @@ components:
         A request cut off mid-handler (e.g. by a function timeout) can leave its key in progress, answering 409 until the key expires after 24 hours.
 
         On the Ads create, boost and duplicate endpoints, a same-body retry runs again once the cut-off request started more than 15 minutes ago.
+    AutomationBacktestDays:
+      name: days
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 90
+        default: 30
+      description: How many whole days before today to replay. Today is not replayed.
   headers:
     BackfillRetryAfter:
       description: Recommended delay before retrying, in seconds.
@@ -1240,6 +1254,36 @@ components:
               error:
                 type: string
                 example: Not found
+    AutomationsAdsRequired:
+      description: 'Ad rules only: your account has no ads access (code `ads_addon_required`). Ads are included on usage-based plans. Event and scheduled automations never get this 403: a boost step without ads access is refused with a 400 at its path.'
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorResponse' }
+    AutomationInvalid:
+      description: 'The automation is invalid, or holds something its kind cannot: `details.problems` lists each problem with its JSON path. A few ad rule checks (an unsupported platform, step or metric, a cooldown shorter than the schedule, approvers not on the team) answer with `param` instead.'
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/ErrorResponse'
+              - type: object
+                properties:
+                  details: { $ref: '#/components/schemas/AutomationProblems' }
+          example:
+            error: Ad rules count in whole minutes
+            code: invalid_field_value
+            param: limits.cooldown
+            details:
+              problems:
+                - { path: limits.cooldown, code: not_supported, message: Ad rules count in whole minutes }
+    AutomationApprovalRefused:
+      description: |
+        Code `invalid_resource_state`. Nothing was changed. The request was already approved or rejected, it expired, or it was cancelled when the automation stopped asking for approval.
+
+        Also returned when the automation no longer asks for approval or never does, and when it is acting on the ad account right now (try again in a minute).
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorResponse' }
     AnalyticsAddonRequired:
       x-summary: "Analytics access is required: add the Analytics add-on on a legacy plan, or use a usage-based plan where it is included."
       description: Analytics access required. Legacy plans need the Analytics add-on; included by default on usage-based plans.
@@ -17848,6 +17892,1137 @@ components:
           properties:
             from: { type: string, pattern: '^([01][0-9]|2[0-3]):[0-5][0-9]$', example: '22:00' }
             to: { type: string, pattern: '^([01][0-9]|2[0-3]):[0-5][0-9]$', example: '06:00' }
+    AutomationScheduleTrigger:
+      type: object
+      required: [type]
+      additionalProperties: false
+      description: |
+        When an ad rule runs: `every` an interval or at set weekly `times` (send one), optionally only between `startsAt` and `endsAt` and never inside `quietHours`. Times and quiet hours are in the ad account timezone.
+      properties:
+        type: { type: string, const: schedule }
+        every: { type: string, enum: ['15m', '30m', '1h', '3h', '6h', '12h', '1d'], description: 'Run every interval. Send this or `times`, not both.' }
+        times:
+          type: array
+          minItems: 1
+          maxItems: 24
+          description: 'Set weekly times. Send this or `every`, not both.'
+          items:
+            type: object
+            required: [days, at]
+            additionalProperties: false
+            properties:
+              days: { type: array, minItems: 1, maxItems: 7, items: { type: string, enum: [mon, tue, wed, thu, fri, sat, sun] } }
+              at: { type: string, pattern: '^([01][0-9]|2[0-3]):[0-5][0-9]$', example: '09:00' }
+        startsAt: { type: string, format: date-time, description: Runs from this time on. }
+        endsAt: { type: string, format: date-time, description: 'Stops running after this time. Must be after `startsAt`.' }
+        quietHours:
+          type: object
+          required: [from, to]
+          additionalProperties: false
+          description: 'A daily window with no checks. It may wrap past midnight, such as `22:00` to `06:00`.'
+          properties:
+            from: { type: string, pattern: '^([01][0-9]|2[0-3]):[0-5][0-9]$', example: '22:00' }
+            to: { type: string, pattern: '^([01][0-9]|2[0-3]):[0-5][0-9]$', example: '06:00', description: 'Differs from `from`.' }
+    AutomationEventTrigger:
+      type: object
+      required: [type, profileId]
+      additionalProperties: false
+      description: |
+        Starts the automation when something happens in Zernio, in one profile. `GET /v1/automations/catalog` lists every event with its facts.
+      properties:
+        type:
+          type: string
+          description: The Zernio event that starts it.
+          enum:
+            - post.failed
+            - post.partial
+            - post.published
+            - post.scheduled
+            - post.recycled
+            - post.platform.published
+            - post.platform.failed
+            - post.platform.deleted
+            - post.external.created
+            - account.connected
+            - account.disconnected
+            - account.permissions_changed
+            - account.rate_limited
+            - account.ads.sync_failed
+            - ad.status_changed
+            - ad.review.rejected
+            - ad.delivery_issue
+            - campaign.budget.depleted
+            - ad_account.status_changed
+            - whatsapp.template.status_updated
+            - whatsapp.account.quality_updated
+            - commerce.order.created
+            - commerce.order.updated
+            - commerce.order.refunded
+            - message.received
+            - message.failed
+            - conversation.started
+            - reaction.received
+            - referral.received
+            - comment.received
+            - review.new
+            - call.received
+            - call.ended
+            - call.failed
+            - lead.received
+          example: post.failed
+        profileId: { type: string, description: 'The profile whose events start it, from `GET /v1/profiles`.' }
+        accountIds: { type: array, minItems: 1, maxItems: 100, items: { type: string }, description: Only events of these accounts. Leave out for every account of the profile. }
+        filter: { $ref: '#/components/schemas/AutomationFactCondition' }
+    AutomationPostSchedule:
+      type: object
+      required: [type, every]
+      additionalProperties: false
+      description: When a scheduled automation checks its posts. Set times and quiet hours are not available for posts.
+      properties:
+        type: { type: string, const: schedule }
+        every: { type: string, enum: ['15m', '30m', '1h', '3h', '6h', '12h', '1d'] }
+        startsAt: { type: string, format: date-time, description: Runs from this time on. }
+        endsAt: { type: string, format: date-time, description: Stops running after this time. }
+    AutomationTrigger:
+      description: |
+        When the automation runs. Its shape decides the kind:
+
+        - A Zernio event name in `type` makes an event automation.
+        - A `schedule` over `subjects.each: post` makes a scheduled automation.
+        - Any other `schedule` makes an ad rule.
+      oneOf:
+        - $ref: '#/components/schemas/AutomationScheduleTrigger'
+        - $ref: '#/components/schemas/AutomationEventTrigger'
+        - $ref: '#/components/schemas/AutomationPostSchedule'
+    AutomationFactCondition:
+      description: |
+        Narrows by the facts of the event or post, such as `platform` or `likes`: one comparison, or a group where `all` must hold or `any` is enough. Groups nest.
+
+        A leaf whose `field` is not a fact of the event or post is refused. Text compares ignoring case. A number or date that does not parse never matches.
+      oneOf:
+        - type: object
+          required: [field, op, value]
+          additionalProperties: false
+          properties:
+            field: { type: string, description: 'A fact name from the catalog.', example: platform }
+            op:
+              type: string
+              enum: [equals, not_equals, contains, not_contains, starts_with, ends_with, exists, not_exists, matches, greater_than, less_than, greater_or_equal, less_or_equal, before, after, has_tag, not_has_tag, is_true, is_false]
+            value: { type: [string, number], example: instagram }
+        - type: object
+          required: [all]
+          additionalProperties: false
+          properties:
+            all: { type: array, minItems: 1, items: { $ref: '#/components/schemas/AutomationFactCondition' } }
+        - type: object
+          required: [any]
+          additionalProperties: false
+          properties:
+            any: { type: array, minItems: 1, items: { $ref: '#/components/schemas/AutomationFactCondition' } }
+    AutomationAdFilter:
+      description: |
+        Narrows the ad objects checked, before any metric is read. `GET /v1/automations/catalog` lists the fields each subject accepts.
+      oneOf:
+        - type: object
+          required: [field, op, value]
+          additionalProperties: false
+          description: Matches a name, a parent's name or the goal, ignoring case.
+          properties:
+            field: { type: string, enum: [name, campaign_name, adset_name, goal] }
+            op: { type: string, enum: [contains, not_contains, equals, not_equals, starts_with] }
+            value: { type: string, minLength: 1, maxLength: 200 }
+        - type: object
+          required: [field, op, values]
+          additionalProperties: false
+          description: Picks or leaves out objects by platform ID.
+          properties:
+            field: { type: string, enum: [campaign_id, adset_id, ad_id] }
+            op: { type: string, enum: [in, not_in] }
+            values: { type: array, minItems: 1, maxItems: 100, items: { type: string } }
+        - type: object
+          required: [field, op, value]
+          additionalProperties: false
+          description: 'Days since the object''s first ad was created, so new ads get time to learn.'
+          properties:
+            field: { type: string, const: days_live }
+            op: { type: string, enum: ['>=', '<'] }
+            value: { type: integer, minimum: 0, maximum: 3650 }
+        - type: object
+          required: [field, op, value]
+          additionalProperties: false
+          description: 'Where the budget sits: on the campaign (Meta CBO, every Google campaign) or on each ad set.'
+          properties:
+            field: { type: string, const: budget_level }
+            op: { type: string, const: equals }
+            value: { type: string, enum: [campaign, adset] }
+    AutomationSubjects:
+      type: object
+      required: [each, adAccounts]
+      description: What an ad rule checks, and where.
+      additionalProperties: false
+      properties:
+        each: { type: string, enum: [campaign, adset, ad], description: The objects judged one by one. }
+        adAccounts:
+          type: array
+          minItems: 1
+          maxItems: 1
+          description: 'The ad account to check. One per ad rule, and an edit cannot move it to another.'
+          items:
+            type: object
+            required: [accountId, adAccountId]
+            additionalProperties: false
+            properties:
+              accountId: { type: string, description: 'The ads connection, from `GET /v1/accounts`.' }
+              adAccountId: { type: string, maxLength: 64, description: 'Platform ad account ID, from `GET /v1/ads/accounts`.' }
+        campaignIds: { type: array, minItems: 1, maxItems: 100, items: { type: string }, description: Only these platform campaigns or their ad sets and ads. Leave out to check the whole ad account. }
+        filters:
+          type: array
+          minItems: 1
+          maxItems: 10
+          description: All must hold.
+          items: { $ref: '#/components/schemas/AutomationAdFilter' }
+        groups:
+          type: array
+          minItems: 1
+          maxItems: 20
+          description: |
+            Judges campaigns together (campaign rules only): each group's numbers are summed and its rates computed on the totals, and a matching group acts on each of its campaigns.
+
+            A group with no filters holds every campaign the rule checks. `reach` and `frequency` cannot be used with groups.
+          items:
+            type: object
+            required: [name, filters]
+            additionalProperties: false
+            properties:
+              name: { type: string, minLength: 1, maxLength: 60, description: Unique within the rule. }
+              filters: { type: array, maxItems: 10, items: { $ref: '#/components/schemas/AutomationAdFilter' } }
+    AutomationPostSubjects:
+      type: object
+      required: [each, profileId]
+      additionalProperties: false
+      description: The posts a scheduled automation checks.
+      properties:
+        each: { type: string, const: post }
+        profileId: { type: string, description: 'The profile whose posts are checked.' }
+        accountIds: { type: array, minItems: 1, maxItems: 100, items: { type: string }, description: Only posts of these accounts. Each must be active on the profile. }
+        publishedWithin: { type: string, pattern: '^[0-9]{1,5}(m|h|d)$', default: 7d, example: 3d, description: 'How far back posts are checked, by when they were published. Whole days, from `1d` to `30d` (`48h` is 2 days).' }
+    AutomationAlert:
+      type: object
+      additionalProperties: false
+      description: 'Turns matches into alerts: the ad rule acts only after `confirmChecks` matching checks in a row, keeps the alert open while `hold` holds and marks it critical when `critical` holds.'
+      properties:
+        confirmChecks: { type: integer, minimum: 1, maximum: 5 }
+        hold: { $ref: '#/components/schemas/AdRuleConditions' }
+        critical: { $ref: '#/components/schemas/AdRuleConditions' }
+    AutomationNotifyStep:
+      type: object
+      required: [type]
+      additionalProperties: false
+      description: |
+        Sends a summary to Slack channels or email addresses of connected accounts. In an ad rule it also sends the `ad_rule.triggered` webhook, and `to` is optional.
+
+        Event and scheduled automations need `to`.
+      properties:
+        id: { type: string, pattern: '^[a-z][a-z0-9_]{0,39}$', description: 'In an ad rule the id is always `notify`.' }
+        type: { type: string, const: notify.send }
+        to:
+          type: array
+          minItems: 1
+          description: Up to 5 in an ad rule.
+          items:
+            type: object
+            required: [accountId]
+            additionalProperties: false
+            description: 'Send `to` or `channelId`, not both.'
+            properties:
+              accountId: { type: string }
+              to: { type: string, format: email, description: An address for a connected Gmail or Outlook account. }
+              channelId: { type: string, description: A channel of a connected Slack account. }
+    AutomationApprovalStep:
+      type: object
+      required: [type, to, expiresIn]
+      additionalProperties: false
+      description: |
+        Makes the ad rule wait for a person's OK before it acts. One per ad rule, placed before the change. Each change waits until one of `to` approves it, for `expiresIn` at most.
+      properties:
+        id: { type: string, const: approval }
+        type: { type: string, const: approval.request }
+        to: { type: array, minItems: 1, maxItems: 10, items: { type: string, format: email }, description: 'Team members, by email. Each once.' }
+        expiresIn: { type: string, pattern: '^[0-9]{1,5}(m|h|d)$', example: 1d, description: 'From `15m` to `7d`, in whole minutes.' }
+    AutomationStep:
+      description: |
+        One thing an ad rule does for each matching object, in order. An ad rule takes at most one `ads.*` change, can ask for approval before it and notify after it.
+
+        `id` is fixed by the step type; leave it out when writing. `GET /v1/automations/catalog` lists the platforms and subjects each step works on.
+      oneOf:
+        - type: object
+          required: [type]
+          additionalProperties: false
+          properties:
+            id: { type: string, const: pause }
+            type: { type: string, const: ads.pause }
+        - type: object
+          required: [type]
+          additionalProperties: false
+          description: Turns objects back on once their cooldown has passed.
+          properties:
+            id: { type: string, const: activate }
+            type: { type: string, const: ads.activate }
+            includeManuallyPaused: { type: boolean, description: 'Also objects a person paused. Without it only what this automation paused is turned back on.' }
+        - type: object
+          required: [type]
+          additionalProperties: false
+          properties:
+            id: { type: string, const: duplicate }
+            type: { type: string, const: ads.duplicate }
+            status: { type: string, enum: [paused, active], description: The copy starts paused unless `active`. }
+            renameSuffix: { type: string, minLength: 1, maxLength: 50 }
+        - type: object
+          required: [type, by]
+          additionalProperties: false
+          description: 'Changes the daily budget by a percent: an increase needs `max`, the budget it stops at, and a decrease needs `min`.'
+          properties:
+            id: { type: string, const: budget }
+            type: { type: string, const: ads.change_budget }
+            by: { type: string, pattern: '^[+-][0-9]{1,3}%$', example: '+20%', description: 'Up to +100% or down to -90%.' }
+            max: { type: number, exclusiveMinimum: 0 }
+            min: { type: number, exclusiveMinimum: 0 }
+        - type: object
+          required: [type, amount]
+          additionalProperties: false
+          properties:
+            id: { type: string, const: budget }
+            type: { type: string, const: ads.set_budget }
+            amount: { type: number, exclusiveMinimum: 0, description: 'The daily budget to set, in the ad account currency.' }
+        - type: object
+          required: [type, by]
+          additionalProperties: false
+          description: 'Changes a Meta ad set''s bid cap or cost cap by a percent, bounded like a budget change. An ad set without one is skipped.'
+          properties:
+            id: { type: string, const: bid }
+            type: { type: string, const: ads.change_bid }
+            by: { type: string, pattern: '^[+-][0-9]{1,3}%$', example: '-10%', description: 'Up to +100% or down to -90%.' }
+            max: { type: number, exclusiveMinimum: 0 }
+            min: { type: number, exclusiveMinimum: 0 }
+        - type: object
+          required: [type, amount]
+          additionalProperties: false
+          description: 'Sets a Meta ad set''s bid cap or cost cap, in the ad account currency.'
+          properties:
+            id: { type: string, const: bid }
+            type: { type: string, const: ads.set_bid }
+            amount: { type: number, exclusiveMinimum: 0 }
+        - type: object
+          required: [type, target, by]
+          additionalProperties: false
+          description: 'Changes a Google campaign''s target CPA or target ROAS by a percent, bounded like a budget change.'
+          properties:
+            id: { type: string, const: target }
+            type: { type: string, const: ads.change_target }
+            target: { type: string, enum: [cpa, roas] }
+            by: { type: string, pattern: '^[+-][0-9]{1,3}%$', example: '+10%' }
+            max: { type: number, exclusiveMinimum: 0 }
+            min: { type: number, exclusiveMinimum: 0 }
+        - type: object
+          required: [type, target, amount]
+          additionalProperties: false
+          description: 'Sets a Google campaign''s target CPA (ad account currency) or target ROAS (a ratio, 3 is 300%).'
+          properties:
+            id: { type: string, const: target }
+            type: { type: string, const: ads.set_target }
+            target: { type: string, enum: [cpa, roas] }
+            amount: { type: number, exclusiveMinimum: 0 }
+        - type: object
+          required: [type, metric, window, from, to]
+          additionalProperties: false
+          description: |
+            Moves daily budget from the matched objects ranked worst by `metric` over `window` to those ranked best. The total stays the same.
+
+            Send `by` (a percent of each giver's budget) or `amount` (in all, split evenly), not both.
+          properties:
+            id: { type: string, const: reallocate }
+            type: { type: string, const: ads.reallocate_budget }
+            metric: { type: string, example: roas, description: 'A condition metric or `result:<key>`, not a calendar metric.' }
+            window: { type: string, example: last_7d, description: 'A condition window.' }
+            best: { type: string, enum: [highest, lowest], description: 'Which end is best. Defaults to lowest for `cpa`, `cpc`, `cpm`, `frequency` and cost results, highest otherwise.' }
+            from: { type: integer, minimum: 1, maximum: 10, description: How many objects give budget. }
+            to: { type: integer, minimum: 1, maximum: 10, description: How many objects receive it. }
+            by: { type: string, pattern: '^[0-9]{1,3}%$', example: '20%', description: 'From 1% to 90%.' }
+            amount: { type: number, exclusiveMinimum: 0 }
+            min: { type: number, exclusiveMinimum: 0, description: A giver's budget never goes below this. }
+            max: { type: number, exclusiveMinimum: 0, description: A receiver's budget never goes above this. }
+        - type: object
+          required: [type]
+          additionalProperties: false
+          description: 'Tags the object''s name: `add` puts text at the start (or the end), `remove` takes every copy of it out. Send one of them.'
+          properties:
+            id: { type: string, const: edit_name }
+            type: { type: string, const: ads.edit_name }
+            add: { type: string, minLength: 1, maxLength: 50 }
+            remove: { type: string, minLength: 1, maxLength: 50 }
+            at: { type: string, enum: [start, end] }
+        - $ref: '#/components/schemas/AutomationApprovalStep'
+        - $ref: '#/components/schemas/AutomationNotifyStep'
+    AutomationBoostStep:
+      type: object
+      required: [type, adAccountId, budget, days, countries]
+      additionalProperties: false
+      description: |
+        Promotes each matched Facebook or Instagram post once, as a Meta ad with a lifetime budget. Posts on other platforms are not boosted. It needs the Ads add-on.
+
+        One boost step per automation, and `limits.maxChangesPerDay` (up to 20) is required: the most posts boosted in a day. At most 5 posts are boosted per check.
+      properties:
+        id: { type: string, pattern: '^[a-z][a-z0-9_]{0,39}$' }
+        type: { type: string, const: ads.boost_post }
+        adAccountId: { type: string, maxLength: 64, description: 'The Meta ad account that pays, from `GET /v1/ads/accounts`.' }
+        budget: { type: number, exclusiveMinimum: 0, description: 'The whole spend of one boost, in the ad account currency.' }
+        days: { type: integer, minimum: 1, maximum: 30, description: How long each boost runs. }
+        goal: { type: string, enum: [engagement, awareness, video_views], default: engagement }
+        countries: { type: array, minItems: 1, maxItems: 25, items: { type: string, pattern: '^[A-Z]{2}$' }, example: [US, CA], description: 'ISO 3166 alpha-2 codes.' }
+    AutomationLimits:
+      type: object
+      additionalProperties: false
+      description: An ad rule's limits.
+      properties:
+        cooldown: { type: string, pattern: '^[0-9]{1,5}(m|h|d)$', default: 1d, example: 3d, description: 'How long an object is left alone after the rule acts on it. Whole minutes, up to `30d`.' }
+        maxChangesPerDay: { type: integer, minimum: 1, maximum: 100, description: 'Most changes across the last 24 hours. Needs an `ads.*` step.' }
+        maxChangesPerObject: { type: integer, minimum: 1, maximum: 100, description: 'Most times the rule may change one object, over its whole history. Needs an `ads.*` step.' }
+    AutomationEventLimits:
+      type: object
+      additionalProperties: false
+      description: The limits of an event or scheduled automation.
+      properties:
+        cooldown: { type: string, pattern: '^[0-9]{1,5}(s|m|h|d)$', example: 1h, description: 'How long the same post or account is left alone after the automation acts on it, rounded up to whole minutes. None by default.' }
+        maxChangesPerDay: { type: integer, minimum: 1, description: 'Most runs across the last 24 hours. Required, up to 20, with a boost step.' }
+    AdRuleAutomationDefinition:
+      type: object
+      required: [name, trigger, subjects, conditions, steps]
+      description: |
+        An ad rule. It is also readable under `/v1/ads/rules` with the same id. Unknown fields are refused.
+
+        To have a person OK each change before it is made, put an `approval.request` step before the `ads.*` step.
+      example:
+        name: Cut budget on losers, with approval
+        trigger: { type: schedule, every: 6h, quietHours: { from: '22:00', to: '07:00' } }
+        subjects: { each: adset, adAccounts: [{ accountId: 6731a0c2e4b0f1a2b3c4d5e6, adAccountId: act_1234567890 }] }
+        conditions: { all: [{ metric: cpa, window: last_3d, op: '>', value: 40 }] }
+        steps: [{ type: approval.request, to: [lead@example.com], expiresIn: 1d }, { type: ads.change_budget, by: '-20%', min: 10 }, { type: notify.send }]
+        limits: { cooldown: 1d, maxChangesPerDay: 10 }
+      properties:
+        name: { type: string, minLength: 1, maxLength: 200 }
+        status: { type: string, enum: [active, paused], default: paused, description: A new ad rule stays paused unless `active`. }
+        trigger: { $ref: '#/components/schemas/AutomationScheduleTrigger' }
+        subjects: { $ref: '#/components/schemas/AutomationSubjects' }
+        conditions: { $ref: '#/components/schemas/AdRuleConditions' }
+        alert: { $ref: '#/components/schemas/AutomationAlert' }
+        steps: { type: array, minItems: 1, maxItems: 50, items: { $ref: '#/components/schemas/AutomationStep' } }
+        limits: { $ref: '#/components/schemas/AutomationLimits' }
+    EventAutomationDefinition:
+      type: object
+      required: [name, trigger, steps]
+      description: 'Runs when something happens in Zernio, such as a post failing, and notifies. Unknown fields are refused.'
+      properties:
+        name: { type: string, minLength: 1, maxLength: 200 }
+        status: { type: string, enum: [active, paused], default: active, description: A new event automation is on unless `paused`. }
+        trigger: { $ref: '#/components/schemas/AutomationEventTrigger' }
+        steps: { type: array, minItems: 1, maxItems: 10, items: { $ref: '#/components/schemas/AutomationNotifyStep' } }
+        limits: { $ref: '#/components/schemas/AutomationEventLimits' }
+    ScheduledAutomationDefinition:
+      type: object
+      required: [name, trigger, subjects, steps]
+      description: |
+        Checks a profile's recent posts on a schedule. Each post that matches `filter` is notified about, and can be boosted. At most 20 posts are acted on per check. Unknown fields are refused.
+      properties:
+        name: { type: string, minLength: 1, maxLength: 200 }
+        status: { type: string, enum: [active, paused], default: active, description: A new scheduled automation is on unless `paused`. }
+        trigger: { $ref: '#/components/schemas/AutomationPostSchedule' }
+        subjects: { $ref: '#/components/schemas/AutomationPostSubjects' }
+        filter: { $ref: '#/components/schemas/AutomationFactCondition' }
+        steps:
+          type: array
+          minItems: 1
+          maxItems: 10
+          items:
+            oneOf:
+              - $ref: '#/components/schemas/AutomationNotifyStep'
+              - $ref: '#/components/schemas/AutomationBoostStep'
+        limits: { $ref: '#/components/schemas/AutomationEventLimits' }
+    AutomationDefinition:
+      description: |
+        An automation of one of three kinds, told apart by its shape:
+
+        - **Ad rule**: a `schedule` trigger over campaigns, ad sets or ads, with metric `conditions` and ad `steps`.
+        - **Event**: a Zernio event in `trigger.type`, narrowed by `trigger.filter`, with notify steps.
+        - **Scheduled**: a `schedule` trigger over `subjects.each: post`, narrowed by `filter`, with notify and boost steps.
+      oneOf:
+        - $ref: '#/components/schemas/AdRuleAutomationDefinition'
+        - $ref: '#/components/schemas/EventAutomationDefinition'
+        - $ref: '#/components/schemas/ScheduledAutomationDefinition'
+    AutomationRecord:
+      type: object
+      required: [id, kind, status, version, lastCheckAt, nextCheckAt, createdAt, updatedAt]
+      properties:
+        id: { type: string }
+        kind: { type: string, enum: [ad_rule, event, scheduled] }
+        status: { type: string, enum: [active, paused] }
+        version: { type: string, description: 'Send it back as `If-Match` when editing, so an edit made after someone else saved is refused.' }
+        lastCheckAt: { type: [string, 'null'], format: date-time, description: 'Null until an ad rule first checks. Always null for event and scheduled automations; their checks list when they ran.' }
+        nextCheckAt: { type: [string, 'null'], format: date-time, description: 'Null while paused. Always null for event and scheduled automations.' }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+        template:
+          type: object
+          required: [id, name, version, latestVersion]
+          description: 'Only on `GET /v1/automations/{automationId}`, for an automation installed from a template.'
+          properties:
+            id: { type: string }
+            name: { type: [string, 'null'] }
+            version: { type: integer, description: The template version it was installed from. }
+            latestVersion: { type: [integer, 'null'], description: Null once the template is deleted. }
+    Automation:
+      oneOf:
+        - allOf:
+            - $ref: '#/components/schemas/AdRuleAutomationDefinition'
+            - $ref: '#/components/schemas/AutomationRecord'
+            - type: object
+              required: [limits]
+              properties:
+                kind: { type: string, const: ad_rule }
+        - allOf:
+            - $ref: '#/components/schemas/EventAutomationDefinition'
+            - $ref: '#/components/schemas/AutomationRecord'
+            - type: object
+              required: [limits]
+              properties:
+                kind: { type: string, const: event }
+        - allOf:
+            - $ref: '#/components/schemas/ScheduledAutomationDefinition'
+            - $ref: '#/components/schemas/AutomationRecord'
+            - type: object
+              required: [limits]
+              properties:
+                kind: { type: string, const: scheduled }
+    AutomationProblems:
+      type: object
+      description: 'Every problem with the automation, each at a JSON path such as `steps[0].by`. The first one also fills `error` and `param`.'
+      properties:
+        problems:
+          type: array
+          items:
+            type: object
+            required: [path, code, message]
+            properties:
+              path: { type: string, example: trigger.every }
+              code: { type: string, enum: [invalid_value, not_supported] }
+              message: { type: string }
+    AutomationActionResult:
+      type: object
+      required: [step, type, status, reason, previous, target]
+      description: 'What an ad rule did to one object, as an absolute change: a budget change reads as the budget it set.'
+      properties:
+        step: { type: string, description: 'The id of the step that made it, for example `budget`.' }
+        type: { type: string, enum: [ads.pause, ads.activate, ads.set_budget, ads.duplicate, ads.edit_name, ads.set_bid, ads.set_target, ads.reallocate_budget] }
+        status: { type: string, enum: [applied, skipped, failed] }
+        reason: { type: [string, 'null'], description: 'Why it was skipped or failed, such as `already_paused`, `daily_limit_reached` or `awaiting_approval`.' }
+        previous: { $ref: '#/components/schemas/AutomationChangedValue' }
+        target: { $ref: '#/components/schemas/AutomationChangedValue' }
+    AutomationChangedValue:
+      type: [object, 'null']
+      description: 'The one value the change moved, keyed by what it is. Null when it moved none, as for a pause.'
+      properties:
+        dailyBudget: { type: number }
+        name: { type: string }
+        bidAmount: { type: number }
+        targetCpa: { type: number }
+        targetRoas: { type: number }
+    AdRuleAutomationCheck:
+      type: object
+      required: [id, automationId, checkedAt, outcome, evaluated, subjects, actions, notification, error]
+      description: One check of an ad rule.
+      properties:
+        id: { type: string }
+        automationId: { type: string }
+        checkedAt: { type: string, format: date-time }
+        outcome: { type: string, enum: [triggered, cooldown, no_match, failed] }
+        evaluated: { type: integer, description: Objects judged. }
+        subjects:
+          type: array
+          items:
+            type: object
+            properties:
+              subject: { type: object, properties: { id: { type: string }, name: { type: string }, campaignId: { type: [string, 'null'] } } }
+              matched: { type: boolean }
+              conditions: { type: array, items: { type: object } }
+        actions:
+          type: array
+          items:
+            allOf:
+              - $ref: '#/components/schemas/AutomationActionResult'
+              - type: object
+                properties:
+                  subjectId: { type: string }
+        notification: { type: [object, 'null'], properties: { status: { type: string, enum: [done, failed] }, reason: { type: string } } }
+        error: { type: [string, 'null'] }
+    AutomationFactResult:
+      type: object
+      description: 'One leaf of the filter, with the fact''s value at the check. Content facts are null for teams that keep no content.'
+      properties:
+        field: { type: string }
+        op: { type: string }
+        value: {}
+        actual: {}
+        met: { type: boolean }
+    AutomationRunResult:
+      type: object
+      required: [type, status, reason]
+      properties:
+        type: { type: string, enum: [notify.send, ads.boost_post] }
+        status: { type: string, enum: [pending, applied, skipped, failed, unknown], description: '`unknown` when the platform never answered, so the outcome is not known.' }
+        reason: { type: [string, 'null'] }
+    EventAutomationCheck:
+      type: object
+      required: [id, automationId, checkedAt, outcome, evaluated, event, eventId, subject, filter, actions, error]
+      description: One event that reached an event automation.
+      properties:
+        id: { type: string }
+        automationId: { type: string }
+        checkedAt: { type: string, format: date-time }
+        outcome: { type: string, enum: [triggered, no_match, cooldown, daily_limit, failed] }
+        evaluated: { type: integer }
+        event: { type: [string, 'null'], example: post.failed }
+        eventId: { type: [string, 'null'] }
+        subject:
+          type: [object, 'null']
+          description: What the event was about.
+          properties:
+            kind: { type: string, example: post }
+            id: { type: string }
+            accountId: { type: string }
+        filter: { type: array, items: { $ref: '#/components/schemas/AutomationFactResult' } }
+        actions: { type: array, items: { $ref: '#/components/schemas/AutomationRunResult' } }
+        error: { type: [string, 'null'] }
+    ScheduledAutomationCheck:
+      type: object
+      required: [id, automationId, checkedAt, outcome, evaluated, analyticsSyncedAt, matched, actions, error]
+      description: One check of a scheduled automation.
+      properties:
+        id: { type: string }
+        automationId: { type: string }
+        checkedAt: { type: string, format: date-time }
+        outcome: { type: string, enum: [triggered, no_match, cooldown, daily_limit, failed] }
+        evaluated: { type: integer, description: Posts judged. }
+        analyticsSyncedAt: { type: [string, 'null'], format: date-time, description: 'The oldest analytics sync among the posts judged: their numbers are as of then.' }
+        matched:
+          type: array
+          description: Up to 20 matching posts.
+          items:
+            type: object
+            properties:
+              postId: { type: string }
+              accountId: { type: string }
+              platform: { type: string }
+              url: { type: [string, 'null'] }
+              filter: { type: array, items: { $ref: '#/components/schemas/AutomationFactResult' } }
+        actions:
+          type: array
+          items:
+            allOf:
+              - $ref: '#/components/schemas/AutomationRunResult'
+              - type: object
+                properties:
+                  postId: { type: string }
+        error: { type: [string, 'null'] }
+    AutomationCheck:
+      description: One check, shaped by the automation's kind.
+      oneOf:
+        - $ref: '#/components/schemas/AdRuleAutomationCheck'
+        - $ref: '#/components/schemas/EventAutomationCheck'
+        - $ref: '#/components/schemas/ScheduledAutomationCheck'
+    AutomationAction:
+      allOf:
+        - $ref: '#/components/schemas/AutomationActionResult'
+        - type: object
+          required: [id, automationId, automationName, checkId, subject, platform, adAccount, currency, createdAt]
+          properties:
+            id: { type: string }
+            automationId: { type: string }
+            automationName: { type: string }
+            checkId: { type: string }
+            subject: { type: object, properties: { kind: { type: string, enum: [campaign, adset, ad] }, id: { type: string }, name: { type: [string, 'null'] } } }
+            platform: { type: string }
+            adAccount: { type: object, properties: { accountId: { type: string }, adAccountId: { type: string } } }
+            currency: { type: [string, 'null'] }
+            createdAt: { type: string, format: date-time }
+    AutomationConditionResult:
+      type: object
+      properties:
+        path: { type: string, example: 'conditions.all[0]' }
+        metric: { type: string }
+        window: { type: string }
+        op: { type: string }
+        value: { type: number }
+        compareTo: { type: string }
+        actual: { type: [number, 'null'], description: Null when the value is unknown; such a condition never holds. }
+        met: { type: boolean }
+    AutomationPreview:
+      type: object
+      required: [evaluatedAt, today, timezone, timezoneAssumed, currency, evaluated, matched, truncated, subjects]
+      description: |
+        What an ad rule would do if it ran now. Nothing is changed. Cooldowns and daily caps are left out, so a run right after can act on fewer objects.
+      properties:
+        evaluatedAt: { type: string, format: date-time }
+        today: { type: string, format: date, description: Today in the ad account timezone. }
+        timezone: { type: string }
+        timezoneAssumed: { type: boolean, description: True when the ad account timezone is unknown and UTC was used. }
+        currency: { type: [string, 'null'] }
+        evaluated: { type: integer }
+        matched: { type: integer }
+        truncated: { type: boolean, description: 'True when more subjects were judged than `limit` lists.' }
+        subjects:
+          type: array
+          description: Matches first, up to `limit`.
+          items:
+            type: object
+            required: [subject, matched, conditions, wouldRun]
+            properties:
+              subject:
+                type: object
+                properties:
+                  kind: { type: string, enum: [campaign, adset, ad] }
+                  id: { type: string, description: Platform ID. }
+                  name: { type: string }
+                  campaignId: { type: [string, 'null'] }
+              group: { type: string, description: 'The group it was judged in, when the rule has `subjects.groups`.' }
+              matched: { type: boolean }
+              conditions: { type: array, items: { $ref: '#/components/schemas/AutomationConditionResult' } }
+              wouldRun:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    step: { type: string }
+                    type: { type: string }
+        groups:
+          type: array
+          description: 'Each group''s totals against the conditions, when the rule has `subjects.groups`.'
+          items:
+            type: object
+            properties:
+              name: { type: string }
+              matched: { type: boolean }
+              conditions: { type: array, items: { $ref: '#/components/schemas/AutomationConditionResult' } }
+              campaignIds: { type: array, items: { type: string } }
+    AutomationTemplateInput:
+      type: object
+      description: >-
+        Something an install asks for. Each automation in the template holds `{ "$input": "<key>" }` where the value
+        goes, and installing puts the value sent in `inputs.<key>` there.
+      required: [key, type, label]
+      properties:
+        key: { type: string, description: 'The name to send the value under in `inputs`, for example `adAccount`.', example: adAccount }
+        type:
+          type: string
+          enum: [ad_account, profile, social_accounts, notify_destination, number, money, percent, choice]
+          description: >-
+            What the value is. `ad_account`: `{ accountId, adAccountId }`. `profile`: a profile id. `social_accounts`:
+            an array of social account ids. `notify_destination`: an array of `{ accountId, to?, channelId? }`.
+            `number`, `money` (in the ad account's currency) and `percent`: a number within the bounds below. `choice`:
+            one of `options[].value`.
+        label: { type: string, example: Ad account }
+        optional: { type: boolean, description: 'True when an install may leave it out. A field that points at a left-out input is dropped.' }
+        default: { type: [string, number], description: Used when an install leaves the input out. An input with a default is never missing. }
+        min: { type: number }
+        exclusiveMin: { type: number, description: 'The value must be above it, for example an amount above 0.' }
+        max: { type: number }
+        integer: { type: boolean, description: True when only whole numbers are accepted. }
+        options:
+          type: array
+          description: What a `choice` input offers.
+          items:
+            type: object
+            required: [value, label]
+            properties:
+              value: { type: [string, number] }
+              label: { type: string }
+    AutomationTemplateAutomation:
+      type: object
+      required: [key, definition]
+      properties:
+        key: { type: string, description: 'Stable within the template, for example `automation1`.', example: automation1 }
+        definition:
+          type: object
+          additionalProperties: true
+          description: >-
+            A `POST /v1/automations` body without `status`, in which every value tied to one account is an input
+            reference such as `{ "$input": "adAccount" }`. Campaign ids, id filters, start and end dates and approval
+            steps are not kept.
+    AutomationTemplate:
+      type: object
+      required: [id, name, description, publisher, visibility, version, areas, inputs, automations, installs, share]
+      properties:
+        id: { type: string, description: "A team template's id (24 hex characters), or the id of one of Zernio's templates such as `stop_losers`." }
+        name: { type: string }
+        description: { type: string }
+        publisher:
+          type: object
+          required: [type]
+          properties:
+            type: { type: string, enum: [team, zernio], description: "`team` for your team's templates and shared ones, `zernio` for Zernio's own." }
+        visibility:
+          type: string
+          enum: [team, link, public]
+          description: '`team`: your team only. `link`: anyone with the share link can read and install it. `public`: one of Zernio''s templates.'
+        version: { type: integer, minimum: 1, description: Goes up each time the content changes. Renaming or sharing keeps it. }
+        areas:
+          type: array
+          items: { type: string, enum: [ads, events, posts, inbox, comments] }
+          description: What its automations work on.
+        inputs:
+          type: array
+          items: { $ref: '#/components/schemas/AutomationTemplateInput' }
+        automations:
+          type: array
+          items: { $ref: '#/components/schemas/AutomationTemplateAutomation' }
+        installs: { type: integer, description: Installs across every team. Always 0 on Zernio's templates. }
+        installedInTeam: { type: integer, description: "Your team's automations made from it. Absent on shared and Zernio templates." }
+        share:
+          type: [object, 'null']
+          description: While shared by link (on your own templates only). Null otherwise.
+          required: [token, path]
+          properties:
+            token: { type: string, description: 'The share token for `/v1/automations/templates/shared/{shareToken}`.' }
+            path: { type: string, description: The dashboard page that opens the template. }
+        createdBy: { type: string, description: "The user who saved it. Only on your team's templates." }
+        createdAt: { type: string, format: date-time, description: "Absent on Zernio's templates." }
+        updatedAt: { type: string, format: date-time, description: "Absent on Zernio's templates." }
+    AutomationTemplateContent:
+      type: object
+      description: 'Where the automations come from. Send `from` or `automations`, not both.'
+      properties:
+        from:
+          description: >-
+            Copy existing automations: your own (`automationIds`), one of Zernio's templates (`templateId`, for example
+            `stop_losers`), or a template shared by link (`shareToken`).
+          oneOf:
+            - type: object
+              title: From your automations
+              required: [automationIds]
+              additionalProperties: false
+              properties:
+                automationIds: { type: array, minItems: 1, maxItems: 20, items: { type: string, pattern: '^[0-9a-f]{24}$' } }
+            - type: object
+              title: From a Zernio template
+              required: [templateId]
+              additionalProperties: false
+              properties:
+                templateId: { type: string, minLength: 1, maxLength: 64 }
+            - type: object
+              title: From a shared template
+              required: [shareToken]
+              additionalProperties: false
+              properties:
+                shareToken: { type: string, minLength: 1, maxLength: 64 }
+        automations:
+          type: array
+          minItems: 1
+          maxItems: 20
+          description: >-
+            Automation definitions, each checked like a `POST /v1/automations` body. Ad accounts, a trigger's profile
+            and accounts, and alert destinations become inputs.
+          items: { $ref: '#/components/schemas/AutomationDefinition' }
+    AutomationTemplateInstallRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        inputs:
+          type: object
+          additionalProperties: true
+          default: {}
+          description: 'A value for each input, by its `key`. Required inputs without a default must be sent.'
+          example:
+            adAccount: { accountId: 6731a0c2e4b0f1a2b3c4d5e6, adAccountId: act_1234567890 }
+        targets:
+          type: array
+          minItems: 1
+          maxItems: 50
+          description: >-
+            Install several times in one call, for example on many ad accounts. Each target is its own install, all or
+            nothing, and its `inputs` win over the shared `inputs`. A failed target leaves the others in place.
+          items:
+            type: object
+            required: [inputs]
+            additionalProperties: false
+            properties:
+              inputs: { type: object, additionalProperties: true }
+        status:
+          type: string
+          enum: [active, paused]
+          default: paused
+          description: The status of every automation created.
+    AutomationTemplateInstallation:
+      type: object
+      required: [templateId, templateVersion, automations]
+      properties:
+        templateId: { type: string }
+        templateVersion: { type: integer }
+        automations:
+          type: array
+          items: { $ref: '#/components/schemas/Automation' }
+    AutomationTemplateTargetResult:
+      type: object
+      required: [target, status]
+      properties:
+        target: { type: integer, description: 'The index of the entry in `targets`.' }
+        status: { type: string, enum: [created, failed] }
+        installation: { $ref: '#/components/schemas/AutomationTemplateInstallation' }
+        error:
+          type: object
+          description: Why this target did not install. Problem paths point into the request, such as `targets[2].inputs.adAccount`.
+          required: [code, message]
+          properties:
+            code: { type: string }
+            message: { type: string }
+            param: { type: string }
+            details: { type: object, additionalProperties: true }
+    AutomationTemplateInstallResponse:
+      oneOf:
+        - type: object
+          title: One install
+          required: [installation]
+          properties:
+            installation: { $ref: '#/components/schemas/AutomationTemplateInstallation' }
+        - type: object
+          title: Several targets
+          required: [installations]
+          properties:
+            installations:
+              type: array
+              description: One result per target, in order.
+              items: { $ref: '#/components/schemas/AutomationTemplateTargetResult' }
+    AutomationControls:
+      type: object
+      required: [paused, pausedAt, adAccounts]
+      description: The team's switch for every ad rule, and each ad account's own controls. Every team member sees the same ones.
+      properties:
+        paused:
+          type: boolean
+          description: True when every ad rule of the team is stopped. Each rule keeps its own status.
+        pausedAt:
+          type: [string, 'null']
+          format: date-time
+          description: When the team switch was turned off; null while it is on.
+        adAccounts:
+          type: array
+          description: Every ad account your automations use, plus any ad account that has controls set.
+          items: { $ref: '#/components/schemas/AutomationAdAccountControls' }
+    AutomationAdAccountControls:
+      type: object
+      required: [accountId, platform, adAccountId, paused, pausedAt, dailyRaiseLimit]
+      properties:
+        accountId:
+          type: [string, 'null']
+          description: The connection your automations reach the ad account through; null when no automation uses it any more.
+        platform:
+          type: string
+          description: 'The ad platform, for example `facebook`.'
+        adAccountId:
+          type: string
+          description: The platform's ad account id.
+        paused:
+          type: boolean
+          description: True when every ad rule on this ad account is stopped.
+        pausedAt:
+          type: [string, 'null']
+          format: date-time
+        dailyRaiseLimit:
+          type: [number, 'null']
+          description: 'The most automations may raise budgets on this ad account in any 24 hours, in the ad account''s currency. Null when there is no limit.'
+    AutomationApprovalDecision:
+      type: object
+      additionalProperties: false
+      properties:
+        token:
+          type: string
+          minLength: 1
+          maxLength: 200
+          description: 'The token from the emailed approval link. When sent, the decision counts only if the link was sent to you. Leave it out when deciding from the API.'
+    AutomationApproval:
+      type: object
+      required: [id, automationId, checkId, status, to, expiresAt, createdAt, decidedBy, decidedAt, canDecide, changes]
+      description: A request an automation sent for a person's approval before acting, with each change it holds.
+      properties:
+        id: { type: string }
+        automationId: { type: string }
+        checkId:
+          type: string
+          description: The check that found the matches and sent the request.
+        status:
+          type: string
+          enum: [pending, approved, rejected, expired, cancelled]
+          description: '`cancelled` when the automation stopped asking for approval before anyone decided.'
+        to:
+          type: array
+          items: { type: string, format: email }
+          description: The emails the request was sent to.
+        expiresAt:
+          type: string
+          format: date-time
+          description: After this the request can no longer be decided and its changes are skipped.
+        createdAt: { type: string, format: date-time }
+        decidedBy:
+          type: [object, 'null']
+          properties:
+            email: { type: string, format: email }
+          description: Who approved or rejected it; null while undecided.
+        decidedAt:
+          type: [string, 'null']
+          format: date-time
+        canDecide:
+          type: boolean
+          description: True when the request is pending and you are one of the approvers the automation names now.
+        changes:
+          type: array
+          description: The changes the request holds. Notifications are not listed.
+          items: { $ref: '#/components/schemas/AutomationApprovalChange' }
+    AutomationApprovalChange:
+      type: object
+      required: [actionId, subject, type, previous, target, conditions, status, reason]
+      properties:
+        actionId: { type: string }
+        subject:
+          type: object
+          required: [kind, id, name]
+          properties:
+            kind: { type: string, enum: [campaign, adset, ad] }
+            id: { type: string }
+            name: { type: [string, 'null'] }
+        type:
+          type: string
+          enum: [ads.pause, ads.activate, ads.set_budget, ads.duplicate, ads.edit_name, ads.set_bid, ads.set_target, ads.reallocate_budget]
+        previous:
+          type: [object, 'null']
+          description: 'The value before the change, under one of `dailyBudget`, `name`, `bidAmount`, `targetCpa` or `targetRoas`. Null when the change moves no value.'
+          properties:
+            dailyBudget: { type: number }
+            name: { type: string }
+            bidAmount: { type: number }
+            targetCpa: { type: number }
+            targetRoas: { type: number }
+        target:
+          type: [object, 'null']
+          description: The value the change sets, keyed like `previous`.
+          properties:
+            dailyBudget: { type: number }
+            name: { type: string }
+            bidAmount: { type: number }
+            targetCpa: { type: number }
+            targetRoas: { type: number }
+        conditions:
+          type: array
+          items: { type: object }
+          description: Each condition as it was judged when the request was sent, with its actual value.
+        status:
+          type: string
+          enum: [pending, applied, skipped, failed, unknown]
+          description: '`pending` until the request is decided.'
+        reason:
+          type: [string, 'null']
+          description: Why the change was made, skipped or failed, when known.
+    AutomationBacktest:
+      type: object
+      required: [from, to, timezone, timezoneAssumed, currency, totals, days, notes]
+      description: What the automation would have done on each past day, replayed on stored daily metrics. Nothing is changed.
+      properties:
+        from:
+          type: string
+          format: date
+          description: The first day replayed, in the ad account timezone.
+        to:
+          type: string
+          format: date
+          description: The last day replayed, yesterday in the ad account timezone.
+        timezone: { type: string }
+        timezoneAssumed:
+          type: boolean
+          description: True when the ad account timezone is unknown and UTC was used.
+        currency: { type: [string, 'null'] }
+        totals:
+          type: object
+          required: [actions, pauses, activations, budgetRaised, budgetLowered, budgetChange, notifications, skipped, subjects, heldBack, daysWithActions]
+          properties:
+            actions: { type: integer, description: Actions it would have taken. Skipped ones are not counted. }
+            pauses: { type: integer }
+            activations: { type: integer }
+            budgetRaised: { type: integer, description: Budget changes that raised a budget. }
+            budgetLowered: { type: integer, description: Budget changes that lowered a budget. }
+            budgetChange: { type: number, description: 'The net budget change across every budget action, in `currency`.' }
+            notifications: { type: integer }
+            skipped: { type: integer, description: Actions planned but skipped. }
+            subjects: { type: integer, description: Distinct objects it would have acted on. }
+            heldBack: { type: integer, description: 'Matches left alone by the cooldown or a cap, summed over the days.' }
+            daysWithActions: { type: integer }
+        days:
+          type: array
+          items: { $ref: '#/components/schemas/AutomationBacktestDay' }
+        notes:
+          type: array
+          description: What this replay could not know, for example that budgets have no history.
+          items:
+            type: object
+            required: [code, message]
+            properties:
+              code:
+                type: string
+                enum: [budget_assumed, results_not_replayed, reach_stored, today_whole_day, pause_history, status_history, no_checks, same_day_numbers, alerts_not_replayed]
+              message: { type: string }
+    AutomationBacktestDay:
+      type: object
+      required: [date, checks, evaluated, matched, heldBack, actions]
+      properties:
+        date: { type: string, format: date }
+        checks:
+          type: integer
+          description: Checks the schedule would have run that day. 0 on a day it skips.
+        evaluated:
+          type: integer
+          description: The most objects any of the day's checks judged.
+        matched:
+          type: integer
+          description: The most objects any of the day's checks matched.
+        heldBack:
+          type: integer
+          description: Matches left alone all day by the cooldown or a cap.
+        actions:
+          type: array
+          items:
+            type: object
+            required: [subject, type]
+            properties:
+              subject:
+                type: object
+                required: [kind, id, name, campaignId]
+                properties:
+                  kind: { type: string, enum: [campaign, adset, ad] }
+                  id: { type: string }
+                  name: { type: string }
+                  campaignId: { type: [string, 'null'] }
+              group:
+                type: string
+                description: For an automation with groups, the group the campaign was judged in.
+              type:
+                type: string
+                enum: [ads.pause, ads.activate, ads.set_budget, ads.duplicate, ads.edit_name, ads.set_bid, ads.set_target, ads.reallocate_budget, notify.send]
+              budget:
+                type: object
+                description: For a budget change, the daily budget before and after.
+                required: [from, to]
+                properties:
+                  from: { type: number }
+                  to: { type: number }
+              skipped:
+                type: string
+                enum: [budget_unknown, at_limit, already_at_amount]
+                description: 'Why it would have been skipped. Absent when it would have acted.'
     AdRule:
       type: object
       required: [id, name, accountId, platform, adAccountId, level, campaignIds, filters, groups, lifecycle, conditions, actions, schedule, cooldownMinutes, enabled, lastRunAt, nextRunAt, createdAt, updatedAt]
@@ -66921,6 +68096,1542 @@ paths:
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/AccountUnavailable' }
+  /v1/automations:
+    get:
+      x-resource-group: ads
+      operationId: listAutomations
+      tags: [Automations]
+      summary: List automations
+      description: |
+        Lists the automations on the profiles your key can reach, newest first, across every kind: ad rules, event automations and scheduled automations.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: accountId
+          in: query
+          schema: { type: string }
+          description: 'Only automations on this account: the ads connection of an ad rule, or one of the `accountIds` of an event or scheduled automation.'
+        - name: adAccountId
+          in: query
+          schema: { type: string }
+          description: Only ad rules checking this platform ad account.
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 100, default: 50 }
+        - name: cursor
+          in: query
+          schema: { type: string }
+          description: '`nextCursor` from the previous page.'
+      responses:
+        '200':
+          description: Automations
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [automations, nextCursor]
+                properties:
+                  automations: { type: array, items: { $ref: '#/components/schemas/Automation' } }
+                  nextCursor: { type: [string, 'null'], description: Null on the last page. }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+    post:
+      x-resource-group: ads
+      operationId: createAutomation
+      tags: [Automations]
+      summary: Create an automation
+      description: |
+        Creates an automation. Its shape picks the kind:
+
+        - **Ad rule**: a `schedule` over campaigns, ad sets or ads, with metric `conditions` and ad `steps`. It stays paused unless `status` is `active`; preview it first with `POST /v1/automations/preview`.
+        - **Event**: a Zernio event in `trigger.type`, such as `post.failed`, with notify steps. It is on unless `status` is `paused`.
+        - **Scheduled**: a `schedule` over a profile's posts, with notify steps and an optional boost. It is on unless `status` is `paused`.
+
+        Everything an automation cannot hold is refused at once: the 400 lists every problem with its JSON path in `details.problems`.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKeyHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AutomationDefinition' }
+            examples:
+              adRule:
+                summary: Pause ads that spend without converting
+                value:
+                  name: Stop losers
+                  status: active
+                  trigger: { type: schedule, every: 1h }
+                  subjects: { each: ad, adAccounts: [{ accountId: 6731a0c2e4b0f1a2b3c4d5e6, adAccountId: act_1234567890 }] }
+                  conditions: { all: [{ metric: spend, window: last_3d, op: '>', value: 50 }, { metric: conversions, window: last_3d, op: '<', value: 1 }] }
+                  steps: [{ type: ads.pause }, { type: notify.send }]
+                  limits: { cooldown: 3d }
+              event:
+                summary: Tell Slack when an Instagram post fails
+                value:
+                  name: Failed Instagram posts
+                  trigger:
+                    type: post.failed
+                    profileId: 6731a0c2e4b0f1a2b3c4d5e7
+                    filter: { field: platform, op: equals, value: instagram }
+                  steps: [{ type: notify.send, to: [{ accountId: 6731a0c2e4b0f1a2b3c4d5e8, channelId: C0123456789 }] }]
+                  limits: { cooldown: 1h }
+              scheduled:
+                summary: Boost posts that take off
+                value:
+                  name: Boost winners
+                  trigger: { type: schedule, every: 1h }
+                  subjects: { each: post, profileId: 6731a0c2e4b0f1a2b3c4d5e7, publishedWithin: 3d }
+                  filter: { all: [{ field: platform, op: equals, value: instagram }, { field: likes, op: greater_than, value: 500 }] }
+                  steps: [{ type: ads.boost_post, adAccountId: act_1234567890, budget: 50, days: 5, countries: [US] }]
+                  limits: { maxChangesPerDay: 3 }
+      responses:
+        '201':
+          description: Automation created
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [automation]
+                properties:
+                  automation: { $ref: '#/components/schemas/Automation' }
+        '400': { $ref: '#/components/responses/AutomationInvalid' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403':
+          description: 'Ad rules only: no ads access (`ads_addon_required`), the ad account is not one the connection selected (`ad_account_not_selected`), or turning it on would raise live spend past the free ads allowance (`ads_allowance_exceeded`).'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+        '409': { $ref: '#/components/responses/IdempotencyKeyInFlight' }
+        '422': { $ref: '#/components/responses/IdempotencyKeyReused' }
+  /v1/automations/catalog:
+    get:
+      x-resource-group: ads
+      operationId: getAutomationCatalog
+      tags: [Automations]
+      summary: Get the automations catalog
+      description: |
+        What an automation can contain and where each part works, built from the same checks that validate a save, so it never offers what saving refuses.
+
+        - `schema`: the JSON Schema of the body of `POST /v1/automations`.
+        - `triggers`: every trigger, tagged with its `kind`. Ad rule and scheduled triggers list their intervals; event triggers list each event with its facts.
+        - The other sections describe ad rules: per subject (campaign, ad set, ad) its metrics and steps with the platforms that accept them, plus filters, groups, alerts, conditions, limits and approval.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Catalog
+          headers:
+            Cache-Control:
+              schema: { type: string, example: 'private, max-age=3600' }
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [schema, triggers, subjects, filters, groups, alert, conditions, limits, approval]
+                properties:
+                  schema: { type: object, description: JSON Schema of the body of `POST /v1/automations`. }
+                  triggers:
+                    type: array
+                    items:
+                      type: object
+                      required: [kind, type]
+                      properties:
+                        kind: { type: string, enum: [ad_rule, event, scheduled] }
+                        type: { type: string, description: '`schedule`, or the Zernio event name.', example: post.failed }
+                        label: { type: string, description: Event triggers only. }
+                        subject: { type: string, description: 'What an event is about, such as `post` or `account`.' }
+                        scope: { type: object, description: 'Which of `profileId` and `accountIds` an event trigger needs.' }
+                        facts:
+                          type: array
+                          description: 'The facts a `filter` can compare, for an event trigger.'
+                          items: { type: object, properties: { name: { type: string }, type: { type: string, enum: [string, number, boolean] }, description: { type: string } } }
+                        subjects:
+                          type: array
+                          description: 'Scheduled trigger only: what it can check (`post`), with the facts of each.'
+                          items: { type: object }
+                        every: { type: array, items: { type: string } }
+                        times: { type: object, description: 'Ad rule trigger only: the weekly set times it takes.' }
+                        filterOperators: { type: array, items: { type: string } }
+                        steps: { type: array, items: { type: string } }
+                        boost: { type: object, description: 'Scheduled trigger only: the platforms, goals, most days and most boosts a day of `ads.boost_post`.' }
+                        limits: { type: array, items: { type: string } }
+                  subjects:
+                    type: array
+                    description: Ad rule subjects.
+                    items:
+                      type: object
+                      properties:
+                        each: { type: string, enum: [campaign, adset, ad] }
+                        platforms: { type: array, items: { type: string } }
+                        metrics: { type: array, items: { type: object, properties: { metric: { type: string }, platforms: { type: array, items: { type: string } } } } }
+                        steps: { type: array, items: { type: object, properties: { type: { type: string }, platforms: { type: array, items: { type: string } } } } }
+                  filters: { type: object, description: 'The fields and operators `subjects.filters` takes, and which fields each subject accepts.' }
+                  groups: { type: object, description: 'What `subjects.groups` takes.' }
+                  alert: { type: object, description: The most checks `alert.confirmChecks` can ask for. }
+                  conditions: { type: object, description: 'Condition operators, windows, `compareTo` options and size limits.' }
+                  limits: { type: array, items: { type: string } }
+                  approval: { type: object, description: 'Where `approval.request` goes, how many approvers and how long it can wait.' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+  /v1/automations/actions:
+    get:
+      x-resource-group: ads
+      operationId: listAutomationActions
+      tags: [Automations]
+      summary: List automation actions
+      description: |
+        Every change your ad rules made, newest first: what changed, the value before and after, and whether it was applied, skipped or failed. What event and scheduled automations did is in each one's checks.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: automationId
+          in: query
+          schema: { type: string }
+        - name: accountId
+          in: query
+          schema: { type: string }
+          description: Only actions on this ads connection.
+        - name: type
+          in: query
+          schema: { type: string, enum: [ads.pause, ads.activate, ads.set_budget, ads.duplicate, ads.edit_name, ads.set_bid, ads.set_target, ads.reallocate_budget] }
+          description: 'A change reads as the value it set, so budget changes filter as `ads.set_budget`.'
+        - name: from
+          in: query
+          schema: { type: string, format: date-time }
+        - name: to
+          in: query
+          schema: { type: string, format: date-time }
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 100, default: 50 }
+        - name: cursor
+          in: query
+          schema: { type: string }
+          description: '`nextCursor` from the previous page.'
+      responses:
+        '200':
+          description: Actions
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [actions, nextCursor]
+                properties:
+                  actions: { type: array, items: { $ref: '#/components/schemas/AutomationAction' } }
+                  nextCursor: { type: [string, 'null'] }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+  /v1/automations/{automationId}/checks:
+    get:
+      x-resource-group: ads
+      operationId: listAutomationChecks
+      tags: [Automations]
+      summary: List an automation's checks
+      description: |
+        Each time the automation ran, newest first, with what matched and what it did. For an event automation, each check is one event that reached it.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: automationId
+          in: path
+          required: true
+          schema: { type: string }
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 100, default: 20 }
+        - name: cursor
+          in: query
+          schema: { type: string }
+          description: '`nextCursor` from the previous page.'
+      responses:
+        '200':
+          description: Checks
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [checks, nextCursor]
+                properties:
+                  checks: { type: array, items: { $ref: '#/components/schemas/AutomationCheck' } }
+                  nextCursor: { type: [string, 'null'], description: Null on the last page. }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /v1/automations/preview:
+    post:
+      x-resource-group: ads
+      operationId: previewAutomationDraft
+      tags: [Automations]
+      summary: Preview an unsaved automation
+      description: |
+        Shows what an ad rule would do if it ran now, without saving it or changing anything: every object it checks, each condition with its actual value, and the steps a match would run. It refuses what saving would refuse.
+
+        Event and scheduled automations cannot be previewed yet (400, `not_supported`).
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 500, default: 100 }
+          description: How many subjects to list, matches first. `evaluated` and `matched` always count them all.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AutomationDefinition' }
+      responses:
+        '200':
+          description: Preview
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AutomationPreview' }
+        '400': { $ref: '#/components/responses/AutomationInvalid' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/AutomationsAdsRequired' }
+  /v1/automations/{automationId}:
+    parameters:
+      - name: automationId
+        in: path
+        required: true
+        schema: { type: string }
+    get:
+      x-resource-group: ads
+      operationId: getAutomation
+      tags: [Automations]
+      summary: Get an automation
+      description: An automation installed from a template also carries `template`.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Automation
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [automation]
+                properties:
+                  automation: { $ref: '#/components/schemas/Automation' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    patch:
+      x-resource-group: ads
+      operationId: updateAutomation
+      tags: [Automations]
+      summary: Edit an automation
+      description: |
+        Replaces the top-level fields you send and keeps the rest: to change one step, send all of `steps`. The result is checked as a whole automation, so problems carry the same paths as on create.
+
+        An automation keeps its kind, and an ad rule stays on its ad account. Send `alert: null` to remove an ad rule's alert.
+
+        Send the `version` you read as `If-Match`: if the automation was saved since, the edit is refused with a 409 (`automation_stale`). An edit is also refused with a 409 when another save lands while it is being applied.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: If-Match
+          in: header
+          required: false
+          schema: { type: string }
+          description: The automation's `version` when you read it.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              minProperties: 1
+              additionalProperties: false
+              properties:
+                name: { type: string, minLength: 1, maxLength: 200 }
+                status: { type: string, enum: [active, paused] }
+                trigger: { $ref: '#/components/schemas/AutomationTrigger' }
+                subjects:
+                  oneOf:
+                    - $ref: '#/components/schemas/AutomationSubjects'
+                    - $ref: '#/components/schemas/AutomationPostSubjects'
+                filter: { $ref: '#/components/schemas/AutomationFactCondition' }
+                conditions: { $ref: '#/components/schemas/AdRuleConditions' }
+                alert:
+                  oneOf:
+                    - $ref: '#/components/schemas/AutomationAlert'
+                    - type: 'null'
+                steps:
+                  type: array
+                  minItems: 1
+                  description: The steps the automation's kind takes.
+                  items:
+                    oneOf:
+                      - $ref: '#/components/schemas/AutomationStep'
+                      - $ref: '#/components/schemas/AutomationBoostStep'
+                limits:
+                  oneOf:
+                    - $ref: '#/components/schemas/AutomationLimits'
+                    - $ref: '#/components/schemas/AutomationEventLimits'
+      responses:
+        '200':
+          description: Automation updated
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [automation]
+                properties:
+                  automation: { $ref: '#/components/schemas/Automation' }
+        '400': { $ref: '#/components/responses/AutomationInvalid' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/AutomationsAdsRequired' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409':
+          description: 'The automation was saved after the `version` in `If-Match` (code `automation_stale`). `details.version` is the current one: read it again and resend your edit.'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+    delete:
+      x-resource-group: ads
+      operationId: deleteAutomation
+      tags: [Automations]
+      summary: Delete an automation
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Automation deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /v1/automations/{automationId}/activate:
+    post:
+      x-resource-group: ads
+      operationId: activateAutomation
+      tags: [Automations]
+      summary: Turn an automation on
+      description: An ad rule's first check runs right away.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: automationId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Automation on
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [automation]
+                properties:
+                  automation: { $ref: '#/components/schemas/Automation' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/AutomationsAdsRequired' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /v1/automations/{automationId}/pause:
+    post:
+      x-resource-group: ads
+      operationId: pauseAutomation
+      tags: [Automations]
+      summary: Turn an automation off
+      description: Pausing never needs ads access.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: automationId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Automation off
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [automation]
+                properties:
+                  automation: { $ref: '#/components/schemas/Automation' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /v1/automations/{automationId}/preview:
+    post:
+      x-resource-group: ads
+      operationId: previewAutomation
+      tags: [Automations]
+      summary: Preview a saved automation
+      description: |
+        Shows what an ad rule would do if it ran now. Nothing is changed. Event and scheduled automations cannot be previewed yet (400, `not_supported`).
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: automationId
+          in: path
+          required: true
+          schema: { type: string }
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 500, default: 100 }
+          description: How many subjects to list, matches first. `evaluated` and `matched` always count them all.
+      responses:
+        '200':
+          description: Preview
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AutomationPreview' }
+        '400': { $ref: '#/components/responses/AutomationInvalid' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/AutomationsAdsRequired' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /v1/automations/templates:
+    get:
+      x-resource-group: ads
+      operationId: listAutomationTemplates
+      tags:
+        - Automations
+      summary: List automation templates
+      description: >
+        Lists your team's templates, newest first. Every team member sees the templates any member saved. A team keeps
+        up to 200.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: scope
+          in: query
+          schema: { type: string, enum: [team], default: team }
+          description: Which templates to list. Only `team` today.
+      responses:
+        '200':
+          description: Templates
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [templates]
+                properties:
+                  templates:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AutomationTemplate'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      x-resource-group: ads
+      operationId: createAutomationTemplate
+      tags:
+        - Automations
+      summary: Create an automation template
+      description: >
+        Saves a reusable setup of one or more automations (up to 20) that your team, or anyone you share it with, can
+        install. Start from your own automations, one of Zernio's templates, a shared template, or definitions sent as
+        they are.
+
+
+        Nothing tied to one account is kept. Ad accounts, a trigger's profile and accounts, and alert destinations
+        become `inputs` that each install fills. Campaign ids, id filters, dates and approval steps are dropped.
+
+
+        From one of Zernio's templates, each threshold and budget or bid amount also becomes an input, with the
+        template's own value as its default.
+
+
+        A template that would not install is refused: the 400 lists every problem in `details.problems`.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKeyHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - type: object
+                  required: [name]
+                  properties:
+                    name: { type: string, minLength: 1, maxLength: 200 }
+                    description: { type: string, maxLength: 1000, default: '' }
+                - $ref: '#/components/schemas/AutomationTemplateContent'
+            examples:
+              fromAutomations:
+                summary: From your automations
+                value:
+                  name: Protect spend
+                  description: Pause losers and alert the team.
+                  from:
+                    automationIds: [6731a0c2e4b0f1a2b3c4d5e6]
+              fromZernio:
+                summary: From a Zernio template
+                value:
+                  name: Stop losers
+                  from:
+                    templateId: stop_losers
+      responses:
+        '201':
+          description: Template created
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [template]
+                properties:
+                  template:
+                    $ref: '#/components/schemas/AutomationTemplate'
+        '400':
+          $ref: '#/components/responses/AutomationInvalid'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: An automation in `from.automationIds`, the Zernio template or the shared template was not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: >-
+            Your team already keeps 200 templates (code `automation_template_limit`); delete one to save another. Also
+            returned when the same Idempotency-Key is still processing.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          $ref: '#/components/responses/IdempotencyKeyReused'
+  /v1/automations/templates/{templateId}:
+    get:
+      x-resource-group: ads
+      operationId: getAutomationTemplate
+      tags:
+        - Automations
+      summary: Get an automation template
+      description: >
+        Returns one of your team's templates, with its inputs and automations.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: templateId
+          in: path
+          required: true
+          schema: { type: string, pattern: '^[0-9a-f]{24}$' }
+          description: The template's id.
+      responses:
+        '200':
+          description: Template
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [template]
+                properties:
+                  template:
+                    $ref: '#/components/schemas/AutomationTemplate'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: No template with this id in your team.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    patch:
+      x-resource-group: ads
+      operationId: updateAutomationTemplate
+      tags:
+        - Automations
+      summary: Update an automation template
+      description: >
+        Renames a template, turns its share link on or off, or replaces its automations. Send at least one field.
+
+
+        Renaming or sharing keeps the `version`. New content (`from` or `automations`) is a new version; automations
+        already installed keep the version they came from.
+
+
+        `visibility: link` turns the share link on (the same link while it stays on) and `visibility: team` revokes it.
+        To copy a shared template, use `POST /v1/automations/templates` instead.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: templateId
+          in: path
+          required: true
+          schema: { type: string, pattern: '^[0-9a-f]{24}$' }
+          description: The template's id.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - type: object
+                  minProperties: 1
+                  properties:
+                    name: { type: string, minLength: 1, maxLength: 200 }
+                    description: { type: string, maxLength: 1000 }
+                    visibility: { type: string, enum: [team, link] }
+                - $ref: '#/components/schemas/AutomationTemplateContent'
+            example:
+              visibility: link
+      responses:
+        '200':
+          description: Template updated
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [template]
+                properties:
+                  template:
+                    $ref: '#/components/schemas/AutomationTemplate'
+        '400':
+          $ref: '#/components/responses/AutomationInvalid'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: No template with this id in your team, or a source in `from` was not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    delete:
+      x-resource-group: ads
+      operationId: deleteAutomationTemplate
+      tags:
+        - Automations
+      summary: Delete an automation template
+      description: >
+        Deletes one of your team's templates and its share link. Automations already installed from it stay.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: templateId
+          in: path
+          required: true
+          schema: { type: string, pattern: '^[0-9a-f]{24}$' }
+          description: The template's id.
+      responses:
+        '200':
+          description: Template deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [deleted]
+                properties:
+                  deleted: { type: boolean, description: Always true. }
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: No template with this id in your team.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /v1/automations/templates/{templateId}/install:
+    post:
+      x-resource-group: ads
+      operationId: installAutomationTemplate
+      tags:
+        - Automations
+      summary: Install an automation template
+      description: >
+        Creates every automation in the template, with your values in place of its inputs. All or nothing: if one
+        automation fails, the ones already created are removed. New automations stay paused unless `status` is `active`.
+
+
+        To install on many ad accounts at once, send `targets` (up to 50). Each target is its own install with its own
+        `inputs`, which win over the shared `inputs`. A failed target leaves the others in place, and the response is 207.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: templateId
+          in: path
+          required: true
+          schema: { type: string, pattern: '^[0-9a-f]{24}$' }
+          description: The template's id.
+        - $ref: '#/components/parameters/IdempotencyKeyHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AutomationTemplateInstallRequest'
+            examples:
+              one:
+                summary: One ad account
+                value:
+                  inputs:
+                    adAccount: { accountId: 6731a0c2e4b0f1a2b3c4d5e6, adAccountId: act_1234567890 }
+                  status: active
+              many:
+                summary: Many ad accounts at once
+                value:
+                  inputs:
+                    alertTo: [{ accountId: 6731a0c2e4b0f1a2b3c4d5e6, to: alerts@example.com }]
+                  targets:
+                    - inputs:
+                        adAccount: { accountId: 6731a0c2e4b0f1a2b3c4d5e6, adAccountId: act_1234567890 }
+                    - inputs:
+                        adAccount: { accountId: 6731a0c2e4b0f1a2b3c4d5e7, adAccountId: act_9876543210 }
+      responses:
+        '201':
+          description: 'Installed. `installation` for one install, `installations` when `targets` was sent and every target installed.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AutomationTemplateInstallResponse'
+        '207':
+          description: 'Some targets installed and some failed: check each `installations[].status`.'
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [installations]
+                properties:
+                  installations:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AutomationTemplateTargetResult'
+        '400':
+          description: >-
+            The request is invalid, or an input is missing, unknown or of the wrong type: `details.problems` lists each
+            one at its path, such as `inputs.adAccount`.
+
+
+            When no target installed, the first target's error is returned with every target's result in
+            `details.installations`.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ErrorResponse'
+                  - type: object
+                    properties:
+                      details:
+                        $ref: '#/components/schemas/AutomationProblems'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/AutomationsAdsRequired'
+        '404':
+          description: No template with this id in your team.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          $ref: '#/components/responses/IdempotencyKeyInFlight'
+        '422':
+          $ref: '#/components/responses/IdempotencyKeyReused'
+  /v1/automations/templates/shared/{shareToken}:
+    get:
+      x-resource-group: ads
+      operationId: getSharedAutomationTemplate
+      tags:
+        - Automations
+      summary: Get a shared automation template
+      description: >
+        Returns a template shared by link, from any team. Who made it and its install counts in that team are left out,
+        and `share` is null.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: shareToken
+          in: path
+          required: true
+          schema: { type: string, minLength: 1, maxLength: 64 }
+          description: 'The token from the template''s `share.token`.'
+      responses:
+        '200':
+          description: Template
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [template]
+                properties:
+                  template:
+                    $ref: '#/components/schemas/AutomationTemplate'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: No template is shared with this token, or its link was turned off.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /v1/automations/templates/shared/{shareToken}/install:
+    post:
+      x-resource-group: ads
+      operationId: installSharedAutomationTemplate
+      tags:
+        - Automations
+      summary: Install a shared automation template
+      description: >
+        Installs a template shared by link into your account, the same way as your own templates.
+
+
+        To install on many ad accounts at once, send `targets` (up to 50). Each target is its own install with its own
+        `inputs`, which win over the shared `inputs`. A failed target leaves the others in place, and the response is 207.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: shareToken
+          in: path
+          required: true
+          schema: { type: string, minLength: 1, maxLength: 64 }
+          description: 'The token from the template''s `share.token`.'
+        - $ref: '#/components/parameters/IdempotencyKeyHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AutomationTemplateInstallRequest'
+            examples:
+              one:
+                summary: One ad account
+                value:
+                  inputs:
+                    adAccount: { accountId: 6731a0c2e4b0f1a2b3c4d5e6, adAccountId: act_1234567890 }
+                  status: active
+              many:
+                summary: Many ad accounts at once
+                value:
+                  inputs:
+                    alertTo: [{ accountId: 6731a0c2e4b0f1a2b3c4d5e6, to: alerts@example.com }]
+                  targets:
+                    - inputs:
+                        adAccount: { accountId: 6731a0c2e4b0f1a2b3c4d5e6, adAccountId: act_1234567890 }
+                    - inputs:
+                        adAccount: { accountId: 6731a0c2e4b0f1a2b3c4d5e7, adAccountId: act_9876543210 }
+      responses:
+        '201':
+          description: 'Installed. `installation` for one install, `installations` when `targets` was sent and every target installed.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AutomationTemplateInstallResponse'
+        '207':
+          description: 'Some targets installed and some failed: check each `installations[].status`.'
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [installations]
+                properties:
+                  installations:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AutomationTemplateTargetResult'
+        '400':
+          description: >-
+            The request is invalid, or an input is missing, unknown or of the wrong type: `details.problems` lists each
+            one at its path, such as `inputs.adAccount`.
+
+
+            When no target installed, the first target's error is returned with every target's result in
+            `details.installations`.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ErrorResponse'
+                  - type: object
+                    properties:
+                      details:
+                        $ref: '#/components/schemas/AutomationProblems'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/AutomationsAdsRequired'
+        '404':
+          description: No template is shared with this token, or its link was turned off.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          $ref: '#/components/responses/IdempotencyKeyInFlight'
+        '422':
+          $ref: '#/components/responses/IdempotencyKeyReused'
+  /v1/automations/templates/zernio/{templateId}:
+    get:
+      x-resource-group: ads
+      operationId: getZernioAutomationTemplate
+      tags:
+        - Automations
+      summary: Get a Zernio automation template
+      description: >
+        Returns one of Zernio's ready-made ad rule templates in the same shape as your own. Each threshold and budget
+        or bid amount is an input with the template's own value as its default, so an install can change it or leave it.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: templateId
+          in: path
+          required: true
+          schema: { type: string, minLength: 1, maxLength: 100 }
+          example: stop_losers
+          description: 'The id of one of Zernio''s templates, for example `stop_losers`.'
+      responses:
+        '200':
+          description: Template
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [template]
+                properties:
+                  template:
+                    $ref: '#/components/schemas/AutomationTemplate'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: No Zernio template with this id.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /v1/automations/templates/zernio/{templateId}/install:
+    post:
+      x-resource-group: ads
+      operationId: installZernioAutomationTemplate
+      tags:
+        - Automations
+      summary: Install a Zernio automation template
+      description: >
+        Installs one of Zernio's ready-made templates. Leave a value input out to keep the template's default.
+
+
+        To install on many ad accounts at once, send `targets` (up to 50). Each target is its own install with its own
+        `inputs`, which win over the shared `inputs`. A failed target leaves the others in place, and the response is 207.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: templateId
+          in: path
+          required: true
+          schema: { type: string, minLength: 1, maxLength: 100 }
+          example: stop_losers
+          description: 'The id of one of Zernio''s templates, for example `stop_losers`.'
+        - $ref: '#/components/parameters/IdempotencyKeyHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AutomationTemplateInstallRequest'
+            examples:
+              one:
+                summary: One ad account
+                value:
+                  inputs:
+                    adAccount: { accountId: 6731a0c2e4b0f1a2b3c4d5e6, adAccountId: act_1234567890 }
+                  status: active
+              many:
+                summary: Many ad accounts at once
+                value:
+                  inputs:
+                    alertTo: [{ accountId: 6731a0c2e4b0f1a2b3c4d5e6, to: alerts@example.com }]
+                  targets:
+                    - inputs:
+                        adAccount: { accountId: 6731a0c2e4b0f1a2b3c4d5e6, adAccountId: act_1234567890 }
+                    - inputs:
+                        adAccount: { accountId: 6731a0c2e4b0f1a2b3c4d5e7, adAccountId: act_9876543210 }
+      responses:
+        '201':
+          description: 'Installed. `installation` for one install, `installations` when `targets` was sent and every target installed.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AutomationTemplateInstallResponse'
+        '207':
+          description: 'Some targets installed and some failed: check each `installations[].status`.'
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [installations]
+                properties:
+                  installations:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AutomationTemplateTargetResult'
+        '400':
+          description: >-
+            The request is invalid, or an input is missing, unknown or of the wrong type: `details.problems` lists each
+            one at its path, such as `inputs.adAccount`.
+
+
+            When no target installed, the first target's error is returned with every target's result in
+            `details.installations`.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ErrorResponse'
+                  - type: object
+                    properties:
+                      details:
+                        $ref: '#/components/schemas/AutomationProblems'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/AutomationsAdsRequired'
+        '404':
+          description: No Zernio template with this id.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          $ref: '#/components/responses/IdempotencyKeyInFlight'
+        '422':
+          $ref: '#/components/responses/IdempotencyKeyReused'
+  /v1/automations/controls:
+    get:
+      x-resource-group: ads
+      operationId: getAutomationControls
+      tags:
+        - Automations
+      summary: Get automation controls
+      description: |
+        The team's switch for every ad rule, and each ad account's own switch and daily raise limit. Boosting automations do not read them.
+
+        Every team member sees the same controls. `adAccounts` lists each ad account your automations use, plus any ad account that has controls set.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Controls
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [controls]
+                properties:
+                  controls: { $ref: '#/components/schemas/AutomationControls' }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/AutomationsAdsRequired'
+    patch:
+      x-resource-group: ads
+      operationId: updateAutomationControls
+      tags:
+        - Automations
+      summary: Turn every ad automation off or on
+      description: |
+        Turns every ad rule of the team off (`paused: true`) or back on. Each rule keeps its own status, so turning the switch back on resumes exactly the rules that were active.
+
+        Scheduled automations that boost posts are not stopped by it: pause them one by one.
+
+        It reaches every profile, so only the account owner or a full-access team member can use it. A key limited to some profiles gets 403.
+
+        Turning off a switch that is already off keeps its original `pausedAt`.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [paused]
+              properties:
+                paused:
+                  type: boolean
+                  description: True stops every ad automation of the team; false lets them run again.
+      responses:
+        '200':
+          description: The controls after the change
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [controls]
+                properties:
+                  controls: { $ref: '#/components/schemas/AutomationControls' }
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: 'Code `insufficient_permissions` when the caller is not the account owner or a full-access team member, or `ads_addon_required` when the account has no ads access.'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+  /v1/automations/controls/ad-accounts:
+    patch:
+      x-resource-group: ads
+      operationId: updateAutomationAdAccountControls
+      tags:
+        - Automations
+      summary: Update one ad account's controls
+      description: |
+        Turns ad rules off or on for one ad account, sets its daily raise limit, or both. Send at least one of `paused` and `dailyRaiseLimit`; fields you leave out keep their value.
+
+        The ad account must be one the connection in `accountId` reaches, as for an automation on it. Controls apply to every ad rule of the team on that ad account.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [accountId, adAccountId]
+              properties:
+                accountId:
+                  type: string
+                  description: The ads connection that reaches the ad account.
+                adAccountId:
+                  type: string
+                  minLength: 1
+                  maxLength: 64
+                  description: The platform's ad account id.
+                paused:
+                  type: boolean
+                  description: True stops every automation on this ad account; false lets them run again.
+                dailyRaiseLimit:
+                  type: [number, 'null']
+                  minimum: 0.01
+                  maximum: 100000000
+                  description: |
+                    The most automations may raise budgets on this ad account in any 24 hours, in the ad account's currency. A raise past it is cut to the room left.
+
+                    Send null to remove the limit.
+            example:
+              accountId: 6650f1c2a1b2c3d4e5f60718
+              adAccountId: act_1234567890
+              dailyRaiseLimit: 500
+      responses:
+        '200':
+          description: The controls after the change
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [controls]
+                properties:
+                  controls: { $ref: '#/components/schemas/AutomationControls' }
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: 'Code `ads_addon_required` when the account has no ads access, or `ad_account_not_selected` when the ad account is not among the connection''s selected ad accounts.'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: 'Code `ads_connection_required`: the connection needs reconnecting.'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+  /v1/automations/{automationId}/approvals:
+    get:
+      x-resource-group: ads
+      operationId: listAutomationApprovals
+      tags:
+        - Automations
+      summary: List an automation's approval requests
+      description: |
+        The requests an automation sent for a person's approval before acting, newest first. Each lists the changes it holds, who may decide it and until when.
+
+        Only automations that ask for approval have requests. Others return 409.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: automationId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending, approved, rejected, expired, cancelled]
+          description: Only requests in this status.
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+          description: How many requests to return. There is no cursor; the newest come first.
+      responses:
+        '200':
+          description: Approval requests
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [approvals]
+                properties:
+                  approvals:
+                    type: array
+                    items: { $ref: '#/components/schemas/AutomationApproval' }
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: 'Code `invalid_resource_state`: this automation never waits for approval.'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+  /v1/automations/{automationId}/approvals/{approvalId}:
+    get:
+      x-resource-group: ads
+      operationId: getAutomationApproval
+      tags:
+        - Automations
+      summary: Get an approval request
+      description: One approval request with the changes it holds, who may decide it and whether you can.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: automationId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: approvalId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Approval request
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [approval]
+                properties:
+                  approval: { $ref: '#/components/schemas/AutomationApproval' }
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: 'Code `invalid_resource_state`: this automation never waits for approval.'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+  /v1/automations/{automationId}/approvals/{approvalId}/approve:
+    post:
+      x-resource-group: ads
+      operationId: approveAutomationApproval
+      tags:
+        - Automations
+      summary: Approve an approval request
+      description: |
+        Approves a pending request, so the automation acts on each change it holds. Each change is checked again first, and one that no longer applies is skipped.
+
+        Only the approvers the automation names now can decide, matched by the email of the user behind the API key. A request already decided, expired or cancelled is refused with nothing changed.
+
+        Each applied or failed change fires `automation.action.applied` or `automation.action.failed`.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: automationId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: approvalId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AutomationApprovalDecision'
+      responses:
+        '200':
+          description: The request after the decision
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [approval]
+                properties:
+                  approval: { $ref: '#/components/schemas/AutomationApproval' }
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: 'Code `insufficient_permissions` when you are not one of the approvers or `token` was sent to someone else, or `ads_addon_required` when the account has no ads access.'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/AutomationApprovalRefused'
+  /v1/automations/{automationId}/approvals/{approvalId}/reject:
+    post:
+      x-resource-group: ads
+      operationId: rejectAutomationApproval
+      tags:
+        - Automations
+      summary: Reject an approval request
+      description: |
+        Rejects a pending request: every change it holds is skipped and nothing is changed on the ad account.
+
+        Only the approvers the automation names now can decide, matched by the email of the user behind the API key. Rejecting needs no ads access, like pausing.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: automationId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: approvalId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AutomationApprovalDecision'
+      responses:
+        '200':
+          description: The request after the decision
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [approval]
+                properties:
+                  approval: { $ref: '#/components/schemas/AutomationApproval' }
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: 'Code `insufficient_permissions`: you are not one of the approvers, or `token` was sent to someone else.'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/AutomationApprovalRefused'
+  /v1/automations/backtest:
+    post:
+      x-resource-group: ads
+      operationId: backtestAutomationDraft
+      tags:
+        - Automations
+      summary: Backtest an unsaved automation
+      description: |
+        Replays an automation over past days on stored daily metrics, without saving it or changing anything. It refuses what saving would refuse.
+
+        Each day lists what it would have done. Its own changes carry into later days, but the metrics stay what really happened. `notes` says what the replay could not know.
+
+        Only ad automations can be backtested, on at most 5,000 ads.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/AutomationBacktestDays'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AutomationDefinition'
+      responses:
+        '200':
+          description: Backtest
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AutomationBacktest'
+        '400':
+          $ref: '#/components/responses/AutomationInvalid'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/AutomationsAdsRequired'
+  /v1/automations/{automationId}/backtest:
+    post:
+      x-resource-group: ads
+      operationId: backtestAutomation
+      tags:
+        - Automations
+      summary: Backtest a saved automation
+      description: |
+        What a saved automation would have done over the last `days` days, replayed on stored daily metrics. Nothing is changed.
+
+        Each day lists what it would have done. Its own changes carry into later days, but the metrics stay what really happened. `notes` says what the replay could not know.
+
+        Only ad automations can be backtested, on at most 5,000 ads.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: automationId
+          in: path
+          required: true
+          schema:
+            type: string
+        - $ref: '#/components/parameters/AutomationBacktestDays'
+      responses:
+        '200':
+          description: Backtest
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AutomationBacktest'
+        '400':
+          $ref: '#/components/responses/AutomationInvalid'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/AutomationsAdsRequired'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /v1/ads/rules:
     get:
       x-resource-group: ads

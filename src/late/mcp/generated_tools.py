@@ -16241,6 +16241,939 @@ def register_generated_tools(mcp, _get_client):
         except Exception as e:
             raise ToolError(f"Error: {e}") from e
 
+    # AUTOMATIONS
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List automations",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def automations_list_automations(
+        account_id: str | None = None,
+        ad_account_id: str | None = None,
+        limit: int = 50,
+        cursor: str | None = None,
+    ) -> str:
+        """List automations
+
+        Lists the automations on the profiles your key can reach, newest first, across every kind: ad rules, event automations and scheduled automations.
+
+        Args:
+            account_id: Only automations on this account: the ads connection of an ad rule, or one of the `accountIds` of an event or scheduled automation.
+            ad_account_id: Only ad rules checking this platform ad account.
+            limit
+            cursor: `nextCursor` from the previous page."""
+        client = _get_client()
+        try:
+            response = client.automations.list_automations(
+                account_id=account_id,
+                ad_account_id=ad_account_id,
+                limit=limit,
+                cursor=cursor,
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Create an automation",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def automations_create_automation(body: dict[str, Any]) -> str:
+        """Create an automation
+
+        Creates an automation. Its shape picks the kind:
+
+        - **Ad rule**: a `schedule` over campaigns, ad sets or ads, with metric `conditions` and ad `steps`. It stays paused unless `status` is `active`; preview it first with `POST /v1/automations/preview`.
+        - **Event**: a Zernio event in `trigger.type`, such as `post.failed`, with notify steps. It is on unless `status` is `paused`.
+        - **Scheduled**: a `schedule` over a profile's posts, with notify steps and an optional boost. It is on unless `status` is `paused`.
+
+        Everything an automation cannot hold is refused at once: the 400 lists every problem with its JSON path in `details.problems`.
+
+        Args:
+            body: Full request body as documented in the API reference. (required)"""
+        client = _get_client()
+        try:
+            response = client.automations.create_automation(body=body)
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get the automations catalog",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def automations_get_automation_catalog() -> str:
+        """Get the automations catalog
+
+        What an automation can contain and where each part works, built from the same checks that validate a save, so it never offers what saving refuses.
+
+        - `schema`: the JSON Schema of the body of `POST /v1/automations`.
+        - `triggers`: every trigger, tagged with its `kind`. Ad rule and scheduled triggers list their intervals; event triggers list each event with its facts.
+        - The other sections describe ad rules: per subject (campaign, ad set, ad) its metrics and steps with the platforms that accept them, plus filters, groups, alerts, conditions, limits and approval."""
+        client = _get_client()
+        try:
+            response = client.automations.get_automation_catalog()
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List automation actions",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def automations_list_automation_actions(
+        automation_id: str | None = None,
+        account_id: str | None = None,
+        type: Literal[
+            "ads.pause",
+            "ads.activate",
+            "ads.set_budget",
+            "ads.duplicate",
+            "ads.edit_name",
+            "ads.set_bid",
+            "ads.set_target",
+            "ads.reallocate_budget",
+        ]
+        | None = None,
+        from_: str | None = None,
+        to: str | None = None,
+        limit: int = 50,
+        cursor: str | None = None,
+    ) -> str:
+        """List automation actions
+
+        Every change your ad rules made, newest first: what changed, the value before and after, and whether it was applied, skipped or failed. What event and scheduled automations did is in each one's checks.
+
+        Args:
+            automation_id
+            account_id: Only actions on this ads connection.
+            type: A change reads as the value it set, so budget changes filter as `ads.set_budget`.
+            from_
+            to
+            limit
+            cursor: `nextCursor` from the previous page."""
+        client = _get_client()
+        try:
+            response = client.automations.list_automation_actions(
+                automation_id=automation_id,
+                account_id=account_id,
+                type=type,
+                from_=from_,
+                to=to,
+                limit=limit,
+                cursor=cursor,
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List an automation's checks",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def automations_list_automation_checks(
+        automation_id: str, limit: int = 20, cursor: str | None = None
+    ) -> str:
+        """List an automation's checks
+
+        Each time the automation ran, newest first, with what matched and what it did. For an event automation, each check is one event that reached it.
+
+        Args:
+            automation_id: (required)
+            limit
+            cursor: `nextCursor` from the previous page."""
+        client = _get_client()
+        try:
+            response = client.automations.list_automation_checks(
+                automation_id=automation_id, limit=limit, cursor=cursor
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Preview an unsaved automation",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def automations_preview_automation_draft(
+        body: dict[str, Any], limit: int = 100
+    ) -> str:
+        """Preview an unsaved automation
+
+        Shows what an ad rule would do if it ran now, without saving it or changing anything: every object it checks, each condition with its actual value, and the steps a match would run. It refuses what saving would refuse.
+
+        Event and scheduled automations cannot be previewed yet (400, `not_supported`).
+
+        Args:
+            limit: How many subjects to list, matches first. `evaluated` and `matched` always count them all.
+            body: Full request body as documented in the API reference. (required)"""
+        client = _get_client()
+        try:
+            response = client.automations.preview_automation_draft(
+                limit=limit, body=body
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get an automation",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def automations_get_automation() -> str:
+        """Get an automation
+
+        An automation installed from a template also carries `template`."""
+        client = _get_client()
+        try:
+            response = client.automations.get_automation()
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Edit an automation",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def automations_update_automation(
+        name: str | None = None,
+        status: Literal["active", "paused"] | None = None,
+        trigger: dict[str, Any] | None = None,
+        subjects: dict[str, Any] | None = None,
+        filter: dict[str, Any] | None = None,
+        conditions: dict[str, Any] | None = None,
+        alert: str | None = None,
+        steps: list[dict[str, Any]] | None = None,
+        limits: dict[str, Any] | None = None,
+    ) -> str:
+        """Edit an automation
+
+        Replaces the top-level fields you send and keeps the rest: to change one step, send all of `steps`. The result is checked as a whole automation, so problems carry the same paths as on create.
+
+        An automation keeps its kind, and an ad rule stays on its ad account. Send `alert: null` to remove an ad rule's alert.
+
+        Send the `version` you read as `If-Match`: if the automation was saved since, the edit is refused with a 409 (`automation_stale`). An edit is also refused with a 409 when another save lands while it is being applied.
+
+        Args:
+            name
+            status
+            trigger: Object with keys: type (string, required); every (one of: 15m, 30m, 1h, 3h, 6h, 12h, 1d) - Run every interval. Send this or `times`, not both.; times (list of objects with keys days, at) - Set weekly times. Send this or `every`, not both.; startsAt (string) - Runs from this time on.; endsAt (string) - Stops running after this time. Must be after `startsAt`.; quietHours (object with keys from, to) - A daily window with no checks. It may wrap past midnight, such as `22:00` to `06:00`.
+            subjects: Object with keys: each (one of: campaign, adset, ad; required) - The objects judged one by one.; adAccounts (list of objects with keys accountId, adAccountId, required) - The ad account to check. One per ad rule, and an edit cannot move it to another.; campaignIds (list of string) - Only these platform campaigns or their ad sets and ads. Leave out to check the whole ad account.; filters (list of objects with keys field, op, value) - All must hold.; groups (list of objects with keys name, filters) - Judges campaigns together (campaign rules only): each group's numbers are summed and its rates computed on the totals, and a matching group acts on each of ...
+            filter: Object with keys: field (string, required) - A fact name from the catalog.; op (one of: equals, not_equals, contains, not_contains, starts_with, ends_with, exists, not_exists, matches, greater_than, less_than, greater_or_equal, less_or_equal, before, after, has_tag, not_has_tag, is_true, is_false; required); value (string or number, required)
+            conditions: Object with keys: all (list of objects with keys metric, window, op, value, compareTo, required)
+            alert
+            steps: The steps the automation's kind takes. Each item is an object with keys: id (string); type (string, required)
+            limits: Object with keys: cooldown (string) - How long an object is left alone after the rule acts on it. Whole minutes, up to `30d`.; maxChangesPerDay (integer) - Most changes across the last 24 hours. Needs an `ads.*` step.; maxChangesPerObject (integer) - Most times the rule may change one object, over its whole history. Needs an `ads.*` step."""
+        client = _get_client()
+        try:
+            response = client.automations.update_automation(
+                name=name,
+                status=status,
+                trigger=trigger,
+                subjects=subjects,
+                filter=filter,
+                conditions=conditions,
+                alert=alert,
+                steps=steps,
+                limits=limits,
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Delete an automation",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def automations_delete_automation() -> str:
+        """Delete an automation"""
+        client = _get_client()
+        try:
+            response = client.automations.delete_automation()
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Turn an automation on",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def automations_activate_automation(automation_id: str) -> str:
+        """Turn an automation on
+
+        An ad rule's first check runs right away.
+
+        Args:
+            automation_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.automations.activate_automation(
+                automation_id=automation_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Turn an automation off",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def automations_pause_automation(automation_id: str) -> str:
+        """Turn an automation off
+
+        Pausing never needs ads access.
+
+        Args:
+            automation_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.automations.pause_automation(automation_id=automation_id)
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Preview a saved automation",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def automations_preview_automation(automation_id: str, limit: int = 100) -> str:
+        """Preview a saved automation
+
+        Shows what an ad rule would do if it ran now. Nothing is changed. Event and scheduled automations cannot be previewed yet (400, `not_supported`).
+
+        Args:
+            automation_id: (required)
+            limit: How many subjects to list, matches first. `evaluated` and `matched` always count them all."""
+        client = _get_client()
+        try:
+            response = client.automations.preview_automation(
+                automation_id=automation_id, limit=limit
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List automation templates",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def automations_list_automation_templates(scope: Literal["team"] = "team") -> str:
+        """List automation templates
+
+        Lists your team's templates, newest first. Every team member sees the templates any member saved. A team keeps up to 200.
+
+        Args:
+            scope: Which templates to list. Only `team` today."""
+        client = _get_client()
+        try:
+            response = client.automations.list_automation_templates(scope=scope)
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Create an automation template",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def automations_create_automation_template(
+        name: str,
+        description: str = "",
+        from_: dict[str, Any] | None = None,
+        automations: list[dict[str, Any]] | None = None,
+    ) -> str:
+        """Create an automation template
+
+        Saves a reusable setup of one or more automations (up to 20) that your team, or anyone you share it with, can install. Start from your own automations, one of Zernio's templates, a shared template, or definitions sent as they are.
+
+        Nothing tied to one account is kept. Ad accounts, a trigger's profile and accounts, and alert destinations become `inputs` that each install fills. Campaign ids, id filters, dates and approval steps are dropped.
+
+        From one of Zernio's templates, each threshold and budget or bid amount also becomes an input, with the template's own value as its default.
+
+        A template that would not install is refused: the 400 lists every problem in `details.problems`.
+
+        Args:
+            name: (required)
+            description
+            from_: Copy existing automations: your own (`automationIds`), one of Zernio's templates (`templateId`, for example `stop_losers`), or a template shared by link (`shareToken`). Object with keys: automationIds (list of string, required)
+            automations: Automation definitions, each checked like a `POST /v1/automations` body. Ad accounts, a trigger's profile and accounts, and alert destinations become inputs. Each item is an object with keys: name (string, required); status (one of: active, paused) - A new ad rule stays paused unless `active`.; trigger (object with keys type, every, times, startsAt, endsAt, quietHours, required); subjects (object with keys each, adAccounts, campaignIds, filters, groups, required); conditions (object with keys all, required); alert (object with keys confirmChecks, hold, critical); steps (list of objects with keys id, type, required); limits (object with keys cooldown, maxChangesPerDay, maxChangesPerObject)"""
+        client = _get_client()
+        try:
+            response = client.automations.create_automation_template(
+                name=name, description=description, from_=from_, automations=automations
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get an automation template",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def automations_get_automation_template(template_id: str) -> str:
+        """Get an automation template
+
+        Returns one of your team's templates, with its inputs and automations.
+
+        Args:
+            template_id: The template's id. (required)"""
+        client = _get_client()
+        try:
+            response = client.automations.get_automation_template(
+                template_id=template_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Update an automation template",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def automations_update_automation_template(
+        template_id: str,
+        name: str | None = None,
+        description: str | None = None,
+        visibility: Literal["team", "link"] | None = None,
+        from_: dict[str, Any] | None = None,
+        automations: list[dict[str, Any]] | None = None,
+    ) -> str:
+        """Update an automation template
+
+        Renames a template, turns its share link on or off, or replaces its automations. Send at least one field.
+
+        Renaming or sharing keeps the `version`. New content (`from` or `automations`) is a new version; automations already installed keep the version they came from.
+
+        `visibility: link` turns the share link on (the same link while it stays on) and `visibility: team` revokes it. To copy a shared template, use `POST /v1/automations/templates` instead.
+
+        Args:
+            template_id: The template's id. (required)
+            name
+            description
+            visibility
+            from_: Copy existing automations: your own (`automationIds`), one of Zernio's templates (`templateId`, for example `stop_losers`), or a template shared by link (`shareToken`). Object with keys: automationIds (list of string, required)
+            automations: Automation definitions, each checked like a `POST /v1/automations` body. Ad accounts, a trigger's profile and accounts, and alert destinations become inputs. Each item is an object with keys: name (string, required); status (one of: active, paused) - A new ad rule stays paused unless `active`.; trigger (object with keys type, every, times, startsAt, endsAt, quietHours, required); subjects (object with keys each, adAccounts, campaignIds, filters, groups, required); conditions (object with keys all, required); alert (object with keys confirmChecks, hold, critical); steps (list of objects with keys id, type, required); limits (object with keys cooldown, maxChangesPerDay, maxChangesPerObject)"""
+        client = _get_client()
+        try:
+            response = client.automations.update_automation_template(
+                template_id=template_id,
+                name=name,
+                description=description,
+                visibility=visibility,
+                from_=from_,
+                automations=automations,
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Delete an automation template",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def automations_delete_automation_template(template_id: str) -> str:
+        """Delete an automation template
+
+        Deletes one of your team's templates and its share link. Automations already installed from it stay.
+
+        Args:
+            template_id: The template's id. (required)"""
+        client = _get_client()
+        try:
+            response = client.automations.delete_automation_template(
+                template_id=template_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Install an automation template",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def automations_install_automation_template(
+        template_id: str,
+        inputs: dict[str, Any] | None = None,
+        targets: list[dict[str, Any]] | None = None,
+        status: Literal["active", "paused"] = "paused",
+    ) -> str:
+        """Install an automation template
+
+        Creates every automation in the template, with your values in place of its inputs. All or nothing: if one automation fails, the ones already created are removed. New automations stay paused unless `status` is `active`.
+
+        To install on many ad accounts at once, send `targets` (up to 50). Each target is its own install with its own `inputs`, which win over the shared `inputs`. A failed target leaves the others in place, and the response is 207.
+
+        Args:
+            template_id: The template's id. (required)
+            inputs: A value for each input, by its `key`. Required inputs without a default must be sent.
+            targets: Install several times in one call, for example on many ad accounts. Each target is its own install, all or nothing, and its `inputs` win over the shared `inputs`. A failed target leaves the others in place. Each item is an object with keys: inputs (object, required)
+            status: The status of every automation created."""
+        client = _get_client()
+        try:
+            response = client.automations.install_automation_template(
+                template_id=template_id, inputs=inputs, targets=targets, status=status
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get a shared automation template",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def automations_get_shared_automation_template(share_token: str) -> str:
+        """Get a shared automation template
+
+        Returns a template shared by link, from any team. Who made it and its install counts in that team are left out, and `share` is null.
+
+        Args:
+            share_token: The token from the template's `share.token`. (required)"""
+        client = _get_client()
+        try:
+            response = client.automations.get_shared_automation_template(
+                share_token=share_token
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Install a shared automation template",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def automations_install_shared_automation_template(
+        share_token: str,
+        inputs: dict[str, Any] | None = None,
+        targets: list[dict[str, Any]] | None = None,
+        status: Literal["active", "paused"] = "paused",
+    ) -> str:
+        """Install a shared automation template
+
+        Installs a template shared by link into your account, the same way as your own templates.
+
+        To install on many ad accounts at once, send `targets` (up to 50). Each target is its own install with its own `inputs`, which win over the shared `inputs`. A failed target leaves the others in place, and the response is 207.
+
+        Args:
+            share_token: The token from the template's `share.token`. (required)
+            inputs: A value for each input, by its `key`. Required inputs without a default must be sent.
+            targets: Install several times in one call, for example on many ad accounts. Each target is its own install, all or nothing, and its `inputs` win over the shared `inputs`. A failed target leaves the others in place. Each item is an object with keys: inputs (object, required)
+            status: The status of every automation created."""
+        client = _get_client()
+        try:
+            response = client.automations.install_shared_automation_template(
+                share_token=share_token, inputs=inputs, targets=targets, status=status
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get a Zernio automation template",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def automations_get_zernio_automation_template(template_id: str) -> str:
+        """Get a Zernio automation template
+
+        Returns one of Zernio's ready-made ad rule templates in the same shape as your own. Each threshold and budget or bid amount is an input with the template's own value as its default, so an install can change it or leave it.
+
+        Args:
+            template_id: The id of one of Zernio's templates, for example `stop_losers`. (required)"""
+        client = _get_client()
+        try:
+            response = client.automations.get_zernio_automation_template(
+                template_id=template_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Install a Zernio automation template",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def automations_install_zernio_automation_template(
+        template_id: str,
+        inputs: dict[str, Any] | None = None,
+        targets: list[dict[str, Any]] | None = None,
+        status: Literal["active", "paused"] = "paused",
+    ) -> str:
+        """Install a Zernio automation template
+
+        Installs one of Zernio's ready-made templates. Leave a value input out to keep the template's default.
+
+        To install on many ad accounts at once, send `targets` (up to 50). Each target is its own install with its own `inputs`, which win over the shared `inputs`. A failed target leaves the others in place, and the response is 207.
+
+        Args:
+            template_id: The id of one of Zernio's templates, for example `stop_losers`. (required)
+            inputs: A value for each input, by its `key`. Required inputs without a default must be sent.
+            targets: Install several times in one call, for example on many ad accounts. Each target is its own install, all or nothing, and its `inputs` win over the shared `inputs`. A failed target leaves the others in place. Each item is an object with keys: inputs (object, required)
+            status: The status of every automation created."""
+        client = _get_client()
+        try:
+            response = client.automations.install_zernio_automation_template(
+                template_id=template_id, inputs=inputs, targets=targets, status=status
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get automation controls",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def automations_get_automation_controls() -> str:
+        """Get automation controls
+
+        The team's switch for every ad rule, and each ad account's own switch and daily raise limit. Boosting automations do not read them.
+
+        Every team member sees the same controls. `adAccounts` lists each ad account your automations use, plus any ad account that has controls set."""
+        client = _get_client()
+        try:
+            response = client.automations.get_automation_controls()
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Turn every ad automation off or on",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def automations_update_automation_controls(paused: bool) -> str:
+        """Turn every ad automation off or on
+
+        Turns every ad rule of the team off (`paused: true`) or back on. Each rule keeps its own status, so turning the switch back on resumes exactly the rules that were active.
+
+        Scheduled automations that boost posts are not stopped by it: pause them one by one.
+
+        It reaches every profile, so only the account owner or a full-access team member can use it. A key limited to some profiles gets 403.
+
+        Turning off a switch that is already off keeps its original `pausedAt`.
+
+        Args:
+            paused: True stops every ad automation of the team; false lets them run again. (required)"""
+        client = _get_client()
+        try:
+            response = client.automations.update_automation_controls(paused=paused)
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Update one ad account's controls",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def automations_update_automation_ad_account_controls(
+        account_id: str,
+        ad_account_id: str,
+        paused: bool | None = None,
+        daily_raise_limit: str | None = None,
+    ) -> str:
+        """Update one ad account's controls
+
+            Turns ad rules off or on for one ad account, sets its daily raise limit, or both. Send at least one of `paused` and `dailyRaiseLimit`; fields you leave out keep their value.
+
+            The ad account must be one the connection in `accountId` reaches, as for an automation on it. Controls apply to every ad rule of the team on that ad account.
+
+            Args:
+                account_id: The ads connection that reaches the ad account. (required)
+                ad_account_id: The platform's ad account id. (required)
+                paused: True stops every automation on this ad account; false lets them run again.
+                daily_raise_limit: The most automations may raise budgets on this ad account in any 24 hours, in the ad account's currency. A raise past it is cut to the room left.
+
+        Send null to remove the limit."""
+        client = _get_client()
+        try:
+            response = client.automations.update_automation_ad_account_controls(
+                account_id=account_id,
+                ad_account_id=ad_account_id,
+                paused=paused,
+                daily_raise_limit=daily_raise_limit,
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List an automation's approval requests",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def automations_list_automation_approvals(
+        automation_id: str,
+        status: Literal["pending", "approved", "rejected", "expired", "cancelled"]
+        | None = None,
+        limit: int = 20,
+    ) -> str:
+        """List an automation's approval requests
+
+        The requests an automation sent for a person's approval before acting, newest first. Each lists the changes it holds, who may decide it and until when.
+
+        Only automations that ask for approval have requests. Others return 409.
+
+        Args:
+            automation_id: (required)
+            status: Only requests in this status.
+            limit: How many requests to return. There is no cursor; the newest come first."""
+        client = _get_client()
+        try:
+            response = client.automations.list_automation_approvals(
+                automation_id=automation_id, status=status, limit=limit
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get an approval request",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def automations_get_automation_approval(
+        automation_id: str, approval_id: str
+    ) -> str:
+        """Get an approval request
+
+        One approval request with the changes it holds, who may decide it and whether you can.
+
+        Args:
+            automation_id: (required)
+            approval_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.automations.get_automation_approval(
+                automation_id=automation_id, approval_id=approval_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Approve an approval request",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def automations_approve_automation_approval(
+        automation_id: str, approval_id: str, token: str | None = None
+    ) -> str:
+        """Approve an approval request
+
+        Approves a pending request, so the automation acts on each change it holds. Each change is checked again first, and one that no longer applies is skipped.
+
+        Only the approvers the automation names now can decide, matched by the email of the user behind the API key. A request already decided, expired or cancelled is refused with nothing changed.
+
+        Each applied or failed change fires `automation.action.applied` or `automation.action.failed`.
+
+        Args:
+            automation_id: (required)
+            approval_id: (required)
+            token: The token from the emailed approval link. When sent, the decision counts only if the link was sent to you. Leave it out when deciding from the API."""
+        client = _get_client()
+        try:
+            response = client.automations.approve_automation_approval(
+                automation_id=automation_id, approval_id=approval_id, token=token
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Reject an approval request",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def automations_reject_automation_approval(
+        automation_id: str, approval_id: str, token: str | None = None
+    ) -> str:
+        """Reject an approval request
+
+        Rejects a pending request: every change it holds is skipped and nothing is changed on the ad account.
+
+        Only the approvers the automation names now can decide, matched by the email of the user behind the API key. Rejecting needs no ads access, like pausing.
+
+        Args:
+            automation_id: (required)
+            approval_id: (required)
+            token: The token from the emailed approval link. When sent, the decision counts only if the link was sent to you. Leave it out when deciding from the API."""
+        client = _get_client()
+        try:
+            response = client.automations.reject_automation_approval(
+                automation_id=automation_id, approval_id=approval_id, token=token
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Backtest an unsaved automation",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def automations_backtest_automation_draft(
+        body: dict[str, Any], days: int = 30
+    ) -> str:
+        """Backtest an unsaved automation
+
+        Replays an automation over past days on stored daily metrics, without saving it or changing anything. It refuses what saving would refuse.
+
+        Each day lists what it would have done. Its own changes carry into later days, but the metrics stay what really happened. `notes` says what the replay could not know.
+
+        Only ad automations can be backtested, on at most 5,000 ads.
+
+        Args:
+            days: How many whole days before today to replay. Today is not replayed.
+            body: Full request body as documented in the API reference. (required)"""
+        client = _get_client()
+        try:
+            response = client.automations.backtest_automation_draft(
+                days=days, body=body
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Backtest a saved automation",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def automations_backtest_automation(automation_id: str, days: int = 30) -> str:
+        """Backtest a saved automation
+
+        What a saved automation would have done over the last `days` days, replayed on stored daily metrics. Nothing is changed.
+
+        Each day lists what it would have done. Its own changes carry into later days, but the metrics stay what really happened. `notes` says what the replay could not know.
+
+        Only ad automations can be backtested, on at most 5,000 ads.
+
+        Args:
+            automation_id: (required)
+            days: How many whole days before today to replay. Today is not replayed."""
+        client = _get_client()
+        try:
+            response = client.automations.backtest_automation(
+                automation_id=automation_id, days=days
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
     # BLOGS
 
     @mcp.tool(

@@ -700,6 +700,41 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `ad_targeting.search_ad_interests()` | Search targeting interests |
 | `ad_targeting.search_ad_targeting()` | Search targeting options |
 
+### Automations
+| Method | Description |
+|--------|-------------|
+| `automations.list_automation_actions()` | List automation actions |
+| `automations.list_automation_approvals()` | List an automation's approval requests |
+| `automations.list_automation_checks()` | List an automation's checks |
+| `automations.list_automation_templates()` | List automation templates |
+| `automations.list_automations()` | List automations |
+| `automations.create_automation()` | Create an automation |
+| `automations.create_automation_template()` | Create an automation template |
+| `automations.get_automation()` | Get an automation |
+| `automations.get_automation_approval()` | Get an approval request |
+| `automations.get_automation_catalog()` | Get the automations catalog |
+| `automations.get_automation_controls()` | Get automation controls |
+| `automations.get_automation_template()` | Get an automation template |
+| `automations.get_shared_automation_template()` | Get a shared automation template |
+| `automations.get_zernio_automation_template()` | Get a Zernio automation template |
+| `automations.update_automation()` | Edit an automation |
+| `automations.update_automation_ad_account_controls()` | Update one ad account's controls |
+| `automations.update_automation_controls()` | Turn every ad automation off or on |
+| `automations.update_automation_template()` | Update an automation template |
+| `automations.delete_automation()` | Delete an automation |
+| `automations.delete_automation_template()` | Delete an automation template |
+| `automations.activate_automation()` | Turn an automation on |
+| `automations.approve_automation_approval()` | Approve an approval request |
+| `automations.backtest_automation()` | Backtest a saved automation |
+| `automations.backtest_automation_draft()` | Backtest an unsaved automation |
+| `automations.install_automation_template()` | Install an automation template |
+| `automations.install_shared_automation_template()` | Install a shared automation template |
+| `automations.install_zernio_automation_template()` | Install a Zernio automation template |
+| `automations.pause_automation()` | Turn an automation off |
+| `automations.preview_automation()` | Preview a saved automation |
+| `automations.preview_automation_draft()` | Preview an unsaved automation |
+| `automations.reject_automation_approval()` | Reject an approval request |
+
 ### Blogs
 | Method | Description |
 |--------|-------------|
