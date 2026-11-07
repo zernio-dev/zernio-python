@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.522.0"
+  version: "1.522.1"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -45092,11 +45092,11 @@ paths:
                 expiresIn: 900
                 botUsername: "LateScheduleBot"
                 instructions:
-                  - "1. Add @ZernioScheduleBot as an administrator in your channel/group"
-                  - "2. Open a private chat with @ZernioScheduleBot"
-                  - "3. Send: ZRN-ABC123 @yourchannel (replace @yourchannel with your channel username)"
-                  - "4. Wait for confirmation - the connection will appear in your dashboard"
-                  - "Tip: If your channel has no public username, forward a message from it along with the code"
+                  - "1. Add @LateScheduleBot as an administrator in your channel/group"
+                  - "2. Open a private chat with @LateScheduleBot"
+                  - "3. If your channel has a public username, send: ZRN-ABC123 @yourchannel"
+                  - "4. Private channel (no public username)? Forward any message from it to the bot along with the code: ZRN-ABC123"
+                  - "5. Wait for confirmation - the connection will appear in your dashboard"
         '400': { description: Profile ID required or invalid format }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { description: 'No access to this profile, or the connect token was issued for a different profile or platform (INSUFFICIENT_PERMISSIONS)' }
