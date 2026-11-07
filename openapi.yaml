@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.522.1"
+  version: "1.522.2"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -35622,6 +35622,7 @@ paths:
                         description: Platform-specific text override.
                       customMedia:
                         type: array
+                        description: 'On update, an omitted customMedia keeps the stored per-platform media; send [] to clear it.'
                         items: { $ref: '#/components/schemas/MediaItem' }
                       scheduledFor:
                         type: string
