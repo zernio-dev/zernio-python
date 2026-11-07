@@ -136,9 +136,16 @@ class TreasuryResource:
         )
         return self._client._post("/v1/balance/top-ups/preview", data=payload)
 
-    def get_topup_receipt(self, topup_id: str) -> dict[str, Any]:
+    def get_topup_receipt(
+        self, topup_id: str, *, download: bool | None = None
+    ) -> dict[str, Any]:
         """Get a top-up receipt"""
-        return self._client._get(f"/v1/balance/top-ups/{topup_id}/receipt")
+        params = self._build_params(
+            download=download,
+        )
+        return self._client._get(
+            f"/v1/balance/top-ups/{topup_id}/receipt", params=params
+        )
 
     def get_topup_invoice(self, topup_id: str) -> dict[str, Any]:
         """Get a top-up invoice"""
@@ -274,9 +281,16 @@ class TreasuryResource:
         )
         return await self._client._apost("/v1/balance/top-ups/preview", data=payload)
 
-    async def aget_topup_receipt(self, topup_id: str) -> dict[str, Any]:
+    async def aget_topup_receipt(
+        self, topup_id: str, *, download: bool | None = None
+    ) -> dict[str, Any]:
         """Get a top-up receipt (async)"""
-        return await self._client._aget(f"/v1/balance/top-ups/{topup_id}/receipt")
+        params = self._build_params(
+            download=download,
+        )
+        return await self._client._aget(
+            f"/v1/balance/top-ups/{topup_id}/receipt", params=params
+        )
 
     async def aget_topup_invoice(self, topup_id: str) -> dict[str, Any]:
         """Get a top-up invoice (async)"""

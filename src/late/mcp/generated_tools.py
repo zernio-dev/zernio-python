@@ -44607,7 +44607,7 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=False,
         )
     )
-    def treasury_get_topup_receipt(topup_id: str) -> str:
+    def treasury_get_topup_receipt(topup_id: str, download: bool | None = None) -> str:
         """Get a top-up receipt
 
         The receipt for a paid top-up or creator payout payment (`purpose: payout_batch`). `url` is the payment's invoice PDF when it has one (`format: pdf`), else Stripe's card receipt page (`format: page`); `invoiceUrl` and `receiptUrl` give each on its own.
@@ -44615,10 +44615,13 @@ def register_generated_tools(mcp, _get_client):
         The invoice alone is at getTopupInvoice. The link is short-lived, so fetch it when you need it. A profile-scoped key answers 403.
 
         Args:
-            topup_id: (required)"""
+            topup_id: (required)
+            download: true answers the card receipt itself as a PDF file (application/pdf, as an attachment) instead of the JSON links."""
         client = _get_client()
         try:
-            response = client.treasury.get_topup_receipt(topup_id=topup_id)
+            response = client.treasury.get_topup_receipt(
+                topup_id=topup_id, download=download
+            )
             return _format_response(response)
         except Exception as e:
             raise ToolError(f"Error: {e}") from e

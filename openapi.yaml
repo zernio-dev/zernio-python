@@ -30924,10 +30924,17 @@ paths:
           in: path
           required: true
           schema: { type: string }
+        - name: download
+          in: query
+          required: false
+          schema: { type: boolean }
+          description: 'true answers the card receipt itself as a PDF file (application/pdf, as an attachment) instead of the JSON links.'
       responses:
         '200':
-          description: Receipt link
+          description: Receipt link, or the receipt PDF with download=true
           content:
+            application/pdf:
+              schema: { type: string, format: binary }
             application/json:
               schema:
                 type: object
