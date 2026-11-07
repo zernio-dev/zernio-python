@@ -244,7 +244,9 @@ def generate_method_signature(
 
         for param in optional_params:
             default = param.get("default")
-            if default is None:
+            # A spec default of {} or [] would become a shared mutable default
+            # (ruff B006). None omits the field, so the API applies that default.
+            if default is None or isinstance(default, (dict, list)):
                 default_str = "None"
             elif isinstance(default, str):
                 default_str = f'"{default}"'
