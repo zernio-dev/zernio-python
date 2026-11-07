@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.525.0"
+  version: "1.525.1"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -77555,7 +77555,7 @@ paths:
                   type: array
                   items:
                     $ref: '#/components/schemas/GoogleSitelink'
-                  minItems: 2
+                  minItems: 1
                   maxItems: 20
                 callouts:
                   type: array
@@ -77977,7 +77977,7 @@ paths:
                   type: array
                   items:
                     $ref: '#/components/schemas/GoogleSitelink'
-                  minItems: 2
+                  minItems: 1
                   maxItems: 20
                 callouts:
                   type: array
