@@ -196,3 +196,14 @@ jobs:
         with:
           password: ${{ secrets.PYPI_API_TOKEN }}
           skip-existing: true
+
+      - name: Trigger MCP SDK Sync
+        if: steps.changes.outputs.has_changes == 'true'
+        continue-on-error: true
+        run: |
+          curl -fsS -L -X POST \
+            -H "Accept: application/vnd.github.v3+json" \
+            -H "Authorization: token ${{ secrets.MCP_DISPATCH_TOKEN }}" \
+            https://api.github.com/repos/zernio-dev/zernio-mcp/dispatches \
+            -d '{"event_type":"sdk-released","client_payload":{"sdk_version":"${{ steps.version.outputs.new_version }}","ref":"${{ github.sha }}"}}'
+          echo "✓ Triggered MCP sync for ${{ steps.version.outputs.new_version }}"
