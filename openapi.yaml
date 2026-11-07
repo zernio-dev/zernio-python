@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.523.0"
+  version: "1.524.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -13889,6 +13889,10 @@ components:
                 enum: [accounts, numbers, imessage, calls, sms, messages, verify, dlc, xApi, ads, credits, other]
               totalUsd: { type: number }
               quantity: { type: number }
+              paidFrom:
+                type: string
+                enum: [balance]
+                description: 'Present only on pay-per-use paid from the prepaid balance (balance billing). That spend is included in `days` and `totals` but is not on the monthly invoice.'
         peaks:
           type: [object, "null"]
           description: 'Peak counts over the window (usage-based COUNT metrics + live active-number count). Null when `profileId` / `accountId` is set.'
