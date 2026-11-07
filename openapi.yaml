@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.524.0"
+  version: "1.525.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -90233,7 +90233,7 @@ paths:
         - { name: accountId, in: query, required: true, schema: { type: string }, description: Account ID }
         - { name: adAccountId, in: query, required: true, schema: { type: string }, description: Platform ad account ID }
         - { name: platform, in: query, schema: { type: string, enum: [facebook, instagram, googleads, tiktok, tiktokads, pinterest, linkedin, linkedinads, twitter, xads, redditads] } }
-        - { name: type, in: query, required: false, schema: { type: string, enum: [customer_list, company_list, engagement, meta_engagement, website, website_retargeting, lookalike, saved_targeting] }, description: "Filter to one audience type. `saved_targeting` returns stored TargetingSpec audiences; the other types return uploaded/derived audiences." }
+        - { name: type, in: query, required: false, schema: { type: string, enum: [customer_list, company_list, engagement, meta_engagement, website, website_retargeting, lookalike, saved_targeting] }, description: "Filter to one audience type. `saved_targeting` returns stored TargetingSpec audiences and needs no adAccountId; the other types keep only the platform audiences of that type (an empty list when the platform has none). Meta ENGAGEMENT audiences are `meta_engagement`." }
       responses:
         '409': { $ref: '#/components/responses/AccountConnectionRequired' }
         '404': { $ref: '#/components/responses/AccountUnavailable' }
@@ -90265,6 +90265,7 @@ paths:
                         size: { type: integer }
                         summary: { type: string, description: "Who the audience contains, in one line (e.g. '1% lookalike of Customers in US' or 'All website visitors, last 30 days'). Meta only." }
                         status: { type: string }
+                  truncated: { type: boolean, description: "Meta only. True when the ad account has more than 1,000 custom audiences and the list stops at the first 1,000." }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403':
           x-summary: "Ads access is required: legacy plans need the Ads add-on, and usage-based plans include it by default."

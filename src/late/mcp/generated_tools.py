@@ -5629,7 +5629,7 @@ def register_generated_tools(mcp, _get_client):
             account_id: Account ID (required)
             ad_account_id: Platform ad account ID (required)
             platform
-            type: Filter to one audience type. `saved_targeting` returns stored TargetingSpec audiences; the other types return uploaded/derived audiences."""
+            type: Filter to one audience type. `saved_targeting` returns stored TargetingSpec audiences and needs no adAccountId; the other types keep only the platform audiences of that type (an empty list when the platform has none). Meta ENGAGEMENT audiences are `meta_engagement`."""
         client = _get_client()
         try:
             response = client.ad_audiences.list_ad_audiences(
