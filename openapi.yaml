@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.521.1"
+  version: "1.522.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -15065,7 +15065,7 @@ components:
               creative:
                 type: object
                 properties:
-                  type: { type: [string, "null"], enum: [image, video, carousel, document, null] }
+                  type: { type: [string, "null"], enum: [image, video, carousel, document, text, null], description: "Same classification as the ad `creativeType`." }
                   thumbnailUrl: { type: [string, "null"] }
                   headline: { type: [string, "null"] }
                   body: { type: [string, "null"] }
@@ -16983,9 +16983,27 @@ components:
         adType: { type: string, enum: [boost, standalone] }
         creativeType:
           type: [string, "null"]
-          enum: [carousel, video, document, image, null]
-          description: "Creative format, classified from the media the creative carries. `null` when the creative carries no media to classify. An unsynced creative and a genuine text-only ad are indistinguishable, so neither is guessed at. Returned by `GET /v1/ads`, `GET /v1/ads/{adId}` and the ad nodes of `GET /v1/ads/tree`."
+          enum: [carousel, video, document, image, text, null]
+          description: |
+            Creative format. Returned by `GET /v1/ads`, `GET /v1/ads/{adId}` and the ad nodes of `GET /v1/ads/tree`. `text` was added in 1.522.0, so treat unknown values as unclassified.
+
+            - Google: from the ad type. Search ads (`RESPONSIVE_SEARCH_AD`, `EXPANDED_TEXT_AD`, `TEXT_AD`, `EXPANDED_DYNAMIC_SEARCH_AD`, `CALL_AD`) are `text`, video ads or any ad with a YouTube video are `video`, `DEMAND_GEN_CAROUSEL_AD` is `carousel`, other ads with images are `image`.
+            - Pinterest: from `creative_type`. `VIDEO` and `MAX_VIDEO` are `video`, `CAROUSEL` is `carousel`, `REGULAR` and `SHOPPING` are `image`, others are `image` when the pin has an image.
+            - X: from the tweet media. `photo` is `image`, `video` and `animated_gif` are `video`. Card and text-only tweets are `null`.
+            - Other platforms: from the media the creative carries. Two or more images or cards are `carousel`.
+
+            `null` when nothing classifies it: no media and no known format, or a Performance Max asset group. A Google ad not re-synced since 1.522.0 is still classified by its media until the next sync (about 3 hours).
           example: video
+        platformCreativeType:
+          type: string
+          description: |
+            The platform's own creative or ad type, as stored by the last sync. Omitted when the platform reports none.
+
+            - Google: `ad_group_ad.ad.type` (e.g. `RESPONSIVE_SEARCH_AD`, `RESPONSIVE_DISPLAY_AD`, `VIDEO_RESPONSIVE_AD`).
+            - Pinterest: the ad `creative_type` (e.g. `REGULAR`, `VIDEO`, `CAROUSEL`).
+            - X: the promoted tweet's media type (`photo`, `video`, `animated_gif`).
+            - TikTok: `ad_format`. LinkedIn: the campaign `format`. Meta: the creative `object_type`.
+          example: RESPONSIVE_SEARCH_AD
         goal: { type: string, enum: [engagement, traffic, awareness, video_views, lead_generation, lead_conversion, conversions, app_promotion, catalog_sales, page_likes, page_visits, job_applicants], description: "Available goals vary by platform:\n\n- **Meta (Facebook/Instagram):** all 11, including `lead_conversion` (website pixel lead optimization), `catalog_sales` (Advantage+ catalog ads), `page_likes` (Page Likes conversion location under Engagement) and `page_visits` (Page visits and followers under Traffic).\n- **TikTok:** engagement, traffic, awareness, video_views, lead_generation, conversions, app_promotion.\n- **LinkedIn:** all Meta goals except app_promotion / lead_conversion / catalog_sales / page_likes / page_visits.\n- **X:** engagement, traffic, awareness, video_views, app_promotion.\n- **Pinterest:** only engagement, traffic, awareness, video_views.\n- **Google Ads:** only engagement, traffic, awareness (video_views is rejected at create with 422 FEATURE_NOT_AVAILABLE)." }
         isExternal: { type: boolean, description: True for ads synced from platform ad managers }
         synced: { type: boolean, description: 'Only on GET /v1/ads/{adId}. True when the ad comes from Zernio''s synced store; false when it was read live from Meta because it is not synced yet (request made with `accountId`). An unsynced ad has no `id`.' }
