@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.522.3"
+  version: "1.523.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -30684,6 +30684,16 @@ paths:
                   recentTopups:
                     type: array
                     items: { $ref: '#/components/schemas/TreasuryTopup' }
+                  recentCreditRecharges:
+                    type: array
+                    description: 'Balance billing only (absent otherwise). The 10 newest recharges paid from the account credit you held when you moved to the balance, newest first. Nothing was charged to your card and there is no invoice. The amount was added to promoCents with the credit''s own expiry.'
+                    items:
+                      type: object
+                      required: [id, amountCents, createdAt]
+                      properties:
+                        id: { type: string }
+                        amountCents: { type: integer, description: 'Credit added to promoCents.' }
+                        createdAt: { type: string, format: date-time }
         '402':
           $ref: '#/components/responses/PaymentRequired'
         '403': { $ref: '#/components/responses/ResourceGroupForbidden' }
@@ -30695,6 +30705,8 @@ paths:
       summary: Get auto-recharge settings
       description: |
         Your balance's auto-recharge rule: when the balance drops below `belowCents`, the billing owner's saved card is charged back up to `toCents`, tax added on top as for any top-up.
+
+        Account credit you held when you moved to the balance pays a recharge first, without a card charge or invoice (see `recentCreditRecharges` on `GET /v1/balance`). The card is charged only once that credit is used up, and only while the balance is still below `belowCents`.
 
         The first read gives the default rule, sized from your last 30 days of pay-per-use: below about a week of spend (at least $5), back up by about two more weeks (at least $20).
 
