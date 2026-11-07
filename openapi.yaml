@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.522.2"
+  version: "1.522.3"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -1228,7 +1228,7 @@ components:
           schema: { $ref: '#/components/schemas/ErrorResponse' }
     BalanceRequired:
       x-summary: 'Balance at $0: top up in Billing to continue.'
-      description: 'Balance billing only. The balance is at or below $0, so new pay-per-use is refused: code `insufficient_balance`, or `usage_limit_reached` when the auto-recharge monthly limit kept it there. Top up in Billing. Inbound traffic and calls already connected are never refused.'
+      description: 'Balance billing only. The balance is at or below $0 and auto-recharge could not lift it, so new pay-per-use is refused: code `insufficient_balance`, or `usage_limit_reached` when the monthly limit kept it there. Top up in Billing. Inbound traffic and connected calls are never refused.'
       content:
         application/json:
           schema: { $ref: '#/components/schemas/ErrorResponse' }
@@ -30721,6 +30721,8 @@ paths:
         A declined recharge is retried 1 hour, 1 day and 3 days later, with an email each time. After the last retry fails, auto-recharge switches off (`disabledReason: payment_failed`) until the card is updated. A top-up you make yourself resets the retries.
 
         A bank asking for 3D Secure counts as a decline: the charge happens while you are away, so the email asks you to top up in Billing.
+
+        A pay-per-use request that finds the balance at $0 runs the recharge first (with the rule on, a saved card and no retry pending) and goes through when the charge lands, so a new balance at $0 is charged on first use.
 
         When this month's auto-recharges plus the next one would pass `monthlyLimitCents`, the card is not charged and you get one email that month. At $0, pay-per-use then answers 402 `usage_limit_reached`.
 
