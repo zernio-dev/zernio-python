@@ -31124,6 +31124,7 @@ paths:
                   totalCents: { type: integer, description: 'What the card would be charged: amountCents + taxCents.' }
                   taxLabel: { type: [string, "null"], description: 'The tax and its rate, for example "VAT 21%". Null when no tax is charged.' }
                   reverseCharge: { type: boolean, description: 'True for an EU business with a valid VAT id: no VAT, reverse charge.' }
+                  country: { type: [string, "null"], description: 'Two-letter country the tax was placed in, from the billing address. Null when Stripe Tax returned no address.' }
         '400':
           $ref: '#/components/responses/BadRequest'
         '402':
