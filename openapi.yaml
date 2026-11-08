@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.526.0"
+  version: "1.526.1"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -1246,7 +1246,12 @@ components:
     XPostWaitingForBalance:
       x-summary: 'An X platform is waiting for funds: the balance is $0, so it publishes once the balance is funded and fails after 24 hours.'
       description: |
-        Balance billing only. The post was saved and the inline publish ran, but its X platform found the balance at $0 even after auto-recharge, so that platform is waiting (`post.platforms[].status: pending`, `errorMessage` says why) instead of publishing. It publishes within minutes of the balance being funded, and fails with "Your balance was $0" if it is still at $0 after 24 hours. Other platforms in `platformResults` published or failed as usual.
+        Balance billing only. The post was saved, but its X platform found the balance at $0 even after auto-recharge.
+
+        - The X platform is waiting (`post.platforms[].status: pending`, `errorMessage` says why) instead of publishing.
+        - It publishes within minutes of the balance being funded.
+        - It fails with "Your balance was $0" if the balance is still $0 after 24 hours.
+        - Other platforms in `platformResults` published or failed as usual.
 
         This is not "publishing in progress": send the user to Billing to add funds. Usually the request is refused with 402 `insufficient_balance` before anything is saved; 202 covers a balance that reached $0 during the publish.
       content:
