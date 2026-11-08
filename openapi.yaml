@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.526.1"
+  version: "1.527.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -1366,6 +1366,19 @@ components:
       headers:
         Retry-After:
           description: 'Seconds remaining until the upstream quota resets.'
+          schema: { type: integer }
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorResponse' }
+    PaymentAttemptsLimited:
+      x-summary: "Five card payments were declined in 24 hours: no new card payment is tried until `Retry-After` runs out."
+      description: |
+        Code `payment_attempts_limited`: five card payments of the billing owner (top-ups, auto top-ups, payout batches paid by card, cards that failed to save) were declined within 24 hours, so new card payments are refused without reaching the bank until 24 hours after the fifth decline. Nothing was charged.
+
+        The message is "Too many declined payments. Try again tomorrow or contact support." `Retry-After` and `details.retryAt` say when card payments are tried again.
+      headers:
+        Retry-After:
+          description: 'Seconds until card payments are tried again.'
           schema: { type: integer }
       content:
         application/json:
@@ -31027,6 +31040,7 @@ paths:
         - 402 `card_declined`: the bank's reason.
         - 400: `method: bank_transfer` (bank transfers are not available yet).
         - 400 `invalid_billing_address`: the billing address gives no tax location. Add it in Billing, then retry.
+        - 429 `payment_attempts_limited`: five card payments were declined in 24 hours. Nothing reaches the bank until `Retry-After` runs out.
 
         Needs an owner, admin or billing admin, signed in or through a full-access key they created.
       parameters:
@@ -31075,6 +31089,8 @@ paths:
           $ref: '#/components/responses/NotFound'
         '409':
           $ref: '#/components/responses/IdempotencyKeyInFlight'
+        '429':
+          $ref: '#/components/responses/PaymentAttemptsLimited'
         '422':
           $ref: '#/components/responses/IdempotencyKeyReused'
     get:
@@ -101641,6 +101657,7 @@ paths:
         - 402: your balance is negative after a dispute or refund.
         - 400: nothing payable ("Nothing is payable.").
         - 400 `invalid_billing_address`: Stripe cannot place your billing address, so it cannot tax the fee. Nothing is held.
+        - 429 `payment_attempts_limited`: five card payments were declined in 24 hours. Nothing is held and nothing reaches the bank until `Retry-After` runs out.
 
         ### Access and retries
 
@@ -101686,6 +101703,7 @@ paths:
         '403': { $ref: '#/components/responses/MoneyForbidden' }
         '404': { $ref: '#/components/responses/CreatorCampaignNotFound' }
         '409': { $ref: '#/components/responses/CreatorCampaignConflict' }
+        '429': { $ref: '#/components/responses/PaymentAttemptsLimited' }
     get:
       x-resource-group: "creator_campaigns"
       operationId: listCampaignPayoutBatches
