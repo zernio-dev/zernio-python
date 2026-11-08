@@ -1233,7 +1233,13 @@ components:
           schema: { $ref: '#/components/schemas/ErrorResponse' }
     BalanceRequired:
       x-summary: 'Balance at $0: send the user to `funding_url` to top up, then retry.'
-      description: 'Balance billing only. The balance is at or below $0 and auto-recharge could not lift it, so new pay-per-use is refused: code `insufficient_balance`, or `usage_limit_reached` when the monthly limit kept it there. `funding_url` opens Billing with the top-up drawer (the add-card drawer first when there is no card). Inbound traffic and connected calls are never refused.'
+      description: |
+        Balance billing only. The balance is at or below $0 and auto-recharge could not lift it, so new pay-per-use is refused.
+
+        - `insufficient_balance`: the balance is empty.
+        - `usage_limit_reached`: the monthly limit kept it there.
+
+        `funding_url` opens Billing with the top-up drawer (the add-card drawer first when there is no card). Inbound traffic and connected calls are never refused.
       content:
         application/json:
           schema: { $ref: '#/components/schemas/BalanceRequiredError' }
