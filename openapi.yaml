@@ -280,6 +280,9 @@ x-documentation:
     - `campaign_participant.joined` - A creator joined a campaign, by opening their invite link or joining from the open link. Fires once per participant
     - `campaign_participant.suspended` - An operator suspended a participant; they can no longer connect accounts or submit posts to the campaign
     - `campaign_participant.removed` - An operator removed a participant from the campaign
+    - `balance.low` - Balance billing: the balance dropped below the low-balance alert set on auto-recharge (`alertBelowCents`), once per drop, unless an auto top-up is already covering it
+    - `balance.empty` - Balance billing: the balance reached $0 and no auto top-up covered it, so pay-per-use calls answer 402 until it is funded. Carries that 402 `code` and `fundingUrl`
+    - `balance.charged` - Balance billing: a card top-up of the balance succeeded, manual or automatic (`topup.trigger`), with the amount, the VAT and the card charge
     - `webhook.test` - Test event sent when verifying a webhook endpoint
 
     Every delivery carries `X-Zernio-Event` (the event name) and `X-Zernio-Event-Id` (the payload's `id`, a UUID generated once when the event is emitted). That id is identical on every subscription that receives the event, on every automatic retry and on a redelivery via `POST /v1/webhooks/logs/redeliver`, so it is the key to dedupe on. Payloads are signed with HMAC-SHA256 via the `X-Zernio-Signature` header when the subscription has a secret. Legacy `X-Late-*` copies of these three headers are still sent and will be removed in a future major version.
@@ -303,7 +306,7 @@ x-documentation:
     | `creator_campaign.*` | none; `campaign.id` is the campaign |
     | `campaign_payout.*` | none; `campaign.id`, `participant.id` and `creator.id` identify the payout |
     | `campaign_participant.*` | none; `campaign.id`, `participant.id` and `creator.id` identify the participant |
-    | `verification.*`, `phone_number.stock_available`, `api.changelog.published`, `webhook.test`, `contact.*`, `sequence.*`, `workflow.run.*` | none (`sequence.*` and `workflow.run.*` still reach subscriptions scoped to the sending account) |
+    | `verification.*`, `phone_number.stock_available`, `balance.*`, `api.changelog.published`, `webhook.test`, `contact.*`, `sequence.*`, `workflow.run.*` | none (`sequence.*` and `workflow.run.*` still reach subscriptions scoped to the sending account) |
 
     ## Full Documentation
 
@@ -707,6 +710,7 @@ tags:
       - Contacts and automations: `contact.tag_added`, `contact.tag_removed`, `contact.field_changed`, `contact.updated`, `contact.deleted`, `sequence.enrolled`, `sequence.exited`, `workflow.run.started`, `workflow.run.completed`, `workflow.run.failed`, `support.run.completed`, `support.run.failed`, `automation.check.completed`, `automation.action.applied`, `automation.action.failed`, `automation.action.unknown`, `automation.alert.opened`, `automation.alert.escalated`, `automation.alert.resolved`
       - Creator campaigns: `campaign_submission.received`, `campaign_submission.flagged`, `campaign_submission.pending_review`, `campaign_submission.approved`, `campaign_submission.rejected`, `creator_campaign.budget_exhausted`, `creator_campaign.closed`, `campaign_payout.payable`, `campaign_payout.settled`, `campaign_payout.failed`, `campaign_participant.joined`, `campaign_participant.suspended`, `campaign_participant.removed`
       - Calendar and files: `calendar.event.created`, `calendar.event.updated`, `calendar.event.deleted`, `file.created`, `file.updated`, `file.deleted`, `file.picked`
+      - Billing: `balance.low`, `balance.empty`, `balance.charged`
       - Other: `api.changelog.published`, `webhook.test`
 
       **Headers.** Every delivery carries `X-Zernio-Event` (event name) and `X-Zernio-Event-Id` (the payload `id`). That UUID is minted once per event and is identical across every subscribed endpoint, automatic retry and redelivery, so dedupe on it.
@@ -724,6 +728,7 @@ tags:
       - analytics: `analytics.*`
       - telephony: `whatsapp.number.*`, `verification.*`, `sms.registration.*`
       - creator_campaigns: `campaign_submission.*`, `creator_campaign.*`, `campaign_payout.*`, `campaign_participant.*`
+      - money: `balance.*`
       - webhooks: `api.changelog.published`, `webhook.test`
 
       Support Assistant events (`support.run.*`) belong to no single group: they need every resource group enabled and a first-party full-scope caller (a session or a full-scope key, never an OAuth token or a profile-scoped key).
@@ -1227,11 +1232,11 @@ components:
         application/json:
           schema: { $ref: '#/components/schemas/ErrorResponse' }
     BalanceRequired:
-      x-summary: 'Balance at $0: top up in Billing to continue.'
-      description: 'Balance billing only. The balance is at or below $0 and auto-recharge could not lift it, so new pay-per-use is refused: code `insufficient_balance`, or `usage_limit_reached` when the monthly limit kept it there. Top up in Billing. Inbound traffic and connected calls are never refused.'
+      x-summary: 'Balance at $0: send the user to `funding_url` to top up, then retry.'
+      description: 'Balance billing only. The balance is at or below $0 and auto-recharge could not lift it, so new pay-per-use is refused: code `insufficient_balance`, or `usage_limit_reached` when the monthly limit kept it there. `funding_url` opens Billing with the top-up drawer (the add-card drawer first when there is no card). Inbound traffic and connected calls are never refused.'
       content:
         application/json:
-          schema: { $ref: '#/components/schemas/ErrorResponse' }
+          schema: { $ref: '#/components/schemas/BalanceRequiredError' }
     BadRequest:
       description: Invalid request
       content:
@@ -3969,6 +3974,22 @@ components:
           description: The Facebook post ID that was changed.
         message:
           type: string
+    BalanceRequiredError:
+      description: 'The error envelope of a $0 balance refusal (402 `insufficient_balance` or `usage_limit_reached`), plus where to fund the balance.'
+      allOf:
+        - $ref: '#/components/schemas/ErrorResponse'
+        - type: object
+          required: [funding_url]
+          properties:
+            funding_url:
+              type: string
+              format: uri
+              description: 'Dashboard link to Billing that opens the top-up drawer (the add-card drawer first when there is no card). Send the user there, then retry.'
+          example:
+            error: 'Your balance is at $0, so SMS is paused. Top up your balance in Billing to continue.'
+            type: invalid_request_error
+            code: insufficient_balance
+            funding_url: https://zernio.com/dashboard/billing?funding=1
     ErrorResponse:
       type: object
       description: |
@@ -5129,7 +5150,7 @@ components:
           type: array
           items:
             type: string
-            enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.permissions_changed, account.ads.initial_sync_completed, account.ads.sync_failed, account.ads.sync_recovered, analytics.synced, post.tracking_completed, post.authenticity_changed, message.received, conversation.started, conversation.control_changed, call.received, call.ended, call.failed, call.permission_request, message.sent, message.edited, message.deleted, message.delivered, message.read, message.played, message.failed, reaction.received, referral.received, comment.received, review.new, review.updated, review.deleted, review.restored, lead.received, ad.status_changed, ad.created, ad.updated, campaign.created, campaign.updated, ad_set.created, ad_set.updated, ad.review.approved, ad.review.rejected, ad.delivery_issue, campaign.budget.depleted, ad_account.status_changed, ad.video.processed, ad_rule.triggered, automation.check.completed, automation.action.applied, automation.action.failed, automation.action.unknown, automation.alert.opened, automation.alert.escalated, automation.alert.resolved, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.account.quality_updated, whatsapp.account.status_updated, whatsapp.account.alert_received, whatsapp.contact.identity_changed, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, phone_number.stock_available, verification.approved, verification.failed, api.changelog.published, sms.registration.action_required, sms.registration.status_updated, branded_calling.identity.status_updated, branded_calling.identity.action_required, branded_calling.number.status_updated, rcs.agent.status_updated, commerce.product.created, commerce.product.updated, commerce.product.deleted, commerce.order.created, commerce.order.updated, commerce.order.refunded, contact.tag_added, contact.tag_removed, contact.field_changed, sequence.enrolled, sequence.exited, workflow.run.started, workflow.run.completed, workflow.run.failed, support.run.completed, support.run.failed, campaign_submission.received, campaign_submission.flagged, campaign_submission.pending_review, campaign_submission.approved, campaign_submission.rejected, creator_campaign.budget_exhausted, creator_campaign.closed, campaign_payout.payable, campaign_payout.settled, campaign_payout.failed, campaign_participant.joined, campaign_participant.suspended, campaign_participant.removed, account.rate_limited, calendar.event.created, calendar.event.updated, calendar.event.deleted, file.created, file.updated, file.deleted, file.picked, contact.updated, contact.deleted]
+            enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.permissions_changed, account.ads.initial_sync_completed, account.ads.sync_failed, account.ads.sync_recovered, analytics.synced, post.tracking_completed, post.authenticity_changed, message.received, conversation.started, conversation.control_changed, call.received, call.ended, call.failed, call.permission_request, message.sent, message.edited, message.deleted, message.delivered, message.read, message.played, message.failed, reaction.received, referral.received, comment.received, review.new, review.updated, review.deleted, review.restored, lead.received, ad.status_changed, ad.created, ad.updated, campaign.created, campaign.updated, ad_set.created, ad_set.updated, ad.review.approved, ad.review.rejected, ad.delivery_issue, campaign.budget.depleted, ad_account.status_changed, ad.video.processed, ad_rule.triggered, automation.check.completed, automation.action.applied, automation.action.failed, automation.action.unknown, automation.alert.opened, automation.alert.escalated, automation.alert.resolved, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.account.quality_updated, whatsapp.account.status_updated, whatsapp.account.alert_received, whatsapp.contact.identity_changed, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, phone_number.stock_available, verification.approved, verification.failed, api.changelog.published, sms.registration.action_required, sms.registration.status_updated, branded_calling.identity.status_updated, branded_calling.identity.action_required, branded_calling.number.status_updated, rcs.agent.status_updated, commerce.product.created, commerce.product.updated, commerce.product.deleted, commerce.order.created, commerce.order.updated, commerce.order.refunded, contact.tag_added, contact.tag_removed, contact.field_changed, sequence.enrolled, sequence.exited, workflow.run.started, workflow.run.completed, workflow.run.failed, support.run.completed, support.run.failed, campaign_submission.received, campaign_submission.flagged, campaign_submission.pending_review, campaign_submission.approved, campaign_submission.rejected, creator_campaign.budget_exhausted, creator_campaign.closed, campaign_payout.payable, campaign_payout.settled, campaign_payout.failed, campaign_participant.joined, campaign_participant.suspended, campaign_participant.removed, account.rate_limited, calendar.event.created, calendar.event.updated, calendar.event.deleted, file.created, file.updated, file.deleted, file.picked, contact.updated, contact.deleted, balance.low, balance.empty, balance.charged]
           description: Events subscribed to
         isActive:
           type: boolean
@@ -10488,6 +10509,86 @@ components:
           type: string
           format: date-time
           description: 'UTC time at which Zernio generated this event (set once when the event payload is built, before delivery is queued). Retries and redeliveries keep the original value, so it reflects the event, not the delivery attempt.'
+    WebhookPayloadBalanceLow:
+      type: object
+      required: [id, event, balance, fundingUrl, timestamp]
+      properties:
+        id:
+          type: string
+          description: 'Stable webhook event ID: the dedupe key, also sent as the X-Zernio-Event-Id header and identical on every retry and redelivery. It identifies the event only, never an account or other resource.'
+        test:
+          type: boolean
+          description: 'Always true when present: only a sample sent by POST /v1/webhooks/test with an event carries it. Real deliveries never do.'
+        event: { type: string, enum: [balance.low] }
+        balance:
+          type: object
+          required: [spendableCents, alertBelowCents]
+          properties:
+            spendableCents: { type: integer, description: 'What pay-per-use can spend, in USD cents: available plus promo, less usage not posted yet.' }
+            alertBelowCents: { type: integer, description: 'The low-balance alert threshold it dropped below, in USD cents.' }
+        fundingUrl: { type: string, format: uri, description: 'Dashboard link that opens the top-up drawer in Billing.' }
+        timestamp:
+          type: string
+          format: date-time
+          description: 'UTC time at which Zernio generated this event. Retries and redeliveries keep the original value.'
+    WebhookPayloadBalanceEmpty:
+      type: object
+      required: [id, event, balance, code, fundingUrl, timestamp]
+      properties:
+        id:
+          type: string
+          description: 'Stable webhook event ID: the dedupe key, also sent as the X-Zernio-Event-Id header and identical on every retry and redelivery. It identifies the event only, never an account or other resource.'
+        test:
+          type: boolean
+          description: 'Always true when present: only a sample sent by POST /v1/webhooks/test with an event carries it. Real deliveries never do.'
+        event: { type: string, enum: [balance.empty] }
+        balance:
+          type: object
+          required: [spendableCents]
+          properties:
+            spendableCents: { type: integer, description: 'What pay-per-use can spend, in USD cents: 0 or below (usage already in flight can take it under 0).' }
+        code: { type: string, enum: [insufficient_balance, usage_limit_reached], description: 'The 402 code pay-per-use calls get until the balance is funded. `usage_limit_reached` when the auto top-up monthly limit is what keeps it at $0.' }
+        fundingUrl: { type: string, format: uri, description: 'Dashboard link that opens the top-up drawer in Billing.' }
+        timestamp:
+          type: string
+          format: date-time
+          description: 'UTC time at which Zernio generated this event. Retries and redeliveries keep the original value.'
+    WebhookPayloadBalanceCharged:
+      type: object
+      required: [id, event, topup, balance, timestamp]
+      properties:
+        id:
+          type: string
+          description: 'Stable webhook event ID: the dedupe key, also sent as the X-Zernio-Event-Id header and identical on every retry and redelivery. It identifies the event only, never an account or other resource.'
+        test:
+          type: boolean
+          description: 'Always true when present: only a sample sent by POST /v1/webhooks/test with an event carries it. Real deliveries never do.'
+        event: { type: string, enum: [balance.charged] }
+        topup:
+          type: object
+          required: [id, trigger, amountCents, taxCents, chargedCents, currency, card]
+          properties:
+            id: { type: string, description: 'The top-up id, as in GET /v1/balance (`recentTopups`) and its invoice and receipt endpoints.' }
+            trigger: { type: string, enum: [manual, auto_top_up], description: '`manual`: someone topped up in Billing or through the API. `auto_top_up`: the auto top-up rule charged the card.' }
+            amountCents: { type: integer, description: 'Added to the balance, in USD cents.' }
+            taxCents: { type: integer, description: 'VAT charged on top, in USD cents (0 when none applies).' }
+            chargedCents: { type: integer, description: 'What the card was charged, in USD cents: amount plus tax.' }
+            currency: { type: string, enum: [usd] }
+            card:
+              type: [object, "null"]
+              required: [brand, last4]
+              properties:
+                brand: { type: string, description: 'Card brand as Stripe names it, e.g. visa or mastercard.' }
+                last4: { type: [string, "null"] }
+        balance:
+          type: object
+          required: [spendableCents]
+          properties:
+            spendableCents: { type: integer, description: 'What pay-per-use can spend after the top-up, in USD cents.' }
+        timestamp:
+          type: string
+          format: date-time
+          description: 'UTC time at which Zernio generated this event. Retries and redeliveries keep the original value.'
     WebhookPayloadTest:
       type: object
       description: Webhook payload for test deliveries
@@ -26438,6 +26539,116 @@ webhooks:
                     modified: []
             schema:
               $ref: '#/components/schemas/WebhookPayloadApiChangelogPublished'
+      responses:
+        '200':
+          description: Webhook received successfully
+  balance.low:
+    post:
+      operationId: onBalanceLow
+      summary: Balance low event
+      description: |
+        Balance billing only. The balance dropped below the low-balance alert set on auto-recharge (`alertBelowCents` on `GET /v1/balance/auto-recharge`).
+
+        ### When it fires
+
+        Once per drop below the threshold; a balance back at or above it re-arms the next one. It does not fire when an auto top-up is already covering the drop, and never when no alert is set.
+
+        ### Who receives it
+
+        It belongs to the billing owner, not to a profile or account: endpoints scoped with `profileIds` or `accountIds` do not receive it. Restricted keys need the `money` resource group.
+
+        ### How to act
+
+        Send the user to `fundingUrl` (Billing with the top-up drawer open), or top up through the API.
+      tags: [Webhook Events]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              id: 00000000-0000-4000-8000-000000000000
+              event: balance.low
+              timestamp: '2026-01-15T10:00:00Z'
+              balance: { spendableCents: 420, alertBelowCents: 500 }
+              fundingUrl: https://zernio.com/dashboard/billing?funding=1
+            schema:
+              $ref: '#/components/schemas/WebhookPayloadBalanceLow'
+      responses:
+        '200':
+          description: Webhook received successfully
+  balance.empty:
+    post:
+      operationId: onBalanceEmpty
+      summary: Balance empty event
+      description: |
+        Balance billing only. The balance reached $0 and no auto top-up covered it (auto top-up off, the card declined, or the monthly limit reached), so new pay-per-use (SMS, calls, numbers, X and the rest) answers 402 with `code` until the balance is funded.
+
+        ### When it fires
+
+        Once per time the balance runs out, within about a minute of the usage that emptied it. Funding the balance and running out again fires it again.
+
+        ### Who receives it
+
+        The billing owner's endpoints, like `balance.low`. Restricted keys need the `money` resource group.
+
+        ### How to act
+
+        Send the user to `fundingUrl`, or, for `usage_limit_reached`, raise `monthlyLimitCents` with `PATCH /v1/balance/auto-recharge`.
+      tags: [Webhook Events]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              id: 00000000-0000-4000-8000-000000000000
+              event: balance.empty
+              timestamp: '2026-01-15T10:00:00Z'
+              balance: { spendableCents: 0 }
+              code: insufficient_balance
+              fundingUrl: https://zernio.com/dashboard/billing?funding=1
+            schema:
+              $ref: '#/components/schemas/WebhookPayloadBalanceEmpty'
+      responses:
+        '200':
+          description: Webhook received successfully
+  balance.charged:
+    post:
+      operationId: onBalanceCharged
+      summary: Balance charged event
+      description: |
+        Balance billing only. A card top-up of the balance succeeded: one someone made (`trigger: manual`) or one the auto top-up rule made (`trigger: auto_top_up`).
+
+        ### When it fires
+
+        Once per top-up, when the payment is credited to the balance. Stripe emails the billing owner its receipt for the charge.
+
+        ### Payload notes
+
+        `topup.amountCents` was added to the balance; the card was charged `topup.chargedCents`, which is that plus `topup.taxCents` (VAT, 0 when none applies). The invoice and receipt are at `GET /v1/balance/top-ups/{topupId}/invoice` and `/receipt`.
+
+        ### Who receives it
+
+        The billing owner's endpoints, like `balance.low`. Restricted keys need the `money` resource group.
+      tags: [Webhook Events]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              id: 00000000-0000-4000-8000-000000000000
+              event: balance.charged
+              timestamp: '2026-01-15T10:00:00Z'
+              topup:
+                id: 6650a1b2c3d4e5f6a7b8c9d0
+                trigger: auto_top_up
+                amountCents: 2000
+                taxCents: 420
+                chargedCents: 2420
+                currency: usd
+                card: { brand: visa, last4: '4242' }
+              balance: { spendableCents: 2000 }
+            schema:
+              $ref: '#/components/schemas/WebhookPayloadBalanceCharged'
       responses:
         '200':
           description: Webhook received successfully
@@ -50059,7 +50270,7 @@ paths:
                   minItems: 1
                   items:
                     type: string
-                    enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.permissions_changed, account.ads.initial_sync_completed, account.ads.sync_failed, account.ads.sync_recovered, analytics.synced, post.tracking_completed, post.authenticity_changed, message.received, conversation.started, conversation.control_changed, call.received, call.ended, call.failed, call.permission_request, message.sent, message.edited, message.deleted, message.delivered, message.read, message.played, message.failed, reaction.received, referral.received, comment.received, review.new, review.updated, review.deleted, review.restored, lead.received, ad.status_changed, ad.created, ad.updated, campaign.created, campaign.updated, ad_set.created, ad_set.updated, ad.review.approved, ad.review.rejected, ad.delivery_issue, campaign.budget.depleted, ad_account.status_changed, ad.video.processed, ad_rule.triggered, automation.check.completed, automation.action.applied, automation.action.failed, automation.action.unknown, automation.alert.opened, automation.alert.escalated, automation.alert.resolved, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.account.quality_updated, whatsapp.account.status_updated, whatsapp.account.alert_received, whatsapp.contact.identity_changed, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, phone_number.stock_available, verification.approved, verification.failed, api.changelog.published, sms.registration.action_required, sms.registration.status_updated, branded_calling.identity.status_updated, branded_calling.identity.action_required, branded_calling.number.status_updated, rcs.agent.status_updated, commerce.product.created, commerce.product.updated, commerce.product.deleted, commerce.order.created, commerce.order.updated, commerce.order.refunded, contact.tag_added, contact.tag_removed, contact.field_changed, sequence.enrolled, sequence.exited, workflow.run.started, workflow.run.completed, workflow.run.failed, support.run.completed, support.run.failed, campaign_submission.received, campaign_submission.flagged, campaign_submission.pending_review, campaign_submission.approved, campaign_submission.rejected, creator_campaign.budget_exhausted, creator_campaign.closed, campaign_payout.payable, campaign_payout.settled, campaign_payout.failed, campaign_participant.joined, campaign_participant.suspended, campaign_participant.removed]
+                    enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.permissions_changed, account.ads.initial_sync_completed, account.ads.sync_failed, account.ads.sync_recovered, analytics.synced, post.tracking_completed, post.authenticity_changed, message.received, conversation.started, conversation.control_changed, call.received, call.ended, call.failed, call.permission_request, message.sent, message.edited, message.deleted, message.delivered, message.read, message.played, message.failed, reaction.received, referral.received, comment.received, review.new, review.updated, review.deleted, review.restored, lead.received, ad.status_changed, ad.created, ad.updated, campaign.created, campaign.updated, ad_set.created, ad_set.updated, ad.review.approved, ad.review.rejected, ad.delivery_issue, campaign.budget.depleted, ad_account.status_changed, ad.video.processed, ad_rule.triggered, automation.check.completed, automation.action.applied, automation.action.failed, automation.action.unknown, automation.alert.opened, automation.alert.escalated, automation.alert.resolved, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.account.quality_updated, whatsapp.account.status_updated, whatsapp.account.alert_received, whatsapp.contact.identity_changed, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, phone_number.stock_available, verification.approved, verification.failed, api.changelog.published, sms.registration.action_required, sms.registration.status_updated, branded_calling.identity.status_updated, branded_calling.identity.action_required, branded_calling.number.status_updated, rcs.agent.status_updated, commerce.product.created, commerce.product.updated, commerce.product.deleted, commerce.order.created, commerce.order.updated, commerce.order.refunded, contact.tag_added, contact.tag_removed, contact.field_changed, sequence.enrolled, sequence.exited, workflow.run.started, workflow.run.completed, workflow.run.failed, support.run.completed, support.run.failed, campaign_submission.received, campaign_submission.flagged, campaign_submission.pending_review, campaign_submission.approved, campaign_submission.rejected, creator_campaign.budget_exhausted, creator_campaign.closed, campaign_payout.payable, campaign_payout.settled, campaign_payout.failed, campaign_participant.joined, campaign_participant.suspended, campaign_participant.removed, balance.low, balance.empty, balance.charged]
                   description: Events to subscribe to (at least one required)
                 isActive:
                   type: boolean
@@ -50226,7 +50437,7 @@ paths:
                   minItems: 1
                   items:
                     type: string
-                    enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.permissions_changed, account.ads.initial_sync_completed, account.ads.sync_failed, account.ads.sync_recovered, analytics.synced, post.tracking_completed, post.authenticity_changed, message.received, conversation.started, conversation.control_changed, call.received, call.ended, call.failed, call.permission_request, message.sent, message.edited, message.deleted, message.delivered, message.read, message.played, message.failed, reaction.received, referral.received, comment.received, review.new, review.updated, review.deleted, review.restored, lead.received, ad.status_changed, ad.created, ad.updated, campaign.created, campaign.updated, ad_set.created, ad_set.updated, ad.review.approved, ad.review.rejected, ad.delivery_issue, campaign.budget.depleted, ad_account.status_changed, ad.video.processed, ad_rule.triggered, automation.check.completed, automation.action.applied, automation.action.failed, automation.action.unknown, automation.alert.opened, automation.alert.escalated, automation.alert.resolved, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.account.quality_updated, whatsapp.account.status_updated, whatsapp.account.alert_received, whatsapp.contact.identity_changed, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, phone_number.stock_available, verification.approved, verification.failed, api.changelog.published, sms.registration.action_required, sms.registration.status_updated, branded_calling.identity.status_updated, branded_calling.identity.action_required, branded_calling.number.status_updated, rcs.agent.status_updated, commerce.product.created, commerce.product.updated, commerce.product.deleted, commerce.order.created, commerce.order.updated, commerce.order.refunded, contact.tag_added, contact.tag_removed, contact.field_changed, sequence.enrolled, sequence.exited, workflow.run.started, workflow.run.completed, workflow.run.failed, support.run.completed, support.run.failed, campaign_submission.received, campaign_submission.flagged, campaign_submission.pending_review, campaign_submission.approved, campaign_submission.rejected, creator_campaign.budget_exhausted, creator_campaign.closed, campaign_payout.payable, campaign_payout.settled, campaign_payout.failed, campaign_participant.joined, campaign_participant.suspended, campaign_participant.removed]
+                    enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.permissions_changed, account.ads.initial_sync_completed, account.ads.sync_failed, account.ads.sync_recovered, analytics.synced, post.tracking_completed, post.authenticity_changed, message.received, conversation.started, conversation.control_changed, call.received, call.ended, call.failed, call.permission_request, message.sent, message.edited, message.deleted, message.delivered, message.read, message.played, message.failed, reaction.received, referral.received, comment.received, review.new, review.updated, review.deleted, review.restored, lead.received, ad.status_changed, ad.created, ad.updated, campaign.created, campaign.updated, ad_set.created, ad_set.updated, ad.review.approved, ad.review.rejected, ad.delivery_issue, campaign.budget.depleted, ad_account.status_changed, ad.video.processed, ad_rule.triggered, automation.check.completed, automation.action.applied, automation.action.failed, automation.action.unknown, automation.alert.opened, automation.alert.escalated, automation.alert.resolved, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.account.quality_updated, whatsapp.account.status_updated, whatsapp.account.alert_received, whatsapp.contact.identity_changed, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, phone_number.stock_available, verification.approved, verification.failed, api.changelog.published, sms.registration.action_required, sms.registration.status_updated, branded_calling.identity.status_updated, branded_calling.identity.action_required, branded_calling.number.status_updated, rcs.agent.status_updated, commerce.product.created, commerce.product.updated, commerce.product.deleted, commerce.order.created, commerce.order.updated, commerce.order.refunded, contact.tag_added, contact.tag_removed, contact.field_changed, sequence.enrolled, sequence.exited, workflow.run.started, workflow.run.completed, workflow.run.failed, support.run.completed, support.run.failed, campaign_submission.received, campaign_submission.flagged, campaign_submission.pending_review, campaign_submission.approved, campaign_submission.rejected, creator_campaign.budget_exhausted, creator_campaign.closed, campaign_payout.payable, campaign_payout.settled, campaign_payout.failed, campaign_participant.joined, campaign_participant.suspended, campaign_participant.removed, balance.low, balance.empty, balance.charged]
                   description: Events to subscribe to. Must contain at least one event if provided.
                 isActive:
                   type: boolean
@@ -50689,6 +50900,9 @@ paths:
                     - commerce.order.created
                     - commerce.order.updated
                     - commerce.order.refunded
+                    - balance.low
+                    - balance.empty
+                    - balance.charged
                     - api.changelog.published
             examples:
               generic:
@@ -59391,7 +59605,7 @@ paths:
                   sender: { $ref: '#/components/schemas/ImessageSenderLifecycle' }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '402': { x-summary: "A valid payment method is required, or a payment failed, and nothing was ordered: update the card in Billing, then order again.", description: 'Nothing is ordered. A valid payment method is required (code: payment_method_required), the last payment failed or the first month was declined (code: payment_required), or, on balance billing, the balance is at $0 (code: insufficient_balance or usage_limit_reached). Fix it in Billing, then order again.' }
+        '402': { x-summary: "A valid payment method is required, or a payment failed, and nothing was ordered: update the card in Billing, then order again.", description: 'Nothing is ordered. A valid payment method is required (code: payment_method_required), the last payment failed or the first month was declined (code: payment_required), or, on balance billing, the balance is at $0 (code: insufficient_balance or usage_limit_reached, with `funding_url` to top up). Fix it in Billing, then order again.' }
         '403': { description: 'Sender limit reached (code: imessage_sender_limit)' }
         '404': { description: Profile not found or access denied }
         '409': { description: 'Billing setup is incomplete and support must finish it (code: billing_setup_incomplete).' }
@@ -60092,7 +60306,7 @@ paths:
                   agent: { $ref: '#/components/schemas/RcsAgent' }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '402': { x-summary: "No payment method is on file: add a card and retry.", description: 'No payment method on file (payment_method_required). Add a card and retry.' }
+        '402': { x-summary: "No payment method is on file, or the balance is at $0: fund it and retry.", description: 'No payment method on file (payment_method_required): add a card and retry. On balance billing with the balance at $0: code insufficient_balance or usage_limit_reached, top up at `funding_url`, then retry.' }
         '403': { description: 'Your plan does not include the inbox, which RCS requires.' }
         '404': { description: Profile or brand not found }
         '409': { description: 'The brand was rejected, or the Idempotency-Key is still in flight' }
@@ -63476,7 +63690,7 @@ paths:
                   country: { type: string }
                   numberType: { type: string, description: The type that will be ordered after KYC approval. }
                   kycUrl: { type: string }
-        '402': { x-summary: "A payment method is required because the usage-based account has no card on file: add a card, then retry.", description: 'Payment method required (usage-based billing account with no card on file): code PAYMENT_REQUIRED, add a card, then retry. On balance billing with the balance at $0: code insufficient_balance or usage_limit_reached, top up in Billing, then retry.' }
+        '402': { x-summary: "A payment method is required because the usage-based account has no card on file: add a card, then retry.", description: 'Payment method required (usage-based billing account with no card on file): code PAYMENT_REQUIRED, add a card, then retry. On balance billing with the balance at $0: code insufficient_balance or usage_limit_reached, top up at `funding_url`, then retry.' }
         '422': { x-summary: "International numbers require usage-based billing, and legacy Stripe users are limited to the US: switch to usage-based billing.", description: 'International numbers require usage-based billing (legacy Stripe users are US-only). Response body code: USAGE_BILLING_REQUIRED.' }
 
   /v1/phone-numbers/claims/{claimId}:
@@ -64014,7 +64228,7 @@ paths:
                   country: { type: string }
                   numberType: { type: string, description: The type that will be ordered after KYC approval. }
                   kycUrl: { type: string }
-        '402': { x-summary: "A payment method is required because the usage-based account has no card on file: add a card, then retry.", description: 'Payment method required (usage-based billing account with no card on file): code PAYMENT_REQUIRED, add a card, then retry. On balance billing with the balance at $0: code insufficient_balance or usage_limit_reached, top up in Billing, then retry.' }
+        '402': { x-summary: "A payment method is required because the usage-based account has no card on file: add a card, then retry.", description: 'Payment method required (usage-based billing account with no card on file): code PAYMENT_REQUIRED, add a card, then retry. On balance billing with the balance at $0: code insufficient_balance or usage_limit_reached, top up at `funding_url`, then retry.' }
         '422': { x-summary: "International numbers require usage-based billing, and legacy Stripe users are limited to the US: switch to usage-based billing.", description: 'International numbers require usage-based billing (legacy Stripe users are US-only). Response body code: USAGE_BILLING_REQUIRED.' }
 
   /v1/whatsapp/phone-numbers/countries:
@@ -69058,7 +69272,7 @@ paths:
               example: { runId: '64f0a1b2c3d4e5f6a7b8c9d1', threadId: '64f0a1b2c3d4e5f6a7b8c9d2', status: queued, pollAfterSeconds: 5 }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '402': { x-summary: "A card is required or the last payment failed: add or update the card in Billing.", description: 'A card is required (code `payment_method_required`), the last payment failed (code `payment_required`), or, on balance billing, the balance is at $0 (code `insufficient_balance` or `usage_limit_reached`). Fix it in Billing.', content: { application/json: { schema: { $ref: '#/components/schemas/ErrorResponse' } } } }
+        '402': { x-summary: "A card is required or the last payment failed: add or update the card in Billing.", description: 'A card is required (code `payment_method_required`), the last payment failed (code `payment_required`), or, on balance billing, the balance is at $0 (code `insufficient_balance` or `usage_limit_reached`, with `funding_url` to top up). Fix it in Billing.', content: { application/json: { schema: { $ref: '#/components/schemas/ErrorResponse' } } } }
         '403': { description: 'Code `insufficient_permissions`: the credential is not an unrestricted API key, or the user is read-only, restricted or profile-scoped.', content: { application/json: { schema: { $ref: '#/components/schemas/ErrorResponse' } } } }
         '404': { description: 'Code `support_thread_not_found` (`threadId`), `post_not_found`, `account_not_found` or `profile_not_found` (`context.*`).', content: { application/json: { schema: { $ref: '#/components/schemas/ErrorResponse' } } } }
         '409': { x-summary: "A run is already queued or running, or billing setup is incomplete: poll the existing run first, or contact support.", description: 'Code `support_run_in_progress`: the thread already has a run queued or running, so poll it first. Code `billing_setup_incomplete`: no billing customer to attach a card to, contact support. Also returned while a request with the same Idempotency-Key is still processing.', content: { application/json: { schema: { $ref: '#/components/schemas/ErrorResponse' } } } }

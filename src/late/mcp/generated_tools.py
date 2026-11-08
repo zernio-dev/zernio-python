@@ -46506,6 +46506,9 @@ def register_generated_tools(mcp, _get_client):
                 "campaign_participant.joined",
                 "campaign_participant.suspended",
                 "campaign_participant.removed",
+                "balance.low",
+                "balance.empty",
+                "balance.charged",
             ]
         ]
         | None,
@@ -46726,6 +46729,9 @@ def register_generated_tools(mcp, _get_client):
                 "campaign_participant.joined",
                 "campaign_participant.suspended",
                 "campaign_participant.removed",
+                "balance.low",
+                "balance.empty",
+                "balance.charged",
             ]
         ]
         | None = None,
@@ -47088,6 +47094,9 @@ def register_generated_tools(mcp, _get_client):
             "commerce.order.created",
             "commerce.order.updated",
             "commerce.order.refunded",
+            "balance.low",
+            "balance.empty",
+            "balance.charged",
             "api.changelog.published",
         ]
         | None = None,
