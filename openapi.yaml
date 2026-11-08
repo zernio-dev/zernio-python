@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.525.1"
+  version: "1.526.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -1243,6 +1243,15 @@ components:
       content:
         application/json:
           schema: { $ref: '#/components/schemas/BalanceRequiredError' }
+    XPostWaitingForBalance:
+      x-summary: 'An X platform is waiting for funds: the balance is $0, so it publishes once the balance is funded and fails after 24 hours.'
+      description: |
+        Balance billing only. The post was saved and the inline publish ran, but its X platform found the balance at $0 even after auto-recharge, so that platform is waiting (`post.platforms[].status: pending`, `errorMessage` says why) instead of publishing. It publishes within minutes of the balance being funded, and fails with "Your balance was $0" if it is still at $0 after 24 hours. Other platforms in `platformResults` published or failed as usual.
+
+        This is not "publishing in progress": send the user to Billing to add funds. Usually the request is refused with 402 `insufficient_balance` before anything is saved; 202 covers a balance that reached $0 during the publish.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/PostPublishIncompleteResponse' }
     BadRequest:
       description: Invalid request
       content:
@@ -35482,6 +35491,13 @@ paths:
                       - platform: "instagram"
                         status: "pending"
                         error: null
+        '202': { $ref: '#/components/responses/XPostWaitingForBalance' }
+        '402':
+          x-summary: 'Publishing now needs X, and the balance is at $0: send the user to `funding_url` to top up, then retry. Nothing was created.'
+          description: 'Balance billing only. The post publishes now (`publishNow: true` or a due `scheduledFor`) to X, and the balance is at $0 after auto-recharge tried the saved card (code `insufficient_balance` or `usage_limit_reached`). Nothing was created. Top up at `funding_url`, then send the request again.'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/BalanceRequiredError' }
         '400':
           description: 'Validation error.'
           content:
@@ -35946,6 +35962,13 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PostPublishIncompleteResponse'
+        '202': { $ref: '#/components/responses/XPostWaitingForBalance' }
+        '402':
+          x-summary: 'Publishing now needs X, and the balance is at $0: send the user to `funding_url` to top up, then retry. The post was not changed.'
+          description: 'Balance billing only. `publishNow: true` targets X, and the balance is at $0 after auto-recharge tried the saved card (code `insufficient_balance` or `usage_limit_reached`). The post was not changed. Top up at `funding_url`, then send the request again.'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/BalanceRequiredError' }
         '400':
           description: 'Invalid request.'
           content:
@@ -36220,6 +36243,7 @@ paths:
                     description: Summary of why the retry did not fully succeed.
                   post:
                     $ref: '#/components/schemas/Post'
+        '202': { $ref: '#/components/responses/XPostWaitingForBalance' }
         '400':
           description: Invalid state
           content:
@@ -36227,13 +36251,16 @@ paths:
               schema: { $ref: '#/components/schemas/ErrorResponse' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '402':
-          description: 'Payment required: the account owner has a failed payment.'
+          x-summary: 'The account owner has a failed payment, or the post retries to X and the balance is at $0: fix it in Billing, then retry. The post was not changed.'
+          description: 'Payment required, and the post was not changed. Either the account owner has a failed payment, or (balance billing) the post retries to X and the balance is at $0 after auto-recharge tried the saved card: code `insufficient_balance` or `usage_limit_reached`, top up at `funding_url`, then retry.'
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  error: { type: string }
+                anyOf:
+                  - type: object
+                    properties:
+                      error: { type: string }
+                  - $ref: '#/components/schemas/BalanceRequiredError'
         '403':
           x-summary: "A target account is ads-only or over the profile limit, or the post is inaccessible: connect the account for posting."
           description: |
