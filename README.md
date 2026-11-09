@@ -1011,6 +1011,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `conversions.get_conversion_destination()` | Get a conversion destination |
 | `conversions.get_conversion_metrics()` | Get attribution metrics |
 | `conversions.get_conversions_quality()` | Get Event Match Quality |
+| `conversions.get_event()` | Get one stored event and its deliveries |
 | `conversions.update_ad_conversion_goals()` | Update account conversion goals |
 | `conversions.update_conversion_action()` | Update a conversion action's settings |
 | `conversions.update_conversion_destination()` | Update a conversion destination |

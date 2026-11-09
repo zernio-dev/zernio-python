@@ -341,6 +341,7 @@ class ConversionsResource:
         destinations: list[dict[str, Any]] | None = None,
         consent: dict[str, Any] | None = None,
         test_code: str | None = None,
+        mode: str | None = "sync",
     ) -> dict[str, Any]:
         """Send events to every destination"""
         payload = self._build_payload(
@@ -349,11 +350,19 @@ class ConversionsResource:
             destinations=destinations,
             consent=consent,
             test_code=test_code,
+            mode=mode,
         )
         headers: dict[str, str] = {}
         if idempotency_key is not None:
             headers["Idempotency-Key"] = idempotency_key
         return self._client._post("/v1/events", data=payload, headers=headers)
+
+    def get_event(self, event_id: str, profile_id: str) -> dict[str, Any]:
+        """Get one stored event and its deliveries"""
+        params = self._build_params(
+            profile_id=profile_id,
+        )
+        return self._client._get(f"/v1/events/{event_id}", params=params)
 
     def list_event_destinations(
         self, *, profile_id: str | None = None
@@ -817,6 +826,7 @@ class ConversionsResource:
         destinations: list[dict[str, Any]] | None = None,
         consent: dict[str, Any] | None = None,
         test_code: str | None = None,
+        mode: str | None = "sync",
     ) -> dict[str, Any]:
         """Send events to every destination (async)"""
         payload = self._build_payload(
@@ -825,11 +835,19 @@ class ConversionsResource:
             destinations=destinations,
             consent=consent,
             test_code=test_code,
+            mode=mode,
         )
         headers: dict[str, str] = {}
         if idempotency_key is not None:
             headers["Idempotency-Key"] = idempotency_key
         return await self._client._apost("/v1/events", data=payload, headers=headers)
+
+    async def aget_event(self, event_id: str, profile_id: str) -> dict[str, Any]:
+        """Get one stored event and its deliveries (async)"""
+        params = self._build_params(
+            profile_id=profile_id,
+        )
+        return await self._client._aget(f"/v1/events/{event_id}", params=params)
 
     async def alist_event_destinations(
         self, *, profile_id: str | None = None

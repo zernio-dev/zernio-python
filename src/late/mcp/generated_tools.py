@@ -28848,6 +28848,7 @@ def register_generated_tools(mcp, _get_client):
         destinations: list[dict[str, Any]] | None = None,
         consent: dict[str, Any] | None = None,
         test_code: str | None = None,
+        mode: Literal["sync", "async"] = "sync",
     ) -> str:
         """Send events to every destination
 
@@ -28875,7 +28876,8 @@ def register_generated_tools(mcp, _get_client):
             events: Each item is an object with keys: eventName (string, required) - Standard event name (Purchase, Lead, CompleteRegistration, AddToCart, InitiateCheckout, AddPaymentInfo, Subscribe, StartTrial, ViewContent, Search, Contact, ...; eventTime (integer, required) - When the conversion happened, in unix seconds.; eventId (string, required) - Unique dedup key. Use the same eventId on pixel + CAPI to prevent double-counting. Mapped to: - Meta: event_id. - Google: transactionId. - LinkedIn: eventId. ...; value (number) - Conversion value in the specified currency.; currency (string) - ISO 4217 currency code.; user (object with keys email, phone, firstName, lastName, externalId, ipAddress, userAgent, country, city, state, zip, dob, gender, leadId, clickIds, required) - User identity fields. More signals mean higher match rates.; items (list of objects with keys id, name, price, quantity, category) - Item-level detail for ecommerce events.; sourceUrl (string) - URL where the conversion originated (used by Meta).; campaign (object with keys id, name) - The ad campaign behind the event, when you know it. Read only by `POST /v1/events`, which ties the event to the campaign named by `campaign.id`, then by the ...; actionSource (one of: web, app, offline, crm, phone_call, system_generated, business_messaging) - Where the conversion happened. Used by Meta. Google also requires an event source internally; omitting this field sends OTHER to Google. Send an explicit ...; messaging (object with keys channel, wabaId, ctwaClid, pageId, instagramBusinessAccountId, pageScopedUserId, instagramScopedUserId) - Meta only, read when `actionSource` is `business_messaging` (Conversions API for Business Messaging). - `channel` is sent as the event's `messaging_channel` ...; platformData (object) - Escape hatch for platform-specific fields we haven't normalized. On Meta, keys are shallow-merged into `custom_data` only: fields Zernio already builds ... (required)
             destinations: Send to these destinations instead of the saved ones (every event goes to each). Each item is an object with keys: accountId (string, required) - Connected ads account ID (metaads, googleads, linkedinads, tiktokads, openaiads, pinterestads or redditads).; destinationId (string, required) - Platform destination, as listed by GET /v1/accounts/{accountId}/conversion-destinations.
             consent: Batch-level user consent, forwarded to every destination (see POST /v1/ads/conversions). Object with keys: adUserData (one of: GRANTED, DENIED); adPersonalization (one of: GRANTED, DENIED)
-            test_code: Forwarded as each platform test code (see POST /v1/ads/conversions). A root-level `test_event_code` is accepted as an alias. Test events are not stored."""
+            test_code: Forwarded as each platform test code (see POST /v1/ads/conversions). A root-level `test_event_code` is accepted as an alias. Test events are not stored.
+            mode: `sync` sends to every destination before answering (200, per-destination results). `async` stores and queues the sends, then answers 202 at once; each send is retried while the platform fails for now, and its outcome shows on GET /v1/events/{eventId}. Requests with `testCode` always send now."""
         client = _get_client()
         try:
             response = client.conversions.send_events(
@@ -28884,6 +28886,32 @@ def register_generated_tools(mcp, _get_client):
                 destinations=destinations,
                 consent=consent,
                 test_code=test_code,
+                mode=mode,
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get one stored event and its deliveries",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def conversions_get_event(event_id: str, profile_id: str) -> str:
+        """Get one stored event and its deliveries
+
+        Returns one stored event of a profile (the latest copy of it) and, for each destination it was forwarded to, the newest send: `sent`, `retrying` (failed for now and queued again) or `failed` (final). Requires the Ads add-on.
+
+        Args:
+            event_id: The `eventId` the event was sent with. (required)
+            profile_id: Profile the event belongs to. (required)"""
+        client = _get_client()
+        try:
+            response = client.conversions.get_event(
+                event_id=event_id, profile_id=profile_id
             )
             return _format_response(response)
         except Exception as e:
