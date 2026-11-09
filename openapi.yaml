@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.543.0"
+  version: "1.544.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -184,6 +184,10 @@ x-documentation:
     - `account.ads.sync_failed` - An ad account's ads stopped syncing (no successful sync for 24 hours, or every live ad at the retry cap). Fires once until it recovers
     - `account.ads.sync_recovered` - An ad account reported by `account.ads.sync_failed` is syncing again
     - `calendar.event.created` / `calendar.event.updated` / `calendar.event.deleted` - An event changed on a connected Microsoft calendar (push). Carries the event id and the change; read it with `GET /v1/calendar/events/{id}`
+    - `email.opened` - A recipient's mail client loaded the open pixel of a message sent with `trackOpens`. Carries the message, its `metadata` and the open count
+    - `email.link_clicked` - A recipient followed a link of a message sent with `trackLinks`. Carries the original URL and the click count
+    - `email.thread_replied` - Mail from someone other than the mailbox arrived in the thread of a message sent with `trackReplies`
+    - `email.send_failed` - A scheduled email could not be sent at its `scheduledFor` time; nothing reached the recipients
     - `analytics.synced` - One connected account's analytics sync cycle finished. A trigger, not a transport: it carries no metrics and no cursor, so call `GET /v1/analytics/delta` with your own last `nextCursor` to read what changed across every account. Poll-driven (~hourly per account), not real-time. High volume: subscribe to it on a dedicated endpoint.
     - `post.tracking_completed` - A post's tracking window ended and its final analytics read finished. Carries the closing metrics (or `final: null` when none could be read) and why the window completed: `final_read`, `unreachable` or `post_deleted`
     - `post.authenticity_changed` - A tracked post's authenticity score crossed the flag threshold of 40, in either direction. Carries the new and previous score, confidence and reasons. A post's first score never fires it
@@ -710,6 +714,7 @@ tags:
       - Contacts and automations: `contact.tag_added`, `contact.tag_removed`, `contact.field_changed`, `contact.updated`, `contact.deleted`, `sequence.enrolled`, `sequence.exited`, `workflow.run.started`, `workflow.run.completed`, `workflow.run.failed`, `support.run.completed`, `support.run.failed`, `automation.check.completed`, `automation.action.applied`, `automation.action.failed`, `automation.action.unknown`, `automation.alert.opened`, `automation.alert.escalated`, `automation.alert.resolved`
       - Creator campaigns: `campaign_submission.received`, `campaign_submission.flagged`, `campaign_submission.pending_review`, `campaign_submission.approved`, `campaign_submission.rejected`, `creator_campaign.budget_exhausted`, `creator_campaign.closed`, `campaign_payout.payable`, `campaign_payout.settled`, `campaign_payout.failed`, `campaign_participant.joined`, `campaign_participant.suspended`, `campaign_participant.removed`
       - Calendar and files: `calendar.event.created`, `calendar.event.updated`, `calendar.event.deleted`, `file.created`, `file.updated`, `file.deleted`, `file.picked`
+      - Email: `email.opened`, `email.link_clicked`, `email.thread_replied`, `email.send_failed`
       - Billing: `balance.low`, `balance.empty`, `balance.charged`
       - Other: `api.changelog.published`, `webhook.test`
 
@@ -5228,7 +5233,7 @@ components:
           type: array
           items:
             type: string
-            enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.permissions_changed, account.ads.initial_sync_completed, account.ads.sync_failed, account.ads.sync_recovered, analytics.synced, post.tracking_completed, post.authenticity_changed, message.received, conversation.started, conversation.control_changed, call.received, call.ended, call.failed, call.permission_request, message.sent, message.edited, message.deleted, message.delivered, message.read, message.played, message.failed, reaction.received, referral.received, comment.received, review.new, review.updated, review.deleted, review.restored, lead.received, ad.status_changed, ad.created, ad.updated, campaign.created, campaign.updated, ad_set.created, ad_set.updated, ad.review.approved, ad.review.rejected, ad.delivery_issue, campaign.budget.depleted, ad_account.status_changed, ad.video.processed, ad_rule.triggered, automation.check.completed, automation.action.applied, automation.action.failed, automation.action.unknown, automation.alert.opened, automation.alert.escalated, automation.alert.resolved, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.account.quality_updated, whatsapp.account.status_updated, whatsapp.account.alert_received, whatsapp.contact.identity_changed, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, phone_number.stock_available, verification.approved, verification.failed, api.changelog.published, sms.registration.action_required, sms.registration.status_updated, branded_calling.identity.status_updated, branded_calling.identity.action_required, branded_calling.number.status_updated, rcs.agent.status_updated, commerce.product.created, commerce.product.updated, commerce.product.deleted, commerce.order.created, commerce.order.updated, commerce.order.refunded, contact.tag_added, contact.tag_removed, contact.field_changed, sequence.enrolled, sequence.exited, workflow.run.started, workflow.run.completed, workflow.run.failed, support.run.completed, support.run.failed, campaign_submission.received, campaign_submission.flagged, campaign_submission.pending_review, campaign_submission.approved, campaign_submission.rejected, creator_campaign.budget_exhausted, creator_campaign.closed, campaign_payout.payable, campaign_payout.settled, campaign_payout.failed, campaign_participant.joined, campaign_participant.suspended, campaign_participant.removed, account.rate_limited, calendar.event.created, calendar.event.updated, calendar.event.deleted, file.created, file.updated, file.deleted, file.picked, contact.updated, contact.deleted, balance.low, balance.empty, balance.charged]
+            enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.permissions_changed, account.ads.initial_sync_completed, account.ads.sync_failed, account.ads.sync_recovered, analytics.synced, post.tracking_completed, post.authenticity_changed, message.received, conversation.started, conversation.control_changed, call.received, call.ended, call.failed, call.permission_request, message.sent, message.edited, message.deleted, message.delivered, message.read, message.played, message.failed, reaction.received, referral.received, comment.received, review.new, review.updated, review.deleted, review.restored, lead.received, ad.status_changed, ad.created, ad.updated, campaign.created, campaign.updated, ad_set.created, ad_set.updated, ad.review.approved, ad.review.rejected, ad.delivery_issue, campaign.budget.depleted, ad_account.status_changed, ad.video.processed, ad_rule.triggered, automation.check.completed, automation.action.applied, automation.action.failed, automation.action.unknown, automation.alert.opened, automation.alert.escalated, automation.alert.resolved, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.account.quality_updated, whatsapp.account.status_updated, whatsapp.account.alert_received, whatsapp.contact.identity_changed, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, phone_number.stock_available, verification.approved, verification.failed, api.changelog.published, sms.registration.action_required, sms.registration.status_updated, branded_calling.identity.status_updated, branded_calling.identity.action_required, branded_calling.number.status_updated, rcs.agent.status_updated, commerce.product.created, commerce.product.updated, commerce.product.deleted, commerce.order.created, commerce.order.updated, commerce.order.refunded, contact.tag_added, contact.tag_removed, contact.field_changed, sequence.enrolled, sequence.exited, workflow.run.started, workflow.run.completed, workflow.run.failed, support.run.completed, support.run.failed, campaign_submission.received, campaign_submission.flagged, campaign_submission.pending_review, campaign_submission.approved, campaign_submission.rejected, creator_campaign.budget_exhausted, creator_campaign.closed, campaign_payout.payable, campaign_payout.settled, campaign_payout.failed, campaign_participant.joined, campaign_participant.suspended, campaign_participant.removed, account.rate_limited, calendar.event.created, calendar.event.updated, calendar.event.deleted, email.opened, email.link_clicked, email.thread_replied, email.send_failed, file.created, file.updated, file.deleted, file.picked, contact.updated, contact.deleted, balance.low, balance.empty, balance.charged]
           description: Events subscribed to
         isActive:
           type: boolean
@@ -13252,6 +13257,7 @@ components:
         unread: { type: boolean }
         starred: { type: boolean }
         metadata: { type: object, additionalProperties: { type: string } }
+        trackingId: { type: [string, "null"], description: 'Set on a send with `trackOpens`, `trackLinks` or `trackReplies`; the email.* webhooks carry it.' }
     EmailThread:
       type: object
       properties:
@@ -13289,6 +13295,23 @@ components:
         unread: { type: boolean }
         starred: { type: boolean }
         folder: { type: string, description: 'Well-known folder name or folder id to move into.' }
+    ScheduledEmail:
+      type: object
+      description: 'An email sent with `scheduledFor`. `status` moves scheduled, sending, then sent or failed; a cancelled one never leaves.'
+      properties:
+        id: { type: string, description: 'The `scheduleId`.' }
+        accountId: { type: string }
+        status: { type: string, enum: [scheduled, sending, sent, failed, cancelled] }
+        scheduledFor: { type: string, format: date-time }
+        to: { type: array, items: { $ref: '#/components/schemas/EmailAddress' } }
+        subject: { type: string, description: 'Empty on a reply that keeps the thread subject.' }
+        replyToMessageId: { type: [string, "null"], description: 'Set when scheduled through the reply route.' }
+        metadata: { type: [object, "null"], additionalProperties: { type: string } }
+        sentAt: { type: [string, "null"], format: date-time }
+        sentMessageId: { type: [string, "null"], description: 'Provider id of the sent message once `status` is sent.' }
+        sentThreadId: { type: [string, "null"] }
+        error: { type: [string, "null"], description: 'Why a failed send did not leave.' }
+        createdAt: { type: string, format: date-time }
     SendEmailRequest:
       type: object
       required: [accountId, to, subject]
@@ -13317,10 +13340,11 @@ components:
           description: '25 MB in total; 3 MB per attachment on Microsoft.'
         headers: { type: object, additionalProperties: { type: string }, description: 'Custom `X-` headers only. `List-Unsubscribe` is dropped on Microsoft and reported in `metadata.droppedHeaders`.' }
         metadata: { type: object, additionalProperties: { type: string } }
-        scheduledFor: { type: string, format: date-time, description: Reserved; currently rejected. }
-        holdAsDraft: { type: boolean, description: Reserved; currently rejected. }
-        trackOpens: { type: boolean, description: Not available; must be false. }
-        trackLinks: { type: boolean, description: Not available; must be false. }
+        scheduledFor: { type: string, format: date-time, description: 'Send later, between 1 minute and 30 days from now. The request answers 202 with the scheduled send; it leaves within a minute of this time through the same caps as an immediate send. List or cancel it under `/v1/email/messages/scheduled`.' }
+        holdAsDraft: { type: boolean, description: 'Reserved; currently rejected.' }
+        trackOpens: { type: boolean, description: 'Adds an open pixel to the html and fires `email.opened`. Needs `html`.' }
+        trackLinks: { type: boolean, description: 'Rewrites every http(s) link in the html through a Zernio redirect and fires `email.link_clicked`. Needs `html`.' }
+        trackReplies: { type: boolean, description: 'Fires `email.thread_replied` when someone else writes in this message''s thread. Works with text or html.' }
     Calendar:
       type: object
       properties:
@@ -13470,6 +13494,124 @@ components:
           properties:
             id: { type: string }
             changeType: { type: string, enum: [created, updated, deleted] }
+        timestamp: { type: string, format: date-time }
+    WebhookEmailTrackedMessage:
+      type: object
+      description: 'The tracked message an email.* event is about. `messageId` and `threadId` are the provider ids (read the message with `GET /v1/email/messages/{messageId}`); `metadata` is what you sent with it.'
+      properties:
+        messageId: { type: string }
+        threadId: { type: string }
+        trackingId: { type: string, description: 'Also returned as `data.trackingId` by the send.' }
+        metadata: { type: [object, "null"], additionalProperties: { type: string } }
+    WebhookPayloadEmailOpened:
+      type: object
+      description: 'Webhook payload for email.opened.'
+      required: [id, event, account, email, open, timestamp]
+      properties:
+        id: { type: string }
+        profiles: { $ref: '#/components/schemas/WebhookProfiles' }
+        test:
+          type: boolean
+          description: 'Always true when present: only a sample sent by POST /v1/webhooks/test with an event carries it. Real deliveries never do.'
+        event: { type: string, enum: [email.opened] }
+        account:
+          type: object
+          properties:
+            accountId: { type: string }
+            profileId: { type: string }
+            platform: { type: string }
+            username: { type: string }
+            displayName: { type: [string, "null"] }
+        email: { $ref: '#/components/schemas/WebhookEmailTrackedMessage' }
+        open:
+          type: object
+          properties:
+            openedAt: { type: string, format: date-time }
+            firstOpenedAt: { type: string, format: date-time }
+            count: { type: integer, description: 'Pixel loads so far, including repeat fetches by the same client.' }
+        timestamp: { type: string, format: date-time }
+    WebhookPayloadEmailLinkClicked:
+      type: object
+      description: 'Webhook payload for email.link_clicked.'
+      required: [id, event, account, email, click, timestamp]
+      properties:
+        id: { type: string }
+        profiles: { $ref: '#/components/schemas/WebhookProfiles' }
+        test:
+          type: boolean
+          description: 'Always true when present: only a sample sent by POST /v1/webhooks/test with an event carries it. Real deliveries never do.'
+        event: { type: string, enum: [email.link_clicked] }
+        account:
+          type: object
+          properties:
+            accountId: { type: string }
+            profileId: { type: string }
+            platform: { type: string }
+            username: { type: string }
+            displayName: { type: [string, "null"] }
+        email: { $ref: '#/components/schemas/WebhookEmailTrackedMessage' }
+        click:
+          type: object
+          properties:
+            url: { type: string, description: 'The original link target the recipient was redirected to.' }
+            linkIndex: { type: integer, description: 'Position of the link in the html, from 0.' }
+            clickedAt: { type: string, format: date-time }
+            count: { type: integer, description: 'Clicks on any link of the message so far.' }
+        timestamp: { type: string, format: date-time }
+    WebhookPayloadEmailThreadReplied:
+      type: object
+      description: 'Webhook payload for email.thread_replied.'
+      required: [id, event, account, email, reply, timestamp]
+      properties:
+        id: { type: string }
+        profiles: { $ref: '#/components/schemas/WebhookProfiles' }
+        test:
+          type: boolean
+          description: 'Always true when present: only a sample sent by POST /v1/webhooks/test with an event carries it. Real deliveries never do.'
+        event: { type: string, enum: [email.thread_replied] }
+        account:
+          type: object
+          properties:
+            accountId: { type: string }
+            profileId: { type: string }
+            platform: { type: string }
+            username: { type: string }
+            displayName: { type: [string, "null"] }
+        email: { $ref: '#/components/schemas/WebhookEmailTrackedMessage' }
+        reply:
+          type: object
+          properties:
+            messageId: { type: string, description: 'Provider id of the reply.' }
+            from: { oneOf: [{ $ref: '#/components/schemas/EmailAddress' }, { type: "null" }] }
+            receivedAt: { type: string, format: date-time }
+            count: { type: integer, description: 'Replies in the thread so far.' }
+        timestamp: { type: string, format: date-time }
+    WebhookPayloadEmailSendFailed:
+      type: object
+      description: 'Webhook payload for email.send_failed. Read the send with `GET /v1/email/messages/scheduled/{scheduleId}`.'
+      required: [id, event, account, scheduledEmail, timestamp]
+      properties:
+        id: { type: string }
+        profiles: { $ref: '#/components/schemas/WebhookProfiles' }
+        test:
+          type: boolean
+          description: 'Always true when present: only a sample sent by POST /v1/webhooks/test with an event carries it. Real deliveries never do.'
+        event: { type: string, enum: [email.send_failed] }
+        account:
+          type: object
+          properties:
+            accountId: { type: string }
+            profileId: { type: string }
+            platform: { type: string }
+            username: { type: string }
+            displayName: { type: [string, "null"] }
+        scheduledEmail:
+          type: object
+          properties:
+            id: { type: string, description: 'The `scheduleId`.' }
+            scheduledFor: { type: string, format: date-time }
+            error: { type: string }
+            metadata: { type: [object, "null"], additionalProperties: { type: string } }
         timestamp: { type: string, format: date-time }
     FileItem:
       type: object
@@ -21844,6 +21986,174 @@ webhooks:
                   externalId: cus_8f3a2
             schema:
               $ref: '#/components/schemas/WebhookPayloadCalendarEvent'
+      responses:
+        '200':
+          description: Webhook received successfully
+  email.opened:
+    post:
+      operationId: onEmailOpened
+      summary: Email opened
+      description: |
+        A mail client loaded the open pixel of a message sent with `trackOpens: true`.
+
+        Opens are a signal, not proof of reading:
+
+        - Gmail and Apple Mail fetch images through their own proxies, some as soon as the mail arrives.
+        - Clients that block images never report an open.
+        - The sender viewing the message in their own Sent folder counts too.
+
+        Repeat fetches within 10 seconds raise `count` without firing again.
+      tags: [Webhook Events]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              id: 00000000-0000-4000-8000-000000000000
+              event: email.opened
+              timestamp: '2026-01-15T10:00:00Z'
+              account:
+                accountId: 507f1f77bcf86cd799439011
+                profileId: 507f1f77bcf86cd799439012
+                platform: google
+                username: jane@example.com
+                displayName: Jane Doe
+              email:
+                messageId: 18c2f3a4b5d6e7f8
+                threadId: 18c2f3a4b5d6e7f0
+                trackingId: Xk2m9QpL4vR8sT1wY6zA3bC5
+                metadata:
+                  campaign: onboarding
+              open:
+                openedAt: '2026-01-15T10:00:00.000Z'
+                firstOpenedAt: '2026-01-14T10:00:00.000Z'
+                count: 2
+              profiles:
+                - id: 507f1f77bcf86cd799439012
+                  externalId: cus_8f3a2
+            schema:
+              $ref: '#/components/schemas/WebhookPayloadEmailOpened'
+      responses:
+        '200':
+          description: Webhook received successfully
+  email.link_clicked:
+    post:
+      operationId: onEmailLinkClicked
+      summary: Email link clicked
+      description: |
+        A recipient followed a link of a message sent with `trackLinks: true`. Every http(s) link in the html was rewritten to a Zernio redirect that records the click and sends the reader on to `click.url`.
+
+        Security scanners in corporate mail gateways sometimes follow links on delivery, which reports as a click.
+      tags: [Webhook Events]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              id: 00000000-0000-4000-8000-000000000000
+              event: email.link_clicked
+              timestamp: '2026-01-15T10:00:00Z'
+              account:
+                accountId: 507f1f77bcf86cd799439011
+                profileId: 507f1f77bcf86cd799439012
+                platform: google
+                username: jane@example.com
+                displayName: Jane Doe
+              email:
+                messageId: 18c2f3a4b5d6e7f8
+                threadId: 18c2f3a4b5d6e7f0
+                trackingId: Xk2m9QpL4vR8sT1wY6zA3bC5
+                metadata:
+                  campaign: onboarding
+              click:
+                url: https://example.com/pricing
+                linkIndex: 0
+                clickedAt: '2026-01-15T10:00:00.000Z'
+                count: 1
+              profiles:
+                - id: 507f1f77bcf86cd799439012
+                  externalId: cus_8f3a2
+            schema:
+              $ref: '#/components/schemas/WebhookPayloadEmailLinkClicked'
+      responses:
+        '200':
+          description: Webhook received successfully
+  email.thread_replied:
+    post:
+      operationId: onEmailThreadReplied
+      summary: Email thread replied
+      description: |
+        Mail from someone other than the mailbox arrived in the thread of a message sent with `trackReplies: true`. Works on text and html sends. Auto-replies and bounce reports in the thread count as replies.
+
+        The reply also arrives as `message.received` with its full content.
+      tags: [Webhook Events]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              id: 00000000-0000-4000-8000-000000000000
+              event: email.thread_replied
+              timestamp: '2026-01-15T10:00:00Z'
+              account:
+                accountId: 507f1f77bcf86cd799439011
+                profileId: 507f1f77bcf86cd799439012
+                platform: google
+                username: jane@example.com
+                displayName: Jane Doe
+              email:
+                messageId: 18c2f3a4b5d6e7f8
+                threadId: 18c2f3a4b5d6e7f0
+                trackingId: Xk2m9QpL4vR8sT1wY6zA3bC5
+                metadata:
+                  campaign: onboarding
+              reply:
+                messageId: 18c2f3a4b5d6e7f9
+                from:
+                  email: alex@example.com
+                  name: Alex Smith
+                receivedAt: '2026-01-15T10:00:00.000Z'
+                count: 1
+              profiles:
+                - id: 507f1f77bcf86cd799439012
+                  externalId: cus_8f3a2
+            schema:
+              $ref: '#/components/schemas/WebhookPayloadEmailThreadReplied'
+      responses:
+        '200':
+          description: Webhook received successfully
+  email.send_failed:
+    post:
+      operationId: onEmailSendFailed
+      summary: Scheduled email failed
+      description: |
+        A send scheduled with `scheduledFor` could not leave at its time. Nothing reached the recipients. `error` says why, for example the mailbox was disconnected, the daily send cap was reached or the provider refused the mail. The send stays listed with `status: failed`; schedule it again to retry.
+      tags: [Webhook Events]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              id: 00000000-0000-4000-8000-000000000000
+              event: email.send_failed
+              timestamp: '2026-01-15T10:00:00Z'
+              account:
+                accountId: 507f1f77bcf86cd799439011
+                profileId: 507f1f77bcf86cd799439012
+                platform: google
+                username: jane@example.com
+                displayName: Jane Doe
+              scheduledEmail:
+                id: 507f1f77bcf86cd79943902f
+                scheduledFor: '2026-01-14T10:00:00.000Z'
+                error: Daily send limit of 200 reached for this mailbox. Resets at 2026-01-15T00:00:00.000Z.
+                metadata:
+                  campaign: onboarding
+              profiles:
+                - id: 507f1f77bcf86cd799439012
+                  externalId: cus_8f3a2
+            schema:
+              $ref: '#/components/schemas/WebhookPayloadEmailSendFailed'
       responses:
         '200':
           description: Webhook received successfully
@@ -51137,6 +51447,10 @@ paths:
                     - calendar.event.created
                     - calendar.event.updated
                     - calendar.event.deleted
+                    - email.opened
+                    - email.link_clicked
+                    - email.thread_replied
+                    - email.send_failed
                     - file.created
                     - file.updated
                     - file.deleted
@@ -51660,10 +51974,22 @@ paths:
         - Daily cap: Microsoft 1,000; Google Workspace 500; Gmail consumer 200. Reaching it answers 429 `email_send_cap_reached` with `details.cap`.
         - The same body reaching more than 50 distinct recipients within an hour pauses the mailbox with an escalating cooldown (429 `rate_limited`, `account.rate_limited` webhook).
 
+        ### Scheduling
+
+        With `scheduledFor` the request answers 202 with a `ScheduledEmail` instead of sending. The account and payment method are checked now; the caps, cooldowns and the send itself run at `scheduledFor`. A send that fails then fires `email.send_failed`. List, read and cancel scheduled sends under `/v1/email/messages/scheduled`.
+
+        ### Tracking
+
+        - `trackOpens` adds a 1x1 image to the html and fires `email.opened`.
+        - `trackLinks` rewrites every http(s) link in the html through a Zernio redirect and fires `email.link_clicked`.
+        - `trackReplies` fires `email.thread_replied` when someone else writes in the thread.
+
+        Tracking costs nothing extra. Opens are approximate: image proxies prefetch and image blocking hides them.
+
         ### Other errors
 
         - 402: Gmail sends need a payment method on the workspace. Reading, calendar and files do not.
-        - 400: `scheduledFor` and `holdAsDraft` are reserved and currently rejected.
+        - 400: `holdAsDraft` is reserved and rejected; `trackOpens` or `trackLinks` without `html`; `scheduledFor` outside 1 minute to 30 days.
       security: [{ bearerAuth: [] }]
       requestBody:
         required: true
@@ -51683,11 +52009,89 @@ paths:
                 type: object
                 properties:
                   data: { $ref: '#/components/schemas/EmailMessage' }
+        '202':
+          description: 'Scheduled: the send leaves at `scheduledFor`'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/ScheduledEmail' }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '402': { $ref: '#/components/responses/PaymentRequired' }
         '412': { $ref: '#/components/responses/MailboxPreconditionFailed' }
         '429': { $ref: '#/components/responses/EmailSendRefused' }
+  /v1/email/messages/scheduled:
+    get:
+      x-resource-group: "messages"
+      operationId: listScheduledEmails
+      tags: [Email]
+      summary: List scheduled emails
+      description: 'Sends made with `scheduledFor` on this mailbox, in send order. Sent, failed and cancelled ones stay listed; filter with `status`.'
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/EmailAccountId'
+        - { name: status, in: query, schema: { type: string, enum: [scheduled, sending, sent, failed, cancelled] } }
+        - { name: cursor, in: query, schema: { type: string }, description: '`pagination.nextCursor` of the previous page.' }
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 200, default: 50 } }
+      responses:
+        '200':
+          description: Scheduled emails
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { type: array, items: { $ref: '#/components/schemas/ScheduledEmail' } }
+                  pagination: { $ref: '#/components/schemas/CursorPagination' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+  /v1/email/messages/scheduled/{scheduleId}:
+    get:
+      x-resource-group: "messages"
+      operationId: getScheduledEmail
+      tags: [Email]
+      summary: Get a scheduled email
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: scheduleId, in: path, required: true, schema: { type: string } }
+        - $ref: '#/components/parameters/EmailAccountId'
+      responses:
+        '200':
+          description: The scheduled email
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/ScheduledEmail' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    delete:
+      x-resource-group: "messages"
+      operationId: cancelScheduledEmail
+      tags: [Email]
+      summary: Cancel a scheduled email
+      description: 'Cancels a send still waiting for its time and returns it with `status: cancelled`. One that is sending, sent or failed answers 409.'
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: scheduleId, in: path, required: true, schema: { type: string } }
+        - $ref: '#/components/parameters/EmailAccountId'
+      responses:
+        '200':
+          description: The cancelled email
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/ScheduledEmail' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { description: 'The send already left, failed or was cancelled; the message names its status.' }
   /v1/email/messages/{messageId}:
     get:
       x-resource-group: "messages"
@@ -51773,7 +52177,10 @@ paths:
       operationId: replyEmailMessage
       tags: [Email]
       summary: Reply to a message
-      description: 'Replies inside the provider''s thread: the provider builds the quoted original and threading headers, your `html` or `text` goes above the quote. `to`, `cc`, `bcc`, `replyTo`, `subject`, `headers` and `attachments` are honoured; `scheduledFor` and `holdAsDraft` are rejected like on send. Same protection, caps and headers as sending.'
+      description: |
+        Replies inside the provider's thread: the provider builds the quoted original and threading headers, your `html` or `text` goes above the quote. `to`, `cc`, `bcc`, `replyTo`, `subject`, `headers` and `attachments` are honoured.
+
+        `scheduledFor` schedules the reply (202) and `trackOpens`, `trackLinks` and `trackReplies` track it, as on send; `holdAsDraft` is rejected. Same protection, caps and headers as sending.
       security: [{ bearerAuth: [] }]
       parameters:
         - { name: messageId, in: path, required: true, schema: { type: string } }
@@ -51797,6 +52204,14 @@ paths:
                 type: object
                 properties:
                   data: { $ref: '#/components/schemas/EmailMessage' }
+        '202':
+          description: 'Scheduled: the send leaves at `scheduledFor`'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/ScheduledEmail' }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '402': { $ref: '#/components/responses/PaymentRequired' }

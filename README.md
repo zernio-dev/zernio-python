@@ -1118,10 +1118,13 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `email.list_email_folders()` | List mailbox folders |
 | `email.list_email_messages()` | List email messages |
 | `email.list_email_threads()` | List email threads |
+| `email.list_scheduled_emails()` | List scheduled emails |
 | `email.get_email_message()` | Get an email message |
 | `email.get_email_thread()` | Get an email thread with its messages |
+| `email.get_scheduled_email()` | Get a scheduled email |
 | `email.update_email_message()` | Mark read or starred, or move a message |
 | `email.update_email_thread()` | Update every message in a thread |
+| `email.cancel_scheduled_email()` | Cancel a scheduled email |
 | `email.download_email_attachment()` | Download an attachment |
 | `email.reply_email_message()` | Reply to a message |
 | `email.send_email_message()` | Send an email |

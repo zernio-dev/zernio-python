@@ -205,6 +205,7 @@ class EmailResource:
         hold_as_draft: bool | None = None,
         track_opens: bool | None = None,
         track_links: bool | None = None,
+        track_replies: bool | None = None,
     ) -> dict[str, Any]:
         """Send an email"""
         payload = self._build_payload(
@@ -224,8 +225,46 @@ class EmailResource:
             hold_as_draft=hold_as_draft,
             track_opens=track_opens,
             track_links=track_links,
+            track_replies=track_replies,
         )
         return self._client._post("/v1/email/messages", data=payload)
+
+    def list_scheduled_emails(
+        self,
+        account_id: str,
+        *,
+        status: str | None = None,
+        cursor: str | None = None,
+        limit: int | None = 50,
+    ) -> dict[str, Any]:
+        """List scheduled emails"""
+        params = self._build_params(
+            account_id=account_id,
+            status=status,
+            cursor=cursor,
+            limit=limit,
+        )
+        return self._client._get("/v1/email/messages/scheduled", params=params)
+
+    def get_scheduled_email(self, schedule_id: str, account_id: str) -> dict[str, Any]:
+        """Get a scheduled email"""
+        params = self._build_params(
+            account_id=account_id,
+        )
+        return self._client._get(
+            f"/v1/email/messages/scheduled/{schedule_id}", params=params
+        )
+
+    def cancel_scheduled_email(
+        self, schedule_id: str, account_id: str
+    ) -> dict[str, Any]:
+        """Cancel a scheduled email"""
+        params = self._build_params(
+            account_id=account_id,
+        )
+        return self._client._delete(
+            f"/v1/email/messages/scheduled/{schedule_id}", params=params
+        )
 
     def get_email_message(
         self,
@@ -288,6 +327,7 @@ class EmailResource:
         hold_as_draft: bool | None = None,
         track_opens: bool | None = None,
         track_links: bool | None = None,
+        track_replies: bool | None = None,
         mode: str | None = "reply",
     ) -> dict[str, Any]:
         """Reply to a message"""
@@ -308,6 +348,7 @@ class EmailResource:
             hold_as_draft=hold_as_draft,
             track_opens=track_opens,
             track_links=track_links,
+            track_replies=track_replies,
             mode=mode,
         )
         return self._client._post(
@@ -467,6 +508,7 @@ class EmailResource:
         hold_as_draft: bool | None = None,
         track_opens: bool | None = None,
         track_links: bool | None = None,
+        track_replies: bool | None = None,
     ) -> dict[str, Any]:
         """Send an email (async)"""
         payload = self._build_payload(
@@ -486,8 +528,48 @@ class EmailResource:
             hold_as_draft=hold_as_draft,
             track_opens=track_opens,
             track_links=track_links,
+            track_replies=track_replies,
         )
         return await self._client._apost("/v1/email/messages", data=payload)
+
+    async def alist_scheduled_emails(
+        self,
+        account_id: str,
+        *,
+        status: str | None = None,
+        cursor: str | None = None,
+        limit: int | None = 50,
+    ) -> dict[str, Any]:
+        """List scheduled emails (async)"""
+        params = self._build_params(
+            account_id=account_id,
+            status=status,
+            cursor=cursor,
+            limit=limit,
+        )
+        return await self._client._aget("/v1/email/messages/scheduled", params=params)
+
+    async def aget_scheduled_email(
+        self, schedule_id: str, account_id: str
+    ) -> dict[str, Any]:
+        """Get a scheduled email (async)"""
+        params = self._build_params(
+            account_id=account_id,
+        )
+        return await self._client._aget(
+            f"/v1/email/messages/scheduled/{schedule_id}", params=params
+        )
+
+    async def acancel_scheduled_email(
+        self, schedule_id: str, account_id: str
+    ) -> dict[str, Any]:
+        """Cancel a scheduled email (async)"""
+        params = self._build_params(
+            account_id=account_id,
+        )
+        return await self._client._adelete(
+            f"/v1/email/messages/scheduled/{schedule_id}", params=params
+        )
 
     async def aget_email_message(
         self,
@@ -558,6 +640,7 @@ class EmailResource:
         hold_as_draft: bool | None = None,
         track_opens: bool | None = None,
         track_links: bool | None = None,
+        track_replies: bool | None = None,
         mode: str | None = "reply",
     ) -> dict[str, Any]:
         """Reply to a message (async)"""
@@ -578,6 +661,7 @@ class EmailResource:
             hold_as_draft=hold_as_draft,
             track_opens=track_opens,
             track_links=track_links,
+            track_replies=track_replies,
             mode=mode,
         )
         return await self._client._apost(

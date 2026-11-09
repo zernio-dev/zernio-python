@@ -32249,6 +32249,7 @@ def register_generated_tools(mcp, _get_client):
         hold_as_draft: bool | None = None,
         track_opens: bool | None = None,
         track_links: bool | None = None,
+        track_replies: bool | None = None,
     ) -> str:
         """Send an email
 
@@ -32263,10 +32264,9 @@ def register_generated_tools(mcp, _get_client):
         - Daily cap: Microsoft 1,000; Google Workspace 500; Gmail consumer 200. Reaching it answers 429 `email_send_cap_reached` with `details.cap`.
         - The same body reaching more than 50 distinct recipients within an hour pauses the mailbox with an escalating cooldown (429 `rate_limited`, `account.rate_limited` webhook).
 
-        ### Other errors
+        ### Scheduling
 
-        - 402: Gmail sends need a payment method on the workspace. Reading, calendar and files do not.
-        - 400: `scheduledFor` and `holdAsDraft` are reserved and currently rejected.
+        With `scheduledFor` the request answers 202 with a `ScheduledEmail` instead of sending. The account and payment method are checked now; the caps, cooldowns and the send itself run at `scheduledFor`. A send that fails then fires `email.send_failed`. List, ...
 
         Args:
             account_id: (required)
@@ -32281,10 +32281,11 @@ def register_generated_tools(mcp, _get_client):
             attachments: 25 MB in total; 3 MB per attachment on Microsoft. Each item is an object with keys: filename (string, required); contentType (string, required); url (string) - Fetched at send time. Exactly one of `url` or `base64`.; base64 (string); contentId (string) - Makes the attachment inline (`cid:` reference in the html).
             headers: Custom `X-` headers only. `List-Unsubscribe` is dropped on Microsoft and reported in `metadata.droppedHeaders`.
             metadata
-            scheduled_for: Reserved; currently rejected.
+            scheduled_for: Send later, between 1 minute and 30 days from now. The request answers 202 with the scheduled send; it leaves within a minute of this time through the same caps as an immediate send. List or cancel it under `/v1/email/messages/scheduled`.
             hold_as_draft: Reserved; currently rejected.
-            track_opens: Not available; must be false.
-            track_links: Not available; must be false."""
+            track_opens: Adds an open pixel to the html and fires `email.opened`. Needs `html`.
+            track_links: Rewrites every http(s) link in the html through a Zernio redirect and fires `email.link_clicked`. Needs `html`.
+            track_replies: Fires `email.thread_replied` when someone else writes in this message's thread. Works with text or html."""
         client = _get_client()
         try:
             response = client.email.send_email_message(
@@ -32304,6 +32305,88 @@ def register_generated_tools(mcp, _get_client):
                 hold_as_draft=hold_as_draft,
                 track_opens=track_opens,
                 track_links=track_links,
+                track_replies=track_replies,
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List scheduled emails",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def email_list_scheduled_emails(
+        account_id: str,
+        status: Literal["scheduled", "sending", "sent", "failed", "cancelled"]
+        | None = None,
+        cursor: str | None = None,
+        limit: int = 50,
+    ) -> str:
+        """List scheduled emails
+
+        Sends made with `scheduledFor` on this mailbox, in send order. Sent, failed and cancelled ones stay listed; filter with `status`.
+
+        Args:
+            account_id: The connected Google or Microsoft account. (required)
+            status
+            cursor: `pagination.nextCursor` of the previous page.
+            limit"""
+        client = _get_client()
+        try:
+            response = client.email.list_scheduled_emails(
+                account_id=account_id, status=status, cursor=cursor, limit=limit
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get a scheduled email",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def email_get_scheduled_email(schedule_id: str, account_id: str) -> str:
+        """Get a scheduled email
+
+        Args:
+            schedule_id: (required)
+            account_id: The connected Google or Microsoft account. (required)"""
+        client = _get_client()
+        try:
+            response = client.email.get_scheduled_email(
+                schedule_id=schedule_id, account_id=account_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Cancel a scheduled email",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def email_cancel_scheduled_email(schedule_id: str, account_id: str) -> str:
+        """Cancel a scheduled email
+
+        Cancels a send still waiting for its time and returns it with `status: cancelled`. One that is sending, sent or failed answers 409.
+
+        Args:
+            schedule_id: (required)
+            account_id: The connected Google or Microsoft account. (required)"""
+        client = _get_client()
+        try:
+            response = client.email.cancel_scheduled_email(
+                schedule_id=schedule_id, account_id=account_id
             )
             return _format_response(response)
         except Exception as e:
@@ -32429,11 +32512,14 @@ def register_generated_tools(mcp, _get_client):
         hold_as_draft: bool | None = None,
         track_opens: bool | None = None,
         track_links: bool | None = None,
+        track_replies: bool | None = None,
         mode: Literal["reply", "replyAll"] = "reply",
     ) -> str:
         """Reply to a message
 
-        Replies inside the provider's thread: the provider builds the quoted original and threading headers, your `html` or `text` goes above the quote. `to`, `cc`, `bcc`, `replyTo`, `subject`, `headers` and `attachments` are honoured; `scheduledFor` and `holdAsDraft` are rejected like on send. Same protection, caps and headers as sending.
+        Replies inside the provider's thread: the provider builds the quoted original and threading headers, your `html` or `text` goes above the quote. `to`, `cc`, `bcc`, `replyTo`, `subject`, `headers` and `attachments` are honoured.
+
+        `scheduledFor` schedules the reply (202) and `trackOpens`, `trackLinks` and `trackReplies` track it, as on send; `holdAsDraft` is rejected. Same protection, caps and headers as sending.
 
         Args:
             message_id: (required)
@@ -32449,10 +32535,11 @@ def register_generated_tools(mcp, _get_client):
             attachments: 25 MB in total; 3 MB per attachment on Microsoft. Each item is an object with keys: filename (string, required); contentType (string, required); url (string) - Fetched at send time. Exactly one of `url` or `base64`.; base64 (string); contentId (string) - Makes the attachment inline (`cid:` reference in the html).
             headers: Custom `X-` headers only. `List-Unsubscribe` is dropped on Microsoft and reported in `metadata.droppedHeaders`.
             metadata
-            scheduled_for: Reserved; currently rejected.
+            scheduled_for: Send later, between 1 minute and 30 days from now. The request answers 202 with the scheduled send; it leaves within a minute of this time through the same caps as an immediate send. List or cancel it under `/v1/email/messages/scheduled`.
             hold_as_draft: Reserved; currently rejected.
-            track_opens: Not available; must be false.
-            track_links: Not available; must be false.
+            track_opens: Adds an open pixel to the html and fires `email.opened`. Needs `html`.
+            track_links: Rewrites every http(s) link in the html through a Zernio redirect and fires `email.link_clicked`. Needs `html`.
+            track_replies: Fires `email.thread_replied` when someone else writes in this message's thread. Works with text or html.
             mode"""
         client = _get_client()
         try:
@@ -32474,6 +32561,7 @@ def register_generated_tools(mcp, _get_client):
                 hold_as_draft=hold_as_draft,
                 track_opens=track_opens,
                 track_links=track_links,
+                track_replies=track_replies,
                 mode=mode,
             )
             return _format_response(response)
@@ -47154,6 +47242,10 @@ def register_generated_tools(mcp, _get_client):
             "calendar.event.created",
             "calendar.event.updated",
             "calendar.event.deleted",
+            "email.opened",
+            "email.link_clicked",
+            "email.thread_replied",
+            "email.send_failed",
             "file.created",
             "file.updated",
             "file.deleted",
