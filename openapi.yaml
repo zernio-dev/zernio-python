@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.527.0"
+  version: "1.527.1"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -280,7 +280,7 @@ x-documentation:
     - `campaign_participant.joined` - A creator joined a campaign, by opening their invite link or joining from the open link. Fires once per participant
     - `campaign_participant.suspended` - An operator suspended a participant; they can no longer connect accounts or submit posts to the campaign
     - `campaign_participant.removed` - An operator removed a participant from the campaign
-    - `balance.low` - Balance billing: the balance dropped below the low-balance alert set on auto-recharge (`alertBelowCents`), once per drop, unless an auto top-up is already covering it
+    - `balance.low` - Balance billing: the balance dropped below the low-balance alert set on auto top-up (`alertBelowCents`), once per drop, unless an auto top-up is already covering it
     - `balance.empty` - Balance billing: the balance reached $0 and no auto top-up covered it, so pay-per-use calls answer 402 until it is funded. Carries that 402 `code` and `fundingUrl`
     - `balance.charged` - Balance billing: a card top-up of the balance succeeded, manual or automatic (`topup.trigger`), with the amount, the VAT and the card charge
     - `webhook.test` - Test event sent when verifying a webhook endpoint
@@ -1234,7 +1234,7 @@ components:
     BalanceRequired:
       x-summary: 'Balance at $0: send the user to `funding_url` to top up, then retry.'
       description: |
-        Balance billing only. The balance is at or below $0 and auto-recharge could not lift it, so new pay-per-use is refused.
+        Balance billing only. The balance is at or below $0 and auto top-up could not lift it, so new pay-per-use is refused.
 
         - `insufficient_balance`: the balance is empty.
         - `usage_limit_reached`: the monthly limit kept it there.
@@ -1246,7 +1246,7 @@ components:
     XPostWaitingForBalance:
       x-summary: 'An X platform is waiting for funds: the balance is $0, so it publishes once the balance is funded and fails after 24 hours.'
       description: |
-        Balance billing only. The post was saved, but its X platform found the balance at $0 even after auto-recharge.
+        Balance billing only. The post was saved, but its X platform found the balance at $0 even after auto top-up.
 
         - The X platform is waiting (`post.platforms[].status: pending`, `errorMessage` says why) instead of publishing.
         - It publishes within minutes of the balance being funded.
@@ -1748,15 +1748,15 @@ components:
       type: object
       required: [enabled, belowCents, toCents, monthlyLimitCents, alertBelowCents, disabledReason, retryCount, nextRetryAt, monthRechargedCents]
       properties:
-        enabled: { type: boolean, description: 'Whether auto-recharge is on. Charges happen only when this is true and disabledReason is null.' }
-        belowCents: { type: integer, description: 'Recharge when the balance drops below this, in cents.' }
-        toCents: { type: integer, description: 'Recharge back up to this, in cents. The charge is toCents minus the balance, plus tax.' }
-        monthlyLimitCents: { type: [integer, "null"], description: 'Most auto-recharge may add per calendar month (UTC), before tax; null for no limit.' }
+        enabled: { type: boolean, description: 'Whether auto top-up is on. Charges happen only when this is true and disabledReason is null.' }
+        belowCents: { type: integer, description: 'Top up when the balance drops below this, in cents.' }
+        toCents: { type: integer, description: 'Top back up to this, in cents. The charge is toCents minus the balance, plus tax.' }
+        monthlyLimitCents: { type: [integer, "null"], description: 'Most auto top-up may add per calendar month (UTC), before tax; null for no limit.' }
         alertBelowCents: { type: [integer, "null"], description: 'Low-balance email threshold, sent once per drop below it; null for none.' }
         disabledReason: { type: [string, "null"], enum: [payment_failed, null], description: '`payment_failed` after four failed charges in a row. Updating the card clears it.' }
         retryCount: { type: integer, description: 'Failed charges in a row; 0 once one goes through.' }
-        nextRetryAt: { type: [string, "null"], format: date-time, description: 'When a declined recharge is tried again; null when none is waiting.' }
-        monthRechargedCents: { type: integer, description: 'Auto-recharge top-ups this calendar month (UTC), paid or being paid, before tax.' }
+        nextRetryAt: { type: [string, "null"], format: date-time, description: 'When a declined auto top-up is tried again; null when none is waiting.' }
+        monthRechargedCents: { type: integer, description: 'Auto top-ups this calendar month (UTC), paid or being paid, before tax.' }
     PayoutBatchItem:
       type: object
       required: [id, participantId, creator, amountCents, feeCents, totalCents, status, failureReason, transferId, refundedCents]
@@ -1769,7 +1769,7 @@ components:
           properties:
             displayName: { type: string }
         amountCents: { type: integer, description: 'What the creator receives, in full.' }
-        feeCents: { type: integer, description: 'Zernio fee on top: 4% with a 50 cent minimum.' }
+        feeCents: { type: integer, description: 'Zernio fee on top: 4%, 50 cents minimum per payout.' }
         totalCents: { type: integer, description: 'amountCents plus feeCents.' }
         status:
           type: string
@@ -1807,7 +1807,7 @@ components:
         payeeName: { type: [string, "null"], description: "The payee's name when Zernio knows it, for example a creator's display name in one of your creator campaigns; null otherwise" }
         destinationType: { type: string, enum: [creator, ad_account] }
         amountCents: { type: integer, description: 'Amount the payee receives, in full' }
-        feeCents: { type: integer, description: 'Zernio fee added on top, 4% with a 50 cent minimum' }
+        feeCents: { type: integer, description: 'Zernio fee added on top: 4%, 50 cents minimum per payout.' }
         totalCents: { type: integer, description: 'amountCents plus feeCents, both paid by the payout batch card charge' }
         currency: { type: string }
         reference:
@@ -16502,7 +16502,10 @@ components:
       type: object
       additionalProperties: { type: string, enum: [OPT_IN, OPT_OUT] }
       propertyNames: { pattern: '^[a-z0-9_]+$' }
-      description: 'Meta Advantage+ creative enhancements. Map snake_case feature names to OPT_IN or OPT_OUT; Meta validates supported keys and unspecified features default to OPT_OUT. auto_promotion_tag is an Advantage+ enhancement, not the Ads Manager Promotion setting. The deprecated standard_enhancements bundle (subcode 3858504) is a 400 before any Meta call.'
+      description: |
+        Meta Advantage+ creative enhancements. Map snake_case feature names to OPT_IN or OPT_OUT; Meta validates supported keys. On creation Zernio sends only the keys you name, so Meta's default applies to the rest; on PUT /v1/ads/{adId} omitted keys keep the creative's current value. Send OPT_OUT to switch an enhancement off.
+
+        auto_promotion_tag is an Advantage+ enhancement, not the Ads Manager Promotion setting. The deprecated standard_enhancements bundle (subcode 3858504) is a 400 before any Meta call.
       example: { auto_promotion_tag: OPT_IN }
     MetaPromotion:
       type: [object, "null"]
@@ -26580,7 +26583,7 @@ webhooks:
       operationId: onBalanceLow
       summary: Balance low event
       description: |
-        Balance billing only. The balance dropped below the low-balance alert set on auto-recharge (`alertBelowCents` on `GET /v1/balance/auto-recharge`).
+        Balance billing only. The balance dropped below the low-balance alert set on auto top-up (`alertBelowCents` on `GET /v1/balance/auto-recharge`).
 
         ### When it fires
 
@@ -30936,7 +30939,7 @@ paths:
                     items: { $ref: '#/components/schemas/TreasuryTopup' }
                   recentCreditRecharges:
                     type: array
-                    description: 'Balance billing only (absent otherwise). The 10 newest recharges paid from the account credit you held when you moved to the balance, newest first. Nothing was charged to your card and there is no invoice. The amount was added to promoCents with the credit''s own expiry.'
+                    description: 'Balance billing only (absent otherwise). The 10 newest auto top-ups paid from the account credit you held when you moved to the balance, newest first. Nothing was charged to your card and there is no invoice. The amount was added to promoCents with the credit''s own expiry.'
                     items:
                       type: object
                       required: [id, amountCents, createdAt]
@@ -30952,11 +30955,11 @@ paths:
       x-resource-group: "money"
       operationId: getAutoRecharge
       tags: [Treasury]
-      summary: Get auto-recharge settings
+      summary: Get auto top-up settings
       description: |
-        Your balance's auto-recharge rule: when the balance drops below `belowCents`, the billing owner's saved card is charged back up to `toCents`, tax added on top as for any top-up.
+        Your balance's auto top-up rule: when the balance drops below `belowCents`, the billing owner's saved card is charged back up to `toCents`, tax added on top as for any top-up.
 
-        Account credit you held when you moved to the balance pays a recharge first, without a card charge or invoice (see `recentCreditRecharges` on `GET /v1/balance`). The card is charged only once that credit is used up, and only while the balance is still below `belowCents`.
+        Account credit you held when you moved to the balance pays an auto top-up first, without a card charge or invoice (see `recentCreditRecharges` on `GET /v1/balance`). The card is charged only once that credit is used up, and only while the balance is still below `belowCents`.
 
         The first read gives the default rule, sized from your last 30 days of pay-per-use: below about a week of spend (at least $5), back up by about two more weeks (at least $20).
 
@@ -30965,7 +30968,7 @@ paths:
         A profile-scoped key answers 403.
       responses:
         '200':
-          description: Auto-recharge settings
+          description: Auto top-up settings
           content:
             application/json:
               schema:
@@ -30976,17 +30979,17 @@ paths:
       x-resource-group: "money"
       operationId: updateAutoRecharge
       tags: [Treasury]
-      summary: Update auto-recharge settings
+      summary: Update auto top-up settings
       description: |
-        Changes the auto-recharge rule. Omitted fields keep their value.
+        Changes the auto top-up rule. Omitted fields keep their value.
 
-        A declined recharge is retried 1 hour, 1 day and 3 days later, with an email each time. After the last retry fails, auto-recharge switches off (`disabledReason: payment_failed`) until the card is updated. A top-up you make yourself resets the retries.
+        A declined auto top-up is retried 1 hour, 1 day and 3 days later, with an email each time. After the last retry fails, auto top-up switches off (`disabledReason: payment_failed`) until the card is updated. A top-up you make yourself resets the retries.
 
         A bank asking for 3D Secure counts as a decline: the charge happens while you are away, so the email asks you to top up in Billing.
 
-        A pay-per-use request that finds the balance at $0 runs the recharge first (with the rule on, a saved card and no retry pending) and goes through when the charge lands, so a new balance at $0 is charged on first use.
+        A pay-per-use request that finds the balance at $0 runs the auto top-up first (with the rule on, a saved card and no retry pending) and goes through when the charge lands, so a new balance at $0 is charged on first use.
 
-        When this month's auto-recharges plus the next one would pass `monthlyLimitCents`, the card is not charged and you get one email that month. At $0, pay-per-use then answers 402 `usage_limit_reached`.
+        When this month's auto top-ups plus the next one would pass `monthlyLimitCents`, the card is not charged and you get one email that month. At $0, pay-per-use then answers 402 `usage_limit_reached`.
 
         - 400: a field is out of range, or `toCents` is not more than $5 above `belowCents`.
         - 409 `balance_billing_required`: the account is not on the prepaid balance.
@@ -31000,10 +31003,10 @@ paths:
               type: object
               additionalProperties: false
               properties:
-                enabled: { type: boolean, description: 'Turns auto-recharge on or off. A rule switched off by failed charges stays off until the card is updated.' }
-                belowCents: { type: integer, minimum: 500, maximum: 10000000, description: 'Recharge when the balance drops below this, in cents. At least $5.' }
-                toCents: { type: integer, minimum: 500, maximum: 10000000, description: 'Recharge back up to this, in cents. More than $5 above belowCents.' }
-                monthlyLimitCents: { type: [integer, "null"], minimum: 500, maximum: 10000000, description: 'Most auto-recharge may add per calendar month (UTC), before tax. Null for no limit.' }
+                enabled: { type: boolean, description: 'Turns auto top-up on or off. A rule switched off by failed charges stays off until the card is updated.' }
+                belowCents: { type: integer, minimum: 500, maximum: 10000000, description: 'Top up when the balance drops below this, in cents. At least $5.' }
+                toCents: { type: integer, minimum: 500, maximum: 10000000, description: 'Top back up to this, in cents. More than $5 above belowCents.' }
+                monthlyLimitCents: { type: [integer, "null"], minimum: 500, maximum: 10000000, description: 'Most auto top-up may add per calendar month (UTC), before tax. Null for no limit.' }
                 alertBelowCents: { type: [integer, "null"], minimum: 0, maximum: 10000000, description: 'Email the billing owner once each time the balance drops below this. Null for no email.' }
       responses:
         '200':
@@ -35517,7 +35520,7 @@ paths:
         '202': { $ref: '#/components/responses/XPostWaitingForBalance' }
         '402':
           x-summary: 'Publishing now needs X, and the balance is at $0: send the user to `funding_url` to top up, then retry. Nothing was created.'
-          description: 'Balance billing only. The post publishes now (`publishNow: true` or a due `scheduledFor`) to X, and the balance is at $0 after auto-recharge tried the saved card (code `insufficient_balance` or `usage_limit_reached`). Nothing was created. Top up at `funding_url`, then send the request again.'
+          description: 'Balance billing only. The post publishes now (`publishNow: true` or a due `scheduledFor`) to X, and the balance is at $0 after auto top-up tried the saved card (code `insufficient_balance` or `usage_limit_reached`). Nothing was created. Top up at `funding_url`, then send the request again.'
           content:
             application/json:
               schema: { $ref: '#/components/schemas/BalanceRequiredError' }
@@ -35988,7 +35991,7 @@ paths:
         '202': { $ref: '#/components/responses/XPostWaitingForBalance' }
         '402':
           x-summary: 'Publishing now needs X, and the balance is at $0: send the user to `funding_url` to top up, then retry. The post was not changed.'
-          description: 'Balance billing only. `publishNow: true` targets X, and the balance is at $0 after auto-recharge tried the saved card (code `insufficient_balance` or `usage_limit_reached`). The post was not changed. Top up at `funding_url`, then send the request again.'
+          description: 'Balance billing only. `publishNow: true` targets X, and the balance is at $0 after auto top-up tried the saved card (code `insufficient_balance` or `usage_limit_reached`). The post was not changed. Top up at `funding_url`, then send the request again.'
           content:
             application/json:
               schema: { $ref: '#/components/schemas/BalanceRequiredError' }
@@ -36275,7 +36278,7 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '402':
           x-summary: 'The account owner has a failed payment, or the post retries to X and the balance is at $0: fix it in Billing, then retry. The post was not changed.'
-          description: 'Payment required, and the post was not changed. Either the account owner has a failed payment, or (balance billing) the post retries to X and the balance is at $0 after auto-recharge tried the saved card: code `insufficient_balance` or `usage_limit_reached`, top up at `funding_url`, then retry.'
+          description: 'Payment required, and the post was not changed. Either the account owner has a failed payment, or (balance billing) the post retries to X and the balance is at $0 after auto top-up tried the saved card: code `insufficient_balance` or `usage_limit_reached`, top up at `funding_url`, then retry.'
           content:
             application/json:
               schema:
@@ -101634,7 +101637,7 @@ paths:
         ### How it works
 
         1. Every payable creator who finished payout setup (or only `participantIds`, minus `excludeParticipantIds`) is held in `settling`.
-        2. The saved card (the default one, or `paymentMethodId`) pays one invoice while the payer is present: the payouts, plus the fee (4% per creator, 50 cent minimum) and the VAT on the fee where it applies.
+        2. The saved card (the default one, or `paymentMethodId`) pays one invoice while the payer is present: the payouts, plus the fee (4%, 50 cents minimum per payout) and the VAT on the fee where it applies.
         3. Card payments are held 7 days against chargebacks (`releasesAt`). Then each creator gets a transfer funded by the charge, and the batch ends `paid` or `partially_failed`.
 
         Zernio collects the payouts and pays each creator on your behalf and in your name, so the payouts carry no VAT.
@@ -101773,7 +101776,7 @@ paths:
                 properties:
                   payoutCount: { type: integer, description: 'Creators who would be paid.' }
                   amountCents: { type: integer, description: 'Total the creators receive.' }
-                  feeCents: { type: integer, description: 'Zernio fee: 4% per creator, 50 cent minimum.' }
+                  feeCents: { type: integer, description: 'Zernio fee: 4%, 50 cents minimum per payout.' }
                   taxCents: { type: integer, description: 'VAT on the fee, 0 when none applies.' }
                   totalCents: { type: integer, description: 'What the card would be charged: amountCents + feeCents + taxCents.' }
                   taxLabel: { type: [string, "null"], description: 'For example "VAT 21%". Null when there is no tax.' }

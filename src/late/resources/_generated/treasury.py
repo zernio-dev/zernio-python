@@ -78,7 +78,7 @@ class TreasuryResource:
         return self._client._get("/v1/balance")
 
     def get_auto_recharge(self) -> dict[str, Any]:
-        """Get auto-recharge settings"""
+        """Get auto top-up settings"""
         return self._client._get("/v1/balance/auto-recharge")
 
     def update_auto_recharge(
@@ -90,7 +90,7 @@ class TreasuryResource:
         monthly_limit_cents: Any | None = None,
         alert_below_cents: Any | None = None,
     ) -> dict[str, Any]:
-        """Update auto-recharge settings"""
+        """Update auto top-up settings"""
         payload = self._build_payload(
             enabled=enabled,
             below_cents=below_cents,
@@ -221,7 +221,7 @@ class TreasuryResource:
         return await self._client._aget("/v1/balance")
 
     async def aget_auto_recharge(self) -> dict[str, Any]:
-        """Get auto-recharge settings (async)"""
+        """Get auto top-up settings (async)"""
         return await self._client._aget("/v1/balance/auto-recharge")
 
     async def aupdate_auto_recharge(
@@ -233,7 +233,7 @@ class TreasuryResource:
         monthly_limit_cents: Any | None = None,
         alert_below_cents: Any | None = None,
     ) -> dict[str, Any]:
-        """Update auto-recharge settings (async)"""
+        """Update auto top-up settings (async)"""
         payload = self._build_payload(
             enabled=enabled,
             below_cents=below_cents,
