@@ -377,7 +377,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `connect.get_hub_spot_connect_url()` | Get HubSpot OAuth connect URL |
 | `connect.get_linked_in_organizations()` | List LinkedIn orgs |
 | `connect.get_o_auth_app()` | Get an OAuth app |
-| `connect.get_page_webhook_subscription()` | Read a Facebook Page's webhook subscription |
+| `connect.get_page_webhook_subscription()` | Read an account's webhook subscription |
 | `connect.get_pending_o_auth_data()` | Get pending OAuth data |
 | `connect.get_pinterest_boards()` | List Pinterest boards |
 | `connect.get_reddit_flairs()` | List subreddit flairs |
@@ -418,7 +418,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `connect.connect_word_press_with_application_password()` | Connect self-hosted WordPress with an application password |
 | `connect.handle_o_auth_callback()` | Complete OAuth callback |
 | `connect.initiate_telegram_connect()` | Connect Telegram directly |
-| `connect.resync_page_webhook_subscription()` | Re-subscribe a Facebook Page to Zernio's webhooks |
+| `connect.resync_page_webhook_subscription()` | Re-subscribe an account to Zernio's webhooks |
 | `connect.select_facebook_page()` | Select Facebook page |
 | `connect.select_google_analytics_property()` | Connect the chosen Google Analytics property |
 | `connect.select_google_business_location()` | Select Google Business Profile location |

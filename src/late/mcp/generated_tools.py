@@ -27022,18 +27022,24 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
-            title="Read a Facebook Page's webhook subscription",
+            title="Read an account's webhook subscription",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
         )
     )
     def connect_get_page_webhook_subscription(account_id: str) -> str:
-        """Read a Facebook Page's webhook subscription
+        """Read an account's webhook subscription
 
         Returns the webhook fields Zernio's app is subscribed to on the connected Page, read live from Meta.
         Use it to confirm `leadgen` is present: a Page missing it keeps delivering every other event while
         lead ads stop arriving, with nothing to indicate it.
+
+        For an Instagram account connected through Instagram Login it returns the subscription record
+        (`subscriptionId`) and the webhook fields Meta did not subscribe (`missingFields`). An Instagram account
+        connected through Facebook Login returns 409: its webhooks ride the Facebook Page subscription.
+
+        Platforms: facebook, instagram
 
         Args:
             account_id: (required)"""
@@ -27048,19 +27054,28 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
-            title="Re-subscribe a Facebook Page to Zernio's webhooks",
+            title="Re-subscribe an account to Zernio's webhooks",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
         )
     )
     def connect_resync_page_webhook_subscription(account_id: str) -> str:
-        """Re-subscribe a Facebook Page to Zernio's webhooks
+        """Re-subscribe an account to Zernio's webhooks
 
         Re-sends the full field set to Meta and returns the subscription read back afterwards.
         Meta only honours the field set sent at subscribe time, so a Page connected before a field
         existed stays without it until this runs. The response reflects what Meta actually granted,
         not what was requested.
+
+        For an Instagram account connected through Instagram Login, Meta can keep listing a subscription
+        while delivering nothing, and re-sending the fields over it changes nothing. So this call deletes
+        the subscription and creates it again, and `recreated` is true when the record id moved.
+
+        Events can be missed during the short window in between, so use it when delivery has stopped,
+        not periodically. An Instagram account connected through Facebook Login returns 409.
+
+        Platforms: facebook, instagram
 
         Args:
             account_id: (required)"""
