@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.529.0"
+  version: "1.529.1"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -282,7 +282,7 @@ x-documentation:
     - `campaign_participant.removed` - An operator removed a participant from the campaign
     - `balance.low` - Balance billing: the balance dropped below the low-balance alert set on auto top-up (`alertBelowCents`), once per drop, unless an auto top-up is already covering it
     - `balance.empty` - Balance billing: the balance reached $0 and no auto top-up covered it, so pay-per-use calls answer 402 until it is funded. Carries that 402 `code` and `fundingUrl`
-    - `balance.charged` - Balance billing: a card top-up of the balance succeeded, manual or automatic (`topup.trigger`), with the amount, the VAT and the card charge
+    - `balance.charged` - Balance billing: funds were added to the balance by card, by you or by auto top-up (`topup.trigger`), with the amount, the VAT and the card charge
     - `webhook.test` - Test event sent when verifying a webhook endpoint
 
     Every delivery carries `X-Zernio-Event` (the event name) and `X-Zernio-Event-Id` (the payload's `id`, a UUID generated once when the event is emitted). That id is identical on every subscription that receives the event, on every automatic retry and on a redelivery via `POST /v1/webhooks/logs/redeliver`, so it is the key to dedupe on. Payloads are signed with HMAC-SHA256 via the `X-Zernio-Signature` header when the subscription has a secret. Legacy `X-Late-*` copies of these three headers are still sent and will be removed in a future major version.
@@ -341,8 +341,8 @@ tags:
     description: |
       Fund a balance by card, then transfer money to payees (creators, ad accounts) through Zernio. The dashboard calls this your Balance. Requires usage-based billing. Every operation belongs to the `money` resource group.
 
-      - Money writes (top-ups, transfers, treasury settles, payout batches) need an owner, admin or billing admin, signed in or through a full-access key they created.
-      - Reading the team's balance, top-ups, transfers and payees needs a full-access key or a signed-in session; a profile-scoped key answers 403.
+      - Money writes (adding funds, transfers, treasury settles, payout batches) need an owner, admin or billing admin, signed in or through a full-access key they created.
+      - Reading the team's balance, added funds, transfers and payees needs a full-access key or a signed-in session; a profile-scoped key answers 403.
   - name: Creator Portal
     description: |
       The pages a creator uses behind a campaign link: read the campaign, join, connect accounts, submit posts and set up payouts.
@@ -1232,14 +1232,14 @@ components:
         application/json:
           schema: { $ref: '#/components/schemas/ErrorResponse' }
     BalanceRequired:
-      x-summary: 'Balance at $0: send the user to `funding_url` to top up, then retry.'
+      x-summary: 'Balance at $0: send the user to `funding_url` to add funds, then retry.'
       description: |
         Balance billing only. The balance is at or below $0 and auto top-up could not lift it, so new pay-per-use is refused.
 
         - `insufficient_balance`: the balance is empty.
         - `usage_limit_reached`: the monthly limit kept it there.
 
-        `funding_url` opens Billing with the top-up drawer (the add-card drawer first when there is no card). Inbound traffic and connected calls are never refused.
+        `funding_url` opens Billing with the Add funds drawer (the add-card drawer first when there is no card). Inbound traffic and connected calls are never refused.
       content:
         application/json:
           schema: { $ref: '#/components/schemas/BalanceRequiredError' }
@@ -1749,7 +1749,7 @@ components:
       required: [enabled, belowCents, toCents, monthlyLimitCents, alertBelowCents, disabledReason, retryCount, nextRetryAt, monthRechargedCents]
       properties:
         enabled: { type: boolean, description: 'Whether auto top-up is on. Charges happen only when this is true and disabledReason is null.' }
-        belowCents: { type: integer, description: 'Top up when the balance drops below this, in cents.' }
+        belowCents: { type: integer, description: 'Auto top-up charges the card when the balance drops below this, in cents.' }
         toCents: { type: integer, description: 'Top back up to this, in cents. The charge is toCents minus the balance, plus tax.' }
         monthlyLimitCents: { type: [integer, "null"], description: 'Most auto top-up may add per calendar month (UTC), before tax; null for no limit.' }
         alertBelowCents: { type: [integer, "null"], description: 'Low-balance email threshold, sent once per drop below it; null for none.' }
@@ -4017,9 +4017,9 @@ components:
             funding_url:
               type: string
               format: uri
-              description: 'Dashboard link to Billing that opens the top-up drawer (the add-card drawer first when there is no card). Send the user there, then retry.'
+              description: 'Dashboard link to Billing that opens the Add funds drawer (the add-card drawer first when there is no card). Send the user there, then retry.'
           example:
-            error: 'Your balance is at $0, so SMS is paused. Top up your balance in Billing to continue.'
+            error: 'Your balance is at $0, so SMS is paused. Add funds in Billing to continue.'
             type: invalid_request_error
             code: insufficient_balance
             funding_url: https://zernio.com/dashboard/billing?funding=1
@@ -10559,7 +10559,7 @@ components:
           properties:
             spendableCents: { type: integer, description: 'What pay-per-use can spend, in USD cents: available plus promo, less usage not posted yet.' }
             alertBelowCents: { type: integer, description: 'The low-balance alert threshold it dropped below, in USD cents.' }
-        fundingUrl: { type: string, format: uri, description: 'Dashboard link that opens the top-up drawer in Billing.' }
+        fundingUrl: { type: string, format: uri, description: 'Dashboard link that opens the Add funds drawer in Billing.' }
         timestamp:
           type: string
           format: date-time
@@ -10581,7 +10581,7 @@ components:
           properties:
             spendableCents: { type: integer, description: 'What pay-per-use can spend, in USD cents: 0 or below (usage already in flight can take it under 0).' }
         code: { type: string, enum: [insufficient_balance, usage_limit_reached], description: 'The 402 code pay-per-use calls get until the balance is funded. `usage_limit_reached` when the auto top-up monthly limit is what keeps it at $0.' }
-        fundingUrl: { type: string, format: uri, description: 'Dashboard link that opens the top-up drawer in Billing.' }
+        fundingUrl: { type: string, format: uri, description: 'Dashboard link that opens the Add funds drawer in Billing.' }
         timestamp:
           type: string
           format: date-time
@@ -10602,7 +10602,7 @@ components:
           required: [id, trigger, amountCents, taxCents, chargedCents, currency, card]
           properties:
             id: { type: string, description: 'The top-up id, as in GET /v1/balance (`recentTopups`) and its invoice and receipt endpoints.' }
-            trigger: { type: string, enum: [manual, auto_top_up], description: '`manual`: someone topped up in Billing or through the API. `auto_top_up`: the auto top-up rule charged the card.' }
+            trigger: { type: string, enum: [manual, auto_top_up], description: '`manual`: someone added funds in Billing or through the API. `auto_top_up`: the auto top-up rule charged the card.' }
             amountCents: { type: integer, description: 'Added to the balance, in USD cents.' }
             taxCents: { type: integer, description: 'VAT charged on top, in USD cents (0 when none applies).' }
             chargedCents: { type: integer, description: 'What the card was charged, in USD cents: amount plus tax.' }
@@ -26597,7 +26597,7 @@ webhooks:
 
         ### How to act
 
-        Send the user to `fundingUrl` (Billing with the top-up drawer open), or top up through the API.
+        Send the user to `fundingUrl` (Billing with the Add funds drawer open), or add funds through the API.
       tags: [Webhook Events]
       requestBody:
         required: true
@@ -26654,11 +26654,11 @@ webhooks:
       operationId: onBalanceCharged
       summary: Balance charged event
       description: |
-        Balance billing only. A card top-up of the balance succeeded: one someone made (`trigger: manual`) or one the auto top-up rule made (`trigger: auto_top_up`).
+        Balance billing only. Funds were added to the balance by card: by someone (`trigger: manual`) or by the auto top-up rule (`trigger: auto_top_up`).
 
         ### When it fires
 
-        Once per top-up, when the payment is credited to the balance. Stripe emails the billing owner its receipt for the charge.
+        Once per card payment into the balance, when it is credited. Stripe emails the billing owner its receipt for the charge.
 
         ### Payload notes
 
@@ -30890,10 +30890,10 @@ paths:
         Returns your team's balance:
 
         - the balance pay-per-use draws on
-        - top-ups still waiting for payment
-        - your latest top-ups and payout batch payments
+        - funds added but still waiting for payment
+        - your latest payments into the balance and payout batch payments
 
-        A card top-up is in `availableCents` as soon as it is paid. The balance never pays creators: payouts are charged to your card per payout batch.
+        Funds added by card are in `availableCents` as soon as they are paid. The balance never pays creators: payouts are charged to your card per payout batch.
 
         A card dispute or refund is debited from the available balance and can make it negative. New payout batches are refused until it is positive again.
 
@@ -30906,7 +30906,7 @@ paths:
               schema:
                 type: object
                 properties:
-                  availableCents: { type: integer, description: 'Your balance. It goes negative after a dispute or refund of a spent top-up, or when pay-per-use already in flight lands past zero. The next top-up covers it. New payout batches are refused while it is negative.' }
+                  availableCents: { type: integer, description: 'Your balance. It goes negative after a dispute or refund of funds already spent, or when pay-per-use already in flight lands past zero. The next funds you add cover it. New payout batches are refused while it is negative.' }
                   balanceBilling: { type: boolean, description: 'True when the account pays pay-per-use from this prepaid balance (new signups). Absent otherwise: that pay-per-use is on the monthly invoice.' }
                   spendableCents: { type: integer, description: 'Balance billing only (absent otherwise). What pay-per-use can still spend: availableCents plus promoCents, minus usage not yet posted. At 0 or below, new pay-per-use answers 402 `insufficient_balance`.' }
                   promoCents: { type: integer, description: 'Balance billing only (absent otherwise). Promotional and support credit Zernio added to your balance. Pay-per-use spends it before availableCents. It is never paid out to payees and is not part of availableCents.' }
@@ -30985,9 +30985,9 @@ paths:
       description: |
         Changes the auto top-up rule. Omitted fields keep their value.
 
-        A declined auto top-up is retried 1 hour, 1 day and 3 days later, with an email each time. After the last retry fails, auto top-up switches off (`disabledReason: payment_failed`) until the card is updated. A top-up you make yourself resets the retries.
+        A declined auto top-up is retried 1 hour, 1 day and 3 days later, with an email each time. After the last retry fails, auto top-up switches off (`disabledReason: payment_failed`) until the card is updated. Adding funds yourself resets the retries.
 
-        A bank asking for 3D Secure counts as a decline: the charge happens while you are away, so the email asks you to top up in Billing.
+        A bank asking for 3D Secure counts as a decline: the charge happens while you are away, so the email asks you to add funds in Billing.
 
         A pay-per-use request that finds the balance at $0 runs the auto top-up first (with the rule on, a saved card and no retry pending) and goes through when the charge lands, so a new balance at $0 is charged on first use.
 
@@ -31006,7 +31006,7 @@ paths:
               additionalProperties: false
               properties:
                 enabled: { type: boolean, description: 'Turns auto top-up on or off. A rule switched off by failed charges stays off until the card is updated.' }
-                belowCents: { type: integer, minimum: 500, maximum: 10000000, description: 'Top up when the balance drops below this, in cents. At least $5.' }
+                belowCents: { type: integer, minimum: 500, maximum: 10000000, description: 'Auto top-up charges the card when the balance drops below this, in cents. At least $5.' }
                 toCents: { type: integer, minimum: 500, maximum: 10000000, description: 'Top back up to this, in cents. More than $5 above belowCents.' }
                 monthlyLimitCents: { type: [integer, "null"], minimum: 500, maximum: 10000000, description: 'Most auto top-up may add per calendar month (UTC), before tax. Null for no limit.' }
                 alertBelowCents: { type: [integer, "null"], minimum: 0, maximum: 10000000, description: 'Email the billing owner once each time the balance drops below this. Null for no email.' }
@@ -31026,7 +31026,7 @@ paths:
       x-resource-group: "money"
       operationId: createTopup
       tags: [Treasury]
-      summary: Create a top-up
+      summary: Add funds
       description: |
         Charges the billing owner's saved card (the default one, or `paymentMethodId`) `amountCents` plus tax, while the payer is present, and credits your balance `amountCents`. There is no card fee.
 
@@ -31217,7 +31217,7 @@ paths:
       tags: [Treasury]
       summary: Get a top-up invoice
       description: |
-        The invoice for a paid balance top-up: the PDF of the Stripe invoice it was paid through.
+        The invoice for funds added to the balance, once paid: the PDF of the Stripe invoice it was paid through.
 
         It shows the amount added to your balance and the tax charged on top: VAT where it applies, or a reverse charge note for an EU business with a valid VAT id. Usage paid from the balance carries no further VAT.
 
@@ -31263,7 +31263,7 @@ paths:
       description: |
         Alias of getTopupInvoice, kept for clients written against its first name.
 
-        The invoice for a paid balance top-up: the PDF of the Stripe invoice it was paid through.
+        The invoice for funds added to the balance, once paid: the PDF of the Stripe invoice it was paid through.
 
         It shows the amount added to your balance and the tax charged on top: VAT where it applies, or a reverse charge note for an EU business with a valid VAT id. Usage paid from the balance carries no further VAT.
 
@@ -35521,8 +35521,8 @@ paths:
                         error: null
         '202': { $ref: '#/components/responses/XPostWaitingForBalance' }
         '402':
-          x-summary: 'Publishing now needs X, and the balance is at $0: send the user to `funding_url` to top up, then retry. Nothing was created.'
-          description: 'Balance billing only. The post publishes now (`publishNow: true` or a due `scheduledFor`) to X, and the balance is at $0 after auto top-up tried the saved card (code `insufficient_balance` or `usage_limit_reached`). Nothing was created. Top up at `funding_url`, then send the request again.'
+          x-summary: 'Publishing now needs X, and the balance is at $0: send the user to `funding_url` to add funds, then retry. Nothing was created.'
+          description: 'Balance billing only. The post publishes now (`publishNow: true` or a due `scheduledFor`) to X, and the balance is at $0 after auto top-up tried the saved card (code `insufficient_balance` or `usage_limit_reached`). Nothing was created. Add funds at `funding_url`, then send the request again.'
           content:
             application/json:
               schema: { $ref: '#/components/schemas/BalanceRequiredError' }
@@ -35992,8 +35992,8 @@ paths:
                 $ref: '#/components/schemas/PostPublishIncompleteResponse'
         '202': { $ref: '#/components/responses/XPostWaitingForBalance' }
         '402':
-          x-summary: 'Publishing now needs X, and the balance is at $0: send the user to `funding_url` to top up, then retry. The post was not changed.'
-          description: 'Balance billing only. `publishNow: true` targets X, and the balance is at $0 after auto top-up tried the saved card (code `insufficient_balance` or `usage_limit_reached`). The post was not changed. Top up at `funding_url`, then send the request again.'
+          x-summary: 'Publishing now needs X, and the balance is at $0: send the user to `funding_url` to add funds, then retry. The post was not changed.'
+          description: 'Balance billing only. `publishNow: true` targets X, and the balance is at $0 after auto top-up tried the saved card (code `insufficient_balance` or `usage_limit_reached`). The post was not changed. Add funds at `funding_url`, then send the request again.'
           content:
             application/json:
               schema: { $ref: '#/components/schemas/BalanceRequiredError' }
@@ -36280,7 +36280,7 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '402':
           x-summary: 'The account owner has a failed payment, or the post retries to X and the balance is at $0: fix it in Billing, then retry. The post was not changed.'
-          description: 'Payment required, and the post was not changed. Either the account owner has a failed payment, or (balance billing) the post retries to X and the balance is at $0 after auto top-up tried the saved card: code `insufficient_balance` or `usage_limit_reached`, top up at `funding_url`, then retry.'
+          description: 'Payment required, and the post was not changed. Either the account owner has a failed payment, or (balance billing) the post retries to X and the balance is at $0 after auto top-up tried the saved card: code `insufficient_balance` or `usage_limit_reached`, add funds at `funding_url`, then retry.'
           content:
             application/json:
               schema:
@@ -59668,7 +59668,7 @@ paths:
                   sender: { $ref: '#/components/schemas/ImessageSenderLifecycle' }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '402': { x-summary: "A valid payment method is required, or a payment failed, and nothing was ordered: update the card in Billing, then order again.", description: 'Nothing is ordered. A valid payment method is required (code: payment_method_required), the last payment failed or the first month was declined (code: payment_required), or, on balance billing, the balance is at $0 (code: insufficient_balance or usage_limit_reached, with `funding_url` to top up). Fix it in Billing, then order again.' }
+        '402': { x-summary: "A valid payment method is required, or a payment failed, and nothing was ordered: update the card in Billing, then order again.", description: 'Nothing is ordered. A valid payment method is required (code: payment_method_required), the last payment failed or the first month was declined (code: payment_required), or, on balance billing, the balance is at $0 (code: insufficient_balance or usage_limit_reached, with `funding_url` to add funds). Fix it in Billing, then order again.' }
         '403': { description: 'Sender limit reached (code: imessage_sender_limit)' }
         '404': { description: Profile not found or access denied }
         '409': { description: 'Billing setup is incomplete and support must finish it (code: billing_setup_incomplete).' }
@@ -60369,7 +60369,7 @@ paths:
                   agent: { $ref: '#/components/schemas/RcsAgent' }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '402': { x-summary: "No payment method is on file, or the balance is at $0: fund it and retry.", description: 'No payment method on file (payment_method_required): add a card and retry. On balance billing with the balance at $0: code insufficient_balance or usage_limit_reached, top up at `funding_url`, then retry.' }
+        '402': { x-summary: "No payment method is on file, or the balance is at $0: fund it and retry.", description: 'No payment method on file (payment_method_required): add a card and retry. On balance billing with the balance at $0: code insufficient_balance or usage_limit_reached, add funds at `funding_url`, then retry.' }
         '403': { description: 'Your plan does not include the inbox, which RCS requires.' }
         '404': { description: Profile or brand not found }
         '409': { description: 'The brand was rejected, or the Idempotency-Key is still in flight' }
@@ -63753,7 +63753,7 @@ paths:
                   country: { type: string }
                   numberType: { type: string, description: The type that will be ordered after KYC approval. }
                   kycUrl: { type: string }
-        '402': { x-summary: "A payment method is required because the usage-based account has no card on file: add a card, then retry.", description: 'Payment method required (usage-based billing account with no card on file): code PAYMENT_REQUIRED, add a card, then retry. On balance billing with the balance at $0: code insufficient_balance or usage_limit_reached, top up at `funding_url`, then retry.' }
+        '402': { x-summary: "A payment method is required because the usage-based account has no card on file: add a card, then retry.", description: 'Payment method required (usage-based billing account with no card on file): code PAYMENT_REQUIRED, add a card, then retry. On balance billing with the balance at $0: code insufficient_balance or usage_limit_reached, add funds at `funding_url`, then retry.' }
         '422': { x-summary: "International numbers require usage-based billing, and legacy Stripe users are limited to the US: switch to usage-based billing.", description: 'International numbers require usage-based billing (legacy Stripe users are US-only). Response body code: USAGE_BILLING_REQUIRED.' }
 
   /v1/phone-numbers/claims/{claimId}:
@@ -64291,7 +64291,7 @@ paths:
                   country: { type: string }
                   numberType: { type: string, description: The type that will be ordered after KYC approval. }
                   kycUrl: { type: string }
-        '402': { x-summary: "A payment method is required because the usage-based account has no card on file: add a card, then retry.", description: 'Payment method required (usage-based billing account with no card on file): code PAYMENT_REQUIRED, add a card, then retry. On balance billing with the balance at $0: code insufficient_balance or usage_limit_reached, top up at `funding_url`, then retry.' }
+        '402': { x-summary: "A payment method is required because the usage-based account has no card on file: add a card, then retry.", description: 'Payment method required (usage-based billing account with no card on file): code PAYMENT_REQUIRED, add a card, then retry. On balance billing with the balance at $0: code insufficient_balance or usage_limit_reached, add funds at `funding_url`, then retry.' }
         '422': { x-summary: "International numbers require usage-based billing, and legacy Stripe users are limited to the US: switch to usage-based billing.", description: 'International numbers require usage-based billing (legacy Stripe users are US-only). Response body code: USAGE_BILLING_REQUIRED.' }
 
   /v1/whatsapp/phone-numbers/countries:
@@ -69335,7 +69335,7 @@ paths:
               example: { runId: '64f0a1b2c3d4e5f6a7b8c9d1', threadId: '64f0a1b2c3d4e5f6a7b8c9d2', status: queued, pollAfterSeconds: 5 }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '402': { x-summary: "A card is required or the last payment failed: add or update the card in Billing.", description: 'A card is required (code `payment_method_required`), the last payment failed (code `payment_required`), or, on balance billing, the balance is at $0 (code `insufficient_balance` or `usage_limit_reached`, with `funding_url` to top up). Fix it in Billing.', content: { application/json: { schema: { $ref: '#/components/schemas/ErrorResponse' } } } }
+        '402': { x-summary: "A card is required or the last payment failed: add or update the card in Billing.", description: 'A card is required (code `payment_method_required`), the last payment failed (code `payment_required`), or, on balance billing, the balance is at $0 (code `insufficient_balance` or `usage_limit_reached`, with `funding_url` to add funds). Fix it in Billing.', content: { application/json: { schema: { $ref: '#/components/schemas/ErrorResponse' } } } }
         '403': { description: 'Code `insufficient_permissions`: the credential is not an unrestricted API key, or the user is read-only, restricted or profile-scoped.', content: { application/json: { schema: { $ref: '#/components/schemas/ErrorResponse' } } } }
         '404': { description: 'Code `support_thread_not_found` (`threadId`), `post_not_found`, `account_not_found` or `profile_not_found` (`context.*`).', content: { application/json: { schema: { $ref: '#/components/schemas/ErrorResponse' } } } }
         '409': { x-summary: "A run is already queued or running, or billing setup is incomplete: poll the existing run first, or contact support.", description: 'Code `support_run_in_progress`: the thread already has a run queued or running, so poll it first. Code `billing_setup_incomplete`: no billing customer to attach a card to, contact support. Also returned while a request with the same Idempotency-Key is still processing.', content: { application/json: { schema: { $ref: '#/components/schemas/ErrorResponse' } } } }
@@ -101669,7 +101669,7 @@ paths:
 
         - 402 `payment_required`: no saved card. Nothing is held.
         - 402 `card_declined`: the bank's reason; every amount is payable again.
-        - 402: card payouts are limited to $10,000.00 gross per rolling 30 days by default. Over it the call answers "Over your instant payout limit. Top up your balance to pay more this month, or contact support to raise the limit."
+        - 402: card payouts are limited to $10,000.00 gross per rolling 30 days by default. Over it the call answers "Over your instant payout limit for the last 30 days. Contact support to raise it."
         - 402: your balance is negative after a dispute or refund.
         - 400: nothing payable ("Nothing is payable.").
         - 400 `invalid_billing_address`: Stripe cannot place your billing address, so it cannot tax the fee. Nothing is held.

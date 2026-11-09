@@ -44430,10 +44430,10 @@ def register_generated_tools(mcp, _get_client):
         Returns your team's balance:
 
         - the balance pay-per-use draws on
-        - top-ups still waiting for payment
-        - your latest top-ups and payout batch payments
+        - funds added but still waiting for payment
+        - your latest payments into the balance and payout batch payments
 
-        A card top-up is in `availableCents` as soon as it is paid. The balance never pays creators: payouts are charged to your card per payout batch.
+        Funds added by card are in `availableCents` as soon as they are paid. The balance never pays creators: payouts are charged to your card per payout batch.
 
         A card dispute or refund is debited from the available balance and can make it negative. New payout batches are refused until it is positive again.
 
@@ -44491,9 +44491,9 @@ def register_generated_tools(mcp, _get_client):
 
         Changes the auto top-up rule. Omitted fields keep their value.
 
-        A declined auto top-up is retried 1 hour, 1 day and 3 days later, with an email each time. After the last retry fails, auto top-up switches off (`disabledReason: payment_failed`) until the card is updated. A top-up you make yourself resets the retries.
+        A declined auto top-up is retried 1 hour, 1 day and 3 days later, with an email each time. After the last retry fails, auto top-up switches off (`disabledReason: payment_failed`) until the card is updated. Adding funds yourself resets the retries.
 
-        A bank asking for 3D Secure counts as a decline: the charge happens while you are away, so the email asks you to top up in Billing.
+        A bank asking for 3D Secure counts as a decline: the charge happens while you are away, so the email asks you to add funds in Billing.
 
         A pay-per-use request that finds the balance at $0 runs the auto top-up first (with the rule on, a saved card and no retry pending) and goes through when the charge lands, so a new balance at $0 is charged on first use.
 
@@ -44504,7 +44504,7 @@ def register_generated_tools(mcp, _get_client):
 
         Args:
             enabled: Turns auto top-up on or off. A rule switched off by failed charges stays off until the card is updated.
-            below_cents: Top up when the balance drops below this, in cents. At least $5.
+            below_cents: Auto top-up charges the card when the balance drops below this, in cents. At least $5.
             to_cents: Top back up to this, in cents. More than $5 above belowCents.
             monthly_limit_cents: Most auto top-up may add per calendar month (UTC), before tax. Null for no limit.
             alert_below_cents: Email the billing owner once each time the balance drops below this. Null for no email."""
@@ -44523,7 +44523,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
-            title="Create a top-up",
+            title="Add funds",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
@@ -44534,7 +44534,7 @@ def register_generated_tools(mcp, _get_client):
         method: Literal["card", "bank_transfer"],
         payment_method_id: str | None = None,
     ) -> str:
-        """Create a top-up
+        """Add funds
 
         Charges the billing owner's saved card (the default one, or `paymentMethodId`) `amountCents` plus tax, while the payer is present, and credits your balance `amountCents`. There is no card fee.
 
@@ -44647,7 +44647,7 @@ def register_generated_tools(mcp, _get_client):
     def treasury_get_topup_invoice(topup_id: str) -> str:
         """Get a top-up invoice
 
-        The invoice for a paid balance top-up: the PDF of the Stripe invoice it was paid through.
+        The invoice for funds added to the balance, once paid: the PDF of the Stripe invoice it was paid through.
 
         It shows the amount added to your balance and the tax charged on top: VAT where it applies, or a reverse charge note for an EU business with a valid VAT id. Usage paid from the balance carries no further VAT.
 
@@ -44678,7 +44678,7 @@ def register_generated_tools(mcp, _get_client):
 
         Alias of getTopupInvoice, kept for clients written against its first name.
 
-        The invoice for a paid balance top-up: the PDF of the Stripe invoice it was paid through.
+        The invoice for funds added to the balance, once paid: the PDF of the Stripe invoice it was paid through.
 
         It shows the amount added to your balance and the tax charged on top: VAT where it applies, or a reverse charge note for an EU business with a valid VAT id. Usage paid from the balance carries no further VAT.
 

@@ -1484,7 +1484,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `treasury.list_topups()` | List top-ups |
 | `treasury.list_transfers()` | List transfers |
 | `treasury.create_payee_onboarding_link()` | Create a payee onboarding link |
-| `treasury.create_topup()` | Create a top-up |
+| `treasury.create_topup()` | Add funds |
 | `treasury.create_transfer()` | Create a transfer (removed) |
 | `treasury.get_auto_recharge()` | Get auto top-up settings |
 | `treasury.get_balance()` | Get balance |

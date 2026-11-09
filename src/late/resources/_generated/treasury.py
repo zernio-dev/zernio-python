@@ -108,7 +108,7 @@ class TreasuryResource:
         idempotency_key: str | None = None,
         payment_method_id: str | None = None,
     ) -> dict[str, Any]:
-        """Create a top-up"""
+        """Add funds"""
         payload = self._build_payload(
             amount_cents=amount_cents,
             method=method,
@@ -251,7 +251,7 @@ class TreasuryResource:
         idempotency_key: str | None = None,
         payment_method_id: str | None = None,
     ) -> dict[str, Any]:
-        """Create a top-up (async)"""
+        """Add funds (async)"""
         payload = self._build_payload(
             amount_cents=amount_cents,
             method=method,
