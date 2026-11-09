@@ -91,6 +91,7 @@ class ConversionsResource:
         destination_id: str,
         events: list[Any],
         *,
+        idempotency_key: str | None = None,
         test_code: str | None = None,
         consent: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
@@ -102,7 +103,10 @@ class ConversionsResource:
             test_code=test_code,
             consent=consent,
         )
-        return self._client._post("/v1/ads/conversions", data=payload)
+        headers: dict[str, str] = {}
+        if idempotency_key is not None:
+            headers["Idempotency-Key"] = idempotency_key
+        return self._client._post("/v1/ads/conversions", data=payload, headers=headers)
 
     def adjust_conversions(
         self, account_id: str, destination_id: str, adjustments: list[dict[str, Any]]
@@ -337,6 +341,7 @@ class ConversionsResource:
         profile_id: str,
         events: list[Any],
         *,
+        idempotency_key: str | None = None,
         destinations: list[dict[str, Any]] | None = None,
         consent: dict[str, Any] | None = None,
         test_code: str | None = None,
@@ -349,7 +354,10 @@ class ConversionsResource:
             consent=consent,
             test_code=test_code,
         )
-        return self._client._post("/v1/events", data=payload)
+        headers: dict[str, str] = {}
+        if idempotency_key is not None:
+            headers["Idempotency-Key"] = idempotency_key
+        return self._client._post("/v1/events", data=payload, headers=headers)
 
     def list_event_destinations(
         self, *, profile_id: str | None = None
@@ -557,6 +565,7 @@ class ConversionsResource:
         destination_id: str,
         events: list[Any],
         *,
+        idempotency_key: str | None = None,
         test_code: str | None = None,
         consent: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
@@ -568,7 +577,12 @@ class ConversionsResource:
             test_code=test_code,
             consent=consent,
         )
-        return await self._client._apost("/v1/ads/conversions", data=payload)
+        headers: dict[str, str] = {}
+        if idempotency_key is not None:
+            headers["Idempotency-Key"] = idempotency_key
+        return await self._client._apost(
+            "/v1/ads/conversions", data=payload, headers=headers
+        )
 
     async def aadjust_conversions(
         self, account_id: str, destination_id: str, adjustments: list[dict[str, Any]]
@@ -809,6 +823,7 @@ class ConversionsResource:
         profile_id: str,
         events: list[Any],
         *,
+        idempotency_key: str | None = None,
         destinations: list[dict[str, Any]] | None = None,
         consent: dict[str, Any] | None = None,
         test_code: str | None = None,
@@ -821,7 +836,10 @@ class ConversionsResource:
             consent=consent,
             test_code=test_code,
         )
-        return await self._client._apost("/v1/events", data=payload)
+        headers: dict[str, str] = {}
+        if idempotency_key is not None:
+            headers["Idempotency-Key"] = idempotency_key
+        return await self._client._apost("/v1/events", data=payload, headers=headers)
 
     async def alist_event_destinations(
         self, *, profile_id: str | None = None
