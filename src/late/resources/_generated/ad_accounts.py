@@ -1115,6 +1115,7 @@ class AdAccountsResource:
         ad_account_id: str | None = None,
         limit: int | None = None,
         in_scope_only: bool | None = False,
+        live: bool | None = False,
     ) -> dict[str, Any]:
         """List ad accounts"""
         params = self._build_params(
@@ -1122,6 +1123,7 @@ class AdAccountsResource:
             ad_account_id=ad_account_id,
             limit=limit,
             in_scope_only=in_scope_only,
+            live=live,
         )
         return self._client._get("/v1/ads/accounts", params=params)
 
@@ -2279,6 +2281,7 @@ class AdAccountsResource:
         ad_account_id: str | None = None,
         limit: int | None = None,
         in_scope_only: bool | None = False,
+        live: bool | None = False,
     ) -> dict[str, Any]:
         """List ad accounts (async)"""
         params = self._build_params(
@@ -2286,6 +2289,7 @@ class AdAccountsResource:
             ad_account_id=ad_account_id,
             limit=limit,
             in_scope_only=in_scope_only,
+            live=live,
         )
         return await self._client._aget("/v1/ads/accounts", params=params)
 
