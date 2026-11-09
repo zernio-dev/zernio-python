@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.527.1"
+  version: "1.528.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -80717,6 +80717,8 @@ paths:
         Lists the Instagram accounts a Meta ad connection can run ads as, so you can pick the identity for a new ad.
 
         Discovers identities through connected_instagram_accounts, Page linkage and Page-backed identities, with a best-effort business fallback. Business permission errors do not fail discovery. The resolved object uses the same profile-scoped resolver as ad creation; null means no identity was resolved. Format-specific observed-actor fallbacks at creative creation are not predicted.
+
+        Instagram accounts and Pages that other businesses share with the ad account's business as partner assets are listed with source business_partner, and Pages the ad account promotes with source promote_pages. These reads are best effort: a failure there never fails discovery.
       tags: ["Ad Accounts"]
       x-platforms: ["meta"]
       security:
@@ -80743,7 +80745,7 @@ paths:
                           required: [isPageBacked, source]
                           properties:
                             isPageBacked: { type: boolean, description: "Whether this is a Page-backed Instagram identity." }
-                            source: { type: string, enum: [ad_account, page_backed, business], description: "Discovery source; Page linkage also uses page_backed." }
+                            source: { type: string, enum: [ad_account, page_backed, business, business_partner, promote_pages], description: "Discovery source; Page linkage also uses page_backed. business_partner is a partner asset shared with the ad account's business; promote_pages is linked to a Page the ad account promotes." }
                   pages:
                     type: array
                     items:
@@ -80760,7 +80762,7 @@ paths:
                     properties:
                       pageId: { type: [string, "null"], description: "Page selected by the shared ad-creation resolver." }
                       igUserId: { type: [string, "null"], description: "Instagram identity selected by the shared ad-creation resolver." }
-                      source: { type: [string, "null"], enum: [ad_account, page_backed, business, null], description: "Discovery source of the resolved identity; null when absent from discovery." }
+                      source: { type: [string, "null"], enum: [ad_account, page_backed, business, business_partner, promote_pages, null], description: "Discovery source of the resolved identity; null when absent from discovery." }
               example:
                 accounts:
                   - { igUserId: "17841400000000000", username: "example", isPageBacked: false, source: page_backed }
