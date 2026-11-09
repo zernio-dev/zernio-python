@@ -1140,10 +1140,7 @@ def register_generated_tools(mcp, _get_client):
         - `cid`: the Bluesky content id needed to reply.
         - `subreddit`: Reddit only.
         - `title`, `description`, `link`, `boardId` and `boardOwnerUsername`: Pinterest only (the native Pin values; `message` keeps title and description joined).
-
-        ### Expired tokens
-
-        The account's token is ...
+        - `isOwner`: Pinterest and Facebook. On Pinterest, ...
 
         Platforms: facebook, instagram, twitter, bluesky, threads, youtube, linkedin, reddit, tiktok, pinterest
 
@@ -34532,7 +34529,9 @@ def register_generated_tools(mcp, _get_client):
 
         ### LinkedIn
 
-        When `accountId` is a LinkedIn ads account, `adAccountId` is required. Leads are fetched live from LinkedIn's `leadFormResponses`: LinkedIn has no webhook and enforces 90-day retention, ...
+        LinkedIn lead form responses are also stored and listed with the other networks (`platform: linkedin`), usually within 15 minutes, once they reach Zernio.
+
+        When `accountId` is a ...
 
         Platforms: meta, google, linkedin
 
