@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.528.0"
+  version: "1.528.1"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -11600,6 +11600,8 @@ components:
             A collaborator Instagram rejects does not fail the post on its own: Zernio retries once without the usernames Instagram named (all of them when it names none). If the retry fails, the post fails with that error.
 
             No error or webhook reports the removal: read droppedCollaborators on the Instagram entry of `GET /v1/posts/{postId}`. Invites stay pending until each collaborator accepts; `GET /v1/accounts/{accountId}/instagram/media/{mediaId}/collaborators` shows who accepted.
+
+            More than 3 usable usernames returns 400. Values that are not Instagram usernames, and collaborators on a Story, are not sent and return a warning.
         droppedCollaborators:
           type: array
           readOnly: true
