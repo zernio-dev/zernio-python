@@ -198,6 +198,31 @@ class AnalyticsResource:
         )
         return self._client._get("/v1/analytics/tiktok/account-insights", params=params)
 
+    def get_pinterest_account_insights(
+        self,
+        account_id: str,
+        *,
+        metrics: str | None = None,
+        from_date: str | None = None,
+        to_date: str | None = None,
+        since: str | None = None,
+        until: str | None = None,
+        metric_type: str | None = "total_value",
+    ) -> dict[str, Any]:
+        """Get Pinterest account-level insights"""
+        params = self._build_params(
+            account_id=account_id,
+            metrics=metrics,
+            from_date=from_date,
+            to_date=to_date,
+            since=since,
+            until=until,
+            metric_type=metric_type,
+        )
+        return self._client._get(
+            "/v1/analytics/pinterest/account-insights", params=params
+        )
+
     def get_tik_tok_demographics(
         self, account_id: str, *, breakdown: str | None = None
     ) -> dict[str, Any]:
@@ -934,6 +959,31 @@ class AnalyticsResource:
         )
         return await self._client._aget(
             "/v1/analytics/tiktok/account-insights", params=params
+        )
+
+    async def aget_pinterest_account_insights(
+        self,
+        account_id: str,
+        *,
+        metrics: str | None = None,
+        from_date: str | None = None,
+        to_date: str | None = None,
+        since: str | None = None,
+        until: str | None = None,
+        metric_type: str | None = "total_value",
+    ) -> dict[str, Any]:
+        """Get Pinterest account-level insights (async)"""
+        params = self._build_params(
+            account_id=account_id,
+            metrics=metrics,
+            from_date=from_date,
+            to_date=to_date,
+            since=since,
+            until=until,
+            metric_type=metric_type,
+        )
+        return await self._client._aget(
+            "/v1/analytics/pinterest/account-insights", params=params
         )
 
     async def aget_tik_tok_demographics(

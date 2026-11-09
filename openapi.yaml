@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.535.0"
+  version: "1.537.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -178,7 +178,7 @@ x-documentation:
     - `post.external.deleted` - A tracked native post was detected as removed from the platform. `post.deletedAt` carries the detection time. Coverage is bounded to the most recent posts the platform listing returns, and detection is a diff against posts a prior sync already indexed, so an account for which no post has ever been indexed never emits it.
     - `account.connected` - Account connected
     - `account.disconnected` - Account disconnected: deactivated after its token was revoked or rejected (or the platform refused it, e.g. a Facebook Page left out of a later authorization), or flagged as needing reconnection. Not sent again while the account stays deactivated
-    - `account.permissions_changed` - An account connected through your own OAuth app lost a permission area (for example posting) while staying connected
+    - `account.permissions_changed` - An account connected with `scopes` or through your own OAuth app lost a permission area (for example posting) while staying connected
     - `account.rate_limited` - A Google or Microsoft mailbox entered a sending cooldown; sends answer 429 until `account.resetsAt`
     - `account.ads.initial_sync_completed` - Initial ads sync (discovery + 90-day backfill) completed for an ads-enabled account
     - `account.ads.sync_failed` - An ad account's ads stopped syncing (no successful sync for 24 hours, or every live ad at the retry cap). Fires once until it recovers
@@ -4774,6 +4774,9 @@ components:
         totalViews:
           type: integer
           description: Sum of views across all days in the range
+        stale:
+          type: boolean
+          description: 'Present and true when YouTube refused the refresh (the Analytics quota or its rate limit) and the response serves the days Zernio already stored, so some days may be missing; lastSyncedAt says how old they are. Retry later for a full refresh.'
         dailyViews:
           type: array
           items:
@@ -4910,7 +4913,7 @@ components:
       type: object
       description: |
         Shared account-insights response envelope used by every platform-level
-        analytics endpoint (/v1/analytics/{facebook|instagram|youtube|linkedin|tiktok}/*).
+        analytics endpoint (/v1/analytics/{facebook|instagram|youtube|linkedin|tiktok|pinterest}/*).
         The name is historical - the shape was first shipped for Instagram and every
         new platform endpoint reuses it for response-shape consistency. The platform
         field echoes back which platform served the response.
@@ -4924,7 +4927,7 @@ components:
         platform:
           type: string
           description: Platform that served this response.
-          enum: [facebook, instagram, youtube, linkedin, tiktok]
+          enum: [facebook, instagram, youtube, linkedin, tiktok, pinterest]
         dateRange:
           type: object
           properties:
@@ -5701,7 +5704,7 @@ components:
           description: 'UTC time at which Zernio generated this event (set once when the event payload is built, before delivery is queued). Retries and redeliveries keep the original value, so it reflects the event, not the delivery attempt.'
     WebhookPayloadAccountPermissionsChanged:
       type: object
-      description: 'Webhook payload for account.permissions_changed events: an account connected through your own OAuth app hit a missing permission and stays connected for its other areas.'
+      description: 'Webhook payload for account.permissions_changed events: an account connected with `scopes` or through your own OAuth app hit a missing permission and stays connected for its other areas.'
       required: [id, event, account, timestamp]
       properties:
         id:
@@ -5723,7 +5726,7 @@ components:
             platform: { type: string }
             username: { type: string }
             displayName: { type: string }
-            oauthAppId: { type: string, description: 'The OAuth app the account connected through.' }
+            oauthAppId: { type: [string, "null"], description: "The OAuth app the account connected through; null on Zernio's app." }
             missingScopeAreas:
               type: array
               items: { type: string, enum: [posting, analytics, comments, messaging] }
@@ -13738,7 +13741,7 @@ components:
         scopeAreas:
           type: [array, "null"]
           items: { type: string }
-          description: "Accounts connected through your own OAuth app: the permission areas the connect requested. Null on accounts connected through Zernio's app."
+          description: "The permission areas the connect requested: the `scopes` of GET /v1/connect/{platform}, or your OAuth app's areas. Null when the connect requested every area."
         oauthAppId:
           type: [string, "null"]
           description: "The id of your own OAuth app this account connected through (see /v1/connect/oauth-apps); null when it uses Zernio's app."
@@ -28751,6 +28754,86 @@ paths:
         '412':
           description: Missing user.info.stats scope
 
+  /v1/analytics/pinterest/account-insights:
+    get:
+      x-resource-group: "analytics"
+      operationId: getPinterestAccountInsights
+      tags: [Analytics]
+      summary: Get Pinterest account-level insights
+      description: |
+        Returns account-level daily Pinterest metrics, read live from Pinterest's account analytics, plus the follower history from Zernio's daily snapshots.
+
+        These are account totals. They include every pin on the account, also pins published long before the account was connected to Zernio, which per-post analytics cannot cover.
+
+        - Response shape matches /v1/analytics/instagram/account-insights.
+        - Defaults to the last 30 days. Pinterest serves at most the last 89 days, so a fromDate older than that returns 400.
+        - Pinterest reports the latest 1-2 days as still processing. Those days are left out of values and totals until Pinterest settles them.
+      parameters:
+        - name: accountId
+          in: query
+          required: true
+          schema: { type: string }
+          description: The Zernio SocialAccount ID for the Pinterest account.
+        - name: metrics
+          in: query
+          schema: { type: string }
+          description: |
+            Comma-separated list. Defaults to "impressions,engagements,follower_count".
+
+            Live from Pinterest, one value per day:
+              - impressions
+              - engagements
+              - saves
+              - pin_clicks
+              - outbound_clicks
+
+            From Zernio daily snapshots:
+              - follower_count    (follower count per day; total is the latest)
+              - followers_gained  (sum of positive daily follower deltas)
+              - followers_lost    (sum of absolute negative daily deltas)
+        - name: fromDate
+          in: query
+          schema: { type: string, format: date }
+          description: Start date (YYYY-MM-DD). Defaults to 30 days ago. At most 89 days before today.
+        - name: toDate
+          in: query
+          schema: { type: string, format: date }
+          description: End date (YYYY-MM-DD). Defaults to today.
+        - name: since
+          in: query
+          deprecated: true
+          schema: { type: string, format: date }
+          description: 'Alias of fromDate, kept for existing callers'
+        - name: until
+          in: query
+          deprecated: true
+          schema: { type: string, format: date }
+          description: 'Alias of toDate, kept for existing callers'
+        - name: metricType
+          in: query
+          schema:
+            type: string
+            enum: [time_series, total_value]
+            default: total_value
+          description: |
+            "total_value" returns one total per metric.
+            "time_series" also returns the daily values.
+      responses:
+        '200':
+          description: Account insights data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InstagramAccountInsightsResponse'
+        '400':
+          description: 'Bad request (invalid accountId / metrics / metricType, a fromDate older than 89 days, or account is not a Pinterest account)'
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '402':
+          x-summary: "Analytics access is required: add the Analytics add-on on a legacy plan, or use a usage-based plan where it is included."
+          description: Analytics access required. Legacy plans need the Analytics add-on; included by default on usage-based plans.
+        '404':
+          description: Account not found
+
   /v1/analytics/tiktok/demographics:
     get:
       x-resource-group: "analytics"
@@ -37761,6 +37844,10 @@ paths:
                         status: { type: string, enum: [healthy, warning, error] }
                         canPost: { type: boolean }
                         canFetchAnalytics: { type: boolean }
+                        scopeAreas:
+                          type: object
+                          additionalProperties: { type: string, enum: [granted, missing, not_requested] }
+                          description: 'Present when the account connected with `scopes` or through your own OAuth app: each permission area the platform splits, as granted, missing or not_requested. An area never requested does not make the account unhealthy.'
                         tokenValid: { type: boolean }
                         tokenExpiresAt: { type: string, format: date-time }
                         needsReconnect: { type: boolean, description: 'True when the token is expired or revoked, permissions are missing, the account is inactive, or the platform rejected its stored credentials (the same flag the account listing reports as needsReconnection).' }
@@ -38127,6 +38214,10 @@ paths:
                       canPost: { type: boolean, description: 'Whether the granted OAuth scopes allow posting. Scopes only: for WhatsApp, whether Meta lets the number send is `platformConnection.phoneStatus` and the overall `status`.' }
                       canFetchAnalytics: { type: boolean }
                       missingRequired: { type: array, items: { type: string } }
+                      scopeAreas:
+                        type: object
+                        additionalProperties: { type: string, enum: [granted, missing, not_requested] }
+                        description: 'Present when the account connected with `scopes` or through your own OAuth app: each permission area the platform splits, as granted, missing or not_requested. An area never requested does not make the account unhealthy.'
                   issues:
                     type: array
                     items: { type: string }
@@ -39352,7 +39443,7 @@ paths:
 
             When present, the consent dialog asks only for the scopes behind those areas, plus the scopes every connection needs (identity, token refresh, listing the pages, organizations or channels the user picks from).
 
-            - Scopes never asked for are absent from the account's `permissions`, and the health endpoints report them as not granted. A `posting`-only account cannot read analytics or the inbox until reconnected with more areas.
+            - Scopes never asked for are absent from the account's `permissions`. The account keeps the requested areas in `scopeAreas`, and the health endpoints judge it against them: an area never asked for reads `not_requested` and does not make the account unhealthy, so an `analytics`-only account reports `canPost: false` with `status: healthy`. A `posting`-only account cannot read analytics or the inbox until reconnected with more areas.
             - First comments need `comments`: a `posting`-only account publishes the post and skips the first comment.
             - Scopes in none of the areas (X likes, bookmarks and follows, Pinterest ads-only extras) are requested only when the parameter is omitted.
 
@@ -39369,7 +39460,7 @@ paths:
             | instagram (`loginMethod=facebook_login`) | `instagram_content_publish` | `instagram_manage_insights` | `instagram_manage_comments` | `instagram_manage_messages` | `ads_management`, `ads_read`, `leads_retrieval`, `pages_manage_ads` | `instagram_basic`, `pages_show_list`, `pages_read_engagement`, `business_management`, `pages_messaging`, `pages_manage_metadata` |
             | linkedin | `w_member_social`, `w_organization_social`, `r_organization_social`, `r_organization_followers` | `r_member_postAnalytics`, `r_member_profileAnalytics`, `rw_organization_admin`, `r_organization_social`, `r_organization_followers` | `w_member_social`, `w_member_social_feed`, `w_organization_social`, `w_organization_social_feed`, `r_organization_social`, `r_organization_social_feed` | none | `r_ads`, `rw_ads`, `r_ads_reporting`, `r_marketing_leadgen_automation`, `rw_conversions` | `openid`, `profile`, `email`, `r_basicprofile`, `rw_organization_admin` |
             | twitter | `tweet.write`, `media.write` | (in the always-requested set) | `tweet.write`, `like.write`, `tweet.moderate.write` | `dm.read`, `dm.write`, `media.write` | none | `tweet.read`, `users.read`, `offline.access` |
-            | tiktok | `video.publish` | `user.info.stats`, `user.insights`, `video.list`, `video.insights` | `comment.list`, `comment.list.manage`, `video.list` | `message.list.read`, `message.list.send`, `message.list.manage` | none | `user.info.basic`, `user.info.username`, `user.info.profile`, `user.account.type`, `video.publish`, `video.upload`, `video.list` |
+            | tiktok | `video.publish`, `video.upload` | `user.info.stats`, `user.insights`, `video.list`, `video.insights` | `comment.list`, `comment.list.manage`, `video.list` | `message.list.read`, `message.list.send`, `message.list.manage` | none | `user.info.basic`, `user.info.username`, `user.info.profile`, `user.account.type`, `video.list` |
             | youtube | `youtube.upload` | `yt-analytics.readonly` | `youtube.force-ssl` | none | none | `youtube` |
             | threads | `threads_content_publish`, `threads_manage_replies`, `threads_delete` | `threads_manage_insights` | `threads_content_publish`, `threads_read_replies`, `threads_manage_replies`, `threads_delete` | none | none | `threads_basic` |
             | reddit | `submit`, `read`, `mysubreddits`, `flair`, `history`, `edit` | `read`, `history` | `read`, `history`, `edit`, `vote` | `privatemessages` | none | `identity` |
@@ -39385,6 +39476,8 @@ paths:
             | microsoft | `Mail.ReadWrite`, `Mail.Send` | `Calendars.ReadWrite` | `Files.ReadWrite` | `Contacts.Read` | `openid`, `profile`, `email`, `offline_access`, `User.Read` |
 
             Areas accumulate: reconnecting with more areas widens the grant, and `GET /v1/accounts/{accountId}/health` reports the result.
+
+            On tiktok, a connect without `posting` returns 409 `INVALID_RESOURCE_STATE` (`param: scopes`) when the profile already holds an account from Zernio's older TikTok app: that account can only be replaced by a grant that includes posting.
 
         - name: loginHint
           in: query
@@ -40895,6 +40988,10 @@ paths:
                       type: string
                       pattern: '^[a-f0-9]{32}$'
                       description: "Set by the Zernio-hosted picker, whose user token stays in an httpOnly cookie. Integrators send tempToken instead."
+                    scopes:
+                      type: string
+                      example: analytics
+                      description: 'The `scopes` the callback redirect carried, passed back unchanged so the account records the areas it requested. Omit it when the redirect had none.'
                     userProfile:
                       type: object
                       description: "Decoded user profile object from the OAuth callback."
@@ -41129,6 +41226,10 @@ paths:
                   type: string
                   pattern: '^[a-f0-9]{32}$'
                   description: "Set by the Zernio-hosted picker, whose user token stays in an httpOnly cookie. Integrators send tempToken instead."
+                scopes:
+                  type: string
+                  example: analytics
+                  description: 'The `scopes` the callback redirect carried, passed back unchanged so the account records the areas it requested. Omit it when the redirect had none.'
                 redirect_url:
                   type: string
                   format: uri

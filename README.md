@@ -265,6 +265,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `analytics.get_linked_in_org_aggregate_analytics()` | Get LinkedIn org analytics |
 | `analytics.get_linked_in_post_analytics()` | Get LinkedIn post stats |
 | `analytics.get_linked_in_post_reactions()` | Get LinkedIn post reactions |
+| `analytics.get_pinterest_account_insights()` | Get Pinterest account-level insights |
 | `analytics.get_post_authenticity()` | Get a post's authenticity score |
 | `analytics.get_post_samples()` | Get post samples |
 | `analytics.get_post_timeline()` | Get post analytics timeline |

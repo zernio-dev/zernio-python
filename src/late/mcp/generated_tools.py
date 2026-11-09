@@ -14525,6 +14525,69 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="Get Pinterest account-level insights",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def analytics_get_pinterest_account_insights(
+        account_id: str,
+        metrics: str | None = None,
+        from_date: str | None = None,
+        to_date: str | None = None,
+        since: str | None = None,
+        until: str | None = None,
+        metric_type: Literal["time_series", "total_value"] = "total_value",
+    ) -> str:
+        """Get Pinterest account-level insights
+
+            Returns account-level daily Pinterest metrics, read live from Pinterest's account analytics, plus the follower history from Zernio's daily snapshots.
+
+            These are account totals. They include every pin on the account, also pins published long before the account was connected to Zernio, which per-post analytics cannot cover.
+
+            - Response shape matches /v1/analytics/instagram/account-insights.
+            - Defaults to the last 30 days. Pinterest serves at most the last 89 days, so a fromDate older than that returns 400.
+            - Pinterest reports the latest 1-2 days as still processing. Those days are left out of values and totals until Pinterest settles them.
+
+            Args:
+                account_id: The Zernio SocialAccount ID for the Pinterest account. (required)
+                metrics: Comma-separated list. Defaults to "impressions,engagements,follower_count".
+
+        Live from Pinterest, one value per day:
+          - impressions
+          - engagements
+          - saves
+          - pin_clicks
+          - outbound_clicks
+
+        From Zernio daily snapshots:
+          - follower_count    (follower count per day; total is the latest)
+          - followers_gained  (sum of positive daily follower deltas)
+          - followers_lost    (sum of absolute negative daily deltas)
+                from_date: Start date (YYYY-MM-DD). Defaults to 30 days ago. At most 89 days before today.
+                to_date: End date (YYYY-MM-DD). Defaults to today.
+                since: Alias of fromDate, kept for existing callers
+                until: Alias of toDate, kept for existing callers
+                metric_type: "total_value" returns one total per metric.
+        "time_series" also returns the daily values."""
+        client = _get_client()
+        try:
+            response = client.analytics.get_pinterest_account_insights(
+                account_id=account_id,
+                metrics=metrics,
+                from_date=from_date,
+                to_date=to_date,
+                since=since,
+                until=until,
+                metric_type=metric_type,
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="Get TikTok follower demographics",
             readOnlyHint=True,
             destructiveHint=False,
@@ -24789,7 +24852,7 @@ def register_generated_tools(mcp, _get_client):
 
         When present, the consent dialog asks only for the scopes behind those areas, plus the scopes every connection needs (identity, token refresh, listing the pages, organizations or channels the user picks from).
 
-        - Scopes never asked for are absent from the account's `permissions`, and the health endpoints report them as not granted. A `posting`-only account cannot read analytics or the inbox until reconnected with more areas.
+        - Scopes never asked for are absent from the account's `permissions`. The account keeps the requested areas in `scopeAreas`, and the health endpoints judge it against them: an area never asked for reads `not_requested` and does not make the account unhealthy, so an `analytics`-only account reports `canPost: false` with `status: healthy`. A `posting`-only account cannot read analytics or the inbox until reconnected with more areas.
         - First comments need `comments`: a `posting`-only account publishes the post and skips the first comment.
         - Scopes in none of the areas (X likes, bookmarks and follows, Pinterest ads-only extras) are requested only when the parameter is omitted.
 
@@ -24806,7 +24869,7 @@ def register_generated_tools(mcp, _get_client):
         | instagram (`loginMethod=facebook_login`) | `instagram_content_publish` | `instagram_manage_insights` | `instagram_manage_comments` | `instagram_manage_messages` | `ads_management`, `ads_read`, `leads_retrieval`, `pages_manage_ads` | `instagram_basic`, `pages_show_list`, `pages_read_engagement`, `business_management`, `pages_messaging`, `pages_manage_metadata` |
         | linkedin | `w_member_social`, `w_organization_social`, `r_organization_social`, `r_organization_followers` | `r_member_postAnalytics`, `r_member_profileAnalytics`, `rw_organization_admin`, `r_organization_social`, `r_organization_followers` | `w_member_social`, `w_member_social_feed`, `w_organization_social`, `w_organization_social_feed`, `r_organization_social`, `r_organization_social_feed` | none | `r_ads`, `rw_ads`, `r_ads_reporting`, `r_marketing_leadgen_automation`, `rw_conversions` | `openid`, `profile`, `email`, `r_basicprofile`, `rw_organization_admin` |
         | twitter | `tweet.write`, `media.write` | (in the always-requested set) | `tweet.write`, `like.write`, `tweet.moderate.write` | `dm.read`, `dm.write`, `media.write` | none | `tweet.read`, `users.read`, `offline.access` |
-        | tiktok | `video.publish` | `user.info.stats`, `user.insights`, `video.list`, `video.insights` | `comment.list`, `comment.list.manage`, `video.list` | `message.list.read`, `message.list.send`, `message.list.manage` | none | `user.info.basic`, `user.info.username`, `user.info.profile`, `user.account.type`, `video.publish`, `video.upload`, `video.list` |
+        | tiktok | `video.publish`, `video.upload` | `user.info.stats`, `user.insights`, `video.list`, `video.insights` | `comment.list`, `comment.list.manage`, `video.list` | `message.list.read`, `message.list.send`, `message.list.manage` | none | `user.info.basic`, `user.info.username`, `user.info.profile`, `user.account.type`, `video.list` |
         | youtube | `youtube.upload` | `yt-analytics.readonly` | `youtube.force-ssl` | none | none | `youtube` |
         | threads | `threads_content_publish`, `threads_manage_replies`, `threads_delete` | `threads_manage_insights` | `threads_content_publish`, `threads_read_replies`, `threads_manage_replies`, `threads_delete` | none | none | `threads_basic` |
         | reddit | `submit`, `read`, `mysubreddits`, `flair`, `history`, `edit` | `read`, `history` | `read`, `history`, `edit`, `vote` | `privatemessages` | none | `identity` |
@@ -24822,6 +24885,8 @@ def register_generated_tools(mcp, _get_client):
         | microsoft | `Mail.ReadWrite`, `Mail.Send` | `Calendars.ReadWrite` | `Files.ReadWrite` | `Contacts.Read` | `openid`, `profile`, `email`, `offline_access`, `User.Read` |
 
         Areas accumulate: reconnecting with more areas widens the grant, and `GET /v1/accounts/{accountId}/health` reports the result.
+
+        On tiktok, a connect without `posting` returns 409 `INVALID_RESOURCE_STATE` (`param: scopes`) when the profile already holds an account from Zernio's older TikTok app: that account can only be replaced by a grant that includes posting.
                 login_hint: google and microsoft only: pre-fills the account picker with this address so the user lands on the right mailbox.
                 headless: When true, the user is redirected to your redirect_url with raw OAuth data (code, state) instead of Zernio's default account selection UI. Use this to build a custom connect experience.
                 login_method: Instagram only: which of the two Instagram connection methods to use. Ignored for every other platform.
@@ -25821,6 +25886,7 @@ def register_generated_tools(mcp, _get_client):
         page_ids: list[str] | None = None,
         temp_token: str | None = None,
         connect_flow: str | None = None,
+        scopes: str | None = None,
         redirect_url: str | None = None,
     ) -> str:
         """Select the Page whose Instagram account to connect
@@ -25838,6 +25904,7 @@ def register_generated_tools(mcp, _get_client):
         - A single distinct ID behaves exactly like pageId.
                 temp_token: Long-lived Facebook user access token from the OAuth callback redirect. Required unless sent in the X-Temp-Token header.
                 connect_flow: Set by the Zernio-hosted picker, whose user token stays in an httpOnly cookie. Integrators send tempToken instead.
+                scopes: The `scopes` the callback redirect carried, passed back unchanged so the account records the areas it requested. Omit it when the redirect had none.
                 redirect_url: Optional custom redirect URL to return to after selection"""
         client = _get_client()
         try:
@@ -25847,6 +25914,7 @@ def register_generated_tools(mcp, _get_client):
                 page_ids=page_ids,
                 temp_token=temp_token,
                 connect_flow=connect_flow,
+                scopes=scopes,
                 redirect_url=redirect_url,
             )
             return _format_response(response)

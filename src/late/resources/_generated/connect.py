@@ -395,6 +395,7 @@ class ConnectResource:
         page_ids: list[str] | None = None,
         temp_token: str | None = None,
         connect_flow: str | None = None,
+        scopes: str | None = None,
         redirect_url: str | None = None,
     ) -> dict[str, Any]:
         """Select the Page whose Instagram account to connect"""
@@ -404,6 +405,7 @@ class ConnectResource:
             page_ids=page_ids,
             temp_token=temp_token,
             connect_flow=connect_flow,
+            scopes=scopes,
             redirect_url=redirect_url,
         )
         return self._client._post("/v1/connect/instagram/select-account", data=payload)
@@ -1505,6 +1507,7 @@ class ConnectResource:
         page_ids: list[str] | None = None,
         temp_token: str | None = None,
         connect_flow: str | None = None,
+        scopes: str | None = None,
         redirect_url: str | None = None,
     ) -> dict[str, Any]:
         """Select the Page whose Instagram account to connect (async)"""
@@ -1514,6 +1517,7 @@ class ConnectResource:
             page_ids=page_ids,
             temp_token=temp_token,
             connect_flow=connect_flow,
+            scopes=scopes,
             redirect_url=redirect_url,
         )
         return await self._client._apost(
