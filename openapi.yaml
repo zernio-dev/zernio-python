@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.538.0"
+  version: "1.541.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -10752,7 +10752,14 @@ components:
         url:
           type: string
           format: uri
-          description: 'A media item with a null, missing or empty url is dropped, unless it names a connected file with `fileId` + `accountId`.'
+          description: |
+            A media item with a null, missing or empty url is dropped, unless it names a connected file with `fileId` + `accountId`.
+
+            A Google Drive share link is accepted here and in `thumbnail`, `instagramThumbnail`, `customMedia` and cover fields such as TikTok's `video_cover_image_url` (`drive.google.com/file/d/{id}/view`, `open?id={id}`, `uc?id={id}`, `drive.usercontent.google.com/download?id={id}`). Zernio copies the file into its media storage when the post is created or updated and stores that copy's url, so platforms never fetch from Drive. Large files behind Drive's virus-scan page work too.
+
+            The file must be shared as "Anyone with the link". A private, deleted or unknown file, or a folder link, fails the request with a 400 (`invalid_field_value`) before anything is saved. For a private file of a connected Google account, send `fileId` + `accountId` instead.
+
+            A Drive file over 5 GB fails with a 400 (`invalid_field_value`). If Google Drive does not respond, the request fails with a 503 (`temporarily_unavailable`, `Retry-After` set) and nothing is saved, so retry it.
         fileId:
           type: string
           description: |
@@ -11762,7 +11769,7 @@ components:
         instagramThumbnail:
           type: string
           format: uri
-          description: Custom cover image URL for Instagram Reels (JPG or PNG, publicly accessible). Overrides thumbOffset when provided. Also accepted as reelCover (alias).
+          description: Custom cover image URL for Instagram Reels (JPG or PNG, publicly accessible). Overrides thumbOffset when provided. Also accepted as reelCover (alias). The cover cannot be changed after publishing because Meta only allows comment_enabled to be updated on published Instagram media.
         reelCover:
           type: string
           format: uri
@@ -27866,6 +27873,7 @@ paths:
         - The type and format come from the bytes, not the Content-Type header.
         - Corrupt, truncated or non-media files return `valid: false` with code `MEDIA_UNDECODABLE`.
         - Private/localhost URLs are rejected for SSRF protection.
+        - A Google Drive share link is checked against the file behind it. A file not shared as "Anyone with the link" returns `valid: false` with code `MEDIA_URL_UNREACHABLE`.
 
         Platform limits are sourced from each platform's actual upload constraints.
       security:
@@ -36875,12 +36883,18 @@ paths:
       tags: [Posts]
       summary: Update post metadata
       description: |
-        Updates metadata of a published video on the specified platform without re-uploading. Currently only supported for YouTube. At least one updatable field is required.
+        Updates metadata of a published video on the specified platform without re-uploading. Supported on YouTube and Facebook. At least one updatable field is required.
+
+        ### Platforms
+
+        - YouTube: every field below.
+        - Facebook: `thumbnailUrl` only, on a feed video or Reel published through Zernio (post-based mode). It replaces the video's cover. Any other field, a Story, a non-video post, or direct `videoId` mode returns 400.
+        - Instagram: not supported. Meta does not allow changing a Reel or video cover after publishing, so set `instagramThumbnail` when creating the post.
 
         ### Two modes
 
         1. Post-based (video published through Zernio): pass the Zernio postId in the URL and platform in the body.
-        2. Direct video ID (video uploaded outside Zernio, e.g. directly to YouTube): use _ as the postId, and pass videoId + accountId + platform in the body. The accountId is the Zernio account ID for the connected YouTube channel.
+        2. Direct video ID (YouTube only, video uploaded outside Zernio): use _ as the postId, and pass videoId + accountId + platform in the body. The accountId is the Zernio account ID for the connected YouTube channel.
       parameters:
         - name: postId
           in: path
@@ -36897,12 +36911,13 @@ paths:
               properties:
                 platform:
                   type: string
-                  description: The platform to update metadata on
+                  description: The platform to update metadata on. Facebook accepts only thumbnailUrl.
                   enum:
                     - youtube
+                    - facebook
                 videoId:
                   type: string
-                  description: YouTube video ID (required for direct mode, ignored for post-based mode)
+                  description: YouTube video ID (required for direct mode, ignored for post-based mode). Not supported for Facebook.
                 accountId:
                   type: string
                   description: "Zernio account ID. Required for direct mode. In post-based mode, picks which account's copy to update when the post was published to several accounts on this platform (required in that case)."
@@ -36930,13 +36945,18 @@ paths:
                   type: string
                   format: uri
                   description: |
-                    Public URL of a custom thumbnail image (JPEG, PNG, or GIF, max 50 MB, recommended 1280x720). Works on any video you own, including videos not published through Zernio. The channel must be verified (phone verification) to set custom thumbnails.
+                    Public URL of a custom thumbnail image.
+
+                    - YouTube: JPEG, PNG, or GIF, max 50 MB, recommended 1280x720. Works on any video you own, including videos not published through Zernio. The channel must be verified (phone verification) to set custom thumbnails.
+                    - Facebook: JPEG or PNG, max 5 MB, served directly (no redirects). Replaces the cover of a feed video or Reel published through Zernio. Stories are not supported.
 
                     **Errors:**
 
-                    - 400 with the reason, no field updated: YouTube refuses the thumbnail (e.g. channel without the custom-thumbnail permission, video not owned by the connected channel), or the image URL cannot be fetched or has an unsupported format or size.
+                    - 400 with the reason, no field updated: the platform refuses the thumbnail (e.g. YouTube channel without the custom-thumbnail permission, video not owned by the connected account), the Facebook post is not a feed video or Reel, or the image URL cannot be fetched or has an unsupported format or size.
                     - 429: YouTube thumbnail rate limit (uploadRateLimitExceeded). Retry later, not immediately, because retries keep the channel over its limit.
-                    - 500: any other temporary YouTube or network failure; can be retried.
+                    - 404 (Facebook): Facebook cannot find the video. Right after publishing this can be Meta's processing lag, so retry shortly; otherwise the video was deleted or the Page no longer grants access.
+                    - 503 (Facebook): Facebook is still processing the video, so the cover cannot be set yet. Retry in a few minutes.
+                    - 500: any other temporary platform or network failure; can be retried.
                 madeForKids:
                   type: boolean
                   description: "COPPA compliance flag. Set true for child-directed content (restricts comments, notifications, ad targeting)."
@@ -36975,6 +36995,11 @@ paths:
                   videoId: "dQw4w9WgXcQ"
                   accountId: "68fb37418bbca9c10cbfef26"
                   thumbnailUrl: "https://example.com/my-thumbnail.jpg"
+              facebook-cover:
+                summary: Change the cover of a Facebook video or Reel published through Zernio
+                value:
+                  platform: "facebook"
+                  thumbnailUrl: "https://example.com/new-cover.jpg"
       responses:
         '200':
           description: Metadata updated successfully
@@ -36994,7 +37019,7 @@ paths:
                 message: "YouTube video metadata updated successfully"
                 updatedFields: ["title", "description", "tags"]
         '400':
-          description: "Invalid request: unsupported platform, post not published, missing fields, validation error, or the thumbnail could not be set."
+          description: "Invalid request: unsupported platform, a field the platform does not support (Facebook accepts only thumbnailUrl), post not published, a Facebook post that is not a feed video or Reel, missing fields, validation error, or the thumbnail could not be set."
           content:
             application/json:
               schema: { $ref: '#/components/schemas/ErrorResponse' }
@@ -37018,6 +37043,11 @@ paths:
               schema: { $ref: '#/components/schemas/ErrorResponse' }
         '500':
           description: Platform API update failed
+        '503':
+          description: "Facebook is still processing the video, so the cover cannot be set yet. Retry in a few minutes."
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
   /v1/users:
     get:
       x-resource-group: "accounts"
@@ -56375,6 +56405,9 @@ paths:
                   format: uri
                   description: '(Facebook only) URL of an image to attach, publishing a photo comment alongside the text. The URL must be publicly accessible so Meta can fetch it. Returns 400 for other platforms.'
                 commentId: { type: string, description: Reply to specific comment (optional) }
+                mentionAuthor:
+                  type: boolean
+                  description: '(LinkedIn only) When true, the reply starts with an @mention of the author of `commentId` (a member or a page), tagged with their URN and the name LinkedIn returns for them. Requires `commentId`. Returns 400 `platform_not_supported` on other platforms, and 400 `linkedin_mention_name_unavailable` with `details.authorUrn` when LinkedIn does not return the author''s name (for example a page the account does not administer); mention them in `message` as @[Name](urn) instead. If LinkedIn rejects any mention in the reply, it is posted once more with every mention as plain text.'
                 parentCid: { type: string, description: (Bluesky only) Parent content identifier }
                 rootUri: { type: string, description: (Bluesky only) Root post URI }
                 rootCid: { type: string, description: (Bluesky only) Root post CID }
@@ -56395,7 +56428,7 @@ paths:
                       cid: { type: [string, "null"], description: Bluesky CID }
         '400':
           x-summary: "The request is invalid, for example an attachment URL on a non-Facebook platform or a LinkedIn mention that cannot be resolved."
-          description: 'Invalid request (e.g. attachmentUrl on a platform other than Facebook, code PLATFORM_NOT_SUPPORTED). On LinkedIn, a profile or company URL mention that cannot be resolved returns code `linkedin_mentions_invalid`, or `linkedin_mentions_limit_exceeded` for more than 10, with `details.mentions[]`.'
+          description: 'Invalid request (e.g. attachmentUrl on a platform other than Facebook, code PLATFORM_NOT_SUPPORTED). On LinkedIn, a profile or company URL mention that cannot be resolved returns code `linkedin_mentions_invalid`, or `linkedin_mentions_limit_exceeded` for more than 10, with `details.mentions[]`. `mentionAuthor` without `commentId`, or on a platform other than LinkedIn, is rejected, and an author whose name LinkedIn does not return gives `linkedin_mention_name_unavailable` with `details.authorUrn`.'
           content:
             application/json:
               schema:
@@ -56406,6 +56439,7 @@ paths:
                   details:
                     type: object
                     properties:
+                      authorUrn: { type: string, description: '(mentionAuthor) URN of the comment author whose name LinkedIn did not return' }
                       mentions:
                         type: array
                         items: { $ref: '#/components/schemas/LinkedInMentionIssue' }
