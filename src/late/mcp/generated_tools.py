@@ -21437,32 +21437,36 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Reply to comment
 
-        Post a reply to a post or specific comment. Requires accountId in request body.
+            Post a reply to a post or specific comment. Requires accountId in request body.
 
-        ### Idempotency
+            ### Idempotency
 
-        Send an `Idempotency-Key` header to make retries safe (e.g. after a client-side timeout where delivery is unknown).
+            Send an `Idempotency-Key` header to make retries safe (e.g. after a client-side timeout where delivery is unknown).
 
-        - Same key + same body replays the original response (with `Idempotent-Replayed: true`) instead of posting the comment a second time.
-        - Same key + different body returns 422.
-        - A key still in flight returns 409.
+            - Same key + same body replays the original response (with `Idempotent-Replayed: true`) instead of posting the comment a second time.
+            - Same key + different body returns 422.
+            - A key still in flight returns 409.
 
-        Keys are retained for 24 hours and are scoped to the credential and to this exact path. Reusing a key against a different postId returns 422 rather than replaying the other post's response.
+            Keys are retained for 24 hours and are scoped to the credential and to this exact path. Reusing a key against a different postId returns 422 rather than replaying the other post's response.
 
-        Only successful (2xx) responses are stored for replay. If the request throws or returns a non-2xx status the key is released, so the header protects the \"request succeeded but the response was lost\" case.
+            Only successful (2xx) responses are stored for replay. If the request throws or returns a non-2xx status the key is released, so the header protects the \"request succeeded but the response was lost\" case.
 
-        After an ambiguous failure (a 5xx or a network timeout), list the post's comments before retrying with the same key. Treat an empty result as inconclusive rather than as ...
+            After an ambiguous failure (a 5xx or a network timeout), list the post's comments before retrying with the same key. Treat an empty result as inconclusive rather than as ...
 
-        Args:
-            post_id: Zernio post ID or platform-specific post ID. On LinkedIn, pass the post id exactly as the feed returns it (urn:li:share:<id> or urn:li:ugcPost:<id>); a bare number is read as an activity id (urn:li:activity:<n>). (required)
-            account_id: (required)
-            message: Reply text. On LinkedIn, mention with @[https://www.linkedin.com/in/vanity] (resolved to LinkedIn's live name, same rules and errors as post content) or @[Name](urn:li:person|organization:ID); a hand-written name must match LinkedIn's exactly or it renders as plain text. (required)
-            attachment_url: (Facebook only) URL of an image to attach, publishing a photo comment alongside the text. The URL must be publicly accessible so Meta can fetch it. Returns 400 for other platforms.
-            comment_id: Reply to specific comment (optional)
-            mention_author: (LinkedIn only) When true, the reply starts with an @mention of the author of `commentId` (a member or a page), tagged with their URN and the name LinkedIn returns for them. Requires `commentId`. Returns 400 `platform_not_supported` on other platforms, and 400 `linkedin_mention_name_unavailable` with `details.authorUrn` when LinkedIn does not return the author's name (for example a page the account does not administer); mention them in `message` as @[Name](urn) instead. If LinkedIn rejects any mention in the reply, it is posted once more with every mention as plain text.
-            parent_cid: (Bluesky only) Parent content identifier
-            root_uri: (Bluesky only) Root post URI
-            root_cid: (Bluesky only) Root post CID"""
+            Args:
+                post_id: Zernio post ID or platform-specific post ID. On LinkedIn, pass the post id exactly as the feed returns it (urn:li:share:<id> or urn:li:ugcPost:<id>); a bare number is read as an activity id (urn:li:activity:<n>). (required)
+                account_id: (required)
+                message: Reply text. On LinkedIn, mention with @[https://www.linkedin.com/in/vanity] (resolved to LinkedIn's live name, same rules and errors as post content) or @[Name](urn:li:person|organization:ID); a hand-written name must match LinkedIn's exactly or it renders as plain text. (required)
+                attachment_url: (Facebook only) URL of an image to attach, publishing a photo comment alongside the text. The URL must be publicly accessible so Meta can fetch it. Returns 400 for other platforms.
+                comment_id: Reply to specific comment (optional)
+                mention_author: (LinkedIn only) When true, the reply starts with an @mention of the author of `commentId` (a member or a page), tagged with their URN and the name LinkedIn returns for them. Requires `commentId`.
+
+        - Returns 400 `platform_not_supported` on other platforms.
+        - Returns 400 `linkedin_mention_name_unavailable` with `details.authorUrn` when LinkedIn does not return the author's name (for example a page the account does not administer); mention them in `message` as @[Name](urn) instead.
+        - If LinkedIn rejects any mention in the reply, it is posted once more with every mention as plain text.
+                parent_cid: (Bluesky only) Parent content identifier
+                root_uri: (Bluesky only) Root post URI
+                root_cid: (Bluesky only) Root post CID"""
         client = _get_client()
         try:
             response = client.comments.reply_to_inbox_post(
@@ -24849,7 +24853,9 @@ def register_generated_tools(mcp, _get_client):
 
         When present, the consent dialog asks only for the scopes behind those areas, plus the scopes every connection needs (identity, token refresh, listing the pages, organizations or channels the user picks from).
 
-        - Scopes never asked for are absent from the account's `permissions`. The account keeps the requested areas in `scopeAreas`, and the health endpoints judge it against them: an area never asked for reads `not_requested` and does not make the account unhealthy, so an `analytics`-only account reports `canPost: false` with `status: healthy`. A `posting`-only account cannot read analytics or the inbox until reconnected with more areas.
+        - Scopes never asked for are absent from the account's `permissions`. The account keeps the requested areas in `scopeAreas`.
+        - The health endpoints judge the account against those areas: an area never asked for reads `not_requested` and does not make it unhealthy, so an `analytics`-only account reports `canPost: false` with `status: healthy`.
+        - A `posting`-only account cannot read analytics or the inbox until reconnected with more areas.
         - First comments need `comments`: a `posting`-only account publishes the post and skips the first comment.
         - Scopes in none of the areas (X likes, bookmarks and follows, Pinterest ads-only extras) are requested only when the parameter is omitted.
 
