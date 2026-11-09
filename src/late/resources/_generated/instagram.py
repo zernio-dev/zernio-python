@@ -73,9 +73,21 @@ class InstagramResource:
                 result[to_camel(k)] = v
         return result
 
-    def list_instagram_stories(self, account_id: str) -> dict[str, Any]:
+    def list_instagram_stories(
+        self,
+        account_id: str,
+        *,
+        include_expired: bool | None = False,
+        limit: int | None = 100,
+    ) -> dict[str, Any]:
         """List active Instagram stories"""
-        return self._client._get(f"/v1/accounts/{account_id}/instagram/stories")
+        params = self._build_params(
+            include_expired=include_expired,
+            limit=limit,
+        )
+        return self._client._get(
+            f"/v1/accounts/{account_id}/instagram/stories", params=params
+        )
 
     def get_instagram_publishing_limit(self, account_id: str) -> dict[str, Any]:
         """Get Instagram publishing limit"""
@@ -161,9 +173,21 @@ class InstagramResource:
             f"/v1/accounts/{account_id}/instagram/stories/{story_id}/insights"
         )
 
-    async def alist_instagram_stories(self, account_id: str) -> dict[str, Any]:
+    async def alist_instagram_stories(
+        self,
+        account_id: str,
+        *,
+        include_expired: bool | None = False,
+        limit: int | None = 100,
+    ) -> dict[str, Any]:
         """List active Instagram stories (async)"""
-        return await self._client._aget(f"/v1/accounts/{account_id}/instagram/stories")
+        params = self._build_params(
+            include_expired=include_expired,
+            limit=limit,
+        )
+        return await self._client._aget(
+            f"/v1/accounts/{account_id}/instagram/stories", params=params
+        )
 
     async def aget_instagram_publishing_limit(self, account_id: str) -> dict[str, Any]:
         """Get Instagram publishing limit (async)"""

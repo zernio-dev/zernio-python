@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.542.0"
+  version: "1.543.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -46983,7 +46983,12 @@ paths:
       summary: List active Instagram stories
       description: |
         Returns the IG Business/Creator account's currently-active stories.
-        Meta keeps stories live for 24h; expired stories are not returned.
+        Meta keeps stories live for 24h. Pass `includeExpired=true` to also get the
+        stories Zernio archived before they expired: their media is copied into Zernio
+        storage while the story is live, so `mediaUrl` and `thumbnailUrl` keep working
+        after Meta deletes the story. Archiving needs the insights permission and covers
+        stories posted since the account was connected (hourly readings, a final one at 23h,
+        then Meta's end-of-story numbers when its webhook arrives).
 
         Limitations propagated from Meta (these are NOT bugs):
         - 24h window only
@@ -46997,6 +47002,16 @@ paths:
           required: true
           description: The Instagram account ID
           schema: { type: string }
+        - name: includeExpired
+          in: query
+          required: false
+          description: 'Also return archived stories that are no longer live, newest first after the live ones. Every item then carries `expired` and `metrics`.'
+          schema: { type: boolean, default: false }
+        - name: limit
+          in: query
+          required: false
+          description: 'Maximum number of archived stories to read when `includeExpired=true` (live stories are always all returned).'
+          schema: { type: integer, minimum: 1, maximum: 500, default: 100 }
       responses:
         '409': { $ref: '#/components/responses/AccountConnectionRequired' }
         '200':
@@ -47020,7 +47035,19 @@ paths:
                         permalink: { type: [string, "null"], description: Public Instagram permalink to the story (only viewable while live). }
                         thumbnailUrl: { type: [string, "null"], description: Thumbnail URL for video stories. }
                         timestamp: { type: [string, "null"], format: date-time, description: When the story was posted. }
-        '400': { description: Invalid request. }
+                        expired: { type: boolean, description: 'Only with `includeExpired=true`. True for an archived story that is no longer live; its media urls point to Zernio storage.' }
+                        metrics:
+                          type: [object, "null"]
+                          description: 'Only with `includeExpired=true`. Latest archived reading of the story (the final one once it expired), or null when none was taken yet.'
+                          properties:
+                            views: { type: integer }
+                            reach: { type: integer }
+                            replies: { type: integer }
+                            shares: { type: integer }
+                            follows: { type: integer }
+                            profileVisits: { type: integer }
+                            lastUpdated: { type: [string, "null"], format: date-time }
+        '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/AccountUnavailable' }
   /v1/accounts/{accountId}/instagram/publishing-limit:

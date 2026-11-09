@@ -34105,11 +34105,18 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=False,
         )
     )
-    def instagram_list_instagram_stories(account_id: str) -> str:
+    def instagram_list_instagram_stories(
+        account_id: str, include_expired: bool = False, limit: int = 100
+    ) -> str:
         """List active Instagram stories
 
         Returns the IG Business/Creator account's currently-active stories.
-        Meta keeps stories live for 24h; expired stories are not returned.
+        Meta keeps stories live for 24h. Pass `includeExpired=true` to also get the
+        stories Zernio archived before they expired: their media is copied into Zernio
+        storage while the story is live, so `mediaUrl` and `thumbnailUrl` keep working
+        after Meta deletes the story. Archiving needs the insights permission and covers
+        stories posted since the account was connected (hourly readings, a final one at 23h,
+        then Meta's end-of-story numbers when its webhook arrives).
 
         Limitations propagated from Meta (these are NOT bugs):
         - 24h window only
@@ -34119,10 +34126,14 @@ def register_generated_tools(mcp, _get_client):
         - `caption`, `likeCount`, `commentsCount` do not apply to story media
 
         Args:
-            account_id: The Instagram account ID (required)"""
+            account_id: The Instagram account ID (required)
+            include_expired: Also return archived stories that are no longer live, newest first after the live ones. Every item then carries `expired` and `metrics`.
+            limit: Maximum number of archived stories to read when `includeExpired=true` (live stories are always all returned)."""
         client = _get_client()
         try:
-            response = client.instagram.list_instagram_stories(account_id=account_id)
+            response = client.instagram.list_instagram_stories(
+                account_id=account_id, include_expired=include_expired, limit=limit
+            )
             return _format_response(response)
         except Exception as e:
             raise ToolError(f"Error: {e}") from e
