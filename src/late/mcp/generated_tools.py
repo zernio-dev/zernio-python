@@ -5979,6 +5979,8 @@ def register_generated_tools(mcp, _get_client):
 
         Your results summed per campaign over a date range, one entry per campaign with every metric it has, for the ad accounts your key can see. Each day counts its newest uploaded value only, plus the events sent to `POST /v1/events` that are tied to the campaign (`sales`, `revenue`, `leads`, `qualified_leads`).
 
+        An event counts here up to 15 minutes after it arrives.
+
         Paginated by campaign: pass `nextCursor` back as `cursor` until it is null.
 
         Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit
@@ -6046,6 +6048,8 @@ def register_generated_tools(mcp, _get_client):
         """Get your results totals
 
         Each metric you send summed over a date range across every campaign of the ad accounts your key can see, or of the ones you name. Each day counts its newest uploaded value only, plus the events sent to `POST /v1/events` that are tied to a campaign.
+
+        An event counts here up to 15 minutes after it arrives.
 
         Formulas are not computed here, since they also read the platform's numbers: apply one to these totals and the account's spend for the same range, or read it per campaign from `GET /v1/ads/tree?results=true`.
 
