@@ -14462,42 +14462,36 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Get TikTok account-level insights
 
-            Returns account-level TikTok insights from /v2/user/info/ (live) plus historical time series joined from Zernio's daily snapshotter (AccountStats).
+            Returns account-level TikTok insights: the lifetime profile counters (live, with historical time series joined from Zernio's daily snapshotter) and TikTok's own daily account figures (video views, likes, comments, shares, profile views).
 
             - Response shape matches /v1/analytics/instagram/account-insights.
             - Max 89 days, defaults to last 30 days.
             - Requires the user.info.stats scope on the account (412 if missing).
 
-            ### Why the scope is narrow
+            ### Daily account metrics
 
-            This ACCOUNT-level endpoint intentionally exposes only the four counter metrics below. It does not return:
+            `video_views`, `likes`, `comments`, `shares` and `profile_views` are TikTok's daily figures for the whole account, read from the TikTok Business Accounts API. They count every video of the account, not only recent ones, so they differ from GET /v1/analytics/daily-metrics, which sums per-post analytics.
 
-            - account-level impressions / reach
-            - follower inflow / outflow breakdown
-            - account-level watch time
-
-            Follower age, gender, country and city are on GET /v1/analytics/tiktok/demographics.
-
-            ### Per-video metrics
-
-            PER-VIDEO is a different story on the Business lane. An account connected through the TikTok for Business app reports these per video on GET /v1/analytics?postId=...:
-
-            - profile views, website clicks, follows
-            - full-watched rate, watch time
-            - impression sources, viewer types and viewer countries
-
-            They arrive roughly ...
+            - With `metricType=time_series` each day is one entry in `values`. With `total_value` the total is the sum over the range.
+            - The latest day available is yesterday, and TikTok can take 24-48 hours to settle a day. Days after the latest available one ...
 
             Args:
                 account_id: The Zernio SocialAccount ID for the TikTok account. (required)
                 metrics: Comma-separated list. Defaults to
         "follower_count,likes_count,video_count,followers_gained,followers_lost".
 
-        Live from /v2/user/info/ (requires user.info.stats scope):
+        Live profile counters (requires user.info.stats scope):
           - follower_count  (cumulative; time series joined from AccountStats)
           - following_count (cumulative; time series joined from AccountStats.metadata)
           - likes_count     (cumulative; time series joined from AccountStats.metadata)
           - video_count     (cumulative; time series joined from AccountStats.metadata)
+
+        Daily account figures from TikTok (requires user.insights scope and an account on Zernio's TikTok connection):
+          - video_views     (views of all the account's videos that day)
+          - likes           (likes received that day)
+          - comments        (comments received that day)
+          - shares          (shares that day)
+          - profile_views   (profile views that day)
 
         Zernio-synthesized:
           - followers_gained  (sum of positive daily follower deltas)
@@ -14506,8 +14500,8 @@ def register_generated_tools(mcp, _get_client):
                 to_date: End date (YYYY-MM-DD). Defaults to today.
                 since: Alias of fromDate, kept for existing callers
                 until: Alias of toDate, kept for existing callers
-                metric_type: "total_value" returns the latest cumulative counter value.
-        "time_series" returns daily values joined from AccountStats snapshots."""
+                metric_type: "total_value" returns the latest value of a cumulative counter, and the sum over the range for a daily account metric.
+        "time_series" returns daily values: joined from AccountStats snapshots for the counters, TikTok's own daily figures for the daily account metrics."""
         client = _get_client()
         try:
             response = client.analytics.get_tik_tok_account_insights(
