@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.531.1"
+  version: "1.532.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -15000,10 +15000,13 @@ components:
           type: boolean
           description: Whether user has analytics add-on access
         pagination:
-          description: 'Present on a paginated request: `{ page, limit, total, pages }` with page and limit, `{ limit, nextCursor }` with cursor paging (limit alone or cursor).'
+          description: 'Present on a paginated request: `{ page, limit, total, pages }` with page and limit, `{ limit, nextCursor }` with cursor paging (limit alone or cursor). Also `{ limit, nextCursor }` on an unpaged API request cut at 500 accounts.'
           oneOf:
             - $ref: '#/components/schemas/Pagination'
             - $ref: '#/components/schemas/AccountCursorPagination'
+        warning:
+          type: string
+          description: 'Only when an unpaged API request was cut at 500 accounts: how to list the rest with cursor paging.'
         profileTotals:
           type: object
           additionalProperties: { type: integer }
@@ -15050,8 +15053,11 @@ components:
             to: { type: string, format: date-time }
         granularity: { type: string }
         pagination:
-          description: Only present when limit or cursor is sent.
+          description: Present when limit or cursor is sent, and on the default page of 25 that an API request without accountIds gets.
           $ref: '#/components/schemas/AccountCursorPagination'
+        warning:
+          type: string
+          description: Only when the default page of 25 cut the list. Page through the rest with cursor.
     UploadedFile:
       type: object
       properties:
@@ -37236,7 +37242,9 @@ paths:
 
         ### Pagination
 
-        Server-side pagination is optional. When omitted, returns all accounts (backward-compatible).
+        Server-side pagination is optional. When omitted, the dashboard gets every account, while an API key or OAuth app gets at most 500: the first cursor page, ordered by account id.
+
+        When that cap cuts the list, the response carries `warning` and `pagination.nextCursor`, plus the `X-Result-Truncated: true` and `X-Result-Limit: 500` headers. Pass `nextCursor` back as `cursor` (with `limit`) to list the rest.
 
         - Cursor paging: send `limit` alone for the first page, then pass `pagination.nextCursor` back as `cursor` until it is null. Pages are ordered by account id, so accounts added or removed between calls never shift a page. Cannot be combined with `page`, `sort` or `perProfile`.
         - Offset paging: send `page` and `limit` together. Out-of-range page/limit values are rejected with 400 rather than silently clamped.
@@ -37352,7 +37360,7 @@ paths:
           in: query
           schema: { type: integer, minimum: 1 }
           description: |
-            Page number (1-based) for offset paging. Requires limit; omit page, limit and cursor for all accounts.
+            Page number (1-based) for offset paging. Requires limit; omit page, limit and cursor for an unpaged listing (at most 500 accounts for an API key or OAuth app).
         - name: limit
           in: query
           schema: { type: integer, minimum: 1, maximum: 500 }
@@ -37373,6 +37381,13 @@ paths:
       responses:
         '200':
           description: Accounts (with optional pagination)
+          headers:
+            X-Result-Truncated:
+              schema: { type: string, enum: ['true'] }
+              description: 'Only on an unpaged API request whose accounts went past the 500 cap. List the rest with cursor paging.'
+            X-Result-Limit:
+              schema: { type: integer, example: 500 }
+              description: 'Only with X-Result-Truncated: the cap that cut the list.'
           content:
             application/json:
               schema:
@@ -37405,11 +37420,18 @@ paths:
       description: |
         Returns follower count history and growth metrics for connected accounts.
         Requires analytics add-on subscription. Follower counts are refreshed once per day.
+
+        ### Limits
+
+        - At most 25 accounts per request: up to 25 `accountIds`, or a page of accounts. More than 25 `accountIds` returns 400.
+        - Without `accountIds`, the response is the first page of 25 accounts even when `limit` and `cursor` are omitted. Pass `pagination.nextCursor` back as `cursor` for the next one.
+        - When that default page cuts the list, the response also carries a `warning` and the headers `X-Result-Truncated: true` and `X-Result-Limit: 25`.
+        - At most 1 year between `fromDate` and `toDate`. A longer range returns 400.
       parameters:
         - name: accountIds
           in: query
           schema: { type: string }
-          description: Comma-separated list of account IDs (optional, defaults to all user's accounts)
+          description: 'Comma-separated list of up to 25 account IDs. Optional: without it, the response pages through all your accounts.'
         - name: profileId
           in: query
           schema: { type: string }
@@ -37417,7 +37439,7 @@ paths:
         - name: fromDate
           in: query
           schema: { type: string, format: date }
-          description: Start date in YYYY-MM-DD format (defaults to 30 days ago)
+          description: 'Start date in YYYY-MM-DD format (defaults to one year before toDate). At most one year before toDate.'
         - name: toDate
           in: query
           schema: { type: string, format: date }
@@ -37429,7 +37451,7 @@ paths:
         - name: limit
           in: query
           schema: { type: integer, minimum: 1, maximum: 25 }
-          description: 'Accounts per page, ordered by account id. Send it to page through accounts; the response then carries `pagination.nextCursor`. Without limit or cursor every matching account is returned.'
+          description: 'Accounts per page, ordered by account id; the response carries `pagination.nextCursor`. Without limit or cursor, a request without accountIds still gets a first page of 25.'
         - name: cursor
           in: query
           schema: { type: string }
@@ -37437,6 +37459,13 @@ paths:
       responses:
         '200':
           description: Follower stats
+          headers:
+            X-Result-Truncated:
+              schema: { type: string, enum: ['true'] }
+              description: Only when a request without accountIds, limit or cursor got the default page of 25 and more accounts remain. Page through the rest with cursor.
+            X-Result-Limit:
+              schema: { type: integer, example: 25 }
+              description: 'Only with X-Result-Truncated: the page size that cut the list.'
           content:
             application/json:
               schema:

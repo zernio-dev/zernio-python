@@ -768,7 +768,9 @@ def register_generated_tools(mcp, _get_client):
 
             ### Pagination
 
-            Server-side pagination is optional. When omitted, returns all accounts (backward-compatible).
+            Server-side pagination is optional. When omitted, the dashboard gets every account, while an API key or OAuth app gets at most 500: the first cursor page, ordered by account id.
+
+            When that cap cuts the list, the response carries `warning` and `pagination.nextCursor`, plus the `X-Result-Truncated: true` and `X-Result-Limit: 500` headers. Pass `nextCursor` back as `cursor` (with `limit`) to list the rest.
 
             - Cursor paging: send `limit` alone for the first page, then pass `pagination.nextCursor` back as `cursor` until it is null. Pages are ordered by account id, so accounts added or removed between calls never shift a page. Cannot be combined with `page`, `sort` or `perProfile`.
             - Offset paging: send `page` and `limit` together. Out-of-range page/limit values are rejected with 400 rather than silently clamped.
@@ -801,7 +803,7 @@ def register_generated_tools(mcp, _get_client):
                 include_status_counts: When true, the response carries `statusCounts`: how many accounts match every other
         filter of the request (with `status` lifted) in total and how many of those need a
         reconnection. Accepts `true` or `false` in any letter case; any other value returns 400.
-                page: Page number (1-based) for offset paging. Requires limit; omit page, limit and cursor for all accounts.
+                page: Page number (1-based) for offset paging. Requires limit; omit page, limit and cursor for an unpaged listing (at most 500 accounts for an API key or OAuth app).
                 limit: Page size. With page, an offset page; alone or with cursor, a cursor page.
          Omitted, one page of 100 is returned.
                 cursor: Opaque cursor from a previous response's `pagination.nextCursor`; returns the next page of `limit` accounts (500 when limit is omitted). A cursor we cannot parse returns 400. Cannot be combined with page.
@@ -858,13 +860,20 @@ def register_generated_tools(mcp, _get_client):
         Returns follower count history and growth metrics for connected accounts.
         Requires analytics add-on subscription. Follower counts are refreshed once per day.
 
+        ### Limits
+
+        - At most 25 accounts per request: up to 25 `accountIds`, or a page of accounts. More than 25 `accountIds` returns 400.
+        - Without `accountIds`, the response is the first page of 25 accounts even when `limit` and `cursor` are omitted. Pass `pagination.nextCursor` back as `cursor` for the next one.
+        - When that default page cuts the list, the response also carries a `warning` and the headers `X-Result-Truncated: true` and `X-Result-Limit: 25`.
+        - At most 1 year between `fromDate` and `toDate`. A longer range returns 400.
+
         Args:
-            account_ids: Comma-separated list of account IDs (optional, defaults to all user's accounts)
+            account_ids: Comma-separated list of up to 25 account IDs. Optional: without it, the response pages through all your accounts.
             profile_id: Filter by profile ID
-            from_date: Start date in YYYY-MM-DD format (defaults to 30 days ago)
+            from_date: Start date in YYYY-MM-DD format (defaults to one year before toDate). At most one year before toDate.
             to_date: End date in YYYY-MM-DD format (defaults to today)
             granularity: Data aggregation level
-            limit: Accounts per page, ordered by account id. Send it to page through accounts; the response then carries `pagination.nextCursor`. Without limit or cursor every matching account is returned.
+            limit: Accounts per page, ordered by account id; the response carries `pagination.nextCursor`. Without limit or cursor, a request without accountIds still gets a first page of 25.
             cursor: Opaque cursor from a previous response's `pagination.nextCursor`; returns the next page of `limit` accounts (25 when limit is omitted). A cursor we cannot parse returns 400."""
         client = _get_client()
         try:
