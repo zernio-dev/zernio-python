@@ -34504,7 +34504,7 @@ def register_generated_tools(mcp, _get_client):
         account_ids: str | None = None,
         status: str | None = None,
         campaign_id: str | None = None,
-        platform: Literal["meta", "linkedin"] | None = None,
+        platform: Literal["meta", "google", "linkedin"] | None = None,
         q: str | None = None,
         ad_account_id: str | None = None,
         limit: int = 25,
@@ -34513,7 +34513,7 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """List submitted leads
 
-        Lists the leads submitted through your Meta or LinkedIn lead forms, newest first.
+        Lists the leads submitted through your Meta, Google or LinkedIn lead forms, newest first.
 
         Returns submitted Lead Gen leads for your team, newest-first, with keyset pagination on `cursor`. Requires the Ads add-on.
 
@@ -34521,13 +34521,15 @@ def register_generated_tools(mcp, _get_client):
 
         Leads are served from the persisted cache, ingested in real time from the `leadgen` webhook.
 
+        ### Google
+
+        Google lead form submissions are stored like Meta leads and listed with them, usually within 15 minutes of the submission. Each lead says its network in `platform` (`meta`, `google`, `linkedin`), and `platform=google` lists only Google leads. On a Google lead `leadgenId` is the submission id and `formId` the lead form asset id; answers are keyed like Meta's (`email`, `phone_number`, `full_name`), custom questions by their text. Statuses work as for Meta leads.
+
         ### LinkedIn
 
-        When `accountId` is a LinkedIn ads account, `adAccountId` is required. Leads are fetched live from LinkedIn's `leadFormResponses`: LinkedIn has no webhook and enforces 90-day retention, so nothing is persisted.
+        When `accountId` is a LinkedIn ads account, `adAccountId` is required. Leads are fetched live from LinkedIn's `leadFormResponses`: LinkedIn has no webhook and enforces 90-day ...
 
-        Reading LinkedIn responses needs the `r_marketing_leadgen_automation` permission. Accounts connected before it was added must reconnect.
-
-        Platforms: meta, linkedin
+        Platforms: meta, google, linkedin
 
         Args:
             form_id: Filter to a single lead form.
@@ -34535,7 +34537,7 @@ def register_generated_tools(mcp, _get_client):
             account_ids: Meta only. Comma-separated connected account ids, to list several accounts at once. Without accountId or accountIds every account of the team is listed.
             status: Meta only. Comma-separated lead statuses: new, contacted, unreachable, qualified, converted, disqualified.
             campaign_id: Meta only. The platform campaign id the lead came from.
-            platform: meta skips the LinkedIn live fetch; linkedin requires accountId to be a LinkedIn ads connection (400 otherwise).
+            platform: Only leads of this network. meta and google list stored leads of that network (no LinkedIn live fetch); linkedin requires accountId to be a LinkedIn ads connection (400 otherwise). Without it, every stored network is listed, and an accountId that is a LinkedIn ads connection switches to the live fetch.
             q: Meta only. Case-insensitive text search over the lead's answers and the form name.
             ad_account_id: LinkedIn only: the LinkedIn ad account id whose responses to read (owner-scoped finder).
             limit

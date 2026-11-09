@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.532.0"
+  version: "1.533.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -203,7 +203,7 @@ x-documentation:
     - `review.updated` - A Google Business Profile reviewer edited their review text or rating, or a reply was added, edited or removed. A reply posted through `POST /v1/inbox/reviews/{reviewId}/reply` fires immediately, and the periodic check reports it again with the full review payload, so expect a second delivery. A reply removed through the API, or written or removed in Google's own interface, is reported by the periodic check: for replies written in Google, usually within 6 hours for reviews updated in the last 30 days and usually within about 7 days for older ones. Only teams with a webhook subscribed to `review.updated` are checked. A removed reply fires with `hasReply: false`.
     - `review.deleted` - Google Business Profile stopped returning this review, for example after Google's spam filter removed it. Detected by polling: fires usually 6 to 12 hours after the review disappears, only for locations covered by a webhook subscribed to `review.deleted` or `review.restored`. If the review comes back, `review.restored` fires. May arrive for a review id you never received `review.new` for. A review hidden and restored by Google may produce `review.deleted` followed by `review.restored`, and a `review.updated` can arrive for a review previously reported by `review.deleted` (it is restored on the next check).
     - `review.restored` - A review reported by `review.deleted` is returned by Google again. Same payload as `review.new`.
-    - `lead.received` - New lead submitted against a Meta Lead Gen (Instant) Form. `lead.fields` is the question-key → answer map; `lead.formId`/`lead.adId` give provenance.
+    - `lead.received` - New lead submitted against a Meta Lead Gen (Instant) Form or a Google Ads lead form (`account.platform` tells them apart). `lead.fields` is the question-key → answer map; `lead.formId`/`lead.adId` give provenance.
     - `ad.status_changed` - Ad, ad set, or campaign changed status on the ad platform (Meta: `in_process_ad_objects` entry/exit and `with_issues_ad_objects` violations)
     - `ad.created` - An ad was created through Zernio (`source` is `zernio`) or detected by the sync (`source` is `platform`). Never for history loaded when an account connects, nor for ads older than 7 days
     - `ad.updated` - An ad was edited through Zernio (API, MCP or dashboard) or outside it. `changes` lists the edited fields. `source` is `zernio` for edits through Zernio, `platform` for edits the sync detected outside Zernio, up to one sync interval late. From the sync, `changes` covers only `name` and `status`. Budget, bid, schedule and targeting edits made outside Zernio are not announced on the ad. Never for history loaded when an account connects
@@ -1889,7 +1889,8 @@ components:
       type: object
       properties:
         id: { type: string, description: Zernio lead id. }
-        leadgenId: { type: string, description: 'Meta lead id. On LinkedIn, the leadFormResponse id.' }
+        platform: { type: [string, "null"], enum: [meta, google, linkedin, tiktok, null], description: 'The ad network the lead came from.' }
+        leadgenId: { type: string, description: 'Meta lead id. On Google, the lead form submission id; on LinkedIn, the leadFormResponse id.' }
         formId: { type: string }
         formName: { type: [string, "null"] }
         accountId: { type: string }
@@ -7109,9 +7110,13 @@ components:
             id:
               type: string
               description: Zernio lead ID (AdLead document ID)
+            platform:
+              type: [string, "null"]
+              enum: [meta, google, linkedin, tiktok, null]
+              description: The ad network the lead came from.
             leadgenId:
               type: string
-              description: Meta lead ID (the platform's leadgen_id)
+              description: "The network's lead id: Meta's leadgen_id, or the Google lead form submission id"
             formId:
               type: string
               description: Lead Gen form ID the lead was submitted against
@@ -23907,7 +23912,7 @@ webhooks:
       operationId: onLeadReceived
       summary: Lead received event
       description: |
-        A new lead was submitted against a Meta Lead Gen (Instant) form and ingested via the Page `leadgen` webhook.
+        A new lead was submitted against a Meta Lead Gen (Instant) form (ingested via the Page `leadgen` webhook) or a Google Ads lead form (read every 15 minutes). `lead.platform` names the network.
 
         ### Payload notes
 
@@ -23951,6 +23956,7 @@ webhooks:
               timestamp: '2026-01-15T10:00:00Z'
               lead:
                 id: 507f1f77bcf86cd799439018
+                platform: meta
                 leadgenId: '1000000000000001'
                 formId: '1000000000000002'
                 formName: Spring promo form
@@ -88280,16 +88286,20 @@ paths:
       x-resource-group: "contacts"
       operationId: listLeads
       tags: ["Lead Gen"]
-      x-platforms: ["meta", "linkedin"]
+      x-platforms: ["meta", "google", "linkedin"]
       summary: List submitted leads
       description: |
-        Lists the leads submitted through your Meta or LinkedIn lead forms, newest first.
+        Lists the leads submitted through your Meta, Google or LinkedIn lead forms, newest first.
 
         Returns submitted Lead Gen leads for your team, newest-first, with keyset pagination on `cursor`. Requires the Ads add-on.
 
         ### Meta (default)
 
         Leads are served from the persisted cache, ingested in real time from the `leadgen` webhook.
+
+        ### Google
+
+        Google lead form submissions are stored like Meta leads and listed with them, usually within 15 minutes of the submission. Each lead says its network in `platform` (`meta`, `google`, `linkedin`), and `platform=google` lists only Google leads. On a Google lead `leadgenId` is the submission id and `formId` the lead form asset id; answers are keyed like Meta's (`email`, `phone_number`, `full_name`), custom questions by their text. Statuses work as for Meta leads.
 
         ### LinkedIn
 
@@ -88302,7 +88312,7 @@ paths:
         - { name: accountIds, in: query, schema: { type: string }, description: "Meta only. Comma-separated connected account ids, to list several accounts at once. Without accountId or accountIds every account of the team is listed." }
         - { name: status, in: query, schema: { type: string, example: 'new,contacted' }, description: "Meta only. Comma-separated lead statuses: new, contacted, unreachable, qualified, converted, disqualified." }
         - { name: campaignId, in: query, schema: { type: string }, description: "Meta only. The platform campaign id the lead came from." }
-        - { name: platform, in: query, schema: { type: string, enum: [meta, linkedin] }, description: "meta skips the LinkedIn live fetch; linkedin requires accountId to be a LinkedIn ads connection (400 otherwise)." }
+        - { name: platform, in: query, schema: { type: string, enum: [meta, google, linkedin] }, description: "Only leads of this network. meta and google list stored leads of that network (no LinkedIn live fetch); linkedin requires accountId to be a LinkedIn ads connection (400 otherwise). Without it, every stored network is listed, and an accountId that is a LinkedIn ads connection switches to the live fetch." }
         - { name: q, in: query, schema: { type: string, maxLength: 200 }, description: "Meta only. Case-insensitive text search over the lead's answers and the form name." }
         - { name: adAccountId, in: query, schema: { type: string }, description: "LinkedIn only: the LinkedIn ad account id whose responses to read (owner-scoped finder)." }
         - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 25 } }
