@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.555.1"
+  version: "1.556.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -14389,7 +14389,7 @@ components:
         start: { type: string, description: 'ISO date-time, or a date (`YYYY-MM-DD`) for all-day events.' }
         end: { type: string, description: 'Exclusive for all-day events.' }
         allDay: { type: boolean }
-        timezone: { type: string, description: 'IANA zone the event is scheduled in. Default UTC.' }
+        timezone: { type: string, description: "IANA zone the event is scheduled in. Defaults to the calendar's zone on Google and the mailbox's working-hours zone on Microsoft (UTC when Outlook has none, as on personal accounts). A PATCH that moves an event without a zone keeps the zone the event already has." }
         participants: { type: array, maxItems: 100, items: { $ref: '#/components/schemas/EmailAddress' } }
         recurrence: { type: array, maxItems: 5, items: { type: string }, description: 'RRULE lines, e.g. `RRULE:FREQ=WEEKLY;BYDAY=MO,WE;COUNT=10`.' }
         reminders:
@@ -14400,7 +14400,12 @@ components:
         conferencing: { type: string, enum: [google_meet, teams] }
         busy: { type: boolean }
         visibility: { type: string, enum: [default, public, private] }
-        metadata: { type: object, additionalProperties: { type: string } }
+        metadata: { type: object, additionalProperties: { type: string }, description: 'String pairs stored on the event and returned on reads, on Google and Microsoft.' }
+        notifyParticipants:
+          type: string
+          enum: [all, external, none]
+          default: all
+          description: "Who gets an invitation or update email for this write: everyone, only guests outside the organizer's domain, or nobody. Google only; Outlook always notifies, so `external` and `none` answer 400 `unsupported_for_provider` on a Microsoft account."
     CreateCalendarEventRequest:
       allOf:
         - type: object
@@ -34057,9 +34062,13 @@ paths:
       summary: Start connecting a creator account
       security: []
       description: |
-        Returns the authorization URL that connects one of the creator's own social accounts,
-        read-only, so their posts can be verified. Send the creator's browser to `authUrl`; they
-        come back to their participant page. Only the campaign's platforms are accepted.
+        Returns the URL that connects one of the creator's own social accounts, read-only, so their
+        posts can be verified. Only the campaign's platforms are accepted.
+
+        `authUrl` opens the welcome screen in the campaign's brand, then the platform's sign-in.
+
+        The creator comes back to their participant page, or to the connect window's result screen
+        when `windowUrl` is sent.
       requestBody:
         required: true
         content:
@@ -34069,6 +34078,7 @@ paths:
               required: [platform]
               properties:
                 platform: { type: string, minLength: 1, maxLength: 40, description: 'One of the campaign''s platforms, for example tiktok.' }
+                windowUrl: { type: string, maxLength: 2000, description: 'The Zernio connect window the participant page opened (`/connect/complete` with its `window` id). Any other URL answers 400 `invalid_field_value`.' }
       responses:
         '200':
           description: Authorization URL.
@@ -34080,8 +34090,8 @@ paths:
                 properties:
                   authUrl: { type: string, format: uri }
         '400':
-          x-summary: "The connect request is invalid because the platform is not in the campaign, the account limit is reached, or the campaign ended."
-          description: 'The platform is not part of the campaign (`invalid_field_value`), the campaign allows no more connected accounts ("This campaign allows N connected accounts."), or the campaign has ended (`invalid_resource_state`).'
+          x-summary: "The connect request is invalid because the platform is not in the campaign, the window URL is not ours, the account limit is reached, or the campaign ended."
+          description: 'The platform or `windowUrl` is not accepted (`invalid_field_value`), the campaign allows no more connected accounts, or the campaign has ended (`invalid_resource_state`).'
           content:
             application/json:
               schema: { $ref: '#/components/schemas/ErrorResponse' }
@@ -55253,7 +55263,7 @@ paths:
       operationId: listCalendarEvents
       tags: [Calendar]
       summary: List events in a window
-      description: 'Recurring series are expanded into their occurrences inside the window by default (`expandRecurring=false` lists the masters instead). `title` and `location` are substring matches applied to the fetched page.'
+      description: 'Recurring series are expanded into their occurrences inside the window by default (`expandRecurring=false` lists the masters instead, including series that started before `from` and still recur in the window). Events that overlap the window edges are included. `title` and `location` are substring matches applied to the fetched page.'
       security: [{ bearerAuth: [] }]
       parameters:
         - $ref: '#/components/parameters/EmailAccountId'
@@ -55265,7 +55275,7 @@ paths:
         - { name: showCancelled, in: query, schema: { type: boolean, default: false } }
         - { name: expandRecurring, in: query, schema: { type: boolean, default: true } }
         - { name: icalUid, in: query, schema: { type: string } }
-        - { name: sortOrder, in: query, schema: { type: string, enum: [asc, desc], default: asc } }
+        - { name: sortOrder, in: query, schema: { type: string, enum: [asc, desc], default: asc }, description: 'Order by start time across the whole window. On Google, `desc` reads the window in full, so a window over 2,500 events answers 400; narrow `from` and `to`.' }
         - { name: cursor, in: query, schema: { type: string } }
         - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 200, default: 50 } }
         - { name: timezone, in: query, schema: { type: string }, description: 'IANA zone the `start` and `end` offsets are rendered in. Default UTC.' }
@@ -55391,6 +55401,7 @@ paths:
         - { name: eventId, in: path, required: true, schema: { type: string } }
         - $ref: '#/components/parameters/EmailAccountId'
         - { name: calendarId, in: query, schema: { type: string }, description: "The calendar holding the event (an id from GET /v1/calendar/calendars). Defaults to the primary calendar." }
+        - { name: notifyParticipants, in: query, schema: { type: string, enum: [all, external, none], default: all }, description: 'Who gets the cancellation email. Google only; `external` and `none` answer 400 on a Microsoft account.' }
       responses:
         '200':
           description: Deleted
@@ -55414,7 +55425,7 @@ paths:
       operationId: rsvpCalendarEvent
       tags: [Calendar]
       summary: Respond to an invitation
-      description: Accepts, declines or tentatively accepts on behalf of the mailbox and notifies the organizer.
+      description: Accepts, declines or tentatively accepts on behalf of the mailbox and notifies the organizer, unless `sendResponse` is false.
       security: [{ bearerAuth: [] }]
       parameters:
         - { name: eventId, in: path, required: true, schema: { type: string } }
@@ -55430,6 +55441,7 @@ paths:
                 calendarId: { type: string, description: "The calendar holding the event (an id from GET /v1/calendar/calendars). Defaults to the primary calendar." }
                 status: { type: string, enum: [accepted, declined, tentative] }
                 comment: { type: string, maxLength: 1000 }
+                sendResponse: { type: boolean, default: true, description: 'false records the response without emailing the organizer.' }
       responses:
         '200':
           description: The event after the response

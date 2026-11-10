@@ -99,10 +99,13 @@ class CreatorPortalResource:
         )
         return self._client._post("/public/creator-campaigns/{token}", data=payload)
 
-    def start_creator_connect(self, platform: str) -> dict[str, Any]:
+    def start_creator_connect(
+        self, platform: str, *, window_url: str | None = None
+    ) -> dict[str, Any]:
         """Start connecting a creator account"""
         payload = self._build_payload(
             platform=platform,
+            window_url=window_url,
         )
         return self._client._post(
             "/public/creator-campaigns/{token}/connect", data=payload
@@ -249,10 +252,13 @@ class CreatorPortalResource:
             "/public/creator-campaigns/{token}", data=payload
         )
 
-    async def astart_creator_connect(self, platform: str) -> dict[str, Any]:
+    async def astart_creator_connect(
+        self, platform: str, *, window_url: str | None = None
+    ) -> dict[str, Any]:
         """Start connecting a creator account (async)"""
         payload = self._build_payload(
             platform=platform,
+            window_url=window_url,
         )
         return await self._client._apost(
             "/public/creator-campaigns/{token}/connect", data=payload

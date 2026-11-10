@@ -20355,7 +20355,7 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """List events in a window
 
-        Recurring series are expanded into their occurrences inside the window by default (`expandRecurring=false` lists the masters instead). `title` and `location` are substring matches applied to the fetched page.
+        Recurring series are expanded into their occurrences inside the window by default (`expandRecurring=false` lists the masters instead, including series that started before `from` and still recur in the window). Events that overlap the window edges are included. `title` and `location` are substring matches applied to the fetched page.
 
         Args:
             account_id: The connected Google, Microsoft or IMAP account. (required)
@@ -20367,7 +20367,7 @@ def register_generated_tools(mcp, _get_client):
             show_cancelled
             expand_recurring
             ical_uid
-            sort_order
+            sort_order: Order by start time across the whole window. On Google, `desc` reads the window in full, so a window over 2,500 events answers 400; narrow `from` and `to`.
             cursor
             limit
             timezone: IANA zone the `start` and `end` offsets are rendered in. Default UTC."""
@@ -20417,6 +20417,7 @@ def register_generated_tools(mcp, _get_client):
         busy: bool | None = None,
         visibility: Literal["default", "public", "private"] | None = None,
         metadata: dict[str, Any] | None = None,
+        notify_participants: Literal["all", "external", "none"] = "all",
     ) -> str:
         """Create an event
 
@@ -20446,14 +20447,15 @@ def register_generated_tools(mcp, _get_client):
             start: ISO date-time, or a date (`YYYY-MM-DD`) for all-day events. (required)
             end: Exclusive for all-day events. (required)
             all_day
-            timezone: IANA zone the event is scheduled in. Default UTC.
+            timezone: IANA zone the event is scheduled in. Defaults to the calendar's zone on Google and the mailbox's working-hours zone on Microsoft (UTC when Outlook has none, as on personal accounts). A PATCH that moves an event without a zone keeps the zone the event already has.
             participants: Each item is an object with keys: email (string, required); name (string or null)
             recurrence: RRULE lines, e.g. `RRULE:FREQ=WEEKLY;BYDAY=MO,WE;COUNT=10`.
             reminders: Object with keys: useDefault (boolean); overrides (list of objects with keys minutes)
             conferencing
             busy
             visibility
-            metadata"""
+            metadata: String pairs stored on the event and returned on reads, on Google and Microsoft.
+            notify_participants: Who gets an invitation or update email for this write: everyone, only guests outside the organizer's domain, or nobody. Google only; Outlook always notifies, so `external` and `none` answer 400 `unsupported_for_provider` on a Microsoft account."""
         client = _get_client()
         try:
             response = client.calendar.create_calendar_event(
@@ -20473,6 +20475,7 @@ def register_generated_tools(mcp, _get_client):
                 busy=busy,
                 visibility=visibility,
                 metadata=metadata,
+                notify_participants=notify_participants,
             )
             return _format_response(response)
         except Exception as e:
@@ -20537,6 +20540,7 @@ def register_generated_tools(mcp, _get_client):
         busy: bool | None = None,
         visibility: Literal["default", "public", "private"] | None = None,
         metadata: dict[str, Any] | None = None,
+        notify_participants: Literal["all", "external", "none"] = "all",
     ) -> str:
         """Update an event
 
@@ -20550,14 +20554,15 @@ def register_generated_tools(mcp, _get_client):
             start: ISO date-time, or a date (`YYYY-MM-DD`) for all-day events.
             end: Exclusive for all-day events.
             all_day
-            timezone: IANA zone the event is scheduled in. Default UTC.
+            timezone: IANA zone the event is scheduled in. Defaults to the calendar's zone on Google and the mailbox's working-hours zone on Microsoft (UTC when Outlook has none, as on personal accounts). A PATCH that moves an event without a zone keeps the zone the event already has.
             participants: Each item is an object with keys: email (string, required); name (string or null)
             recurrence: RRULE lines, e.g. `RRULE:FREQ=WEEKLY;BYDAY=MO,WE;COUNT=10`.
             reminders: Object with keys: useDefault (boolean); overrides (list of objects with keys minutes)
             conferencing
             busy
             visibility
-            metadata"""
+            metadata: String pairs stored on the event and returned on reads, on Google and Microsoft.
+            notify_participants: Who gets an invitation or update email for this write: everyone, only guests outside the organizer's domain, or nobody. Google only; Outlook always notifies, so `external` and `none` answer 400 `unsupported_for_provider` on a Microsoft account."""
         client = _get_client()
         try:
             response = client.calendar.update_calendar_event(
@@ -20578,6 +20583,7 @@ def register_generated_tools(mcp, _get_client):
                 busy=busy,
                 visibility=visibility,
                 metadata=metadata,
+                notify_participants=notify_participants,
             )
             return _format_response(response)
         except Exception as e:
@@ -20592,18 +20598,25 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def calendar_delete_calendar_event(
-        event_id: str, account_id: str, calendar_id: str | None = None
+        event_id: str,
+        account_id: str,
+        calendar_id: str | None = None,
+        notify_participants: Literal["all", "external", "none"] = "all",
     ) -> str:
         """Delete an event
 
         Args:
             event_id: (required)
             account_id: The connected Google, Microsoft or IMAP account. (required)
-            calendar_id: The calendar holding the event (an id from GET /v1/calendar/calendars). Defaults to the primary calendar."""
+            calendar_id: The calendar holding the event (an id from GET /v1/calendar/calendars). Defaults to the primary calendar.
+            notify_participants: Who gets the cancellation email. Google only; `external` and `none` answer 400 on a Microsoft account."""
         client = _get_client()
         try:
             response = client.calendar.delete_calendar_event(
-                event_id=event_id, account_id=account_id, calendar_id=calendar_id
+                event_id=event_id,
+                account_id=account_id,
+                calendar_id=calendar_id,
+                notify_participants=notify_participants,
             )
             return _format_response(response)
         except Exception as e:
@@ -20623,17 +20636,19 @@ def register_generated_tools(mcp, _get_client):
         status: Literal["accepted", "declined", "tentative"],
         calendar_id: str | None = None,
         comment: str | None = None,
+        send_response: bool = True,
     ) -> str:
         """Respond to an invitation
 
-        Accepts, declines or tentatively accepts on behalf of the mailbox and notifies the organizer.
+        Accepts, declines or tentatively accepts on behalf of the mailbox and notifies the organizer, unless `sendResponse` is false.
 
         Args:
             event_id: (required)
             account_id: (required)
             calendar_id: The calendar holding the event (an id from GET /v1/calendar/calendars). Defaults to the primary calendar.
             status: (required)
-            comment"""
+            comment
+            send_response: false records the response without emailing the organizer."""
         client = _get_client()
         try:
             response = client.calendar.rsvp_calendar_event(
@@ -20642,6 +20657,7 @@ def register_generated_tools(mcp, _get_client):
                 calendar_id=calendar_id,
                 status=status,
                 comment=comment,
+                send_response=send_response,
             )
             return _format_response(response)
         except Exception as e:
@@ -31575,18 +31591,27 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=True,
         )
     )
-    def creator_portal_start_creator_connect(platform: str) -> str:
+    def creator_portal_start_creator_connect(
+        platform: str, window_url: str | None = None
+    ) -> str:
         """Start connecting a creator account
 
-        Returns the authorization URL that connects one of the creator's own social accounts,
-        read-only, so their posts can be verified. Send the creator's browser to `authUrl`; they
-        come back to their participant page. Only the campaign's platforms are accepted.
+        Returns the URL that connects one of the creator's own social accounts, read-only, so their
+        posts can be verified. Only the campaign's platforms are accepted.
+
+        `authUrl` opens the welcome screen in the campaign's brand, then the platform's sign-in.
+
+        The creator comes back to their participant page, or to the connect window's result screen
+        when `windowUrl` is sent.
 
         Args:
-            platform: One of the campaign's platforms, for example tiktok. (required)"""
+            platform: One of the campaign's platforms, for example tiktok. (required)
+            window_url: The Zernio connect window the participant page opened (`/connect/complete` with its `window` id). Any other URL answers 400 `invalid_field_value`."""
         client = _get_client()
         try:
-            response = client.creator_portal.start_creator_connect(platform=platform)
+            response = client.creator_portal.start_creator_connect(
+                platform=platform, window_url=window_url
+            )
             return _format_response(response)
         except Exception as e:
             raise ToolError(f"Error: {e}") from e
