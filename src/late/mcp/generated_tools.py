@@ -865,12 +865,12 @@ def register_generated_tools(mcp, _get_client):
         - At most 25 accounts per request: up to 25 `accountIds`, or a page of accounts. More than 25 `accountIds` returns 400.
         - Without `accountIds`, the response is the first page of 25 accounts even when `limit` and `cursor` are omitted. Pass `pagination.nextCursor` back as `cursor` for the next one.
         - When that default page cuts the list, the response also carries a `warning` and the headers `X-Result-Truncated: true` and `X-Result-Limit: 25`.
-        - At most 1 year between `fromDate` and `toDate`. A longer range returns 400.
+        - At most 1 year between `fromDate` and `toDate`. A longer range is cut to the year before `toDate`: `dateRange.from` shows where the data starts and the response carries a `warning`.
 
         Args:
             account_ids: Comma-separated list of up to 25 account IDs. Optional: without it, the response pages through all your accounts.
             profile_id: Filter by profile ID
-            from_date: Start date in YYYY-MM-DD format (defaults to one year before toDate). At most one year before toDate.
+            from_date: Start date in YYYY-MM-DD format (defaults to one year before toDate). An earlier date is moved to one year before toDate.
             to_date: End date in YYYY-MM-DD format (defaults to today)
             granularity: Data aggregation level
             limit: Accounts per page, ordered by account id; the response carries `pagination.nextCursor`. Without limit or cursor, a request without accountIds still gets a first page of 25.

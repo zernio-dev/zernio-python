@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.562.0"
+  version: "1.562.2"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -14632,7 +14632,7 @@ components:
           properties:
             id: { type: string }
             changeType: { type: string, enum: [created, updated, deleted] }
-            calendarId: { type: [string, "null"], description: "The calendar holding the event, to pass as `calendarId` when reading it: `primary` for the user's main calendar. Null when it is not known, as for a deleted Outlook event." }
+            calendarId: { type: [string, "null"], description: "The calendar holding the event, to pass as `calendarId` when reading it: `primary` for the user's main calendar, else the Google calendar id. Null when it is not known, as for a deleted Outlook event." }
             masterEventId: { type: [string, "null"], description: 'The series this event belongs to, when it is an occurrence or exception.' }
         timestamp: { type: string, format: date-time }
     WebhookEmailTrackedMessage:
@@ -16519,7 +16519,7 @@ components:
           $ref: '#/components/schemas/AccountCursorPagination'
         warning:
           type: string
-          description: Only when the default page of 25 cut the list. Page through the rest with cursor.
+          description: 'Only when the response was cut: the default page of 25 accounts (page through the rest with cursor), or a date range longer than a year (dateRange.from shows where the data starts). Both reasons are joined when they apply together.'
     UploadedFile:
       type: object
       properties:
@@ -23266,7 +23266,7 @@ webhooks:
       operationId: onCalendarEventCreated
       summary: Calendar event created
       description: |
-        An event was added to the primary calendar of a connected mailbox, by the user, an invitation or the API.
+        An event was added to a watched calendar of a connected mailbox, by the user, an invitation or the API. Google watches every calendar the user shows (up to 25), Outlook the default calendar; `calendarId` names it.
 
         ### Platform notes
 
@@ -23304,7 +23304,7 @@ webhooks:
       operationId: onCalendarEventUpdated
       summary: Calendar event updated
       description: |
-        An event on the primary calendar changed: its time, details or participants' answers.
+        An event on a watched calendar changed: its time, details or participants' answers.
       tags: [Webhook Events]
       requestBody:
         required: true
@@ -23693,7 +23693,7 @@ webhooks:
       operationId: onCalendarEventDeleted
       summary: Calendar event deleted
       description: |
-        An event was deleted from the primary calendar.
+        An event was deleted from a watched calendar.
 
         ### Platform notes
 
@@ -40391,7 +40391,7 @@ paths:
         - At most 25 accounts per request: up to 25 `accountIds`, or a page of accounts. More than 25 `accountIds` returns 400.
         - Without `accountIds`, the response is the first page of 25 accounts even when `limit` and `cursor` are omitted. Pass `pagination.nextCursor` back as `cursor` for the next one.
         - When that default page cuts the list, the response also carries a `warning` and the headers `X-Result-Truncated: true` and `X-Result-Limit: 25`.
-        - At most 1 year between `fromDate` and `toDate`. A longer range returns 400.
+        - At most 1 year between `fromDate` and `toDate`. A longer range is cut to the year before `toDate`: `dateRange.from` shows where the data starts and the response carries a `warning`.
       parameters:
         - name: accountIds
           in: query
@@ -40404,7 +40404,7 @@ paths:
         - name: fromDate
           in: query
           schema: { type: string, format: date }
-          description: 'Start date in YYYY-MM-DD format (defaults to one year before toDate). At most one year before toDate.'
+          description: 'Start date in YYYY-MM-DD format (defaults to one year before toDate). An earlier date is moved to one year before toDate.'
         - name: toDate
           in: query
           schema: { type: string, format: date }
