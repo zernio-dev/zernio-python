@@ -206,6 +206,7 @@ class EmailResource:
         from_name: str | None = None,
         from_: str | None = None,
         append_signature: bool | None = None,
+        signature_id: str | None = None,
         text: str | None = None,
         html: str | None = None,
         attachments: list[dict[str, Any]] | None = None,
@@ -227,6 +228,7 @@ class EmailResource:
             from_name=from_name,
             from_=from_,
             append_signature=append_signature,
+            signature_id=signature_id,
             subject=subject,
             text=text,
             html=html,
@@ -342,6 +344,7 @@ class EmailResource:
         from_name: str | None = None,
         from_: str | None = None,
         append_signature: bool | None = None,
+        signature_id: str | None = None,
         text: str | None = None,
         html: str | None = None,
         attachments: list[dict[str, Any]] | None = None,
@@ -364,6 +367,7 @@ class EmailResource:
             from_name=from_name,
             from_=from_,
             append_signature=append_signature,
+            signature_id=signature_id,
             subject=subject,
             text=text,
             html=html,
@@ -397,6 +401,7 @@ class EmailResource:
         from_name: str | None = None,
         from_: str | None = None,
         append_signature: bool | None = None,
+        signature_id: str | None = None,
         subject: str | None = None,
         text: str | None = None,
         html: str | None = None,
@@ -418,6 +423,7 @@ class EmailResource:
             from_name=from_name,
             from_=from_,
             append_signature=append_signature,
+            signature_id=signature_id,
             subject=subject,
             text=text,
             html=html,
@@ -459,6 +465,7 @@ class EmailResource:
         from_name: str | None = None,
         from_: str | None = None,
         append_signature: bool | None = None,
+        signature_id: str | None = None,
         subject: str | None = None,
         text: str | None = None,
         html: str | None = None,
@@ -484,6 +491,7 @@ class EmailResource:
             from_name=from_name,
             from_=from_,
             append_signature=append_signature,
+            signature_id=signature_id,
             subject=subject,
             text=text,
             html=html,
@@ -525,6 +533,7 @@ class EmailResource:
         text: str | None = None,
         html: str | None = None,
         attachments: list[Any] | None = None,
+        signature_id: Any | None = None,
     ) -> dict[str, Any]:
         """Update a draft"""
         payload = self._build_payload(
@@ -537,6 +546,7 @@ class EmailResource:
             text=text,
             html=html,
             attachments=attachments,
+            signature_id=signature_id,
         )
         return self._client._patch(f"/v1/email/drafts/{draft_id}", data=payload)
 
@@ -601,6 +611,83 @@ class EmailResource:
             account_id=account_id,
         )
         return self._client._get("/v1/email/send-as", params=params)
+
+    def declare_email_send_as(
+        self, account_id: str, email: str, *, name: str | None = None
+    ) -> dict[str, Any]:
+        """Declare a send-as address"""
+        payload = self._build_payload(
+            account_id=account_id,
+            email=email,
+            name=name,
+        )
+        return self._client._post("/v1/email/send-as", data=payload)
+
+    def delete_email_send_as(self, email: str, account_id: str) -> dict[str, Any]:
+        """Remove a declared send-as address"""
+        params = self._build_params(
+            account_id=account_id,
+        )
+        return self._client._delete(f"/v1/email/send-as/{email}", params=params)
+
+    def list_email_signatures(self, *, account_id: str | None = None) -> dict[str, Any]:
+        """List signatures"""
+        params = self._build_params(
+            account_id=account_id,
+        )
+        return self._client._get("/v1/email/signatures", params=params)
+
+    def create_email_signature(
+        self,
+        name: str,
+        html: str,
+        *,
+        account_id: str | None = None,
+        text: str | None = None,
+        default_for: list[str] | None = None,
+    ) -> dict[str, Any]:
+        """Create a signature"""
+        payload = self._build_payload(
+            account_id=account_id,
+            name=name,
+            html=html,
+            text=text,
+            default_for=default_for,
+        )
+        return self._client._post("/v1/email/signatures", data=payload)
+
+    def import_email_signatures(self, account_id: str) -> dict[str, Any]:
+        """Import Gmail signatures"""
+        params = self._build_params(
+            account_id=account_id,
+        )
+        return self._client._post("/v1/email/signatures/import", params=params)
+
+    def get_email_signature(self, signature_id: str) -> dict[str, Any]:
+        """Get a signature"""
+        return self._client._get(f"/v1/email/signatures/{signature_id}")
+
+    def update_email_signature(
+        self,
+        signature_id: str,
+        *,
+        name: str | None = None,
+        html: str | None = None,
+        text: Any | None = None,
+        default_for: list[str] | None = None,
+    ) -> dict[str, Any]:
+        """Update a signature"""
+        payload = self._build_payload(
+            name=name,
+            html=html,
+            text=text,
+            default_for=default_for,
+        )
+        return self._client._patch(f"/v1/email/signatures/{signature_id}", data=payload)
+
+    def delete_email_signature(self, signature_id: str) -> dict[str, Any]:
+        """Delete a signature"""
+        return self._client._delete(f"/v1/email/signatures/{signature_id}")
 
     def delete_email_label(self, label_id: str, account_id: str) -> dict[str, Any]:
         """Delete a label"""
@@ -754,6 +841,7 @@ class EmailResource:
         from_name: str | None = None,
         from_: str | None = None,
         append_signature: bool | None = None,
+        signature_id: str | None = None,
         text: str | None = None,
         html: str | None = None,
         attachments: list[dict[str, Any]] | None = None,
@@ -775,6 +863,7 @@ class EmailResource:
             from_name=from_name,
             from_=from_,
             append_signature=append_signature,
+            signature_id=signature_id,
             subject=subject,
             text=text,
             html=html,
@@ -902,6 +991,7 @@ class EmailResource:
         from_name: str | None = None,
         from_: str | None = None,
         append_signature: bool | None = None,
+        signature_id: str | None = None,
         text: str | None = None,
         html: str | None = None,
         attachments: list[dict[str, Any]] | None = None,
@@ -924,6 +1014,7 @@ class EmailResource:
             from_name=from_name,
             from_=from_,
             append_signature=append_signature,
+            signature_id=signature_id,
             subject=subject,
             text=text,
             html=html,
@@ -957,6 +1048,7 @@ class EmailResource:
         from_name: str | None = None,
         from_: str | None = None,
         append_signature: bool | None = None,
+        signature_id: str | None = None,
         subject: str | None = None,
         text: str | None = None,
         html: str | None = None,
@@ -978,6 +1070,7 @@ class EmailResource:
             from_name=from_name,
             from_=from_,
             append_signature=append_signature,
+            signature_id=signature_id,
             subject=subject,
             text=text,
             html=html,
@@ -1019,6 +1112,7 @@ class EmailResource:
         from_name: str | None = None,
         from_: str | None = None,
         append_signature: bool | None = None,
+        signature_id: str | None = None,
         subject: str | None = None,
         text: str | None = None,
         html: str | None = None,
@@ -1044,6 +1138,7 @@ class EmailResource:
             from_name=from_name,
             from_=from_,
             append_signature=append_signature,
+            signature_id=signature_id,
             subject=subject,
             text=text,
             html=html,
@@ -1087,6 +1182,7 @@ class EmailResource:
         text: str | None = None,
         html: str | None = None,
         attachments: list[Any] | None = None,
+        signature_id: Any | None = None,
     ) -> dict[str, Any]:
         """Update a draft (async)"""
         payload = self._build_payload(
@@ -1099,6 +1195,7 @@ class EmailResource:
             text=text,
             html=html,
             attachments=attachments,
+            signature_id=signature_id,
         )
         return await self._client._apatch(f"/v1/email/drafts/{draft_id}", data=payload)
 
@@ -1167,6 +1264,89 @@ class EmailResource:
             account_id=account_id,
         )
         return await self._client._aget("/v1/email/send-as", params=params)
+
+    async def adeclare_email_send_as(
+        self, account_id: str, email: str, *, name: str | None = None
+    ) -> dict[str, Any]:
+        """Declare a send-as address (async)"""
+        payload = self._build_payload(
+            account_id=account_id,
+            email=email,
+            name=name,
+        )
+        return await self._client._apost("/v1/email/send-as", data=payload)
+
+    async def adelete_email_send_as(
+        self, email: str, account_id: str
+    ) -> dict[str, Any]:
+        """Remove a declared send-as address (async)"""
+        params = self._build_params(
+            account_id=account_id,
+        )
+        return await self._client._adelete(f"/v1/email/send-as/{email}", params=params)
+
+    async def alist_email_signatures(
+        self, *, account_id: str | None = None
+    ) -> dict[str, Any]:
+        """List signatures (async)"""
+        params = self._build_params(
+            account_id=account_id,
+        )
+        return await self._client._aget("/v1/email/signatures", params=params)
+
+    async def acreate_email_signature(
+        self,
+        name: str,
+        html: str,
+        *,
+        account_id: str | None = None,
+        text: str | None = None,
+        default_for: list[str] | None = None,
+    ) -> dict[str, Any]:
+        """Create a signature (async)"""
+        payload = self._build_payload(
+            account_id=account_id,
+            name=name,
+            html=html,
+            text=text,
+            default_for=default_for,
+        )
+        return await self._client._apost("/v1/email/signatures", data=payload)
+
+    async def aimport_email_signatures(self, account_id: str) -> dict[str, Any]:
+        """Import Gmail signatures (async)"""
+        params = self._build_params(
+            account_id=account_id,
+        )
+        return await self._client._apost("/v1/email/signatures/import", params=params)
+
+    async def aget_email_signature(self, signature_id: str) -> dict[str, Any]:
+        """Get a signature (async)"""
+        return await self._client._aget(f"/v1/email/signatures/{signature_id}")
+
+    async def aupdate_email_signature(
+        self,
+        signature_id: str,
+        *,
+        name: str | None = None,
+        html: str | None = None,
+        text: Any | None = None,
+        default_for: list[str] | None = None,
+    ) -> dict[str, Any]:
+        """Update a signature (async)"""
+        payload = self._build_payload(
+            name=name,
+            html=html,
+            text=text,
+            default_for=default_for,
+        )
+        return await self._client._apatch(
+            f"/v1/email/signatures/{signature_id}", data=payload
+        )
+
+    async def adelete_email_signature(self, signature_id: str) -> dict[str, Any]:
+        """Delete a signature (async)"""
+        return await self._client._adelete(f"/v1/email/signatures/{signature_id}")
 
     async def adelete_email_label(
         self, label_id: str, account_id: str

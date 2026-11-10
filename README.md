@@ -1126,22 +1126,30 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `email.list_email_labels()` | List labels |
 | `email.list_email_messages()` | List email messages |
 | `email.list_email_send_as()` | List send-as addresses |
+| `email.list_email_signatures()` | List signatures |
 | `email.list_email_threads()` | List email threads |
 | `email.list_scheduled_emails()` | List scheduled emails |
 | `email.create_email_draft()` | Create a draft |
 | `email.create_email_label()` | Create a label |
+| `email.create_email_signature()` | Create a signature |
 | `email.get_email_draft()` | Get a draft |
 | `email.get_email_message()` | Get an email message |
+| `email.get_email_signature()` | Get a signature |
 | `email.get_email_thread()` | Get an email thread with its messages |
 | `email.get_scheduled_email()` | Get a scheduled email |
 | `email.update_email_draft()` | Update a draft |
 | `email.update_email_message()` | Mark read or starred, label, or move a message |
+| `email.update_email_signature()` | Update a signature |
 | `email.update_email_thread()` | Update every message in a thread |
 | `email.delete_email_draft()` | Delete a draft |
 | `email.delete_email_label()` | Delete a label |
+| `email.delete_email_send_as()` | Remove a declared send-as address |
+| `email.delete_email_signature()` | Delete a signature |
 | `email.cancel_scheduled_email()` | Cancel a scheduled email |
+| `email.declare_email_send_as()` | Declare a send-as address |
 | `email.download_email_attachment()` | Download an attachment |
 | `email.forward_email_message()` | Forward a message |
+| `email.import_email_signatures()` | Import Gmail signatures |
 | `email.reply_email_message()` | Reply to a message |
 | `email.send_email_draft()` | Send a draft |
 | `email.send_email_message()` | Send an email |

@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.550.0"
+  version: "1.551.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -13419,6 +13419,7 @@ components:
         provider: { type: string, enum: [google, microsoft] }
         folders: { type: array, items: { type: string } }
         from: { oneOf: [{ $ref: '#/components/schemas/EmailAddress' }, { type: "null" }] }
+        sender: { oneOf: [{ $ref: '#/components/schemas/EmailAddress' }, { type: "null" }], description: 'The mailbox that actually sent it. Same as `from`, except when Outlook sent on behalf of `from` (Send on Behalf rather than Send As).' }
         to: { type: array, items: { $ref: '#/components/schemas/EmailAddress' } }
         cc: { type: array, items: { $ref: '#/components/schemas/EmailAddress' } }
         bcc: { type: array, items: { $ref: '#/components/schemas/EmailAddress' } }
@@ -13487,13 +13488,13 @@ components:
         sendAs:
           type: object
           properties:
-            list: { type: string, enum: [provider, partial, declared], description: '`provider`: `GET /v1/email/send-as` lists every address the provider accepts. `partial`: shared mailboxes are not listed and the provider decides at send time.' }
+            list: { type: string, enum: [provider, partial, declared], description: '`provider`: `GET /v1/email/send-as` lists every address the provider accepts. `partial`: shared mailboxes are not listed; declare them with `POST /v1/email/send-as`.' }
             sharedMailboxes: { type: boolean }
         signatures:
           type: object
           properties:
-            provider: { type: string, enum: [read, none], description: '`read`: `appendSignature` uses the provider signature.' }
-            zernio: { type: boolean }
+            provider: { type: string, enum: [read, none], description: '`read`: `appendSignature` falls back to the provider signature when no Zernio default exists.' }
+            zernio: { type: boolean, description: 'Zernio-stored signatures (`/v1/email/signatures`) work on this mailbox.' }
         labels:
           type: object
           properties:
@@ -13571,15 +13572,35 @@ components:
             textColor: { type: string }
     EmailSendAs:
       type: object
-      description: 'An address the mailbox can send from.'
+      description: 'An address the mailbox can send from: listed by the provider, or declared with `POST /v1/email/send-as`.'
       properties:
         email: { type: string }
-        displayName: { type: [string, "null"] }
+        name: { type: [string, "null"], description: 'Display name used when `fromName` is not given.' }
+        type: { type: string, enum: [primary, alias, shared], description: '`primary` is the mailbox''s own address, `alias` a provider alias, `shared` a declared address (shared mailbox, delegate or alias).' }
+        verificationStatus: { type: string, enum: [accepted, pending, unverified], description: '`pending`: Gmail has not verified the alias, so sends from it are refused. `unverified`: declared and not sent from yet; it becomes `accepted` after its first send.' }
+        isDefault: { type: boolean, description: 'The address the provider picks by default.' }
+        source: { type: string, enum: [provider, declared] }
         replyTo: { type: [string, "null"], description: 'Gmail alias reply-to address, if set.' }
-        isPrimary: { type: boolean, description: 'The mailbox''s own address.' }
-        isDefault: { type: boolean, description: 'The address Gmail picks by default in its compose window.' }
-        verified: { type: boolean, description: 'Gmail sends from an alias only once it is verified. Always `true` on Outlook.' }
-        signature: { type: [string, "null"], description: 'Signature html. Gmail only; always `null` on Outlook.' }
+        signature:
+          type: [object, "null"]
+          description: 'What `appendSignature` appends for this address: the Zernio default first, else the Gmail signature. `null` means `appendSignature` answers 400.'
+          properties:
+            source: { type: string, enum: [zernio, gmail] }
+            id: { type: [string, "null"], description: 'The Zernio signature id. `null` for a Gmail signature.' }
+            html: { type: string }
+            text: { type: [string, "null"] }
+    EmailSignature:
+      type: object
+      description: 'A signature Zernio stores and appends itself, so it works on every provider.'
+      properties:
+        id: { type: string }
+        name: { type: string }
+        html: { type: string }
+        text: { type: [string, "null"], description: 'Appended to plain-text bodies. When `null`, the html stripped to text is used.' }
+        accountId: { type: [string, "null"], description: '`null` for a workspace-wide signature.' }
+        defaultFor: { type: array, items: { type: string }, description: 'Sending addresses this signature is the default for. Each address has one default per scope; an account signature wins over a workspace one.' }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
     ScheduledEmail:
       type: object
       description: 'An email sent with `scheduledFor`. `status` moves scheduled, sending, then sent or failed; a cancelled one never leaves.'
@@ -13610,8 +13631,9 @@ components:
         bcc: { type: array, maxItems: 100, items: { $ref: '#/components/schemas/EmailAddress' } }
         replyTo: { type: array, maxItems: 5, items: { $ref: '#/components/schemas/EmailAddress' } }
         fromName: { type: string, maxLength: 200 }
-        from: { type: string, format: email, description: 'Send from another address of the mailbox, listed by `GET /v1/email/send-as`. Gmail: a verified send-as alias, else 400. Outlook: any address the mailbox has Send As or Send on Behalf rights on, else 403. Omitted, the mail leaves from the mailbox address.' }
-        appendSignature: { type: boolean, description: 'Gmail only. Appends the signature of the sending address (the `from` alias, or the mailbox address) to `html` and `text`. Outlook answers 400: Graph does not expose Outlook signatures.' }
+        from: { type: string, format: email, description: 'Send from another address listed by `GET /v1/email/send-as`; on Outlook, declare a shared mailbox there first. An address not on the list answers 400, and Outlook refusing it at send time answers 403. Omitted, the mail leaves from the mailbox address.' }
+        appendSignature: { type: boolean, description: 'Appends the signature of the sending address: its Zernio default first, else its Gmail signature. 400 when it has neither.' }
+        signatureId: { type: string, description: 'Appends this Zernio signature instead. Wins over `appendSignature`.' }
         subject: { type: string, maxLength: 998 }
         text: { type: string, description: 'Plain-text body. One of `text` or `html` is required.' }
         html: { type: string }
@@ -13669,7 +13691,8 @@ components:
         replyTo: { type: array, maxItems: 5, items: { $ref: '#/components/schemas/EmailAddress' } }
         fromName: { type: string, maxLength: 200 }
         from: { type: string, format: email, description: 'Send from another address of the mailbox, as on `POST /v1/email/messages`. Checked when the draft is saved.' }
-        appendSignature: { type: boolean, description: 'Gmail only. Puts the signature of the sending address in the draft body, where the user sees it.' }
+        appendSignature: { type: boolean, description: 'Puts the signature of the sending address in the draft body, where the user sees it: its Zernio default first, else its Gmail signature.' }
+        signatureId: { type: string, description: 'Puts this Zernio signature in the draft body instead. Wins over `appendSignature`.' }
         subject: { type: string, maxLength: 998, description: 'On a reply draft, empty keeps the thread subject.' }
         text: { type: string }
         html: { type: string }
@@ -13698,6 +13721,7 @@ components:
         text: { type: string }
         html: { type: string, description: 'On a draft created with tracking, the new html is instrumented again under the same `trackingId`.' }
         attachments: { type: array, maxItems: 20, items: { $ref: '#/components/schemas/EmailAttachmentInput' } }
+        signatureId: { type: [string, "null"], description: 'Swaps the Zernio signature block in the new `html` or `text` for this signature, so switching never stacks two; `null` removes it. Needs `html` or `text` in the same request.' }
     ForwardEmailRequest:
       type: object
       required: [accountId, to]
@@ -13709,7 +13733,8 @@ components:
         replyTo: { type: array, maxItems: 5, items: { $ref: '#/components/schemas/EmailAddress' } }
         fromName: { type: string, maxLength: 200 }
         from: { type: string, format: email, description: 'Send from another address of the mailbox, as on `POST /v1/email/messages`.' }
-        appendSignature: { type: boolean, description: 'Gmail only. Appends the signature of the sending address to the note. Outlook answers 400.' }
+        appendSignature: { type: boolean, description: 'Appends the signature of the sending address to the note, above the forwarded original: its Zernio default first, else its Gmail signature.' }
+        signatureId: { type: string, description: 'Appends this Zernio signature to the note instead. Wins over `appendSignature`.' }
         subject: { type: string, maxLength: 998, description: 'Defaults to "Fwd: " plus the original subject.' }
         text: { type: string, description: 'Optional note above the forwarded mail.' }
         html: { type: string, description: 'Optional note above the forwarded mail, as html.' }
@@ -53387,7 +53412,7 @@ paths:
       operationId: listEmailSendAs
       tags: [Email]
       summary: List send-as addresses
-      description: 'The addresses a mailbox can send from, for the `from` field of a send or reply. Gmail lists every send-as alias with its signature, and `from` must be one of them. Outlook lists the mailbox address and its aliases; Exchange checks any other `from` at send time.'
+      description: 'The addresses a mailbox can send from, for `from`, each with the signature `appendSignature` would add. Gmail lists every alias itself. Outlook lists the mailbox address and its aliases, plus any address declared with `POST /v1/email/send-as`.'
       security: [{ bearerAuth: [] }]
       parameters:
         - $ref: '#/components/parameters/EmailAccountId'
@@ -53403,11 +53428,226 @@ paths:
                   meta:
                     type: object
                     properties:
-                      completeList: { type: boolean, description: '`true` when `from` must be in this list (Gmail). `false` when the provider decides at send time (Outlook).' }
-                      signatures: { type: boolean, description: 'Whether `appendSignature` works on this mailbox.' }
+                      list: { type: string, enum: [provider, partial], description: '`provider`: the provider lists every address (Gmail), nothing can be declared. `partial`: declare the addresses the provider cannot list (Outlook).' }
+                      providerSignatures: { type: boolean, description: 'Whether the provider''s own signatures appear here (Gmail).' }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '412': { $ref: '#/components/responses/MailboxPreconditionFailed' }
+    post:
+      x-resource-group: "messages"
+      operationId: declareEmailSendAs
+      tags: [Email]
+      summary: Declare a send-as address
+      description: 'Adds an address the provider cannot list, such as an Outlook shared mailbox, so `from` accepts it. It starts `unverified` and becomes `accepted` after its first send. Gmail answers 400: add aliases in Gmail settings instead. An address already listed comes back with 200.'
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [accountId, email]
+              properties:
+                accountId: { type: string }
+                email: { type: string, format: email, example: 'support@contoso.com' }
+                name: { type: string, maxLength: 200, example: 'Contoso Support' }
+      responses:
+        '200':
+          description: The address was already listed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/EmailSendAs' }
+        '201':
+          description: The address was declared
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/EmailSendAs' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '412': { $ref: '#/components/responses/MailboxPreconditionFailed' }
+  /v1/email/send-as/{email}:
+    delete:
+      x-resource-group: "messages"
+      operationId: deleteEmailSendAs
+      tags: [Email]
+      summary: Remove a declared send-as address
+      description: 'Removes an address declared with `POST /v1/email/send-as`. Addresses the provider lists cannot be removed here. URL-encode the `@`.'
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: email, in: path, required: true, schema: { type: string, format: email } }
+        - $ref: '#/components/parameters/EmailAccountId'
+      responses:
+        '200':
+          description: The declaration was removed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      email: { type: string }
+                      deleted: { type: boolean }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '412': { $ref: '#/components/responses/MailboxPreconditionFailed' }
+  /v1/email/signatures:
+    get:
+      x-resource-group: "messages"
+      operationId: listEmailSignatures
+      tags: [Email]
+      summary: List signatures
+      description: 'Zernio-stored signatures: workspace-wide ones plus those of the accounts you can see. With `accountId`, only workspace-wide ones and that account''s.'
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: accountId, in: query, required: false, schema: { type: string } }
+      responses:
+        '200':
+          description: The signatures
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { type: array, items: { $ref: '#/components/schemas/EmailSignature' } }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+    post:
+      x-resource-group: "messages"
+      operationId: createEmailSignature
+      tags: [Email]
+      summary: Create a signature
+      description: 'Stores a signature Zernio appends on any provider. Without `accountId` it is workspace-wide. `defaultFor` makes it what `appendSignature` uses for those sending addresses. Up to 50 per workspace, 100 KB of html, no scripts.'
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, html]
+              properties:
+                accountId: { type: string }
+                name: { type: string, maxLength: 100, example: 'Sales' }
+                html: { type: string, example: '<b>Ada Lovelace</b><br>Acme Sales' }
+                text: { type: string, maxLength: 20000, example: 'Ada Lovelace, Acme Sales' }
+                defaultFor: { type: array, maxItems: 20, items: { type: string, format: email }, example: ['sales@acme.com'] }
+      responses:
+        '201':
+          description: The signature was created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/EmailSignature' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+  /v1/email/signatures/import:
+    post:
+      x-resource-group: "messages"
+      operationId: importEmailSignatures
+      tags: [Email]
+      summary: Import Gmail signatures
+      description: 'Copies each Gmail send-as signature into a Zernio signature on that account, the default for its address. Repeating it refreshes the copies. Outlook answers 400: Microsoft Graph does not expose signatures.'
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/EmailAccountId'
+      responses:
+        '200':
+          description: The imported signatures
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { type: array, items: { $ref: '#/components/schemas/EmailSignature' } }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '412': { $ref: '#/components/responses/MailboxPreconditionFailed' }
+  /v1/email/signatures/{signatureId}:
+    get:
+      x-resource-group: "messages"
+      operationId: getEmailSignature
+      tags: [Email]
+      summary: Get a signature
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: signatureId, in: path, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: The signature
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/EmailSignature' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    patch:
+      x-resource-group: "messages"
+      operationId: updateEmailSignature
+      tags: [Email]
+      summary: Update a signature
+      description: 'Changes the name, html, text or `defaultFor`. Taking an address in `defaultFor` removes it from the other signatures of the same scope.'
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: signatureId, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name: { type: string, maxLength: 100 }
+                html: { type: string }
+                text: { type: [string, "null"] }
+                defaultFor: { type: array, maxItems: 20, items: { type: string, format: email } }
+      responses:
+        '200':
+          description: The updated signature
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/EmailSignature' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    delete:
+      x-resource-group: "messages"
+      operationId: deleteEmailSignature
+      tags: [Email]
+      summary: Delete a signature
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: signatureId, in: path, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: The signature was deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      id: { type: string }
+                      deleted: { type: boolean }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
   /v1/email/labels/{labelId}:
     delete:
       x-resource-group: "messages"

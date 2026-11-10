@@ -32300,6 +32300,7 @@ def register_generated_tools(mcp, _get_client):
         from_name: str | None = None,
         from_: str | None = None,
         append_signature: bool | None = None,
+        signature_id: str | None = None,
         text: str | None = None,
         html: str | None = None,
         attachments: list[dict[str, Any]] | None = None,
@@ -32335,8 +32336,9 @@ def register_generated_tools(mcp, _get_client):
             bcc: Each item is an object with keys: email (string, required); name (string or null)
             reply_to: Each item is an object with keys: email (string, required); name (string or null)
             from_name
-            from_: Send from another address of the mailbox, listed by `GET /v1/email/send-as`. Gmail: a verified send-as alias, else 400. Outlook: any address the mailbox has Send As or Send on Behalf rights on, else 403. Omitted, the mail leaves from the mailbox address.
-            append_signature: Gmail only. Appends the signature of the sending address (the `from` alias, or the mailbox address) to `html` and `text`. Outlook answers 400: Graph does not expose Outlook signatures.
+            from_: Send from another address listed by `GET /v1/email/send-as`; on Outlook, declare a shared mailbox there first. An address not on the list answers 400, and Outlook refusing it at send time answers 403. Omitted, the mail leaves from the mailbox address.
+            append_signature: Appends the signature of the sending address: its Zernio default first, else its Gmail signature. 400 when it has neither.
+            signature_id: Appends this Zernio signature instead. Wins over `appendSignature`.
             subject: (required)
             text: Plain-text body. One of `text` or `html` is required.
             html
@@ -32359,6 +32361,7 @@ def register_generated_tools(mcp, _get_client):
                 from_name=from_name,
                 from_=from_,
                 append_signature=append_signature,
+                signature_id=signature_id,
                 subject=subject,
                 text=text,
                 html=html,
@@ -32578,6 +32581,7 @@ def register_generated_tools(mcp, _get_client):
         from_name: str | None = None,
         from_: str | None = None,
         append_signature: bool | None = None,
+        signature_id: str | None = None,
         text: str | None = None,
         html: str | None = None,
         attachments: list[dict[str, Any]] | None = None,
@@ -32604,8 +32608,9 @@ def register_generated_tools(mcp, _get_client):
             bcc: Each item is an object with keys: email (string, required); name (string or null)
             reply_to: Each item is an object with keys: email (string, required); name (string or null)
             from_name
-            from_: Send from another address of the mailbox, listed by `GET /v1/email/send-as`. Gmail: a verified send-as alias, else 400. Outlook: any address the mailbox has Send As or Send on Behalf rights on, else 403. Omitted, the mail leaves from the mailbox address.
-            append_signature: Gmail only. Appends the signature of the sending address (the `from` alias, or the mailbox address) to `html` and `text`. Outlook answers 400: Graph does not expose Outlook signatures.
+            from_: Send from another address listed by `GET /v1/email/send-as`; on Outlook, declare a shared mailbox there first. An address not on the list answers 400, and Outlook refusing it at send time answers 403. Omitted, the mail leaves from the mailbox address.
+            append_signature: Appends the signature of the sending address: its Zernio default first, else its Gmail signature. 400 when it has neither.
+            signature_id: Appends this Zernio signature instead. Wins over `appendSignature`.
             subject: Optional on replies; the provider keeps the thread subject. (required)
             text: Plain-text body. One of `text` or `html` is required.
             html
@@ -32630,6 +32635,7 @@ def register_generated_tools(mcp, _get_client):
                 from_name=from_name,
                 from_=from_,
                 append_signature=append_signature,
+                signature_id=signature_id,
                 subject=subject,
                 text=text,
                 html=html,
@@ -32665,6 +32671,7 @@ def register_generated_tools(mcp, _get_client):
         from_name: str | None = None,
         from_: str | None = None,
         append_signature: bool | None = None,
+        signature_id: str | None = None,
         subject: str | None = None,
         text: str | None = None,
         html: str | None = None,
@@ -32693,7 +32700,8 @@ def register_generated_tools(mcp, _get_client):
             reply_to: Each item is an object with keys: email (string, required); name (string or null)
             from_name
             from_: Send from another address of the mailbox, as on `POST /v1/email/messages`.
-            append_signature: Gmail only. Appends the signature of the sending address to the note. Outlook answers 400.
+            append_signature: Appends the signature of the sending address to the note, above the forwarded original: its Zernio default first, else its Gmail signature.
+            signature_id: Appends this Zernio signature to the note instead. Wins over `appendSignature`.
             subject: Defaults to "Fwd: " plus the original subject.
             text: Optional note above the forwarded mail.
             html: Optional note above the forwarded mail, as html.
@@ -32716,6 +32724,7 @@ def register_generated_tools(mcp, _get_client):
                 from_name=from_name,
                 from_=from_,
                 append_signature=append_signature,
+                signature_id=signature_id,
                 subject=subject,
                 text=text,
                 html=html,
@@ -32776,6 +32785,7 @@ def register_generated_tools(mcp, _get_client):
         from_name: str | None = None,
         from_: str | None = None,
         append_signature: bool | None = None,
+        signature_id: str | None = None,
         subject: str | None = None,
         text: str | None = None,
         html: str | None = None,
@@ -32805,7 +32815,8 @@ def register_generated_tools(mcp, _get_client):
             reply_to: Each item is an object with keys: email (string, required); name (string or null)
             from_name
             from_: Send from another address of the mailbox, as on `POST /v1/email/messages`. Checked when the draft is saved.
-            append_signature: Gmail only. Puts the signature of the sending address in the draft body, where the user sees it.
+            append_signature: Puts the signature of the sending address in the draft body, where the user sees it: its Zernio default first, else its Gmail signature.
+            signature_id: Puts this Zernio signature in the draft body instead. Wins over `appendSignature`.
             subject: On a reply draft, empty keeps the thread subject.
             text
             html
@@ -32831,6 +32842,7 @@ def register_generated_tools(mcp, _get_client):
                 from_name=from_name,
                 from_=from_,
                 append_signature=append_signature,
+                signature_id=signature_id,
                 subject=subject,
                 text=text,
                 html=html,
@@ -32894,6 +32906,7 @@ def register_generated_tools(mcp, _get_client):
         text: str | None = None,
         html: str | None = None,
         attachments: list[dict[str, Any]] | None = None,
+        signature_id: str | None = None,
     ) -> str:
         """Update a draft
 
@@ -32909,7 +32922,8 @@ def register_generated_tools(mcp, _get_client):
             subject
             text
             html: On a draft created with tracking, the new html is instrumented again under the same `trackingId`.
-            attachments: Each item is an object with keys: filename (string, required); contentType (string, required); url (string) - Fetched at send time. Exactly one of `url` or `base64`.; base64 (string); contentId (string) - Makes the attachment inline (`cid:` reference in the html)."""
+            attachments: Each item is an object with keys: filename (string, required); contentType (string, required); url (string) - Fetched at send time. Exactly one of `url` or `base64`.; base64 (string); contentId (string) - Makes the attachment inline (`cid:` reference in the html).
+            signature_id: Swaps the Zernio signature block in the new `html` or `text` for this signature, so switching never stacks two; `null` removes it. Needs `html` or `text` in the same request."""
         client = _get_client()
         try:
             response = client.email.update_email_draft(
@@ -32923,6 +32937,7 @@ def register_generated_tools(mcp, _get_client):
                 text=text,
                 html=html,
                 attachments=attachments,
+                signature_id=signature_id,
             )
             return _format_response(response)
         except Exception as e:
@@ -33066,13 +33081,226 @@ def register_generated_tools(mcp, _get_client):
     def email_list_email_send_as(account_id: str) -> str:
         """List send-as addresses
 
-        The addresses a mailbox can send from, for the `from` field of a send or reply. Gmail lists every send-as alias with its signature, and `from` must be one of them. Outlook lists the mailbox address and its aliases; Exchange checks any other `from` at send time.
+        The addresses a mailbox can send from, for `from`, each with the signature `appendSignature` would add. Gmail lists every alias itself. Outlook lists the mailbox address and its aliases, plus any address declared with `POST /v1/email/send-as`.
 
         Args:
             account_id: The connected Google or Microsoft account. (required)"""
         client = _get_client()
         try:
             response = client.email.list_email_send_as(account_id=account_id)
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Declare a send-as address",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def email_declare_email_send_as(
+        account_id: str, email: str, name: str | None = None
+    ) -> str:
+        """Declare a send-as address
+
+        Adds an address the provider cannot list, such as an Outlook shared mailbox, so `from` accepts it. It starts `unverified` and becomes `accepted` after its first send. Gmail answers 400: add aliases in Gmail settings instead. An address already listed comes back with 200.
+
+        Args:
+            account_id: (required)
+            email: (required)
+            name"""
+        client = _get_client()
+        try:
+            response = client.email.declare_email_send_as(
+                account_id=account_id, email=email, name=name
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Remove a declared send-as address",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def email_delete_email_send_as(email: str, account_id: str) -> str:
+        """Remove a declared send-as address
+
+        Removes an address declared with `POST /v1/email/send-as`. Addresses the provider lists cannot be removed here. URL-encode the `@`.
+
+        Args:
+            email: (required)
+            account_id: The connected Google or Microsoft account. (required)"""
+        client = _get_client()
+        try:
+            response = client.email.delete_email_send_as(
+                email=email, account_id=account_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List signatures",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def email_list_email_signatures(account_id: str | None = None) -> str:
+        """List signatures
+
+        Zernio-stored signatures: workspace-wide ones plus those of the accounts you can see. With `accountId`, only workspace-wide ones and that account's.
+
+        Args:
+            account_id"""
+        client = _get_client()
+        try:
+            response = client.email.list_email_signatures(account_id=account_id)
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Create a signature",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def email_create_email_signature(
+        name: str,
+        html: str,
+        account_id: str | None = None,
+        text: str | None = None,
+        default_for: list[str] | None = None,
+    ) -> str:
+        """Create a signature
+
+        Stores a signature Zernio appends on any provider. Without `accountId` it is workspace-wide. `defaultFor` makes it what `appendSignature` uses for those sending addresses. Up to 50 per workspace, 100 KB of html, no scripts.
+
+        Args:
+            account_id
+            name: (required)
+            html: (required)
+            text
+            default_for"""
+        client = _get_client()
+        try:
+            response = client.email.create_email_signature(
+                account_id=account_id,
+                name=name,
+                html=html,
+                text=text,
+                default_for=default_for,
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Import Gmail signatures",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def email_import_email_signatures(account_id: str) -> str:
+        """Import Gmail signatures
+
+        Copies each Gmail send-as signature into a Zernio signature on that account, the default for its address. Repeating it refreshes the copies. Outlook answers 400: Microsoft Graph does not expose signatures.
+
+        Args:
+            account_id: The connected Google or Microsoft account. (required)"""
+        client = _get_client()
+        try:
+            response = client.email.import_email_signatures(account_id=account_id)
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get a signature",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def email_get_email_signature(signature_id: str) -> str:
+        """Get a signature
+
+        Args:
+            signature_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.email.get_email_signature(signature_id=signature_id)
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Update a signature",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def email_update_email_signature(
+        signature_id: str,
+        name: str | None = None,
+        html: str | None = None,
+        text: str | None = None,
+        default_for: list[str] | None = None,
+    ) -> str:
+        """Update a signature
+
+        Changes the name, html, text or `defaultFor`. Taking an address in `defaultFor` removes it from the other signatures of the same scope.
+
+        Args:
+            signature_id: (required)
+            name
+            html
+            text
+            default_for"""
+        client = _get_client()
+        try:
+            response = client.email.update_email_signature(
+                signature_id=signature_id,
+                name=name,
+                html=html,
+                text=text,
+                default_for=default_for,
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Delete a signature",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def email_delete_email_signature(signature_id: str) -> str:
+        """Delete a signature
+
+        Args:
+            signature_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.email.delete_email_signature(signature_id=signature_id)
             return _format_response(response)
         except Exception as e:
             raise ToolError(f"Error: {e}") from e
