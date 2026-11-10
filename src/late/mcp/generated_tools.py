@@ -28077,6 +28077,7 @@ def register_generated_tools(mcp, _get_client):
             "sms",
         ]
         | None = None,
+        group: str | None = None,
         is_subscribed: Literal["true", "false"] | None = None,
         limit: int = 50,
         skip: int = 0,
@@ -28092,6 +28093,7 @@ def register_generated_tools(mcp, _get_client):
             tag
             tags: Comma-separated tags, matches contacts carrying any of them
             platform
+            group: A group id from GET /v1/contacts/groups, such as contactGroups/abc, folder:default or category:VIP. Returns the contacts the Google or Outlook contacts sync filed in that group on the account. Requires accountId. Memberships are not stored while content retention is off.
             is_subscribed
             limit
             skip"""
@@ -28104,6 +28106,7 @@ def register_generated_tools(mcp, _get_client):
                 tag=tag,
                 tags=tags,
                 platform=platform,
+                group=group,
                 is_subscribed=is_subscribed,
                 limit=limit,
                 skip=skip,
@@ -28175,6 +28178,30 @@ def register_generated_tools(mcp, _get_client):
                 platform_identifier=platform_identifier,
                 display_identifier=display_identifier,
             )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List contact groups",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def contacts_list_contact_groups(account_id: str) -> str:
+        """List contact groups
+
+        Lists the groups of a Google or Microsoft account's address book, read live from the provider: Google contact labels, and Outlook contact folders and categories. The account needs the contacts area.
+
+        Each group id is what synced contacts carry in their channel's metadata.groups, and what the group filter of GET /v1/contacts takes.
+
+        Args:
+            account_id: A Google or Microsoft account connected with the contacts area. (required)"""
+        client = _get_client()
+        try:
+            response = client.contacts.list_contact_groups(account_id=account_id)
             return _format_response(response)
         except Exception as e:
             raise ToolError(f"Error: {e}") from e

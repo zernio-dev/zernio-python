@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.562.2"
+  version: "1.563.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -72415,6 +72415,7 @@ paths:
         - { name: tag, in: query, schema: { type: string } }
         - { name: tags, in: query, schema: { type: string }, description: 'Comma-separated tags, matches contacts carrying any of them' }
         - { name: platform, in: query, schema: { type: string, enum: [instagram, facebook, telegram, twitter, bluesky, reddit, whatsapp, slack, sms] } }
+        - { name: group, in: query, schema: { type: string }, description: 'A group id from GET /v1/contacts/groups, such as contactGroups/abc, folder:default or category:VIP. Returns the contacts the Google or Outlook contacts sync filed in that group on the account. Requires accountId. Memberships are not stored while content retention is off.' }
         - { name: isSubscribed, in: query, schema: { type: string, enum: ['true', 'false'] } }
         - { name: limit, in: query, schema: { type: integer, default: 50, maximum: 200 } }
         - { name: skip, in: query, schema: { type: integer, default: 0 } }
@@ -72523,6 +72524,49 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '409': { x-summary: "A channel with this platformIdentifier already exists on the account: use the existing contact or a different identifier.", description: 'Duplicate channel. The platformIdentifier is already bound to a channel on this accountId.' }
 
+  /v1/contacts/groups:
+    get:
+      x-resource-group: "contacts"
+      operationId: listContactGroups
+      summary: List contact groups
+      description: |-
+        Lists the groups of a Google or Microsoft account's address book, read live from the provider: Google contact labels, and Outlook contact folders and categories. The account needs the contacts area.
+
+        Each group id is what synced contacts carry in their channel's metadata.groups, and what the group filter of GET /v1/contacts takes.
+      tags: [Contacts]
+      parameters:
+        - { name: accountId, in: query, required: true, schema: { type: string }, description: 'A Google or Microsoft account connected with the contacts area.' }
+      responses:
+        '200':
+          description: The account's contact groups
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id: { type: string, description: 'Google contactGroups/{id}; Outlook folder:{folderId} (folder:default for the default Contacts folder) or category:{name}.' }
+                        name: { type: string }
+                        type: { type: string, enum: [group, folder, category] }
+                        system: { type: boolean, description: 'A group the provider defines, such as Google starred or the default Outlook Contacts folder.' }
+                        memberCount: { type: [integer, "null"], description: 'Members as Google counts them. Null for Outlook.' }
+                  meta:
+                    type: object
+                    properties:
+                      accountId: { type: string }
+              example:
+                data:
+                  - { id: 'contactGroups/5a7c1d2e0b8f3a91', name: Clients, type: group, system: false, memberCount: 12 }
+                  - { id: 'contactGroups/starred', name: Starred, type: group, system: true, memberCount: 3 }
+                meta: { accountId: '6ae0bff7c1a2b3c4d5e6f708' }
+        '400': { description: 'Invalid request, or the account is not a Google or Microsoft account' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '412': { description: The account was connected without the contacts area }
   /v1/contacts/{contactId}:
     get:
       x-resource-group: "contacts"

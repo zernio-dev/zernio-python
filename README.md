@@ -989,6 +989,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 ### Contacts
 | Method | Description |
 |--------|-------------|
+| `contacts.list_contact_groups()` | List contact groups |
 | `contacts.list_contacts()` | List contacts |
 | `contacts.bulk_create_contacts()` | Bulk create contacts |
 | `contacts.create_contact()` | Create contact |

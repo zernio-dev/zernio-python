@@ -82,6 +82,7 @@ class ContactsResource:
         tag: str | None = None,
         tags: str | None = None,
         platform: str | None = None,
+        group: str | None = None,
         is_subscribed: str | None = None,
         limit: int | None = 50,
         skip: int | None = 0,
@@ -94,6 +95,7 @@ class ContactsResource:
             tag=tag,
             tags=tags,
             platform=platform,
+            group=group,
             is_subscribed=is_subscribed,
             limit=limit,
             skip=skip,
@@ -130,6 +132,13 @@ class ContactsResource:
             display_identifier=display_identifier,
         )
         return self._client._post("/v1/contacts", data=payload)
+
+    def list_contact_groups(self, account_id: str) -> dict[str, Any]:
+        """List contact groups"""
+        params = self._build_params(
+            account_id=account_id,
+        )
+        return self._client._get("/v1/contacts/groups", params=params)
 
     def get_contact(self, contact_id: str) -> dict[str, Any]:
         """Get contact"""
@@ -195,6 +204,7 @@ class ContactsResource:
         tag: str | None = None,
         tags: str | None = None,
         platform: str | None = None,
+        group: str | None = None,
         is_subscribed: str | None = None,
         limit: int | None = 50,
         skip: int | None = 0,
@@ -207,6 +217,7 @@ class ContactsResource:
             tag=tag,
             tags=tags,
             platform=platform,
+            group=group,
             is_subscribed=is_subscribed,
             limit=limit,
             skip=skip,
@@ -243,6 +254,13 @@ class ContactsResource:
             display_identifier=display_identifier,
         )
         return await self._client._apost("/v1/contacts", data=payload)
+
+    async def alist_contact_groups(self, account_id: str) -> dict[str, Any]:
+        """List contact groups (async)"""
+        params = self._build_params(
+            account_id=account_id,
+        )
+        return await self._client._aget("/v1/contacts/groups", params=params)
 
     async def aget_contact(self, contact_id: str) -> dict[str, Any]:
         """Get contact (async)"""
