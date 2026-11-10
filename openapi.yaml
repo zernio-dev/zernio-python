@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.551.1"
+  version: "1.552.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -1586,6 +1586,46 @@ components:
                   effective_account_limit: 2000
                   current_account_count: 2000
   schemas:
+    ImapDiscovery:
+      type: object
+      properties:
+        email: { type: string }
+        route: { type: string, enum: [imap, google_oauth, microsoft_oauth, unsupported] }
+        provider: { type: [object, "null"], properties: { id: { type: [string, "null"] }, name: { type: [string, "null"] } } }
+        source: { type: string, enum: [preset, mx, autoconfig, ispdb, srv, probe, none] }
+        confidence: { type: string, enum: [high, medium, low], description: 'low when only a probe answered: show the settings for the user to check.' }
+        imap: { type: [object, "null"], properties: { host: { type: string }, port: { type: integer }, security: { type: string, enum: [tls, starttls] }, username: { type: string } } }
+        smtp: { type: [object, "null"], properties: { host: { type: string }, port: { type: integer }, security: { type: string, enum: [tls, starttls], description: 'tls from the first byte (993, 465) or STARTTLS on a plain port (143, 587).' } } }
+        auth:
+          type: [object, "null"]
+          properties:
+            kind: { type: string, enum: [password, app_password, oauth] }
+            label: { type: string, example: 'App-specific password' }
+            why: { type: string }
+            helpUrl: { type: string, format: uri }
+            steps: { type: array, items: { type: string } }
+            note: { type: string }
+        preflight:
+          type: array
+          description: 'What to switch on at the provider first, such as IMAP access on GMX or Yandex.'
+          items: { type: object, properties: { id: { type: string, enum: [enable_imap] }, text: { type: string }, url: { type: string, format: uri } } }
+        reconnectCause: { type: [string, "null"] }
+        reason: { type: [string, "null"] }
+        unsupportedReason: { type: [string, "null"], enum: [proton_requires_bridge, null] }
+        appPasswordFallback:
+          type: object
+          description: 'Google only: Gmail over IMAP with an app password, for accounts whose admin blocks Google sign-in for other apps.'
+    ImapConnectResult:
+      type: object
+      properties:
+        dryRun: { type: boolean }
+        created: { type: boolean }
+        reconnected: { type: boolean }
+        account: { type: object, properties: { _id: { type: string }, platform: { type: string, example: imap }, username: { type: string }, displayName: { type: string }, profileId: { type: string } } }
+        stages: { type: object, properties: { imapConnect: { type: string, enum: [ok, failed, skipped] }, imapAuth: { type: string, enum: [ok, failed, skipped] }, smtpConnect: { type: string, enum: [ok, failed, skipped] }, smtpAuth: { type: string, enum: [ok, failed, skipped] } } }
+        folders: { type: object, description: 'The special folders found: SPECIAL-USE first, then localized names.', properties: { sent: { type: string }, drafts: { type: string }, trash: { type: string }, spam: { type: string }, archive: { type: string } } }
+        settings: { type: object, properties: { imap: { type: object, properties: { host: { type: string }, port: { type: integer }, security: { type: string, enum: [tls, starttls], description: 'tls from the first byte (993, 465) or STARTTLS on a plain port (143, 587).' } } }, smtp: { type: object, properties: { host: { type: string }, port: { type: integer }, security: { type: string, enum: [tls, starttls], description: 'tls from the first byte (993, 465) or STARTTLS on a plain port (143, 587).' } } }, source: { type: string } } }
+        redirectUrl: { type: string, description: 'Hosted page only: where to send the user next.' }
     StoredEvent:
       type: object
       properties:
@@ -5598,6 +5638,12 @@ components:
               type: string
             displayName:
               type: string
+            reconnected:
+              type: boolean
+              description: 'Present and true when a reconnect restored an existing account in place, keeping its accountId.'
+            replacedAccountId:
+              type: string
+              description: 'The IMAP account this connection replaces, when a reconnected mailbox moved to Google or Microsoft. That account is retired at the same time, with account.disconnected and reasonCode replaced.'
         timestamp:
           type: string
           format: date-time
@@ -5822,6 +5868,14 @@ components:
             reason:
               type: string
               description: Human-readable reason for the disconnection
+            reasonCode:
+              type: string
+              enum: [auth_failed, imap_disabled, tls_error, unreachable, replaced]
+              description: 'IMAP mailboxes only: why polling stopped, or replaced when a Google or Microsoft account took over the mailbox.'
+            reconnectUrl:
+              type: string
+              format: uri
+              description: 'IMAP mailboxes only: a hosted link, valid seven days, that reconnects the same account in place. Send it to the user.'
         timestamp:
           type: string
           format: date-time
@@ -41936,6 +41990,31 @@ paths:
         '404': { description: 'Profile not found or access denied.' }
         '502': { description: 'Webflow returned an unclassified upstream error.' }
 
+  /v1/connect/email:
+    get:
+      operationId: getEmailConnectUrl
+      tags: [Connect]
+      summary: Get a hosted link to connect any mailbox
+      description: 'One link for any address. The page asks for the email first, sends Gmail, Google Workspace, Outlook.com and Microsoft 365 (found by domain or MX) to their OAuth connect, and every other mailbox to IMAP with the provider''s app-password steps. Valid for one hour.'
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: profileId, in: query, required: true, schema: { type: string } }
+        - { name: redirect_url, in: query, schema: { type: string, format: uri }, description: 'Where the page sends the user afterwards, with status, accountId, platform and email (or status=error and error).' }
+        - { name: email, in: query, schema: { type: string, format: email }, description: 'Prefills the address and skips the first screen.' }
+        - { name: name, in: query, schema: { type: string }, description: 'Display name for sent mail; the page asks for it when absent.' }
+        - { name: reconnectAccountId, in: query, schema: { type: string }, description: 'Opens the reconnect variant for an IMAP account: only the new password is asked for, and the accountId stays the same.' }
+      responses:
+        '200':
+          description: The hosted page URL
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  authUrl: { type: string, format: uri }
+                  expiresAt: { type: string, format: date-time }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
   /v1/connect/wordpress/token:
     post:
       x-resource-group: "accounts"
@@ -53340,6 +53419,102 @@ paths:
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '412': { $ref: '#/components/responses/MailboxPreconditionFailed' }
+  /v1/email/imap/discover:
+    post:
+      x-resource-group: "messages"
+      operationId: discoverImapSettings
+      tags: [Email]
+      summary: Find the mail settings for an address
+      description: 'The routing decision the hosted page makes, for your own connect form: Google or Microsoft OAuth, IMAP with the servers and the provider''s app-password steps, or unsupported. Sources run in parallel inside 15 seconds: presets, MX, autoconfig, Thunderbird''s ISPDB (sent the domain only), SRV records, then a probe.'
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email]
+              properties:
+                email: { type: string, format: email, example: 'ana@acme.es' }
+      responses:
+        '200':
+          description: Where this address connects, and how
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/ImapDiscovery' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+  /v1/email/imap/accounts:
+    post:
+      x-resource-group: "messages"
+      operationId: createImapAccount
+      tags: [Email]
+      summary: Connect an IMAP mailbox
+      description: 'Connects any IMAP/SMTP mailbox without the hosted page. Email and password are enough when discovery finds the servers. Every check runs before anything is stored; a failure answers 422 with the failing stage''s code. An address already on the profile is updated in place and keeps its accountId.'
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [profileId, email]
+              properties:
+                profileId: { type: string }
+                email: { type: string, format: email }
+                name: { type: string, description: 'Shown to people the mailbox emails.' }
+                password: { type: string, description: 'Shortcut for imap.password.' }
+                imap:
+                  type: object
+                  description: 'Leave out to use discovery. username defaults to the email.'
+                  properties:
+                    host: { type: string, example: 'imap.ionos.es' }
+                    port: { type: integer, example: 993 }
+                    security: { type: string, enum: [tls, starttls] }
+                    username: { type: string }
+                    password: { type: string }
+                smtp:
+                  type: object
+                  description: 'username and password default to the IMAP ones.'
+                  properties:
+                    host: { type: string, example: 'smtp.ionos.es' }
+                    port: { type: integer, example: 465 }
+                    security: { type: string, enum: [tls, starttls] }
+                    username: { type: string }
+                    password: { type: string }
+                identities:
+                  type: array
+                  description: 'Other addresses this mailbox sends as.'
+                  items: { type: object, required: [email], properties: { email: { type: string, format: email }, name: { type: string } } }
+                dryRun: { type: boolean, description: 'Run every check and store nothing, for live validation in your own form.' }
+                allowSelfSignedCertificate: { type: boolean, description: 'On-premise servers only: accept a certificate that cannot be verified. The hosted page never offers it.' }
+                reconnectAccountId: { type: string, description: 'Reconnect this account in place with a new password; the stored servers are reused.' }
+      responses:
+        '200':
+          description: 'A dry run passed, or an existing account was updated in place'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ImapConnectResult' }
+        '201':
+          description: The mailbox was connected
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ImapConnectResult' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '422':
+          description: 'A check failed. code names the stage (imap_auth_failed, app_password_required, use_oauth, imap_disabled, imap_unreachable, tls_hostname_mismatch, tls_untrusted, smtp_unreachable, smtp_auth_failed, provider_unsupported, discovery_failed); details.stages says which checks passed.'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+        '429':
+          description: 'too_many_attempts: the provider is refusing sign-ins; wait before retrying.'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
   /v1/email/labels:
     get:
       x-resource-group: "messages"

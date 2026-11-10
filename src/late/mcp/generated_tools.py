@@ -25672,6 +25672,44 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="Get a hosted link to connect any mailbox",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def connect_get_email_connect_url(
+        profile_id: str,
+        redirect_url: str | None = None,
+        email: str | None = None,
+        name: str | None = None,
+        reconnect_account_id: str | None = None,
+    ) -> str:
+        """Get a hosted link to connect any mailbox
+
+        One link for any address. The page asks for the email first, sends Gmail, Google Workspace, Outlook.com and Microsoft 365 (found by domain or MX) to their OAuth connect, and every other mailbox to IMAP with the provider's app-password steps. Valid for one hour.
+
+        Args:
+            profile_id: (required)
+            redirect_url: Where the page sends the user afterwards, with status, accountId, platform and email (or status=error and error).
+            email: Prefills the address and skips the first screen.
+            name: Display name for sent mail; the page asks for it when absent.
+            reconnect_account_id: Opens the reconnect variant for an IMAP account: only the new password is asked for, and the accountId stays the same."""
+        client = _get_client()
+        try:
+            response = client.connect.get_email_connect_url(
+                profile_id=profile_id,
+                redirect_url=redirect_url,
+                email=email,
+                name=name,
+                reconnect_account_id=reconnect_account_id,
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="Connect self-hosted WordPress with an application password",
             readOnlyHint=False,
             destructiveHint=True,
@@ -33016,6 +33054,81 @@ def register_generated_tools(mcp, _get_client):
         client = _get_client()
         try:
             response = client.email.list_email_folders(account_id=account_id)
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Find the mail settings for an address",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def email_discover_imap_settings(email: str) -> str:
+        """Find the mail settings for an address
+
+        The routing decision the hosted page makes, for your own connect form: Google or Microsoft OAuth, IMAP with the servers and the provider's app-password steps, or unsupported. Sources run in parallel inside 15 seconds: presets, MX, autoconfig, Thunderbird's ISPDB (sent the domain only), SRV records, then a probe.
+
+        Args:
+            email: (required)"""
+        client = _get_client()
+        try:
+            response = client.email.discover_imap_settings(email=email)
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Connect an IMAP mailbox",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def email_create_imap_account(
+        profile_id: str,
+        email: str,
+        name: str | None = None,
+        password: str | None = None,
+        imap: dict[str, Any] | None = None,
+        smtp: dict[str, Any] | None = None,
+        identities: list[dict[str, Any]] | None = None,
+        dry_run: bool | None = None,
+        allow_self_signed_certificate: bool | None = None,
+        reconnect_account_id: str | None = None,
+    ) -> str:
+        """Connect an IMAP mailbox
+
+        Connects any IMAP/SMTP mailbox without the hosted page. Email and password are enough when discovery finds the servers. Every check runs before anything is stored; a failure answers 422 with the failing stage's code. An address already on the profile is updated in place and keeps its accountId.
+
+        Args:
+            profile_id: (required)
+            email: (required)
+            name: Shown to people the mailbox emails.
+            password: Shortcut for imap.password.
+            imap: Leave out to use discovery. username defaults to the email. Object with keys: host (string); port (integer); security (one of: tls, starttls); username (string); password (string)
+            smtp: username and password default to the IMAP ones. Object with keys: host (string); port (integer); security (one of: tls, starttls); username (string); password (string)
+            identities: Other addresses this mailbox sends as. Each item is an object with keys: email (string, required); name (string)
+            dry_run: Run every check and store nothing, for live validation in your own form.
+            allow_self_signed_certificate: On-premise servers only: accept a certificate that cannot be verified. The hosted page never offers it.
+            reconnect_account_id: Reconnect this account in place with a new password; the stored servers are reused."""
+        client = _get_client()
+        try:
+            response = client.email.create_imap_account(
+                profile_id=profile_id,
+                email=email,
+                name=name,
+                password=password,
+                imap=imap,
+                smtp=smtp,
+                identities=identities,
+                dry_run=dry_run,
+                allow_self_signed_certificate=allow_self_signed_certificate,
+                reconnect_account_id=reconnect_account_id,
+            )
             return _format_response(response)
         except Exception as e:
             raise ToolError(f"Error: {e}") from e

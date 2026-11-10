@@ -316,6 +316,25 @@ class ConnectResource:
         )
         return self._client._post("/v1/connect/webflow/token", data=payload)
 
+    def get_email_connect_url(
+        self,
+        profile_id: str,
+        *,
+        redirect_url: str | None = None,
+        email: str | None = None,
+        name: str | None = None,
+        reconnect_account_id: str | None = None,
+    ) -> dict[str, Any]:
+        """Get a hosted link to connect any mailbox"""
+        params = self._build_params(
+            profile_id=profile_id,
+            redirect_url=redirect_url,
+            email=email,
+            name=name,
+            reconnect_account_id=reconnect_account_id,
+        )
+        return self._client._get("/v1/connect/email", params=params)
+
     def connect_word_press_with_application_password(
         self, profile_id: str, site_url: str, username: str, application_password: str
     ) -> dict[str, Any]:
@@ -1427,6 +1446,25 @@ class ConnectResource:
             site_token=site_token,
         )
         return await self._client._apost("/v1/connect/webflow/token", data=payload)
+
+    async def aget_email_connect_url(
+        self,
+        profile_id: str,
+        *,
+        redirect_url: str | None = None,
+        email: str | None = None,
+        name: str | None = None,
+        reconnect_account_id: str | None = None,
+    ) -> dict[str, Any]:
+        """Get a hosted link to connect any mailbox (async)"""
+        params = self._build_params(
+            profile_id=profile_id,
+            redirect_url=redirect_url,
+            email=email,
+            name=name,
+            reconnect_account_id=reconnect_account_id,
+        )
+        return await self._client._aget("/v1/connect/email", params=params)
 
     async def aconnect_word_press_with_application_password(
         self, profile_id: str, site_url: str, username: str, application_password: str

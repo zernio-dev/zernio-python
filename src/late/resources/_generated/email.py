@@ -587,6 +587,42 @@ class EmailResource:
         )
         return self._client._get("/v1/email/folders", params=params)
 
+    def discover_imap_settings(self, email: str) -> dict[str, Any]:
+        """Find the mail settings for an address"""
+        payload = self._build_payload(
+            email=email,
+        )
+        return self._client._post("/v1/email/imap/discover", data=payload)
+
+    def create_imap_account(
+        self,
+        profile_id: str,
+        email: str,
+        *,
+        name: str | None = None,
+        password: str | None = None,
+        imap: dict[str, Any] | None = None,
+        smtp: dict[str, Any] | None = None,
+        identities: list[dict[str, Any]] | None = None,
+        dry_run: bool | None = None,
+        allow_self_signed_certificate: bool | None = None,
+        reconnect_account_id: str | None = None,
+    ) -> dict[str, Any]:
+        """Connect an IMAP mailbox"""
+        payload = self._build_payload(
+            profile_id=profile_id,
+            email=email,
+            name=name,
+            password=password,
+            imap=imap,
+            smtp=smtp,
+            identities=identities,
+            dry_run=dry_run,
+            allow_self_signed_certificate=allow_self_signed_certificate,
+            reconnect_account_id=reconnect_account_id,
+        )
+        return self._client._post("/v1/email/imap/accounts", data=payload)
+
     def list_email_labels(self, account_id: str) -> dict[str, Any]:
         """List labels"""
         params = self._build_params(
@@ -1239,6 +1275,42 @@ class EmailResource:
             account_id=account_id,
         )
         return await self._client._aget("/v1/email/folders", params=params)
+
+    async def adiscover_imap_settings(self, email: str) -> dict[str, Any]:
+        """Find the mail settings for an address (async)"""
+        payload = self._build_payload(
+            email=email,
+        )
+        return await self._client._apost("/v1/email/imap/discover", data=payload)
+
+    async def acreate_imap_account(
+        self,
+        profile_id: str,
+        email: str,
+        *,
+        name: str | None = None,
+        password: str | None = None,
+        imap: dict[str, Any] | None = None,
+        smtp: dict[str, Any] | None = None,
+        identities: list[dict[str, Any]] | None = None,
+        dry_run: bool | None = None,
+        allow_self_signed_certificate: bool | None = None,
+        reconnect_account_id: str | None = None,
+    ) -> dict[str, Any]:
+        """Connect an IMAP mailbox (async)"""
+        payload = self._build_payload(
+            profile_id=profile_id,
+            email=email,
+            name=name,
+            password=password,
+            imap=imap,
+            smtp=smtp,
+            identities=identities,
+            dry_run=dry_run,
+            allow_self_signed_certificate=allow_self_signed_certificate,
+            reconnect_account_id=reconnect_account_id,
+        )
+        return await self._client._apost("/v1/email/imap/accounts", data=payload)
 
     async def alist_email_labels(self, account_id: str) -> dict[str, Any]:
         """List labels (async)"""

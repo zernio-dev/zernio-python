@@ -372,6 +372,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `connect.get_connect_handoff()` | Get a phone handoff |
 | `connect.get_connect_url()` | Get OAuth connect URL |
 | `connect.get_connect_welcome_screen()` | Get the saved welcome screen |
+| `connect.get_email_connect_url()` | Get a hosted link to connect any mailbox |
 | `connect.get_facebook_pages()` | List Facebook pages |
 | `connect.get_gmb_locations()` | List Google Business Profile locations |
 | `connect.get_google_analytics_connect_url()` | Get Google Analytics OAuth connect URL |
@@ -1132,6 +1133,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `email.create_email_draft()` | Create a draft |
 | `email.create_email_label()` | Create a label |
 | `email.create_email_signature()` | Create a signature |
+| `email.create_imap_account()` | Connect an IMAP mailbox |
 | `email.get_email_draft()` | Get a draft |
 | `email.get_email_message()` | Get an email message |
 | `email.get_email_signature()` | Get a signature |
@@ -1147,6 +1149,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `email.delete_email_signature()` | Delete a signature |
 | `email.cancel_scheduled_email()` | Cancel a scheduled email |
 | `email.declare_email_send_as()` | Declare a send-as address |
+| `email.discover_imap_settings()` | Find the mail settings for an address |
 | `email.download_email_attachment()` | Download an attachment |
 | `email.forward_email_message()` | Forward a message |
 | `email.import_email_signatures()` | Import Gmail signatures |
