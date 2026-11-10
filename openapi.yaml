@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.549.0"
+  version: "1.550.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -184,10 +184,12 @@ x-documentation:
     - `account.ads.sync_failed` - An ad account's ads stopped syncing (no successful sync for 24 hours, or every live ad at the retry cap). Fires once until it recovers
     - `account.ads.sync_recovered` - An ad account reported by `account.ads.sync_failed` is syncing again
     - `calendar.event.created` / `calendar.event.updated` / `calendar.event.deleted` - An event changed on a connected Microsoft calendar (push). Carries the event id and the change; read it with `GET /v1/calendar/events/{id}`
+    - `email.sent` - A mail left through the email API: a send, reply, forward, draft send or scheduled send. Exactly one per mail, with `source` and the `draftId` or `scheduleId` behind it
     - `email.opened` - A recipient's mail client loaded the open pixel of a message sent with `trackOpens`. Carries the message, its `metadata` and the open count
     - `email.link_clicked` - A recipient followed a link of a message sent with `trackLinks`. Carries the original URL and the click count
     - `email.thread_replied` - Mail from someone other than the mailbox arrived in the thread of a message sent with `trackReplies`
     - `email.send_failed` - A scheduled email could not be sent at its `scheduledFor` time; nothing reached the recipients
+    - `email.bounced` - A delivery failure report (bounce) for mail the mailbox sent arrived. One event per failed recipient, with the status code, the diagnostic and whether it is hard or soft
     - `analytics.synced` - One connected account's analytics sync cycle finished. A trigger, not a transport: it carries no metrics and no cursor, so call `GET /v1/analytics/delta` with your own last `nextCursor` to read what changed across every account. Poll-driven (~hourly per account), not real-time. High volume: subscribe to it on a dedicated endpoint.
     - `post.tracking_completed` - A post's tracking window ended and its final analytics read finished. Carries the closing metrics (or `final: null` when none could be read) and why the window completed: `final_read`, `unreachable` or `post_deleted`
     - `post.authenticity_changed` - A tracked post's authenticity score crossed the flag threshold of 40, in either direction. Carries the new and previous score, confidence and reasons. A post's first score never fires it
@@ -720,7 +722,7 @@ tags:
       - Contacts and automations: `contact.tag_added`, `contact.tag_removed`, `contact.field_changed`, `contact.updated`, `contact.deleted`, `sequence.enrolled`, `sequence.exited`, `workflow.run.started`, `workflow.run.completed`, `workflow.run.failed`, `support.run.completed`, `support.run.failed`, `automation.check.completed`, `automation.action.applied`, `automation.action.failed`, `automation.action.unknown`, `automation.alert.opened`, `automation.alert.escalated`, `automation.alert.resolved`
       - Creator campaigns: `campaign_submission.received`, `campaign_submission.flagged`, `campaign_submission.pending_review`, `campaign_submission.approved`, `campaign_submission.rejected`, `creator_campaign.budget_exhausted`, `creator_campaign.closed`, `campaign_payout.payable`, `campaign_payout.settled`, `campaign_payout.failed`, `campaign_participant.joined`, `campaign_participant.suspended`, `campaign_participant.removed`
       - Calendar and files: `calendar.event.created`, `calendar.event.updated`, `calendar.event.deleted`, `file.created`, `file.updated`, `file.deleted`, `file.picked`
-      - Email: `email.opened`, `email.link_clicked`, `email.thread_replied`, `email.send_failed`
+      - Email: `email.sent`, `email.opened`, `email.link_clicked`, `email.thread_replied`, `email.send_failed`, `email.bounced`
       - Billing: `balance.low`, `balance.empty`, `balance.charged`
       - Other: `api.changelog.published`, `webhook.test`
 
@@ -4112,6 +4114,24 @@ components:
             Raw error payload from the upstream platform, passed through verbatim so
             integrators can read provider-specific codes. For Meta this includes
             error_subcode, error_user_title, and error_user_msg.
+        provider:
+          type: string
+          description: 'Email API: the mailbox provider the error came from (`google`, `microsoft`).'
+        providerError:
+          type: object
+          description: "Email API: the provider's own error code and message, for support and logs. Branch on `code`, not on this."
+          properties:
+            code: { type: [string, "null"] }
+            message: { type: [string, "null"] }
+        retryable:
+          type: boolean
+          description: 'Email API: whether the same request can succeed if retried (with the same `Idempotency-Key` for sends).'
+        requestId:
+          type: string
+          description: 'Email API: the request id, also in the `X-Request-Id` header. Quote it when you contact support.'
+        docsUrl:
+          type: string
+          description: 'Email API: where this `code` is documented.'
         details:
           type: object
           additionalProperties: true
@@ -5240,7 +5260,7 @@ components:
           type: array
           items:
             type: string
-            enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.permissions_changed, account.ads.initial_sync_completed, account.ads.sync_failed, account.ads.sync_recovered, analytics.synced, post.tracking_completed, post.authenticity_changed, message.received, conversation.started, conversation.control_changed, call.received, call.ended, call.failed, call.permission_request, call.transcript_segment, call.recording_ready, message.sent, message.edited, message.deleted, message.delivered, message.read, message.played, message.failed, reaction.received, referral.received, comment.received, mention.received, review.new, review.updated, review.deleted, review.restored, lead.received, ad.status_changed, ad.created, ad.updated, campaign.created, campaign.updated, ad_set.created, ad_set.updated, ad.review.approved, ad.review.rejected, ad.delivery_issue, campaign.budget.depleted, ad_account.status_changed, ad.video.processed, ad_rule.triggered, automation.check.completed, automation.action.applied, automation.action.failed, automation.action.unknown, automation.alert.opened, automation.alert.escalated, automation.alert.resolved, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.account.quality_updated, whatsapp.account.status_updated, whatsapp.account.alert_received, whatsapp.contact.identity_changed, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, phone_number.stock_available, verification.approved, verification.failed, api.changelog.published, sms.registration.action_required, sms.registration.status_updated, branded_calling.identity.status_updated, branded_calling.identity.action_required, branded_calling.number.status_updated, rcs.agent.status_updated, commerce.product.created, commerce.product.updated, commerce.product.deleted, commerce.order.created, commerce.order.updated, commerce.order.refunded, contact.tag_added, contact.tag_removed, contact.field_changed, sequence.enrolled, sequence.exited, workflow.run.started, workflow.run.completed, workflow.run.failed, support.run.completed, support.run.failed, campaign_submission.received, campaign_submission.flagged, campaign_submission.pending_review, campaign_submission.approved, campaign_submission.rejected, creator_campaign.budget_exhausted, creator_campaign.closed, campaign_payout.payable, campaign_payout.settled, campaign_payout.failed, campaign_participant.joined, campaign_participant.suspended, campaign_participant.removed, account.rate_limited, calendar.event.created, calendar.event.updated, calendar.event.deleted, email.opened, email.link_clicked, email.thread_replied, email.send_failed, file.created, file.updated, file.deleted, file.picked, contact.updated, contact.deleted, balance.low, balance.empty, balance.charged]
+            enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.permissions_changed, account.ads.initial_sync_completed, account.ads.sync_failed, account.ads.sync_recovered, analytics.synced, post.tracking_completed, post.authenticity_changed, message.received, conversation.started, conversation.control_changed, call.received, call.ended, call.failed, call.permission_request, call.transcript_segment, call.recording_ready, message.sent, message.edited, message.deleted, message.delivered, message.read, message.played, message.failed, reaction.received, referral.received, comment.received, mention.received, review.new, review.updated, review.deleted, review.restored, lead.received, ad.status_changed, ad.created, ad.updated, campaign.created, campaign.updated, ad_set.created, ad_set.updated, ad.review.approved, ad.review.rejected, ad.delivery_issue, campaign.budget.depleted, ad_account.status_changed, ad.video.processed, ad_rule.triggered, automation.check.completed, automation.action.applied, automation.action.failed, automation.action.unknown, automation.alert.opened, automation.alert.escalated, automation.alert.resolved, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.account.quality_updated, whatsapp.account.status_updated, whatsapp.account.alert_received, whatsapp.contact.identity_changed, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, phone_number.stock_available, verification.approved, verification.failed, api.changelog.published, sms.registration.action_required, sms.registration.status_updated, branded_calling.identity.status_updated, branded_calling.identity.action_required, branded_calling.number.status_updated, rcs.agent.status_updated, commerce.product.created, commerce.product.updated, commerce.product.deleted, commerce.order.created, commerce.order.updated, commerce.order.refunded, contact.tag_added, contact.tag_removed, contact.field_changed, sequence.enrolled, sequence.exited, workflow.run.started, workflow.run.completed, workflow.run.failed, support.run.completed, support.run.failed, campaign_submission.received, campaign_submission.flagged, campaign_submission.pending_review, campaign_submission.approved, campaign_submission.rejected, creator_campaign.budget_exhausted, creator_campaign.closed, campaign_payout.payable, campaign_payout.settled, campaign_payout.failed, campaign_participant.joined, campaign_participant.suspended, campaign_participant.removed, account.rate_limited, calendar.event.created, calendar.event.updated, calendar.event.deleted, email.sent, email.opened, email.link_clicked, email.thread_replied, email.send_failed, email.bounced, file.created, file.updated, file.deleted, file.picked, contact.updated, contact.deleted, balance.low, balance.empty, balance.charged]
           description: Events subscribed to
         isActive:
           type: boolean
@@ -13416,6 +13436,77 @@ components:
         labels: { type: array, items: { type: string }, description: 'Gmail: the ids of the user labels on the message (names come from `GET /v1/email/labels`). Outlook: its category names.' }
         metadata: { type: object, additionalProperties: { type: string } }
         trackingId: { type: [string, "null"], description: 'Set on a send with `trackOpens`, `trackLinks` or `trackReplies`; the email.* webhooks carry it.' }
+        clean: { $ref: '#/components/schemas/EmailClean' }
+        draftId: { type: [string, "null"], description: 'On a mail sent from a draft (`POST /v1/email/drafts/{draftId}/send`): the draft it was. The sent mail has a new id.' }
+        forwardedFrom: { type: [string, "null"], description: 'On a forward: the message it forwarded.' }
+    EmailClean:
+      type: object
+      description: |
+        Only with `clean=true`. The new text of the mail, deterministic (no model): client quote markup first, then attribution lines in common languages, then boilerplate such as "Sent from my iPhone".
+
+        `text` is never empty when the mail has a body: when extraction leaves nothing, the whole body comes back with `status: fallback`.
+
+        The sender's signature stays in `text` and is also in `signature`. A forward keeps the forwarded content and its header block is parsed into `forwarded`. A bounce report passes through whole.
+      properties:
+        text: { type: string }
+        status: { type: string, enum: [stripped, unchanged, fallback] }
+        removed:
+          type: object
+          properties:
+            quoted: { type: boolean, description: 'Quoted earlier mail was removed.' }
+            forwardHeader: { type: boolean, description: "A forward's header block was removed; it is parsed into `forwarded`." }
+            boilerplate: { type: boolean, description: 'Client boilerplate such as "Sent from my iPhone" was removed.' }
+        signature: { type: [string, "null"] }
+        forwarded:
+          type: [object, "null"]
+          properties:
+            from: { type: [string, "null"] }
+            to: { type: [string, "null"] }
+            date: { type: [string, "null"] }
+            subject: { type: [string, "null"] }
+    EmailCapabilities:
+      type: object
+      description: 'On Google and Microsoft accounts connected with the email area: what this mailbox provider can do, so you can branch before calling.'
+      properties:
+        sync:
+          type: object
+          properties:
+            mode: { type: string, enum: [push, poll] }
+            typicalDelaySeconds: { type: integer }
+        drafts:
+          type: object
+          properties:
+            supported: { type: boolean }
+            clientEditsVisible: { type: boolean, description: 'Edits the user makes in their mail client show up in the draft you read back.' }
+            versioned: { type: boolean, description: 'Drafts carry a `version` for `If-Match`.' }
+        forward:
+          type: object
+          properties:
+            native: { type: boolean, description: "The provider forwards itself (Outlook's createForward); otherwise Zernio builds the forward." }
+            asAttachment: { type: boolean }
+        sendAs:
+          type: object
+          properties:
+            list: { type: string, enum: [provider, partial, declared], description: '`provider`: `GET /v1/email/send-as` lists every address the provider accepts. `partial`: shared mailboxes are not listed and the provider decides at send time.' }
+            sharedMailboxes: { type: boolean }
+        signatures:
+          type: object
+          properties:
+            provider: { type: string, enum: [read, none], description: '`read`: `appendSignature` uses the provider signature.' }
+            zernio: { type: boolean }
+        labels:
+          type: object
+          properties:
+            model: { type: string, enum: [labels, categories, folders] }
+        bounces:
+          type: object
+          properties:
+            detection: { type: boolean }
+        scheduledSend:
+          type: object
+          properties:
+            holdAsDraft: { type: boolean }
+        tracking: { type: boolean }
     EmailThread:
       type: object
       properties:
@@ -13544,6 +13635,91 @@ components:
         trackOpens: { type: boolean, description: 'Adds an open pixel to the html and fires `email.opened`. Needs `html`.' }
         trackLinks: { type: boolean, description: 'Rewrites every http(s) link in the html through a Zernio redirect and fires `email.link_clicked`. Needs `html`.' }
         trackReplies: { type: boolean, description: 'Fires `email.thread_replied` when someone else writes in this message''s thread. Works with text or html.' }
+    EmailDraft:
+      description: 'A draft in the mailbox. Carries the message fields; `id` is the draft id the drafts endpoints take. Store `id`, not `messageId`.'
+      allOf:
+        - $ref: '#/components/schemas/EmailMessage'
+        - type: object
+          properties:
+            object: { type: string, enum: [draft] }
+            id: { type: string, description: 'The draft id: the Gmail draft id, or the Outlook message id.' }
+            kind: { type: string, enum: [new, reply, forward], description: 'Fixed when the draft is created. A draft the user wrote in their mail client is read from its headers.' }
+            version: { type: string, description: 'Changes on every edit, the user''s in Gmail or Outlook included. Pass it as `If-Match` to update or send only that version. Also the `ETag` response header.' }
+            messageId: { type: string, description: 'The provider message behind the draft. Volatile: Gmail replaces it on every save.' }
+            inReplyTo: { type: [string, "null"], description: 'The message a reply draft answers.' }
+            forwardOf: { type: [string, "null"], description: 'The message a forward draft forwards.' }
+            trackingId: { type: [string, "null"], description: 'Set when the draft was created with tracking.' }
+    EmailAttachmentInput:
+      type: object
+      required: [filename, contentType]
+      properties:
+        filename: { type: string }
+        contentType: { type: string }
+        url: { type: string, format: uri, description: 'Fetched at send time. Exactly one of `url` or `base64`.' }
+        base64: { type: string }
+        contentId: { type: string, description: 'Makes the attachment inline (`cid:` reference in the html).' }
+    CreateEmailDraftRequest:
+      type: object
+      required: [accountId]
+      properties:
+        accountId: { type: string }
+        to: { type: array, maxItems: 100, items: { $ref: '#/components/schemas/EmailAddress' }, description: 'Optional on a draft; needed before it is sent.' }
+        cc: { type: array, maxItems: 100, items: { $ref: '#/components/schemas/EmailAddress' } }
+        bcc: { type: array, maxItems: 100, items: { $ref: '#/components/schemas/EmailAddress' } }
+        replyTo: { type: array, maxItems: 5, items: { $ref: '#/components/schemas/EmailAddress' } }
+        fromName: { type: string, maxLength: 200 }
+        from: { type: string, format: email, description: 'Send from another address of the mailbox, as on `POST /v1/email/messages`. Checked when the draft is saved.' }
+        appendSignature: { type: boolean, description: 'Gmail only. Puts the signature of the sending address in the draft body, where the user sees it.' }
+        subject: { type: string, maxLength: 998, description: 'On a reply draft, empty keeps the thread subject.' }
+        text: { type: string }
+        html: { type: string }
+        attachments: { type: array, maxItems: 20, items: { $ref: '#/components/schemas/EmailAttachmentInput' } }
+        headers: { type: object, additionalProperties: { type: string }, description: 'Custom `X-` headers only.' }
+        metadata: { type: object, additionalProperties: { type: string }, description: 'Kept with the draft and returned on the sent message and its email.* webhooks.' }
+        inReplyTo: { type: string, description: 'Makes a reply draft in that message''s thread, addressed and threaded like a reply. Not with `forwardOf`.' }
+        replyAll: { type: boolean, description: 'With `inReplyTo`: address every recipient of the original. Leave out `to`, `cc` and `bcc`.' }
+        forwardOf: { type: string, description: 'Makes a forward draft of that message, with its attachments. Recipients can come later. Not with `inReplyTo`.' }
+        includeAttachments: { type: boolean, default: true, description: 'With `forwardOf`: false keeps only the inline images of the original.' }
+        excludeAttachmentIds: { type: array, maxItems: 50, items: { type: string }, description: 'With `forwardOf`: attachment ids (from a read of the original) to leave out.' }
+        trackOpens: { type: boolean, description: 'Puts the open pixel in the draft html now; fires `email.opened` once it is sent. Needs `html`.' }
+        trackLinks: { type: boolean, description: 'Rewrites the draft''s links now; fires `email.link_clicked` once it is sent. Needs `html`.' }
+        trackReplies: { type: boolean, description: 'Fires `email.thread_replied` once it is sent.' }
+    UpdateEmailDraftRequest:
+      type: object
+      required: [accountId]
+      description: 'Every field is optional; the ones you leave out keep their current value. `text` or `html` replaces the whole body, and `attachments` replaces the whole set.'
+      properties:
+        accountId: { type: string }
+        to: { type: array, maxItems: 100, items: { $ref: '#/components/schemas/EmailAddress' } }
+        cc: { type: array, maxItems: 100, items: { $ref: '#/components/schemas/EmailAddress' } }
+        bcc: { type: array, maxItems: 100, items: { $ref: '#/components/schemas/EmailAddress' } }
+        replyTo: { type: array, maxItems: 5, items: { $ref: '#/components/schemas/EmailAddress' } }
+        subject: { type: string, maxLength: 998 }
+        text: { type: string }
+        html: { type: string, description: 'On a draft created with tracking, the new html is instrumented again under the same `trackingId`.' }
+        attachments: { type: array, maxItems: 20, items: { $ref: '#/components/schemas/EmailAttachmentInput' } }
+    ForwardEmailRequest:
+      type: object
+      required: [accountId, to]
+      properties:
+        accountId: { type: string }
+        to: { type: array, minItems: 1, maxItems: 100, items: { $ref: '#/components/schemas/EmailAddress' } }
+        cc: { type: array, maxItems: 100, items: { $ref: '#/components/schemas/EmailAddress' } }
+        bcc: { type: array, maxItems: 100, items: { $ref: '#/components/schemas/EmailAddress' } }
+        replyTo: { type: array, maxItems: 5, items: { $ref: '#/components/schemas/EmailAddress' } }
+        fromName: { type: string, maxLength: 200 }
+        from: { type: string, format: email, description: 'Send from another address of the mailbox, as on `POST /v1/email/messages`.' }
+        appendSignature: { type: boolean, description: 'Gmail only. Appends the signature of the sending address to the note. Outlook answers 400.' }
+        subject: { type: string, maxLength: 998, description: 'Defaults to "Fwd: " plus the original subject.' }
+        text: { type: string, description: 'Optional note above the forwarded mail.' }
+        html: { type: string, description: 'Optional note above the forwarded mail, as html.' }
+        attachments: { type: array, maxItems: 20, items: { $ref: '#/components/schemas/EmailAttachmentInput' }, description: 'Added to the forwarded attachments. Everything together stays under 25 MB, else 413 `attachment_too_large`.' }
+        includeAttachments: { type: boolean, default: true, description: 'False keeps only the inline images of the original.' }
+        excludeAttachmentIds: { type: array, maxItems: 50, items: { type: string }, description: 'Attachment ids (from a read of the original) to leave out.' }
+        metadata: { type: object, additionalProperties: { type: string } }
+        trackOpens: { type: boolean, description: 'Adds an open pixel to the note and fires `email.opened`. Needs `html`.' }
+        trackLinks: { type: boolean, description: 'Rewrites the links of the note and fires `email.link_clicked`. Needs `html`.' }
+        trackReplies: { type: boolean, description: 'Fires `email.thread_replied` when someone else writes in the thread.' }
     Calendar:
       type: object
       properties:
@@ -13784,6 +13960,12 @@ components:
             from: { oneOf: [{ $ref: '#/components/schemas/EmailAddress' }, { type: "null" }] }
             receivedAt: { type: string, format: date-time }
             count: { type: integer, description: 'Replies in the thread so far.' }
+            clean:
+              type: object
+              description: 'The reply without the quoted history, as `clean=true` returns it on a message read. `status: fallback` means nothing could be stripped safely and `text` is the whole body.'
+              properties:
+                text: { type: string }
+                status: { type: string, enum: [stripped, unchanged, fallback] }
         timestamp: { type: string, format: date-time }
     WebhookPayloadEmailSendFailed:
       type: object
@@ -13811,6 +13993,90 @@ components:
             scheduledFor: { type: string, format: date-time }
             error: { type: string }
             metadata: { type: [object, "null"], additionalProperties: { type: string } }
+        timestamp: { type: string, format: date-time }
+    WebhookPayloadEmailBounced:
+      type: object
+      description: 'Webhook payload for email.bounced. One event per failed recipient of the bounce.'
+      required: [id, event, account, email, bounce, timestamp]
+      properties:
+        id: { type: string }
+        profiles: { $ref: '#/components/schemas/WebhookProfiles' }
+        test:
+          type: boolean
+          description: 'Always true when present: only a sample sent by POST /v1/webhooks/test with an event carries it. Real deliveries never do.'
+        event: { type: string, enum: [email.bounced] }
+        account:
+          type: object
+          properties:
+            accountId: { type: string }
+            profileId: { type: string }
+            platform: { type: string }
+            username: { type: string }
+            displayName: { type: [string, "null"] }
+        email:
+          type: object
+          description: 'The mail that bounced. `messageId`, `trackingId` and `metadata` are set when it was sent with tracking; otherwise match on `threadId`, `internetMessageId` or `subject`.'
+          properties:
+            messageId: { type: [string, "null"], description: 'Provider id of the sent mail.' }
+            threadId: { type: string }
+            internetMessageId: { type: [string, "null"], description: 'The RFC 5322 Message-ID of the mail that bounced.' }
+            trackingId: { type: [string, "null"] }
+            metadata: { type: [object, "null"], additionalProperties: { type: string } }
+            subject: { type: [string, "null"], description: 'From the headers the report quotes.' }
+            sentAt: { type: [string, "null"], format: date-time, description: 'From the headers the report quotes.' }
+        bounce:
+          type: object
+          properties:
+            recipient: { type: string, description: 'The address that refused the mail.' }
+            type: { type: string, enum: [hard, soft, undetermined], description: '`hard`: 5.x.x, the address does not take mail. `soft`: 4.x.x, a temporary refusal the sending server gave up on. `undetermined`: the report gave no status.' }
+            category: { type: string, enum: [user_unknown, mailbox_full, domain_not_found, policy_blocked, spam_blocked, blocklisted, message_too_large, content_rejected, auth_failure, rate_limited, other] }
+            status: { type: [string, "null"], description: 'RFC 3463 enhanced status, such as 5.1.1.' }
+            smtpCode: { type: [integer, "null"], description: 'The SMTP reply code, such as 550. Always a number.' }
+            diagnostic: { type: [string, "null"], description: 'The receiving server''s answer.' }
+            recommendedAction: { type: string, enum: [remove, retry, review, fix_configuration], description: '`remove` only for an address that does not take mail. Sender-side refusals (authentication, blocklists, spam filters) are `fix_configuration` or `review`, never `remove`.' }
+            reportingMta: { type: [string, "null"] }
+            detection: { type: string, enum: [dsn, ndr], description: '`dsn`: a standard delivery report with the bounced Message-ID. `ndr`: a non-standard report read from its headers and text.' }
+            bounceMessageId: { type: string, description: 'Provider id of the bounce report in the mailbox.' }
+            bouncedAt: { type: string, format: date-time, description: 'When the report arrived in the mailbox.' }
+            detectedAt: { type: string, format: date-time, description: 'When Zernio read it. Reports can arrive minutes to days after the send.' }
+        timestamp: { type: string, format: date-time }
+    WebhookPayloadEmailSent:
+      type: object
+      description: 'Webhook payload for email.sent.'
+      required: [id, event, account, source, email, timestamp]
+      properties:
+        id: { type: string }
+        profiles: { $ref: '#/components/schemas/WebhookProfiles' }
+        test:
+          type: boolean
+          description: 'Always true when present: only a sample sent by POST /v1/webhooks/test with an event carries it. Real deliveries never do.'
+        event: { type: string, enum: [email.sent] }
+        account:
+          type: object
+          properties:
+            accountId: { type: string }
+            profileId: { type: string }
+            platform: { type: string }
+            username: { type: string }
+            displayName: { type: [string, "null"] }
+        source: { type: string, enum: [send, reply, forward, draft, scheduled] }
+        email:
+          type: object
+          properties:
+            messageId: { type: string, description: 'Provider id of the sent mail.' }
+            threadId: { type: string }
+            trackingId: { type: [string, "null"] }
+            metadata: { type: [object, "null"], additionalProperties: { type: string } }
+            subject: { type: string }
+            from: { oneOf: [{ $ref: '#/components/schemas/EmailAddress' }, { type: "null" }] }
+            to: { type: array, items: { $ref: '#/components/schemas/EmailAddress' } }
+            cc: { type: array, items: { $ref: '#/components/schemas/EmailAddress' } }
+            bcc: { type: array, items: { $ref: '#/components/schemas/EmailAddress' } }
+            sentAt: { type: string, format: date-time }
+        draftId: { type: [string, "null"], description: 'The draft it was sent from (`source: draft`, or a scheduled draft).' }
+        scheduleId: { type: [string, "null"], description: 'The scheduled send (`source: scheduled`).' }
+        replyToMessageId: { type: [string, "null"] }
+        forwardedFrom: { type: [string, "null"] }
         timestamp: { type: string, format: date-time }
     FileItem:
       type: object
@@ -14078,6 +14344,7 @@ components:
             - $ref: '#/components/schemas/Profile'
         username: { type: string }
         displayName: { type: string }
+        capabilities: { $ref: '#/components/schemas/EmailCapabilities' }
         platformUserId:
           type: string
           description: |
@@ -22303,9 +22570,9 @@ webhooks:
       operationId: onEmailThreadReplied
       summary: Email thread replied
       description: |
-        Mail from someone other than the mailbox arrived in the thread of a message sent with `trackReplies: true`. Works on text and html sends. Auto-replies and bounce reports in the thread count as replies.
+        Mail from someone other than the mailbox arrived in the thread of a message sent with `trackReplies: true`. Works on text and html sends. Auto-replies count as replies; bounce reports do not and fire `email.bounced` instead.
 
-        The reply also arrives as `message.received` with its full content.
+        `reply.clean.text` is the reply without the quoted history, so an agent can act on it without reading the message. The reply also arrives as `message.received` with its full content.
       tags: [Webhook Events]
       requestBody:
         required: true
@@ -22334,6 +22601,12 @@ webhooks:
                   name: Alex Smith
                 receivedAt: '2026-01-15T10:00:00.000Z'
                 count: 1
+                clean:
+                  text: |-
+                    Thursday at 3 works for us.
+
+                    Alex
+                  status: stripped
               profiles:
                 - id: 507f1f77bcf86cd799439012
                   externalId: cus_8f3a2
@@ -22374,6 +22647,111 @@ webhooks:
                   externalId: cus_8f3a2
             schema:
               $ref: '#/components/schemas/WebhookPayloadEmailSendFailed'
+      responses:
+        '200':
+          description: Webhook received successfully
+  email.bounced:
+    post:
+      operationId: onEmailBounced
+      summary: Email bounced
+      description: |
+        A delivery failure report for mail the mailbox sent arrived: the receiving server refused it for a recipient. Fires for every send from the mailbox, once per failed recipient. Delayed-delivery warnings and out-of-office replies do not fire it.
+
+        Act on `recommendedAction`: `remove` means the address does not take mail. Refusals on the sending side (`auth_failure`, `blocklisted`, `spam_blocked`, `policy_blocked`) never say `remove`. The report also arrives as `message.received`, and it does not count as a reply for `email.thread_replied`.
+      tags: [Webhook Events]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              id: 00000000-0000-4000-8000-000000000000
+              event: email.bounced
+              timestamp: '2026-01-15T10:00:00Z'
+              account:
+                accountId: 507f1f77bcf86cd799439011
+                profileId: 507f1f77bcf86cd799439012
+                platform: google
+                username: jane@example.com
+                displayName: Jane Doe
+              email:
+                messageId: 18c2f3a4b5d6e7f8
+                threadId: 18c2f3a4b5d6e7f0
+                internetMessageId: <CAJx8Lq2pV9nR4mT6wY1zA3bC5dE7fG@mail.gmail.com>
+                trackingId: Xk2m9QpL4vR8sT1wY6zA3bC5
+                metadata:
+                  campaign: onboarding
+                subject: Proposal for Q1
+                sentAt: '2026-01-14T10:00:00.000Z'
+              bounce:
+                recipient: alex@example.com
+                type: hard
+                category: user_unknown
+                status: 5.1.1
+                smtpCode: 550
+                diagnostic: 550 5.1.1 The email account that you tried to reach does not exist.
+                recommendedAction: remove
+                reportingMta: mx.google.com
+                detection: dsn
+                bounceMessageId: 18c2f3a4b5d6e7f9
+                bouncedAt: '2026-01-15T10:00:00.000Z'
+                detectedAt: '2026-01-15T10:00:00.000Z'
+              profiles:
+                - id: 507f1f77bcf86cd799439012
+                  externalId: cus_8f3a2
+            schema:
+              $ref: '#/components/schemas/WebhookPayloadEmailBounced'
+      responses:
+        '200':
+          description: Webhook received successfully
+  email.sent:
+    post:
+      operationId: onEmailSent
+      summary: Email sent
+      description: |
+        A mail left through the email API. Exactly one event per mail, whichever path sent it: `source` is `send`, `reply`, `forward`, `draft` or `scheduled`. A scheduled draft carries both `scheduleId` and `draftId`.
+
+        Use it to record sends in your own system with the `metadata` you passed. The sent copy also arrives as `message.sent` in the inbox.
+      tags: [Webhook Events]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              id: 00000000-0000-4000-8000-000000000000
+              event: email.sent
+              timestamp: '2026-01-15T10:00:00Z'
+              account:
+                accountId: 507f1f77bcf86cd799439011
+                profileId: 507f1f77bcf86cd799439012
+                platform: google
+                username: jane@example.com
+                displayName: Jane Doe
+              source: draft
+              email:
+                messageId: 18c2f3a4b5d6e7f8
+                threadId: 18c2f3a4b5d6e7f0
+                trackingId: Xk2m9QpL4vR8sT1wY6zA3bC5
+                metadata:
+                  campaign: onboarding
+                subject: Proposal for Q1
+                from:
+                  email: jane@example.com
+                  name: Jane Doe
+                to:
+                  - email: alex@example.com
+                    name: Alex Smith
+                cc: []
+                bcc: []
+                sentAt: '2026-01-15T10:00:00.000Z'
+              draftId: r-1234567890123456789
+              scheduleId: null
+              replyToMessageId: null
+              forwardedFrom: null
+              profiles:
+                - id: 507f1f77bcf86cd799439012
+                  externalId: cus_8f3a2
+            schema:
+              $ref: '#/components/schemas/WebhookPayloadEmailSent'
       responses:
         '200':
           description: Webhook received successfully
@@ -51908,10 +52286,12 @@ paths:
                     - calendar.event.created
                     - calendar.event.updated
                     - calendar.event.deleted
+                    - email.sent
                     - email.opened
                     - email.link_clicked
                     - email.thread_replied
                     - email.send_failed
+                    - email.bounced
                     - file.created
                     - file.updated
                     - file.deleted
@@ -52328,6 +52708,7 @@ paths:
       parameters:
         - { name: threadId, in: path, required: true, schema: { type: string } }
         - $ref: '#/components/parameters/EmailAccountId'
+        - { name: clean, in: query, schema: { type: boolean, default: false }, description: 'Add `cleanText` to every message: what each one added to the conversation, without the quoted history.' }
       responses:
         '200':
           description: The thread and every message in it, oldest first
@@ -52455,6 +52836,8 @@ paths:
         - 402: Gmail sends need a payment method on the workspace. Reading, calendar and files do not.
         - 400: `holdAsDraft` without `scheduledFor`; `trackOpens` or `trackLinks` without `html`; `scheduledFor` outside 1 minute to 30 days.
       security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKeyHeader'
       requestBody:
         required: true
         content:
@@ -52569,6 +52952,7 @@ paths:
         - $ref: '#/components/parameters/EmailAccountId'
         - { name: includeHeaders, in: query, schema: { type: boolean, default: false }, description: 'Include the raw internet headers under `headers`.' }
         - { name: raw, in: query, schema: { type: boolean, default: false }, description: 'Include the MIME source under `raw`.' }
+        - { name: clean, in: query, schema: { type: boolean, default: false }, description: 'Add `cleanText`: the new text only, without quoted replies, forwarded history, signature or tracking pixels. Ready to hand to an LLM.' }
       responses:
         '200':
           description: The message with its bodies
@@ -52648,6 +53032,7 @@ paths:
         `scheduledFor` schedules the reply (202) and `trackOpens`, `trackLinks` and `trackReplies` track it, as on send; `holdAsDraft` holds it as a reply draft in the thread until then. Same protection, caps and headers as sending.
       security: [{ bearerAuth: [] }]
       parameters:
+        - $ref: '#/components/parameters/IdempotencyKeyHeader'
         - { name: messageId, in: path, required: true, schema: { type: string } }
       requestBody:
         required: true
@@ -52683,6 +53068,230 @@ paths:
         '403': { description: 'Outlook refused `from`: the mailbox has no Send As or Send on Behalf right on it.', content: { application/json: { schema: { $ref: '#/components/schemas/ErrorResponse' } } } }
         '404': { $ref: '#/components/responses/NotFound' }
         '412': { $ref: '#/components/responses/MailboxPreconditionFailed' }
+        '429': { $ref: '#/components/responses/EmailSendRefused' }
+  /v1/email/messages/{messageId}/forward:
+    post:
+      x-resource-group: "messages"
+      operationId: forwardEmailMessage
+      tags: [Email]
+      summary: Forward a message
+      description: |
+        Forwards the message with its attachments. Your `text` or `html` goes above the forwarded mail, and the subject defaults to "Fwd: " plus the original's. On Google the forward stays in the original thread; on Microsoft it goes through Outlook's own forward.
+
+        `includeAttachments: false` keeps only the original's inline images, and `excludeAttachmentIds` leaves out the ones you name. Everything together stays under 25 MB.
+
+        `trackOpens`, `trackLinks` and `trackReplies` work as on send. Same protection, caps and headers as sending. The response carries `forwardedFrom`, and `email.sent` fires with `source: forward`.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKeyHeader'
+        - { name: messageId, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ForwardEmailRequest' }
+      responses:
+        '201':
+          description: The sent forward
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/EmailMessage' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '402': { $ref: '#/components/responses/PaymentRequired' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '412': { $ref: '#/components/responses/MailboxPreconditionFailed' }
+        '413': { description: 'attachment_too_large: the forwarded and added attachments pass 25 MB; details.limitBytes', content: { application/json: { schema: { $ref: '#/components/schemas/ErrorResponse' } } } }
+        '429': { $ref: '#/components/responses/EmailSendRefused' }
+  /v1/email/drafts:
+    get:
+      x-resource-group: "messages"
+      operationId: listEmailDrafts
+      tags: [Email]
+      summary: List drafts
+      description: The mailbox's drafts, newest first, including drafts the user wrote in Gmail or Outlook. Drafts in the trash are left out. Rows carry no bodies on Google; get a draft to read them.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/EmailAccountId'
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 25 } }
+        - { name: cursor, in: query, schema: { type: string } }
+      responses:
+        '200':
+          description: A page of drafts
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { type: array, items: { $ref: '#/components/schemas/EmailDraft' } }
+                  pagination: { $ref: '#/components/schemas/CursorPagination' }
+                  meta: { $ref: '#/components/schemas/EmailListMeta' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '412': { $ref: '#/components/responses/MailboxPreconditionFailed' }
+    post:
+      x-resource-group: "messages"
+      operationId: createEmailDraft
+      tags: [Email]
+      summary: Create a draft
+      description: |
+        Saves a draft in the user's mailbox, where they see it in Gmail or Outlook. Recipients and subject can come later. `inReplyTo` makes a reply draft in that thread and `forwardOf` a forward draft with the original's attachments; the `kind` is fixed for the life of the draft.
+
+        Send it with `POST /v1/email/drafts/{draftId}/send`. Edits the user makes in their mail client are what goes out. Store the draft `id`, and pass its `version` as `If-Match` so an update or send applies only to the version you saw.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKeyHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreateEmailDraftRequest' }
+      responses:
+        '201':
+          description: The saved draft
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/EmailDraft' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '412': { $ref: '#/components/responses/MailboxPreconditionFailed' }
+  /v1/email/drafts/{draftId}:
+    get:
+      x-resource-group: "messages"
+      operationId: getEmailDraft
+      tags: [Email]
+      summary: Get a draft
+      description: The draft as it stands in the mailbox now, with its bodies. A draft deleted in the mail client answers 404.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: draftId, in: path, required: true, schema: { type: string } }
+        - $ref: '#/components/parameters/EmailAccountId'
+      responses:
+        '200':
+          description: The draft
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/EmailDraft' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '412': { $ref: '#/components/responses/MailboxPreconditionFailed' }
+    patch:
+      x-resource-group: "messages"
+      operationId: updateEmailDraft
+      tags: [Email]
+      summary: Update a draft
+      description: Changes the fields you send and keeps the rest. A reply draft stays in its thread, and a new body on a reply or forward draft goes above the quoted original. With `If-Match`, a draft someone edited since answers 412 `draft_conflict` with the current draft.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: If-Match, in: header, required: false, schema: { type: string }, description: 'The draft `version` (also its `ETag`). The request applies only if the draft is still that version; otherwise 412 `draft_conflict` with the current draft in `details.draft`.' }
+        - { name: draftId, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/UpdateEmailDraftRequest' }
+      responses:
+        '200':
+          description: The updated draft. On Google `messageId` changes on every update; the draft `id` does not.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/EmailDraft' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { description: 'draft_sending: a send of this draft is in flight', content: { application/json: { schema: { $ref: '#/components/schemas/ErrorResponse' } } } }
+        '412': { description: 'draft_conflict (stale If-Match, current draft in details.draft), or the mailbox precondition failed', content: { application/json: { schema: { $ref: '#/components/schemas/ErrorResponse' } } } }
+    delete:
+      x-resource-group: "messages"
+      operationId: deleteEmailDraft
+      tags: [Email]
+      summary: Delete a draft
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: draftId, in: path, required: true, schema: { type: string } }
+        - $ref: '#/components/parameters/EmailAccountId'
+      responses:
+        '200':
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      id: { type: string }
+                      deleted: { type: boolean }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '412': { $ref: '#/components/responses/MailboxPreconditionFailed' }
+  /v1/email/drafts/{draftId}/send:
+    post:
+      x-resource-group: "messages"
+      operationId: sendEmailDraft
+      tags: [Email]
+      summary: Send a draft
+      description: |
+        Sends the draft as it stands in the mailbox now, edits made in Gmail or Outlook included, and returns the sent message with `draftId`. The draft needs at least one recipient. A draft the user deleted or already sent answers 404 `draft_not_found`.
+
+        With `If-Match` it goes out only if it is still the version the approver saw (412 `draft_conflict` otherwise). If the user removed the open pixel or rewrote links, tracking is put back before it is sent. Fires `email.sent` with `source: draft`.
+
+        Tracking set when the draft was created applies, and its `metadata` comes back on the sent message. Same protection, caps and headers as sending.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: If-Match, in: header, required: false, schema: { type: string }, description: 'The draft `version` (also its `ETag`). The request applies only if the draft is still that version; otherwise 412 `draft_conflict` with the current draft in `details.draft`.' }
+        - $ref: '#/components/parameters/IdempotencyKeyHeader'
+        - { name: draftId, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [accountId]
+              properties:
+                accountId: { type: string }
+                sendAt: { type: string, format: date-time, description: 'Send later, 1 minute to 30 days ahead: answers 202 with a `ScheduledEmail`. The draft stays editable in the mailbox and goes out as it stands then. Cancelling with `DELETE /v1/email/messages/scheduled/{scheduleId}` keeps the draft.' }
+      responses:
+        '201':
+          description: The sent message
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/EmailMessage' }
+        '202':
+          description: 'Scheduled with `sendAt`'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/ScheduledEmail' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '402': { $ref: '#/components/responses/PaymentRequired' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { description: 'draft_sending: a send of this draft is in flight', content: { application/json: { schema: { $ref: '#/components/schemas/ErrorResponse' } } } }
+        '412': { description: 'draft_conflict (the draft is no longer the If-Match version; the current draft is in details.draft), or the mailbox precondition failed', content: { application/json: { schema: { $ref: '#/components/schemas/ErrorResponse' } } } }
         '429': { $ref: '#/components/responses/EmailSendRefused' }
   /v1/email/folders:
     get:

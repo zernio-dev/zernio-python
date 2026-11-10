@@ -32140,16 +32140,19 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=False,
         )
     )
-    def email_get_email_thread(thread_id: str, account_id: str) -> str:
+    def email_get_email_thread(
+        thread_id: str, account_id: str, clean: bool = False
+    ) -> str:
         """Get an email thread with its messages
 
         Args:
             thread_id: (required)
-            account_id: The connected Google or Microsoft account. (required)"""
+            account_id: The connected Google or Microsoft account. (required)
+            clean: Add `cleanText` to every message: what each one added to the conversation, without the quoted history."""
         client = _get_client()
         try:
             response = client.email.get_email_thread(
-                thread_id=thread_id, account_id=account_id
+                thread_id=thread_id, account_id=account_id, clean=clean
             )
             return _format_response(response)
         except Exception as e:
@@ -32466,6 +32469,7 @@ def register_generated_tools(mcp, _get_client):
         account_id: str,
         include_headers: bool = False,
         raw: bool = False,
+        clean: bool = False,
     ) -> str:
         """Get an email message
 
@@ -32473,7 +32477,8 @@ def register_generated_tools(mcp, _get_client):
             message_id: (required)
             account_id: The connected Google or Microsoft account. (required)
             include_headers: Include the raw internet headers under `headers`.
-            raw: Include the MIME source under `raw`."""
+            raw: Include the MIME source under `raw`.
+            clean: Add `cleanText`: the new text only, without quoted replies, forwarded history, signature or tracking pixels. Ready to hand to an LLM."""
         client = _get_client()
         try:
             response = client.email.get_email_message(
@@ -32481,6 +32486,7 @@ def register_generated_tools(mcp, _get_client):
                 account_id=account_id,
                 include_headers=include_headers,
                 raw=raw,
+                clean=clean,
             )
             return _format_response(response)
         except Exception as e:
@@ -32636,6 +32642,342 @@ def register_generated_tools(mcp, _get_client):
                 track_links=track_links,
                 track_replies=track_replies,
                 mode=mode,
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Forward a message",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def email_forward_email_message(
+        message_id: str,
+        account_id: str,
+        to: list[dict[str, Any]] | None,
+        cc: list[dict[str, Any]] | None = None,
+        bcc: list[dict[str, Any]] | None = None,
+        reply_to: list[dict[str, Any]] | None = None,
+        from_name: str | None = None,
+        from_: str | None = None,
+        append_signature: bool | None = None,
+        subject: str | None = None,
+        text: str | None = None,
+        html: str | None = None,
+        attachments: list[dict[str, Any]] | None = None,
+        include_attachments: bool = True,
+        exclude_attachment_ids: list[str] | None = None,
+        metadata: dict[str, Any] | None = None,
+        track_opens: bool | None = None,
+        track_links: bool | None = None,
+        track_replies: bool | None = None,
+    ) -> str:
+        """Forward a message
+
+        Forwards the message with its attachments. Your `text` or `html` goes above the forwarded mail, and the subject defaults to \"Fwd: \" plus the original's. On Google the forward stays in the original thread; on Microsoft it goes through Outlook's own forward.
+
+        `includeAttachments: false` keeps only the original's inline images, and `excludeAttachmentIds` leaves out the ones you name. Everything together stays under 25 MB.
+
+        `trackOpens`, `trackLinks` and `trackReplies` work as on send. Same protection, caps and headers as sending. The response carries `forwardedFrom`, and `email.sent` fires with `source: forward`.
+
+        Args:
+            message_id: (required)
+            account_id: (required)
+            to: Each item is an object with keys: email (string, required); name (string or null) (required)
+            cc: Each item is an object with keys: email (string, required); name (string or null)
+            bcc: Each item is an object with keys: email (string, required); name (string or null)
+            reply_to: Each item is an object with keys: email (string, required); name (string or null)
+            from_name
+            from_: Send from another address of the mailbox, as on `POST /v1/email/messages`.
+            append_signature: Gmail only. Appends the signature of the sending address to the note. Outlook answers 400.
+            subject: Defaults to "Fwd: " plus the original subject.
+            text: Optional note above the forwarded mail.
+            html: Optional note above the forwarded mail, as html.
+            attachments: Added to the forwarded attachments. Everything together stays under 25 MB, else 413 `attachment_too_large`. Each item is an object with keys: filename (string, required); contentType (string, required); url (string) - Fetched at send time. Exactly one of `url` or `base64`.; base64 (string); contentId (string) - Makes the attachment inline (`cid:` reference in the html).
+            include_attachments: False keeps only the inline images of the original.
+            exclude_attachment_ids: Attachment ids (from a read of the original) to leave out.
+            metadata
+            track_opens: Adds an open pixel to the note and fires `email.opened`. Needs `html`.
+            track_links: Rewrites the links of the note and fires `email.link_clicked`. Needs `html`.
+            track_replies: Fires `email.thread_replied` when someone else writes in the thread."""
+        client = _get_client()
+        try:
+            response = client.email.forward_email_message(
+                message_id=message_id,
+                account_id=account_id,
+                to=to,
+                cc=cc,
+                bcc=bcc,
+                reply_to=reply_to,
+                from_name=from_name,
+                from_=from_,
+                append_signature=append_signature,
+                subject=subject,
+                text=text,
+                html=html,
+                attachments=attachments,
+                include_attachments=include_attachments,
+                exclude_attachment_ids=exclude_attachment_ids,
+                metadata=metadata,
+                track_opens=track_opens,
+                track_links=track_links,
+                track_replies=track_replies,
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List drafts",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def email_list_email_drafts(
+        account_id: str, limit: int = 25, cursor: str | None = None
+    ) -> str:
+        """List drafts
+
+        The mailbox's drafts, newest first, including drafts the user wrote in Gmail or Outlook. Drafts in the trash are left out. Rows carry no bodies on Google; get a draft to read them.
+
+        Args:
+            account_id: The connected Google or Microsoft account. (required)
+            limit
+            cursor"""
+        client = _get_client()
+        try:
+            response = client.email.list_email_drafts(
+                account_id=account_id, limit=limit, cursor=cursor
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Create a draft",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def email_create_email_draft(
+        account_id: str,
+        to: list[dict[str, Any]] | None = None,
+        cc: list[dict[str, Any]] | None = None,
+        bcc: list[dict[str, Any]] | None = None,
+        reply_to: list[dict[str, Any]] | None = None,
+        from_name: str | None = None,
+        from_: str | None = None,
+        append_signature: bool | None = None,
+        subject: str | None = None,
+        text: str | None = None,
+        html: str | None = None,
+        attachments: list[dict[str, Any]] | None = None,
+        headers: dict[str, Any] | None = None,
+        metadata: dict[str, Any] | None = None,
+        in_reply_to: str | None = None,
+        reply_all: bool | None = None,
+        forward_of: str | None = None,
+        include_attachments: bool = True,
+        exclude_attachment_ids: list[str] | None = None,
+        track_opens: bool | None = None,
+        track_links: bool | None = None,
+        track_replies: bool | None = None,
+    ) -> str:
+        """Create a draft
+
+        Saves a draft in the user's mailbox, where they see it in Gmail or Outlook. Recipients and subject can come later. `inReplyTo` makes a reply draft in that thread and `forwardOf` a forward draft with the original's attachments; the `kind` is fixed for the life of the draft.
+
+        Send it with `POST /v1/email/drafts/{draftId}/send`. Edits the user makes in their mail client are what goes out. Store the draft `id`, and pass its `version` as `If-Match` so an update or send applies only to the version you saw.
+
+        Args:
+            account_id: (required)
+            to: Optional on a draft; needed before it is sent. Each item is an object with keys: email (string, required); name (string or null)
+            cc: Each item is an object with keys: email (string, required); name (string or null)
+            bcc: Each item is an object with keys: email (string, required); name (string or null)
+            reply_to: Each item is an object with keys: email (string, required); name (string or null)
+            from_name
+            from_: Send from another address of the mailbox, as on `POST /v1/email/messages`. Checked when the draft is saved.
+            append_signature: Gmail only. Puts the signature of the sending address in the draft body, where the user sees it.
+            subject: On a reply draft, empty keeps the thread subject.
+            text
+            html
+            attachments: Each item is an object with keys: filename (string, required); contentType (string, required); url (string) - Fetched at send time. Exactly one of `url` or `base64`.; base64 (string); contentId (string) - Makes the attachment inline (`cid:` reference in the html).
+            headers: Custom `X-` headers only.
+            metadata: Kept with the draft and returned on the sent message and its email.* webhooks.
+            in_reply_to: Makes a reply draft in that message's thread, addressed and threaded like a reply. Not with `forwardOf`.
+            reply_all: With `inReplyTo`: address every recipient of the original. Leave out `to`, `cc` and `bcc`.
+            forward_of: Makes a forward draft of that message, with its attachments. Recipients can come later. Not with `inReplyTo`.
+            include_attachments: With `forwardOf`: false keeps only the inline images of the original.
+            exclude_attachment_ids: With `forwardOf`: attachment ids (from a read of the original) to leave out.
+            track_opens: Puts the open pixel in the draft html now; fires `email.opened` once it is sent. Needs `html`.
+            track_links: Rewrites the draft's links now; fires `email.link_clicked` once it is sent. Needs `html`.
+            track_replies: Fires `email.thread_replied` once it is sent."""
+        client = _get_client()
+        try:
+            response = client.email.create_email_draft(
+                account_id=account_id,
+                to=to,
+                cc=cc,
+                bcc=bcc,
+                reply_to=reply_to,
+                from_name=from_name,
+                from_=from_,
+                append_signature=append_signature,
+                subject=subject,
+                text=text,
+                html=html,
+                attachments=attachments,
+                headers=headers,
+                metadata=metadata,
+                in_reply_to=in_reply_to,
+                reply_all=reply_all,
+                forward_of=forward_of,
+                include_attachments=include_attachments,
+                exclude_attachment_ids=exclude_attachment_ids,
+                track_opens=track_opens,
+                track_links=track_links,
+                track_replies=track_replies,
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get a draft",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def email_get_email_draft(draft_id: str, account_id: str) -> str:
+        """Get a draft
+
+        The draft as it stands in the mailbox now, with its bodies. A draft deleted in the mail client answers 404.
+
+        Args:
+            draft_id: (required)
+            account_id: The connected Google or Microsoft account. (required)"""
+        client = _get_client()
+        try:
+            response = client.email.get_email_draft(
+                draft_id=draft_id, account_id=account_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Update a draft",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def email_update_email_draft(
+        draft_id: str,
+        account_id: str,
+        to: list[dict[str, Any]] | None = None,
+        cc: list[dict[str, Any]] | None = None,
+        bcc: list[dict[str, Any]] | None = None,
+        reply_to: list[dict[str, Any]] | None = None,
+        subject: str | None = None,
+        text: str | None = None,
+        html: str | None = None,
+        attachments: list[dict[str, Any]] | None = None,
+    ) -> str:
+        """Update a draft
+
+        Changes the fields you send and keeps the rest. A reply draft stays in its thread, and a new body on a reply or forward draft goes above the quoted original. With `If-Match`, a draft someone edited since answers 412 `draft_conflict` with the current draft.
+
+        Args:
+            draft_id: (required)
+            account_id: (required)
+            to: Each item is an object with keys: email (string, required); name (string or null)
+            cc: Each item is an object with keys: email (string, required); name (string or null)
+            bcc: Each item is an object with keys: email (string, required); name (string or null)
+            reply_to: Each item is an object with keys: email (string, required); name (string or null)
+            subject
+            text
+            html: On a draft created with tracking, the new html is instrumented again under the same `trackingId`.
+            attachments: Each item is an object with keys: filename (string, required); contentType (string, required); url (string) - Fetched at send time. Exactly one of `url` or `base64`.; base64 (string); contentId (string) - Makes the attachment inline (`cid:` reference in the html)."""
+        client = _get_client()
+        try:
+            response = client.email.update_email_draft(
+                draft_id=draft_id,
+                account_id=account_id,
+                to=to,
+                cc=cc,
+                bcc=bcc,
+                reply_to=reply_to,
+                subject=subject,
+                text=text,
+                html=html,
+                attachments=attachments,
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Delete a draft",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def email_delete_email_draft(draft_id: str, account_id: str) -> str:
+        """Delete a draft
+
+        Args:
+            draft_id: (required)
+            account_id: The connected Google or Microsoft account. (required)"""
+        client = _get_client()
+        try:
+            response = client.email.delete_email_draft(
+                draft_id=draft_id, account_id=account_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Send a draft",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def email_send_email_draft(
+        draft_id: str, account_id: str, send_at: str | None = None
+    ) -> str:
+        """Send a draft
+
+        Sends the draft as it stands in the mailbox now, edits made in Gmail or Outlook included, and returns the sent message with `draftId`. The draft needs at least one recipient. A draft the user deleted or already sent answers 404 `draft_not_found`.
+
+        With `If-Match` it goes out only if it is still the version the approver saw (412 `draft_conflict` otherwise). If the user removed the open pixel or rewrote links, tracking is put back before it is sent. Fires `email.sent` with `source: draft`.
+
+        Tracking set when the draft was created applies, and its `metadata` comes back on the sent message. Same protection, caps and headers as sending.
+
+        Args:
+            draft_id: (required)
+            account_id: (required)
+            send_at: Send later, 1 minute to 30 days ahead: answers 202 with a `ScheduledEmail`. The draft stays editable in the mailbox and goes out as it stands then. Cancelling with `DELETE /v1/email/messages/scheduled/{scheduleId}` keeps the draft."""
+        client = _get_client()
+        try:
+            response = client.email.send_email_draft(
+                draft_id=draft_id, account_id=account_id, send_at=send_at
             )
             return _format_response(response)
         except Exception as e:
@@ -47419,10 +47761,12 @@ def register_generated_tools(mcp, _get_client):
             "calendar.event.created",
             "calendar.event.updated",
             "calendar.event.deleted",
+            "email.sent",
             "email.opened",
             "email.link_clicked",
             "email.thread_replied",
             "email.send_failed",
+            "email.bounced",
             "file.created",
             "file.updated",
             "file.deleted",

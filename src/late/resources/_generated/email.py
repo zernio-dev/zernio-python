@@ -118,10 +118,13 @@ class EmailResource:
         )
         return self._client._get("/v1/email/threads", params=params)
 
-    def get_email_thread(self, thread_id: str, account_id: str) -> dict[str, Any]:
+    def get_email_thread(
+        self, thread_id: str, account_id: str, *, clean: bool | None = False
+    ) -> dict[str, Any]:
         """Get an email thread with its messages"""
         params = self._build_params(
             account_id=account_id,
+            clean=clean,
         )
         return self._client._get(f"/v1/email/threads/{thread_id}", params=params)
 
@@ -196,6 +199,7 @@ class EmailResource:
         to: list[Any],
         subject: str,
         *,
+        idempotency_key: str | None = None,
         cc: list[Any] | None = None,
         bcc: list[Any] | None = None,
         reply_to: list[Any] | None = None,
@@ -235,7 +239,10 @@ class EmailResource:
             track_links=track_links,
             track_replies=track_replies,
         )
-        return self._client._post("/v1/email/messages", data=payload)
+        headers: dict[str, str] = {}
+        if idempotency_key is not None:
+            headers["Idempotency-Key"] = idempotency_key
+        return self._client._post("/v1/email/messages", data=payload, headers=headers)
 
     def list_scheduled_emails(
         self,
@@ -281,12 +288,14 @@ class EmailResource:
         *,
         include_headers: bool | None = False,
         raw: bool | None = False,
+        clean: bool | None = False,
     ) -> dict[str, Any]:
         """Get an email message"""
         params = self._build_params(
             account_id=account_id,
             include_headers=include_headers,
             raw=raw,
+            clean=clean,
         )
         return self._client._get(f"/v1/email/messages/{message_id}", params=params)
 
@@ -326,6 +335,7 @@ class EmailResource:
         to: list[Any],
         subject: str,
         *,
+        idempotency_key: str | None = None,
         cc: list[Any] | None = None,
         bcc: list[Any] | None = None,
         reply_to: list[Any] | None = None,
@@ -367,8 +377,197 @@ class EmailResource:
             track_replies=track_replies,
             mode=mode,
         )
+        headers: dict[str, str] = {}
+        if idempotency_key is not None:
+            headers["Idempotency-Key"] = idempotency_key
         return self._client._post(
-            f"/v1/email/messages/{message_id}/reply", data=payload
+            f"/v1/email/messages/{message_id}/reply", data=payload, headers=headers
+        )
+
+    def forward_email_message(
+        self,
+        message_id: str,
+        account_id: str,
+        to: list[Any],
+        *,
+        idempotency_key: str | None = None,
+        cc: list[Any] | None = None,
+        bcc: list[Any] | None = None,
+        reply_to: list[Any] | None = None,
+        from_name: str | None = None,
+        from_: str | None = None,
+        append_signature: bool | None = None,
+        subject: str | None = None,
+        text: str | None = None,
+        html: str | None = None,
+        attachments: list[Any] | None = None,
+        include_attachments: bool | None = True,
+        exclude_attachment_ids: list[str] | None = None,
+        metadata: dict[str, Any] | None = None,
+        track_opens: bool | None = None,
+        track_links: bool | None = None,
+        track_replies: bool | None = None,
+    ) -> dict[str, Any]:
+        """Forward a message"""
+        payload = self._build_payload(
+            account_id=account_id,
+            to=to,
+            cc=cc,
+            bcc=bcc,
+            reply_to=reply_to,
+            from_name=from_name,
+            from_=from_,
+            append_signature=append_signature,
+            subject=subject,
+            text=text,
+            html=html,
+            attachments=attachments,
+            include_attachments=include_attachments,
+            exclude_attachment_ids=exclude_attachment_ids,
+            metadata=metadata,
+            track_opens=track_opens,
+            track_links=track_links,
+            track_replies=track_replies,
+        )
+        headers: dict[str, str] = {}
+        if idempotency_key is not None:
+            headers["Idempotency-Key"] = idempotency_key
+        return self._client._post(
+            f"/v1/email/messages/{message_id}/forward", data=payload, headers=headers
+        )
+
+    def list_email_drafts(
+        self, account_id: str, *, limit: int | None = 25, cursor: str | None = None
+    ) -> dict[str, Any]:
+        """List drafts"""
+        params = self._build_params(
+            account_id=account_id,
+            limit=limit,
+            cursor=cursor,
+        )
+        return self._client._get("/v1/email/drafts", params=params)
+
+    def create_email_draft(
+        self,
+        account_id: str,
+        *,
+        idempotency_key: str | None = None,
+        to: list[Any] | None = None,
+        cc: list[Any] | None = None,
+        bcc: list[Any] | None = None,
+        reply_to: list[Any] | None = None,
+        from_name: str | None = None,
+        from_: str | None = None,
+        append_signature: bool | None = None,
+        subject: str | None = None,
+        text: str | None = None,
+        html: str | None = None,
+        attachments: list[Any] | None = None,
+        headers: dict[str, Any] | None = None,
+        metadata: dict[str, Any] | None = None,
+        in_reply_to: str | None = None,
+        reply_all: bool | None = None,
+        forward_of: str | None = None,
+        include_attachments: bool | None = True,
+        exclude_attachment_ids: list[str] | None = None,
+        track_opens: bool | None = None,
+        track_links: bool | None = None,
+        track_replies: bool | None = None,
+    ) -> dict[str, Any]:
+        """Create a draft"""
+        payload = self._build_payload(
+            account_id=account_id,
+            to=to,
+            cc=cc,
+            bcc=bcc,
+            reply_to=reply_to,
+            from_name=from_name,
+            from_=from_,
+            append_signature=append_signature,
+            subject=subject,
+            text=text,
+            html=html,
+            attachments=attachments,
+            headers=headers,
+            metadata=metadata,
+            in_reply_to=in_reply_to,
+            reply_all=reply_all,
+            forward_of=forward_of,
+            include_attachments=include_attachments,
+            exclude_attachment_ids=exclude_attachment_ids,
+            track_opens=track_opens,
+            track_links=track_links,
+            track_replies=track_replies,
+        )
+        headers: dict[str, str] = {}
+        if idempotency_key is not None:
+            headers["Idempotency-Key"] = idempotency_key
+        return self._client._post("/v1/email/drafts", data=payload, headers=headers)
+
+    def get_email_draft(self, draft_id: str, account_id: str) -> dict[str, Any]:
+        """Get a draft"""
+        params = self._build_params(
+            account_id=account_id,
+        )
+        return self._client._get(f"/v1/email/drafts/{draft_id}", params=params)
+
+    def update_email_draft(
+        self,
+        draft_id: str,
+        account_id: str,
+        *,
+        if_match: str | None = None,
+        to: list[Any] | None = None,
+        cc: list[Any] | None = None,
+        bcc: list[Any] | None = None,
+        reply_to: list[Any] | None = None,
+        subject: str | None = None,
+        text: str | None = None,
+        html: str | None = None,
+        attachments: list[Any] | None = None,
+    ) -> dict[str, Any]:
+        """Update a draft"""
+        payload = self._build_payload(
+            account_id=account_id,
+            to=to,
+            cc=cc,
+            bcc=bcc,
+            reply_to=reply_to,
+            subject=subject,
+            text=text,
+            html=html,
+            attachments=attachments,
+        )
+        return self._client._patch(f"/v1/email/drafts/{draft_id}", data=payload)
+
+    def delete_email_draft(self, draft_id: str, account_id: str) -> dict[str, Any]:
+        """Delete a draft"""
+        params = self._build_params(
+            account_id=account_id,
+        )
+        return self._client._delete(f"/v1/email/drafts/{draft_id}", params=params)
+
+    def send_email_draft(
+        self,
+        draft_id: str,
+        account_id: str,
+        *,
+        if_match: str | None = None,
+        idempotency_key: str | None = None,
+        send_at: datetime | str | None = None,
+    ) -> dict[str, Any]:
+        """Send a draft"""
+        payload = self._build_payload(
+            account_id=account_id,
+            send_at=send_at,
+        )
+        headers: dict[str, str] = {}
+        if if_match is not None:
+            headers["If-Match"] = if_match
+        if idempotency_key is not None:
+            headers["Idempotency-Key"] = idempotency_key
+        return self._client._post(
+            f"/v1/email/drafts/{draft_id}/send", data=payload, headers=headers
         )
 
     def list_email_folders(self, account_id: str) -> dict[str, Any]:
@@ -466,11 +665,12 @@ class EmailResource:
         return await self._client._aget("/v1/email/threads", params=params)
 
     async def aget_email_thread(
-        self, thread_id: str, account_id: str
+        self, thread_id: str, account_id: str, *, clean: bool | None = False
     ) -> dict[str, Any]:
         """Get an email thread with its messages (async)"""
         params = self._build_params(
             account_id=account_id,
+            clean=clean,
         )
         return await self._client._aget(f"/v1/email/threads/{thread_id}", params=params)
 
@@ -547,6 +747,7 @@ class EmailResource:
         to: list[Any],
         subject: str,
         *,
+        idempotency_key: str | None = None,
         cc: list[Any] | None = None,
         bcc: list[Any] | None = None,
         reply_to: list[Any] | None = None,
@@ -586,7 +787,12 @@ class EmailResource:
             track_links=track_links,
             track_replies=track_replies,
         )
-        return await self._client._apost("/v1/email/messages", data=payload)
+        headers: dict[str, str] = {}
+        if idempotency_key is not None:
+            headers["Idempotency-Key"] = idempotency_key
+        return await self._client._apost(
+            "/v1/email/messages", data=payload, headers=headers
+        )
 
     async def alist_scheduled_emails(
         self,
@@ -634,12 +840,14 @@ class EmailResource:
         *,
         include_headers: bool | None = False,
         raw: bool | None = False,
+        clean: bool | None = False,
     ) -> dict[str, Any]:
         """Get an email message (async)"""
         params = self._build_params(
             account_id=account_id,
             include_headers=include_headers,
             raw=raw,
+            clean=clean,
         )
         return await self._client._aget(
             f"/v1/email/messages/{message_id}", params=params
@@ -687,6 +895,7 @@ class EmailResource:
         to: list[Any],
         subject: str,
         *,
+        idempotency_key: str | None = None,
         cc: list[Any] | None = None,
         bcc: list[Any] | None = None,
         reply_to: list[Any] | None = None,
@@ -728,8 +937,203 @@ class EmailResource:
             track_replies=track_replies,
             mode=mode,
         )
+        headers: dict[str, str] = {}
+        if idempotency_key is not None:
+            headers["Idempotency-Key"] = idempotency_key
         return await self._client._apost(
-            f"/v1/email/messages/{message_id}/reply", data=payload
+            f"/v1/email/messages/{message_id}/reply", data=payload, headers=headers
+        )
+
+    async def aforward_email_message(
+        self,
+        message_id: str,
+        account_id: str,
+        to: list[Any],
+        *,
+        idempotency_key: str | None = None,
+        cc: list[Any] | None = None,
+        bcc: list[Any] | None = None,
+        reply_to: list[Any] | None = None,
+        from_name: str | None = None,
+        from_: str | None = None,
+        append_signature: bool | None = None,
+        subject: str | None = None,
+        text: str | None = None,
+        html: str | None = None,
+        attachments: list[Any] | None = None,
+        include_attachments: bool | None = True,
+        exclude_attachment_ids: list[str] | None = None,
+        metadata: dict[str, Any] | None = None,
+        track_opens: bool | None = None,
+        track_links: bool | None = None,
+        track_replies: bool | None = None,
+    ) -> dict[str, Any]:
+        """Forward a message (async)"""
+        payload = self._build_payload(
+            account_id=account_id,
+            to=to,
+            cc=cc,
+            bcc=bcc,
+            reply_to=reply_to,
+            from_name=from_name,
+            from_=from_,
+            append_signature=append_signature,
+            subject=subject,
+            text=text,
+            html=html,
+            attachments=attachments,
+            include_attachments=include_attachments,
+            exclude_attachment_ids=exclude_attachment_ids,
+            metadata=metadata,
+            track_opens=track_opens,
+            track_links=track_links,
+            track_replies=track_replies,
+        )
+        headers: dict[str, str] = {}
+        if idempotency_key is not None:
+            headers["Idempotency-Key"] = idempotency_key
+        return await self._client._apost(
+            f"/v1/email/messages/{message_id}/forward", data=payload, headers=headers
+        )
+
+    async def alist_email_drafts(
+        self, account_id: str, *, limit: int | None = 25, cursor: str | None = None
+    ) -> dict[str, Any]:
+        """List drafts (async)"""
+        params = self._build_params(
+            account_id=account_id,
+            limit=limit,
+            cursor=cursor,
+        )
+        return await self._client._aget("/v1/email/drafts", params=params)
+
+    async def acreate_email_draft(
+        self,
+        account_id: str,
+        *,
+        idempotency_key: str | None = None,
+        to: list[Any] | None = None,
+        cc: list[Any] | None = None,
+        bcc: list[Any] | None = None,
+        reply_to: list[Any] | None = None,
+        from_name: str | None = None,
+        from_: str | None = None,
+        append_signature: bool | None = None,
+        subject: str | None = None,
+        text: str | None = None,
+        html: str | None = None,
+        attachments: list[Any] | None = None,
+        headers: dict[str, Any] | None = None,
+        metadata: dict[str, Any] | None = None,
+        in_reply_to: str | None = None,
+        reply_all: bool | None = None,
+        forward_of: str | None = None,
+        include_attachments: bool | None = True,
+        exclude_attachment_ids: list[str] | None = None,
+        track_opens: bool | None = None,
+        track_links: bool | None = None,
+        track_replies: bool | None = None,
+    ) -> dict[str, Any]:
+        """Create a draft (async)"""
+        payload = self._build_payload(
+            account_id=account_id,
+            to=to,
+            cc=cc,
+            bcc=bcc,
+            reply_to=reply_to,
+            from_name=from_name,
+            from_=from_,
+            append_signature=append_signature,
+            subject=subject,
+            text=text,
+            html=html,
+            attachments=attachments,
+            headers=headers,
+            metadata=metadata,
+            in_reply_to=in_reply_to,
+            reply_all=reply_all,
+            forward_of=forward_of,
+            include_attachments=include_attachments,
+            exclude_attachment_ids=exclude_attachment_ids,
+            track_opens=track_opens,
+            track_links=track_links,
+            track_replies=track_replies,
+        )
+        headers: dict[str, str] = {}
+        if idempotency_key is not None:
+            headers["Idempotency-Key"] = idempotency_key
+        return await self._client._apost(
+            "/v1/email/drafts", data=payload, headers=headers
+        )
+
+    async def aget_email_draft(self, draft_id: str, account_id: str) -> dict[str, Any]:
+        """Get a draft (async)"""
+        params = self._build_params(
+            account_id=account_id,
+        )
+        return await self._client._aget(f"/v1/email/drafts/{draft_id}", params=params)
+
+    async def aupdate_email_draft(
+        self,
+        draft_id: str,
+        account_id: str,
+        *,
+        if_match: str | None = None,
+        to: list[Any] | None = None,
+        cc: list[Any] | None = None,
+        bcc: list[Any] | None = None,
+        reply_to: list[Any] | None = None,
+        subject: str | None = None,
+        text: str | None = None,
+        html: str | None = None,
+        attachments: list[Any] | None = None,
+    ) -> dict[str, Any]:
+        """Update a draft (async)"""
+        payload = self._build_payload(
+            account_id=account_id,
+            to=to,
+            cc=cc,
+            bcc=bcc,
+            reply_to=reply_to,
+            subject=subject,
+            text=text,
+            html=html,
+            attachments=attachments,
+        )
+        return await self._client._apatch(f"/v1/email/drafts/{draft_id}", data=payload)
+
+    async def adelete_email_draft(
+        self, draft_id: str, account_id: str
+    ) -> dict[str, Any]:
+        """Delete a draft (async)"""
+        params = self._build_params(
+            account_id=account_id,
+        )
+        return await self._client._adelete(
+            f"/v1/email/drafts/{draft_id}", params=params
+        )
+
+    async def asend_email_draft(
+        self,
+        draft_id: str,
+        account_id: str,
+        *,
+        if_match: str | None = None,
+        idempotency_key: str | None = None,
+        send_at: datetime | str | None = None,
+    ) -> dict[str, Any]:
+        """Send a draft (async)"""
+        payload = self._build_payload(
+            account_id=account_id,
+            send_at=send_at,
+        )
+        headers: dict[str, str] = {}
+        if if_match is not None:
+            headers["If-Match"] = if_match
+        if idempotency_key is not None:
+            headers["Idempotency-Key"] = idempotency_key
+        return await self._client._apost(
+            f"/v1/email/drafts/{draft_id}/send", data=payload, headers=headers
         )
 
     async def alist_email_folders(self, account_id: str) -> dict[str, Any]:
