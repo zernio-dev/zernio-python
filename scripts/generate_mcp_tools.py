@@ -155,6 +155,7 @@ def _resolve_schema(schema: dict[str, Any], spec: dict[str, Any] | None) -> dict
             resolved_branches = [_resolve_schema(b, spec) for b in schema[combinator]]
             types = {b.get("type") for b in resolved_branches if isinstance(b, dict)}
             types.discard(None)
+            types.discard("null")
             if len(types) == 1:
                 only = types.pop()
                 for b in resolved_branches:
@@ -213,6 +214,9 @@ def get_python_type(
     schema = _resolve_schema(schema, spec)
 
     schema_type = schema.get("type")
+    if isinstance(schema_type, list):
+        non_null = [t for t in schema_type if t != "null"]
+        schema_type = non_null[0] if len(non_null) == 1 else None
     default = schema.get("default")
 
     # Scalars: respect the OpenAPI-declared default when present, otherwise

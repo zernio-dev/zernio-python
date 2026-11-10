@@ -2383,7 +2383,9 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=True,
         )
     )
-    def accounts_update_bluesky_settings(account_id: str, default_langs: str) -> str:
+    def accounts_update_bluesky_settings(
+        account_id: str, default_langs: list[str] | None
+    ) -> str:
         """Update Bluesky account settings
 
         Set or clear the account's default post languages. 1-3 BCP-47 codes (e.g. \"pt\", \"en-US\"), the same validation as per-post langs; explicit null clears the default. Per-post platformSpecificData.langs always overrides this default. Applies to posts published after the change; already-published posts cannot be retagged (Bluesky has no post edit).
@@ -5345,7 +5347,7 @@ def register_generated_tools(mcp, _get_client):
         account_id: str,
         ad_account_id: str,
         name: str | None = None,
-        spend_cap: str | None = None,
+        spend_cap: float | None = None,
         reset_amount_spent: bool | None = None,
         default_dsa_beneficiary: str | None = None,
         default_dsa_payor: str | None = None,
@@ -8251,7 +8253,7 @@ def register_generated_tools(mcp, _get_client):
         regional_regulated_categories: list[str] | None = None,
         regional_regulation_identities: dict[str, Any] | None = None,
         smart_targeting: dict[str, Any] | None = None,
-        placements: str | None = None,
+        placements: dict[str, Any] | None = None,
         start_date: str | None = None,
         end_date: str | None = None,
         targeting: dict[str, Any] | None = None,
@@ -10481,7 +10483,7 @@ def register_generated_tools(mcp, _get_client):
         billing_event: str | None = None,
         buying_type: Literal["AUCTION", "RESERVED"] = "AUCTION",
         rf_prediction_id: str | None = None,
-        promotion: str | None = None,
+        promotion: dict[str, Any] | None = None,
         creative_features: dict[str, Any] | None = None,
         catalog_format: Literal[
             "single_image",
@@ -11925,7 +11927,7 @@ def register_generated_tools(mcp, _get_client):
         instagram_account_id: str | None = None,
         optimize_card_order: bool | None = None,
         url_tags: str | None = None,
-        promotion: str | None = None,
+        promotion: dict[str, Any] | None = None,
         creative_features: dict[str, Any] | None = None,
         multi_advertiser: Literal["OPT_IN", "OPT_OUT"] | None = None,
         ai_disclosure: Literal["OPT_IN", "OPT_OUT"] | None = None,
@@ -13381,7 +13383,7 @@ def register_generated_tools(mcp, _get_client):
         actions: list[dict[str, Any]] | None,
         campaign_ids: list[str] | None = None,
         filters: list[dict[str, Any]] | None = None,
-        groups: str | None = None,
+        groups: list[dict[str, Any]] | None = None,
         lifecycle: dict[str, Any] | None = None,
         schedule: dict[str, Any] | None = None,
         cooldown_minutes: int = 1440,
@@ -13590,10 +13592,10 @@ def register_generated_tools(mcp, _get_client):
     def ad_rules_update_ad_rule(
         name: str | None = None,
         level: Literal["campaign", "adset", "ad"] | None = None,
-        campaign_ids: str | None = None,
+        campaign_ids: list[str] | None = None,
         filters: list[dict[str, Any]] | None = None,
         groups: str | None = None,
-        lifecycle: str | None = None,
+        lifecycle: dict[str, Any] | None = None,
         conditions: dict[str, Any] | None = None,
         actions: list[dict[str, Any]] | None = None,
         schedule: dict[str, Any] | None = None,
@@ -13614,7 +13616,7 @@ def register_generated_tools(mcp, _get_client):
             campaign_ids
             filters: Each item is an object with keys: field (one of: name, campaign_name, adset_name, goal; required) - The object's own name, its campaign's or ad set's name, or the campaign goal (objective) as the platform reports it.; op (one of: contains, not_contains, equals, not_equals, starts_with; required); value (string, required)
             groups: Null removes the groups; each campaign is then judged on its own.
-            lifecycle: Null removes it; every matching run then acts and notifies again.
+            lifecycle: Null removes it; every matching run then acts and notifies again. Object with keys: confirmChecks (integer) - Matching runs in a row before acting. Defaults to 1.; hold (object with keys all) - Keeps an open alert open after the conditions stop matching.; critical (object with keys all) - Marks an open alert critical.
             conditions: Object with keys: all (list of objects with keys metric, window, op, value, compareTo, required)
             actions: Each item is an object with keys: type (one of: notify; required) - Send the `ad_rule.triggered` webhook, and the alert to every `send` destination.; send (list of objects with keys accountId, channelId) - Also send a short alert through accounts you connected: what matched, the values and what the rule did. Up to 5 destinations, checked when the rule is saved. ...
             schedule: Object with keys: everyMinutes (one of: 15, 30, 60, 180, 360, 720, 1440) - How often the rule runs, in minutes. Null on a rule that runs at set times.; times (array or null) - Set weekly times in the ad account timezone, instead of an interval. A rule that changes ads needs a cooldown of at least the shortest gap between two times.; startsAt (string or null) - The rule runs from this time on.; endsAt (string or null) - The rule stops running after this time.; quietHours (object or null) - A daily window in the ad account timezone when the rule does not run, like `{ \"from\": \"22:00\", \"to\": \"06:00\" }`. It may wrap past midnight; the first run ...
@@ -16556,7 +16558,7 @@ def register_generated_tools(mcp, _get_client):
         subjects: dict[str, Any] | None = None,
         filter: dict[str, Any] | None = None,
         conditions: dict[str, Any] | None = None,
-        alert: str | None = None,
+        alert: dict[str, Any] | None = None,
         steps: list[dict[str, Any]] | None = None,
         limits: dict[str, Any] | None = None,
     ) -> str:
@@ -16575,7 +16577,7 @@ def register_generated_tools(mcp, _get_client):
             subjects: Object with keys: each (one of: campaign, adset, ad; required) - The objects judged one by one.; adAccounts (list of objects with keys accountId, adAccountId, required) - The ad account to check. One per ad rule, and an edit cannot move it to another.; campaignIds (list of string) - Only these platform campaigns or their ad sets and ads. Leave out to check the whole ad account.; filters (list of objects with keys field, op, value) - All must hold.; groups (list of objects with keys name, filters) - Judges campaigns together (campaign rules only): each group's numbers are summed and its rates computed on the totals, and a matching group acts on each of ...
             filter: Object with keys: field (string, required) - A fact name from the catalog.; op (one of: equals, not_equals, contains, not_contains, starts_with, ends_with, exists, not_exists, matches, greater_than, less_than, greater_or_equal, less_or_equal, before, after, has_tag, not_has_tag, is_true, is_false; required); value (string or number, required)
             conditions: Object with keys: all (list of objects with keys metric, window, op, value, compareTo, required)
-            alert
+            alert: Object with keys: confirmChecks (integer); hold (object with keys all); critical (object with keys all)
             steps: The steps the automation's kind takes. Each item is an object with keys: id (string); type (string, required)
             limits: Object with keys: cooldown (string) - How long an object is left alone after the rule acts on it. Whole minutes, up to `30d`.; maxChangesPerDay (integer) - Most changes across the last 24 hours. Needs an `ads.*` step.; maxChangesPerObject (integer) - Most times the rule may change one object, over its whole history. Needs an `ads.*` step."""
         client = _get_client()
@@ -17047,7 +17049,7 @@ def register_generated_tools(mcp, _get_client):
         account_id: str,
         ad_account_id: str,
         paused: bool | None = None,
-        daily_raise_limit: str | None = None,
+        daily_raise_limit: float | None = None,
     ) -> str:
         """Update one ad account's controls
 
@@ -18839,7 +18841,7 @@ def register_generated_tools(mcp, _get_client):
         purchase_info: str | None = None,
         delivery_and_shipping: str | None = None,
         business_description: str | None = None,
-        contact_info: str | None = None,
+        contact_info: dict[str, Any] | None = None,
     ) -> str:
         """Replace business information
 
@@ -20943,11 +20945,11 @@ def register_generated_tools(mcp, _get_client):
         audience: dict[str, Any] | None = None,
         follow_gate: dict[str, Any] | None = None,
         repeat_policy: dict[str, Any] | None = None,
-        dedupe_same_text_hours: str | None = None,
+        dedupe_same_text_hours: int | None = None,
         public_reply_policy: Literal["after_dm", "always"] = "after_dm",
         actions: dict[str, Any] | None = None,
         quick_replies: list[dict[str, Any]] | None = None,
-        dm_media: str | None = None,
+        dm_media: dict[str, Any] | None = None,
         is_active: bool = True,
     ) -> str:
         """Create comment-to-DM automation
@@ -21013,7 +21015,7 @@ def register_generated_tools(mcp, _get_client):
                 public_reply_policy: 'after_dm' posts commentReply only after a successful DM. 'always' posts it whatever the audience rule, dedupe or DM outcome: the moment a comment matches, or after commentReplyDelaySeconds when set (raised to dmDelaySeconds, so it never precedes the DM attempt).
                 actions: Object with keys: likeComment (boolean) - Like the comment as the account. Facebook always; Instagram only for accounts connected through Facebook Login and allowlisted for likes while Meta reviews ...; hideComment (boolean) - Hide the comment once the first DM has been attempted, so the private reply is never sent to an already hidden comment.
                 quick_replies: Opt-in quick-reply chips on the DM (up to 13). Chips do not render in Message Requests, where a first DM to a cold commenter lands, so prefer buttons for first contact. Mutually exclusive with buttons and template (400). Each item is an object with keys: title (string, required); payload (string, required) - Delivered back via the messaging webhook when tapped.; imageUrl (string)
-                dm_media
+                dm_media: Object with keys: type (one of: image, video, audio, file; required); url (string, required) - Publicly reachable http(s) URL Meta downloads the media from.
                 is_active: Create the automation paused with false."""
         client = _get_client()
         try:
@@ -21100,7 +21102,7 @@ def register_generated_tools(mcp, _get_client):
         post_title: str | None = None,
         dm_message: str | None = None,
         buttons: list[dict[str, Any]] | None = None,
-        template: str | None = None,
+        template: dict[str, Any] | None = None,
         comment_reply: str | None = None,
         dm_message_variations: list[str] | None = None,
         comment_reply_variations: list[str] | None = None,
@@ -21113,11 +21115,11 @@ def register_generated_tools(mcp, _get_client):
         follow_gate: dict[str, Any] | None = None,
         is_active: bool | None = None,
         repeat_policy: dict[str, Any] | None = None,
-        dedupe_same_text_hours: str | None = None,
+        dedupe_same_text_hours: int | None = None,
         public_reply_policy: Literal["after_dm", "always"] | None = None,
         actions: dict[str, Any] | None = None,
-        quick_replies: str | None = None,
-        dm_media: str | None = None,
+        quick_replies: list[dict[str, Any]] | None = None,
+        dm_media: dict[str, Any] | None = None,
     ) -> str:
         """Update automation settings
 
@@ -21154,7 +21156,7 @@ def register_generated_tools(mcp, _get_client):
                 post_title: Post content snippet for display. Moves as a unit with platformPostId and postId (see platformPostId).
                 dm_message
                 buttons: Inline DM buttons (1-3). Pass [] to clear all buttons. Each item is an object with keys: type (one of: url, postback, phone; required); title (string, required) - Button label (20 chars max); url (string) - Target URL (required when type is url); payload (string) - Postback payload delivered via the messaging_postbacks webhook (required when type is postback); phone (string) - Phone number, e.g. +14155551234 (required when type is phone; Facebook only)
-                template: Product card sent instead of the plain dmMessage bubble. Pass null to clear it and fall back to dmMessage. Mutually exclusive with buttons, including with the buttons already stored on the automation.
+                template: Product card sent instead of the plain dmMessage bubble. Pass null to clear it and fall back to dmMessage. Mutually exclusive with buttons, including with the buttons already stored on the automation. Object with keys: type (one of: generic; required); imageAspectRatio (one of: horizontal, square) - Facebook only. How Messenger renders each element imageUrl: horizontal (1.91:1, the default) or square (1:1). Instagram has no such setting, so an Instagram ...; elements (list of objects with keys title, subtitle, imageUrl, buttons, required)
                 comment_reply: On LinkedIn, mention with `@[Name](urn:li:person:ID)` or `@[Name](urn:li:organization:ID)`, getting the URN from `GET /v1/accounts/{accountId}/linkedin-mentions`. The name must match the person's or Page's LinkedIn name exactly, or the mention renders as plain text. Profile or company URL mentions are not resolved here and are sent as plain text.
                 dm_message_variations: Alternate DM texts for random rotation (see create). Pass [] to clear.
                 comment_reply_variations: Alternate public replies for random rotation. Pass [] to clear.
@@ -21173,7 +21175,7 @@ def register_generated_tools(mcp, _get_client):
                 public_reply_policy: 'after_dm' posts commentReply only after a successful DM. 'always' posts it whatever the audience rule, dedupe or DM outcome: the moment a comment matches, or after commentReplyDelaySeconds when set (raised to dmDelaySeconds, so it never precedes the DM attempt).
                 actions: Object with keys: likeComment (boolean) - Like the comment as the account. Facebook always; Instagram only for accounts connected through Facebook Login and allowlisted for likes while Meta reviews ...; hideComment (boolean) - Hide the comment once the first DM has been attempted, so the private reply is never sent to an already hidden comment.
                 quick_replies: Opt-in quick-reply chips on the DM (up to 13). Chips do not render in Message Requests, where a first DM to a cold commenter lands, so prefer buttons for first contact. Mutually exclusive with buttons and template (400). Send null to clear.
-                dm_media"""
+                dm_media: Object with keys: type (one of: image, video, audio, file; required); url (string, required) - Publicly reachable http(s) URL Meta downloads the media from."""
         client = _get_client()
         try:
             response = client.comment_automations.update_comment_automation(
@@ -23517,8 +23519,8 @@ def register_generated_tools(mcp, _get_client):
         amount: str | None = None,
         applies_on_each_item: bool | None = None,
         minimum_subtotal: str | None = None,
-        minimum_quantity: str | None = None,
-        usage_limit: str | None = None,
+        minimum_quantity: int | None = None,
+        usage_limit: int | None = None,
         once_per_customer: bool | None = None,
         starts_at: str | None = None,
         ends_at: str | None = None,
@@ -23616,8 +23618,8 @@ def register_generated_tools(mcp, _get_client):
         amount: str | None = None,
         applies_on_each_item: bool | None = None,
         minimum_subtotal: str | None = None,
-        minimum_quantity: str | None = None,
-        usage_limit: str | None = None,
+        minimum_quantity: int | None = None,
+        usage_limit: int | None = None,
         once_per_customer: bool | None = None,
         starts_at: str | None = None,
         ends_at: str | None = None,
@@ -29629,9 +29631,9 @@ def register_generated_tools(mcp, _get_client):
         ends_at: str | None = None,
         tracking_days: int = 30,
         hold_days: int = 10,
-        max_post_age_minutes: str | None = None,
+        max_post_age_minutes: int | None = None,
         settlement: Literal["none", "external", "treasury"] = "none",
-        branding: str | None = None,
+        branding: dict[str, Any] | None = None,
     ) -> str:
         """Create creator campaign
 
@@ -29656,7 +29658,7 @@ def register_generated_tools(mcp, _get_client):
             hold_days
             max_post_age_minutes: Optional maximum age in minutes of a post when it is submitted. Null or omitted (the default) accepts any age. Posts published before the campaign started are always refused.
             settlement
-            branding"""
+            branding: Object with keys: brandName (string); primaryColor (string); logoUrl (string); theme (object)"""
         client = _get_client()
         try:
             response = client.creator_campaigns.create_creator_campaign(
@@ -29766,11 +29768,11 @@ def register_generated_tools(mcp, _get_client):
         ends_at: str | None = None,
         tracking_days: int | None = None,
         hold_days: int | None = None,
-        max_post_age_minutes: str | None = None,
+        max_post_age_minutes: int | None = None,
         settlement: Literal["none", "external", "treasury"] | None = None,
         economics: dict[str, Any] | None = None,
         caps: dict[str, Any] | None = None,
-        branding: str | None = None,
+        branding: dict[str, Any] | None = None,
     ) -> str:
         """Update creator campaign
 
@@ -29793,7 +29795,7 @@ def register_generated_tools(mcp, _get_client):
             settlement
             economics: Object with keys: type (one of: cpm; required); metric (one of: views, engagements) - What the rate pays on. `engagements` counts the `engagementTypes` as each platform reports them, and `minViewsToEarn` then applies to engagements. Fixed once ...; engagementTypes (list of string) - With `metric: engagements`, the engagements that count. Missing means all four, and sending it on a views campaign answers 400. YouTube reports likes and ...; organicViewsOnly (boolean) - Count only organic views: views from ads the creator ran do not earn. Every campaign platform must be YouTube or X, which report ad views per post, or the ...; ratePer1kCents (integer, required); minViewsToEarn (integer, required) - The count a post must reach before it earns, in the campaign metric (views or engagements).; maxPayoutPerClipCents (integer); budgetCents (integer, required)
             caps: Object with keys: maxParticipants (integer) - Invites and joins past this count answer 403.; maxSubmissionsPerParticipantPerDay (integer) - Posts one participant can submit to this campaign per UTC day, counting every submission whatever its status. The next submit that day answers 409 ...; maxAccountsPerParticipant (integer) - Accounts a participant can use in this campaign. Connecting a new account past it answers 400; only the first accounts connected, up to this count, can submit ...; maxXReadSpendCents (integer) - X campaigns only: what tracking X posts may cost in X reads, in cents. Unset means 5000 ($50). X bills one read per tracked post per UTC day, and you pay it ...; authenticityThreshold (number, required) - A submission whose authenticity score falls below this is flagged `low_authenticity`. It is never rejected automatically. Defaults to 40 on create.
-            branding"""
+            branding: Object with keys: brandName (string); primaryColor (string); logoUrl (string); theme (object)"""
         client = _get_client()
         try:
             response = client.creator_campaigns.update_creator_campaign(
@@ -39481,7 +39483,7 @@ def register_generated_tools(mcp, _get_client):
         message: str | None = None,
         documents: list[dict[str, Any]] | None = None,
         address: dict[str, Any] | None = None,
-        entity_type: str | None = None,
+        entity_type: Literal["individual", "business"] | None = None,
         attachments: list[dict[str, Any]] | None = None,
     ) -> str:
         """Respond to the regulatory reviewer (message + corrections)
@@ -44898,8 +44900,8 @@ def register_generated_tools(mcp, _get_client):
         enabled: bool | None = None,
         below_cents: int | None = None,
         to_cents: int | None = None,
-        monthly_limit_cents: str | None = None,
-        alert_below_cents: str | None = None,
+        monthly_limit_cents: int | None = None,
+        alert_below_cents: int | None = None,
     ) -> str:
         """Update auto top-up settings
 
@@ -49400,8 +49402,8 @@ def register_generated_tools(mcp, _get_client):
         sip_auth_username: str | None = None,
         sip_auth_password: str | None = None,
         recording_enabled: bool | None = None,
-        call_icon_countries: str | None = None,
-        max_call_duration_seconds: str | None = None,
+        call_icon_countries: list[str] | None = None,
+        max_call_duration_seconds: int | None = None,
         forward_caller_id: Literal["business", "caller"] | None = None,
     ) -> str:
         """Update calling config
@@ -49799,8 +49801,8 @@ def register_generated_tools(mcp, _get_client):
         sip_auth_username: str | None = None,
         sip_auth_password: str | None = None,
         recording_enabled: bool | None = None,
-        call_icon_countries: str | None = None,
-        max_call_duration_seconds: str | None = None,
+        call_icon_countries: list[str] | None = None,
+        max_call_duration_seconds: int | None = None,
         forward_caller_id: Literal["business", "caller"] | None = None,
     ) -> str:
         """Update calling config
