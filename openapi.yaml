@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.545.1"
+  version: "1.545.2"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -19710,7 +19710,7 @@ components:
               type: [string, "null"]
               enum: [BELOW_AVERAGE, AVERAGE, ABOVE_AVERAGE, null]
               description: 'How relevant and useful the landing page is to people who click (`post_click_quality_score`).'
-        syncedAt: { type: [string, "null"], format: date-time }
+        syncedAt: { type: [string, "null"], format: date-time, description: 'When Zernio last read this keyword from Google: the last successful keyword sync of its ad account, or a later edit through Zernio.' }
         metrics:
           type: [object, "null"]
           description: 'Trailing 30-day window. Null on rows synced before the metrics columns existed (re-synced on the keyword''s next daily sweep).'
