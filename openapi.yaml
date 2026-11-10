@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.553.1"
+  version: "1.554.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -459,7 +459,7 @@ tags:
       OAuth and credential flows for connecting accounts, plus per-platform selection
       steps (Facebook pages, Pinterest boards, LinkedIn organizations, Google Business Profile locations, etc.).
   - name: Email
-    description: "Read, send and organize mail in connected Google Workspace and Microsoft 365 mailboxes. Connect with `scopes=email`."
+    description: "Read, send and organize mail in connected Google, Microsoft and IMAP mailboxes. Connect Google or Microsoft with `scopes=email`, or any mailbox with `GET /v1/connect/email`."
   - name: Calendar
     description: "Calendars, events, RSVPs, free/busy and cross-account availability for connected Google and Microsoft accounts. Connect with `scopes=calendar`."
   - name: Files
@@ -924,7 +924,7 @@ components:
       in: query
       required: true
       schema: { type: string }
-      description: The connected Google or Microsoft account.
+      description: The connected Google, Microsoft or IMAP account.
     LiveStatusRead:
       name: live
       in: query
@@ -14040,7 +14040,7 @@ components:
         id: { type: string, description: "The provider's message id." }
         threadId: { type: string }
         accountId: { type: string }
-        provider: { type: string, enum: [google, microsoft] }
+        provider: { type: string, enum: [google, microsoft, imap] }
         folders: { type: array, items: { type: string } }
         from: { oneOf: [{ $ref: '#/components/schemas/EmailAddress' }, { type: "null" }] }
         sender: { oneOf: [{ $ref: '#/components/schemas/EmailAddress' }, { type: "null" }], description: 'The mailbox that actually sent it. Same as `from`, except when Outlook sent on behalf of `from` (Send on Behalf rather than Send As).' }
@@ -14091,7 +14091,7 @@ components:
             subject: { type: [string, "null"] }
     EmailCapabilities:
       type: object
-      description: 'On Google and Microsoft accounts connected with the email area: what this mailbox provider can do, so you can branch before calling.'
+      description: 'On Google, Microsoft and IMAP accounts with email access: what this mailbox provider can do, so you can branch before calling.'
       properties:
         sync:
           type: object
@@ -14137,7 +14137,7 @@ components:
       properties:
         id: { type: string }
         accountId: { type: string }
-        provider: { type: string, enum: [google, microsoft] }
+        provider: { type: string, enum: [google, microsoft, imap] }
         subject: { type: string }
         snippet: { type: string }
         participants: { type: array, items: { $ref: '#/components/schemas/EmailAddress' } }
@@ -14157,7 +14157,7 @@ components:
       properties:
         id: { type: string }
         accountId: { type: string }
-        provider: { type: string, enum: [google, microsoft] }
+        provider: { type: string, enum: [google, microsoft, imap] }
         name: { type: string }
         wellKnown: { type: string, enum: [inbox, sent, drafts, trash, spam, archive] }
         unreadCount: { type: integer }
@@ -14186,7 +14186,7 @@ components:
       properties:
         id: { type: string, description: "Gmail label id such as `Label_12`, or the Outlook category name." }
         accountId: { type: string }
-        provider: { type: string, enum: [google, microsoft] }
+        provider: { type: string, enum: [google, microsoft, imap] }
         name: { type: string, description: 'Gmail nests labels with a slash, as in `Hermia/Handled`.' }
         type: { type: string, enum: [system, user] }
         color:
@@ -14277,7 +14277,7 @@ components:
         headers: { type: object, additionalProperties: { type: string }, description: 'Custom `X-` headers only. `List-Unsubscribe` is dropped on Microsoft and reported in `metadata.droppedHeaders`.' }
         metadata: { type: object, additionalProperties: { type: string } }
         scheduledFor: { type: string, format: date-time, description: 'Send later, between 1 minute and 30 days from now. The request answers 202 with the scheduled send; it leaves within a minute of this time through the same caps as an immediate send. List or cancel it under `/v1/email/messages/scheduled`.' }
-        holdAsDraft: { type: boolean, description: 'Needs `scheduledFor`. Saves the email as a draft in the mailbox now and sends that draft at `scheduledFor`, with any edits the user made in Gmail or Outlook. A draft deleted or sent from the mailbox first fails the send (`email.send_failed`). Cancelling deletes the draft.' }
+        holdAsDraft: { type: boolean, description: 'Needs `scheduledFor`. Saves the email as a draft in the mailbox now and sends that draft at `scheduledFor`, with any edits the user made in their mail app. A draft deleted or sent from the mailbox first fails the send (`email.send_failed`). Cancelling deletes the draft.' }
         trackOpens: { type: boolean, description: 'Adds an open pixel to the html and fires `email.opened`. Needs `html`.' }
         trackLinks: { type: boolean, description: 'Rewrites every http(s) link in the html through a Zernio redirect and fires `email.link_clicked`. Needs `html`.' }
         trackReplies: { type: boolean, description: 'Fires `email.thread_replied` when someone else writes in this message''s thread. Works with text or html.' }
@@ -14290,7 +14290,7 @@ components:
             object: { type: string, enum: [draft] }
             id: { type: string, description: 'The draft id: the Gmail draft id, or the Outlook message id.' }
             kind: { type: string, enum: [new, reply, forward], description: 'Fixed when the draft is created. A draft the user wrote in their mail client is read from its headers.' }
-            version: { type: string, description: 'Changes on every edit, the user''s in Gmail or Outlook included. Pass it as `If-Match` to update or send only that version. Also the `ETag` response header.' }
+            version: { type: string, description: 'Changes on every edit, the user''s in their mail app included. Pass it as `If-Match` to update or send only that version. Also the `ETag` response header.' }
             messageId: { type: string, description: 'The provider message behind the draft. Volatile: Gmail replaces it on every save.' }
             inReplyTo: { type: [string, "null"], description: 'The message a reply draft answers.' }
             forwardOf: { type: [string, "null"], description: 'The message a forward draft forwards.' }
@@ -14986,7 +14986,7 @@ components:
         _id: { type: string }
         platform:
           type: string
-          enum: [tiktok, instagram, facebook, youtube, linkedin, twitter, threads, pinterest, reddit, bluesky, googlebusiness, telegram, snapchat, discord, slack, whatsapp, shopify, wordpress, wix, linkedinads, metaads, pinterestads, tiktokads, xads, googleads, openaiads, redditads, sms, phone, rcs, whopads, google, microsoft, hubspot, webflow, googleanalytics, imessage, tiktokshop, microsoftads]
+          enum: [tiktok, instagram, facebook, youtube, linkedin, twitter, threads, pinterest, reddit, bluesky, googlebusiness, telegram, snapchat, discord, slack, whatsapp, shopify, wordpress, wix, linkedinads, metaads, pinterestads, tiktokads, xads, googleads, openaiads, redditads, sms, phone, rcs, whopads, google, microsoft, imap, hubspot, webflow, googleanalytics, imessage, tiktokshop, microsoftads]
         profileId:
           oneOf:
             - type: string
@@ -19310,7 +19310,7 @@ components:
                     required: [accountId, to]
                     additionalProperties: false
                     properties:
-                      accountId: { type: string, description: 'A connected Gmail or Outlook mailbox with email access.' }
+                      accountId: { type: string, description: 'A connected Gmail, Outlook or IMAP mailbox with email access.' }
                       to: { type: string, format: email, description: 'The address that receives the alert, sent as a new email from that mailbox.' }
         - type: object
           required: [type]
@@ -19736,7 +19736,7 @@ components:
             description: 'Send `to` or `channelId`, not both.'
             properties:
               accountId: { type: string }
-              to: { type: string, format: email, description: An address for a connected Gmail or Outlook account. }
+              to: { type: string, format: email, description: 'An address, sent from a connected Gmail, Outlook or IMAP mailbox.' }
               channelId: { type: string, description: A channel of a connected Slack account. }
     AutomationApprovalStep:
       type: object
@@ -24094,7 +24094,7 @@ webhooks:
 
         ### Platform notes
 
-        New email from Google and Microsoft mailboxes arrives as this event.
+        New email from Google, Microsoft and IMAP mailboxes arrives as this event.
       tags: [Webhook Events]
       requestBody:
         required: true
@@ -54088,7 +54088,7 @@ paths:
       tags: [Email]
       summary: List email threads
       description: |
-        Threads of a connected Google or Microsoft mailbox, newest first. Every filter that the provider cannot apply server-side is applied to the fetched page instead and named in `meta.filteredClientSide`, so a filtered page can hold fewer than `limit` items while `pagination.hasMore` stays true.
+        Threads of a connected Google, Microsoft or IMAP mailbox, newest first. Every filter that the provider cannot apply server-side is applied to the fetched page instead and named in `meta.filteredClientSide`, so a filtered page can hold fewer than `limit` items while `pagination.hasMore` stays true.
 
         On Google, folders are Gmail labels: `folder` takes a well-known name or a label id, `archive` means mail carrying none of the inbox, trash or spam labels, and `sortOrder=asc` reverses the fetched page (Gmail lists newest first only).
 
@@ -54137,7 +54137,7 @@ paths:
       parameters:
         - { name: threadId, in: path, required: true, schema: { type: string } }
         - $ref: '#/components/parameters/EmailAccountId'
-        - { name: clean, in: query, schema: { type: boolean, default: false }, description: 'Add `cleanText` to every message: what each one added to the conversation, without the quoted history.' }
+        - { name: clean, in: query, schema: { type: boolean, default: false }, description: 'Add a `clean` object to every message: the text each one added, without quoted replies, footers or tracking pixels, plus its `signature` and a parsed `forwarded` header.' }
       responses:
         '200':
           description: The thread and every message in it, oldest first
@@ -54381,7 +54381,7 @@ paths:
         - $ref: '#/components/parameters/EmailAccountId'
         - { name: includeHeaders, in: query, schema: { type: boolean, default: false }, description: 'Include the raw internet headers under `headers`.' }
         - { name: raw, in: query, schema: { type: boolean, default: false }, description: 'Include the MIME source under `raw`.' }
-        - { name: clean, in: query, schema: { type: boolean, default: false }, description: 'Add `cleanText`: the new text only, without quoted replies, forwarded history, signature or tracking pixels. Ready to hand to an LLM.' }
+        - { name: clean, in: query, schema: { type: boolean, default: false }, description: 'Add a `clean` object: the new text without quoted replies, footers or tracking pixels, the `signature` on its own (it also stays in `text`), and a parsed `forwarded` header. Ready to hand to an LLM.' }
       responses:
         '200':
           description: The message with its bodies
@@ -54541,7 +54541,7 @@ paths:
       operationId: listEmailDrafts
       tags: [Email]
       summary: List drafts
-      description: The mailbox's drafts, newest first, including drafts the user wrote in Gmail or Outlook. Drafts in the trash are left out. Rows carry no bodies on Google; get a draft to read them.
+      description: The mailbox's drafts, newest first, including drafts the user wrote in their mail app. Drafts in the trash are left out. Rows carry no bodies on Google; get a draft to read them.
       security: [{ bearerAuth: [] }]
       parameters:
         - $ref: '#/components/parameters/EmailAccountId'
@@ -54568,7 +54568,7 @@ paths:
       tags: [Email]
       summary: Create a draft
       description: |
-        Saves a draft in the user's mailbox, where they see it in Gmail or Outlook. Recipients and subject can come later. `inReplyTo` makes a reply draft in that thread and `forwardOf` a forward draft with the original's attachments; the `kind` is fixed for the life of the draft.
+        Saves a draft in the user's mailbox, where they see it in their mail app. Recipients and subject can come later. `inReplyTo` makes a reply draft in that thread and `forwardOf` a forward draft with the original's attachments; the `kind` is fixed for the life of the draft.
 
         Send it with `POST /v1/email/drafts/{draftId}/send`. Edits the user makes in their mail client are what goes out. Store the draft `id`, and pass its `version` as `If-Match` so an update or send applies only to the version you saw.
       security: [{ bearerAuth: [] }]
@@ -54678,7 +54678,7 @@ paths:
       tags: [Email]
       summary: Send a draft
       description: |
-        Sends the draft as it stands in the mailbox now, edits made in Gmail or Outlook included, and returns the sent message with `draftId`. The draft needs at least one recipient. A draft the user deleted or already sent answers 404 `draft_not_found`.
+        Sends the draft as it stands in the mailbox now, edits made in their mail app included, and returns the sent message with `draftId`. The draft needs at least one recipient. A draft the user deleted or already sent answers 404 `draft_not_found`.
 
         With `If-Match` it goes out only if it is still the version the approver saw (412 `draft_conflict` otherwise). If the user removed the open pixel or rewrote links, tracking is put back before it is sent. Fires `email.sent` with `source: draft`.
 
@@ -56051,9 +56051,9 @@ paths:
       description: |
         Start a direct message conversation with a user. If a conversation with that recipient already exists, the message is added to the existing thread.
 
-        Supported platforms: X, Bluesky, Reddit, WhatsApp, SMS, Slack, iMessage, and email (Google and Microsoft accounts). Other platforms return PLATFORM_NOT_SUPPORTED.
+        Supported platforms: X, Bluesky, Reddit, WhatsApp, SMS, Slack, iMessage, and email (Google, Microsoft and IMAP accounts). Other platforms return PLATFORM_NOT_SUPPORTED.
 
-        ### Email (Google / Microsoft)
+        ### Email (Google, Microsoft, IMAP)
 
         Pass the recipient address as participantId with `subject`, `message` and optionally `cc`. The mail is sent from the mailbox and mirrored into the inbox. The response names the inbox conversation it opened (the provider thread id, usable with the other inbox endpoints).
 

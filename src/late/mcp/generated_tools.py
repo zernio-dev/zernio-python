@@ -20322,7 +20322,7 @@ def register_generated_tools(mcp, _get_client):
         The account must have been connected with `scopes=calendar` (412 `account_scope_missing` otherwise).
 
         Args:
-            account_id: The connected Google or Microsoft account. (required)"""
+            account_id: The connected Google, Microsoft or IMAP account. (required)"""
         client = _get_client()
         try:
             response = client.calendar.list_calendars(account_id=account_id)
@@ -20358,7 +20358,7 @@ def register_generated_tools(mcp, _get_client):
         Recurring series are expanded into their occurrences inside the window by default (`expandRecurring=false` lists the masters instead). `title` and `location` are substring matches applied to the fetched page.
 
         Args:
-            account_id: The connected Google or Microsoft account. (required)
+            account_id: The connected Google, Microsoft or IMAP account. (required)
             calendar_id: Defaults to the primary calendar.
             from_: (required)
             to: (required)
@@ -20496,7 +20496,7 @@ def register_generated_tools(mcp, _get_client):
 
         Args:
             event_id: (required)
-            account_id: The connected Google or Microsoft account. (required)
+            account_id: The connected Google, Microsoft or IMAP account. (required)
             calendar_id: The calendar holding the event (an id from GET /v1/calendar/calendars). Defaults to the primary calendar.
             timezone"""
         client = _get_client()
@@ -20598,7 +20598,7 @@ def register_generated_tools(mcp, _get_client):
 
         Args:
             event_id: (required)
-            account_id: The connected Google or Microsoft account. (required)
+            account_id: The connected Google, Microsoft or IMAP account. (required)
             calendar_id: The calendar holding the event (an id from GET /v1/calendar/calendars). Defaults to the primary calendar."""
         client = _get_client()
         try:
@@ -32837,14 +32837,14 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """List email threads
 
-        Threads of a connected Google or Microsoft mailbox, newest first. Every filter that the provider cannot apply server-side is applied to the fetched page instead and named in `meta.filteredClientSide`, so a filtered page can hold fewer than `limit` items while `pagination.hasMore` stays true.
+        Threads of a connected Google, Microsoft or IMAP mailbox, newest first. Every filter that the provider cannot apply server-side is applied to the fetched page instead and named in `meta.filteredClientSide`, so a filtered page can hold fewer than `limit` items while `pagination.hasMore` stays true.
 
         On Google, folders are Gmail labels: `folder` takes a well-known name or a label id, `archive` means mail carrying none of the inbox, trash or spam labels, and `sortOrder=asc` reverses the fetched page (Gmail lists newest first only).
 
         The account must have been connected with `scopes=email` (412 `account_scope_missing` otherwise).
 
         Args:
-            account_id: The connected Google or Microsoft account. (required)
+            account_id: The connected Google, Microsoft or IMAP account. (required)
             folder: Well-known folder (`inbox`, `sent`, `drafts`, `trash`, `spam`, `archive`) or a provider folder id from `GET /v1/email/folders`. Default inbox.
             unread
             starred
@@ -32901,8 +32901,8 @@ def register_generated_tools(mcp, _get_client):
 
         Args:
             thread_id: (required)
-            account_id: The connected Google or Microsoft account. (required)
-            clean: Add `cleanText` to every message: what each one added to the conversation, without the quoted history."""
+            account_id: The connected Google, Microsoft or IMAP account. (required)
+            clean: Add a `clean` object to every message: the text each one added, without quoted replies, footers or tracking pixels, plus its `signature` and a parsed `forwarded` header."""
         client = _get_client()
         try:
             response = client.email.get_email_thread(
@@ -32994,7 +32994,7 @@ def register_generated_tools(mcp, _get_client):
         - `archive` means mail without the inbox, trash or spam labels.
 
         Args:
-            account_id: The connected Google or Microsoft account. (required)
+            account_id: The connected Google, Microsoft or IMAP account. (required)
             folder
             unread
             starred
@@ -33100,7 +33100,7 @@ def register_generated_tools(mcp, _get_client):
             headers: Custom `X-` headers only. `List-Unsubscribe` is dropped on Microsoft and reported in `metadata.droppedHeaders`.
             metadata
             scheduled_for: Send later, between 1 minute and 30 days from now. The request answers 202 with the scheduled send; it leaves within a minute of this time through the same caps as an immediate send. List or cancel it under `/v1/email/messages/scheduled`.
-            hold_as_draft: Needs `scheduledFor`. Saves the email as a draft in the mailbox now and sends that draft at `scheduledFor`, with any edits the user made in Gmail or Outlook. A draft deleted or sent from the mailbox first fails the send (`email.send_failed`). Cancelling deletes the draft.
+            hold_as_draft: Needs `scheduledFor`. Saves the email as a draft in the mailbox now and sends that draft at `scheduledFor`, with any edits the user made in their mail app. A draft deleted or sent from the mailbox first fails the send (`email.send_failed`). Cancelling deletes the draft.
             track_opens: Adds an open pixel to the html and fires `email.opened`. Needs `html`.
             track_links: Rewrites every http(s) link in the html through a Zernio redirect and fires `email.link_clicked`. Needs `html`.
             track_replies: Fires `email.thread_replied` when someone else writes in this message's thread. Works with text or html."""
@@ -33152,7 +33152,7 @@ def register_generated_tools(mcp, _get_client):
         Sends made with `scheduledFor` on this mailbox, in send order. Sent, failed and cancelled ones stay listed; filter with `status`.
 
         Args:
-            account_id: The connected Google or Microsoft account. (required)
+            account_id: The connected Google, Microsoft or IMAP account. (required)
             status
             cursor: `pagination.nextCursor` of the previous page.
             limit"""
@@ -33178,7 +33178,7 @@ def register_generated_tools(mcp, _get_client):
 
         Args:
             schedule_id: (required)
-            account_id: The connected Google or Microsoft account. (required)"""
+            account_id: The connected Google, Microsoft or IMAP account. (required)"""
         client = _get_client()
         try:
             response = client.email.get_scheduled_email(
@@ -33203,7 +33203,7 @@ def register_generated_tools(mcp, _get_client):
 
         Args:
             schedule_id: (required)
-            account_id: The connected Google or Microsoft account. (required)"""
+            account_id: The connected Google, Microsoft or IMAP account. (required)"""
         client = _get_client()
         try:
             response = client.email.cancel_scheduled_email(
@@ -33232,10 +33232,10 @@ def register_generated_tools(mcp, _get_client):
 
         Args:
             message_id: (required)
-            account_id: The connected Google or Microsoft account. (required)
+            account_id: The connected Google, Microsoft or IMAP account. (required)
             include_headers: Include the raw internet headers under `headers`.
             raw: Include the MIME source under `raw`.
-            clean: Add `cleanText`: the new text only, without quoted replies, forwarded history, signature or tracking pixels. Ready to hand to an LLM."""
+            clean: Add a `clean` object: the new text without quoted replies, footers or tracking pixels, the `signature` on its own (it also stays in `text`), and a parsed `forwarded` header. Ready to hand to an LLM."""
         client = _get_client()
         try:
             response = client.email.get_email_message(
@@ -33306,7 +33306,7 @@ def register_generated_tools(mcp, _get_client):
 
         Args:
             message_id: (required)
-            account_id: The connected Google or Microsoft account. (required)"""
+            account_id: The connected Google, Microsoft or IMAP account. (required)"""
         client = _get_client()
         try:
             response = client.email.trash_email_message(
@@ -33372,7 +33372,7 @@ def register_generated_tools(mcp, _get_client):
             headers: Custom `X-` headers only. `List-Unsubscribe` is dropped on Microsoft and reported in `metadata.droppedHeaders`.
             metadata
             scheduled_for: Send later, between 1 minute and 30 days from now. The request answers 202 with the scheduled send; it leaves within a minute of this time through the same caps as an immediate send. List or cancel it under `/v1/email/messages/scheduled`.
-            hold_as_draft: Needs `scheduledFor`. Saves the email as a draft in the mailbox now and sends that draft at `scheduledFor`, with any edits the user made in Gmail or Outlook. A draft deleted or sent from the mailbox first fails the send (`email.send_failed`). Cancelling deletes the draft.
+            hold_as_draft: Needs `scheduledFor`. Saves the email as a draft in the mailbox now and sends that draft at `scheduledFor`, with any edits the user made in their mail app. A draft deleted or sent from the mailbox first fails the send (`email.send_failed`). Cancelling deletes the draft.
             track_opens: Adds an open pixel to the html and fires `email.opened`. Needs `html`.
             track_links: Rewrites every http(s) link in the html through a Zernio redirect and fires `email.link_clicked`. Needs `html`.
             track_replies: Fires `email.thread_replied` when someone else writes in this message's thread. Works with text or html.
@@ -33507,10 +33507,10 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """List drafts
 
-        The mailbox's drafts, newest first, including drafts the user wrote in Gmail or Outlook. Drafts in the trash are left out. Rows carry no bodies on Google; get a draft to read them.
+        The mailbox's drafts, newest first, including drafts the user wrote in their mail app. Drafts in the trash are left out. Rows carry no bodies on Google; get a draft to read them.
 
         Args:
-            account_id: The connected Google or Microsoft account. (required)
+            account_id: The connected Google, Microsoft or IMAP account. (required)
             limit
             cursor"""
         client = _get_client()
@@ -33557,7 +33557,7 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Create a draft
 
-        Saves a draft in the user's mailbox, where they see it in Gmail or Outlook. Recipients and subject can come later. `inReplyTo` makes a reply draft in that thread and `forwardOf` a forward draft with the original's attachments; the `kind` is fixed for the life of the draft.
+        Saves a draft in the user's mailbox, where they see it in their mail app. Recipients and subject can come later. `inReplyTo` makes a reply draft in that thread and `forwardOf` a forward draft with the original's attachments; the `kind` is fixed for the life of the draft.
 
         Send it with `POST /v1/email/drafts/{draftId}/send`. Edits the user makes in their mail client are what goes out. Store the draft `id`, and pass its `version` as `If-Match` so an update or send applies only to the version you saw.
 
@@ -33631,7 +33631,7 @@ def register_generated_tools(mcp, _get_client):
 
         Args:
             draft_id: (required)
-            account_id: The connected Google or Microsoft account. (required)"""
+            account_id: The connected Google, Microsoft or IMAP account. (required)"""
         client = _get_client()
         try:
             response = client.email.get_email_draft(
@@ -33710,7 +33710,7 @@ def register_generated_tools(mcp, _get_client):
 
         Args:
             draft_id: (required)
-            account_id: The connected Google or Microsoft account. (required)"""
+            account_id: The connected Google, Microsoft or IMAP account. (required)"""
         client = _get_client()
         try:
             response = client.email.delete_email_draft(
@@ -33733,7 +33733,7 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Send a draft
 
-        Sends the draft as it stands in the mailbox now, edits made in Gmail or Outlook included, and returns the sent message with `draftId`. The draft needs at least one recipient. A draft the user deleted or already sent answers 404 `draft_not_found`.
+        Sends the draft as it stands in the mailbox now, edits made in their mail app included, and returns the sent message with `draftId`. The draft needs at least one recipient. A draft the user deleted or already sent answers 404 `draft_not_found`.
 
         With `If-Match` it goes out only if it is still the version the approver saw (412 `draft_conflict` otherwise). If the user removed the open pixel or rewrote links, tracking is put back before it is sent. Fires `email.sent` with `source: draft`.
 
@@ -33766,7 +33766,7 @@ def register_generated_tools(mcp, _get_client):
         On Google, folders are Gmail labels (system labels carry `wellKnown`; `unreadCount` and `totalCount` are present only where Gmail reports them). There is no archive folder on Google; archived mail is listed with `folder=archive`.
 
         Args:
-            account_id: The connected Google or Microsoft account. (required)"""
+            account_id: The connected Google, Microsoft or IMAP account. (required)"""
         client = _get_client()
         try:
             response = client.email.list_email_folders(account_id=account_id)
@@ -33865,7 +33865,7 @@ def register_generated_tools(mcp, _get_client):
         Gmail labels, system and user, or the Outlook category list. If an organization blocks reading the Outlook list, it comes back empty and categories still apply to messages by name.
 
         Args:
-            account_id: The connected Google or Microsoft account. (required)"""
+            account_id: The connected Google, Microsoft or IMAP account. (required)"""
         client = _get_client()
         try:
             response = client.email.list_email_labels(account_id=account_id)
@@ -33915,7 +33915,7 @@ def register_generated_tools(mcp, _get_client):
         The addresses a mailbox can send from, for `from`, each with the signature `appendSignature` would add. Gmail lists every alias itself. Outlook lists the mailbox address and its aliases, plus any address declared with `POST /v1/email/send-as`.
 
         Args:
-            account_id: The connected Google or Microsoft account. (required)"""
+            account_id: The connected Google, Microsoft or IMAP account. (required)"""
         client = _get_client()
         try:
             response = client.email.list_email_send_as(account_id=account_id)
@@ -33966,7 +33966,7 @@ def register_generated_tools(mcp, _get_client):
 
         Args:
             email: (required)
-            account_id: The connected Google or Microsoft account. (required)"""
+            account_id: The connected Google, Microsoft or IMAP account. (required)"""
         client = _get_client()
         try:
             response = client.email.delete_email_send_as(
@@ -34050,7 +34050,7 @@ def register_generated_tools(mcp, _get_client):
         Copies each Gmail send-as signature into a Zernio signature on that account, the default for its address. Repeating it refreshes the copies. Outlook answers 400: Microsoft Graph does not expose signatures.
 
         Args:
-            account_id: The connected Google or Microsoft account. (required)"""
+            account_id: The connected Google, Microsoft or IMAP account. (required)"""
         client = _get_client()
         try:
             response = client.email.import_email_signatures(account_id=account_id)
@@ -34151,7 +34151,7 @@ def register_generated_tools(mcp, _get_client):
 
         Args:
             label_id: (required)
-            account_id: The connected Google or Microsoft account. (required)"""
+            account_id: The connected Google, Microsoft or IMAP account. (required)"""
         client = _get_client()
         try:
             response = client.email.delete_email_label(
@@ -34178,7 +34178,7 @@ def register_generated_tools(mcp, _get_client):
 
         Args:
             attachment_id: (required)
-            account_id: The connected Google or Microsoft account. (required)
+            account_id: The connected Google, Microsoft or IMAP account. (required)
             message_id: (required)"""
         client = _get_client()
         try:
@@ -34278,7 +34278,7 @@ def register_generated_tools(mcp, _get_client):
         - Google Drive returns only files Zernio created or the user picked (see the Files tag): an unpicked folder lists empty.
 
         Args:
-            account_id: The connected Google or Microsoft account. (required)
+            account_id: The connected Google, Microsoft or IMAP account. (required)
             folder_id: Provider folder id; omit for the root.
             q: Name search.
             cursor
@@ -34441,7 +34441,7 @@ def register_generated_tools(mcp, _get_client):
 
         Args:
             file_id: (required)
-            account_id: The connected Google or Microsoft account. (required)"""
+            account_id: The connected Google, Microsoft or IMAP account. (required)"""
         client = _get_client()
         try:
             response = client.files.get_file(file_id=file_id, account_id=account_id)
@@ -34496,7 +34496,7 @@ def register_generated_tools(mcp, _get_client):
 
         Args:
             file_id: (required)
-            account_id: The connected Google or Microsoft account. (required)"""
+            account_id: The connected Google, Microsoft or IMAP account. (required)"""
         client = _get_client()
         try:
             response = client.files.trash_file(file_id=file_id, account_id=account_id)
@@ -34519,7 +34519,7 @@ def register_generated_tools(mcp, _get_client):
 
         Args:
             file_id: (required)
-            account_id: The connected Google or Microsoft account. (required)"""
+            account_id: The connected Google, Microsoft or IMAP account. (required)"""
         client = _get_client()
         try:
             response = client.files.download_file(
@@ -34544,7 +34544,7 @@ def register_generated_tools(mcp, _get_client):
 
         Args:
             file_id: (required)
-            account_id: The connected Google or Microsoft account. (required)"""
+            account_id: The connected Google, Microsoft or IMAP account. (required)"""
         client = _get_client()
         try:
             response = client.files.get_file_share_link(
@@ -37233,9 +37233,9 @@ def register_generated_tools(mcp, _get_client):
 
             Start a direct message conversation with a user. If a conversation with that recipient already exists, the message is added to the existing thread.
 
-            Supported platforms: X, Bluesky, Reddit, WhatsApp, SMS, Slack, iMessage, and email (Google and Microsoft accounts). Other platforms return PLATFORM_NOT_SUPPORTED.
+            Supported platforms: X, Bluesky, Reddit, WhatsApp, SMS, Slack, iMessage, and email (Google, Microsoft and IMAP accounts). Other platforms return PLATFORM_NOT_SUPPORTED.
 
-            ### Email (Google / Microsoft)
+            ### Email (Google, Microsoft, IMAP)
 
             Pass the recipient address as participantId with `subject`, `message` and optionally `cc`. The mail is sent from the mailbox and mirrored into the inbox. The response names the inbox conversation it opened (the provider thread id, usable with the other inbox endpoints).
 
@@ -37247,7 +37247,7 @@ def register_generated_tools(mcp, _get_client):
 
             ### iMessage
 
-            Pass the recipient as participantId: a phone number in international format (+15551234567) or an iMessage ...
+            Pass the recipient as participantId: a phone number in international format (+15551234567) or an ...
 
             Args:
                 account_id: The account ID to send from (required)
