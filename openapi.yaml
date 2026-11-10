@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.553.0"
+  version: "1.553.1"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -54772,7 +54772,10 @@ paths:
       operationId: createImapAccount
       tags: [Email]
       summary: Connect an IMAP mailbox
-      description: 'Connects any IMAP/SMTP mailbox without the hosted page. Email and password are enough when discovery finds the servers. Every check runs before anything is stored; a failure answers 422 with the failing stage''s code. An address already on the profile is updated in place and keeps its accountId.'
+      description: |-
+        Connects any IMAP/SMTP mailbox without the hosted page. Email and password are enough when discovery finds the servers. Every check runs before anything is stored; a failure answers 422 with the failing stage's code. An address already on the profile is updated in place and keeps its accountId.
+
+        Send `Accept: application/x-ndjson` to stream one line per check as it runs, ending with a `result` line that holds the status and this body.
       security: [{ bearerAuth: [] }]
       requestBody:
         required: true

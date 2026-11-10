@@ -33820,6 +33820,8 @@ def register_generated_tools(mcp, _get_client):
 
         Connects any IMAP/SMTP mailbox without the hosted page. Email and password are enough when discovery finds the servers. Every check runs before anything is stored; a failure answers 422 with the failing stage's code. An address already on the profile is updated in place and keeps its accountId.
 
+        Send `Accept: application/x-ndjson` to stream one line per check as it runs, ending with a `result` line that holds the status and this body.
+
         Args:
             profile_id: (required)
             email: (required)
