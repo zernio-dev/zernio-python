@@ -32169,17 +32169,21 @@ def register_generated_tools(mcp, _get_client):
         unread: bool | None = None,
         starred: bool | None = None,
         folder: str | None = None,
+        add_labels: list[str] | None = None,
+        remove_labels: list[str] | None = None,
     ) -> str:
         """Update every message in a thread
 
-        Applies `unread`, `starred` or a `folder` move to each message of the thread.
+        Applies `unread`, `starred`, `addLabels`, `removeLabels` or a `folder` move to each message of the thread.
 
         Args:
             thread_id: (required)
             account_id: (required)
             unread
             starred
-            folder: Well-known folder name or folder id to move into."""
+            folder: Well-known folder name or folder id to move into.
+            add_labels: Labels to add, by id or name (case-insensitive). The message stays where it is. On Outlook these are category names; a name not yet in the mailbox is created on the message.
+            remove_labels: Labels to remove, by id or name. A label cannot be both added and removed in one request."""
         client = _get_client()
         try:
             response = client.email.update_email_thread(
@@ -32188,6 +32192,8 @@ def register_generated_tools(mcp, _get_client):
                 unread=unread,
                 starred=starred,
                 folder=folder,
+                add_labels=add_labels,
+                remove_labels=remove_labels,
             )
             return _format_response(response)
         except Exception as e:
@@ -32476,7 +32482,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
-            title="Mark read or starred, or move a message",
+            title="Mark read or starred, label, or move a message",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
@@ -32488,17 +32494,21 @@ def register_generated_tools(mcp, _get_client):
         unread: bool | None = None,
         starred: bool | None = None,
         folder: str | None = None,
+        add_labels: list[str] | None = None,
+        remove_labels: list[str] | None = None,
     ) -> str:
-        """Mark read or starred, or move a message
+        """Mark read or starred, label, or move a message
 
-        `folder` moves the message. On Google a move swaps the inbox, trash and spam labels and keeps every other label; `archive` removes the inbox label.
+        `addLabels` and `removeLabels` tag the message without moving it. `folder` moves it: on Google a move files the mail in one place, so it drops the inbox, trash, spam and user labels it held; `archive` removes the inbox label.
 
         Args:
             message_id: (required)
             account_id: (required)
             unread
             starred
-            folder: Well-known folder name or folder id to move into."""
+            folder: Well-known folder name or folder id to move into.
+            add_labels: Labels to add, by id or name (case-insensitive). The message stays where it is. On Outlook these are category names; a name not yet in the mailbox is created on the message.
+            remove_labels: Labels to remove, by id or name. A label cannot be both added and removed in one request."""
         client = _get_client()
         try:
             response = client.email.update_email_message(
@@ -32507,6 +32517,8 @@ def register_generated_tools(mcp, _get_client):
                 unread=unread,
                 starred=starred,
                 folder=folder,
+                add_labels=add_labels,
+                remove_labels=remove_labels,
             )
             return _format_response(response)
         except Exception as e:
@@ -32635,6 +32647,81 @@ def register_generated_tools(mcp, _get_client):
         client = _get_client()
         try:
             response = client.email.list_email_folders(account_id=account_id)
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List labels",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def email_list_email_labels(account_id: str) -> str:
+        """List labels
+
+        Gmail labels, system and user, or the Outlook category list. Reading the Outlook list needs mailbox settings access, which Zernio does not request, so it can come back empty while categories still apply to messages by name.
+
+        Args:
+            account_id: The connected Google or Microsoft account. (required)"""
+        client = _get_client()
+        try:
+            response = client.email.list_email_labels(account_id=account_id)
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Create a label",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def email_create_email_label(
+        account_id: str, name: str, color: dict[str, Any] | None = None
+    ) -> str:
+        """Create a label
+
+        Creates a Gmail label or an Outlook category. Safe to repeat: when the name already exists (case-insensitive) the existing label comes back with 200.
+
+        Args:
+            account_id: (required)
+            name: (required)
+            color: Gmail only. Both values must come from Gmail's label palette. Object with keys: backgroundColor (string, required); textColor (string, required)"""
+        client = _get_client()
+        try:
+            response = client.email.create_email_label(
+                account_id=account_id, name=name, color=color
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Delete a label",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def email_delete_email_label(label_id: str, account_id: str) -> str:
+        """Delete a label
+
+        Deletes a Gmail user label or an Outlook category, by id or name (URL-encode a slash). Gmail removes the label from every message. Deleting an Outlook category needs mailbox settings access and returns 412 without it.
+
+        Args:
+            label_id: (required)
+            account_id: The connected Google or Microsoft account. (required)"""
+        client = _get_client()
+        try:
+            response = client.email.delete_email_label(
+                label_id=label_id, account_id=account_id
+            )
             return _format_response(response)
         except Exception as e:
             raise ToolError(f"Error: {e}") from e

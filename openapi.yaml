@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.547.1"
+  version: "1.547.2"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -13413,6 +13413,7 @@ components:
         date: { type: string, format: date-time }
         unread: { type: boolean }
         starred: { type: boolean }
+        labels: { type: array, items: { type: string }, description: 'Gmail: the ids of the user labels on the message (names come from `GET /v1/email/labels`). Outlook: its category names.' }
         metadata: { type: object, additionalProperties: { type: string } }
         trackingId: { type: [string, "null"], description: 'Set on a send with `trackOpens`, `trackLinks` or `trackReplies`; the email.* webhooks carry it.' }
     EmailThread:
@@ -13427,6 +13428,7 @@ components:
         messageIds: { type: array, items: { type: string } }
         draftIds: { type: array, items: { type: string } }
         folders: { type: array, items: { type: string } }
+        labels: { type: array, items: { type: string }, description: 'Every label (Gmail) or category (Outlook) on any message of the thread.' }
         hasAttachments: { type: boolean }
         hasDrafts: { type: boolean }
         unread: { type: boolean }
@@ -13452,6 +13454,30 @@ components:
         unread: { type: boolean }
         starred: { type: boolean }
         folder: { type: string, description: 'Well-known folder name or folder id to move into.' }
+        addLabels:
+          type: array
+          maxItems: 20
+          items: { type: string }
+          description: 'Labels to add, by id or name (case-insensitive). The message stays where it is. On Outlook these are category names; a name not yet in the mailbox is created on the message.'
+        removeLabels:
+          type: array
+          maxItems: 20
+          items: { type: string }
+          description: 'Labels to remove, by id or name. A label cannot be both added and removed in one request.'
+    EmailLabel:
+      type: object
+      description: 'A Gmail label or an Outlook category. Outlook categories are addressed by name, so their `id` is the name.'
+      properties:
+        id: { type: string, description: "Gmail label id such as `Label_12`, or the Outlook category name." }
+        accountId: { type: string }
+        provider: { type: string, enum: [google, microsoft] }
+        name: { type: string, description: 'Gmail nests labels with a slash, as in `Hermia/Handled`.' }
+        type: { type: string, enum: [system, user] }
+        color:
+          type: [object, "null"]
+          properties:
+            backgroundColor: { type: string }
+            textColor: { type: string }
     ScheduledEmail:
       type: object
       description: 'An email sent with `scheduledFor`. `status` moves scheduled, sending, then sent or failed; a cancelled one never leaves.'
@@ -52306,7 +52332,7 @@ paths:
       operationId: updateEmailThread
       tags: [Email]
       summary: Update every message in a thread
-      description: Applies `unread`, `starred` or a `folder` move to each message of the thread.
+      description: Applies `unread`, `starred`, `addLabels`, `removeLabels` or a `folder` move to each message of the thread.
       security: [{ bearerAuth: [] }]
       parameters:
         - { name: threadId, in: path, required: true, schema: { type: string } }
@@ -52540,8 +52566,8 @@ paths:
       x-resource-group: "messages"
       operationId: updateEmailMessage
       tags: [Email]
-      summary: Mark read or starred, or move a message
-      description: '`folder` moves the message. On Google a move swaps the inbox, trash and spam labels and keeps every other label; `archive` removes the inbox label.'
+      summary: Mark read or starred, label, or move a message
+      description: '`addLabels` and `removeLabels` tag the message without moving it. `folder` moves it: on Google a move files the mail in one place, so it drops the inbox, trash, spam and user labels it held; `archive` removes the inbox label.'
       security: [{ bearerAuth: [] }]
       parameters:
         - { name: messageId, in: path, required: true, schema: { type: string } }
@@ -52658,6 +52684,100 @@ paths:
                   data: { type: array, items: { $ref: '#/components/schemas/EmailFolder' } }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '412': { $ref: '#/components/responses/MailboxPreconditionFailed' }
+  /v1/email/labels:
+    get:
+      x-resource-group: "messages"
+      operationId: listEmailLabels
+      tags: [Email]
+      summary: List labels
+      description: 'Gmail labels, system and user, or the Outlook category list. Reading the Outlook list needs mailbox settings access, which Zernio does not request, so it can come back empty while categories still apply to messages by name.'
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/EmailAccountId'
+      responses:
+        '200':
+          description: The mailbox's labels
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { type: array, items: { $ref: '#/components/schemas/EmailLabel' } }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '412': { $ref: '#/components/responses/MailboxPreconditionFailed' }
+    post:
+      x-resource-group: "messages"
+      operationId: createEmailLabel
+      tags: [Email]
+      summary: Create a label
+      description: 'Creates a Gmail label or an Outlook category. Safe to repeat: when the name already exists (case-insensitive) the existing label comes back with 200.'
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [accountId, name]
+              properties:
+                accountId: { type: string }
+                name: { type: string, maxLength: 225, example: 'Hermia/Handled' }
+                color:
+                  type: object
+                  description: 'Gmail only. Both values must come from Gmail''s label palette.'
+                  required: [backgroundColor, textColor]
+                  properties:
+                    backgroundColor: { type: string, example: '#16a766' }
+                    textColor: { type: string, example: '#ffffff' }
+      responses:
+        '200':
+          description: A label with this name already existed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/EmailLabel' }
+        '201':
+          description: The label was created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/EmailLabel' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '412': { $ref: '#/components/responses/MailboxPreconditionFailed' }
+  /v1/email/labels/{labelId}:
+    delete:
+      x-resource-group: "messages"
+      operationId: deleteEmailLabel
+      tags: [Email]
+      summary: Delete a label
+      description: 'Deletes a Gmail user label or an Outlook category, by id or name (URL-encode a slash). Gmail removes the label from every message. Deleting an Outlook category needs mailbox settings access and returns 412 without it.'
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: labelId, in: path, required: true, schema: { type: string } }
+        - $ref: '#/components/parameters/EmailAccountId'
+      responses:
+        '200':
+          description: The label was deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      id: { type: string }
+                      deleted: { type: boolean }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
         '412': { $ref: '#/components/responses/MailboxPreconditionFailed' }
   /v1/email/attachments/{attachmentId}:
     get:

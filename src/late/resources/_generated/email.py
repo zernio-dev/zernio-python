@@ -133,6 +133,8 @@ class EmailResource:
         unread: bool | None = None,
         starred: bool | None = None,
         folder: str | None = None,
+        add_labels: list[str] | None = None,
+        remove_labels: list[str] | None = None,
     ) -> dict[str, Any]:
         """Update every message in a thread"""
         payload = self._build_payload(
@@ -140,6 +142,8 @@ class EmailResource:
             unread=unread,
             starred=starred,
             folder=folder,
+            add_labels=add_labels,
+            remove_labels=remove_labels,
         )
         return self._client._patch(f"/v1/email/threads/{thread_id}", data=payload)
 
@@ -290,13 +294,17 @@ class EmailResource:
         unread: bool | None = None,
         starred: bool | None = None,
         folder: str | None = None,
+        add_labels: list[str] | None = None,
+        remove_labels: list[str] | None = None,
     ) -> dict[str, Any]:
-        """Mark read or starred, or move a message"""
+        """Mark read or starred, label, or move a message"""
         payload = self._build_payload(
             account_id=account_id,
             unread=unread,
             starred=starred,
             folder=folder,
+            add_labels=add_labels,
+            remove_labels=remove_labels,
         )
         return self._client._patch(f"/v1/email/messages/{message_id}", data=payload)
 
@@ -361,6 +369,31 @@ class EmailResource:
             account_id=account_id,
         )
         return self._client._get("/v1/email/folders", params=params)
+
+    def list_email_labels(self, account_id: str) -> dict[str, Any]:
+        """List labels"""
+        params = self._build_params(
+            account_id=account_id,
+        )
+        return self._client._get("/v1/email/labels", params=params)
+
+    def create_email_label(
+        self, account_id: str, name: str, *, color: dict[str, Any] | None = None
+    ) -> dict[str, Any]:
+        """Create a label"""
+        payload = self._build_payload(
+            account_id=account_id,
+            name=name,
+            color=color,
+        )
+        return self._client._post("/v1/email/labels", data=payload)
+
+    def delete_email_label(self, label_id: str, account_id: str) -> dict[str, Any]:
+        """Delete a label"""
+        params = self._build_params(
+            account_id=account_id,
+        )
+        return self._client._delete(f"/v1/email/labels/{label_id}", params=params)
 
     def download_email_attachment(
         self, attachment_id: str, account_id: str, message_id: str
@@ -434,6 +467,8 @@ class EmailResource:
         unread: bool | None = None,
         starred: bool | None = None,
         folder: str | None = None,
+        add_labels: list[str] | None = None,
+        remove_labels: list[str] | None = None,
     ) -> dict[str, Any]:
         """Update every message in a thread (async)"""
         payload = self._build_payload(
@@ -441,6 +476,8 @@ class EmailResource:
             unread=unread,
             starred=starred,
             folder=folder,
+            add_labels=add_labels,
+            remove_labels=remove_labels,
         )
         return await self._client._apatch(
             f"/v1/email/threads/{thread_id}", data=payload
@@ -597,13 +634,17 @@ class EmailResource:
         unread: bool | None = None,
         starred: bool | None = None,
         folder: str | None = None,
+        add_labels: list[str] | None = None,
+        remove_labels: list[str] | None = None,
     ) -> dict[str, Any]:
-        """Mark read or starred, or move a message (async)"""
+        """Mark read or starred, label, or move a message (async)"""
         payload = self._build_payload(
             account_id=account_id,
             unread=unread,
             starred=starred,
             folder=folder,
+            add_labels=add_labels,
+            remove_labels=remove_labels,
         )
         return await self._client._apatch(
             f"/v1/email/messages/{message_id}", data=payload
@@ -674,6 +715,35 @@ class EmailResource:
             account_id=account_id,
         )
         return await self._client._aget("/v1/email/folders", params=params)
+
+    async def alist_email_labels(self, account_id: str) -> dict[str, Any]:
+        """List labels (async)"""
+        params = self._build_params(
+            account_id=account_id,
+        )
+        return await self._client._aget("/v1/email/labels", params=params)
+
+    async def acreate_email_label(
+        self, account_id: str, name: str, *, color: dict[str, Any] | None = None
+    ) -> dict[str, Any]:
+        """Create a label (async)"""
+        payload = self._build_payload(
+            account_id=account_id,
+            name=name,
+            color=color,
+        )
+        return await self._client._apost("/v1/email/labels", data=payload)
+
+    async def adelete_email_label(
+        self, label_id: str, account_id: str
+    ) -> dict[str, Any]:
+        """Delete a label (async)"""
+        params = self._build_params(
+            account_id=account_id,
+        )
+        return await self._client._adelete(
+            f"/v1/email/labels/{label_id}", params=params
+        )
 
     async def adownload_email_attachment(
         self, attachment_id: str, account_id: str, message_id: str
