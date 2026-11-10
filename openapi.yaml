@@ -195,7 +195,7 @@ x-documentation:
     - `post.authenticity_changed` - A tracked post's authenticity score crossed the flag threshold of 40, in either direction. Carries the new and previous score, confidence and reasons. A post's first score never fires it
     - `message.received` - New inbound DM or SMS received (SMS arrives with `platform: "sms"`)
     - `conversation.started` - A new conversation opened between one of your accounts and a contact, in either direction (any DM platform, and SMS); fires only the first time the thread appears
-    - `conversation.control_changed` - Meta's handover protocol moved a conversation. WhatsApp: Meta Business Agent took it over or handed it to you; while `control.owner` is `ai_agent`, inbound messages arrive with `metadata.standby: true` and the agent answers them, and sending a message takes control back. Facebook and Instagram: another app (such as Page Inbox) passed or took the thread; while you are not the owner, inbound arrive with `metadata.standby: true` and sends fail with `not_thread_owner` until you take control with thread-control (accounts connected through a Facebook Page; an Instagram Login connection cannot take and waits for the owner to pass it)
+    - `conversation.control_changed` - Control of a conversation moved (Meta Business Agent on WhatsApp, Meta's conversation routing on Facebook and Instagram). WhatsApp: Meta Business Agent took it over or handed it to you; while `control.owner` is `ai_agent`, inbound messages arrive with `metadata.standby: true` and the agent answers them, and sending a message takes control back. Facebook and Instagram (Meta's conversation routing, which replaced the Handover Protocol for Instagram in October 2025): Meta told Zernio that another app passed the thread to it or took it from it; while you are not the owner, inbound arrive with `metadata.standby: true` and sends fail with `not_thread_owner` unless Meta lets Zernio take control (Facebook Login connections with a conversation routing default app and take-control permission; an Instagram Login connection cannot take and waits for the owner to pass it)
     - `message.sent` - DM sent via the API. `message.sentVia` says which Zernio surface produced it, and `automationId`, `workflowId` / `executionId`, `broadcastId` or `sequenceId` name the automation, workflow run, broadcast or sequence that sent it
     - `message.edited` - A sender edited a message (Instagram, Messenger, Telegram, WhatsApp)
     - `message.deleted` - A sender deleted ("unsent") a message (Instagram; WhatsApp in both directions, whether the business deleted a message it sent or the customer deleted one they sent). `message.direction` tells the two apart.
@@ -8860,7 +8860,7 @@ components:
           $ref: '#/components/schemas/InboxWebhookAccount'
         metadata:
           type: [object, "null"]
-          description: 'Platform-specific message context (present when the message is a quick reply tap, postback button tap, inline keyboard callback, a quote-reply to an earlier message, an inbound another app is answering under Meta''s handover protocol, or a TikTok DM that is not plain text)'
+          description: 'Platform-specific message context (present when the message is a quick reply tap, postback button tap, inline keyboard callback, a quote-reply to an earlier message, an inbound another app is answering under Meta''s conversation routing, or a TikTok DM that is not plain text)'
           properties:
             standby:
               type: boolean
@@ -8870,7 +8870,7 @@ components:
                 To take control back:
 
                 - WhatsApp: sending a reply takes control back.
-                - Facebook, and Instagram accounts connected through a Facebook Page: take control first with POST /v1/inbox/conversations/{conversationId}/thread-control.
+                - Facebook, and Instagram accounts connected through a Facebook Page: a send tries take_thread_control once and resends. Meta allows the take only when the account has a default app set in conversation routing and has allowed Zernio to take control of conversations.
                 - Instagram Login connections: cannot take or request control; wait for the owner to pass it.
             quotedMessageId:
               type: string
@@ -9696,9 +9696,9 @@ components:
     WebhookPayloadConversationControlChanged:
       type: object
       description: |
-        Who answers a conversation changed under Meta's handover protocol. WhatsApp: Meta
-        Business Agent took it over, handed it to you, or another partner app took it.
-        Facebook and Instagram: another app passed the thread to you, or took or received it.
+        Who answers a conversation changed. WhatsApp: Meta Business Agent took it over,
+        handed it to you, or another partner app took it. Facebook and Instagram (Meta's
+        conversation routing): another app passed the thread to you or took it from you.
       required: [id, event, conversation, account, control, changedAt, timestamp]
       properties:
         test:
@@ -24173,7 +24173,7 @@ webhooks:
       operationId: onConversationControlChanged
       summary: Conversation control changed event
       description: |
-        Control of a conversation moved under Meta's handover protocol (`messaging_handovers`).
+        Control of a conversation moved: Meta Business Agent on WhatsApp, or Meta's conversation routing on Facebook and Instagram (`messaging_handovers`). On Instagram, Conversation Routing replaced the Handover Protocol in October 2025 and kept its thread-control events.
 
         ### Owner values
 
@@ -24193,11 +24193,11 @@ webhooks:
 
         ### Facebook and Instagram
 
-        Another app on the Page passed the thread to you, or took or received it. While you are not the owner, sends answer `409` `not_thread_owner`.
+        Meta sent Zernio a `pass_thread_control` (another app passed the thread to you) or `take_thread_control` (another app took it from you) event. Meta sends nothing on `release` or when two other apps move a thread between them, and your own thread-control calls do not fire this event (their response carries the new owner). It fires once per change of the stored owner. While you are not the owner, sends answer `409` `not_thread_owner`.
 
         ### Taking control on Facebook and Instagram
 
-        Call `POST /v1/inbox/conversations/{conversationId}/thread-control` with `action: "take"`, or `"request"` to ask the owner to pass it. Both answer 400 `platform_not_supported` on Instagram Login connections.
+        Call `POST /v1/inbox/conversations/{conversationId}/thread-control` with `action: "take"`, or `"request"` to ask the owner to pass it. Meta accepts `take` only when the account has a default app set in conversation routing and the business has allowed Zernio to take control of conversations; otherwise it answers code 27. Both answer 400 `platform_not_supported` on Instagram Login connections.
 
         ### When it does not fire
 
@@ -57837,9 +57837,9 @@ paths:
             Conflict. One of:
 
             - The same Idempotency-Key is still processing. Retry after a short backoff.
-            - On Facebook and Instagram, another app owns the thread under Meta's handover protocol (code not_thread_owner, Meta subcode 2534037 in platformError). `details.ownerAppId` names the owner when Meta reports it.
+            - On Facebook and Instagram, another app owns the thread under Meta's conversation routing (code not_thread_owner, Meta subcode 2534037 in platformError). `details.ownerAppId` names the owner when Meta reports it.
 
-            To fix not_thread_owner, take control with POST /v1/inbox/conversations/{conversationId}/thread-control, then resend. Only accounts connected through a Facebook Page can take; an Instagram Login connection cannot.
+            On accounts connected through a Facebook Page, Zernio already tried take_thread_control once before answering not_thread_owner, so Meta refused it: make Zernio the default app in the account's conversation routing settings and allow it to take control of conversations, or wait for the owning app to pass the thread. An Instagram Login connection cannot take; only the owner can pass the thread back.
           content:
             application/json:
               schema: { $ref: '#/components/schemas/ErrorResponse' }
@@ -58094,7 +58094,7 @@ paths:
       operationId: setConversationThreadControl
       summary: Change who answers a conversation (handover)
       description: |
-        Changes who answers a conversation, using Meta's handover protocol on WhatsApp, Facebook and Instagram.
+        Changes who answers a conversation: Meta Business Agent handover on WhatsApp, Meta's conversation routing on Facebook and Instagram. On Instagram, Conversation Routing replaced the Handover Protocol in October 2025 and kept the thread-control calls below.
 
         **WhatsApp**, on numbers with Meta Business Agent enabled:
 
@@ -58102,18 +58102,20 @@ paths:
         - `take`: take control before sending anything, so the agent stops replying while an operator reads the thread. Meta accepts this only from the business configured as the number's escalation partner; other apps take control by sending a message.
         - `pass`: transfer control to the number's configured escalation partner, or to the agent with `target: ai_agent`. Meta's Cloud API currently rejects it ("Pass action is not supported", verified 2026-09-08); use `release` to hand a thread back to the agent.
 
-        **Facebook and Instagram** (Messenger Platform handover between the apps on the Page, such as Page Inbox):
+        **Facebook and Instagram** (conversation routing between the apps on the account, such as Page Inbox or the Instagram Inbox):
 
-        - `pass` with `targetAppId`: give the thread to another app (`pass_thread_control`). Page Inbox is 263902037430900.
-        - `take`: take the thread back (`take_thread_control`). Meta allows it only to the Page's primary receiver, and only on accounts connected through a Facebook Page. On an Instagram Login connection it answers 400 `platform_not_supported`.
+        - `pass` with `targetAppId`: give the thread to another app (`pass_thread_control`). Page Inbox is 263902037430900, the Instagram Inbox is 1217981644879628.
+        - `take`: take the thread back (`take_thread_control`). Only on accounts connected through a Facebook Page, and Meta accepts it only when the account has a default app set in its conversation routing settings and the business has allowed Zernio to take control of conversations (Page settings > Page setup > Advanced messaging). Otherwise Meta answers code 27, returned as 400 `platform_api_error` with an explanation. On an Instagram Login connection it answers 400 `platform_not_supported`.
         - `request`: ask the current owner to pass the thread (`request_thread_control`); nothing changes until it does. Not available on Instagram Login connections (400 `platform_not_supported`).
-        - `release`: give the thread back to the primary receiver (`release_thread_control`).
+        - `release`: make the thread idle (`release_thread_control`); the account's default app answers next.
+
+        A send refused with `not_thread_owner` on a Facebook Login connection already tries `take` once and resends.
 
         ### While another app owns the thread
 
         While another app owns a Facebook or Instagram thread, inbound messages arrive with `metadata.standby: true` and a send answers 409 `not_thread_owner`.
 
-        The conversation's `threadControl` follows the result. A `conversation.control_changed` webhook fires when Meta later reports the change.
+        The conversation's `threadControl` follows the result. This call does not fire `conversation.control_changed`; that event fires only when Meta tells Zernio another app passed a thread to it or took one from it.
       tags: [Messages]
       security: [{ bearerAuth: [] }]
       parameters:
@@ -58171,7 +58173,7 @@ paths:
                         type: string
                         description: 'The app that received the thread, on a Facebook or Instagram pass.'
         '400':
-          description: 'Invalid field, or take / request on an Instagram account connected with Instagram Login (code platform_not_supported)'
+          description: 'Invalid field, take / request on an Instagram account connected with Instagram Login (code platform_not_supported), or Meta refused the handover (code platform_api_error, for example Meta code 27 when conversation routing does not allow Zernio to take the thread)'
           content:
             application/json:
               schema: { $ref: '#/components/schemas/ErrorResponse' }
@@ -58240,7 +58242,7 @@ paths:
           description: Account or conversation not found
         '409':
           x-summary: "The same Idempotency-Key is still processing, or another app owns the thread: retry later, or take thread control first and then resend."
-          description: 'The same Idempotency-Key is still processing, or another app owns the thread under Meta''s handover protocol (code not_thread_owner, `details.ownerAppId` names it when Meta says). Take control with thread-control first (accounts connected through a Facebook Page only; an Instagram Login connection cannot take).'
+          description: 'The same Idempotency-Key is still processing, or another app owns the thread under Meta''s conversation routing (code not_thread_owner, `details.ownerAppId` names it when Meta says). Take control with thread-control first (accounts connected through a Facebook Page only; an Instagram Login connection cannot take).'
           content:
             application/json:
               schema: { $ref: '#/components/schemas/ErrorResponse' }

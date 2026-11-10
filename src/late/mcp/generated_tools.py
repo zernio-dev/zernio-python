@@ -37838,7 +37838,7 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Change who answers a conversation (handover)
 
-        Changes who answers a conversation, using Meta's handover protocol on WhatsApp, Facebook and Instagram.
+        Changes who answers a conversation: Meta Business Agent handover on WhatsApp, Meta's conversation routing on Facebook and Instagram. On Instagram, Conversation Routing replaced the Handover Protocol in October 2025 and kept the thread-control calls below.
 
         **WhatsApp**, on numbers with Meta Business Agent enabled:
 
@@ -37846,9 +37846,7 @@ def register_generated_tools(mcp, _get_client):
         - `take`: take control before sending anything, so the agent stops replying while an operator reads the thread. Meta accepts this only from the business configured as the number's escalation partner; other apps take control by sending a message.
         - `pass`: transfer control to the number's configured escalation partner, or to the agent with `target: ai_agent`. Meta's Cloud API currently rejects it (\"Pass action is not supported\", verified 2026-09-08); use `release` to hand a thread back to the agent.
 
-        **Facebook and Instagram** (Messenger Platform handover between the apps on the Page, such as Page Inbox):
-
-        - `pass` with `targetAppId`: give the thread to another app ...
+        **Facebook and ...
 
         Args:
             conversation_id: The conversation ID (required)
