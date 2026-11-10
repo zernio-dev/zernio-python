@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.547.3"
+  version: "1.547.4"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -52693,7 +52693,7 @@ paths:
       operationId: listEmailLabels
       tags: [Email]
       summary: List labels
-      description: 'Gmail labels, system and user, or the Outlook category list. Reading the Outlook list needs mailbox settings access, which Zernio does not request, so it can come back empty while categories still apply to messages by name.'
+      description: 'Gmail labels, system and user, or the Outlook category list. If an organization blocks reading the Outlook list, it comes back empty and categories still apply to messages by name.'
       security: [{ bearerAuth: [] }]
       parameters:
         - $ref: '#/components/parameters/EmailAccountId'
@@ -52759,7 +52759,7 @@ paths:
       operationId: deleteEmailLabel
       tags: [Email]
       summary: Delete a label
-      description: 'Deletes a Gmail user label or an Outlook category, by id or name (URL-encode a slash). Gmail removes the label from every message. Deleting an Outlook category needs mailbox settings access and returns 412 without it.'
+      description: 'Deletes a Gmail user label or an Outlook category, by id or name (URL-encode a slash). Gmail removes the label from every message. Outlook keeps a deleted category on messages that already carry it; 412 when the organization blocks the category list.'
       security: [{ bearerAuth: [] }]
       parameters:
         - { name: labelId, in: path, required: true, schema: { type: string } }
