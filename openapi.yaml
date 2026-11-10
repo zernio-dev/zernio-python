@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.560.0"
+  version: "1.561.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -21082,12 +21082,12 @@ components:
                 server-side for Meta and Google. Sent as plaintext to LinkedIn
                 (LinkedIn's Conversions API spec requires the raw value).
                 Maximum effective list size on LinkedIn is 1.
-            ipAddress: { type: string, description: Client IP address. Sent plaintext. }
-            userAgent: { type: string, description: Client user-agent string. Sent plaintext. }
+            ipAddress: { type: string, description: "Client IP address. Sent plaintext (Meta, Pinterest, Reddit, OpenAI, Google Ads)." }
+            userAgent: { type: string, description: "Client user-agent string. Sent plaintext (Meta, Pinterest, Reddit, OpenAI, Google Ads)." }
             country: { type: string, description: "ISO 3166-1 alpha-2 country code, e.g. 'us'." }
             city: { type: string, description: "Meta advanced matching (ct). Plaintext city; normalized + SHA-256 hashed server-side. Meta only." }
             state: { type: string, description: "Meta advanced matching (st). 2-letter ANSI for US; hashed server-side. Meta only." }
-            zip: { type: string, description: "Meta advanced matching (zp). US uses first 5 digits; hashed server-side. Meta only." }
+            zip: { type: string, description: "Postal code. Meta advanced matching (zp; US uses first 5 digits; hashed server-side). Google Ads sends it plain in an address identifier with firstName, lastName and country, only when all four are present." }
             dob: { type: string, description: "Meta advanced matching (db). YYYYMMDD; hashed server-side. Meta only." }
             gender: { type: string, description: "Meta advanced matching (ge). 'f' or 'm'; hashed server-side. Meta only." }
             leadId:
