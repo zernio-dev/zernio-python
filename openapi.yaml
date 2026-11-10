@@ -1481,7 +1481,7 @@ components:
         Payment method or enterprise contract required: the authenticated account hit a billing gate before the connection could proceed. Switch on `reason` to render the right prompt:
 
         - `free_tier_exceeded`: the team has connected more accounts than the free tier allows. Add a payment method to continue (billed per additional connected account).
-        - `twitter_passthrough`: connecting an X account requires a card on file from day one, because X API calls incur real per-call pass-through costs. Applies to the 1st X account, not only the 3rd+. Not returned to accounts on the prepaid balance: they connect X without a card, and X calls are paid from the balance (refused with `insufficient_balance` at $0).
+        - `twitter_passthrough`: connecting an X account requires a card on file, even the 1st one, because X API calls are passed through per call. Prepaid-balance accounts never get it: they pay X calls from the balance.
         - `enterprise_required`: the team's enterprise contract sets a connected-account cap and it has been reached. Self-service teams have NO cap (the $1/account rate continues at any scale). The user already has a card on file; this gate is about contract terms.
         - `card_verification_required`: the card on file was flagged at add time (prepaid, or issued in a different country than the billing address). A one-time verification charge of `details.verification_amount_cents` (USD) is pending; it is credited to the team's usage balance, not a fee.
 
