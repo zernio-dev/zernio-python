@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.547.2"
+  version: "1.547.3"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -13486,6 +13486,8 @@ components:
         accountId: { type: string }
         status: { type: string, enum: [scheduled, sending, sent, failed, cancelled] }
         scheduledFor: { type: string, format: date-time }
+        holdAsDraft: { type: boolean, description: 'True when the email waits as a draft in the mailbox and is sent as that draft stands at `scheduledFor`.' }
+        draftId: { type: [string, "null"], description: 'The mailbox draft of a `holdAsDraft` send: the Gmail draft id, or the Outlook message id. `null` otherwise.' }
         to: { type: array, items: { $ref: '#/components/schemas/EmailAddress' } }
         subject: { type: [string, "null"], description: 'Empty on a reply that keeps the thread subject. `null` once the send finishes under zero content retention.' }
         contentNotRetained: { type: boolean, description: 'Present and `true` when the email content was dropped under [zero content retention](/security/zero-content-retention).' }
@@ -13525,7 +13527,7 @@ components:
         headers: { type: object, additionalProperties: { type: string }, description: 'Custom `X-` headers only. `List-Unsubscribe` is dropped on Microsoft and reported in `metadata.droppedHeaders`.' }
         metadata: { type: object, additionalProperties: { type: string } }
         scheduledFor: { type: string, format: date-time, description: 'Send later, between 1 minute and 30 days from now. The request answers 202 with the scheduled send; it leaves within a minute of this time through the same caps as an immediate send. List or cancel it under `/v1/email/messages/scheduled`.' }
-        holdAsDraft: { type: boolean, description: 'Reserved; currently rejected.' }
+        holdAsDraft: { type: boolean, description: 'Needs `scheduledFor`. Saves the email as a draft in the mailbox now and sends that draft at `scheduledFor`, with any edits the user made in Gmail or Outlook. A draft deleted or sent from the mailbox first fails the send (`email.send_failed`). Cancelling deletes the draft.' }
         trackOpens: { type: boolean, description: 'Adds an open pixel to the html and fires `email.opened`. Needs `html`.' }
         trackLinks: { type: boolean, description: 'Rewrites every http(s) link in the html through a Zernio redirect and fires `email.link_clicked`. Needs `html`.' }
         trackReplies: { type: boolean, description: 'Fires `email.thread_replied` when someone else writes in this message''s thread. Works with text or html.' }
@@ -52434,7 +52436,7 @@ paths:
         ### Other errors
 
         - 402: Gmail sends need a payment method on the workspace. Reading, calendar and files do not.
-        - 400: `holdAsDraft` is reserved and rejected; `trackOpens` or `trackLinks` without `html`; `scheduledFor` outside 1 minute to 30 days.
+        - 400: `holdAsDraft` without `scheduledFor`; `trackOpens` or `trackLinks` without `html`; `scheduledFor` outside 1 minute to 30 days.
       security: [{ bearerAuth: [] }]
       requestBody:
         required: true
@@ -52625,7 +52627,7 @@ paths:
       description: |
         Replies inside the provider's thread: the provider builds the quoted original and threading headers, your `html` or `text` goes above the quote. `to`, `cc`, `bcc`, `replyTo`, `subject`, `headers` and `attachments` are honoured.
 
-        `scheduledFor` schedules the reply (202) and `trackOpens`, `trackLinks` and `trackReplies` track it, as on send; `holdAsDraft` is rejected. Same protection, caps and headers as sending.
+        `scheduledFor` schedules the reply (202) and `trackOpens`, `trackLinks` and `trackReplies` track it, as on send; `holdAsDraft` holds it as a reply draft in the thread until then. Same protection, caps and headers as sending.
       security: [{ bearerAuth: [] }]
       parameters:
         - { name: messageId, in: path, required: true, schema: { type: string } }
