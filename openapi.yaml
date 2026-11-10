@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.563.0"
+  version: "1.564.1"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -14275,6 +14275,16 @@ components:
           properties:
             backgroundColor: { type: string }
             textColor: { type: string }
+    EmailSharedMailbox:
+      type: object
+      description: An Outlook shared mailbox added under a connected Microsoft account. It is an account of its own, so every `/v1/email` endpoint takes its `accountId`.
+      properties:
+        accountId: { type: string, description: 'Pass it as `accountId` to any /v1/email endpoint.' }
+        address: { type: string, format: email, example: 'support@contoso.com' }
+        displayName: { type: [string, "null"] }
+        parentAccountId: { type: string, description: 'The Outlook account whose access opens this mailbox.' }
+        isActive: { type: boolean }
+        addedAt: { type: string, format: date-time }
     EmailSendAs:
       type: object
       description: 'An address the mailbox can send from: listed by the provider, or declared with `POST /v1/email/send-as`.'
@@ -42363,11 +42373,13 @@ paths:
             4. `instagram_login_method_mismatch`: an Instagram Login authorization landed on a profile whose Instagram account is connected through Facebook Login, so nothing changed. To refresh it, connect again with `loginMethod=facebook_login`. To move it to Instagram Login, disconnect it first.
         - name: scopes
           in: query
-          schema: { type: string, example: 'posting,analytics', description: 'Comma-separated subset of posting, analytics, comments, messaging, ads, email, calendar, files, contacts.' }
+          schema: { type: string, example: 'posting,analytics', description: 'Comma-separated subset of posting, analytics, comments, messaging, ads, email, shared_mailboxes, calendar, files, contacts, directory.' }
           description: |
             Comma-separated permission areas to request instead of the platform's full permission set.
 
-            **Values:** `posting`, `analytics`, `comments`, `messaging`, `ads`; on google and microsoft, `email`, `calendar`, `files`, `contacts`.
+            **Values:** `posting`, `analytics`, `comments`, `messaging`, `ads`; on google and microsoft, `email`, `calendar`, `files`, `contacts`, `directory`; on microsoft only, `shared_mailboxes`. `directory` (people search) works on microsoft, and on google only through your own OAuth app for now.
+
+            `shared_mailboxes` (Microsoft only) adds `Mail.ReadWrite.Shared` and `Mail.Send.Shared`, so the account can add shared mailboxes it has access to with `POST /v1/email/shared-mailboxes`. Pass it next to `email`. To add it to a connected account, reconnect with `scopes=email,shared_mailboxes`.
 
             **Default:** omit it (what the dashboard does) to request everything the platform supports. Google and microsoft REQUIRE it (400 `INVALID_FIELD_VALUE` when absent) because their consent screens are reviewed per area.
 
@@ -55347,6 +55359,78 @@ paths:
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
+        '412': { $ref: '#/components/responses/MailboxPreconditionFailed' }
+  /v1/email/shared-mailboxes:
+    get:
+      x-resource-group: "messages"
+      operationId: listEmailSharedMailboxes
+      tags: [Email]
+      summary: List shared mailboxes
+      description: 'The Outlook shared mailboxes added under this Microsoft account. Each one is an account: pass its `accountId` to any `/v1/email` endpoint.'
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/EmailAccountId'
+      responses:
+        '200':
+          description: The shared mailboxes, active ones first
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { type: array, items: { $ref: '#/components/schemas/EmailSharedMailbox' } }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '412': { $ref: '#/components/responses/MailboxPreconditionFailed' }
+    post:
+      x-resource-group: "messages"
+      operationId: addEmailSharedMailbox
+      tags: [Email]
+      summary: Add a shared mailbox
+      description: |
+        Adds an Outlook shared mailbox the connected user can open (Full Access in Exchange) as an account of its own on the same profile. It counts as a connected account.
+
+        The Microsoft account needs the `shared_mailboxes` area: connect or reconnect it with `scopes=email,shared_mailboxes`. Without it the call answers 412.
+
+        Zernio opens the mailbox before saving it. 403 `shared_mailbox_access_denied` means the user cannot open that address. Adding an address again returns the existing account with 200.
+
+        New mail is read every minute, because Microsoft sends no change notifications for shared mailboxes opened this way. Sending needs Send As or Send on Behalf on the mailbox. Remove it with `DELETE /v1/accounts/{accountId}`. Disconnecting the Microsoft account removes its shared mailboxes too.
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [accountId, address]
+              properties:
+                accountId: { type: string, description: 'The connected Microsoft account that has access to the shared mailbox.' }
+                address: { type: string, format: email, example: 'support@contoso.com' }
+                displayName: { type: string, maxLength: 200, example: 'Contoso Support' }
+      responses:
+        '200':
+          description: The shared mailbox was already added
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/EmailSharedMailbox' }
+        '201':
+          description: The shared mailbox was added as a new account
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/EmailSharedMailbox' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403':
+          description: '`shared_mailbox_access_denied`: the user cannot open that address. It must be a mailbox in the same organization, with Full Access granted to the user.'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
         '412': { $ref: '#/components/responses/MailboxPreconditionFailed' }
   /v1/email/signatures:
     get:
@@ -72567,6 +72651,62 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
         '412': { description: The account was connected without the contacts area }
+  /v1/contacts/autocomplete:
+    get:
+      x-resource-group: "contacts"
+      operationId: autocompleteContacts
+      summary: Search people
+      description: |-
+        Finds people for an address field, read live from a Google or Microsoft account. Nothing is stored.
+
+        With the contacts area it searches the user's address book. With the directory area it also searches coworkers and the people the user mails: Microsoft ranks them by relevance, Google adds its Workspace directory and other contacts.
+      tags: [Contacts]
+      parameters:
+        - { name: accountId, in: query, required: true, schema: { type: string }, description: 'A Google or Microsoft account connected with the contacts or directory area.' }
+        - { name: q, in: query, required: true, schema: { type: string, minLength: 1, maxLength: 200 }, description: 'What the user typed: a name or the start of an email address.' }
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 50, default: 10 } }
+      responses:
+        '200':
+          description: Matching people, best first, one entry per email address
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        name: { type: string }
+                        email: { type: [string, "null"] }
+                        emails: { type: array, items: { type: string } }
+                        phones: { type: array, items: { type: string }, description: 'E.164 numbers only.' }
+                        company: { type: [string, "null"] }
+                        jobTitle: { type: [string, "null"] }
+                        photoUrl: { type: [string, "null"] }
+                        source: { type: string, enum: [contacts, other, directory], description: 'contacts = saved contacts, other = people the user mailed, directory = the organization.' }
+                  meta:
+                    type: object
+                    properties:
+                      accountId: { type: string }
+                      sources:
+                        type: array
+                        description: 'Each source searched. A source the provider refused, such as the directory of a personal Google account, has searched false and an error.'
+                        items:
+                          type: object
+                          properties:
+                            source: { type: string, enum: [contacts, other, directory] }
+                            searched: { type: boolean }
+                            error: { type: string, enum: [not_available_for_this_account, provider_error] }
+              example:
+                data:
+                  - { name: Ada Lovelace, email: ada@acme.com, emails: [ada@acme.com], phones: ['+34612345678'], company: Acme, jobTitle: CTO, photoUrl: null, source: directory }
+                meta: { accountId: '6ac37c0e027ed07afbf242ed', sources: [{ source: directory, searched: true }] }
+        '400': { description: 'Invalid request, or the account is not a Google or Microsoft account' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '412': { description: 'The account was connected without the contacts or directory area' }
   /v1/contacts/{contactId}:
     get:
       x-resource-group: "contacts"

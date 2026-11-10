@@ -24924,7 +24924,9 @@ def register_generated_tools(mcp, _get_client):
         4. `instagram_login_method_mismatch`: an Instagram Login authorization landed on a profile whose Instagram account is connected through Facebook Login, so nothing changed. To refresh it, connect again with `loginMethod=facebook_login`. To move it to Instagram Login, disconnect it first.
                 scopes: Comma-separated permission areas to request instead of the platform's full permission set.
 
-        **Values:** `posting`, `analytics`, `comments`, `messaging`, `ads`; on google and microsoft, `email`, `calendar`, `files`, `contacts`.
+        **Values:** `posting`, `analytics`, `comments`, `messaging`, `ads`; on google and microsoft, `email`, `calendar`, `files`, `contacts`, `directory`; on microsoft only, `shared_mailboxes`. `directory` (people search) works on microsoft, and on google only through your own OAuth app for now.
+
+        `shared_mailboxes` (Microsoft only) adds `Mail.ReadWrite.Shared` and `Mail.Send.Shared`, so the account can add shared mailboxes it has access to with `POST /v1/email/shared-mailboxes`. Pass it next to `email`. To add it to a connected account, reconnect with `scopes=email,shared_mailboxes`.
 
         **Default:** omit it (what the dashboard does) to request everything the platform supports. Google and microsoft REQUIRE it (400 `INVALID_FIELD_VALUE` when absent) because their consent screens are reviewed per area.
 
@@ -28202,6 +28204,34 @@ def register_generated_tools(mcp, _get_client):
         client = _get_client()
         try:
             response = client.contacts.list_contact_groups(account_id=account_id)
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Search people",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def contacts_autocomplete_contacts(account_id: str, q: str, limit: int = 10) -> str:
+        """Search people
+
+        Finds people for an address field, read live from a Google or Microsoft account. Nothing is stored.
+
+        With the contacts area it searches the user's address book. With the directory area it also searches coworkers and the people the user mails: Microsoft ranks them by relevance, Google adds its Workspace directory and other contacts.
+
+        Args:
+            account_id: A Google or Microsoft account connected with the contacts or directory area. (required)
+            q: What the user typed: a name or the start of an email address. (required)
+            limit"""
+        client = _get_client()
+        try:
+            response = client.contacts.autocomplete_contacts(
+                account_id=account_id, q=q, limit=limit
+            )
             return _format_response(response)
         except Exception as e:
             raise ToolError(f"Error: {e}") from e
@@ -34227,6 +34257,62 @@ def register_generated_tools(mcp, _get_client):
         try:
             response = client.email.delete_email_send_as(
                 email=email, account_id=account_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List shared mailboxes",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def email_list_email_shared_mailboxes(account_id: str) -> str:
+        """List shared mailboxes
+
+        The Outlook shared mailboxes added under this Microsoft account. Each one is an account: pass its `accountId` to any `/v1/email` endpoint.
+
+        Args:
+            account_id: The connected Google, Microsoft or IMAP account. (required)"""
+        client = _get_client()
+        try:
+            response = client.email.list_email_shared_mailboxes(account_id=account_id)
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Add a shared mailbox",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def email_add_email_shared_mailbox(
+        account_id: str, address: str, display_name: str | None = None
+    ) -> str:
+        """Add a shared mailbox
+
+        Adds an Outlook shared mailbox the connected user can open (Full Access in Exchange) as an account of its own on the same profile. It counts as a connected account.
+
+        The Microsoft account needs the `shared_mailboxes` area: connect or reconnect it with `scopes=email,shared_mailboxes`. Without it the call answers 412.
+
+        Zernio opens the mailbox before saving it. 403 `shared_mailbox_access_denied` means the user cannot open that address. Adding an address again returns the existing account with 200.
+
+        New mail is read every minute, because Microsoft sends no change notifications for shared mailboxes opened this way. Sending needs Send As or Send on Behalf on the mailbox. Remove it with `DELETE /v1/accounts/{accountId}`. Disconnecting the Microsoft account removes its shared mailboxes too.
+
+        Args:
+            account_id: The connected Microsoft account that has access to the shared mailbox. (required)
+            address: (required)
+            display_name"""
+        client = _get_client()
+        try:
+            response = client.email.add_email_shared_mailbox(
+                account_id=account_id, address=address, display_name=display_name
             )
             return _format_response(response)
         except Exception as e:

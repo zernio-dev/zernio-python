@@ -140,6 +140,17 @@ class ContactsResource:
         )
         return self._client._get("/v1/contacts/groups", params=params)
 
+    def autocomplete_contacts(
+        self, account_id: str, q: str, *, limit: int | None = 10
+    ) -> dict[str, Any]:
+        """Search people"""
+        params = self._build_params(
+            account_id=account_id,
+            q=q,
+            limit=limit,
+        )
+        return self._client._get("/v1/contacts/autocomplete", params=params)
+
     def get_contact(self, contact_id: str) -> dict[str, Any]:
         """Get contact"""
         return self._client._get(f"/v1/contacts/{contact_id}")
@@ -261,6 +272,17 @@ class ContactsResource:
             account_id=account_id,
         )
         return await self._client._aget("/v1/contacts/groups", params=params)
+
+    async def aautocomplete_contacts(
+        self, account_id: str, q: str, *, limit: int | None = 10
+    ) -> dict[str, Any]:
+        """Search people (async)"""
+        params = self._build_params(
+            account_id=account_id,
+            q=q,
+            limit=limit,
+        )
+        return await self._client._aget("/v1/contacts/autocomplete", params=params)
 
     async def aget_contact(self, contact_id: str) -> dict[str, Any]:
         """Get contact (async)"""

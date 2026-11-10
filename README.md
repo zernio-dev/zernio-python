@@ -997,6 +997,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `contacts.get_contact_channels()` | List channels for a contact |
 | `contacts.update_contact()` | Update contact |
 | `contacts.delete_contact()` | Delete contact |
+| `contacts.autocomplete_contacts()` | Search people |
 
 ### Content Retention
 | Method | Description |
@@ -1152,6 +1153,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `email.list_email_labels()` | List labels |
 | `email.list_email_messages()` | List email messages |
 | `email.list_email_send_as()` | List send-as addresses |
+| `email.list_email_shared_mailboxes()` | List shared mailboxes |
 | `email.list_email_signatures()` | List signatures |
 | `email.list_email_threads()` | List email threads |
 | `email.list_scheduled_emails()` | List scheduled emails |
@@ -1172,6 +1174,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `email.delete_email_label()` | Delete a label |
 | `email.delete_email_send_as()` | Remove a declared send-as address |
 | `email.delete_email_signature()` | Delete a signature |
+| `email.add_email_shared_mailbox()` | Add a shared mailbox |
 | `email.cancel_scheduled_email()` | Cancel a scheduled email |
 | `email.declare_email_send_as()` | Declare a send-as address |
 | `email.discover_imap_settings()` | Find the mail settings for an address |

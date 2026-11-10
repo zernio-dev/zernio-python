@@ -666,6 +666,24 @@ class EmailResource:
         )
         return self._client._delete(f"/v1/email/send-as/{email}", params=params)
 
+    def list_email_shared_mailboxes(self, account_id: str) -> dict[str, Any]:
+        """List shared mailboxes"""
+        params = self._build_params(
+            account_id=account_id,
+        )
+        return self._client._get("/v1/email/shared-mailboxes", params=params)
+
+    def add_email_shared_mailbox(
+        self, account_id: str, address: str, *, display_name: str | None = None
+    ) -> dict[str, Any]:
+        """Add a shared mailbox"""
+        payload = self._build_payload(
+            account_id=account_id,
+            address=address,
+            display_name=display_name,
+        )
+        return self._client._post("/v1/email/shared-mailboxes", data=payload)
+
     def list_email_signatures(self, *, account_id: str | None = None) -> dict[str, Any]:
         """List signatures"""
         params = self._build_params(
@@ -1356,6 +1374,24 @@ class EmailResource:
             account_id=account_id,
         )
         return await self._client._adelete(f"/v1/email/send-as/{email}", params=params)
+
+    async def alist_email_shared_mailboxes(self, account_id: str) -> dict[str, Any]:
+        """List shared mailboxes (async)"""
+        params = self._build_params(
+            account_id=account_id,
+        )
+        return await self._client._aget("/v1/email/shared-mailboxes", params=params)
+
+    async def aadd_email_shared_mailbox(
+        self, account_id: str, address: str, *, display_name: str | None = None
+    ) -> dict[str, Any]:
+        """Add a shared mailbox (async)"""
+        payload = self._build_payload(
+            account_id=account_id,
+            address=address,
+            display_name=display_name,
+        )
+        return await self._client._apost("/v1/email/shared-mailboxes", data=payload)
 
     async def alist_email_signatures(
         self, *, account_id: str | None = None
