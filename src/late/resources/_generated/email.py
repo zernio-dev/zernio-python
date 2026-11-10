@@ -200,6 +200,8 @@ class EmailResource:
         bcc: list[Any] | None = None,
         reply_to: list[Any] | None = None,
         from_name: str | None = None,
+        from_: str | None = None,
+        append_signature: bool | None = None,
         text: str | None = None,
         html: str | None = None,
         attachments: list[dict[str, Any]] | None = None,
@@ -219,6 +221,8 @@ class EmailResource:
             bcc=bcc,
             reply_to=reply_to,
             from_name=from_name,
+            from_=from_,
+            append_signature=append_signature,
             subject=subject,
             text=text,
             html=html,
@@ -326,6 +330,8 @@ class EmailResource:
         bcc: list[Any] | None = None,
         reply_to: list[Any] | None = None,
         from_name: str | None = None,
+        from_: str | None = None,
+        append_signature: bool | None = None,
         text: str | None = None,
         html: str | None = None,
         attachments: list[dict[str, Any]] | None = None,
@@ -346,6 +352,8 @@ class EmailResource:
             bcc=bcc,
             reply_to=reply_to,
             from_name=from_name,
+            from_=from_,
+            append_signature=append_signature,
             subject=subject,
             text=text,
             html=html,
@@ -387,6 +395,13 @@ class EmailResource:
             color=color,
         )
         return self._client._post("/v1/email/labels", data=payload)
+
+    def list_email_send_as(self, account_id: str) -> dict[str, Any]:
+        """List send-as addresses"""
+        params = self._build_params(
+            account_id=account_id,
+        )
+        return self._client._get("/v1/email/send-as", params=params)
 
     def delete_email_label(self, label_id: str, account_id: str) -> dict[str, Any]:
         """Delete a label"""
@@ -536,6 +551,8 @@ class EmailResource:
         bcc: list[Any] | None = None,
         reply_to: list[Any] | None = None,
         from_name: str | None = None,
+        from_: str | None = None,
+        append_signature: bool | None = None,
         text: str | None = None,
         html: str | None = None,
         attachments: list[dict[str, Any]] | None = None,
@@ -555,6 +572,8 @@ class EmailResource:
             bcc=bcc,
             reply_to=reply_to,
             from_name=from_name,
+            from_=from_,
+            append_signature=append_signature,
             subject=subject,
             text=text,
             html=html,
@@ -672,6 +691,8 @@ class EmailResource:
         bcc: list[Any] | None = None,
         reply_to: list[Any] | None = None,
         from_name: str | None = None,
+        from_: str | None = None,
+        append_signature: bool | None = None,
         text: str | None = None,
         html: str | None = None,
         attachments: list[dict[str, Any]] | None = None,
@@ -692,6 +713,8 @@ class EmailResource:
             bcc=bcc,
             reply_to=reply_to,
             from_name=from_name,
+            from_=from_,
+            append_signature=append_signature,
             subject=subject,
             text=text,
             html=html,
@@ -733,6 +756,13 @@ class EmailResource:
             color=color,
         )
         return await self._client._apost("/v1/email/labels", data=payload)
+
+    async def alist_email_send_as(self, account_id: str) -> dict[str, Any]:
+        """List send-as addresses (async)"""
+        params = self._build_params(
+            account_id=account_id,
+        )
+        return await self._client._aget("/v1/email/send-as", params=params)
 
     async def adelete_email_label(
         self, label_id: str, account_id: str

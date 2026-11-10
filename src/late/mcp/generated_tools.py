@@ -32295,6 +32295,8 @@ def register_generated_tools(mcp, _get_client):
         bcc: list[dict[str, Any]] | None = None,
         reply_to: list[dict[str, Any]] | None = None,
         from_name: str | None = None,
+        from_: str | None = None,
+        append_signature: bool | None = None,
         text: str | None = None,
         html: str | None = None,
         attachments: list[dict[str, Any]] | None = None,
@@ -32330,6 +32332,8 @@ def register_generated_tools(mcp, _get_client):
             bcc: Each item is an object with keys: email (string, required); name (string or null)
             reply_to: Each item is an object with keys: email (string, required); name (string or null)
             from_name
+            from_: Send from another address of the mailbox, listed by `GET /v1/email/send-as`. Gmail: a verified send-as alias, else 400. Outlook: any address the mailbox has Send As or Send on Behalf rights on, else 403. Omitted, the mail leaves from the mailbox address.
+            append_signature: Gmail only. Appends the signature of the sending address (the `from` alias, or the mailbox address) to `html` and `text`. Outlook answers 400: Graph does not expose Outlook signatures.
             subject: (required)
             text: Plain-text body. One of `text` or `html` is required.
             html
@@ -32350,6 +32354,8 @@ def register_generated_tools(mcp, _get_client):
                 bcc=bcc,
                 reply_to=reply_to,
                 from_name=from_name,
+                from_=from_,
+                append_signature=append_signature,
                 subject=subject,
                 text=text,
                 html=html,
@@ -32564,6 +32570,8 @@ def register_generated_tools(mcp, _get_client):
         bcc: list[dict[str, Any]] | None = None,
         reply_to: list[dict[str, Any]] | None = None,
         from_name: str | None = None,
+        from_: str | None = None,
+        append_signature: bool | None = None,
         text: str | None = None,
         html: str | None = None,
         attachments: list[dict[str, Any]] | None = None,
@@ -32590,6 +32598,8 @@ def register_generated_tools(mcp, _get_client):
             bcc: Each item is an object with keys: email (string, required); name (string or null)
             reply_to: Each item is an object with keys: email (string, required); name (string or null)
             from_name
+            from_: Send from another address of the mailbox, listed by `GET /v1/email/send-as`. Gmail: a verified send-as alias, else 400. Outlook: any address the mailbox has Send As or Send on Behalf rights on, else 403. Omitted, the mail leaves from the mailbox address.
+            append_signature: Gmail only. Appends the signature of the sending address (the `from` alias, or the mailbox address) to `html` and `text`. Outlook answers 400: Graph does not expose Outlook signatures.
             subject: Optional on replies; the provider keeps the thread subject. (required)
             text: Plain-text body. One of `text` or `html` is required.
             html
@@ -32612,6 +32622,8 @@ def register_generated_tools(mcp, _get_client):
                 bcc=bcc,
                 reply_to=reply_to,
                 from_name=from_name,
+                from_=from_,
+                append_signature=append_signature,
                 subject=subject,
                 text=text,
                 html=html,
@@ -32697,6 +32709,28 @@ def register_generated_tools(mcp, _get_client):
             response = client.email.create_email_label(
                 account_id=account_id, name=name, color=color
             )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List send-as addresses",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def email_list_email_send_as(account_id: str) -> str:
+        """List send-as addresses
+
+        The addresses a mailbox can send from, for the `from` field of a send or reply. Gmail lists every send-as alias with its signature, and `from` must be one of them. Outlook lists the mailbox address and its aliases; Exchange checks any other `from` at send time.
+
+        Args:
+            account_id: The connected Google or Microsoft account. (required)"""
+        client = _get_client()
+        try:
+            response = client.email.list_email_send_as(account_id=account_id)
             return _format_response(response)
         except Exception as e:
             raise ToolError(f"Error: {e}") from e

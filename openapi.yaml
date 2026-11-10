@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.548.1"
+  version: "1.548.2"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -13478,6 +13478,17 @@ components:
           properties:
             backgroundColor: { type: string }
             textColor: { type: string }
+    EmailSendAs:
+      type: object
+      description: 'An address the mailbox can send from.'
+      properties:
+        email: { type: string }
+        displayName: { type: [string, "null"] }
+        replyTo: { type: [string, "null"], description: 'Gmail alias reply-to address, if set.' }
+        isPrimary: { type: boolean, description: 'The mailbox''s own address.' }
+        isDefault: { type: boolean, description: 'The address Gmail picks by default in its compose window.' }
+        verified: { type: boolean, description: 'Gmail sends from an alias only once it is verified. Always `true` on Outlook.' }
+        signature: { type: [string, "null"], description: 'Signature html. Gmail only; always `null` on Outlook.' }
     ScheduledEmail:
       type: object
       description: 'An email sent with `scheduledFor`. `status` moves scheduled, sending, then sent or failed; a cancelled one never leaves.'
@@ -13508,6 +13519,8 @@ components:
         bcc: { type: array, maxItems: 100, items: { $ref: '#/components/schemas/EmailAddress' } }
         replyTo: { type: array, maxItems: 5, items: { $ref: '#/components/schemas/EmailAddress' } }
         fromName: { type: string, maxLength: 200 }
+        from: { type: string, format: email, description: 'Send from another address of the mailbox, listed by `GET /v1/email/send-as`. Gmail: a verified send-as alias, else 400. Outlook: any address the mailbox has Send As or Send on Behalf rights on, else 403. Omitted, the mail leaves from the mailbox address.' }
+        appendSignature: { type: boolean, description: 'Gmail only. Appends the signature of the sending address (the `from` alias, or the mailbox address) to `html` and `text`. Outlook answers 400: Graph does not expose Outlook signatures.' }
         subject: { type: string, maxLength: 998 }
         text: { type: string, description: 'Plain-text body. One of `text` or `html` is required.' }
         html: { type: string }
@@ -52471,6 +52484,7 @@ paths:
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '402': { $ref: '#/components/responses/PaymentRequired' }
+        '403': { description: 'Outlook refused `from`: the mailbox has no Send As or Send on Behalf right on it.', content: { application/json: { schema: { $ref: '#/components/schemas/ErrorResponse' } } } }
         '412': { $ref: '#/components/responses/MailboxPreconditionFailed' }
         '429': { $ref: '#/components/responses/EmailSendRefused' }
   /v1/email/messages/scheduled:
@@ -52666,6 +52680,7 @@ paths:
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '402': { $ref: '#/components/responses/PaymentRequired' }
+        '403': { description: 'Outlook refused `from`: the mailbox has no Send As or Send on Behalf right on it.', content: { application/json: { schema: { $ref: '#/components/schemas/ErrorResponse' } } } }
         '404': { $ref: '#/components/responses/NotFound' }
         '412': { $ref: '#/components/responses/MailboxPreconditionFailed' }
         '429': { $ref: '#/components/responses/EmailSendRefused' }
@@ -52754,6 +52769,33 @@ paths:
                 type: object
                 properties:
                   data: { $ref: '#/components/schemas/EmailLabel' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '412': { $ref: '#/components/responses/MailboxPreconditionFailed' }
+  /v1/email/send-as:
+    get:
+      x-resource-group: "messages"
+      operationId: listEmailSendAs
+      tags: [Email]
+      summary: List send-as addresses
+      description: 'The addresses a mailbox can send from, for the `from` field of a send or reply. Gmail lists every send-as alias with its signature, and `from` must be one of them. Outlook lists the mailbox address and its aliases; Exchange checks any other `from` at send time.'
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/EmailAccountId'
+      responses:
+        '200':
+          description: The mailbox's send-as addresses, the mailbox address first
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { type: array, items: { $ref: '#/components/schemas/EmailSendAs' } }
+                  meta:
+                    type: object
+                    properties:
+                      completeList: { type: boolean, description: '`true` when `from` must be in this list (Gmail). `false` when the provider decides at send time (Outlook).' }
+                      signatures: { type: boolean, description: 'Whether `appendSignature` works on this mailbox.' }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '412': { $ref: '#/components/responses/MailboxPreconditionFailed' }

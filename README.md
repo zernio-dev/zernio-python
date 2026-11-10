@@ -1124,6 +1124,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `email.list_email_folders()` | List mailbox folders |
 | `email.list_email_labels()` | List labels |
 | `email.list_email_messages()` | List email messages |
+| `email.list_email_send_as()` | List send-as addresses |
 | `email.list_email_threads()` | List email threads |
 | `email.list_scheduled_emails()` | List scheduled emails |
 | `email.create_email_label()` | Create a label |
