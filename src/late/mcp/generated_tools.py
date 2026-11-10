@@ -27994,6 +27994,271 @@ def register_generated_tools(mcp, _get_client):
         except Exception as e:
             raise ToolError(f"Error: {e}") from e
 
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Start a Google Workspace organization connection",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def connect_create_google_org_connection(
+        profile_id: str,
+        domain: str,
+        scopes: list[Literal["email", "calendar", "files", "contacts"]] | None,
+        admin_email: str | None = None,
+        allowed_emails: list[str] | None = None,
+    ) -> str:
+        """Start a Google Workspace organization connection
+
+        Creates an organization connection for a Google Workspace domain. A super admin then delegates Zernio's client ID with the returned scopes, and you add mailboxes without each user signing in.
+
+        ### Flow
+
+        1. Add `setup.dnsRecord` (a TXT record) to the domain. It proves the domain's owner set up this connection.
+        2. A super admin adds `setup.clientId` with `setup.scopes` under domain-wide delegation in the Admin console.
+        3. Call `POST /v1/org-connections/{orgConnectionId}/verify` with any mailbox in the domain.
+        4. Add mailboxes with `POST /v1/org-connections/{orgConnectionId}/mailboxes`.
+
+        Args:
+            profile_id: (required)
+            domain: The Workspace domain the admin delegates. (required)
+            scopes: Areas the mailboxes get, the same as a user connect. (required)
+            admin_email: A super admin, used to list the domain's users.
+            allowed_emails: Addresses or `@domain` entries mailboxes must match. Omit for every mailbox."""
+        client = _get_client()
+        try:
+            response = client.connect.create_google_org_connection(
+                profile_id=profile_id,
+                domain=domain,
+                scopes=scopes,
+                admin_email=admin_email,
+                allowed_emails=allowed_emails,
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Start a Microsoft 365 organization connection",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def connect_create_microsoft_org_connection(
+        profile_id: str,
+        scopes: list[Literal["email", "calendar", "files", "contacts"]] | None,
+        allowed_emails: list[str] | None = None,
+        redirect_url: str | None = None,
+    ) -> str:
+        """Start a Microsoft 365 organization connection
+
+        Creates an organization connection for a Microsoft 365 tenant. An administrator opens `setup.adminConsentUrl` and approves Zernio's application permissions once, then you add mailboxes without each user signing in.
+
+        After consent Microsoft sends the administrator to `redirectUrl` with `orgConnectionId`, `status` (`active`, `pending` or `denied`) and `tenant`.
+
+        Application permissions reach every mailbox in the tenant. Administrators can scope them with an Exchange Online application access policy or RBAC for Applications.
+
+        Args:
+            profile_id: (required)
+            scopes: (required)
+            allowed_emails: Addresses or `@domain` entries mailboxes must match. Omit for every mailbox.
+            redirect_url: Where Microsoft sends the administrator after consent."""
+        client = _get_client()
+        try:
+            response = client.connect.create_microsoft_org_connection(
+                profile_id=profile_id,
+                scopes=scopes,
+                allowed_emails=allowed_emails,
+                redirect_url=redirect_url,
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List organization connections",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def connect_list_org_connections(profile_id: str) -> str:
+        """List organization connections
+
+        The Google Workspace and Microsoft 365 organization connections on a profile, newest first.
+
+        Args:
+            profile_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.connect.list_org_connections(profile_id=profile_id)
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get an organization connection",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def connect_get_org_connection() -> str:
+        """Get an organization connection
+
+        One organization connection with its status and setup instructions."""
+        client = _get_client()
+        try:
+            response = client.connect.get_org_connection()
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Update an organization connection",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def connect_update_org_connection(
+        allowed_emails: str | None = None, admin_email: str | None = None
+    ) -> str:
+        """Update an organization connection
+
+        Changes the allowlist or the Google directory admin.
+
+        Mailboxes already added that a narrowed allowlist excludes answer `401` `reconnect_required` until it includes them again.
+
+        Args:
+            allowed_emails
+            admin_email"""
+        client = _get_client()
+        try:
+            response = client.connect.update_org_connection(
+                allowed_emails=allowed_emails, admin_email=admin_email
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Delete an organization connection",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def connect_delete_org_connection() -> str:
+        """Delete an organization connection
+
+        Deletes the connection. Mailboxes added from it stay on the profile and answer `401` `reconnect_required` until you disconnect them or connect them another way.
+
+        `mailboxAccountIds` lists them."""
+        client = _get_client()
+        try:
+            response = client.connect.delete_org_connection()
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Verify an organization connection",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def connect_verify_org_connection(
+        org_connection_id: str, email: str | None = None
+    ) -> str:
+        """Verify an organization connection
+
+        Checks the administrator's grant and activates the connection.
+
+        Google: the domain's TXT record and a token for `email` with every delegated scope. Microsoft: a tenant token carrying every application permission the areas need.
+
+        `409` `org_grant_incomplete` says what is still missing.
+
+        Args:
+            org_connection_id: (required)
+            email: Google only. Any mailbox in the domain."""
+        client = _get_client()
+        try:
+            response = client.connect.verify_org_connection(
+                org_connection_id=org_connection_id, email=email
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List an organization's users",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def connect_list_org_connection_users(
+        org_connection_id: str, cursor: str | None = None
+    ) -> str:
+        """List an organization's users
+
+        The organization's users, 100 per page, with whether each is allowed and the `accountId` of those already added.
+
+        Google needs `adminEmail` on the connection and the directory scope delegated.
+
+        Args:
+            org_connection_id: (required)
+            cursor"""
+        client = _get_client()
+        try:
+            response = client.connect.list_org_connection_users(
+                org_connection_id=org_connection_id, cursor=cursor
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Add a mailbox from an organization connection",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def connect_add_org_connection_mailbox(
+        org_connection_id: str, email: str, name: str | None = None
+    ) -> str:
+        """Add a mailbox from an organization connection
+
+        Adds one mailbox from an active organization connection, with no sign-in from its user. It becomes a `google` or `microsoft` account on the connection's profile and works with every email, calendar, files and contacts endpoint.
+
+        `201` for a new account, `200` when the address was already on the profile and now runs on the organization grant. `account.connected` fires.
+
+        Args:
+            org_connection_id: (required)
+            email: (required)
+            name: Display name; defaults to the provider's."""
+        client = _get_client()
+        try:
+            response = client.connect.add_org_connection_mailbox(
+                org_connection_id=org_connection_id, email=email, name=name
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
     # CONNECTED_APPS
 
     @mcp.tool(

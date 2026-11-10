@@ -1204,6 +1204,103 @@ class ConnectResource:
         )
         return self._client._get("/v1/connect/microsoft/admin-consent", params=params)
 
+    def create_google_org_connection(
+        self,
+        profile_id: str,
+        domain: str,
+        scopes: list[str],
+        *,
+        admin_email: str | None = None,
+        allowed_emails: list[str] | None = None,
+    ) -> dict[str, Any]:
+        """Start a Google Workspace organization connection"""
+        payload = self._build_payload(
+            profile_id=profile_id,
+            domain=domain,
+            scopes=scopes,
+            admin_email=admin_email,
+            allowed_emails=allowed_emails,
+        )
+        return self._client._post("/v1/connect/google/org", data=payload)
+
+    def create_microsoft_org_connection(
+        self,
+        profile_id: str,
+        scopes: list[str],
+        *,
+        allowed_emails: list[str] | None = None,
+        redirect_url: str | None = None,
+    ) -> dict[str, Any]:
+        """Start a Microsoft 365 organization connection"""
+        payload = self._build_payload(
+            profile_id=profile_id,
+            scopes=scopes,
+            allowed_emails=allowed_emails,
+            redirect_url=redirect_url,
+        )
+        return self._client._post("/v1/connect/microsoft/org", data=payload)
+
+    def list_org_connections(self, profile_id: str) -> dict[str, Any]:
+        """List organization connections"""
+        params = self._build_params(
+            profile_id=profile_id,
+        )
+        return self._client._get("/v1/org-connections", params=params)
+
+    def get_org_connection(self) -> dict[str, Any]:
+        """Get an organization connection"""
+        return self._client._get("/v1/org-connections/{orgConnectionId}")
+
+    def update_org_connection(
+        self, *, allowed_emails: Any | None = None, admin_email: Any | None = None
+    ) -> dict[str, Any]:
+        """Update an organization connection"""
+        payload = self._build_payload(
+            allowed_emails=allowed_emails,
+            admin_email=admin_email,
+        )
+        return self._client._patch(
+            "/v1/org-connections/{orgConnectionId}", data=payload
+        )
+
+    def delete_org_connection(self) -> dict[str, Any]:
+        """Delete an organization connection"""
+        return self._client._delete("/v1/org-connections/{orgConnectionId}")
+
+    def verify_org_connection(
+        self, org_connection_id: str, *, email: str | None = None
+    ) -> dict[str, Any]:
+        """Verify an organization connection"""
+        payload = self._build_payload(
+            email=email,
+        )
+        return self._client._post(
+            f"/v1/org-connections/{org_connection_id}/verify", data=payload
+        )
+
+    def list_org_connection_users(
+        self, org_connection_id: str, *, cursor: str | None = None
+    ) -> dict[str, Any]:
+        """List an organization's users"""
+        params = self._build_params(
+            cursor=cursor,
+        )
+        return self._client._get(
+            f"/v1/org-connections/{org_connection_id}/users", params=params
+        )
+
+    def add_org_connection_mailbox(
+        self, org_connection_id: str, email: str, *, name: str | None = None
+    ) -> dict[str, Any]:
+        """Add a mailbox from an organization connection"""
+        payload = self._build_payload(
+            email=email,
+            name=name,
+        )
+        return self._client._post(
+            f"/v1/org-connections/{org_connection_id}/mailboxes", data=payload
+        )
+
     async def acreate_platform_invite(
         self,
         profile_id: str,
@@ -2371,4 +2468,101 @@ class ConnectResource:
         )
         return await self._client._aget(
             "/v1/connect/microsoft/admin-consent", params=params
+        )
+
+    async def acreate_google_org_connection(
+        self,
+        profile_id: str,
+        domain: str,
+        scopes: list[str],
+        *,
+        admin_email: str | None = None,
+        allowed_emails: list[str] | None = None,
+    ) -> dict[str, Any]:
+        """Start a Google Workspace organization connection (async)"""
+        payload = self._build_payload(
+            profile_id=profile_id,
+            domain=domain,
+            scopes=scopes,
+            admin_email=admin_email,
+            allowed_emails=allowed_emails,
+        )
+        return await self._client._apost("/v1/connect/google/org", data=payload)
+
+    async def acreate_microsoft_org_connection(
+        self,
+        profile_id: str,
+        scopes: list[str],
+        *,
+        allowed_emails: list[str] | None = None,
+        redirect_url: str | None = None,
+    ) -> dict[str, Any]:
+        """Start a Microsoft 365 organization connection (async)"""
+        payload = self._build_payload(
+            profile_id=profile_id,
+            scopes=scopes,
+            allowed_emails=allowed_emails,
+            redirect_url=redirect_url,
+        )
+        return await self._client._apost("/v1/connect/microsoft/org", data=payload)
+
+    async def alist_org_connections(self, profile_id: str) -> dict[str, Any]:
+        """List organization connections (async)"""
+        params = self._build_params(
+            profile_id=profile_id,
+        )
+        return await self._client._aget("/v1/org-connections", params=params)
+
+    async def aget_org_connection(self) -> dict[str, Any]:
+        """Get an organization connection (async)"""
+        return await self._client._aget("/v1/org-connections/{orgConnectionId}")
+
+    async def aupdate_org_connection(
+        self, *, allowed_emails: Any | None = None, admin_email: Any | None = None
+    ) -> dict[str, Any]:
+        """Update an organization connection (async)"""
+        payload = self._build_payload(
+            allowed_emails=allowed_emails,
+            admin_email=admin_email,
+        )
+        return await self._client._apatch(
+            "/v1/org-connections/{orgConnectionId}", data=payload
+        )
+
+    async def adelete_org_connection(self) -> dict[str, Any]:
+        """Delete an organization connection (async)"""
+        return await self._client._adelete("/v1/org-connections/{orgConnectionId}")
+
+    async def averify_org_connection(
+        self, org_connection_id: str, *, email: str | None = None
+    ) -> dict[str, Any]:
+        """Verify an organization connection (async)"""
+        payload = self._build_payload(
+            email=email,
+        )
+        return await self._client._apost(
+            f"/v1/org-connections/{org_connection_id}/verify", data=payload
+        )
+
+    async def alist_org_connection_users(
+        self, org_connection_id: str, *, cursor: str | None = None
+    ) -> dict[str, Any]:
+        """List an organization's users (async)"""
+        params = self._build_params(
+            cursor=cursor,
+        )
+        return await self._client._aget(
+            f"/v1/org-connections/{org_connection_id}/users", params=params
+        )
+
+    async def aadd_org_connection_mailbox(
+        self, org_connection_id: str, email: str, *, name: str | None = None
+    ) -> dict[str, Any]:
+        """Add a mailbox from an organization connection (async)"""
+        payload = self._build_payload(
+            email=email,
+            name=name,
+        )
+        return await self._client._apost(
+            f"/v1/org-connections/{org_connection_id}/mailboxes", data=payload
         )
