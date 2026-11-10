@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.545.2"
+  version: "1.546.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -203,6 +203,7 @@ x-documentation:
     - `reaction.received` - A participant added or removed an emoji reaction on a message (WhatsApp, Telegram, Slack, Instagram, Facebook Messenger, TikTok)
     - `referral.received` - Someone opened an existing Instagram/Messenger thread through an ig.me/m.me `ref` link or a returning Messenger ad click; carries Meta's referral object (a referral that rides an inbound message arrives on `message.received` under `metadata.referral` instead)
     - `comment.received` - New comment received on a post (Instagram, Facebook, Threads, YouTube, LinkedIn, Bluesky, Reddit, TikTok). X/Twitter does NOT fire this event
+    - `mention.received` - Your account was mentioned in a post, caption or comment (Instagram, Facebook, LinkedIn)
     - `review.new` - New review posted on a connected account (Google Business Profile)
     - `review.updated` - A Google Business Profile reviewer edited their review text or rating, or a reply was added, edited or removed. A reply posted through `POST /v1/inbox/reviews/{reviewId}/reply` fires immediately, and the periodic check reports it again with the full review payload, so expect a second delivery. A reply removed through the API, or written or removed in Google's own interface, is reported by the periodic check: for replies written in Google, usually within 6 hours for reviews updated in the last 30 days and usually within about 7 days for older ones. Only teams with a webhook subscribed to `review.updated` are checked. A removed reply fires with `hasReply: false`.
     - `review.deleted` - Google Business Profile stopped returning this review, for example after Google's spam filter removed it. Detected by polling: fires usually 6 to 12 hours after the review disappears, only for locations covered by a webhook subscribed to `review.deleted` or `review.restored`. If the review comes back, `review.restored` fires. May arrive for a review id you never received `review.new` for. A review hidden and restored by Google may produce `review.deleted` followed by `review.restored`, and a `review.updated` can arrive for a review previously reported by `review.deleted` (it is restored on the next check).
@@ -236,6 +237,8 @@ x-documentation:
     - `call.ended` - A call ended; carries duration, end reason, cost breakdown, and the recording when enabled
     - `call.failed` - A call failed with a hard error before or during bridging
     - `call.permission_request` - A WhatsApp user accepted or rejected your call-permission request
+    - `call.transcript_segment` - One final segment of a live call transcript (teams with zero content retention only)
+    - `call.recording_ready` - A call recording is ready; its link expires after about 3 days (teams with zero content retention only)
     - `whatsapp.automatic_event` - Meta's automatic event identification detected a lead or purchase in a Click-to-WhatsApp conversation. Branch on `eventName` (`LeadSubmitted` | `Purchase`); carries the `ctwa_clid` Conversions API match key
     - `phone_number.stock_available` - An out-of-stock country you watch (POST /v1/phone-numbers/stock-watches) has deliverable numbers again. Fires once per watch, then the watch is consumed. Carries the deliverable count per number type at sweep time (first come, first served).
     - `whatsapp.number.kyc_submitted` - An end customer completed a hosted KYC share link; the number entered regulatory review under your account
@@ -299,7 +302,7 @@ x-documentation:
     | --- | --- |
     | `account.*`, `analytics.synced` | `account.accountId` |
     | `post.tracking_completed`, `post.authenticity_changed` | `post.accountId` |
-    | `message.*`, `reaction.received`, `referral.received`, `conversation.*`, `comment.received`, `review.*`, `lead.received`, `call.*` | `account.accountId` (`account.id` carries the same value, kept for compatibility; `call.received`, `call.ended` and `call.failed` also carry `call.accountId`) |
+    | `message.*`, `reaction.received`, `referral.received`, `conversation.*`, `comment.received`, `mention.received`, `review.*`, `lead.received`, `call.*` | `account.accountId` (`account.id` carries the same value, kept for compatibility; `call.received`, `call.ended` and `call.failed` also carry `call.accountId`) |
     | `post.platform.*`, `post.tiktok.url_resolved` | `account.accountId` (the target this event is about; `post.platforms[].accountId` lists every target) |
     | `post.scheduled`, `post.published`, `post.failed`, `post.partial`, `post.cancelled`, `post.recycled` | `post.platforms[].accountId`, one per target; there is no top-level account |
     | `post.external.*` | `account.accountId` (also `post.accountId`) |
@@ -392,6 +395,9 @@ tags:
   - name: Users
     description: |
       Read the authenticated user and team members.
+  - name: Content Retention
+    description: |
+      Read or change whether your team stores message, comment, lead, post and call content. With zero content retention, Zernio keeps identifiers and metadata only and webhooks are the only copy of the content.
   - name: Usage
     description: |
       Usage and metering.
@@ -704,8 +710,8 @@ tags:
       - Posts: `post.scheduled`, `post.published`, `post.failed`, `post.partial`, `post.cancelled`, `post.recycled`, `post.platform.published`, `post.platform.failed`, `post.platform.deleted`, `post.tiktok.url_resolved`, `post.external.created`, `post.external.updated`, `post.external.deleted`, `post.tracking_completed`, `post.authenticity_changed`
       - Accounts and analytics: `account.connected`, `account.disconnected`, `account.permissions_changed`, `account.ads.initial_sync_completed`, `account.ads.sync_failed`, `account.ads.sync_recovered`, `account.rate_limited`, `analytics.synced`
       - Messages: `message.received`, `message.sent`, `message.edited`, `message.deleted`, `message.delivered`, `message.read`, `message.played`, `message.failed`, `reaction.received`, `referral.received`, `conversation.started`, `conversation.control_changed`
-      - Calls: `call.received`, `call.ended`, `call.failed`, `call.permission_request`
-      - Engagement and leads: `comment.received`, `review.new`, `review.updated`, `review.deleted`, `review.restored`, `lead.received`
+      - Calls: `call.received`, `call.ended`, `call.failed`, `call.permission_request`, `call.transcript_segment`, `call.recording_ready`
+      - Engagement and leads: `comment.received`, `mention.received`, `review.new`, `review.updated`, `review.deleted`, `review.restored`, `lead.received`
       - Ads: `ad.status_changed`, `ad.created`, `ad.updated`, `campaign.created`, `campaign.updated`, `ad_set.created`, `ad_set.updated`, `ad.review.approved`, `ad.review.rejected`, `ad.delivery_issue`, `campaign.budget.depleted`, `ad_account.status_changed`, `ad.video.processed`, `ad_rule.triggered`
       - WhatsApp: `whatsapp.template.status_updated`, `whatsapp.template.category_updated`, `whatsapp.account.name_status_updated`, `whatsapp.account.quality_updated`, `whatsapp.account.status_updated`, `whatsapp.account.alert_received`, `whatsapp.contact.identity_changed`, `whatsapp.automatic_event`
       - WhatsApp numbers: `whatsapp.number.activated`, `whatsapp.number.declined`, `whatsapp.number.action_required`, `whatsapp.number.verification_required`, `whatsapp.number.suspended`, `whatsapp.number.reactivated`, `whatsapp.number.released`, `whatsapp.number.kyc_submitted`
@@ -1904,9 +1910,10 @@ components:
         campaignId: { type: [string, "null"], description: 'On LinkedIn, this is the LinkedIn Campaign id, which corresponds to platformAdSetId on GET /v1/ads (LinkedIn''s Campaign Group is Zernio''s campaign).' }
         isOrganic: { type: boolean }
         createdTime: { type: [string, "null"], description: ISO 8601. }
-        fields: { type: object, additionalProperties: { type: string }, description: 'Question key → answer. On LinkedIn, the key is the lowercased predefinedField, else the question name, else the numeric questionId; multiple-choice values are option labels (unlike Meta, which returns the option key).' }
-        fieldData: { type: array, items: { type: object }, description: "Raw Meta field_data." }
+        fields: { type: [object, "null"], additionalProperties: { type: string }, description: 'Question key → answer. On LinkedIn, the key is the lowercased predefinedField, else the question name, else the numeric questionId; multiple-choice values are option labels (unlike Meta, which returns the option key).' }
+        fieldData: { type: [array, "null"], items: { type: object }, description: "Raw Meta field_data." }
         consents: { $ref: '#/components/schemas/AdLeadConsents' }
+        contentNotRetained: { type: boolean, description: 'True when this team does not retain content, so the content fields of this row are null. Identifiers and metadata stay.' }
         status: { type: string, enum: [new, contacted, unreachable, qualified, converted, disqualified], description: 'Meta leads only. `contacted` is set when the first WhatsApp message of a lead_received workflow is delivered, `unreachable` when it fails or the phone number is not valid.' }
         statusChangedAt: { type: [string, "null"], format: date-time }
         value: { type: [number, "null"] }
@@ -5233,7 +5240,7 @@ components:
           type: array
           items:
             type: string
-            enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.permissions_changed, account.ads.initial_sync_completed, account.ads.sync_failed, account.ads.sync_recovered, analytics.synced, post.tracking_completed, post.authenticity_changed, message.received, conversation.started, conversation.control_changed, call.received, call.ended, call.failed, call.permission_request, message.sent, message.edited, message.deleted, message.delivered, message.read, message.played, message.failed, reaction.received, referral.received, comment.received, review.new, review.updated, review.deleted, review.restored, lead.received, ad.status_changed, ad.created, ad.updated, campaign.created, campaign.updated, ad_set.created, ad_set.updated, ad.review.approved, ad.review.rejected, ad.delivery_issue, campaign.budget.depleted, ad_account.status_changed, ad.video.processed, ad_rule.triggered, automation.check.completed, automation.action.applied, automation.action.failed, automation.action.unknown, automation.alert.opened, automation.alert.escalated, automation.alert.resolved, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.account.quality_updated, whatsapp.account.status_updated, whatsapp.account.alert_received, whatsapp.contact.identity_changed, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, phone_number.stock_available, verification.approved, verification.failed, api.changelog.published, sms.registration.action_required, sms.registration.status_updated, branded_calling.identity.status_updated, branded_calling.identity.action_required, branded_calling.number.status_updated, rcs.agent.status_updated, commerce.product.created, commerce.product.updated, commerce.product.deleted, commerce.order.created, commerce.order.updated, commerce.order.refunded, contact.tag_added, contact.tag_removed, contact.field_changed, sequence.enrolled, sequence.exited, workflow.run.started, workflow.run.completed, workflow.run.failed, support.run.completed, support.run.failed, campaign_submission.received, campaign_submission.flagged, campaign_submission.pending_review, campaign_submission.approved, campaign_submission.rejected, creator_campaign.budget_exhausted, creator_campaign.closed, campaign_payout.payable, campaign_payout.settled, campaign_payout.failed, campaign_participant.joined, campaign_participant.suspended, campaign_participant.removed, account.rate_limited, calendar.event.created, calendar.event.updated, calendar.event.deleted, email.opened, email.link_clicked, email.thread_replied, email.send_failed, file.created, file.updated, file.deleted, file.picked, contact.updated, contact.deleted, balance.low, balance.empty, balance.charged]
+            enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.permissions_changed, account.ads.initial_sync_completed, account.ads.sync_failed, account.ads.sync_recovered, analytics.synced, post.tracking_completed, post.authenticity_changed, message.received, conversation.started, conversation.control_changed, call.received, call.ended, call.failed, call.permission_request, call.transcript_segment, call.recording_ready, message.sent, message.edited, message.deleted, message.delivered, message.read, message.played, message.failed, reaction.received, referral.received, comment.received, mention.received, review.new, review.updated, review.deleted, review.restored, lead.received, ad.status_changed, ad.created, ad.updated, campaign.created, campaign.updated, ad_set.created, ad_set.updated, ad.review.approved, ad.review.rejected, ad.delivery_issue, campaign.budget.depleted, ad_account.status_changed, ad.video.processed, ad_rule.triggered, automation.check.completed, automation.action.applied, automation.action.failed, automation.action.unknown, automation.alert.opened, automation.alert.escalated, automation.alert.resolved, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.account.quality_updated, whatsapp.account.status_updated, whatsapp.account.alert_received, whatsapp.contact.identity_changed, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, phone_number.stock_available, verification.approved, verification.failed, api.changelog.published, sms.registration.action_required, sms.registration.status_updated, branded_calling.identity.status_updated, branded_calling.identity.action_required, branded_calling.number.status_updated, rcs.agent.status_updated, commerce.product.created, commerce.product.updated, commerce.product.deleted, commerce.order.created, commerce.order.updated, commerce.order.refunded, contact.tag_added, contact.tag_removed, contact.field_changed, sequence.enrolled, sequence.exited, workflow.run.started, workflow.run.completed, workflow.run.failed, support.run.completed, support.run.failed, campaign_submission.received, campaign_submission.flagged, campaign_submission.pending_review, campaign_submission.approved, campaign_submission.rejected, creator_campaign.budget_exhausted, creator_campaign.closed, campaign_payout.payable, campaign_payout.settled, campaign_payout.failed, campaign_participant.joined, campaign_participant.suspended, campaign_participant.removed, account.rate_limited, calendar.event.created, calendar.event.updated, calendar.event.deleted, email.opened, email.link_clicked, email.thread_replied, email.send_failed, file.created, file.updated, file.deleted, file.picked, contact.updated, contact.deleted, balance.low, balance.empty, balance.charged]
           description: Events subscribed to
         isActive:
           type: boolean
@@ -5288,6 +5295,18 @@ components:
             - A subscription with both lists must be satisfied on both.
             - Applied when the event is emitted. A redelivery replays a delivery already made to this endpoint, and a test fire ignores the list.
             - The shared WhatsApp sandbox account id (listed by `GET /v1/accounts?includeSandbox=true`) is accepted, so a subscription can receive sandbox traffic only.
+    ContentRetentionResponse:
+      type: object
+      required: [mode]
+      properties:
+        mode:
+          type: string
+          enum: [standard, none]
+          description: '`standard` stores content. `none` is zero content retention: identifiers and metadata only.'
+        profileIds:
+          type: array
+          items: { type: string }
+          description: 'Returned by GET. Profiles that use zero content retention on their own while the team is `standard`. Change one with `contentRetention` on PUT /v1/profiles/{profileId}.'
     WebhookLog:
       type: object
       description: A single webhook delivery attempt recorded by Zernio (30-day retention).
@@ -5324,13 +5343,13 @@ components:
         requestPayload:
           type: object
           additionalProperties: true
-          description: The JSON payload sent to the destination endpoint
+          description: 'The JSON payload sent to the destination endpoint. Empty when the team does not retain content.'
         responseBody:
           type: string
-          description: Response body returned by the destination endpoint
+          description: 'Response body returned by the destination endpoint. Empty when the team does not retain content.'
         errorMessage:
           type: string
-          description: Error message when delivery failed
+          description: 'Error message when delivery failed. When the team does not retain content it only holds `Detail not retained (<category>)`.'
         attemptNumber:
           type: integer
           description: Delivery attempt number (increments on retries)
@@ -5370,12 +5389,16 @@ components:
           enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled]
         post:
           type: object
-          required: [id, content, status, scheduledFor, platforms]
+          required: [id, status, scheduledFor, platforms]
           properties:
             id:
               type: string
             content:
               type: string
+              description: Absent once publishing finishes when the team does not retain content.
+            contentNotRetained:
+              type: boolean
+              description: True when this team does not retain content and the post text was already cleared.
             status:
               type: string
             scheduledFor:
@@ -6941,6 +6964,48 @@ components:
           type: string
           format: date-time
           description: 'UTC time at which Zernio generated this event (set once when the event payload is built, before delivery is queued).'
+    WebhookPayloadMention:
+      type: object
+      description: 'Webhook payload for mention received events (Instagram, Facebook, LinkedIn).'
+      required: [id, event, mention, account, timestamp]
+      properties:
+        id:
+          type: string
+          description: 'Stable webhook event ID: the dedupe key, also sent as the X-Zernio-Event-Id header and identical on every retry and redelivery. It identifies the event only, never an account or other resource.'
+        profiles: { $ref: '#/components/schemas/WebhookProfiles' }
+        test:
+          type: boolean
+          description: 'Always true when present: only a sample sent by POST /v1/webhooks/test with an event carries it. Real deliveries never do.'
+        event:
+          type: string
+          enum: [mention.received]
+        mention:
+          type: object
+          required: [id, platform, type, mediaId, postId, commentId, content, permalink, authorUrn, authorName, authorUsername, authorPicture, organizationalEntity, publishedAt]
+          properties:
+            id: { type: string, description: 'Mention ID, the same as `id` on GET /v1/inbox/mentions.' }
+            platform: { type: string, enum: [instagram, facebook, linkedin] }
+            type: { type: [string, "null"], enum: [caption, post, comment, null], description: 'Null on LinkedIn.' }
+            mediaId: { type: [string, "null"], description: 'Instagram media ID.' }
+            postId: { type: [string, "null"], description: 'Facebook post ID.' }
+            commentId: { type: [string, "null"] }
+            content: { type: [string, "null"], description: 'Text that mentioned the account.' }
+            permalink: { type: [string, "null"], description: 'URL to the source post on LinkedIn. Null on Instagram and Facebook.' }
+            authorUrn: { type: [string, "null"] }
+            authorName: { type: [string, "null"] }
+            authorUsername: { type: [string, "null"] }
+            authorPicture: { type: [string, "null"] }
+            organizationalEntity: { type: string, description: 'The mentioned organization, Page or Instagram account.' }
+            publishedAt: { type: string, format: date-time }
+        account:
+          type: object
+          required: [id, platform, username]
+          properties:
+            id: { type: string }
+            accountId: { type: string, description: 'SocialAccount id, the same as `id`.' }
+            platform: { type: string }
+            username: { type: string }
+        timestamp: { type: string, format: date-time }
     WebhookPayloadComment:
       type: object
       description: 'Webhook payload for comment received events (Instagram, Facebook, Threads, YouTube, LinkedIn, Bluesky, Reddit, TikTok). X/Twitter does NOT fire this event. TikTok events carry only the author id: the comment.update webhook has no username, picture or owner flag.'
@@ -9073,6 +9138,7 @@ components:
               message: { type: string }
         recordingUrl: { type: [string, "null"], description: "May be expired. Resolve a fresh playable URL via GET /v1/calls/{id}/recording (any channel)." }
         lastTranscriptSnippet: { type: [string, "null"], description: "Most recent transcript segment, for list previews." }
+        contentNotRetained: { type: boolean, description: 'True when this team does not retain content and the call asked for a recording, a transcript or a voicemail. Use the `call.transcript_segment` and `call.recording_ready` webhooks.' }
         transcript:
           type: array
           description: Full transcript segments (detail endpoint only; omitted from lists).
@@ -9253,6 +9319,88 @@ components:
             isPermanent: { type: boolean }
             expirationTimestamp: { type: string, format: date-time, description: "Present only when temporary" }
             responseSource: { type: string, description: "Meta's response source, typically `user_action`" }
+        account: { $ref: '#/components/schemas/InboxWebhookAccount' }
+        timestamp:
+          type: string
+          format: date-time
+          description: 'UTC time at which Zernio generated this event (set once when the event payload is built, before delivery is queued). Retries and redeliveries keep the original value, so it reflects the event, not the delivery attempt.'
+    WebhookPayloadCallTranscriptSegment:
+      type: object
+      description: |
+        Webhook payload for the `call.transcript_segment` event. Fires once
+        per final transcript segment of a call with transcription on, for
+        teams with zero content retention. Zernio does not store the
+        transcript, so this event is the only copy.
+      required: [id, event, call, segment, account, timestamp]
+      properties:
+        test:
+          type: boolean
+          description: 'Always true when present: only a sample sent by POST /v1/webhooks/test with an event carries it. Real deliveries never do.'
+        id: { type: string, description: 'Stable webhook event ID: the dedupe key, also sent as the X-Zernio-Event-Id header and identical on every retry and redelivery. It identifies the event only, never an account or other resource.' }
+        profiles: { $ref: '#/components/schemas/WebhookProfiles' }
+        event:
+          type: string
+          enum: [call.transcript_segment]
+        call:
+          type: object
+          properties:
+            id: { type: string, description: Internal Zernio Call doc id }
+            metaCallId: { type: [string, "null"], description: "Meta wacid.* call id when known" }
+            accountId: { type: string }
+            phoneNumberId: { type: string, description: "Meta phone_number_id" }
+            direction: { type: string, enum: [inbound, outbound] }
+            from: { type: string, description: "Consumer wa_id / E.164" }
+            to: { type: string, description: "Business number (E.164)" }
+            contactId: { type: string }
+            conversationId: { type: string }
+        segment:
+          type: object
+          required: [text, confidence, at]
+          properties:
+            text: { type: string, description: The final text of this segment. }
+            confidence: { type: [number, "null"], description: 'Speech recognition confidence from 0 to 1, when the provider reports it.' }
+            at: { type: string, format: date-time, description: When the segment was transcribed. }
+        account: { $ref: '#/components/schemas/InboxWebhookAccount' }
+        timestamp:
+          type: string
+          format: date-time
+          description: 'UTC time at which Zernio generated this event (set once when the event payload is built, before delivery is queued). Retries and redeliveries keep the original value, so it reflects the event, not the delivery attempt.'
+    WebhookPayloadCallRecordingReady:
+      type: object
+      description: |
+        Webhook payload for the `call.recording_ready` event. Fires when the
+        recording of a call (or voicemail) is ready, for teams with zero
+        content retention. Zernio does not keep the recording: download it
+        from `recording.url` before `recording.expiresAt`.
+      required: [id, event, call, recording, account, timestamp]
+      properties:
+        test:
+          type: boolean
+          description: 'Always true when present: only a sample sent by POST /v1/webhooks/test with an event carries it. Real deliveries never do.'
+        id: { type: string, description: 'Stable webhook event ID: the dedupe key, also sent as the X-Zernio-Event-Id header and identical on every retry and redelivery. It identifies the event only, never an account or other resource.' }
+        profiles: { $ref: '#/components/schemas/WebhookProfiles' }
+        event:
+          type: string
+          enum: [call.recording_ready]
+        call:
+          type: object
+          properties:
+            id: { type: string, description: Internal Zernio Call doc id }
+            metaCallId: { type: [string, "null"], description: "Meta wacid.* call id when known" }
+            accountId: { type: string }
+            phoneNumberId: { type: string, description: "Meta phone_number_id" }
+            direction: { type: string, enum: [inbound, outbound] }
+            from: { type: string, description: "Consumer wa_id / E.164" }
+            to: { type: string, description: "Business number (E.164)" }
+            contactId: { type: string }
+            conversationId: { type: string }
+            isVoicemail: { type: boolean }
+        recording:
+          type: object
+          required: [url, expiresAt]
+          properties:
+            url: { type: string, format: uri, description: Temporary link to the recording file. }
+            expiresAt: { type: string, format: date-time, description: 'When the link stops working, about 3 days after the call.' }
         account: { $ref: '#/components/schemas/InboxWebhookAccount' }
         timestamp:
           type: string
@@ -10910,7 +11058,7 @@ components:
             - type: string
             - $ref: '#/components/schemas/SocialAccount'
         customContent:
-          type: string
+          type: [string, "null"]
           description: Platform-specific text override. When set, this content is used instead of the top-level post content for this platform. Useful for tailoring captions per platform (e.g. keeping tweets under 280 characters).
         customMedia:
           type: array
@@ -11042,9 +11190,10 @@ components:
             - type: string
             - $ref: '#/components/schemas/User'
         title:
-          type: string
+          type: [string, "null"]
           description: "Stored on the post for reference/display only. This field is NOT used as the video title when publishing. To set a YouTube video title, use platformSpecificData.title on the youtube platform target (falls back to the first line of content when omitted)."
-        content: { type: string }
+        content: { type: [string, "null"], description: 'Null once publishing finishes when the team does not retain content.' }
+        contentNotRetained: { type: boolean, description: 'True when this team does not retain content, so `title`, `content` and every `customContent` are null after publishing. Identifiers and metadata stay.' }
         mediaItems:
           type: array
           items: { $ref: '#/components/schemas/MediaItem' }
@@ -13198,6 +13347,14 @@ components:
         externalId:
           type: [string, "null"]
           description: 'Your own identifier for this profile, set on create or update. Null when none is set.'
+        contentRetention:
+          type: string
+          enum: [standard, none]
+          description: 'This profile''s own zero content retention setting. `none` stores identifiers and metadata only for this profile. Change it with `contentRetention` on update; only the team owner can.'
+        effectiveContentRetention:
+          type: string
+          enum: [standard, none]
+          description: 'The mode that applies to this profile: `none` when the profile or the whole team uses zero content retention.'
         isDefault: { type: boolean }
         isOverLimit:
           type: boolean
@@ -13304,7 +13461,8 @@ components:
         status: { type: string, enum: [scheduled, sending, sent, failed, cancelled] }
         scheduledFor: { type: string, format: date-time }
         to: { type: array, items: { $ref: '#/components/schemas/EmailAddress' } }
-        subject: { type: string, description: 'Empty on a reply that keeps the thread subject.' }
+        subject: { type: [string, "null"], description: 'Empty on a reply that keeps the thread subject. `null` once the send finishes under zero content retention.' }
+        contentNotRetained: { type: boolean, description: 'Present and `true` when the email content was dropped under [zero content retention](/security/zero-content-retention).' }
         replyToMessageId: { type: [string, "null"], description: 'Set when scheduled through the reply route.' }
         metadata: { type: [object, "null"], additionalProperties: { type: string } }
         sentAt: { type: [string, "null"], format: date-time }
@@ -14616,7 +14774,8 @@ components:
         postId: { type: string }
         latePostId: { type: [string, "null"], description: 'Original Zernio post ID if scheduled via Zernio' }
         status: { type: string, enum: [published, failed, partial, scheduled, publishing, draft, cancelled], description: "Overall post status. \"partial\" when some platforms published and others failed.\n\nWhile any platform is still pending or processing, the post's own status is returned instead (usually scheduled or publishing), even if another platform already published.\n\nA post with no published or failed platform (for example every platform cancelled) returns its own status with syncStatus unavailable and no platformAnalytics." }
-        content: { type: string }
+        content: { type: [string, "null"] }
+        contentNotRetained: { type: boolean, description: 'True when this team does not retain content, so the content fields of this row are null. Identifiers and metadata stay.' }
         scheduledFor: { type: string, format: date-time }
         publishedAt: { type: [string, "null"], format: date-time }
         analytics:
@@ -14687,7 +14846,8 @@ components:
             properties:
               _id: { type: string }
               latePostId: { type: [string, "null"], description: 'Original Zernio post ID if scheduled via Zernio' }
-              content: { type: string }
+              content: { type: [string, "null"] }
+              contentNotRetained: { type: boolean, description: 'True when this team does not retain content, so the content fields of this row are null. Identifiers and metadata stay.' }
               scheduledFor: { type: string, format: date-time }
               publishedAt: { type: string, format: date-time }
               status: { type: string }
@@ -23287,6 +23447,108 @@ webhooks:
       responses:
         '200':
           description: Webhook received successfully
+  call.transcript_segment:
+    post:
+      operationId: onCallTranscriptSegment
+      summary: Call transcript segment event
+      description: |
+        One final segment of a live call transcript.
+
+        ### When it fires
+
+        Only for teams with zero content retention, on calls with transcription on: once per final segment, while the call is live. Zernio stores no transcript for these teams, so it cannot be fetched later. Store each segment when it arrives.
+
+        ### Payload notes
+
+        `segment.text` is the final text, `segment.confidence` the recognition confidence and `segment.at` when it was transcribed.
+      tags: [Webhook Events]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              id: 00000000-0000-4000-8000-000000000000
+              event: call.transcript_segment
+              timestamp: '2026-01-15T10:00:00Z'
+              call:
+                id: 507f1f77bcf86cd799439017
+                metaCallId: wacid.SAMPLE1234567890
+                accountId: 507f1f77bcf86cd799439011
+                phoneNumberId: '100000000000001'
+                direction: inbound
+                from: '+15555550123'
+                to: '+15555550100'
+                contactId: 507f1f77bcf86cd799439016
+                conversationId: 507f1f77bcf86cd799439014
+              segment:
+                text: I would like to change my appointment.
+                confidence: 0.97
+                at: '2026-01-15T10:00:00.000Z'
+              account:
+                id: 507f1f77bcf86cd799439011
+                accountId: 507f1f77bcf86cd799439011
+                platform: whatsapp
+                username: '+15555550100'
+                displayName: Sample Brand
+              profiles:
+                - id: 507f1f77bcf86cd799439012
+                  externalId: cus_8f3a2
+            schema:
+              $ref: '#/components/schemas/WebhookPayloadCallTranscriptSegment'
+      responses:
+        '200':
+          description: Webhook received successfully
+  call.recording_ready:
+    post:
+      operationId: onCallRecordingReady
+      summary: Call recording ready event
+      description: |
+        A call recording is ready to download.
+
+        ### When it fires
+
+        Only for teams with zero content retention, on calls with recording on, and only while a webhook listens to it. Zernio keeps no recording for these teams, and the copy behind the link expires after about 3 days. Download the file before `recording.expiresAt`.
+
+        ### Payload notes
+
+        `call.isVoicemail` tells a voicemail from a recorded call. If the recording could not be copied, no event fires and `call.ended` lists it in `callErrors`.
+      tags: [Webhook Events]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              id: 00000000-0000-4000-8000-000000000000
+              event: call.recording_ready
+              timestamp: '2026-01-15T10:00:00Z'
+              call:
+                id: 507f1f77bcf86cd799439017
+                metaCallId: wacid.SAMPLE1234567890
+                accountId: 507f1f77bcf86cd799439011
+                phoneNumberId: '100000000000001'
+                direction: inbound
+                from: '+15555550123'
+                to: '+15555550100'
+                contactId: 507f1f77bcf86cd799439016
+                conversationId: 507f1f77bcf86cd799439014
+                isVoicemail: false
+              recording:
+                url: https://media.zernio.com/transient-media/recordings/sample.mp3
+                expiresAt: '2026-01-15T10:00:00.000Z'
+              account:
+                id: 507f1f77bcf86cd799439011
+                accountId: 507f1f77bcf86cd799439011
+                platform: whatsapp
+                username: '+15555550100'
+                displayName: Sample Brand
+              profiles:
+                - id: 507f1f77bcf86cd799439012
+                  externalId: cus_8f3a2
+            schema:
+              $ref: '#/components/schemas/WebhookPayloadCallRecordingReady'
+      responses:
+        '200':
+          description: Webhook received successfully
   message.sent:
     post:
       operationId: onMessageSent
@@ -23907,6 +24169,60 @@ webhooks:
                   externalId: cus_8f3a2
             schema:
               $ref: '#/components/schemas/WebhookPayloadComment'
+      responses:
+        '200':
+          description: Webhook received successfully
+  mention.received:
+    post:
+      operationId: onMentionReceived
+      summary: Mention received event
+      description: |
+        A connected Instagram, Facebook or LinkedIn account was mentioned in a post, caption or comment.
+
+        ### When it fires
+
+        Once per mention, the first time Zernio sees it. Delivery is at most once: reconcile with `GET /v1/inbox/mentions`.
+
+        - Instagram and Facebook arrive in real time from the platform's webhook.
+        - LinkedIn arrives from its webhook or from polling, so delivery can take minutes. A newly connected account can receive mentions from the last 48 hours once.
+
+        ### Payload notes
+
+        Carries the same fields as `GET /v1/inbox/mentions`. Fields a platform does not provide are null. A LinkedIn mention found by polling for a team that does not retain content has no author, and an Instagram mention has no content if the live read fails.
+      tags: [Webhook Events]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              id: 00000000-0000-4000-8000-000000000000
+              event: mention.received
+              timestamp: '2026-01-15T10:00:00Z'
+              mention:
+                id: 507f1f77bcf86cd799439013
+                platform: facebook
+                type: post
+                mediaId: null
+                postId: '17900000000000001'
+                commentId: null
+                content: Great service from @sample_brand!
+                permalink: null
+                authorUrn: '17841400000000001'
+                authorName: Sample Customer
+                authorUsername: null
+                authorPicture: null
+                organizationalEntity: '17900000000000002'
+                publishedAt: '2026-01-15T10:00:00.000Z'
+              account:
+                id: 507f1f77bcf86cd799439011
+                accountId: 507f1f77bcf86cd799439011
+                platform: facebook
+                username: sample_brand
+              profiles:
+                - id: 507f1f77bcf86cd799439012
+                  externalId: cus_8f3a2
+            schema:
+              $ref: '#/components/schemas/WebhookPayloadMention'
       responses:
         '200':
           description: Webhook received successfully
@@ -36512,6 +36828,12 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/ErrorResponse' }
+        '422':
+          x-summary: "The post text was cleared after publishing because the team does not retain content: create a new post."
+          description: 'Invalid resource state (`invalid_resource_state`): this team does not retain content and the post text was cleared once publishing finished, so the post cannot be changed or published again. Create a new post instead.'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
     delete:
       x-resource-group: "publishing"
       operationId: deletePost
@@ -36794,6 +37116,12 @@ paths:
         '404': { $ref: '#/components/responses/NotFound' }
         '409':
           description: Post is currently publishing
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+        '422':
+          x-summary: "The post text was cleared after publishing because the team does not retain content: create a new post."
+          description: 'Invalid resource state (`invalid_resource_state`): this team does not retain content and the post text was cleared once publishing finished, so the post cannot be changed or published again. Create a new post instead.'
           content:
             application/json:
               schema: { $ref: '#/components/schemas/ErrorResponse' }
@@ -37562,6 +37890,10 @@ paths:
                 color: { type: string, example: '#ffeda0' }
                 timezone: { type: string, example: 'Europe/Istanbul', description: 'IANA timezone new posts on this profile use when they name no `timezone`. Omit to keep UTC. An unknown name returns 400.' }
                 externalId: { type: string, minLength: 1, maxLength: 255, example: 'tenant_42', description: 'Your own identifier for this profile, typically the id of the tenant or client it serves in your system (1 to 255 characters, trimmed). Unique among the profiles of the user who owns the profile: a duplicate returns 409 profile_external_id_conflict. Look a profile up by it with GET /v1/profiles?externalId=.' }
+                contentRetention:
+                  type: string
+                  enum: [standard, none]
+                  description: 'Set `none` to create the profile with zero content retention, so nothing of its accounts is stored from the first sync. Only the team owner can, with a session or a full-access key; anyone else gets 403.'
             example:
               name: "Marketing Team"
               description: "Profile for marketing campaigns"
@@ -37627,7 +37959,7 @@ paths:
       operationId: updateProfile
       tags: [Profiles]
       summary: Update profile
-      description: "Updates a profile's name, description, color, default timezone, externalId, or default status."
+      description: "Updates a profile's name, description, color, default timezone, externalId, default status, or zero content retention."
       parameters:
         - name: profileId
           in: path
@@ -37647,6 +37979,10 @@ paths:
                 timezone: { type: [string, "null"], example: 'Europe/Istanbul', description: 'IANA timezone new posts on this profile use when they name no `timezone`. Set to null to go back to UTC. An unknown name returns 400.' }
                 externalId: { type: [string, "null"], minLength: 1, maxLength: 255, example: 'tenant_42', description: 'Your own identifier for this profile (1 to 255 characters, trimmed). Set to null to clear it. A value another profile of the same owner already holds returns 409 profile_external_id_conflict.' }
                 isDefault: { type: boolean }
+                contentRetention:
+                  type: string
+                  enum: [standard, none]
+                  description: 'Turns zero content retention on (`none`) or off (`standard`) for this profile only, for new data within about a minute. Only the team owner can change it. `standard` answers 409 while the whole team has it on; `none` answers 409 during a WhatsApp verification of a number of this profile.'
             example:
               name: "Marketing Team (Updated)"
               color: "#2196F3"
@@ -37671,7 +38007,8 @@ paths:
         '400': { x-summary: "The request is invalid, for example an unknown timezone or a body with no updatable field: send at least one valid field.", description: 'Invalid request, including an unknown timezone or a body that carries none of name, description, color, timezone, externalId or isDefault (code: missing_required_field).' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
-        '409': { description: "A profile with this name (code: profile_name_conflict) or this externalId (code: profile_external_id_conflict) already exists." }
+        '403': { description: 'Only the team owner can change contentRetention, with a session or a full-access key.' }
+        '409': { description: "A profile with this name (code: profile_name_conflict) or this externalId (code: profile_external_id_conflict) already exists, or contentRetention cannot change now: the whole team uses zero content retention, or a Zernio number of this profile has a WhatsApp verification in progress." }
     delete:
       x-resource-group: "accounts"
       operationId: deleteProfile
@@ -39403,6 +39740,65 @@ paths:
         '403': { $ref: '#/components/responses/ResourceGroupForbidden' }
         '404': { $ref: '#/components/responses/NotFound' }
 
+  /v1/content-retention:
+    get:
+      x-resource-group: accounts
+      operationId: getContentRetention
+      tags: [Content Retention]
+      summary: Get content retention mode
+      description: |
+        Returns whether your team stores content. `none` is zero content retention: Zernio keeps identifiers and metadata only, and content fields come back as `null` with `contentNotRetained: true`. See the zero content retention guide for what changes.
+      responses:
+        '200':
+          description: The team's content retention mode
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ContentRetentionResponse' }
+              example: { mode: standard }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/ResourceGroupForbidden' }
+    put:
+      x-resource-group: accounts
+      operationId: updateContentRetention
+      tags: [Content Retention]
+      summary: Turn zero content retention on or off
+      description: |
+        Sets your team's content retention mode for every member. Only the team owner can change it, with a signed-in session or a full-access API key.
+
+        - `none` turns on zero content retention: from then on Zernio stores no message text, comments, lead answers, mentions, post text after publishing, call transcripts or recordings. Webhooks become the only copy, so store each event when it arrives.
+        - `standard` stores content again for new data. Content that was not stored cannot come back.
+        - The change applies to new data within about 5 minutes. Content stored before it stays until it is deleted.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [mode]
+              additionalProperties: false
+              properties:
+                mode: { type: string, enum: [standard, none] }
+            example: { mode: none }
+      responses:
+        '200':
+          description: The mode now set
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ContentRetentionResponse' }
+              example: { mode: none }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403':
+          description: 'Only the team owner can change the mode, on a signed-in session or a full-access API key (`insufficient_permissions`). Read-only, profile-scoped and restricted API keys and third-party OAuth tokens get 403 too.'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+        '409':
+          x-summary: "A Zernio number of the team has a WhatsApp verification in progress: finish or cancel it, then try again."
+          description: 'Invalid resource state (`invalid_resource_state`): a Zernio phone number of the team has a WhatsApp verification in progress. Teams with zero content retention cannot receive the verification code, so finish or cancel it first.'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
   /v1/me/connected-apps:
     get:
       x-resource-group: "admin-plane"
@@ -50943,7 +51339,7 @@ paths:
                   minItems: 1
                   items:
                     type: string
-                    enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.permissions_changed, account.ads.initial_sync_completed, account.ads.sync_failed, account.ads.sync_recovered, analytics.synced, post.tracking_completed, post.authenticity_changed, message.received, conversation.started, conversation.control_changed, call.received, call.ended, call.failed, call.permission_request, message.sent, message.edited, message.deleted, message.delivered, message.read, message.played, message.failed, reaction.received, referral.received, comment.received, review.new, review.updated, review.deleted, review.restored, lead.received, ad.status_changed, ad.created, ad.updated, campaign.created, campaign.updated, ad_set.created, ad_set.updated, ad.review.approved, ad.review.rejected, ad.delivery_issue, campaign.budget.depleted, ad_account.status_changed, ad.video.processed, ad_rule.triggered, automation.check.completed, automation.action.applied, automation.action.failed, automation.action.unknown, automation.alert.opened, automation.alert.escalated, automation.alert.resolved, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.account.quality_updated, whatsapp.account.status_updated, whatsapp.account.alert_received, whatsapp.contact.identity_changed, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, phone_number.stock_available, verification.approved, verification.failed, api.changelog.published, sms.registration.action_required, sms.registration.status_updated, branded_calling.identity.status_updated, branded_calling.identity.action_required, branded_calling.number.status_updated, rcs.agent.status_updated, commerce.product.created, commerce.product.updated, commerce.product.deleted, commerce.order.created, commerce.order.updated, commerce.order.refunded, contact.tag_added, contact.tag_removed, contact.field_changed, sequence.enrolled, sequence.exited, workflow.run.started, workflow.run.completed, workflow.run.failed, support.run.completed, support.run.failed, campaign_submission.received, campaign_submission.flagged, campaign_submission.pending_review, campaign_submission.approved, campaign_submission.rejected, creator_campaign.budget_exhausted, creator_campaign.closed, campaign_payout.payable, campaign_payout.settled, campaign_payout.failed, campaign_participant.joined, campaign_participant.suspended, campaign_participant.removed, balance.low, balance.empty, balance.charged]
+                    enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.permissions_changed, account.ads.initial_sync_completed, account.ads.sync_failed, account.ads.sync_recovered, analytics.synced, post.tracking_completed, post.authenticity_changed, message.received, conversation.started, conversation.control_changed, call.received, call.ended, call.failed, call.permission_request, call.transcript_segment, call.recording_ready, message.sent, message.edited, message.deleted, message.delivered, message.read, message.played, message.failed, reaction.received, referral.received, comment.received, mention.received, review.new, review.updated, review.deleted, review.restored, lead.received, ad.status_changed, ad.created, ad.updated, campaign.created, campaign.updated, ad_set.created, ad_set.updated, ad.review.approved, ad.review.rejected, ad.delivery_issue, campaign.budget.depleted, ad_account.status_changed, ad.video.processed, ad_rule.triggered, automation.check.completed, automation.action.applied, automation.action.failed, automation.action.unknown, automation.alert.opened, automation.alert.escalated, automation.alert.resolved, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.account.quality_updated, whatsapp.account.status_updated, whatsapp.account.alert_received, whatsapp.contact.identity_changed, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, phone_number.stock_available, verification.approved, verification.failed, api.changelog.published, sms.registration.action_required, sms.registration.status_updated, branded_calling.identity.status_updated, branded_calling.identity.action_required, branded_calling.number.status_updated, rcs.agent.status_updated, commerce.product.created, commerce.product.updated, commerce.product.deleted, commerce.order.created, commerce.order.updated, commerce.order.refunded, contact.tag_added, contact.tag_removed, contact.field_changed, sequence.enrolled, sequence.exited, workflow.run.started, workflow.run.completed, workflow.run.failed, support.run.completed, support.run.failed, campaign_submission.received, campaign_submission.flagged, campaign_submission.pending_review, campaign_submission.approved, campaign_submission.rejected, creator_campaign.budget_exhausted, creator_campaign.closed, campaign_payout.payable, campaign_payout.settled, campaign_payout.failed, campaign_participant.joined, campaign_participant.suspended, campaign_participant.removed, balance.low, balance.empty, balance.charged]
                   description: Events to subscribe to (at least one required)
                 isActive:
                   type: boolean
@@ -51110,7 +51506,7 @@ paths:
                   minItems: 1
                   items:
                     type: string
-                    enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.permissions_changed, account.ads.initial_sync_completed, account.ads.sync_failed, account.ads.sync_recovered, analytics.synced, post.tracking_completed, post.authenticity_changed, message.received, conversation.started, conversation.control_changed, call.received, call.ended, call.failed, call.permission_request, message.sent, message.edited, message.deleted, message.delivered, message.read, message.played, message.failed, reaction.received, referral.received, comment.received, review.new, review.updated, review.deleted, review.restored, lead.received, ad.status_changed, ad.created, ad.updated, campaign.created, campaign.updated, ad_set.created, ad_set.updated, ad.review.approved, ad.review.rejected, ad.delivery_issue, campaign.budget.depleted, ad_account.status_changed, ad.video.processed, ad_rule.triggered, automation.check.completed, automation.action.applied, automation.action.failed, automation.action.unknown, automation.alert.opened, automation.alert.escalated, automation.alert.resolved, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.account.quality_updated, whatsapp.account.status_updated, whatsapp.account.alert_received, whatsapp.contact.identity_changed, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, phone_number.stock_available, verification.approved, verification.failed, api.changelog.published, sms.registration.action_required, sms.registration.status_updated, branded_calling.identity.status_updated, branded_calling.identity.action_required, branded_calling.number.status_updated, rcs.agent.status_updated, commerce.product.created, commerce.product.updated, commerce.product.deleted, commerce.order.created, commerce.order.updated, commerce.order.refunded, contact.tag_added, contact.tag_removed, contact.field_changed, sequence.enrolled, sequence.exited, workflow.run.started, workflow.run.completed, workflow.run.failed, support.run.completed, support.run.failed, campaign_submission.received, campaign_submission.flagged, campaign_submission.pending_review, campaign_submission.approved, campaign_submission.rejected, creator_campaign.budget_exhausted, creator_campaign.closed, campaign_payout.payable, campaign_payout.settled, campaign_payout.failed, campaign_participant.joined, campaign_participant.suspended, campaign_participant.removed, balance.low, balance.empty, balance.charged]
+                    enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.permissions_changed, account.ads.initial_sync_completed, account.ads.sync_failed, account.ads.sync_recovered, analytics.synced, post.tracking_completed, post.authenticity_changed, message.received, conversation.started, conversation.control_changed, call.received, call.ended, call.failed, call.permission_request, call.transcript_segment, call.recording_ready, message.sent, message.edited, message.deleted, message.delivered, message.read, message.played, message.failed, reaction.received, referral.received, comment.received, mention.received, review.new, review.updated, review.deleted, review.restored, lead.received, ad.status_changed, ad.created, ad.updated, campaign.created, campaign.updated, ad_set.created, ad_set.updated, ad.review.approved, ad.review.rejected, ad.delivery_issue, campaign.budget.depleted, ad_account.status_changed, ad.video.processed, ad_rule.triggered, automation.check.completed, automation.action.applied, automation.action.failed, automation.action.unknown, automation.alert.opened, automation.alert.escalated, automation.alert.resolved, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.account.quality_updated, whatsapp.account.status_updated, whatsapp.account.alert_received, whatsapp.contact.identity_changed, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, phone_number.stock_available, verification.approved, verification.failed, api.changelog.published, sms.registration.action_required, sms.registration.status_updated, branded_calling.identity.status_updated, branded_calling.identity.action_required, branded_calling.number.status_updated, rcs.agent.status_updated, commerce.product.created, commerce.product.updated, commerce.product.deleted, commerce.order.created, commerce.order.updated, commerce.order.refunded, contact.tag_added, contact.tag_removed, contact.field_changed, sequence.enrolled, sequence.exited, workflow.run.started, workflow.run.completed, workflow.run.failed, support.run.completed, support.run.failed, campaign_submission.received, campaign_submission.flagged, campaign_submission.pending_review, campaign_submission.approved, campaign_submission.rejected, creator_campaign.budget_exhausted, creator_campaign.closed, campaign_payout.payable, campaign_payout.settled, campaign_payout.failed, campaign_participant.joined, campaign_participant.suspended, campaign_participant.removed, balance.low, balance.empty, balance.charged]
                   description: Events to subscribe to. Must contain at least one event if provided.
                 isActive:
                   type: boolean
@@ -51384,7 +51780,7 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { $ref: '#/components/responses/ResourceGroupForbidden' }
         '404': { description: 'Webhook subscription not found' }
-        '422': { x-summary: "The original payload cannot be replayed because no delivery matches within 30 days, or the stored payload is truncated or invalid.", description: 'Original payload not replayable: no delivery matches this event inside the 30-day retention window, or the stored payload is truncated or not valid JSON' }
+        '422': { x-summary: "The original payload cannot be replayed because no delivery matches within 30 days, or the stored payload is truncated or invalid.", description: 'Original payload not replayable: no delivery matches this event inside the 30-day retention window, the stored payload is truncated or not valid JSON, or the team does not retain content so no payload is stored' }
         '502':
           x-summary: "The redelivery was attempted but your endpoint errored again: fix your endpoint, since the attempt is still logged."
           description: |
@@ -51519,7 +51915,10 @@ paths:
                     - call.ended
                     - call.failed
                     - call.permission_request
+                    - call.transcript_segment
+                    - call.recording_ready
                     - comment.received
+                    - mention.received
                     - review.new
                     - review.updated
                     - review.deleted
@@ -53031,7 +53430,8 @@ paths:
                           type: [string, "null"]
                           description: 'The bare Facebook Page id behind the account, for Facebook and Instagram connected through Facebook Login. Null when the account has no Facebook Page.'
                         participantId: { type: string }
-                        participantName: { type: string }
+                        participantName: { type: [string, "null"] }
+                        contentNotRetained: { type: boolean, description: 'True when this team does not retain content, so the content fields of this row are null. Identifiers and metadata stay.' }
                         participantPicture: { type: [string, "null"] }
                         participantVerifiedType:
                           type: [string, "null"]
@@ -53043,7 +53443,7 @@ paths:
                         whatsappUsername:
                           type: string
                           description: 'WhatsApp only. The participant''s WhatsApp username (e.g. `jane.shop`, no leading @). Not a stable identifier, because users can change it: useful for display, not recommended as an identity anchor. Captured from inbound messages, so older threads fill in on their next inbound.'
-                        lastMessage: { type: string }
+                        lastMessage: { type: [string, "null"] }
                         updatedTime: { type: string, format: date-time }
                         status: { type: string, enum: [active, archived] }
                         unreadCount: { type: [integer, "null"], maximum: 1000, description: 'Number of unread incoming messages, capped at 1000. Read from a replica, so it can trail a conversation you just marked read by a few seconds.' }
@@ -53667,9 +54067,11 @@ paths:
                             id: { type: string, description: "Conversation ID, usable with the conversation messages endpoints" }
                             platform: { type: string }
                             accountId: { type: string }
+                            participantId: { type: [string, "null"] }
                             participantName: { type: [string, "null"] }
                             participantUsername: { type: [string, "null"] }
                             participantPicture: { type: [string, "null"] }
+                            contentNotRetained: { type: boolean, description: 'True when this team does not retain content, so the content fields of this row are null. Identifiers and metadata stay.' }
                             businessScopedUserId:
                               type: string
                               description: 'WhatsApp only. Meta business-scoped user ID (BSUID), the stable identity anchor; present when Meta has sent it for this participant.'
@@ -53712,6 +54114,7 @@ paths:
                             platform: { type: string }
                             error: { type: string }
                       lastUpdated: { type: string, format: date-time }
+                      contentNotRetained: { type: boolean, description: 'True when a searched account belongs to a team that does not retain content. Message text is not searchable there, only identifiers match.' }
                       accountsSkipped:
                         type: array
                         description: Connected messaging accounts that cannot be searched (live-fetched platforms)
@@ -53763,7 +54166,8 @@ paths:
                         description: 'The bare Facebook Page id behind the account, for Facebook and Instagram connected through Facebook Login. Null when the account has no Facebook Page.'
                       platform: { type: string }
                       status: { type: string, enum: [active, archived] }
-                      participantName: { type: string }
+                      participantName: { type: [string, "null"] }
+                      contentNotRetained: { type: boolean, description: 'True when this team does not retain content, so the content fields of this row are null. Identifiers and metadata stay.' }
                       participantId: { type: string }
                       participantVerifiedType:
                         type: [string, "null"]
@@ -53775,7 +54179,7 @@ paths:
                       whatsappUsername:
                         type: string
                         description: 'WhatsApp only. The participant''s WhatsApp username (e.g. `jane.shop`, no leading @). Not a stable identifier, because users can change it: useful for display, not recommended as an identity anchor. Captured from inbound messages, so older threads fill in on their next inbound.'
-                      lastMessage: { type: string }
+                      lastMessage: { type: [string, "null"] }
                       lastMessageAt: { type: string, format: date-time }
                       updatedTime: { type: string, format: date-time }
                       participants:
@@ -54021,7 +54425,8 @@ paths:
                         conversationId: { type: string }
                         accountId: { type: string }
                         platform: { type: string }
-                        message: { type: string }
+                        message: { type: [string, "null"] }
+                        contentNotRetained: { type: boolean, description: 'True when this team does not retain content, so the content fields of this row are null. Identifiers and metadata stay.' }
                         senderId: { type: string }
                         senderName: { type: [string, "null"] }
                         senderVerifiedType:
@@ -58287,8 +58692,9 @@ paths:
                         accountUsername:
                           type: string
                         content:
-                          type: string
+                          type: [string, "null"]
                           description: 'Text that mentioned you: the post text on LinkedIn, the caption or comment text on Instagram, the post or comment text on Facebook. Empty until it has been read.'
+                        contentNotRetained: { type: boolean, description: 'True when this team does not retain content, so the content fields of this row are null. Identifiers and metadata stay.' }
                         permalink:
                           type: [string, "null"]
                           description: URL to the source post on LinkedIn. Null on Instagram and Facebook.
@@ -58585,7 +58991,8 @@ paths:
                     type: object
                     properties:
                       id: { type: string }
-                      text: { type: string }
+                      text: { type: [string, "null"], description: '`null` under [zero content retention](/security/zero-content-retention).' }
+                      contentNotRetained: { type: boolean, description: 'Present and `true` when the reply text is not returned under zero content retention.' }
                       created: { type: string, format: date-time }
                   platform: { type: string }
         '400':
@@ -59728,9 +60135,10 @@ paths:
               schema:
                 type: object
                 properties:
-                  url: { type: string }
+                  url: { type: [string, "null"] }
+                  contentNotRetained: { type: boolean, description: 'True when this team does not retain content: no recording is stored, and `url` is null. Use the `call.recording_ready` webhook.' }
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '404': { description: "Call not found, or no recording is available for this call" }
+        '404': { description: "Call not found, or no recording is available for this call. A team that does not retain content gets 404 on the redirect form and `{ url: null, contentNotRetained: true }` with JSON." }
         '502': { description: Recording provider lookup failed }
 
   /v1/whatsapp/calls/estimate:
@@ -59880,10 +60288,11 @@ paths:
               schema:
                 type: object
                 properties:
-                  url: { type: string }
+                  url: { type: [string, "null"] }
+                  contentNotRetained: { type: boolean, description: 'True when this team does not retain content: no recording is stored, and `url` is null. Use the `call.recording_ready` webhook.' }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '404': { description: "Call not found, or no recording is available for this call" }
+        '404': { description: "Call not found, or no recording is available for this call. A team that does not retain content gets 404 on the redirect form and `{ url: null, contentNotRetained: true }` with JSON." }
         '502': { description: Recording provider lookup failed }
 
   /v1/voice/calls:
@@ -60076,9 +60485,10 @@ paths:
               schema:
                 type: object
                 properties:
-                  url: { type: string }
+                  url: { type: [string, "null"] }
+                  contentNotRetained: { type: boolean, description: 'True when this team does not retain content: no recording is stored, and `url` is null. Use the `call.recording_ready` webhook.' }
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '404': { description: "Call not found, or no recording is available for this call" }
+        '404': { description: "Call not found, or no recording is available for this call. A team that does not retain content gets 404 on the redirect form and `{ url: null, contentNotRetained: true }` with JSON." }
         '502': { description: Recording provider lookup failed }
 
   /v1/voice/calls/{id}/transfer:
@@ -69020,8 +69430,9 @@ paths:
                         senderName: { type: [string, "null"] }
                         conversationId: { type: [string, "null"] }
                         flowToken: { type: [string, "null"] }
-                        data: { type: object, description: Submitted field values (flow_token removed) }
+                        data: { type: [object, "null"], description: Submitted field values (flow_token removed) }
                         raw: { type: [string, "null"], description: Raw response_json string }
+                        contentNotRetained: { type: boolean, description: 'True when this team does not retain content, so the content fields of this row are null. Identifiers and metadata stay.' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { description: WhatsApp account not found }
 
@@ -69059,7 +69470,7 @@ paths:
                       type: object
                       properties:
                         id: { type: string }
-                        name: { type: string }
+                        name: { type: [string, "null"] }
                         email: { type: string }
                         company: { type: string }
                         avatarUrl: { type: string }
@@ -69127,7 +69538,7 @@ paths:
                     type: object
                     properties:
                       id: { type: string }
-                      name: { type: string }
+                      name: { type: [string, "null"] }
                       email: { type: string }
                       company: { type: string }
                       tags: { type: array, items: { type: string } }
@@ -70412,7 +70823,7 @@ paths:
                           properties:
                             kind: { type: string, enum: [timer, reply] }
                             nodeId: { type: string }
-                        variables: { type: object, additionalProperties: true }
+                        variables: { type: object, additionalProperties: true, description: 'Empty once the run finishes when the team does not retain content.' }
                         platformIdentifier: { type: string }
                         conversationId: { type: [string, "null"], description: 'Null only while a comment-triggered run has not sent its private reply yet.' }
                         stepCount: { type: integer }
@@ -71095,7 +71506,7 @@ paths:
                         contactId: { type: string }
                         channelId: { type: string }
                         platformIdentifier: { type: string }
-                        contactName: { type: string }
+                        contactName: { type: [string, "null"] }
                         currentStepIndex: { type: integer }
                         status: { type: string, enum: [active, completed, exited, paused] }
                         exitReason: { type: [string, "null"] }
@@ -71646,8 +72057,8 @@ paths:
                         items:
                           type: object
                           properties:
-                            commentText: { type: string }
-                            commenterName: { type: string }
+                            commentText: { type: [string, "null"] }
+                            commenterName: { type: [string, "null"] }
                             excludedBy: { type: string, description: Set when an exclusion keyword vetoed an otherwise matching comment }
                             at: { type: string, format: date-time }
         '400': { $ref: '#/components/responses/BadRequest' }
@@ -88984,6 +89395,7 @@ paths:
                     properties:
                       lastCheckedAt: { type: [string, "null"], format: date-time, description: 'Meta only, present when `accountId` is passed: when Zernio last re-read the Page''s forms from Meta to catch leads the webhook missed. Null when no leads matched or before the first pass.' }
                       lastUpdated: { type: string, format: date-time }
+                      contentNotRetained: { type: boolean, description: 'True when this team does not retain content. Answers and form names are not searchable with `q`.' }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { description: Ads add-on required. }

@@ -995,6 +995,12 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `contacts.update_contact()` | Update contact |
 | `contacts.delete_contact()` | Delete contact |
 
+### Content Retention
+| Method | Description |
+|--------|-------------|
+| `content_retention.get_content_retention()` | Get content retention mode |
+| `content_retention.update_content_retention()` | Turn zero content retention on or off |
+
 ### Conversions
 | Method | Description |
 |--------|-------------|

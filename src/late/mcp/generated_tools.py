@@ -28225,6 +28225,55 @@ def register_generated_tools(mcp, _get_client):
         except Exception as e:
             raise ToolError(f"Error: {e}") from e
 
+    # CONTENT_RETENTION
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get content retention mode",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def content_retention_get_content_retention() -> str:
+        """Get content retention mode
+
+        Returns whether your team stores content. `none` is zero content retention: Zernio keeps identifiers and metadata only, and content fields come back as `null` with `contentNotRetained: true`. See the zero content retention guide for what changes."""
+        client = _get_client()
+        try:
+            response = client.content_retention.get_content_retention()
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Turn zero content retention on or off",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def content_retention_update_content_retention(
+        mode: Literal["standard", "none"],
+    ) -> str:
+        """Turn zero content retention on or off
+
+        Sets your team's content retention mode for every member. Only the team owner can change it, with a signed-in session or a full-access API key.
+
+        - `none` turns on zero content retention: from then on Zernio stores no message text, comments, lead answers, mentions, post text after publishing, call transcripts or recordings. Webhooks become the only copy, so store each event when it arrives.
+        - `standard` stores content again for new data. Content that was not stored cannot come back.
+        - The change applies to new data within about 5 minutes. Content stored before it stays until it is deleted.
+
+        Args:
+            mode: (required)"""
+        client = _get_client()
+        try:
+            response = client.content_retention.update_content_retention(mode=mode)
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
     # CONVERSIONS
 
     @mcp.tool(
@@ -41186,6 +41235,7 @@ def register_generated_tools(mcp, _get_client):
         color: str | None = None,
         timezone: str | None = None,
         external_id: str | None = None,
+        content_retention: Literal["standard", "none"] | None = None,
     ) -> str:
         """Create profile
 
@@ -41205,7 +41255,8 @@ def register_generated_tools(mcp, _get_client):
             description
             color
             timezone: IANA timezone new posts on this profile use when they name no `timezone`. Omit to keep UTC. An unknown name returns 400.
-            external_id: Your own identifier for this profile, typically the id of the tenant or client it serves in your system (1 to 255 characters, trimmed). Unique among the profiles of the user who owns the profile: a duplicate returns 409 profile_external_id_conflict. Look a profile up by it with GET /v1/profiles?externalId=."""
+            external_id: Your own identifier for this profile, typically the id of the tenant or client it serves in your system (1 to 255 characters, trimmed). Unique among the profiles of the user who owns the profile: a duplicate returns 409 profile_external_id_conflict. Look a profile up by it with GET /v1/profiles?externalId=.
+            content_retention: Set `none` to create the profile with zero content retention, so nothing of its accounts is stored from the first sync. Only the team owner can, with a session or a full-access key; anyone else gets 403."""
         client = _get_client()
         try:
             response = client.profiles.create_profile(
@@ -41214,6 +41265,7 @@ def register_generated_tools(mcp, _get_client):
                 color=color,
                 timezone=timezone,
                 external_id=external_id,
+                content_retention=content_retention,
             )
             return _format_response(response)
         except Exception as e:
@@ -41257,10 +41309,11 @@ def register_generated_tools(mcp, _get_client):
         timezone: str | None = None,
         external_id: str | None = None,
         is_default: bool | None = None,
+        content_retention: Literal["standard", "none"] | None = None,
     ) -> str:
         """Update profile
 
-        Updates a profile's name, description, color, default timezone, externalId, or default status.
+        Updates a profile's name, description, color, default timezone, externalId, default status, or zero content retention.
 
         Args:
             profile_id: (required)
@@ -41269,7 +41322,8 @@ def register_generated_tools(mcp, _get_client):
             color
             timezone: IANA timezone new posts on this profile use when they name no `timezone`. Set to null to go back to UTC. An unknown name returns 400.
             external_id: Your own identifier for this profile (1 to 255 characters, trimmed). Set to null to clear it. A value another profile of the same owner already holds returns 409 profile_external_id_conflict.
-            is_default"""
+            is_default
+            content_retention: Turns zero content retention on (`none`) or off (`standard`) for this profile only, for new data within about a minute. Only the team owner can change it. `standard` answers 409 while the whole team has it on; `none` answers 409 during a WhatsApp verification of a number of this profile."""
         client = _get_client()
         try:
             response = client.profiles.update_profile(
@@ -41280,6 +41334,7 @@ def register_generated_tools(mcp, _get_client):
                 timezone=timezone,
                 external_id=external_id,
                 is_default=is_default,
+                content_retention=content_retention,
             )
             return _format_response(response)
         except Exception as e:
@@ -46666,6 +46721,8 @@ def register_generated_tools(mcp, _get_client):
                 "call.ended",
                 "call.failed",
                 "call.permission_request",
+                "call.transcript_segment",
+                "call.recording_ready",
                 "message.sent",
                 "message.edited",
                 "message.deleted",
@@ -46676,6 +46733,7 @@ def register_generated_tools(mcp, _get_client):
                 "reaction.received",
                 "referral.received",
                 "comment.received",
+                "mention.received",
                 "review.new",
                 "review.updated",
                 "review.deleted",
@@ -46889,6 +46947,8 @@ def register_generated_tools(mcp, _get_client):
                 "call.ended",
                 "call.failed",
                 "call.permission_request",
+                "call.transcript_segment",
+                "call.recording_ready",
                 "message.sent",
                 "message.edited",
                 "message.deleted",
@@ -46899,6 +46959,7 @@ def register_generated_tools(mcp, _get_client):
                 "reaction.received",
                 "referral.received",
                 "comment.received",
+                "mention.received",
                 "review.new",
                 "review.updated",
                 "review.deleted",
@@ -47291,7 +47352,10 @@ def register_generated_tools(mcp, _get_client):
             "call.ended",
             "call.failed",
             "call.permission_request",
+            "call.transcript_segment",
+            "call.recording_ready",
             "comment.received",
+            "mention.received",
             "review.new",
             "review.updated",
             "review.deleted",

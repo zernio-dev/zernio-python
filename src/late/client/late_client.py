@@ -38,6 +38,7 @@ from ..resources import (
     ConnectedAppsResource,
     ConnectResource,
     ContactsResource,
+    ContentRetentionResource,
     ConversionsResource,
     CreatorCampaignsResource,
     CreatorPortalResource,
@@ -199,6 +200,7 @@ class Zernio(BaseClient):
         self.connect = ConnectResource(self)
         self.connected_apps = ConnectedAppsResource(self)
         self.contacts = ContactsResource(self)
+        self.content_retention = ContentRetentionResource(self)
         self.conversions = ConversionsResource(self)
         self.creator_campaigns = CreatorCampaignsResource(self)
         self.creator_portal = CreatorPortalResource(self)

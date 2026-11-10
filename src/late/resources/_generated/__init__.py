@@ -30,6 +30,7 @@ from .commerce import CommerceResource
 from .connect import ConnectResource
 from .connected_apps import ConnectedAppsResource
 from .contacts import ContactsResource
+from .content_retention import ContentRetentionResource
 from .conversions import ConversionsResource
 from .creator_campaigns import CreatorCampaignsResource
 from .creator_portal import CreatorPortalResource
@@ -111,6 +112,7 @@ __all__ = [
     "ConnectResource",
     "ConnectedAppsResource",
     "ContactsResource",
+    "ContentRetentionResource",
     "ConversionsResource",
     "CreatorCampaignsResource",
     "CreatorPortalResource",
