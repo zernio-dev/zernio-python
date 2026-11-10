@@ -49,6 +49,9 @@ from .resources import register_resources
 from .tool_definitions import TOOL_DEFINITIONS
 
 if TYPE_CHECKING:
+    from collections.abc import Sequence
+
+    from fastmcp.server.context import Context
     from fastmcp.tools import Tool
 
 # Context variable to store the Zernio API key for the current connection
@@ -157,6 +160,24 @@ class _AnnotatedBM25SearchTransform(BM25SearchTransform):
                 )
             }
         )
+
+    # The catalog is fixed for the life of the process (tools are registered at
+    # import and no tool carries per-user visibility or auth), so the visible
+    # catalog is read once and the BM25 index is reused by identity. FastMCP
+    # otherwise rebuilds the catalog and SHA-256s every tool's text on each
+    # search: ~14 ms of the ~18 ms CPU a search_tools call costs on one core.
+    # Revisit if tools ever become per-user or get registered at runtime.
+    _visible_tools: Sequence[Tool] | None = None
+
+    async def _get_visible_tools(self, ctx: Context) -> Sequence[Tool]:
+        if self._visible_tools is None:
+            self._visible_tools = await super()._get_visible_tools(ctx)
+        return self._visible_tools
+
+    async def _search(self, tools: Sequence[Tool], query: str) -> Sequence[Tool]:
+        if tools is not self._indexed_tools:
+            return await super()._search(tools, query)
+        return [tools[i] for i in self._index.query(query, self._max_results)]
 
 
 # Initialize MCP server
