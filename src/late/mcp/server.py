@@ -163,13 +163,17 @@ class _AnnotatedBM25SearchTransform(BM25SearchTransform):
 mcp = FastMCP(
     "Zernio",
     instructions="""
-Zernio API server for scheduling social media posts.
+Zernio API server for social posting, messaging, email and ads.
 
 Available tools are prefixed by resource:
 - accounts_* : Manage connected social media accounts
 - profiles_* : Manage profiles (groups of accounts)
 - posts_*    : Create, list, update, delete posts
 - media_*    : Upload images and videos
+- email_*    : Read, send, schedule, forward and track mail in connected
+               Gmail, Outlook and IMAP mailboxes; drafts, labels, signatures
+- calendar_* : Google and Outlook calendar events and availability
+- files_*    : Google Drive and OneDrive files
 - docs_*     : Search Zernio API documentation
 - support_ask : PAID diagnosis of a Zernio API problem
 
