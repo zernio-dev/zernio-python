@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.547.4"
+  version: "1.548.1"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -14764,6 +14764,9 @@ components:
 
             On a cross-posted post this is the curve of the account with the most views among those reporting one, never a blend: curves from different platforms and accounts measure different audiences and different seconds. Each platformAnalytics entry keeps its own curve.
         reposts: { type: integer, example: 0, description: "Reposts of the media by other users, minus deleted reposts, on feed posts, reels and stories. Instagram accounts connected with Facebook Login only.\n\n- Instagram Login accounts: always 0 (Meta does not expose this metric for them).\n- Other platforms: 0, including Threads, where reposts are counted in shares instead." }
+        totalViews: { type: [integer, "null"], example: 12379, description: "Views across every surface Meta counts for the post (Meta total_views_count): Instagram itself, the same post shared to Facebook, and its boosts and ads, replays included. Instagram videos and Reels on accounts connected with Facebook Login only. `views` stays Instagram organic only.\n\n- Null for Instagram Login accounts, other platforms, and snapshots taken before the field existed (it fills on the post's next analytics sync).\n- On a post published to several accounts, the sum across accounts, counting views for the accounts that do not report it. Null when no account reports it.\n- Also null for images and carousels." }
+        totalLikes: { type: [integer, "null"], example: 330, description: "Likes across every surface Meta counts for the post (Meta total_like_count): Instagram itself, the same post shared to Facebook, and its boosts and ads. Instagram accounts connected with Facebook Login only. `likes` stays Instagram organic only.\n\n- Null for Instagram Login accounts, other platforms, and snapshots taken before the field existed (it fills on the post's next analytics sync).\n- On a post published to several accounts, the sum across accounts, counting likes for the accounts that do not report it. Null when no account reports it." }
+        totalComments: { type: [integer, "null"], example: 3, description: "Comments across every surface Meta counts for the post (Meta total_comments_count): Instagram itself, the same post shared to Facebook, and its boosts and ads. Instagram accounts connected with Facebook Login only. `comments` stays Instagram organic only.\n\n- Null for Instagram Login accounts, other platforms, and snapshots taken before the field existed (it fills on the post's next analytics sync).\n- On a post published to several accounts, the sum across accounts, counting comments for the accounts that do not report it. Null when no account reports it." }
         videoDurationSeconds: { type: [integer, "null"], example: 30, description: "Video length in seconds. Null when unknown: platforms that do not report a length, non-video media, or when Instagram does not expose the media URL (e.g. reels with copyrighted audio).\n\n- YouTube: filled for public videos once their analytics next refresh (from the Data API; live streams may report null). The Data API has no Shorts flag: a video over 180 seconds cannot be a Short, but a shorter one may be a regular upload.\n- Instagram Reels: also filled. Combine with igReelsAvgWatchTime (ms) to estimate retention." }
         engagementRate: { type: number, example: 6.59, description: "Percentage, rounded to 2 decimals: (likes + comments + shares + saves) / (impressions or reach or views) * 100. Clicks and follows are never counted.\n\nThe denominator is the FIRST of impressions, reach, views that is non-zero, so the basis varies by post: impressions if present, else reach, else views. For a single consistent basis (e.g. interactions / reach), compute it from the raw fields above.\n\nOn the post-level roll-up of a cross-posted post, the denominator is the SUM of the denominators resolved per platform entry. An entry reporting none of impressions, reach or views is excluded from both sides of the ratio. Each platformAnalytics entry below keeps its own single denominator.\n\nThe engagementRate on the LinkedIn account endpoints uses a different formula." }
         lastUpdated: { type: string, format: date-time }
@@ -31880,6 +31883,7 @@ paths:
         - 402 `card_declined`: the bank's reason.
         - 400: `method: bank_transfer` (bank transfers are not available yet).
         - 400 `invalid_billing_address`: the billing address gives no tax location. Add it in Billing, then retry.
+        - 400 `billing_address_required`: the total with tax is over EUR 400 (at the day's ECB rate) and the billing details hold no name and street address. An invoice over that amount must name the buyer and their address. Add them in Billing > Billing details, then retry. Nothing is charged.
         - 429 `payment_attempts_limited`: five card payments were declined in 24 hours. Nothing reaches the bank until `Retry-After` runs out.
 
         Needs an owner, admin or billing admin, signed in or through a full-access key they created.
