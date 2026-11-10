@@ -33233,7 +33233,7 @@ def register_generated_tools(mcp, _get_client):
             subject: (required)
             text: Plain-text body. One of `text` or `html` is required.
             html
-            attachments: 25 MB in total; 3 MB per attachment on Microsoft. Each item is an object with keys: filename (string, required); contentType (string, required); url (string) - Fetched at send time. Exactly one of `url` or `base64`.; base64 (string); contentId (string) - Makes the attachment inline (`cid:` reference in the html).
+            attachments: 25 MB in total on every provider. Send files over 4 MB by url: request bodies are capped at 4.5 MB. Each item is an object with keys: filename (string, required); contentType (string, required); url (string) - Fetched at send time. Exactly one of `url` or `base64`.; base64 (string); contentId (string) - Makes the attachment inline (`cid:` reference in the html).
             headers: Custom `X-` headers only. `List-Unsubscribe` is dropped on Microsoft and reported in `metadata.droppedHeaders`.
             metadata
             scheduled_for: Send later, between 1 minute and 30 days from now. The request answers 202 with the scheduled send; it leaves within a minute of this time through the same caps as an immediate send. List or cancel it under `/v1/email/messages/scheduled`.
@@ -33505,7 +33505,7 @@ def register_generated_tools(mcp, _get_client):
             subject: Optional on replies; the provider keeps the thread subject. (required)
             text: Plain-text body. One of `text` or `html` is required.
             html
-            attachments: 25 MB in total; 3 MB per attachment on Microsoft. Each item is an object with keys: filename (string, required); contentType (string, required); url (string) - Fetched at send time. Exactly one of `url` or `base64`.; base64 (string); contentId (string) - Makes the attachment inline (`cid:` reference in the html).
+            attachments: 25 MB in total on every provider. Send files over 4 MB by url: request bodies are capped at 4.5 MB. Each item is an object with keys: filename (string, required); contentType (string, required); url (string) - Fetched at send time. Exactly one of `url` or `base64`.; base64 (string); contentId (string) - Makes the attachment inline (`cid:` reference in the html).
             headers: Custom `X-` headers only. `List-Unsubscribe` is dropped on Microsoft and reported in `metadata.droppedHeaders`.
             metadata
             scheduled_for: Send later, between 1 minute and 30 days from now. The request answers 202 with the scheduled send; it leaves within a minute of this time through the same caps as an immediate send. List or cancel it under `/v1/email/messages/scheduled`.
