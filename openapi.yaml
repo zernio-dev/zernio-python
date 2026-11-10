@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.556.0"
+  version: "1.556.1"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -23618,7 +23618,7 @@ webhooks:
 
         ### When it fires
 
-        It fires from the daily sync of a Google Contacts or Outlook account, so up to a day after the change. It also fires when a WhatsApp coexistence address book adds or renames a contact.
+        It fires from the sync of a Google Contacts or Outlook account, which runs every 15 minutes, so up to 15 minutes after the change. It also fires when a WhatsApp coexistence address book adds or renames a contact.
       tags: [Webhook Events]
       requestBody:
         required: true
@@ -23654,7 +23654,7 @@ webhooks:
 
         ### Effect
 
-        Zernio removes its email channel for that account; the contact stays when other channels remain. It arrives up to a day after the change, from the daily sync.
+        Zernio removes its email channels for that account; the contact stays when other channels remain. It arrives up to 15 minutes after the change, from the sync.
       tags: [Webhook Events]
       requestBody:
         required: true
