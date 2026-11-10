@@ -1036,10 +1036,13 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 ### Creator Campaigns
 | Method | Description |
 |--------|-------------|
+| `creator_campaigns.list_campaign_drafts()` | List campaign drafts |
 | `creator_campaigns.list_campaign_ledger()` | List campaign ledger |
+| `creator_campaigns.list_campaign_orders()` | List campaign orders |
 | `creator_campaigns.list_campaign_participants()` | List campaign participants |
 | `creator_campaigns.list_campaign_payables()` | List campaign payables |
 | `creator_campaigns.list_campaign_payout_batches()` | List payout batches |
+| `creator_campaigns.list_campaign_samples()` | List campaign sample requests |
 | `creator_campaigns.list_campaign_submissions()` | List campaign submissions |
 | `creator_campaigns.list_creator_campaigns()` | List creator campaigns |
 | `creator_campaigns.create_campaign_adjustment()` | Create campaign adjustment |
@@ -1047,24 +1050,35 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `creator_campaigns.create_campaign_participant()` | Invite campaign participant |
 | `creator_campaigns.create_campaign_payout_batch()` | Pay creators with one card payment |
 | `creator_campaigns.create_creator_campaign()` | Create creator campaign |
+| `creator_campaigns.get_campaign_ad_results()` | Get campaign ad results |
+| `creator_campaigns.get_campaign_draft()` | Get campaign draft |
 | `creator_campaigns.get_campaign_participant()` | Get campaign participant |
 | `creator_campaigns.get_campaign_report()` | Get campaign report |
 | `creator_campaigns.get_campaign_submission()` | Get campaign submission |
 | `creator_campaigns.get_creator_campaign()` | Get creator campaign |
 | `creator_campaigns.update_creator_campaign()` | Update creator campaign |
 | `creator_campaigns.activate_creator_campaign()` | Activate creator campaign |
+| `creator_campaigns.approve_campaign_draft()` | Approve campaign draft |
+| `creator_campaigns.approve_campaign_participant()` | Approve pending campaign participant |
+| `creator_campaigns.approve_campaign_sample()` | Approve campaign sample request |
 | `creator_campaigns.approve_campaign_submission()` | Approve campaign submission |
 | `creator_campaigns.close_creator_campaign()` | Close creator campaign |
+| `creator_campaigns.decline_campaign_sample()` | Decline campaign sample request |
+| `creator_campaigns.deny_campaign_participant()` | Deny pending campaign participant |
+| `creator_campaigns.launch_campaign_ads()` | Launch campaign posts as ads |
 | `creator_campaigns.move_campaign_participant()` | Move participant to another campaign |
 | `creator_campaigns.pause_creator_campaign()` | Pause creator campaign |
 | `creator_campaigns.preview_campaign_payout_batch()` | Preview a payout batch |
 | `creator_campaigns.raise_creator_campaign_budget()` | Raise creator campaign budget |
 | `creator_campaigns.reinstate_campaign_participant()` | Reinstate campaign participant |
+| `creator_campaigns.reject_campaign_draft()` | Reject campaign draft |
 | `creator_campaigns.reject_campaign_submission()` | Reject campaign submission |
 | `creator_campaigns.remove_campaign_participant()` | Remove campaign participant |
 | `creator_campaigns.reopen_campaign_submission()` | Reopen campaign submission |
+| `creator_campaigns.request_campaign_draft_revision()` | Request changes on a campaign draft |
 | `creator_campaigns.resend_campaign_participant_invite()` | Resend campaign participant invite |
 | `creator_campaigns.settle_campaign_participant()` | Settle campaign participant |
+| `creator_campaigns.ship_campaign_sample()` | Mark campaign sample shipped |
 | `creator_campaigns.suspend_campaign_participant()` | Suspend campaign participant |
 
 ### Creator Portal
@@ -1075,10 +1089,14 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `creator_portal.get_creator_payouts()` | List a creator's earnings history |
 | `creator_portal.get_creator_portal()` | Read a creator invite or participant page |
 | `creator_portal.join_creator_campaign()` | Join a campaign |
+| `creator_portal.presign_creator_draft_upload()` | Get an upload URL for a draft |
 | `creator_portal.recover_creator_portal_links()` | Email a creator their campaign links |
 | `creator_portal.remove_creator_account()` | Remove a connected account |
+| `creator_portal.request_creator_sample()` | Request a product sample |
+| `creator_portal.set_creator_spark_code()` | Set a post's Spark code |
 | `creator_portal.start_creator_connect()` | Start connecting a creator account |
 | `creator_portal.start_creator_payouts()` | Start payout onboarding |
+| `creator_portal.submit_creator_draft()` | Submit a draft for review |
 | `creator_portal.submit_creator_post()` | Submit a post |
 
 ### Custom Fields

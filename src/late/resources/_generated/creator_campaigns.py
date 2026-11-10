@@ -91,6 +91,13 @@ class CreatorCampaignsResource:
         max_post_age_minutes: Any | None = None,
         settlement: str | None = "none",
         branding: Any | None = None,
+        landing_url: Any | None = None,
+        code_discount_percent: Any | None = None,
+        join_approval: str | None = "auto",
+        require_draft_approval: bool | None = False,
+        store_account_id: Any | None = None,
+        sample_product_ids: list[str] | None = None,
+        sample_content_due_days: int | None = 14,
     ) -> dict[str, Any]:
         """Create creator campaign"""
         payload = self._build_payload(
@@ -108,6 +115,13 @@ class CreatorCampaignsResource:
             max_post_age_minutes=max_post_age_minutes,
             settlement=settlement,
             branding=branding,
+            landing_url=landing_url,
+            code_discount_percent=code_discount_percent,
+            join_approval=join_approval,
+            require_draft_approval=require_draft_approval,
+            store_account_id=store_account_id,
+            sample_product_ids=sample_product_ids,
+            sample_content_due_days=sample_content_due_days,
         )
         headers: dict[str, str] = {}
         if idempotency_key is not None:
@@ -156,6 +170,13 @@ class CreatorCampaignsResource:
         economics: Any | None = None,
         caps: Any | None = None,
         branding: Any | None = None,
+        landing_url: Any | None = None,
+        code_discount_percent: Any | None = None,
+        join_approval: str | None = None,
+        require_draft_approval: bool | None = None,
+        store_account_id: Any | None = None,
+        sample_product_ids: list[str] | None = None,
+        sample_content_due_days: int | None = None,
     ) -> dict[str, Any]:
         """Update creator campaign"""
         payload = self._build_payload(
@@ -172,6 +193,13 @@ class CreatorCampaignsResource:
             economics=economics,
             caps=caps,
             branding=branding,
+            landing_url=landing_url,
+            code_discount_percent=code_discount_percent,
+            join_approval=join_approval,
+            require_draft_approval=require_draft_approval,
+            store_account_id=store_account_id,
+            sample_product_ids=sample_product_ids,
+            sample_content_due_days=sample_content_due_days,
         )
         return self._client._patch(f"/v1/creator-campaigns/{campaign_id}", data=payload)
 
@@ -247,6 +275,38 @@ class CreatorCampaignsResource:
         """Get campaign participant"""
         return self._client._get(
             f"/v1/creator-campaigns/{campaign_id}/participants/{participant_id}"
+        )
+
+    def approve_campaign_participant(
+        self,
+        campaign_id: str,
+        participant_id: str,
+        *,
+        idempotency_key: str | None = None,
+    ) -> dict[str, Any]:
+        """Approve pending campaign participant"""
+        headers: dict[str, str] = {}
+        if idempotency_key is not None:
+            headers["Idempotency-Key"] = idempotency_key
+        return self._client._post(
+            f"/v1/creator-campaigns/{campaign_id}/participants/{participant_id}/approve",
+            headers=headers,
+        )
+
+    def deny_campaign_participant(
+        self,
+        campaign_id: str,
+        participant_id: str,
+        *,
+        idempotency_key: str | None = None,
+    ) -> dict[str, Any]:
+        """Deny pending campaign participant"""
+        headers: dict[str, str] = {}
+        if idempotency_key is not None:
+            headers["Idempotency-Key"] = idempotency_key
+        return self._client._post(
+            f"/v1/creator-campaigns/{campaign_id}/participants/{participant_id}/deny",
+            headers=headers,
         )
 
     def suspend_campaign_participant(
@@ -476,6 +536,162 @@ class CreatorCampaignsResource:
             headers=headers,
         )
 
+    def list_campaign_drafts(
+        self,
+        campaign_id: str,
+        *,
+        status: str | None = None,
+        participant_id: str | None = None,
+        limit: int | None = 50,
+        skip: int | None = 0,
+    ) -> dict[str, Any]:
+        """List campaign drafts"""
+        params = self._build_params(
+            status=status,
+            participant_id=participant_id,
+            limit=limit,
+            skip=skip,
+        )
+        return self._client._get(
+            f"/v1/creator-campaigns/{campaign_id}/drafts", params=params
+        )
+
+    def get_campaign_draft(self, campaign_id: str, draft_id: str) -> dict[str, Any]:
+        """Get campaign draft"""
+        return self._client._get(
+            f"/v1/creator-campaigns/{campaign_id}/drafts/{draft_id}"
+        )
+
+    def approve_campaign_draft(
+        self, campaign_id: str, draft_id: str, *, idempotency_key: str | None = None
+    ) -> dict[str, Any]:
+        """Approve campaign draft"""
+        headers: dict[str, str] = {}
+        if idempotency_key is not None:
+            headers["Idempotency-Key"] = idempotency_key
+        return self._client._post(
+            f"/v1/creator-campaigns/{campaign_id}/drafts/{draft_id}/approve",
+            headers=headers,
+        )
+
+    def request_campaign_draft_revision(
+        self,
+        campaign_id: str,
+        draft_id: str,
+        *,
+        idempotency_key: str | None = None,
+        note: str | None = None,
+        comments: list[dict[str, Any]] | None = [],
+    ) -> dict[str, Any]:
+        """Request changes on a campaign draft"""
+        payload = self._build_payload(
+            note=note,
+            comments=comments,
+        )
+        headers: dict[str, str] = {}
+        if idempotency_key is not None:
+            headers["Idempotency-Key"] = idempotency_key
+        return self._client._post(
+            f"/v1/creator-campaigns/{campaign_id}/drafts/{draft_id}/request-revision",
+            data=payload,
+            headers=headers,
+        )
+
+    def reject_campaign_draft(
+        self,
+        campaign_id: str,
+        draft_id: str,
+        reason: str,
+        *,
+        idempotency_key: str | None = None,
+    ) -> dict[str, Any]:
+        """Reject campaign draft"""
+        payload = self._build_payload(
+            reason=reason,
+        )
+        headers: dict[str, str] = {}
+        if idempotency_key is not None:
+            headers["Idempotency-Key"] = idempotency_key
+        return self._client._post(
+            f"/v1/creator-campaigns/{campaign_id}/drafts/{draft_id}/reject",
+            data=payload,
+            headers=headers,
+        )
+
+    def list_campaign_samples(
+        self,
+        campaign_id: str,
+        *,
+        status: str | None = None,
+        participant_id: str | None = None,
+        limit: int | None = 50,
+        skip: int | None = 0,
+    ) -> dict[str, Any]:
+        """List campaign sample requests"""
+        params = self._build_params(
+            status=status,
+            participant_id=participant_id,
+            limit=limit,
+            skip=skip,
+        )
+        return self._client._get(
+            f"/v1/creator-campaigns/{campaign_id}/samples", params=params
+        )
+
+    def approve_campaign_sample(
+        self, campaign_id: str, sample_id: str, *, idempotency_key: str | None = None
+    ) -> dict[str, Any]:
+        """Approve campaign sample request"""
+        headers: dict[str, str] = {}
+        if idempotency_key is not None:
+            headers["Idempotency-Key"] = idempotency_key
+        return self._client._post(
+            f"/v1/creator-campaigns/{campaign_id}/samples/{sample_id}/approve",
+            headers=headers,
+        )
+
+    def decline_campaign_sample(
+        self,
+        campaign_id: str,
+        sample_id: str,
+        reason: str,
+        *,
+        idempotency_key: str | None = None,
+    ) -> dict[str, Any]:
+        """Decline campaign sample request"""
+        payload = self._build_payload(
+            reason=reason,
+        )
+        headers: dict[str, str] = {}
+        if idempotency_key is not None:
+            headers["Idempotency-Key"] = idempotency_key
+        return self._client._post(
+            f"/v1/creator-campaigns/{campaign_id}/samples/{sample_id}/decline",
+            data=payload,
+            headers=headers,
+        )
+
+    def ship_campaign_sample(
+        self,
+        campaign_id: str,
+        sample_id: str,
+        *,
+        idempotency_key: str | None = None,
+        tracking_url: str | None = None,
+    ) -> dict[str, Any]:
+        """Mark campaign sample shipped"""
+        payload = self._build_payload(
+            tracking_url=tracking_url,
+        )
+        headers: dict[str, str] = {}
+        if idempotency_key is not None:
+            headers["Idempotency-Key"] = idempotency_key
+        return self._client._post(
+            f"/v1/creator-campaigns/{campaign_id}/samples/{sample_id}/ship",
+            data=payload,
+            headers=headers,
+        )
+
     def list_campaign_payables(self, campaign_id: str) -> dict[str, Any]:
         """List campaign payables"""
         return self._client._get(f"/v1/creator-campaigns/{campaign_id}/payables")
@@ -524,9 +740,91 @@ class CreatorCampaignsResource:
             f"/v1/creator-campaigns/{campaign_id}/ledger", params=params
         )
 
+    def list_campaign_orders(
+        self,
+        campaign_id: str,
+        *,
+        participant_id: str | None = None,
+        status: str | None = None,
+        limit: int | None = 50,
+        skip: int | None = 0,
+    ) -> dict[str, Any]:
+        """List campaign orders"""
+        params = self._build_params(
+            participant_id=participant_id,
+            status=status,
+            limit=limit,
+            skip=skip,
+        )
+        return self._client._get(
+            f"/v1/creator-campaigns/{campaign_id}/orders", params=params
+        )
+
     def get_campaign_report(self, campaign_id: str) -> dict[str, Any]:
         """Get campaign report"""
         return self._client._get(f"/v1/creator-campaigns/{campaign_id}/report")
+
+    def launch_campaign_ads(
+        self,
+        campaign_id: str,
+        submission_ids: list[str],
+        network: str,
+        account_id: str,
+        ad_account_id: str,
+        identity: str,
+        *,
+        idempotency_key: str | None = None,
+        ad_set_id: str | None = None,
+        existing_campaign_id: str | None = None,
+        daily_budget: float | None = None,
+        body: str | None = None,
+        headline: str | None = None,
+        call_to_action: str | None = None,
+        link_url: str | None = None,
+        status: str | None = "PAUSED",
+    ) -> dict[str, Any]:
+        """Launch campaign posts as ads"""
+        payload = self._build_payload(
+            submission_ids=submission_ids,
+            network=network,
+            account_id=account_id,
+            ad_account_id=ad_account_id,
+            ad_set_id=ad_set_id,
+            existing_campaign_id=existing_campaign_id,
+            daily_budget=daily_budget,
+            identity=identity,
+            body=body,
+            headline=headline,
+            call_to_action=call_to_action,
+            link_url=link_url,
+            status=status,
+        )
+        headers: dict[str, str] = {}
+        if idempotency_key is not None:
+            headers["Idempotency-Key"] = idempotency_key
+        return self._client._post(
+            f"/v1/creator-campaigns/{campaign_id}/ads/launch",
+            data=payload,
+            headers=headers,
+        )
+
+    def get_campaign_ad_results(
+        self,
+        campaign_id: str,
+        *,
+        rank_by: str | None = "spend",
+        from_: str | None = None,
+        to: str | None = None,
+    ) -> dict[str, Any]:
+        """Get campaign ad results"""
+        params = self._build_params(
+            rank_by=rank_by,
+            from_=from_,
+            to=to,
+        )
+        return self._client._get(
+            f"/v1/creator-campaigns/{campaign_id}/ad-results", params=params
+        )
 
     async def acreate_creator_campaign(
         self,
@@ -546,6 +844,13 @@ class CreatorCampaignsResource:
         max_post_age_minutes: Any | None = None,
         settlement: str | None = "none",
         branding: Any | None = None,
+        landing_url: Any | None = None,
+        code_discount_percent: Any | None = None,
+        join_approval: str | None = "auto",
+        require_draft_approval: bool | None = False,
+        store_account_id: Any | None = None,
+        sample_product_ids: list[str] | None = None,
+        sample_content_due_days: int | None = 14,
     ) -> dict[str, Any]:
         """Create creator campaign (async)"""
         payload = self._build_payload(
@@ -563,6 +868,13 @@ class CreatorCampaignsResource:
             max_post_age_minutes=max_post_age_minutes,
             settlement=settlement,
             branding=branding,
+            landing_url=landing_url,
+            code_discount_percent=code_discount_percent,
+            join_approval=join_approval,
+            require_draft_approval=require_draft_approval,
+            store_account_id=store_account_id,
+            sample_product_ids=sample_product_ids,
+            sample_content_due_days=sample_content_due_days,
         )
         headers: dict[str, str] = {}
         if idempotency_key is not None:
@@ -611,6 +923,13 @@ class CreatorCampaignsResource:
         economics: Any | None = None,
         caps: Any | None = None,
         branding: Any | None = None,
+        landing_url: Any | None = None,
+        code_discount_percent: Any | None = None,
+        join_approval: str | None = None,
+        require_draft_approval: bool | None = None,
+        store_account_id: Any | None = None,
+        sample_product_ids: list[str] | None = None,
+        sample_content_due_days: int | None = None,
     ) -> dict[str, Any]:
         """Update creator campaign (async)"""
         payload = self._build_payload(
@@ -627,6 +946,13 @@ class CreatorCampaignsResource:
             economics=economics,
             caps=caps,
             branding=branding,
+            landing_url=landing_url,
+            code_discount_percent=code_discount_percent,
+            join_approval=join_approval,
+            require_draft_approval=require_draft_approval,
+            store_account_id=store_account_id,
+            sample_product_ids=sample_product_ids,
+            sample_content_due_days=sample_content_due_days,
         )
         return await self._client._apatch(
             f"/v1/creator-campaigns/{campaign_id}", data=payload
@@ -706,6 +1032,38 @@ class CreatorCampaignsResource:
         """Get campaign participant (async)"""
         return await self._client._aget(
             f"/v1/creator-campaigns/{campaign_id}/participants/{participant_id}"
+        )
+
+    async def aapprove_campaign_participant(
+        self,
+        campaign_id: str,
+        participant_id: str,
+        *,
+        idempotency_key: str | None = None,
+    ) -> dict[str, Any]:
+        """Approve pending campaign participant (async)"""
+        headers: dict[str, str] = {}
+        if idempotency_key is not None:
+            headers["Idempotency-Key"] = idempotency_key
+        return await self._client._apost(
+            f"/v1/creator-campaigns/{campaign_id}/participants/{participant_id}/approve",
+            headers=headers,
+        )
+
+    async def adeny_campaign_participant(
+        self,
+        campaign_id: str,
+        participant_id: str,
+        *,
+        idempotency_key: str | None = None,
+    ) -> dict[str, Any]:
+        """Deny pending campaign participant (async)"""
+        headers: dict[str, str] = {}
+        if idempotency_key is not None:
+            headers["Idempotency-Key"] = idempotency_key
+        return await self._client._apost(
+            f"/v1/creator-campaigns/{campaign_id}/participants/{participant_id}/deny",
+            headers=headers,
         )
 
     async def asuspend_campaign_participant(
@@ -937,6 +1295,164 @@ class CreatorCampaignsResource:
             headers=headers,
         )
 
+    async def alist_campaign_drafts(
+        self,
+        campaign_id: str,
+        *,
+        status: str | None = None,
+        participant_id: str | None = None,
+        limit: int | None = 50,
+        skip: int | None = 0,
+    ) -> dict[str, Any]:
+        """List campaign drafts (async)"""
+        params = self._build_params(
+            status=status,
+            participant_id=participant_id,
+            limit=limit,
+            skip=skip,
+        )
+        return await self._client._aget(
+            f"/v1/creator-campaigns/{campaign_id}/drafts", params=params
+        )
+
+    async def aget_campaign_draft(
+        self, campaign_id: str, draft_id: str
+    ) -> dict[str, Any]:
+        """Get campaign draft (async)"""
+        return await self._client._aget(
+            f"/v1/creator-campaigns/{campaign_id}/drafts/{draft_id}"
+        )
+
+    async def aapprove_campaign_draft(
+        self, campaign_id: str, draft_id: str, *, idempotency_key: str | None = None
+    ) -> dict[str, Any]:
+        """Approve campaign draft (async)"""
+        headers: dict[str, str] = {}
+        if idempotency_key is not None:
+            headers["Idempotency-Key"] = idempotency_key
+        return await self._client._apost(
+            f"/v1/creator-campaigns/{campaign_id}/drafts/{draft_id}/approve",
+            headers=headers,
+        )
+
+    async def arequest_campaign_draft_revision(
+        self,
+        campaign_id: str,
+        draft_id: str,
+        *,
+        idempotency_key: str | None = None,
+        note: str | None = None,
+        comments: list[dict[str, Any]] | None = [],
+    ) -> dict[str, Any]:
+        """Request changes on a campaign draft (async)"""
+        payload = self._build_payload(
+            note=note,
+            comments=comments,
+        )
+        headers: dict[str, str] = {}
+        if idempotency_key is not None:
+            headers["Idempotency-Key"] = idempotency_key
+        return await self._client._apost(
+            f"/v1/creator-campaigns/{campaign_id}/drafts/{draft_id}/request-revision",
+            data=payload,
+            headers=headers,
+        )
+
+    async def areject_campaign_draft(
+        self,
+        campaign_id: str,
+        draft_id: str,
+        reason: str,
+        *,
+        idempotency_key: str | None = None,
+    ) -> dict[str, Any]:
+        """Reject campaign draft (async)"""
+        payload = self._build_payload(
+            reason=reason,
+        )
+        headers: dict[str, str] = {}
+        if idempotency_key is not None:
+            headers["Idempotency-Key"] = idempotency_key
+        return await self._client._apost(
+            f"/v1/creator-campaigns/{campaign_id}/drafts/{draft_id}/reject",
+            data=payload,
+            headers=headers,
+        )
+
+    async def alist_campaign_samples(
+        self,
+        campaign_id: str,
+        *,
+        status: str | None = None,
+        participant_id: str | None = None,
+        limit: int | None = 50,
+        skip: int | None = 0,
+    ) -> dict[str, Any]:
+        """List campaign sample requests (async)"""
+        params = self._build_params(
+            status=status,
+            participant_id=participant_id,
+            limit=limit,
+            skip=skip,
+        )
+        return await self._client._aget(
+            f"/v1/creator-campaigns/{campaign_id}/samples", params=params
+        )
+
+    async def aapprove_campaign_sample(
+        self, campaign_id: str, sample_id: str, *, idempotency_key: str | None = None
+    ) -> dict[str, Any]:
+        """Approve campaign sample request (async)"""
+        headers: dict[str, str] = {}
+        if idempotency_key is not None:
+            headers["Idempotency-Key"] = idempotency_key
+        return await self._client._apost(
+            f"/v1/creator-campaigns/{campaign_id}/samples/{sample_id}/approve",
+            headers=headers,
+        )
+
+    async def adecline_campaign_sample(
+        self,
+        campaign_id: str,
+        sample_id: str,
+        reason: str,
+        *,
+        idempotency_key: str | None = None,
+    ) -> dict[str, Any]:
+        """Decline campaign sample request (async)"""
+        payload = self._build_payload(
+            reason=reason,
+        )
+        headers: dict[str, str] = {}
+        if idempotency_key is not None:
+            headers["Idempotency-Key"] = idempotency_key
+        return await self._client._apost(
+            f"/v1/creator-campaigns/{campaign_id}/samples/{sample_id}/decline",
+            data=payload,
+            headers=headers,
+        )
+
+    async def aship_campaign_sample(
+        self,
+        campaign_id: str,
+        sample_id: str,
+        *,
+        idempotency_key: str | None = None,
+        tracking_url: str | None = None,
+    ) -> dict[str, Any]:
+        """Mark campaign sample shipped (async)"""
+        payload = self._build_payload(
+            tracking_url=tracking_url,
+        )
+        headers: dict[str, str] = {}
+        if idempotency_key is not None:
+            headers["Idempotency-Key"] = idempotency_key
+        return await self._client._apost(
+            f"/v1/creator-campaigns/{campaign_id}/samples/{sample_id}/ship",
+            data=payload,
+            headers=headers,
+        )
+
     async def alist_campaign_payables(self, campaign_id: str) -> dict[str, Any]:
         """List campaign payables (async)"""
         return await self._client._aget(f"/v1/creator-campaigns/{campaign_id}/payables")
@@ -985,6 +1501,88 @@ class CreatorCampaignsResource:
             f"/v1/creator-campaigns/{campaign_id}/ledger", params=params
         )
 
+    async def alist_campaign_orders(
+        self,
+        campaign_id: str,
+        *,
+        participant_id: str | None = None,
+        status: str | None = None,
+        limit: int | None = 50,
+        skip: int | None = 0,
+    ) -> dict[str, Any]:
+        """List campaign orders (async)"""
+        params = self._build_params(
+            participant_id=participant_id,
+            status=status,
+            limit=limit,
+            skip=skip,
+        )
+        return await self._client._aget(
+            f"/v1/creator-campaigns/{campaign_id}/orders", params=params
+        )
+
     async def aget_campaign_report(self, campaign_id: str) -> dict[str, Any]:
         """Get campaign report (async)"""
         return await self._client._aget(f"/v1/creator-campaigns/{campaign_id}/report")
+
+    async def alaunch_campaign_ads(
+        self,
+        campaign_id: str,
+        submission_ids: list[str],
+        network: str,
+        account_id: str,
+        ad_account_id: str,
+        identity: str,
+        *,
+        idempotency_key: str | None = None,
+        ad_set_id: str | None = None,
+        existing_campaign_id: str | None = None,
+        daily_budget: float | None = None,
+        body: str | None = None,
+        headline: str | None = None,
+        call_to_action: str | None = None,
+        link_url: str | None = None,
+        status: str | None = "PAUSED",
+    ) -> dict[str, Any]:
+        """Launch campaign posts as ads (async)"""
+        payload = self._build_payload(
+            submission_ids=submission_ids,
+            network=network,
+            account_id=account_id,
+            ad_account_id=ad_account_id,
+            ad_set_id=ad_set_id,
+            existing_campaign_id=existing_campaign_id,
+            daily_budget=daily_budget,
+            identity=identity,
+            body=body,
+            headline=headline,
+            call_to_action=call_to_action,
+            link_url=link_url,
+            status=status,
+        )
+        headers: dict[str, str] = {}
+        if idempotency_key is not None:
+            headers["Idempotency-Key"] = idempotency_key
+        return await self._client._apost(
+            f"/v1/creator-campaigns/{campaign_id}/ads/launch",
+            data=payload,
+            headers=headers,
+        )
+
+    async def aget_campaign_ad_results(
+        self,
+        campaign_id: str,
+        *,
+        rank_by: str | None = "spend",
+        from_: str | None = None,
+        to: str | None = None,
+    ) -> dict[str, Any]:
+        """Get campaign ad results (async)"""
+        params = self._build_params(
+            rank_by=rank_by,
+            from_=from_,
+            to=to,
+        )
+        return await self._client._aget(
+            f"/v1/creator-campaigns/{campaign_id}/ad-results", params=params
+        )

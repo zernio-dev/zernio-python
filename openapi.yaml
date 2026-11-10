@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.552.0"
+  version: "1.553.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -287,8 +287,19 @@ x-documentation:
     - `campaign_payout.settled` - A payout to a participant was recorded; `payout.settlement` holds the amount and the external reference
     - `campaign_payout.failed` - A treasury payout to a participant did not reach the creator: Stripe refused it (`returned`), it could not be confirmed within 24 hours (`stale`), or it was reversed after it was sent (`reversed`). The amount is payable again, minus any amount a rejection made while the payout was in flight claws back to the campaign budget; `payout.failure` holds the transfer and the reason
     - `campaign_participant.joined` - A creator joined a campaign, by opening their invite link or joining from the open link. Fires once per participant
+    - `campaign_participant.pending` - A creator joined through the open link of a campaign with `joinApproval: manual` and waits for the operator to approve or deny them
+    - `campaign_participant.approved` - An operator approved a pending creator, who is now active. Fires instead of `campaign_participant.joined` for that creator
+    - `campaign_participant.denied` - An operator denied a pending creator
     - `campaign_participant.suspended` - An operator suspended a participant; they can no longer connect accounts or submit posts to the campaign
     - `campaign_participant.removed` - An operator removed a participant from the campaign
+    - `campaign_draft.submitted` - A creator uploaded a draft, or a new version of one, for review on a campaign with `requireDraftApproval`
+    - `campaign_draft.approved` - An operator approved a draft version; the creator may publish it and submit the post for it
+    - `campaign_draft.revision_requested` - An operator asked for changes on a draft version; `draft.reviewNote` and `draft.comments` (with `atMs` timestamps) say what to change
+    - `campaign_draft.rejected` - An operator rejected a draft version for good; `draft.reviewNote` is the reason
+    - `campaign_sample.requested` - A creator asked for a free sample of one of the campaign's products
+    - `campaign_sample.approved` - An operator approved a sample request; `sample.discountCode` is the 100%-off, single-use code for the product in the campaign's store
+    - `campaign_sample.shipped` - An operator marked an approved sample as shipped, with an optional `sample.trackingUrl`
+    - `campaign_sample.declined` - An operator declined a sample request; `sample.declineReason` is the reason
     - `balance.low` - Balance billing: the balance dropped below the low-balance alert set on auto top-up (`alertBelowCents`), once per drop, unless an auto top-up is already covering it
     - `balance.empty` - Balance billing: the balance reached $0 and no auto top-up covered it, so pay-per-use calls answer 402 until it is funded. Carries that 402 `code` and `fundingUrl`
     - `balance.charged` - Balance billing: funds were added to the balance by card, by you or by auto top-up (`topup.trigger`), with the amount, the VAT and the card charge
@@ -315,6 +326,8 @@ x-documentation:
     | `creator_campaign.*` | none; `campaign.id` is the campaign |
     | `campaign_payout.*` | none; `campaign.id`, `participant.id` and `creator.id` identify the payout |
     | `campaign_participant.*` | none; `campaign.id`, `participant.id` and `creator.id` identify the participant |
+    | `campaign_draft.*` | none; `draft.id` is the draft version and `campaign.id`, `participant.id`, `creator.id` identify the rest |
+    | `campaign_sample.*` | none; `sample.id` is the sample request, `sample.storeAccountId` the store, and `campaign.id`, `participant.id`, `creator.id` identify the rest |
     | `verification.*`, `phone_number.stock_available`, `balance.*`, `api.changelog.published`, `webhook.test`, `contact.*`, `sequence.*`, `workflow.run.*` | none (`sequence.*` and `workflow.run.*` still reach subscriptions scoped to the sending account) |
 
     ## Full Documentation
@@ -343,7 +356,7 @@ tags:
 
       Amounts are USD cents. Earnings move through four states per participant: accruing (earned, not approved), owed (approved, on hold for `holdDays`), payable and settled.
 
-      Webhooks: `campaign_submission.*`, `creator_campaign.*`, `campaign_payout.*` and `campaign_participant.*`.
+      Webhooks: `campaign_submission.*`, `creator_campaign.*`, `campaign_payout.*`, `campaign_participant.*`, `campaign_draft.*` and `campaign_sample.*`.
 
       Creator campaigns run on usage-based billing; every operation answers 403 `feature_not_available` for a workspace not on it. Every operation belongs to the `creator_campaigns` resource group.
   - name: Treasury
@@ -720,7 +733,7 @@ tags:
       - Telephony: `phone_number.stock_available`, `verification.approved`, `verification.failed`, `sms.registration.action_required`, `sms.registration.status_updated`, `branded_calling.identity.status_updated`, `branded_calling.identity.action_required`, `branded_calling.number.status_updated`, `rcs.agent.status_updated`
       - Commerce: `commerce.product.created`, `commerce.product.updated`, `commerce.product.deleted`, `commerce.order.created`, `commerce.order.updated`, `commerce.order.refunded`
       - Contacts and automations: `contact.tag_added`, `contact.tag_removed`, `contact.field_changed`, `contact.updated`, `contact.deleted`, `sequence.enrolled`, `sequence.exited`, `workflow.run.started`, `workflow.run.completed`, `workflow.run.failed`, `support.run.completed`, `support.run.failed`, `automation.check.completed`, `automation.action.applied`, `automation.action.failed`, `automation.action.unknown`, `automation.alert.opened`, `automation.alert.escalated`, `automation.alert.resolved`
-      - Creator campaigns: `campaign_submission.received`, `campaign_submission.flagged`, `campaign_submission.pending_review`, `campaign_submission.approved`, `campaign_submission.rejected`, `creator_campaign.budget_exhausted`, `creator_campaign.closed`, `campaign_payout.payable`, `campaign_payout.settled`, `campaign_payout.failed`, `campaign_participant.joined`, `campaign_participant.suspended`, `campaign_participant.removed`
+      - Creator campaigns: `campaign_submission.received`, `campaign_submission.flagged`, `campaign_submission.pending_review`, `campaign_submission.approved`, `campaign_submission.rejected`, `creator_campaign.budget_exhausted`, `creator_campaign.closed`, `campaign_payout.payable`, `campaign_payout.settled`, `campaign_payout.failed`, `campaign_participant.joined`, `campaign_participant.pending`, `campaign_participant.approved`, `campaign_participant.denied`, `campaign_participant.suspended`, `campaign_participant.removed`, `campaign_draft.submitted`, `campaign_draft.approved`, `campaign_draft.revision_requested`, `campaign_draft.rejected`, `campaign_sample.requested`, `campaign_sample.approved`, `campaign_sample.shipped`, `campaign_sample.declined`
       - Calendar and files: `calendar.event.created`, `calendar.event.updated`, `calendar.event.deleted`, `file.created`, `file.updated`, `file.deleted`, `file.picked`
       - Email: `email.sent`, `email.opened`, `email.link_clicked`, `email.thread_replied`, `email.send_failed`, `email.bounced`
       - Billing: `balance.low`, `balance.empty`, `balance.charged`
@@ -740,7 +753,7 @@ tags:
       - accounts: `account.*`, `whatsapp.template.*`, `whatsapp.account.*`
       - analytics: `analytics.*`
       - telephony: `whatsapp.number.*`, `verification.*`, `sms.registration.*`
-      - creator_campaigns: `campaign_submission.*`, `creator_campaign.*`, `campaign_payout.*`, `campaign_participant.*`
+      - creator_campaigns: `campaign_submission.*`, `creator_campaign.*`, `campaign_payout.*`, `campaign_participant.*`, `campaign_draft.*`, `campaign_sample.*`
       - money: `balance.*`
       - webhooks: `api.changelog.published`, `webhook.test`
 
@@ -1191,11 +1204,14 @@ components:
     CreatorCampaignForbidden:
       x-summary: "The workspace lacks usage-based billing, the campaign is full, or the key lacks access: switch billing or use a permitted key."
       description: |
-        Refused. Code `feature_not_available`: creator campaigns run on usage-based
-        billing and the workspace that owns the campaign is not on it yet ("Creator campaigns
-        require usage-based billing..."; contact support to switch), or the campaign reached
-        `caps.maxParticipants` (invites and joins only).
-        Code `insufficient_permissions`: a restricted API key without the `creator_campaigns`
+        Refused.
+
+        - Code `feature_not_available`: creator campaigns run on usage-based billing and the workspace
+          that owns the campaign is not on it yet ("Creator campaigns require usage-based billing...";
+          contact support to switch).
+        - Code `feature_not_available`: the campaign reached `caps.maxParticipants` (invites, joins and
+          approving a pending creator).
+        - Code `insufficient_permissions`: a restricted API key without the `creator_campaigns`
         resource group.
       content:
         application/json:
@@ -1205,8 +1221,8 @@ components:
             type: permission_error
             code: feature_not_available
     CreatorCampaignNotFound:
-      x-summary: "The campaign, participant or submission does not exist or is not reachable with this key: check the ID and the key's scope."
-      description: 'The campaign, participant or submission does not exist, belongs to another team, or sits in a profile this key cannot reach (code `resource_not_found`).'
+      x-summary: "The campaign, participant, submission, draft or sample request does not exist or is not reachable with this key: check the ID and the key's scope."
+      description: 'The campaign, participant, submission, draft or sample request does not exist, belongs to another team, or sits in a profile this key cannot reach (code `resource_not_found`).'
       content:
         application/json:
           schema: { $ref: '#/components/schemas/ErrorResponse' }
@@ -1216,7 +1232,7 @@ components:
             code: resource_not_found
     CreatorCampaignConflict:
       x-summary: "The resource state does not allow this action, or the idempotency key is still processing: check the current state and retry later."
-      description: 'The campaign, participant or submission is not in a state that allows this action (code `invalid_resource_state`); the message names the current state. Also returned while the same `Idempotency-Key` is still processing.'
+      description: 'The campaign, participant, submission, draft or sample request is not in a state that allows this action (code `invalid_resource_state`); the message names the current state. Also returned while the same `Idempotency-Key` is still processing.'
       content:
         application/json:
           schema: { $ref: '#/components/schemas/ErrorResponse' }
@@ -1667,7 +1683,7 @@ components:
     CreatorPortalCampaign:
       type: object
       description: 'The campaign as a creator sees it: terms, never the budget.'
-      required: [id, name, brandName, logoUrl, theme, status, platforms, contentRules, startsAt, endsAt, startedAt, currency, economics, maxPostAgeMinutes, holdDays, trackingDays, maxAccountsPerParticipant]
+      required: [id, name, brandName, logoUrl, theme, status, platforms, contentRules, startsAt, endsAt, startedAt, currency, economics, maxPostAgeMinutes, holdDays, trackingDays, maxAccountsPerParticipant, joinApproval, requireDraftApproval, sampleProducts, sampleContentDueDays]
       properties:
         id: { type: string, description: 'The campaign id, as in a link-recovery URL.' }
         name: { type: string }
@@ -1686,6 +1702,13 @@ components:
         holdDays: { type: integer, description: 'Days approved earnings stay owed before they become payable.' }
         trackingDays: { type: integer, description: 'Days each submitted post is tracked for views.' }
         maxAccountsPerParticipant: { type: [integer, "null"], description: 'How many connected accounts can submit posts. Null means no limit.' }
+        joinApproval: { type: string, enum: [auto, manual], description: 'manual: a creator who joins through the open link waits `pending` until the campaign team accepts them.' }
+        requireDraftApproval: { type: boolean, description: 'The creator uploads a draft for review first, and submits the live post for an approved draft.' }
+        sampleProducts:
+          type: array
+          description: 'Products the creator can ask a free sample of; empty when the campaign offers none.'
+          items: { $ref: '#/components/schemas/CreatorCampaignSampleProduct' }
+        sampleContentDueDays: { type: integer, description: 'Days after a sample is approved by which a post is expected.' }
     CreatorPortalEconomics:
       description: 'How the campaign pays, without its budget. Amounts in cents. A pool campaign shows the pool size as `poolCents`.'
       oneOf:
@@ -1715,13 +1738,34 @@ components:
             poolCents: { type: integer }
             minViewsToQualify: { type: integer }
             organicViewsOnly: { type: boolean, description: 'Only organic views count; views from ads do not.' }
+        - type: object
+          title: Retainer
+          required: [type, mode, amountCents, period, requiredApprovedPosts, commission]
+          properties:
+            type: { type: string, enum: [retainer] }
+            mode: { type: string, enum: [standard, smart] }
+            amountCents: { type: integer }
+            period: { type: string, enum: [week, month, once] }
+            requiredApprovedPosts: { type: integer }
+            commission:
+              oneOf:
+                - { $ref: '#/components/schemas/CreatorCampaignCommissionTerms' }
+                - { type: "null" }
+        - allOf:
+            - type: object
+              title: Commission
+              required: [type]
+              properties:
+                type: { type: string, enum: [commission] }
+            - $ref: '#/components/schemas/CreatorCampaignCommissionTerms'
     CreatorPortalSubmission:
       type: object
-      required: [id, platform, postId, url, status, submittedAt, publishedAt, views, engagements, viewsFromAds, earnedCents, rejectReason, flags, trackingEndsAt]
+      required: [id, platform, postId, url, status, submittedAt, publishedAt, views, engagements, viewsFromAds, earnedCents, rejectReason, flags, trackingEndsAt, hasSparkCode, draftId]
       properties:
         id: { type: string }
         platform: { type: string }
         postId: { type: string }
+        hasSparkCode: { type: boolean, description: 'A TikTok post whose Spark code the creator pasted, so the brand can run it as a Spark Ad. The code itself is never returned.' }
         url: { type: [string, "null"] }
         status: { type: string, enum: [received, tracking, pending_review, approved, rejected, expired, withdrawn] }
         submittedAt: { type: string, format: date-time }
@@ -1736,6 +1780,7 @@ components:
           description: 'Creator-safe flags only. Every other review flag shows as `under_review`.'
           items: { type: string, enum: [unreachable, post_deleted, duplicate_post, under_review] }
         trackingEndsAt: { type: [string, "null"], format: date-time }
+        draftId: { type: [string, "null"], description: 'The approved draft this post publishes.' }
     CreatorPortalPayoutSetup:
       type: object
       required: [mode, status, country, suggestedCountry, transfers]
@@ -1773,7 +1818,7 @@ components:
         campaign: { $ref: '#/components/schemas/CreatorPortalCampaign' }
     CreatorPortalParticipant:
       type: object
-      required: [kind, campaign, participant, accounts, submissions, earnings, payouts]
+      required: [kind, campaign, participant, accounts, submissions, drafts, samples, earnings, payouts]
       properties:
         kind: { type: string, enum: [participant] }
         campaign: { $ref: '#/components/schemas/CreatorPortalCampaign' }
@@ -1782,7 +1827,7 @@ components:
           required: [displayName, status, joinedAt]
           properties:
             displayName: { type: string }
-            status: { type: string, enum: [invited, active, suspended, removed] }
+            status: { type: string, enum: [invited, pending, active, suspended, removed, denied] }
             joinedAt: { type: [string, "null"], format: date-time }
         accounts:
           type: array
@@ -1801,6 +1846,14 @@ components:
           type: array
           description: 'The latest 100 submissions.'
           items: { $ref: '#/components/schemas/CreatorPortalSubmission' }
+        drafts:
+          type: array
+          description: 'The latest 100 draft versions, newest first. Empty on a campaign that does not review drafts.'
+          items: { $ref: '#/components/schemas/CreatorPortalDraft' }
+        samples:
+          type: array
+          description: 'Every sample request of the creator, newest first.'
+          items: { $ref: '#/components/schemas/CreatorPortalSample' }
         earnings:
           type: object
           required: [accruingCents, owedCents, payableCents, payingCents, paidCents, nextReleaseAt]
@@ -1812,6 +1865,94 @@ components:
             paidCents: { type: integer }
             nextReleaseAt: { type: [string, "null"], format: date-time, description: 'When the next held amount becomes payable.' }
         payouts: { $ref: '#/components/schemas/CreatorPortalPayoutSetup' }
+        referral:
+          description: 'On a campaign that pays commission on a linked store: the creator''s discount code, tracking link and the orders credited to them. Null otherwise, and for a creator who is not active.'
+          oneOf:
+            - { $ref: '#/components/schemas/CreatorPortalReferral' }
+            - { type: "null" }
+        retainer:
+          description: 'On a retainer campaign: the period running now. Null otherwise.'
+          oneOf:
+            - type: object
+              required: [periodStart, periodEnd, approvedPosts, requiredApprovedPosts, commissionCents]
+              properties:
+                periodStart: { type: string, format: date-time }
+                periodEnd: { type: [string, "null"], format: date-time, description: 'Null on a one-time retainer of a campaign without an end date.' }
+                approvedPosts: { type: integer }
+                requiredApprovedPosts: { type: integer }
+                commissionCents: { type: integer, description: 'Commission earned in the period; a smart retainer tops it up to its amount.' }
+            - { type: "null" }
+    CreatorPortalReferral:
+      type: object
+      required: [code, discountPercent, trackingUrl, orders, totals]
+      properties:
+        code: { type: [string, "null"], description: 'The creator''s discount code. Null while the store has not created it yet, or on a link-only campaign.' }
+        discountPercent: { type: [integer, "null"], description: 'What the code takes off an order.' }
+        trackingUrl: { type: [string, "null"], description: 'The landing page with the UTM parameters that credit the creator. Null on a code-only campaign.' }
+        orders:
+          type: array
+          description: 'The latest 50 credited orders.'
+          items:
+            type: object
+            required: [id, number, placedAt, matchedBy, salesCents, refundedCents, commissionCents, status, confirmsAt]
+            properties:
+              id: { type: string }
+              number: { type: string }
+              placedAt: { type: string, format: date-time }
+              matchedBy: { type: string, enum: [code, link] }
+              salesCents: { type: integer }
+              refundedCents: { type: integer }
+              commissionCents: { type: integer }
+              status: { type: string, enum: [in_refund_window, confirmed, refunded] }
+              confirmsAt: { type: string, format: date-time, description: 'Order date plus the campaign hold, when the commission is approved.' }
+        totals:
+          type: object
+          required: [orders, salesCents, commissionCents]
+          properties:
+            orders: { type: integer }
+            salesCents: { type: integer, description: 'Sales net of refunds.' }
+            commissionCents: { type: integer }
+    CreatorPortalDraft:
+      type: object
+      description: 'One version of a draft the creator uploaded for review.'
+      required: [id, chainId, version, revisionOf, status, mediaUrl, mediaType, caption, reviewNote, comments, submittedAt, reviewedAt, submissionId]
+      properties:
+        id: { type: string, description: 'Pass as `draftId` when submitting the live post of an approved draft, or as `revisionOf` to answer a revision request.' }
+        chainId: { type: string }
+        version: { type: integer, minimum: 1 }
+        revisionOf: { type: [string, "null"] }
+        status: { type: string, enum: [submitted, approved, revision_requested, rejected] }
+        mediaUrl: { type: string, format: uri }
+        mediaType: { type: string, enum: [video, image] }
+        caption: { type: string }
+        reviewNote: { type: [string, "null"] }
+        comments:
+          type: array
+          items:
+            type: object
+            required: [atMs, body]
+            properties:
+              atMs: { type: [integer, "null"], description: 'Milliseconds into the video; null for a general comment.' }
+              body: { type: string }
+        submittedAt: { type: string, format: date-time }
+        reviewedAt: { type: [string, "null"], format: date-time }
+        submissionId: { type: [string, "null"], description: 'The live post submitted for this draft.' }
+    CreatorPortalSample:
+      type: object
+      required: [id, productId, productTitle, variantTitle, status, shippingAddress, note, discountCode, trackingUrl, declineReason, requestedAt, contentDueAt]
+      properties:
+        id: { type: string }
+        productId: { type: string }
+        productTitle: { type: string }
+        variantTitle: { type: [string, "null"] }
+        status: { type: string, enum: [pending, approved, shipped, declined] }
+        shippingAddress: { $ref: '#/components/schemas/CampaignSampleShippingAddress' }
+        note: { type: [string, "null"] }
+        discountCode: { type: [string, "null"], description: 'The single-use code to redeem the product at checkout, once approved.' }
+        trackingUrl: { type: [string, "null"] }
+        declineReason: { type: [string, "null"] }
+        requestedAt: { type: string, format: date-time }
+        contentDueAt: { type: [string, "null"], format: date-time, description: 'When a post is due for the sample; null until approved.' }
     TreasuryTopup:
       type: object
       properties:
@@ -5300,7 +5441,7 @@ components:
           type: array
           items:
             type: string
-            enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.permissions_changed, account.ads.initial_sync_completed, account.ads.sync_failed, account.ads.sync_recovered, analytics.synced, post.tracking_completed, post.authenticity_changed, message.received, conversation.started, conversation.control_changed, call.received, call.ended, call.failed, call.permission_request, call.transcript_segment, call.recording_ready, message.sent, message.edited, message.deleted, message.delivered, message.read, message.played, message.failed, reaction.received, referral.received, comment.received, mention.received, review.new, review.updated, review.deleted, review.restored, lead.received, ad.status_changed, ad.created, ad.updated, campaign.created, campaign.updated, ad_set.created, ad_set.updated, ad.review.approved, ad.review.rejected, ad.delivery_issue, campaign.budget.depleted, ad_account.status_changed, ad.video.processed, ad_rule.triggered, automation.check.completed, automation.action.applied, automation.action.failed, automation.action.unknown, automation.alert.opened, automation.alert.escalated, automation.alert.resolved, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.account.quality_updated, whatsapp.account.status_updated, whatsapp.account.alert_received, whatsapp.contact.identity_changed, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, phone_number.stock_available, verification.approved, verification.failed, api.changelog.published, sms.registration.action_required, sms.registration.status_updated, branded_calling.identity.status_updated, branded_calling.identity.action_required, branded_calling.number.status_updated, rcs.agent.status_updated, commerce.product.created, commerce.product.updated, commerce.product.deleted, commerce.order.created, commerce.order.updated, commerce.order.refunded, contact.tag_added, contact.tag_removed, contact.field_changed, sequence.enrolled, sequence.exited, workflow.run.started, workflow.run.completed, workflow.run.failed, support.run.completed, support.run.failed, campaign_submission.received, campaign_submission.flagged, campaign_submission.pending_review, campaign_submission.approved, campaign_submission.rejected, creator_campaign.budget_exhausted, creator_campaign.closed, campaign_payout.payable, campaign_payout.settled, campaign_payout.failed, campaign_participant.joined, campaign_participant.suspended, campaign_participant.removed, account.rate_limited, calendar.event.created, calendar.event.updated, calendar.event.deleted, email.sent, email.opened, email.link_clicked, email.thread_replied, email.send_failed, email.bounced, file.created, file.updated, file.deleted, file.picked, contact.updated, contact.deleted, balance.low, balance.empty, balance.charged]
+            enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.permissions_changed, account.ads.initial_sync_completed, account.ads.sync_failed, account.ads.sync_recovered, analytics.synced, post.tracking_completed, post.authenticity_changed, message.received, conversation.started, conversation.control_changed, call.received, call.ended, call.failed, call.permission_request, call.transcript_segment, call.recording_ready, message.sent, message.edited, message.deleted, message.delivered, message.read, message.played, message.failed, reaction.received, referral.received, comment.received, mention.received, review.new, review.updated, review.deleted, review.restored, lead.received, ad.status_changed, ad.created, ad.updated, campaign.created, campaign.updated, ad_set.created, ad_set.updated, ad.review.approved, ad.review.rejected, ad.delivery_issue, campaign.budget.depleted, ad_account.status_changed, ad.video.processed, ad_rule.triggered, automation.check.completed, automation.action.applied, automation.action.failed, automation.action.unknown, automation.alert.opened, automation.alert.escalated, automation.alert.resolved, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.account.quality_updated, whatsapp.account.status_updated, whatsapp.account.alert_received, whatsapp.contact.identity_changed, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, phone_number.stock_available, verification.approved, verification.failed, api.changelog.published, sms.registration.action_required, sms.registration.status_updated, branded_calling.identity.status_updated, branded_calling.identity.action_required, branded_calling.number.status_updated, rcs.agent.status_updated, commerce.product.created, commerce.product.updated, commerce.product.deleted, commerce.order.created, commerce.order.updated, commerce.order.refunded, contact.tag_added, contact.tag_removed, contact.field_changed, sequence.enrolled, sequence.exited, workflow.run.started, workflow.run.completed, workflow.run.failed, support.run.completed, support.run.failed, campaign_submission.received, campaign_submission.flagged, campaign_submission.pending_review, campaign_submission.approved, campaign_submission.rejected, creator_campaign.budget_exhausted, creator_campaign.closed, campaign_payout.payable, campaign_payout.settled, campaign_payout.failed, campaign_participant.joined, campaign_participant.suspended, campaign_participant.removed, account.rate_limited, calendar.event.created, calendar.event.updated, calendar.event.deleted, email.sent, email.opened, email.link_clicked, email.thread_replied, email.send_failed, email.bounced, file.created, file.updated, file.deleted, file.picked, contact.updated, contact.deleted, balance.low, balance.empty, balance.charged, campaign_participant.pending, campaign_participant.approved, campaign_participant.denied, campaign_draft.submitted, campaign_draft.approved, campaign_draft.revision_requested, campaign_draft.rejected, campaign_sample.requested, campaign_sample.approved, campaign_sample.shipped, campaign_sample.declined]
           description: Events subscribed to
         isActive:
           type: boolean
@@ -6257,9 +6398,10 @@ components:
     WebhookPayloadCampaignParticipant:
       type: object
       description: |
-        Webhook payload for `campaign_participant.joined`, `campaign_participant.suspended` and
-        `campaign_participant.removed`. `participant.status` is the status after the change.
-        `participant.joinedAt` is null for a participant removed before they ever joined.
+        Webhook payload for `campaign_participant.joined`, `campaign_participant.pending`,
+        `campaign_participant.approved`, `campaign_participant.denied`, `campaign_participant.suspended`
+        and `campaign_participant.removed`. `participant.status` is the status after the change.
+        `participant.joinedAt` is null for a participant who never joined (pending, denied, or removed before joining).
       required: [id, event, campaign, participant, creator, timestamp]
       properties:
         id:
@@ -6271,7 +6413,7 @@ components:
           description: 'Always true when present: only a sample sent by POST /v1/webhooks/test with an event carries it. Real deliveries never do.'
         event:
           type: string
-          enum: [campaign_participant.joined, campaign_participant.suspended, campaign_participant.removed]
+          enum: [campaign_participant.joined, campaign_participant.pending, campaign_participant.approved, campaign_participant.denied, campaign_participant.suspended, campaign_participant.removed]
         campaign:
           type: object
           required: [id, name]
@@ -6283,7 +6425,7 @@ components:
           required: [id, status, joinedAt]
           properties:
             id: { type: string }
-            status: { type: string, enum: [invited, active, suspended, removed] }
+            status: { type: string, enum: [invited, pending, active, suspended, removed, denied] }
             joinedAt: { type: [string, "null"], format: date-time }
         creator:
           type: object
@@ -6291,6 +6433,121 @@ components:
           properties:
             id: { type: string }
             displayName: { type: string }
+        timestamp:
+          type: string
+          format: date-time
+          description: 'UTC time at which Zernio generated this event (set once when the event payload is built, before delivery is queued). Retries and redeliveries keep the original value, so it reflects the event, not the delivery attempt.'
+    WebhookPayloadCampaignDraft:
+      type: object
+      description: |
+        Webhook payload for `campaign_draft.submitted`, `campaign_draft.approved`,
+        `campaign_draft.revision_requested` and `campaign_draft.rejected`. `draft` is the version
+        the event is about; `draft.status` is its status after the change.
+      required: [id, event, campaign, participant, creator, draft, timestamp]
+      properties:
+        id:
+          type: string
+          description: 'Stable webhook event ID: the dedupe key, also sent as the X-Zernio-Event-Id header and identical on every retry and redelivery. It identifies the event only, never an account or other resource.'
+        profiles: { $ref: '#/components/schemas/WebhookProfiles' }
+        test:
+          type: boolean
+          description: 'Always true when present: only a sample sent by POST /v1/webhooks/test with an event carries it. Real deliveries never do.'
+        event:
+          type: string
+          enum: [campaign_draft.submitted, campaign_draft.approved, campaign_draft.revision_requested, campaign_draft.rejected]
+        campaign:
+          type: object
+          required: [id, name]
+          properties:
+            id: { type: string }
+            name: { type: string }
+        participant:
+          type: object
+          required: [id]
+          properties:
+            id: { type: string }
+        creator:
+          type: object
+          required: [id, displayName]
+          properties:
+            id: { type: string }
+            displayName: { type: string }
+        draft:
+          type: object
+          required: [id, chainId, version, revisionOf, status, mediaUrl, mediaType, caption, reviewNote, comments]
+          properties:
+            id: { type: string }
+            chainId: { type: string }
+            version: { type: integer, minimum: 1 }
+            revisionOf: { type: [string, "null"] }
+            status: { type: string, enum: [submitted, approved, revision_requested, rejected] }
+            mediaUrl: { type: string }
+            mediaType: { type: string, enum: [video, image] }
+            caption: { type: string }
+            reviewNote: { type: [string, "null"], description: 'The revision note or the rejection reason.' }
+            comments:
+              type: array
+              items:
+                type: object
+                required: [atMs, body]
+                properties:
+                  atMs: { type: [integer, "null"], description: 'Milliseconds into the video; null for a general comment.' }
+                  body: { type: string }
+        timestamp:
+          type: string
+          format: date-time
+          description: 'UTC time at which Zernio generated this event (set once when the event payload is built, before delivery is queued). Retries and redeliveries keep the original value, so it reflects the event, not the delivery attempt.'
+    WebhookPayloadCampaignSample:
+      type: object
+      description: |
+        Webhook payload for `campaign_sample.requested`, `campaign_sample.approved`,
+        `campaign_sample.shipped` and `campaign_sample.declined`. `sample.status` is the status
+        after the change; `sample.discountCode` is set from approval on.
+      required: [id, event, campaign, participant, creator, sample, timestamp]
+      properties:
+        id:
+          type: string
+          description: 'Stable webhook event ID: the dedupe key, also sent as the X-Zernio-Event-Id header and identical on every retry and redelivery. It identifies the event only, never an account or other resource.'
+        profiles: { $ref: '#/components/schemas/WebhookProfiles' }
+        test:
+          type: boolean
+          description: 'Always true when present: only a sample sent by POST /v1/webhooks/test with an event carries it. Real deliveries never do.'
+        event:
+          type: string
+          enum: [campaign_sample.requested, campaign_sample.approved, campaign_sample.shipped, campaign_sample.declined]
+        campaign:
+          type: object
+          required: [id, name]
+          properties:
+            id: { type: string }
+            name: { type: string }
+        participant:
+          type: object
+          required: [id]
+          properties:
+            id: { type: string }
+        creator:
+          type: object
+          required: [id, displayName]
+          properties:
+            id: { type: string }
+            displayName: { type: string }
+        sample:
+          type: object
+          required: [id, storeAccountId, productId, variantId, productTitle, variantTitle, status, shippingAddress, note, discountCode, trackingUrl, declineReason]
+          properties:
+            id: { type: string }
+            storeAccountId: { type: string }
+            productId: { type: string }
+            variantId: { type: [string, "null"] }
+            productTitle: { type: string }
+            variantTitle: { type: [string, "null"] }
+            status: { type: string, enum: [pending, approved, shipped, declined] }
+            shippingAddress: { $ref: '#/components/schemas/CampaignSampleShippingAddress' }
+            note: { type: [string, "null"] }
+            discountCode: { type: [string, "null"], description: 'The 100%-off, single-use code, set from approval on.' }
+            trackingUrl: { type: [string, "null"] }
+            declineReason: { type: [string, "null"] }
         timestamp:
           type: string
           format: date-time
@@ -6304,16 +6561,64 @@ components:
         - `cpm`: `ratePer1kCents` per 1,000 of the counted `metric` (views by default), earned once a post reaches `minViewsToEarn` of it, capped per post by `maxPayoutPerClipCents`.
         - `per_post`: `perApprovedPostCents` for each approved post, at most `maxPostsPerParticipant` per participant.
         - `pool`: `budgetCents` is split at close among approved posts by eligible views; a post needs `minViewsToQualify` views to share.
+        - `ad_performance`: pays on the results of the ads that run each post (see `GET /v1/creator-campaigns/{campaignId}/ad-results`), counted once a day through the previous UTC day. Only Instagram, Facebook and TikTok posts.
+        - `retainer`: `amountCents` per `period` once the creator has `requiredApprovedPosts` approved posts in it. `mode: smart` tops the period's commission up to `amountCents`.
+        - `commission`: a share of the sales of the linked store (`storeAccountId`) credited to each creator by their discount code or tracking link.
       oneOf:
         - $ref: '#/components/schemas/CreatorCampaignEconomicsCpm'
         - $ref: '#/components/schemas/CreatorCampaignEconomicsPerPost'
         - $ref: '#/components/schemas/CreatorCampaignEconomicsPool'
+        - $ref: '#/components/schemas/CreatorCampaignEconomicsAdPerformance'
+        - $ref: '#/components/schemas/CreatorCampaignEconomicsRetainer'
+        - $ref: '#/components/schemas/CreatorCampaignEconomicsCommission'
       discriminator:
         propertyName: type
         mapping:
           cpm: '#/components/schemas/CreatorCampaignEconomicsCpm'
           per_post: '#/components/schemas/CreatorCampaignEconomicsPerPost'
           pool: '#/components/schemas/CreatorCampaignEconomicsPool'
+          ad_performance: '#/components/schemas/CreatorCampaignEconomicsAdPerformance'
+          retainer: '#/components/schemas/CreatorCampaignEconomicsRetainer'
+          commission: '#/components/schemas/CreatorCampaignEconomicsCommission'
+    CreatorCampaignCommissionTerms:
+      type: object
+      description: 'Commission on store orders. Set `percentOfSalesBps`, `perOrderCents` or both. Sales are the line items after discounts, before shipping and tax; refunds come off them, and a cancelled or fully refunded order earns nothing.'
+      properties:
+        percentOfSalesBps: { type: integer, minimum: 1, maximum: 10000, description: 'Share of the sales in basis points: 1500 is 15%.' }
+        perOrderCents: { type: integer, minimum: 1, description: 'A flat amount per credited order.' }
+        attribution:
+          type: string
+          enum: [code_or_link, code, link]
+          default: code_or_link
+          description: 'How an order is credited: the creator''s discount code, the last click on their tracking link, or both with the code winning.'
+    CreatorCampaignEconomicsRetainer:
+      type: object
+      title: Retainer
+      required: [type, amountCents, period, requiredApprovedPosts, budgetCents]
+      properties:
+        type: { type: string, enum: [retainer] }
+        mode:
+          type: string
+          enum: [standard, smart]
+          default: standard
+          description: '`standard` pays `amountCents` per period. `smart` guarantees it: the commission the creator earned in the period is topped up to `amountCents`. Smart needs `commission` and a linked store.'
+        amountCents: { type: integer, minimum: 1 }
+        period:
+          type: string
+          enum: [week, month, once]
+          description: 'Weeks start Monday 00:00 UTC, months on the 1st. A period is paid within a day after it ends. A standard `once` retainer pays as soon as the posts are approved; a smart one when the campaign ends.'
+        requiredApprovedPosts: { type: integer, minimum: 0, description: 'Posts approved within the period that it needs. 0 pays without posts.' }
+        commission: { $ref: '#/components/schemas/CreatorCampaignCommissionTerms' }
+        budgetCents: { type: integer, minimum: 0 }
+    CreatorCampaignEconomicsCommission:
+      allOf:
+        - type: object
+          title: Commission
+          required: [type, budgetCents]
+          properties:
+            type: { type: string, enum: [commission] }
+            budgetCents: { type: integer, minimum: 0 }
+        - $ref: '#/components/schemas/CreatorCampaignCommissionTerms'
     CreatorCampaignEconomicsCpm:
       type: object
       title: CPM
@@ -6353,6 +6658,101 @@ components:
         budgetCents: { type: integer, minimum: 0 }
         minViewsToQualify: { type: integer, minimum: 0 }
         organicViewsOnly: { type: boolean, default: false, description: 'Count only organic views: views from ads the creator ran do not earn. Every campaign platform must be YouTube or X, which report ad views per post, or the request answers 400. A post earns nothing until its ad views were first read.' }
+    CreatorCampaignEconomicsAdPerformance:
+      type: object
+      title: On ad results
+      additionalProperties: false
+      required: [type, metric, budgetCents]
+      description: |
+        Pays on what the ads running a post achieve. `spend` and `purchase_value` take `rateBps` (a share of the amount), `purchases` and `clicks` take `centsPerUnit` each, and `impressions` takes `centsPerUnit` per 1,000.
+
+        Sending the other rate field, or `organicViewsOnly`, answers 400. Every campaign platform must be Instagram, Facebook or TikTok. Money from an ad billed in another currency than the campaign does not count.
+      properties:
+        type: { type: string, enum: [ad_performance] }
+        metric: { type: string, enum: [spend, purchases, purchase_value, clicks, impressions] }
+        rateBps: { type: integer, minimum: 1, maximum: 10000, description: 'Basis points of the spend or purchase value: 1000 is 10%.' }
+        centsPerUnit: { type: integer, minimum: 1, description: 'Cents per purchase or click, or per 1,000 impressions.' }
+        maxPayoutPerPostCents: { type: integer, minimum: 1 }
+        budgetCents: { type: integer, minimum: 0 }
+    CreatorCampaignAdResultFigures:
+      type: object
+      required: [spendCents, impressions, clicks, purchases, purchaseValueCents, roas, cpaCents, ctr]
+      properties:
+        spendCents: { type: integer, description: 'Ad spend in minor units of the campaign currency.' }
+        impressions: { type: integer }
+        clicks: { type: integer }
+        purchases: { type: integer }
+        purchaseValueCents: { type: integer }
+        roas: { type: [number, "null"], description: 'Purchase value over spend. Null before any spend.' }
+        cpaCents: { type: [integer, "null"], description: 'Spend per purchase. Null without purchases.' }
+        ctr: { type: [number, "null"], description: 'Clicks over impressions, in percent. Null without impressions.' }
+    CreatorCampaignAdResults:
+      type: object
+      required: [currency, totals, submissions, creators, capabilities]
+      properties:
+        currency: { type: string }
+        totals:
+          allOf:
+            - $ref: '#/components/schemas/CreatorCampaignAdResultFigures'
+            - type: object
+              required: [posts, ads]
+              properties:
+                posts: { type: integer, description: 'Posts with at least one ad.' }
+                ads: { type: integer }
+        submissions:
+          type: array
+          description: 'Posts that run as ads or had a launch, biggest spend first. An ad belongs to the post it was launched from, else to the post it runs (boosted post, effective Instagram media, Spark item).'
+          items:
+            type: object
+            required: [submissionId, participantId, creator, platform, platformPostId, ads, launches, results]
+            properties:
+              submissionId: { type: string }
+              participantId: { type: string }
+              creator: { type: object, required: [id, displayName, avatarUrl], properties: { id: { type: string }, displayName: { type: string }, avatarUrl: { type: [string, "null"], description: 'The creator''s profile picture: their connected account with the most followers, else their Gravatar. Null when neither exists. Platform picture URLs can expire, so show initials when the image fails to load.' } } }
+              platform: { type: string }
+              platformPostId: { type: string }
+              ads:
+                type: array
+                items:
+                  type: object
+                  required: [id, name, status, platformAdId]
+                  properties:
+                    id: { type: string, description: 'Zernio ad id, as in /v1/ads.' }
+                    name: { type: string }
+                    status: { type: string }
+                    platformAdId: { type: [string, "null"] }
+              launches:
+                type: array
+                items:
+                  type: object
+                  required: [placementKey, identity, status, adId, error, updatedAt]
+                  properties:
+                    placementKey: { type: string, description: 'Ad account and ad set or campaign the post was launched into.' }
+                    identity: { type: string, enum: [brand, creator] }
+                    status: { type: string, enum: [launching, launched, failed] }
+                    adId: { type: [string, "null"] }
+                    error: { type: [string, "null"] }
+                    updatedAt: { type: string, format: date-time }
+              results: { $ref: '#/components/schemas/CreatorCampaignAdResultFigures' }
+        creators:
+          type: array
+          description: 'Creators whose posts run as ads, ranked by `rankBy`.'
+          items:
+            allOf:
+              - $ref: '#/components/schemas/CreatorCampaignAdResultFigures'
+              - type: object
+                required: [rank, participantId, creator, posts, ads]
+                properties:
+                  rank: { type: integer, minimum: 1 }
+                  participantId: { type: string }
+                  creator: { type: object, required: [id, displayName, avatarUrl], properties: { id: { type: string }, displayName: { type: string }, avatarUrl: { type: [string, "null"], description: 'The creator''s profile picture: their connected account with the most followers, else their Gravatar. Null when neither exists. Platform picture URLs can expire, so show initials when the image fails to load.' } } }
+                  posts: { type: integer }
+                  ads: { type: integer }
+        capabilities:
+          type: object
+          required: [partnershipAds]
+          properties:
+            partnershipAds: { type: boolean, description: 'Whether creator identity on Instagram (Partnership Ads) is available to the caller. It is a limited release while Meta reviews the permission it needs.' }
     CreatorCampaignCaps:
       type: object
       required: [authenticityThreshold]
@@ -6396,7 +6796,7 @@ components:
         withdrawn: { type: integer }
     CreatorCampaign:
       type: object
-      required: [id, userId, profileId, kind, name, brandName, status, type, currency, platforms, contentRules, startsAt, endsAt, trackingDays, holdDays, maxPostAgeMinutes, settlement, economics, caps, branding, budgetExhaustedAt, closedAt, activatedAt, payableScannedAt, createdAt, updatedAt, hasOpenInvite, consumedCents, participantCount, submissionCounts, payableCents]
+      required: [id, userId, profileId, kind, name, brandName, status, type, currency, platforms, contentRules, startsAt, endsAt, trackingDays, holdDays, maxPostAgeMinutes, settlement, economics, caps, branding, budgetExhaustedAt, closedAt, activatedAt, payableScannedAt, joinApproval, requireDraftApproval, storeAccountId, sampleProducts, sampleContentDueDays, createdAt, updatedAt, hasOpenInvite, consumedCents, participantCount, submissionCounts, payableCents, pendingParticipantCount, draftCounts, sampleCounts]
       properties:
         id: { type: string }
         userId: { type: string, description: 'The workspace billing owner the campaign belongs to.' }
@@ -6408,7 +6808,7 @@ components:
           type: string
           enum: [draft, active, paused, closed]
           description: 'draft until activated; active accepts submissions and accrues; paused stops new submissions; closed is final.'
-        type: { type: string, enum: [cpm, per_post, pool], description: Same as economics.type. }
+        type: { type: string, enum: [cpm, per_post, pool, retainer, commission, ad_performance], description: Same as economics.type. }
         currency: { type: string, example: usd }
         platforms:
           type: array
@@ -6433,6 +6833,14 @@ components:
         budgetExhaustedAt: { type: [string, "null"], format: date-time }
         closedAt: { type: [string, "null"], format: date-time }
         payableScannedAt: { type: [string, "null"], format: date-time, description: 'Internal watermark of the payable scan.' }
+        joinApproval: { type: string, enum: [auto, manual], description: 'auto: creators who join through the open link are active at once. manual: they land `pending` until you approve or deny them. Personal invites are never held.' }
+        requireDraftApproval: { type: boolean, description: 'Creators upload a draft for review first, and submit the live post for an approved draft (`draftId`).' }
+        storeAccountId: { type: [string, "null"], description: 'The connected store (Shopify or WooCommerce) whose orders pay commission and whose products creators can ask as samples. Null when the campaign has neither.' }
+        sampleProducts:
+          type: array
+          description: 'Products creators can ask a free sample of.'
+          items: { $ref: '#/components/schemas/CreatorCampaignSampleProduct' }
+        sampleContentDueDays: { type: integer, minimum: 1, maximum: 365, description: 'Days after a sample is approved before a creator with no post since shows as owing content (`contentOwed`).' }
         createdAt: { type: string, format: date-time }
         updatedAt: { type: string, format: date-time }
         hasOpenInvite: { type: boolean, description: 'True once an open invite link was created. The link itself is returned only when it is created.' }
@@ -6440,6 +6848,11 @@ components:
         participantCount: { type: integer }
         submissionCounts: { $ref: '#/components/schemas/CampaignSubmissionCounts' }
         payableCents: { type: integer, description: "What the campaign's creators can be paid now, summed over every participant's payable balance." }
+        landingUrl: { type: [string, "null"], description: 'The page creator tracking links open.' }
+        codeDiscountPercent: { type: [integer, "null"], description: 'What each creator discount code takes off.' }
+        pendingParticipantCount: { type: integer, description: 'Creators who asked to join through the open link and wait for a decision. Not counted in `participantCount`.' }
+        draftCounts: { $ref: '#/components/schemas/CampaignDraftCounts' }
+        sampleCounts: { $ref: '#/components/schemas/CampaignSampleCounts' }
     CreateCreatorCampaignRequest:
       type: object
       required: [profileId, name, brandName, economics]
@@ -6467,6 +6880,22 @@ components:
           oneOf:
             - { $ref: '#/components/schemas/CreatorCampaignBranding' }
             - { type: "null" }
+        landingUrl: { type: [string, "null"], format: uri, maxLength: 2000, description: 'The page creator tracking links open. Required unless `attribution` is `code`.' }
+        codeDiscountPercent: { type: [integer, "null"], minimum: 1, maximum: 100, description: 'What each creator''s discount code takes off an order. Required unless `attribution` is `link`.' }
+        joinApproval: { type: string, enum: [auto, manual], default: auto, description: 'manual holds creators who join through the open link as `pending` until you approve them. Personal invites are never held.' }
+        requireDraftApproval: { type: boolean, default: false, description: 'Creators upload a draft for review before publishing, and each submitted post must name an approved draft.' }
+        storeAccountId:
+          type: [string, "null"]
+          description: |
+            A connected Shopify or WooCommerce store account. On `commission` and smart `retainer` economics its orders pay commission: required there, and fixed once such a campaign leaves draft.
+
+            On any campaign creators can ask for free samples of its products (`sampleProductIds`). Changing it without `sampleProductIds` clears the sample products; null removes the store and the products.
+        sampleProductIds:
+          type: array
+          maxItems: 20
+          items: { type: string, minLength: 1, maxLength: 64 }
+          description: 'Product ids in the store that creators can ask a free sample of. Each is read from the store and saved as `sampleProducts`; an unknown product answers 404 `product_not_found`. Needs a store, otherwise 400 `missing_required_field` (`param: storeAccountId`).'
+        sampleContentDueDays: { type: integer, minimum: 1, maximum: 365, default: 14, description: 'Days after a sample is approved before a creator with no post since shows as owing content.' }
     UpdateCreatorCampaignRequest:
       type: object
       minProperties: 1
@@ -6490,6 +6919,22 @@ components:
           oneOf:
             - { $ref: '#/components/schemas/CreatorCampaignBranding' }
             - { type: "null" }
+        landingUrl: { type: [string, "null"], format: uri, maxLength: 2000, description: 'The page creator tracking links open. Required unless `attribution` is `code`.' }
+        codeDiscountPercent: { type: [integer, "null"], minimum: 1, maximum: 100, description: 'What each creator''s discount code takes off an order. Required unless `attribution` is `link`.' }
+        joinApproval: { type: string, enum: [auto, manual], description: 'manual holds creators who join through the open link as `pending` until you approve them. Personal invites are never held.' }
+        requireDraftApproval: { type: boolean, description: 'Creators upload a draft for review before publishing, and each submitted post must name an approved draft.' }
+        storeAccountId:
+          type: [string, "null"]
+          description: |
+            A connected Shopify or WooCommerce store account. On `commission` and smart `retainer` economics its orders pay commission: required there, and fixed once such a campaign leaves draft.
+
+            On any campaign creators can ask for free samples of its products (`sampleProductIds`). Changing it without `sampleProductIds` clears the sample products; null removes the store and the products.
+        sampleProductIds:
+          type: array
+          maxItems: 20
+          items: { type: string, minLength: 1, maxLength: 64 }
+          description: 'Product ids in the store that creators can ask a free sample of. Each is read from the store and saved as `sampleProducts`; an unknown product answers 404 `product_not_found`. Needs a store, otherwise 400 `missing_required_field` (`param: storeAccountId`).'
+        sampleContentDueDays: { type: integer, minimum: 1, maximum: 365, description: 'Days after a sample is approved before a creator with no post since shows as owing content.' }
     CampaignParticipantBalances:
       type: object
       description: 'USD cents in each state. accruing: earned on posts not yet approved. owed: approved and on hold. payable: past the hold, ready to pay. settling: a treasury payout in progress, no longer payable and not reversible by a reject. settled: paid out.'
@@ -6508,12 +6953,13 @@ components:
         campaignId: { type: string }
         creator:
           type: object
-          required: [id, displayName, email]
+          required: [id, displayName, email, avatarUrl]
           properties:
             id: { type: string }
             displayName: { type: string }
             email: { type: [string, "null"] }
-        status: { type: string, enum: [invited, active, suspended, removed] }
+            avatarUrl: { type: [string, "null"], description: 'The creator''s profile picture: their connected account with the most followers, else their Gravatar. Null when neither exists. Platform picture URLs can expire, so show initials when the image fails to load.' }
+        status: { type: string, enum: [invited, pending, active, suspended, removed, denied] }
         joinedAt: { type: [string, "null"], format: date-time }
         accounts:
           type: array
@@ -6557,13 +7003,14 @@ components:
         raisedAt: { type: string, format: date-time }
     CampaignSubmission:
       type: object
-      required: [id, campaignId, participantId, creatorId, accountId, platform, platformPostId, platformPostUrl, externalPostId, trackingWindowId, mediaHash, submittedAt, postPublishedAt, status, rejectReason, reviewRound, reviewedBy, reviewedAt, viewsAtSubmission, viewsLatest, viewsEligible, engagementsLatest, viewsPaid, paidViewsReadAt, lastAccruedViews, accruedCents, approvedCents, authenticityScore, authenticityConfidence, flags, createdAt, updatedAt, creator, authenticity, earnedCents, releasedCents, paidOutCents, window, post]
+      required: [id, campaignId, participantId, creatorId, accountId, platform, platformPostId, platformPostUrl, externalPostId, trackingWindowId, mediaHash, submittedAt, postPublishedAt, status, rejectReason, reviewRound, reviewedBy, reviewedAt, viewsAtSubmission, viewsLatest, viewsEligible, engagementsLatest, viewsPaid, paidViewsReadAt, lastAccruedViews, accruedCents, approvedCents, authenticityScore, authenticityConfidence, flags, draftId, createdAt, updatedAt, creator, authenticity, earnedCents, releasedCents, paidOutCents, window, post]
       properties:
         id: { type: string }
         campaignId: { type: string }
         participantId: { type: string }
         creatorId: { type: string }
         accountId: { type: string, description: 'The creator account the post was published from.' }
+        hasSparkCode: { type: boolean, description: 'The creator pasted a TikTok Spark code for this post, so it can launch as a Spark Ad. The code itself is never returned.' }
         platform: { type: string, enum: [tiktok, instagram, youtube, threads, pinterest, facebook, twitter] }
         platformPostId: { type: string }
         platformPostUrl: { type: [string, "null"] }
@@ -6593,14 +7040,16 @@ components:
         flags:
           type: array
           items: { $ref: '#/components/schemas/CampaignSubmissionFlag' }
+        draftId: { type: [string, "null"], description: 'The approved draft this post publishes, on a campaign with `requireDraftApproval`.' }
         createdAt: { type: string, format: date-time }
         updatedAt: { type: string, format: date-time }
         creator:
           type: object
-          required: [id, displayName]
+          required: [id, displayName, avatarUrl]
           properties:
             id: { type: string }
             displayName: { type: string }
+            avatarUrl: { type: [string, "null"], description: 'The creator''s profile picture: their connected account with the most followers, else their Gravatar. Null when neither exists. Platform picture URLs can expire, so show initials when the image fails to load.' }
         authenticity:
           type: [object, "null"]
           description: '0 to 100, where 100 means the view pattern looks organic. Null until the post is scored.'
@@ -6648,6 +7097,127 @@ components:
                   comments: { type: integer }
                   shares: { type: integer }
                   saves: { type: integer }
+    CreatorCampaignSampleProduct:
+      type: object
+      description: 'A product creators can ask a free sample of, as it was in the store when it was picked.'
+      required: [productId, title, imageUrl, variants]
+      properties:
+        productId: { type: string }
+        title: { type: string }
+        imageUrl: { type: [string, "null"] }
+        variants:
+          type: array
+          description: 'The options a creator picks from. Empty for a product with a single variant.'
+          items:
+            type: object
+            required: [id, title]
+            properties:
+              id: { type: string }
+              title: { type: string }
+    CampaignDraftCounts:
+      type: object
+      description: 'Drafts by the status of their latest version.'
+      required: [submitted, approved, revision_requested, rejected]
+      properties:
+        submitted: { type: integer }
+        approved: { type: integer }
+        revision_requested: { type: integer }
+        rejected: { type: integer }
+    CampaignSampleCounts:
+      type: object
+      description: 'Sample requests by status.'
+      required: [pending, approved, shipped, declined]
+      properties:
+        pending: { type: integer }
+        approved: { type: integer }
+        shipped: { type: integer }
+        declined: { type: integer }
+    CampaignDraft:
+      type: object
+      description: 'One version of a creator''s content, uploaded for review before it is published. A revision is a new version in the same `chainId` with `version` + 1 and `revisionOf` set to the version it answers.'
+      required: [id, campaignId, participantId, creator, chainId, version, revisionOf, mediaUrl, mediaType, caption, status, reviewNote, reviewedAt, submittedAt, comments, submissionId]
+      properties:
+        id: { type: string }
+        campaignId: { type: string }
+        participantId: { type: string }
+        creator:
+          type: object
+          required: [id, displayName, avatarUrl]
+          properties:
+            id: { type: string }
+            displayName: { type: string }
+            avatarUrl: { type: [string, "null"], description: 'The creator''s profile picture: their connected account with the most followers, else their Gravatar. Null when neither exists. Platform picture URLs can expire, so show initials when the image fails to load.' }
+        chainId: { type: string, description: 'The id of the first version of the chain.' }
+        version: { type: integer, minimum: 1 }
+        revisionOf: { type: [string, "null"], description: 'The version this one answers; null on version 1.' }
+        mediaUrl: { type: string, format: uri }
+        mediaType: { type: string, enum: [video, image] }
+        caption: { type: string }
+        status:
+          type: string
+          enum: [submitted, approved, revision_requested, rejected]
+          description: 'submitted: waits for review. approved: the creator may publish it. revision_requested: the creator should upload a new version. rejected: final.'
+        reviewNote: { type: [string, "null"], description: 'The note sent with a revision request, or the rejection reason.' }
+        reviewedAt: { type: [string, "null"], format: date-time }
+        submittedAt: { type: string, format: date-time }
+        comments:
+          type: array
+          description: 'Review comments on this version, in video order.'
+          items:
+            type: object
+            required: [id, atMs, body, createdAt]
+            properties:
+              id: { type: string }
+              atMs: { type: [integer, "null"], description: 'Milliseconds into the video; null for a general comment.' }
+              body: { type: string }
+              createdAt: { type: string, format: date-time }
+        submissionId: { type: [string, "null"], description: 'The live post submitted for this draft, once the creator published it.' }
+    CampaignSampleShippingAddress:
+      type: object
+      required: [name, line1, city, postalCode, country]
+      properties:
+        name: { type: string, minLength: 1, maxLength: 200 }
+        line1: { type: string, minLength: 1, maxLength: 300 }
+        line2: { type: string, maxLength: 300 }
+        city: { type: string, minLength: 1, maxLength: 200 }
+        region: { type: string, maxLength: 200 }
+        postalCode: { type: string, minLength: 1, maxLength: 32 }
+        country: { type: string, minLength: 2, maxLength: 2, description: 'ISO 3166-1 alpha-2 country code.' }
+        phone: { type: string, maxLength: 40 }
+    CampaignSample:
+      type: object
+      description: 'A free product sample a creator asked for.'
+      required: [id, campaignId, participantId, creator, storeAccountId, productId, variantId, productTitle, variantTitle, shippingAddress, note, status, declineReason, discountCode, trackingUrl, approvedAt, shippedAt, requestedAt, contentDueAt, contentOwed]
+      properties:
+        id: { type: string }
+        campaignId: { type: string }
+        participantId: { type: string }
+        creator:
+          type: object
+          required: [id, displayName, avatarUrl]
+          properties:
+            id: { type: string }
+            displayName: { type: string }
+            avatarUrl: { type: [string, "null"], description: 'The creator''s profile picture: their connected account with the most followers, else their Gravatar. Null when neither exists. Platform picture URLs can expire, so show initials when the image fails to load.' }
+        storeAccountId: { type: string, description: 'The store the sample comes from.' }
+        productId: { type: string }
+        variantId: { type: [string, "null"] }
+        productTitle: { type: string }
+        variantTitle: { type: [string, "null"] }
+        shippingAddress: { $ref: '#/components/schemas/CampaignSampleShippingAddress' }
+        note: { type: [string, "null"], description: 'The creator''s note.' }
+        status:
+          type: string
+          enum: [pending, approved, shipped, declined]
+          description: 'pending: waits for review. approved: a discount code was created. shipped: you recorded that you sent it. declined: final for this request.'
+        declineReason: { type: [string, "null"] }
+        discountCode: { type: [string, "null"], description: 'The 100%-off, single-use code for the product, set on approval.' }
+        trackingUrl: { type: [string, "null"] }
+        approvedAt: { type: [string, "null"], format: date-time }
+        shippedAt: { type: [string, "null"], format: date-time }
+        requestedAt: { type: string, format: date-time }
+        contentDueAt: { type: [string, "null"], format: date-time, description: 'When a post is due: the approval plus the campaign''s `sampleContentDueDays`. Null unless approved or shipped.' }
+        contentOwed: { type: boolean, description: 'True past `contentDueAt` when the creator submitted no post since the approval.' }
     CampaignLedgerEntry:
       type: object
       required: [id, kind, amountCents, debit, credit, holdUntil, releasedByEntryId, reversesEntryId, referenceType, referenceId, cause, externalReference, actor, createdAt]
@@ -28701,6 +29271,117 @@ webhooks:
       responses:
         '200':
           description: Webhook received successfully
+  campaign_participant.pending:
+    post:
+      operationId: onCampaignParticipantPending
+      summary: Campaign participant pending event
+      description: |
+        A creator asked to join a campaign that reviews creators.
+
+        ### When it fires
+
+        A creator joined from the open link of a campaign whose `joinApproval` is `manual`. They wait as `pending` until you approve or deny them, and they do not take a place under `maxParticipants` while they wait.
+      tags: [Webhook Events]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              id: 00000000-0000-4000-8000-000000000000
+              event: campaign_participant.pending
+              timestamp: '2026-01-15T10:00:00Z'
+              campaign:
+                id: 507f1f77bcf86cd799439029
+                name: Launch clips
+              participant:
+                id: 507f1f77bcf86cd79943902a
+                status: pending
+                joinedAt: null
+              creator:
+                id: 507f1f77bcf86cd79943902b
+                displayName: Cleo
+              profiles:
+                - id: 507f1f77bcf86cd799439012
+                  externalId: cus_8f3a2
+            schema:
+              $ref: '#/components/schemas/WebhookPayloadCampaignParticipant'
+      responses:
+        '200':
+          description: Webhook received successfully
+  campaign_participant.approved:
+    post:
+      operationId: onCampaignParticipantApproved
+      summary: Campaign participant approved event
+      description: |
+        You accepted a creator who asked to join.
+
+        ### Effect
+
+        They are now `active` and `participant.joinedAt` is set. This event replaces `campaign_participant.joined` for them, so it fires instead of it, never with it.
+      tags: [Webhook Events]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              id: 00000000-0000-4000-8000-000000000000
+              event: campaign_participant.approved
+              timestamp: '2026-01-15T10:00:00Z'
+              campaign:
+                id: 507f1f77bcf86cd799439029
+                name: Launch clips
+              participant:
+                id: 507f1f77bcf86cd79943902a
+                status: active
+                joinedAt: '2026-01-15T10:00:00.000Z'
+              creator:
+                id: 507f1f77bcf86cd79943902b
+                displayName: Cleo
+              profiles:
+                - id: 507f1f77bcf86cd799439012
+                  externalId: cus_8f3a2
+            schema:
+              $ref: '#/components/schemas/WebhookPayloadCampaignParticipant'
+      responses:
+        '200':
+          description: Webhook received successfully
+  campaign_participant.denied:
+    post:
+      operationId: onCampaignParticipantDenied
+      summary: Campaign participant denied event
+      description: |
+        You turned down a creator who asked to join.
+
+        ### Effect
+
+        They cannot submit anything to this campaign.
+      tags: [Webhook Events]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              id: 00000000-0000-4000-8000-000000000000
+              event: campaign_participant.denied
+              timestamp: '2026-01-15T10:00:00Z'
+              campaign:
+                id: 507f1f77bcf86cd799439029
+                name: Launch clips
+              participant:
+                id: 507f1f77bcf86cd79943902a
+                status: denied
+                joinedAt: null
+              creator:
+                id: 507f1f77bcf86cd79943902b
+                displayName: Cleo
+              profiles:
+                - id: 507f1f77bcf86cd799439012
+                  externalId: cus_8f3a2
+            schema:
+              $ref: '#/components/schemas/WebhookPayloadCampaignParticipant'
+      responses:
+        '200':
+          description: Webhook received successfully
   campaign_participant.suspended:
     post:
       operationId: onCampaignParticipantSuspended
@@ -28772,6 +29453,404 @@ webhooks:
                   externalId: cus_8f3a2
             schema:
               $ref: '#/components/schemas/WebhookPayloadCampaignParticipant'
+      responses:
+        '200':
+          description: Webhook received successfully
+  campaign_draft.submitted:
+    post:
+      operationId: onCampaignDraftSubmitted
+      summary: Campaign draft submitted event
+      description: |
+        A creator uploaded a draft, or a new version of one, on a campaign with `requireDraftApproval`.
+
+        ### Versions
+
+        `draft.version` is 1 for a new draft, higher for a new version answering your requested changes, and `draft.revisionOf` names the version it answers.
+      tags: [Webhook Events]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              id: 00000000-0000-4000-8000-000000000000
+              event: campaign_draft.submitted
+              timestamp: '2026-01-15T10:00:00Z'
+              campaign:
+                id: 507f1f77bcf86cd799439029
+                name: Launch clips
+              participant:
+                id: 507f1f77bcf86cd79943902a
+              creator:
+                id: 507f1f77bcf86cd79943902b
+                displayName: Cleo
+              draft:
+                id: 507f1f77bcf86cd799439032
+                chainId: 507f1f77bcf86cd799439032
+                version: 1
+                revisionOf: null
+                status: submitted
+                mediaUrl: https://media.zernio.com/creator-drafts/launch-clip.mp4
+                mediaType: video
+                caption: First cut of the launch clip
+                reviewNote: null
+                comments: []
+              profiles:
+                - id: 507f1f77bcf86cd799439012
+                  externalId: cus_8f3a2
+            schema:
+              $ref: '#/components/schemas/WebhookPayloadCampaignDraft'
+      responses:
+        '200':
+          description: Webhook received successfully
+  campaign_draft.approved:
+    post:
+      operationId: onCampaignDraftApproved
+      summary: Campaign draft approved event
+      description: |
+        You approved a draft version.
+
+        ### Effect
+
+        The creator can now publish it and submit the post with its `draftId`.
+      tags: [Webhook Events]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              id: 00000000-0000-4000-8000-000000000000
+              event: campaign_draft.approved
+              timestamp: '2026-01-15T10:00:00Z'
+              campaign:
+                id: 507f1f77bcf86cd799439029
+                name: Launch clips
+              participant:
+                id: 507f1f77bcf86cd79943902a
+              creator:
+                id: 507f1f77bcf86cd79943902b
+                displayName: Cleo
+              draft:
+                id: 507f1f77bcf86cd799439032
+                chainId: 507f1f77bcf86cd799439032
+                version: 1
+                revisionOf: null
+                status: approved
+                mediaUrl: https://media.zernio.com/creator-drafts/launch-clip.mp4
+                mediaType: video
+                caption: First cut of the launch clip
+                reviewNote: null
+                comments: []
+              profiles:
+                - id: 507f1f77bcf86cd799439012
+                  externalId: cus_8f3a2
+            schema:
+              $ref: '#/components/schemas/WebhookPayloadCampaignDraft'
+      responses:
+        '200':
+          description: Webhook received successfully
+  campaign_draft.revision_requested:
+    post:
+      operationId: onCampaignDraftRevisionRequested
+      summary: Campaign draft revision requested event
+      description: |
+        You asked for changes to a draft version.
+
+        ### Comments
+
+        `draft.comments` lists your notes, each with `atMs` for the moment of the video it points at, or null for a general note. The creator can upload one new version of it.
+      tags: [Webhook Events]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              id: 00000000-0000-4000-8000-000000000000
+              event: campaign_draft.revision_requested
+              timestamp: '2026-01-15T10:00:00Z'
+              campaign:
+                id: 507f1f77bcf86cd799439029
+                name: Launch clips
+              participant:
+                id: 507f1f77bcf86cd79943902a
+              creator:
+                id: 507f1f77bcf86cd79943902b
+                displayName: Cleo
+              draft:
+                id: 507f1f77bcf86cd799439032
+                chainId: 507f1f77bcf86cd799439032
+                version: 1
+                revisionOf: null
+                status: revision_requested
+                mediaUrl: https://media.zernio.com/creator-drafts/launch-clip.mp4
+                mediaType: video
+                caption: First cut of the launch clip
+                reviewNote: Close, a couple of changes.
+                comments:
+                  - atMs: 4000
+                    body: Hook too slow
+              profiles:
+                - id: 507f1f77bcf86cd799439012
+                  externalId: cus_8f3a2
+            schema:
+              $ref: '#/components/schemas/WebhookPayloadCampaignDraft'
+      responses:
+        '200':
+          description: Webhook received successfully
+  campaign_draft.rejected:
+    post:
+      operationId: onCampaignDraftRejected
+      summary: Campaign draft rejected event
+      description: |
+        You rejected a draft version.
+
+        ### Effect
+
+        It can never back a post, and it gets no new version.
+      tags: [Webhook Events]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              id: 00000000-0000-4000-8000-000000000000
+              event: campaign_draft.rejected
+              timestamp: '2026-01-15T10:00:00Z'
+              campaign:
+                id: 507f1f77bcf86cd799439029
+                name: Launch clips
+              participant:
+                id: 507f1f77bcf86cd79943902a
+              creator:
+                id: 507f1f77bcf86cd79943902b
+                displayName: Cleo
+              draft:
+                id: 507f1f77bcf86cd799439032
+                chainId: 507f1f77bcf86cd799439032
+                version: 1
+                revisionOf: null
+                status: rejected
+                mediaUrl: https://media.zernio.com/creator-drafts/launch-clip.mp4
+                mediaType: video
+                caption: First cut of the launch clip
+                reviewNote: Off brief.
+                comments: []
+              profiles:
+                - id: 507f1f77bcf86cd799439012
+                  externalId: cus_8f3a2
+            schema:
+              $ref: '#/components/schemas/WebhookPayloadCampaignDraft'
+      responses:
+        '200':
+          description: Webhook received successfully
+  campaign_sample.requested:
+    post:
+      operationId: onCampaignSampleRequested
+      summary: Campaign sample requested event
+      description: |
+        A creator asked for one of the campaign's `sampleProducts`, with a shipping address.
+      tags: [Webhook Events]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              id: 00000000-0000-4000-8000-000000000000
+              event: campaign_sample.requested
+              timestamp: '2026-01-15T10:00:00Z'
+              campaign:
+                id: 507f1f77bcf86cd799439029
+                name: Launch clips
+              participant:
+                id: 507f1f77bcf86cd79943902a
+              creator:
+                id: 507f1f77bcf86cd79943902b
+                displayName: Cleo
+              sample:
+                id: 507f1f77bcf86cd799439031
+                storeAccountId: 507f1f77bcf86cd799439011
+                productId: '8123456789012'
+                variantId: '44123456789012'
+                productTitle: Trail runner
+                variantTitle: Size 42
+                status: pending
+                shippingAddress:
+                  name: Cleo Park
+                  line1: 12 Market St
+                  city: Austin
+                  region: TX
+                  postalCode: '78701'
+                  country: US
+                note: null
+                discountCode: null
+                trackingUrl: null
+                declineReason: null
+              profiles:
+                - id: 507f1f77bcf86cd799439012
+                  externalId: cus_8f3a2
+            schema:
+              $ref: '#/components/schemas/WebhookPayloadCampaignSample'
+      responses:
+        '200':
+          description: Webhook received successfully
+  campaign_sample.approved:
+    post:
+      operationId: onCampaignSampleApproved
+      summary: Campaign sample approved event
+      description: |
+        You approved a sample request.
+
+        ### Discount code
+
+        `sample.discountCode` is the single-use, 100% off code created in your store for that product.
+      tags: [Webhook Events]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              id: 00000000-0000-4000-8000-000000000000
+              event: campaign_sample.approved
+              timestamp: '2026-01-15T10:00:00Z'
+              campaign:
+                id: 507f1f77bcf86cd799439029
+                name: Launch clips
+              participant:
+                id: 507f1f77bcf86cd79943902a
+              creator:
+                id: 507f1f77bcf86cd79943902b
+                displayName: Cleo
+              sample:
+                id: 507f1f77bcf86cd799439031
+                storeAccountId: 507f1f77bcf86cd799439011
+                productId: '8123456789012'
+                variantId: '44123456789012'
+                productTitle: Trail runner
+                variantTitle: Size 42
+                status: approved
+                shippingAddress:
+                  name: Cleo Park
+                  line1: 12 Market St
+                  city: Austin
+                  region: TX
+                  postalCode: '78701'
+                  country: US
+                note: null
+                discountCode: SAMPLE-7KQ2M9XA
+                trackingUrl: null
+                declineReason: null
+              profiles:
+                - id: 507f1f77bcf86cd799439012
+                  externalId: cus_8f3a2
+            schema:
+              $ref: '#/components/schemas/WebhookPayloadCampaignSample'
+      responses:
+        '200':
+          description: Webhook received successfully
+  campaign_sample.shipped:
+    post:
+      operationId: onCampaignSampleShipped
+      summary: Campaign sample shipped event
+      description: |
+        You marked an approved sample as shipped.
+
+        ### Tracking
+
+        `sample.trackingUrl` is set when you gave one.
+      tags: [Webhook Events]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              id: 00000000-0000-4000-8000-000000000000
+              event: campaign_sample.shipped
+              timestamp: '2026-01-15T10:00:00Z'
+              campaign:
+                id: 507f1f77bcf86cd799439029
+                name: Launch clips
+              participant:
+                id: 507f1f77bcf86cd79943902a
+              creator:
+                id: 507f1f77bcf86cd79943902b
+                displayName: Cleo
+              sample:
+                id: 507f1f77bcf86cd799439031
+                storeAccountId: 507f1f77bcf86cd799439011
+                productId: '8123456789012'
+                variantId: '44123456789012'
+                productTitle: Trail runner
+                variantTitle: Size 42
+                status: shipped
+                shippingAddress:
+                  name: Cleo Park
+                  line1: 12 Market St
+                  city: Austin
+                  region: TX
+                  postalCode: '78701'
+                  country: US
+                note: null
+                discountCode: SAMPLE-7KQ2M9XA
+                trackingUrl: https://tracking.example.com/1Z999
+                declineReason: null
+              profiles:
+                - id: 507f1f77bcf86cd799439012
+                  externalId: cus_8f3a2
+            schema:
+              $ref: '#/components/schemas/WebhookPayloadCampaignSample'
+      responses:
+        '200':
+          description: Webhook received successfully
+  campaign_sample.declined:
+    post:
+      operationId: onCampaignSampleDeclined
+      summary: Campaign sample declined event
+      description: |
+        You declined a sample request.
+
+        ### Effect
+
+        `sample.declineReason` says why. The creator can ask for the same product again.
+      tags: [Webhook Events]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              id: 00000000-0000-4000-8000-000000000000
+              event: campaign_sample.declined
+              timestamp: '2026-01-15T10:00:00Z'
+              campaign:
+                id: 507f1f77bcf86cd799439029
+                name: Launch clips
+              participant:
+                id: 507f1f77bcf86cd79943902a
+              creator:
+                id: 507f1f77bcf86cd79943902b
+                displayName: Cleo
+              sample:
+                id: 507f1f77bcf86cd799439031
+                storeAccountId: 507f1f77bcf86cd799439011
+                productId: '8123456789012'
+                variantId: '44123456789012'
+                productTitle: Trail runner
+                variantTitle: Size 42
+                status: declined
+                shippingAddress:
+                  name: Cleo Park
+                  line1: 12 Market St
+                  city: Austin
+                  region: TX
+                  postalCode: '78701'
+                  country: US
+                note: null
+                discountCode: null
+                trackingUrl: null
+                declineReason: Out of stock
+              profiles:
+                - id: 507f1f77bcf86cd799439012
+                  externalId: cus_8f3a2
+            schema:
+              $ref: '#/components/schemas/WebhookPayloadCampaignSample'
       responses:
         '200':
           description: Webhook received successfully
@@ -32872,7 +33951,7 @@ paths:
         `token` is one of:
 
         - An open invite token (from `POST /v1/creator-campaigns/{campaignId}/invite-link`): answers `kind: invite` with the campaign only.
-        - A participant token (from an invite or a join): answers `kind: participant` with the creator's connected accounts, latest 100 submissions, earnings and payout setup.
+        - A participant token (from an invite or a join): answers `kind: participant` with the creator's connected accounts, latest 100 submissions, draft versions, sample requests, earnings and payout setup. A creator held for approval reads it with `participant.status` `pending` (or `denied` once turned away).
 
         Reading a participant page also re-checks the creator's connected accounts.
       responses:
@@ -32901,6 +33980,7 @@ paths:
 
         - Participant token: the body is ignored and the invite is accepted.
         - Open invite token: a new participant is created from `displayName` (required) and `email` (optional), and a fresh participant token comes back. Keep it: it is the creator's only key to their page.
+        - On a campaign with `joinApproval: manual`, an open-link joiner lands `pending` and `campaign_participant.pending` fires instead of `campaign_participant.joined`. A pending creator holds no place under `caps.maxParticipants` (the limit is checked when the operator approves them) and cannot submit posts, drafts or sample requests until approved. Personal invites always get straight in.
 
         Open-link joins are limited to about 20 per IP address and 60 per link every 10 minutes.
       requestBody:
@@ -32931,7 +34011,7 @@ paths:
               schema: { $ref: '#/components/schemas/ErrorResponse' }
         '403':
           x-summary: "The campaign is not taking new creators right now, for example because it reached its participant cap: ask the campaign team."
-          description: 'The campaign is not taking new creators (`feature_not_available`, "This campaign is not taking new creators right now. Ask the campaign team."), for example because it reached its participant cap.'
+          description: 'The campaign is not taking new creators (`feature_not_available`, "This campaign is not taking new creators right now. Ask the campaign team."), for example because it reached its participant cap. Not returned for the cap on a `joinApproval: manual` campaign, where the cap is checked on approval.'
           content:
             application/json:
               schema: { $ref: '#/components/schemas/ErrorResponse' }
@@ -33003,6 +34083,7 @@ paths:
               required: [url]
               properties:
                 url: { type: string, minLength: 1, maxLength: 2048, description: 'The public link to the post.' }
+                draftId: { type: string, description: 'The approved draft this post publishes. Required when the campaign has `requireDraftApproval`: it must be one of the creator''s own drafts, `approved`, and not used by another post yet (each draft backs one post only).' }
       responses:
         '201':
           description: Submitted.
@@ -33021,6 +34102,7 @@ paths:
             - `param: url`: the link is not a post of an accepted platform, or the post was published before the campaign started or longer ago than the campaign accepts.
             - TikTok and X post ids carry their creation time, so a post from before the campaign is refused as such even when no connected account has it.
             - The post is from an account past the campaign's `caps.maxAccountsPerParticipant` ("This campaign allows 2 connected accounts."). Only the first accounts the creator connected, up to that count, can submit.
+            - `param: draftId` (`missing_required_field`): the campaign requires draft approval and no `draftId` was sent.
           content:
             application/json:
               schema: { $ref: '#/components/schemas/ErrorResponse' }
@@ -33042,7 +34124,175 @@ paths:
               schema: { $ref: '#/components/schemas/ErrorResponse' }
         '409':
           x-summary: "The post cannot be submitted: accept the invite, wait for an active campaign, and submit each post once within the daily limit."
-          description: 'The invite is not accepted yet, the campaign is not accepting posts (not started, paused or ended), the post was already submitted, today''s per-participant post limit is reached, or the participation was suspended or removed (`invalid_resource_state`; the message says which).'
+          description: |
+            `invalid_resource_state`, and the message says which:
+
+            - The invite is not accepted yet, the creator is still pending approval or was denied, or the participation was suspended or removed.
+            - The campaign is not accepting posts (not started, paused or ended).
+            - The post was already submitted, or today's per-participant post limit is reached.
+            - `draftId` is not one of the creator's approved drafts or already backs another post.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+        '429': { $ref: '#/components/responses/CreatorPortalRateLimited' }
+  /public/creator-campaigns/{token}/drafts/upload:
+    parameters:
+      - $ref: '#/components/parameters/CreatorPortalToken'
+    post:
+      x-resource-group: "public"
+      operationId: presignCreatorDraftUpload
+      tags: [Creator Portal]
+      summary: Get an upload URL for a draft
+      security: []
+      description: |
+        Returns a presigned URL to upload one draft file to, on a campaign with `requireDraftApproval`. `PUT` the file to `uploadUrl` with the same `Content-Type`, then pass `publicUrl` as `mediaUrl` to `POST /public/creator-campaigns/{token}/drafts`. The URL expires after `expiresIn` seconds.
+
+        Accepted files: MP4, MOV or WebM video, JPG, PNG or WebP image, up to 500 MB. About 20 uploads per participant every 10 minutes.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [filename, contentType]
+              properties:
+                filename: { type: string, minLength: 1, maxLength: 255 }
+                contentType: { type: string, enum: [video/mp4, video/quicktime, video/webm, image/jpeg, image/png, image/webp] }
+                size: { type: integer, minimum: 0, maximum: 524288000, description: 'File size in bytes. Optional; over 500 MB answers 400.' }
+      responses:
+        '200':
+          description: Upload URL.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [uploadUrl, publicUrl, key, expiresIn]
+                properties:
+                  uploadUrl: { type: string, format: uri, description: 'Presigned URL to `PUT` the file to.' }
+                  publicUrl: { type: string, format: uri, description: 'Where the file is served once uploaded. Pass it as `mediaUrl`.' }
+                  key: { type: string }
+                  expiresIn: { type: integer, description: 'Seconds until `uploadUrl` expires.' }
+        '400':
+          x-summary: "The file name, type or size is invalid: upload a supported video or image under 500 MB."
+          description: 'An invalid field: an unsupported `contentType` or a `size` over 500 MB.'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+        '404': { $ref: '#/components/responses/CreatorPortalLinkNotFound' }
+        '409':
+          x-summary: "Drafts cannot be uploaded now: the campaign does not review drafts, is not accepting posts, or the creator is not active in it."
+          description: 'The campaign does not review drafts, is not accepting posts (not started, paused or ended), the invite is not accepted yet, or the creator is pending, denied, suspended or removed (`invalid_resource_state`; the message says which).'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+        '429': { $ref: '#/components/responses/CreatorPortalRateLimited' }
+  /public/creator-campaigns/{token}/drafts:
+    parameters:
+      - $ref: '#/components/parameters/CreatorPortalToken'
+    post:
+      x-resource-group: "public"
+      operationId: submitCreatorDraft
+      tags: [Creator Portal]
+      summary: Submit a draft for review
+      security: []
+      description: |
+        Sends a draft for the campaign team to review before the creator publishes, on a campaign with `requireDraftApproval`, and fires `campaign_draft.submitted`. `mediaUrl` must be a `publicUrl` from `POST /public/creator-campaigns/{token}/drafts/upload`.
+
+        ### Revisions
+
+        - Without `revisionOf` the draft starts a new chain at version 1.
+        - With `revisionOf` it is the next version of that chain. Only one of the creator's own versions marked `revision_requested` takes a new version, and only once.
+
+        About 20 drafts per participant every 10 minutes.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [mediaUrl, mediaType]
+              properties:
+                mediaUrl: { type: string, format: uri, maxLength: 2048, description: 'The `publicUrl` of the uploaded file.' }
+                mediaType: { type: string, enum: [video, image] }
+                caption: { type: string, maxLength: 5000, default: '' }
+                revisionOf: { type: string, description: 'The version marked `revision_requested` that this draft answers.' }
+      responses:
+        '201':
+          description: Draft submitted.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [draft]
+                properties:
+                  draft: { $ref: '#/components/schemas/CreatorPortalDraft' }
+        '400':
+          x-summary: "The draft is invalid: upload the file from the campaign page first and pass its public URL."
+          description: 'An invalid field, or `mediaUrl` is not a file uploaded for this campaign (`invalid_field_value`, `param: mediaUrl`, "Upload the file from your campaign page first").'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+        '404': { $ref: '#/components/responses/CreatorPortalLinkNotFound' }
+        '409':
+          x-summary: "The draft cannot be submitted now: check the campaign accepts drafts and that the revised version is yours and awaits changes."
+          description: |
+            `invalid_resource_state`, and the message says which:
+
+            - The campaign does not review drafts or is not accepting posts.
+            - The creator is not active in it (invite not accepted, pending, denied, suspended or removed).
+            - `revisionOf` is not one of the creator's versions or is not `revision_requested`, or a newer version of it was already uploaded.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+        '429': { $ref: '#/components/responses/CreatorPortalRateLimited' }
+  /public/creator-campaigns/{token}/samples:
+    parameters:
+      - $ref: '#/components/parameters/CreatorPortalToken'
+    post:
+      x-resource-group: "public"
+      operationId: requestCreatorSample
+      tags: [Creator Portal]
+      summary: Request a product sample
+      security: []
+      description: |
+        Asks for a free sample of one of the campaign's `sampleProducts`, shipped to `shippingAddress`, and fires `campaign_sample.requested`. The request waits for the campaign team; on approval the creator gets a single-use discount code for the product.
+
+        - A product with `variants` needs `variantId`.
+        - One open request per product: asking again while one is pending, approved or shipped answers 409. A declined product can be asked again.
+
+        About 10 requests per participant every 10 minutes.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [productId, shippingAddress]
+              properties:
+                productId: { type: string, minLength: 1, maxLength: 64, description: 'A `productId` from the campaign''s `sampleProducts`.' }
+                variantId: { type: string, minLength: 1, maxLength: 64, description: 'Required when the product lists `variants`.' }
+                shippingAddress: { $ref: '#/components/schemas/CampaignSampleShippingAddress' }
+                note: { type: string, maxLength: 1000 }
+      responses:
+        '201':
+          description: Sample requested.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [sample]
+                properties:
+                  sample: { $ref: '#/components/schemas/CreatorPortalSample' }
+        '400':
+          x-summary: "The request is invalid: pick a product the campaign offers and one of its options."
+          description: 'An invalid field, a product the campaign does not offer (`invalid_field_value`, `param: productId`), or a missing or unknown option (`param: variantId`, "Pick one of the options for this product").'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+        '404': { $ref: '#/components/responses/CreatorPortalLinkNotFound' }
+        '409':
+          x-summary: "The sample cannot be requested now: the campaign offers none, a request for this product is open, or the creator is not active."
+          description: 'The campaign offers no samples or is not accepting posts, the creator is not active in it (invite not accepted, pending, denied, suspended or removed), or the creator already has an open request for this product (`invalid_resource_state`; the message says which).'
           content:
             application/json:
               schema: { $ref: '#/components/schemas/ErrorResponse' }
@@ -33087,6 +34337,64 @@ paths:
               schema: { $ref: '#/components/schemas/ErrorResponse' }
         '409':
           description: 'A post from the account is still counting views (`invalid_resource_state`; the message says how many).'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+  /public/creator-campaigns/{token}/submissions/{submissionId}/spark-code:
+    parameters:
+      - $ref: '#/components/parameters/CreatorPortalToken'
+      - name: submissionId
+        in: path
+        required: true
+        description: 'The `id` of one of the participant''s `submissions`.'
+        schema: { type: string }
+    put:
+      x-resource-group: "public"
+      operationId: setCreatorSparkCode
+      tags: [Creator Portal]
+      summary: Set a post's Spark code
+      security: []
+      description: |
+        The creator pastes the Spark code of one of their TikTok posts (generated in the TikTok app under the post's
+        ad settings), so the brand can run the post as a Spark Ad under the creator's handle.
+
+        Send `null` to clear it. The code is never returned: submissions only expose `hasSparkCode`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [sparkAuthCode]
+              properties:
+                sparkAuthCode: { type: [string, "null"], minLength: 1, maxLength: 500, description: 'The Spark code, or null to clear it.' }
+      responses:
+        '200':
+          description: Saved.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [submission]
+                properties:
+                  submission:
+                    type: object
+                    required: [id, hasSparkCode]
+                    properties:
+                      id: { type: string }
+                      hasSparkCode: { type: boolean }
+        '400':
+          description: 'Invalid input, or the post is not a TikTok post (`invalid_field_value`).'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+        '404':
+          description: 'The link is invalid or expired, or the post is not one of the participant''s submissions (`resource_not_found`).'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+        '409':
+          description: 'The post was rejected or withdrawn (`invalid_resource_state`).'
           content:
             application/json:
               schema: { $ref: '#/components/schemas/ErrorResponse' }
@@ -51866,7 +53174,7 @@ paths:
                   minItems: 1
                   items:
                     type: string
-                    enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.permissions_changed, account.ads.initial_sync_completed, account.ads.sync_failed, account.ads.sync_recovered, analytics.synced, post.tracking_completed, post.authenticity_changed, message.received, conversation.started, conversation.control_changed, call.received, call.ended, call.failed, call.permission_request, call.transcript_segment, call.recording_ready, message.sent, message.edited, message.deleted, message.delivered, message.read, message.played, message.failed, reaction.received, referral.received, comment.received, mention.received, review.new, review.updated, review.deleted, review.restored, lead.received, ad.status_changed, ad.created, ad.updated, campaign.created, campaign.updated, ad_set.created, ad_set.updated, ad.review.approved, ad.review.rejected, ad.delivery_issue, campaign.budget.depleted, ad_account.status_changed, ad.video.processed, ad_rule.triggered, automation.check.completed, automation.action.applied, automation.action.failed, automation.action.unknown, automation.alert.opened, automation.alert.escalated, automation.alert.resolved, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.account.quality_updated, whatsapp.account.status_updated, whatsapp.account.alert_received, whatsapp.contact.identity_changed, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, phone_number.stock_available, verification.approved, verification.failed, api.changelog.published, sms.registration.action_required, sms.registration.status_updated, branded_calling.identity.status_updated, branded_calling.identity.action_required, branded_calling.number.status_updated, rcs.agent.status_updated, commerce.product.created, commerce.product.updated, commerce.product.deleted, commerce.order.created, commerce.order.updated, commerce.order.refunded, contact.tag_added, contact.tag_removed, contact.field_changed, sequence.enrolled, sequence.exited, workflow.run.started, workflow.run.completed, workflow.run.failed, support.run.completed, support.run.failed, campaign_submission.received, campaign_submission.flagged, campaign_submission.pending_review, campaign_submission.approved, campaign_submission.rejected, creator_campaign.budget_exhausted, creator_campaign.closed, campaign_payout.payable, campaign_payout.settled, campaign_payout.failed, campaign_participant.joined, campaign_participant.suspended, campaign_participant.removed, balance.low, balance.empty, balance.charged]
+                    enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.permissions_changed, account.ads.initial_sync_completed, account.ads.sync_failed, account.ads.sync_recovered, analytics.synced, post.tracking_completed, post.authenticity_changed, message.received, conversation.started, conversation.control_changed, call.received, call.ended, call.failed, call.permission_request, call.transcript_segment, call.recording_ready, message.sent, message.edited, message.deleted, message.delivered, message.read, message.played, message.failed, reaction.received, referral.received, comment.received, mention.received, review.new, review.updated, review.deleted, review.restored, lead.received, ad.status_changed, ad.created, ad.updated, campaign.created, campaign.updated, ad_set.created, ad_set.updated, ad.review.approved, ad.review.rejected, ad.delivery_issue, campaign.budget.depleted, ad_account.status_changed, ad.video.processed, ad_rule.triggered, automation.check.completed, automation.action.applied, automation.action.failed, automation.action.unknown, automation.alert.opened, automation.alert.escalated, automation.alert.resolved, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.account.quality_updated, whatsapp.account.status_updated, whatsapp.account.alert_received, whatsapp.contact.identity_changed, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, phone_number.stock_available, verification.approved, verification.failed, api.changelog.published, sms.registration.action_required, sms.registration.status_updated, branded_calling.identity.status_updated, branded_calling.identity.action_required, branded_calling.number.status_updated, rcs.agent.status_updated, commerce.product.created, commerce.product.updated, commerce.product.deleted, commerce.order.created, commerce.order.updated, commerce.order.refunded, contact.tag_added, contact.tag_removed, contact.field_changed, sequence.enrolled, sequence.exited, workflow.run.started, workflow.run.completed, workflow.run.failed, support.run.completed, support.run.failed, campaign_submission.received, campaign_submission.flagged, campaign_submission.pending_review, campaign_submission.approved, campaign_submission.rejected, creator_campaign.budget_exhausted, creator_campaign.closed, campaign_payout.payable, campaign_payout.settled, campaign_payout.failed, campaign_participant.joined, campaign_participant.suspended, campaign_participant.removed, balance.low, balance.empty, balance.charged, campaign_participant.pending, campaign_participant.approved, campaign_participant.denied, campaign_draft.submitted, campaign_draft.approved, campaign_draft.revision_requested, campaign_draft.rejected, campaign_sample.requested, campaign_sample.approved, campaign_sample.shipped, campaign_sample.declined]
                   description: Events to subscribe to (at least one required)
                 isActive:
                   type: boolean
@@ -52033,7 +53341,7 @@ paths:
                   minItems: 1
                   items:
                     type: string
-                    enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.permissions_changed, account.ads.initial_sync_completed, account.ads.sync_failed, account.ads.sync_recovered, analytics.synced, post.tracking_completed, post.authenticity_changed, message.received, conversation.started, conversation.control_changed, call.received, call.ended, call.failed, call.permission_request, call.transcript_segment, call.recording_ready, message.sent, message.edited, message.deleted, message.delivered, message.read, message.played, message.failed, reaction.received, referral.received, comment.received, mention.received, review.new, review.updated, review.deleted, review.restored, lead.received, ad.status_changed, ad.created, ad.updated, campaign.created, campaign.updated, ad_set.created, ad_set.updated, ad.review.approved, ad.review.rejected, ad.delivery_issue, campaign.budget.depleted, ad_account.status_changed, ad.video.processed, ad_rule.triggered, automation.check.completed, automation.action.applied, automation.action.failed, automation.action.unknown, automation.alert.opened, automation.alert.escalated, automation.alert.resolved, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.account.quality_updated, whatsapp.account.status_updated, whatsapp.account.alert_received, whatsapp.contact.identity_changed, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, phone_number.stock_available, verification.approved, verification.failed, api.changelog.published, sms.registration.action_required, sms.registration.status_updated, branded_calling.identity.status_updated, branded_calling.identity.action_required, branded_calling.number.status_updated, rcs.agent.status_updated, commerce.product.created, commerce.product.updated, commerce.product.deleted, commerce.order.created, commerce.order.updated, commerce.order.refunded, contact.tag_added, contact.tag_removed, contact.field_changed, sequence.enrolled, sequence.exited, workflow.run.started, workflow.run.completed, workflow.run.failed, support.run.completed, support.run.failed, campaign_submission.received, campaign_submission.flagged, campaign_submission.pending_review, campaign_submission.approved, campaign_submission.rejected, creator_campaign.budget_exhausted, creator_campaign.closed, campaign_payout.payable, campaign_payout.settled, campaign_payout.failed, campaign_participant.joined, campaign_participant.suspended, campaign_participant.removed, balance.low, balance.empty, balance.charged]
+                    enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.permissions_changed, account.ads.initial_sync_completed, account.ads.sync_failed, account.ads.sync_recovered, analytics.synced, post.tracking_completed, post.authenticity_changed, message.received, conversation.started, conversation.control_changed, call.received, call.ended, call.failed, call.permission_request, call.transcript_segment, call.recording_ready, message.sent, message.edited, message.deleted, message.delivered, message.read, message.played, message.failed, reaction.received, referral.received, comment.received, mention.received, review.new, review.updated, review.deleted, review.restored, lead.received, ad.status_changed, ad.created, ad.updated, campaign.created, campaign.updated, ad_set.created, ad_set.updated, ad.review.approved, ad.review.rejected, ad.delivery_issue, campaign.budget.depleted, ad_account.status_changed, ad.video.processed, ad_rule.triggered, automation.check.completed, automation.action.applied, automation.action.failed, automation.action.unknown, automation.alert.opened, automation.alert.escalated, automation.alert.resolved, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.account.quality_updated, whatsapp.account.status_updated, whatsapp.account.alert_received, whatsapp.contact.identity_changed, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, phone_number.stock_available, verification.approved, verification.failed, api.changelog.published, sms.registration.action_required, sms.registration.status_updated, branded_calling.identity.status_updated, branded_calling.identity.action_required, branded_calling.number.status_updated, rcs.agent.status_updated, commerce.product.created, commerce.product.updated, commerce.product.deleted, commerce.order.created, commerce.order.updated, commerce.order.refunded, contact.tag_added, contact.tag_removed, contact.field_changed, sequence.enrolled, sequence.exited, workflow.run.started, workflow.run.completed, workflow.run.failed, support.run.completed, support.run.failed, campaign_submission.received, campaign_submission.flagged, campaign_submission.pending_review, campaign_submission.approved, campaign_submission.rejected, creator_campaign.budget_exhausted, creator_campaign.closed, campaign_payout.payable, campaign_payout.settled, campaign_payout.failed, campaign_participant.joined, campaign_participant.suspended, campaign_participant.removed, balance.low, balance.empty, balance.charged, campaign_participant.pending, campaign_participant.approved, campaign_participant.denied, campaign_draft.submitted, campaign_draft.approved, campaign_draft.revision_requested, campaign_draft.rejected, campaign_sample.requested, campaign_sample.approved, campaign_sample.shipped, campaign_sample.declined]
                   description: Events to subscribe to. Must contain at least one event if provided.
                 isActive:
                   type: boolean
@@ -52438,8 +53746,19 @@ paths:
                     - campaign_payout.settled
                     - campaign_payout.failed
                     - campaign_participant.joined
+                    - campaign_participant.pending
+                    - campaign_participant.approved
+                    - campaign_participant.denied
                     - campaign_participant.suspended
                     - campaign_participant.removed
+                    - campaign_draft.submitted
+                    - campaign_draft.approved
+                    - campaign_draft.revision_requested
+                    - campaign_draft.rejected
+                    - campaign_sample.requested
+                    - campaign_sample.approved
+                    - campaign_sample.shipped
+                    - campaign_sample.declined
                     - call.received
                     - call.ended
                     - call.failed
@@ -103706,7 +105025,7 @@ paths:
           description: Campaign ID.
         - name: status
           in: query
-          schema: { type: string, enum: [invited, active, suspended, removed] }
+          schema: { type: string, enum: [invited, pending, active, suspended, removed, denied] }
         - name: limit
           in: query
           schema: { type: integer, minimum: 1, maximum: 200, default: 50 }
@@ -103764,6 +105083,89 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { $ref: '#/components/responses/CreatorCampaignForbidden' }
         '404': { $ref: '#/components/responses/CreatorCampaignNotFound' }
+  /v1/creator-campaigns/{campaignId}/participants/{participantId}/approve:
+    post:
+      x-resource-group: "creator_campaigns"
+      operationId: approveCampaignParticipant
+      tags: [Creator Campaigns]
+      summary: Approve pending campaign participant
+      description: |
+        Lets a `pending` creator into the campaign: they become `active`, `joinedAt` is set, the creator is emailed and `campaign_participant.approved` fires (not `campaign_participant.joined`).
+
+        A creator is `pending` when they joined through the open link of a campaign with `joinApproval: manual`. Personal invites are never held.
+
+        ### Creator limit
+
+        Pending creators do not count toward `caps.maxParticipants`; the limit is checked here instead. A full campaign refuses the approval with 403 `feature_not_available` and the creator stays `pending`.
+
+        ### Errors
+
+        - 403 `feature_not_available`: the campaign reached `caps.maxParticipants`.
+        - 409 `invalid_resource_state`: the participant is not `pending`, or the campaign is closed.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: campaignId
+          in: path
+          required: true
+          schema: { type: string }
+          description: Campaign ID.
+        - name: participantId
+          in: path
+          required: true
+          schema: { type: string }
+          description: Participant ID.
+        - $ref: '#/components/parameters/IdempotencyKeyHeader'
+      responses:
+        '200':
+          description: Participant approved
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [participant]
+                properties:
+                  participant: { $ref: '#/components/schemas/CampaignParticipant' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/CreatorCampaignForbidden' }
+        '404': { $ref: '#/components/responses/CreatorCampaignNotFound' }
+        '409': { $ref: '#/components/responses/CreatorCampaignConflict' }
+  /v1/creator-campaigns/{campaignId}/participants/{participantId}/deny:
+    post:
+      x-resource-group: "creator_campaigns"
+      operationId: denyCampaignParticipant
+      tags: [Creator Campaigns]
+      summary: Deny pending campaign participant
+      description: |
+        Turns a `pending` creator away: they become `denied`, the creator is emailed and `campaign_participant.denied` fires. A denied creator cannot submit posts, drafts or sample requests. Any status other than `pending` answers 409.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: campaignId
+          in: path
+          required: true
+          schema: { type: string }
+          description: Campaign ID.
+        - name: participantId
+          in: path
+          required: true
+          schema: { type: string }
+          description: Participant ID.
+        - $ref: '#/components/parameters/IdempotencyKeyHeader'
+      responses:
+        '200':
+          description: Participant denied
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [participant]
+                properties:
+                  participant: { $ref: '#/components/schemas/CampaignParticipant' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/CreatorCampaignForbidden' }
+        '404': { $ref: '#/components/responses/CreatorCampaignNotFound' }
+        '409': { $ref: '#/components/responses/CreatorCampaignConflict' }
   /v1/creator-campaigns/{campaignId}/participants/{participantId}/suspend:
     post:
       x-resource-group: "creator_campaigns"
@@ -104479,6 +105881,428 @@ paths:
         '404': { $ref: '#/components/responses/CreatorCampaignNotFound' }
         '409': { $ref: '#/components/responses/CreatorCampaignConflict' }
         '422': { $ref: '#/components/responses/IdempotencyKeyReused' }
+  /v1/creator-campaigns/{campaignId}/drafts:
+    get:
+      x-resource-group: "creator_campaigns"
+      operationId: listCampaignDrafts
+      tags: [Creator Campaigns]
+      summary: List campaign drafts
+      description: |
+        Lists the drafts creators uploaded for review on a campaign with `requireDraftApproval`, newest first.
+
+        Each draft is a chain of versions: a revision is a new version in the same `chainId`. Only the latest version of each chain is listed, so `status` is the chain's current state and `total` counts chains. Earlier versions come with `GET /v1/creator-campaigns/{campaignId}/drafts/{draftId}`.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: campaignId
+          in: path
+          required: true
+          schema: { type: string }
+          description: Campaign ID.
+        - name: status
+          in: query
+          schema: { type: string, enum: [submitted, approved, revision_requested, rejected] }
+          description: Only drafts whose latest version is in this status. `submitted` is the review queue.
+        - name: participantId
+          in: query
+          schema: { type: string }
+          description: Only drafts of this participant.
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 200, default: 50 }
+        - name: skip
+          in: query
+          schema: { type: integer, minimum: 0, default: 0 }
+      responses:
+        '200':
+          description: Drafts
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [drafts, total]
+                properties:
+                  drafts:
+                    type: array
+                    items: { $ref: '#/components/schemas/CampaignDraft' }
+                  total: { type: integer }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/CreatorCampaignForbidden' }
+        '404': { $ref: '#/components/responses/CreatorCampaignNotFound' }
+  /v1/creator-campaigns/{campaignId}/drafts/{draftId}:
+    get:
+      x-resource-group: "creator_campaigns"
+      operationId: getCampaignDraft
+      tags: [Creator Campaigns]
+      summary: Get campaign draft
+      description: |
+        Returns one draft version and every version of its chain (`versions`, newest first, including this one), each with its review comments.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: campaignId
+          in: path
+          required: true
+          schema: { type: string }
+          description: Campaign ID.
+        - name: draftId
+          in: path
+          required: true
+          schema: { type: string }
+          description: Draft version ID.
+      responses:
+        '200':
+          description: Draft
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [draft, versions]
+                properties:
+                  draft: { $ref: '#/components/schemas/CampaignDraft' }
+                  versions:
+                    type: array
+                    description: 'Every version of the chain, newest first.'
+                    items: { $ref: '#/components/schemas/CampaignDraft' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/CreatorCampaignForbidden' }
+        '404': { $ref: '#/components/responses/CreatorCampaignNotFound' }
+  /v1/creator-campaigns/{campaignId}/drafts/{draftId}/approve:
+    post:
+      x-resource-group: "creator_campaigns"
+      operationId: approveCampaignDraft
+      tags: [Creator Campaigns]
+      summary: Approve campaign draft
+      description: |
+        Approves a `submitted` draft version, emails the creator and fires `campaign_draft.approved`. The creator can then publish it and submit the live post with this `draftId`; each approved draft backs one post only.
+
+        Each version is decided once: a version that is no longer `submitted` answers 409.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: campaignId
+          in: path
+          required: true
+          schema: { type: string }
+          description: Campaign ID.
+        - name: draftId
+          in: path
+          required: true
+          schema: { type: string }
+          description: Draft version ID.
+        - $ref: '#/components/parameters/IdempotencyKeyHeader'
+      responses:
+        '200':
+          description: Draft approved
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [draft]
+                properties:
+                  draft: { $ref: '#/components/schemas/CampaignDraft' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/CreatorCampaignForbidden' }
+        '404': { $ref: '#/components/responses/CreatorCampaignNotFound' }
+        '409': { $ref: '#/components/responses/CreatorCampaignConflict' }
+        '422': { $ref: '#/components/responses/IdempotencyKeyReused' }
+  /v1/creator-campaigns/{campaignId}/drafts/{draftId}/request-revision:
+    post:
+      x-resource-group: "creator_campaigns"
+      operationId: requestCampaignDraftRevision
+      tags: [Creator Campaigns]
+      summary: Request changes on a campaign draft
+      description: |
+        Marks a `submitted` draft version `revision_requested`, emails the creator and fires `campaign_draft.revision_requested`. The creator answers with one new version (`revisionOf` set to this version).
+
+        Send a `note`, at least one entry in `comments`, or both; neither answers 400 `missing_required_field`. A comment with `atMs` is pinned to that moment of the video.
+
+        Each version is decided once: a version that is no longer `submitted` answers 409.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: campaignId
+          in: path
+          required: true
+          schema: { type: string }
+          description: Campaign ID.
+        - name: draftId
+          in: path
+          required: true
+          schema: { type: string }
+          description: Draft version ID.
+        - $ref: '#/components/parameters/IdempotencyKeyHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                note: { type: string, maxLength: 5000, description: 'What to change overall. Stored as `reviewNote`.' }
+                comments:
+                  type: array
+                  maxItems: 50
+                  default: []
+                  items:
+                    type: object
+                    required: [body]
+                    properties:
+                      atMs: { type: [integer, "null"], minimum: 0, description: 'Milliseconds into the video the comment is about. Null or omitted for a general comment.' }
+                      body: { type: string, minLength: 1, maxLength: 2000 }
+      responses:
+        '200':
+          description: Changes requested
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [draft]
+                properties:
+                  draft: { $ref: '#/components/schemas/CampaignDraft' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/CreatorCampaignForbidden' }
+        '404': { $ref: '#/components/responses/CreatorCampaignNotFound' }
+        '409': { $ref: '#/components/responses/CreatorCampaignConflict' }
+        '422': { $ref: '#/components/responses/IdempotencyKeyReused' }
+  /v1/creator-campaigns/{campaignId}/drafts/{draftId}/reject:
+    post:
+      x-resource-group: "creator_campaigns"
+      operationId: rejectCampaignDraft
+      tags: [Creator Campaigns]
+      summary: Reject campaign draft
+      description: |
+        Rejects a `submitted` draft version for good, emails the creator and fires `campaign_draft.rejected`. The reason is stored as `reviewNote`. A rejected draft takes no new version and backs no post.
+
+        Each version is decided once: a version that is no longer `submitted` answers 409.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: campaignId
+          in: path
+          required: true
+          schema: { type: string }
+          description: Campaign ID.
+        - name: draftId
+          in: path
+          required: true
+          schema: { type: string }
+          description: Draft version ID.
+        - $ref: '#/components/parameters/IdempotencyKeyHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [reason]
+              properties:
+                reason: { type: string, minLength: 1, maxLength: 2000 }
+      responses:
+        '200':
+          description: Draft rejected
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [draft]
+                properties:
+                  draft: { $ref: '#/components/schemas/CampaignDraft' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/CreatorCampaignForbidden' }
+        '404': { $ref: '#/components/responses/CreatorCampaignNotFound' }
+        '409': { $ref: '#/components/responses/CreatorCampaignConflict' }
+        '422': { $ref: '#/components/responses/IdempotencyKeyReused' }
+  /v1/creator-campaigns/{campaignId}/samples:
+    get:
+      x-resource-group: "creator_campaigns"
+      operationId: listCampaignSamples
+      tags: [Creator Campaigns]
+      summary: List campaign sample requests
+      description: |
+        Lists the free product samples creators asked for, newest first. `contentOwed` marks an approved or shipped sample whose creator submitted no post in the `sampleContentDueDays` since the approval.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: campaignId
+          in: path
+          required: true
+          schema: { type: string }
+          description: Campaign ID.
+        - name: status
+          in: query
+          schema: { type: string, enum: [pending, approved, shipped, declined] }
+          description: Only requests in this status. `pending` is the review queue.
+        - name: participantId
+          in: query
+          schema: { type: string }
+          description: Only requests of this participant.
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 200, default: 50 }
+        - name: skip
+          in: query
+          schema: { type: integer, minimum: 0, default: 0 }
+      responses:
+        '200':
+          description: Sample requests
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [samples, total]
+                properties:
+                  samples:
+                    type: array
+                    items: { $ref: '#/components/schemas/CampaignSample' }
+                  total: { type: integer }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/CreatorCampaignForbidden' }
+        '404': { $ref: '#/components/responses/CreatorCampaignNotFound' }
+  /v1/creator-campaigns/{campaignId}/samples/{sampleId}/approve:
+    post:
+      x-resource-group: "creator_campaigns"
+      operationId: approveCampaignSample
+      tags: [Creator Campaigns]
+      summary: Approve campaign sample request
+      description: |
+        Approves a `pending` sample request. Zernio creates a 100%-off, single-use discount code (`SAMPLE-XXXXXXXX`) limited to the requested product in the campaign's store (Shopify or WooCommerce), returns it as `discountCode`, emails it to the creator and fires `campaign_sample.approved`. The creator redeems it at checkout.
+
+        The code is created before the request changes, so when the store refuses (missing discount permission, an unsupported store, a store error) its error is returned and the request stays `pending`. The approval also starts the `sampleContentDueDays` clock behind `contentDueAt` and `contentOwed`.
+
+        ### Errors
+
+        - 400 `platform_not_supported`: the store cannot create discounts.
+        - 403: the store has not granted the permission discounts need.
+        - 409 `invalid_resource_state`: the request is not `pending`.
+        - 502 `platform_api_error`: the store is unavailable.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: campaignId
+          in: path
+          required: true
+          schema: { type: string }
+          description: Campaign ID.
+        - name: sampleId
+          in: path
+          required: true
+          schema: { type: string }
+          description: Sample request ID.
+        - $ref: '#/components/parameters/IdempotencyKeyHeader'
+      responses:
+        '200':
+          description: Sample approved
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [sample]
+                properties:
+                  sample: { $ref: '#/components/schemas/CampaignSample' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/CreatorCampaignForbidden' }
+        '404': { $ref: '#/components/responses/CreatorCampaignNotFound' }
+        '409': { $ref: '#/components/responses/CreatorCampaignConflict' }
+        '422': { $ref: '#/components/responses/IdempotencyKeyReused' }
+        '502':
+          x-summary: "The store is unavailable: retry later. The request stays pending."
+          description: 'The store did not answer (`platform_api_error`). No code was created and the request stays `pending`.'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+  /v1/creator-campaigns/{campaignId}/samples/{sampleId}/decline:
+    post:
+      x-resource-group: "creator_campaigns"
+      operationId: declineCampaignSample
+      tags: [Creator Campaigns]
+      summary: Decline campaign sample request
+      description: |
+        Declines a `pending` sample request with a reason, emails the creator and fires `campaign_sample.declined`. The creator can ask for the same product again. Any other status answers 409.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: campaignId
+          in: path
+          required: true
+          schema: { type: string }
+          description: Campaign ID.
+        - name: sampleId
+          in: path
+          required: true
+          schema: { type: string }
+          description: Sample request ID.
+        - $ref: '#/components/parameters/IdempotencyKeyHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [reason]
+              properties:
+                reason: { type: string, minLength: 1, maxLength: 1000, description: 'Shown to the creator.' }
+      responses:
+        '200':
+          description: Sample declined
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [sample]
+                properties:
+                  sample: { $ref: '#/components/schemas/CampaignSample' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/CreatorCampaignForbidden' }
+        '404': { $ref: '#/components/responses/CreatorCampaignNotFound' }
+        '409': { $ref: '#/components/responses/CreatorCampaignConflict' }
+        '422': { $ref: '#/components/responses/IdempotencyKeyReused' }
+  /v1/creator-campaigns/{campaignId}/samples/{sampleId}/ship:
+    post:
+      x-resource-group: "creator_campaigns"
+      operationId: shipCampaignSample
+      tags: [Creator Campaigns]
+      summary: Mark campaign sample shipped
+      description: |
+        Records that you sent an `approved` sample yourself, with an optional tracking link, emails the creator and fires `campaign_sample.shipped`. No store call or money is involved. Any other status answers 409.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: campaignId
+          in: path
+          required: true
+          schema: { type: string }
+          description: Campaign ID.
+        - name: sampleId
+          in: path
+          required: true
+          schema: { type: string }
+          description: Sample request ID.
+        - $ref: '#/components/parameters/IdempotencyKeyHeader'
+      requestBody:
+        required: false
+        description: 'Optional: no body marks the sample shipped without a tracking link.'
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                trackingUrl: { type: string, format: uri, maxLength: 2048, description: 'The carrier tracking link, shown to the creator.' }
+      responses:
+        '200':
+          description: Sample marked shipped
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [sample]
+                properties:
+                  sample: { $ref: '#/components/schemas/CampaignSample' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/CreatorCampaignForbidden' }
+        '404': { $ref: '#/components/responses/CreatorCampaignNotFound' }
+        '409': { $ref: '#/components/responses/CreatorCampaignConflict' }
+        '422': { $ref: '#/components/responses/IdempotencyKeyReused' }
   /v1/creator-campaigns/{campaignId}/payables:
     get:
       x-resource-group: "creator_campaigns"
@@ -104615,6 +106439,87 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { $ref: '#/components/responses/CreatorCampaignForbidden' }
         '404': { $ref: '#/components/responses/CreatorCampaignNotFound' }
+  /v1/creator-campaigns/{campaignId}/orders:
+    get:
+      x-resource-group: "creator_campaigns"
+      operationId: listCampaignOrders
+      tags: [Creator Campaigns]
+      summary: List campaign orders
+      description: |
+        Lists the store orders a commission or smart retainer campaign credited to its creators, newest first, and every
+        active creator's discount code and tracking link.
+
+        An order is `pending` while the store is still attributing it (Shopify does so for a few minutes after checkout),
+        `matched` once it is credited to a creator and `unmatched` when it never was. Commission is approved `holdDays`
+        after the order was placed.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: campaignId
+          in: path
+          required: true
+          schema: { type: string }
+          description: Campaign ID.
+        - name: participantId
+          in: query
+          schema: { type: string }
+          description: Only this creator's orders.
+        - name: status
+          in: query
+          schema: { type: string, enum: [pending, matched, unmatched] }
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 200, default: 50 }
+        - name: skip
+          in: query
+          schema: { type: integer, minimum: 0, default: 0 }
+      responses:
+        '200':
+          description: Orders and creator codes
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [orders, total, referrals]
+                properties:
+                  orders:
+                    type: array
+                    items:
+                      type: object
+                      required: [id, platformOrderId, orderNumber, status, participantId, creatorName, creatorAvatarUrl, matchedBy, discountCode, currency, salesCents, refundedCents, commissionCents, orderCreatedAt, approvedAt]
+                      properties:
+                        id: { type: string }
+                        platformOrderId: { type: string, description: 'The order id on the store, as in `GET /v1/commerce/orders/{orderId}`.' }
+                        orderNumber: { type: string }
+                        status: { type: string, enum: [pending, matched, unmatched] }
+                        participantId: { type: [string, "null"] }
+                        creatorName: { type: [string, "null"] }
+                        creatorAvatarUrl: { type: [string, "null"], description: 'The creator''s profile picture. Same source as a participant''s `creator.avatarUrl`.' }
+                        matchedBy: { type: [string, "null"], enum: [code, link, null] }
+                        discountCode: { type: [string, "null"] }
+                        currency: { type: string }
+                        salesCents: { type: integer }
+                        refundedCents: { type: integer }
+                        commissionCents: { type: integer, description: 'Commission the order holds now, net of refunds.' }
+                        orderCreatedAt: { type: string, format: date-time }
+                        approvedAt: { type: [string, "null"], format: date-time }
+                  total: { type: integer }
+                  referrals:
+                    type: array
+                    items:
+                      type: object
+                      required: [participantId, creatorName, creatorAvatarUrl, code, codeStatus, codeFailureReason, trackingUrl]
+                      properties:
+                        participantId: { type: string }
+                        creatorName: { type: string }
+                        creatorAvatarUrl: { type: [string, "null"], description: 'The creator''s profile picture. Same source as a participant''s `creator.avatarUrl`.' }
+                        code: { type: [string, "null"] }
+                        codeStatus: { type: [string, "null"], enum: [ready, failed, null], description: 'Null until the code is first created, when the creator opens their page.' }
+                        codeFailureReason: { type: [string, "null"] }
+                        trackingUrl: { type: [string, "null"] }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/CreatorCampaignForbidden' }
+        '404': { $ref: '#/components/responses/CreatorCampaignNotFound' }
   /v1/creator-campaigns/{campaignId}/report:
     get:
       x-resource-group: "creator_campaigns"
@@ -104641,6 +106546,135 @@ paths:
                 required: [report]
                 properties:
                   report: { $ref: '#/components/schemas/CampaignReport' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/CreatorCampaignForbidden' }
+        '404': { $ref: '#/components/responses/CreatorCampaignNotFound' }
+  /v1/creator-campaigns/{campaignId}/ads/launch:
+    post:
+      x-resource-group: "creator_campaigns"
+      operationId: launchCampaignAds
+      tags: [Creator Campaigns]
+      summary: Launch campaign posts as ads
+      description: |
+        Runs approved posts of an active campaign as ads, each post on its own: a post that cannot run is reported
+        in `results` and never stops the rest.
+
+        A post already launched (or launching) into the same placement is
+        reported as `already_launched` or `in_progress` and never gets a second ad, so a retry is safe.
+
+        ### What each post becomes
+
+        - **Meta, `identity: brand`**: a new ad from the post media in the existing ad set `adSetId`, under the brand's Page.
+        - **Meta, `identity: creator`**: a Partnership Ad of the Instagram post under the creator's handle. Partnership Ads are a limited release while Meta reviews the permission they need (`capabilities.partnershipAds` in `GET /v1/creator-campaigns/{campaignId}/ad-results`); without it these posts fail with a message to launch them with brand identity. Facebook posts only run with brand identity.
+        - **TikTok** (`identity: creator` only): a Spark Ad of the creator's post in its own ad group with `dailyBudget`, inside the existing campaign `existingCampaignId`. Needs the Spark code the creator pasted on their campaign page (`hasSparkCode` on the submission).
+
+        One launch runs on one network: posts from the other network fail with a message to launch them separately.
+        Needs ads access (403 `ads_addon_required`) and room in the managed ads allowance (403 `ads_allowance_exceeded`).
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: campaignId
+          in: path
+          required: true
+          schema: { type: string }
+          description: Campaign ID.
+        - $ref: '#/components/parameters/IdempotencyKeyHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [submissionIds, network, accountId, adAccountId, identity]
+              properties:
+                submissionIds: { type: array, minItems: 1, maxItems: 50, items: { type: string }, description: 'Approved submissions to run as ads.' }
+                network: { type: string, enum: [meta, tiktok], description: 'Meta runs Instagram and Facebook posts; TikTok runs TikTok posts.' }
+                accountId: { type: string, description: 'The brand''s connected ads account (Facebook or TikTok) the ads run from, as in `/v1/accounts`.' }
+                adAccountId: { type: string, minLength: 1, description: 'Platform ad account ID.' }
+                adSetId: { type: string, minLength: 1, description: 'Existing Meta ad set the ads go into. Required when `network` is `meta`.' }
+                existingCampaignId: { type: string, minLength: 1, description: 'Existing TikTok campaign that gets one ad group per post. Required when `network` is `tiktok`.' }
+                dailyBudget: { type: number, exclusiveMinimum: 0, description: 'Daily budget of each TikTok ad group, in the ad account currency. Required when `network` is `tiktok`.' }
+                identity: { type: string, enum: [brand, creator], description: 'Whose handle the ad runs under. TikTok takes `creator` only.' }
+                body: { type: string, minLength: 1, maxLength: 2200, description: 'Primary text of brand ads. Defaults to the post caption.' }
+                headline: { type: string, minLength: 1, maxLength: 255 }
+                callToAction: { type: string, minLength: 1, description: 'Call to action, as in `POST /v1/ads/create`.' }
+                linkUrl: { type: string, format: uri, description: 'Destination URL (http or https).' }
+                status: { type: string, enum: [ACTIVE, PAUSED], default: PAUSED, description: 'Ads launch paused unless set to `ACTIVE`.' }
+      responses:
+        '200':
+          description: 'One result per distinct submission ID, in no particular order.'
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [results]
+                properties:
+                  results:
+                    type: array
+                    items:
+                      type: object
+                      required: [submissionId, outcome, identity, adId, error]
+                      properties:
+                        submissionId: { type: string }
+                        outcome: { type: string, enum: [launched, already_launched, in_progress, failed], description: '`in_progress`: another launch of this post into the same placement is still running.' }
+                        identity: { type: string, enum: [brand, creator] }
+                        adId: { type: [string, "null"], description: 'Zernio ad id, as in /v1/ads.' }
+                        error: { type: [string, "null"], description: 'Why the post did not launch.' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403':
+          description: 'No ads access (`ads_addon_required`), over the managed ads allowance (`ads_allowance_exceeded`), or a restricted API key without the `creator_campaigns` resource group (`insufficient_permissions`).'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+        '404': { $ref: '#/components/responses/CreatorCampaignNotFound' }
+        '409': { $ref: '#/components/responses/CreatorCampaignConflict' }
+        '422': { $ref: '#/components/responses/IdempotencyKeyReused' }
+  /v1/creator-campaigns/{campaignId}/ad-results:
+    get:
+      x-resource-group: "creator_campaigns"
+      operationId: getCampaignAdResults
+      tags: [Creator Campaigns]
+      summary: Get campaign ad results
+      description: |
+        What the campaign's posts did as ads: totals, each post with its ads and launches, and the creators ranked
+        by `rankBy`.
+
+        An ad counts for a post when it was launched from the post, or when it runs the post (a boosted
+        post, the Instagram media it shows, or a TikTok Spark item).
+
+        Figures come from the ads' daily metrics; money is in the campaign currency, and ads billed in
+        another currency are left out of money figures.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: campaignId
+          in: path
+          required: true
+          schema: { type: string }
+          description: Campaign ID.
+        - name: rankBy
+          in: query
+          schema: { type: string, enum: [spend, roas, purchases], default: spend }
+          description: How `creators` is ranked.
+        - name: from
+          in: query
+          schema: { type: string, format: date }
+          description: 'First day counted (YYYY-MM-DD, UTC). Omit to count from the first day of data.'
+        - name: to
+          in: query
+          schema: { type: string, format: date }
+          description: 'Last day counted (YYYY-MM-DD, UTC). Omit to count through the latest day of data.'
+      responses:
+        '200':
+          description: Campaign ad results
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [adResults]
+                properties:
+                  adResults: { $ref: '#/components/schemas/CreatorCampaignAdResults' }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { $ref: '#/components/responses/CreatorCampaignForbidden' }

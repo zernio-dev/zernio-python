@@ -29670,31 +29670,47 @@ def register_generated_tools(mcp, _get_client):
         max_post_age_minutes: str | None = None,
         settlement: Literal["none", "external", "treasury"] = "none",
         branding: str | None = None,
+        landing_url: str | None = None,
+        code_discount_percent: str | None = None,
+        join_approval: Literal["auto", "manual"] = "auto",
+        require_draft_approval: bool = False,
+        store_account_id: str | None = None,
+        sample_product_ids: list[str] | None = None,
+        sample_content_due_days: int = 14,
     ) -> str:
         """Create creator campaign
 
-        Creates a campaign in `draft`. Creators are paid for verified performance of the posts they
-        submit: Zernio tracks each post through a tracking window, scores its authenticity and records
-        every earning in a ledger. Activate the campaign to start accepting submissions.
+            Creates a campaign in `draft`. Creators are paid for verified performance of the posts they
+            submit: Zernio tracks each post through a tracking window, scores its authenticity and records
+            every earning in a ledger. Activate the campaign to start accepting submissions.
 
-        Creator campaigns run on usage-based billing; a workspace not on it gets 403
-        `feature_not_available`. `profileId` must be a profile this key can reach, otherwise 404.
+            Creator campaigns run on usage-based billing; a workspace not on it gets 403
+            `feature_not_available`. `profileId` must be a profile this key can reach, otherwise 404.
 
-        Args:
-            profile_id: Profile the campaign lives in. Creator accounts connect into the same workspace. (required)
-            name: (required)
-            brand_name: (required)
-            economics: Object with keys: type (one of: cpm; required); metric (one of: views, engagements) - What the rate pays on. `engagements` counts the `engagementTypes` as each platform reports them, and `minViewsToEarn` then applies to engagements. Fixed once ...; engagementTypes (list of string) - With `metric: engagements`, the engagements that count. Missing means all four, and sending it on a views campaign answers 400. YouTube reports likes and ...; organicViewsOnly (boolean) - Count only organic views: views from ads the creator ran do not earn. Every campaign platform must be YouTube or X, which report ad views per post, or the ...; ratePer1kCents (integer, required); minViewsToEarn (integer, required) - The count a post must reach before it earns, in the campaign metric (views or engagements).; maxPayoutPerClipCents (integer); budgetCents (integer, required) (required)
-            caps: Omitted, the campaign starts with authenticityThreshold 40 and no other caps. Object with keys: maxParticipants (integer) - Invites and joins past this count answer 403.; maxSubmissionsPerParticipantPerDay (integer) - Posts one participant can submit to this campaign per UTC day, counting every submission whatever its status. The next submit that day answers 409 ...; maxAccountsPerParticipant (integer) - Accounts a participant can use in this campaign. Connecting a new account past it answers 400; only the first accounts connected, up to this count, can submit ...; maxXReadSpendCents (integer) - X campaigns only: what tracking X posts may cost in X reads, in cents. Unset means 5000 ($50). X bills one read per tracked post per UTC day, and you pay it ...; authenticityThreshold (number, required) - A submission whose authenticity score falls below this is flagged `low_authenticity`. It is never rejected automatically. Defaults to 40 on create.
-            platforms: Platforms creators may post on. At least one is needed to activate. `twitter` (X) needs usage-based billing: X reads are billed at cost, up to `caps.maxXReadSpendCents`, and X views are the post's impressions. `facebook` takes Page reels and videos only.
-            content_rules
-            starts_at
-            ends_at
-            tracking_days
-            hold_days
-            max_post_age_minutes: Optional maximum age in minutes of a post when it is submitted. Null or omitted (the default) accepts any age. Posts published before the campaign started are always refused.
-            settlement
-            branding"""
+            Args:
+                profile_id: Profile the campaign lives in. Creator accounts connect into the same workspace. (required)
+                name: (required)
+                brand_name: (required)
+                economics: Object with keys: type (one of: cpm; required); metric (one of: views, engagements) - What the rate pays on. `engagements` counts the `engagementTypes` as each platform reports them, and `minViewsToEarn` then applies to engagements. Fixed once ...; engagementTypes (list of string) - With `metric: engagements`, the engagements that count. Missing means all four, and sending it on a views campaign answers 400. YouTube reports likes and ...; organicViewsOnly (boolean) - Count only organic views: views from ads the creator ran do not earn. Every campaign platform must be YouTube or X, which report ad views per post, or the ...; ratePer1kCents (integer, required); minViewsToEarn (integer, required) - The count a post must reach before it earns, in the campaign metric (views or engagements).; maxPayoutPerClipCents (integer); budgetCents (integer, required) (required)
+                caps: Omitted, the campaign starts with authenticityThreshold 40 and no other caps. Object with keys: maxParticipants (integer) - Invites and joins past this count answer 403.; maxSubmissionsPerParticipantPerDay (integer) - Posts one participant can submit to this campaign per UTC day, counting every submission whatever its status. The next submit that day answers 409 ...; maxAccountsPerParticipant (integer) - Accounts a participant can use in this campaign. Connecting a new account past it answers 400; only the first accounts connected, up to this count, can submit ...; maxXReadSpendCents (integer) - X campaigns only: what tracking X posts may cost in X reads, in cents. Unset means 5000 ($50). X bills one read per tracked post per UTC day, and you pay it ...; authenticityThreshold (number, required) - A submission whose authenticity score falls below this is flagged `low_authenticity`. It is never rejected automatically. Defaults to 40 on create.
+                platforms: Platforms creators may post on. At least one is needed to activate. `twitter` (X) needs usage-based billing: X reads are billed at cost, up to `caps.maxXReadSpendCents`, and X views are the post's impressions. `facebook` takes Page reels and videos only.
+                content_rules
+                starts_at
+                ends_at
+                tracking_days
+                hold_days
+                max_post_age_minutes: Optional maximum age in minutes of a post when it is submitted. Null or omitted (the default) accepts any age. Posts published before the campaign started are always refused.
+                settlement
+                branding
+                landing_url: The page creator tracking links open. Required unless `attribution` is `code`.
+                code_discount_percent: What each creator's discount code takes off an order. Required unless `attribution` is `link`.
+                join_approval: manual holds creators who join through the open link as `pending` until you approve them. Personal invites are never held.
+                require_draft_approval: Creators upload a draft for review before publishing, and each submitted post must name an approved draft.
+                store_account_id: A connected Shopify or WooCommerce store account. On `commission` and smart `retainer` economics its orders pay commission: required there, and fixed once such a campaign leaves draft.
+
+        On any campaign creators can ask for free samples of its products (`sampleProductIds`). Changing it without `sampleProductIds` clears the sample products; null removes the store and the products.
+                sample_product_ids: Product ids in the store that creators can ask a free sample of. Each is read from the store and saved as `sampleProducts`; an unknown product answers 404 `product_not_found`. Needs a store, otherwise 400 `missing_required_field` (`param: storeAccountId`).
+                sample_content_due_days: Days after a sample is approved before a creator with no post since shows as owing content."""
         client = _get_client()
         try:
             response = client.creator_campaigns.create_creator_campaign(
@@ -29712,6 +29728,13 @@ def register_generated_tools(mcp, _get_client):
                 max_post_age_minutes=max_post_age_minutes,
                 settlement=settlement,
                 branding=branding,
+                landing_url=landing_url,
+                code_discount_percent=code_discount_percent,
+                join_approval=join_approval,
+                require_draft_approval=require_draft_approval,
+                store_account_id=store_account_id,
+                sample_product_ids=sample_product_ids,
+                sample_content_due_days=sample_content_due_days,
             )
             return _format_response(response)
         except Exception as e:
@@ -29809,29 +29832,45 @@ def register_generated_tools(mcp, _get_client):
         economics: dict[str, Any] | None = None,
         caps: dict[str, Any] | None = None,
         branding: str | None = None,
+        landing_url: str | None = None,
+        code_discount_percent: str | None = None,
+        join_approval: Literal["auto", "manual"] | None = None,
+        require_draft_approval: bool | None = None,
+        store_account_id: str | None = None,
+        sample_product_ids: list[str] | None = None,
+        sample_content_due_days: int | None = None,
     ) -> str:
         """Update creator campaign
 
-        Updates any subset of the campaign's settings. `economics` (and with it the campaign type)
-        can only change while the campaign is a draft; afterwards that answers 409, and a live campaign's
-        budget is raised with `POST /v1/creator-campaigns/{campaignId}/budget`. An empty body
-        answers 400.
+            Updates any subset of the campaign's settings. `economics` (and with it the campaign type)
+            can only change while the campaign is a draft; afterwards that answers 409, and a live campaign's
+            budget is raised with `POST /v1/creator-campaigns/{campaignId}/budget`. An empty body
+            answers 400.
 
-        Args:
-            campaign_id: Campaign ID. (required)
-            name
-            brand_name
-            platforms
-            content_rules
-            starts_at
-            ends_at
-            tracking_days
-            hold_days
-            max_post_age_minutes: Null removes the limit.
-            settlement
-            economics: Object with keys: type (one of: cpm; required); metric (one of: views, engagements) - What the rate pays on. `engagements` counts the `engagementTypes` as each platform reports them, and `minViewsToEarn` then applies to engagements. Fixed once ...; engagementTypes (list of string) - With `metric: engagements`, the engagements that count. Missing means all four, and sending it on a views campaign answers 400. YouTube reports likes and ...; organicViewsOnly (boolean) - Count only organic views: views from ads the creator ran do not earn. Every campaign platform must be YouTube or X, which report ad views per post, or the ...; ratePer1kCents (integer, required); minViewsToEarn (integer, required) - The count a post must reach before it earns, in the campaign metric (views or engagements).; maxPayoutPerClipCents (integer); budgetCents (integer, required)
-            caps: Object with keys: maxParticipants (integer) - Invites and joins past this count answer 403.; maxSubmissionsPerParticipantPerDay (integer) - Posts one participant can submit to this campaign per UTC day, counting every submission whatever its status. The next submit that day answers 409 ...; maxAccountsPerParticipant (integer) - Accounts a participant can use in this campaign. Connecting a new account past it answers 400; only the first accounts connected, up to this count, can submit ...; maxXReadSpendCents (integer) - X campaigns only: what tracking X posts may cost in X reads, in cents. Unset means 5000 ($50). X bills one read per tracked post per UTC day, and you pay it ...; authenticityThreshold (number, required) - A submission whose authenticity score falls below this is flagged `low_authenticity`. It is never rejected automatically. Defaults to 40 on create.
-            branding"""
+            Args:
+                campaign_id: Campaign ID. (required)
+                name
+                brand_name
+                platforms
+                content_rules
+                starts_at
+                ends_at
+                tracking_days
+                hold_days
+                max_post_age_minutes: Null removes the limit.
+                settlement
+                economics: Object with keys: type (one of: cpm; required); metric (one of: views, engagements) - What the rate pays on. `engagements` counts the `engagementTypes` as each platform reports them, and `minViewsToEarn` then applies to engagements. Fixed once ...; engagementTypes (list of string) - With `metric: engagements`, the engagements that count. Missing means all four, and sending it on a views campaign answers 400. YouTube reports likes and ...; organicViewsOnly (boolean) - Count only organic views: views from ads the creator ran do not earn. Every campaign platform must be YouTube or X, which report ad views per post, or the ...; ratePer1kCents (integer, required); minViewsToEarn (integer, required) - The count a post must reach before it earns, in the campaign metric (views or engagements).; maxPayoutPerClipCents (integer); budgetCents (integer, required)
+                caps: Object with keys: maxParticipants (integer) - Invites and joins past this count answer 403.; maxSubmissionsPerParticipantPerDay (integer) - Posts one participant can submit to this campaign per UTC day, counting every submission whatever its status. The next submit that day answers 409 ...; maxAccountsPerParticipant (integer) - Accounts a participant can use in this campaign. Connecting a new account past it answers 400; only the first accounts connected, up to this count, can submit ...; maxXReadSpendCents (integer) - X campaigns only: what tracking X posts may cost in X reads, in cents. Unset means 5000 ($50). X bills one read per tracked post per UTC day, and you pay it ...; authenticityThreshold (number, required) - A submission whose authenticity score falls below this is flagged `low_authenticity`. It is never rejected automatically. Defaults to 40 on create.
+                branding
+                landing_url: The page creator tracking links open. Required unless `attribution` is `code`.
+                code_discount_percent: What each creator's discount code takes off an order. Required unless `attribution` is `link`.
+                join_approval: manual holds creators who join through the open link as `pending` until you approve them. Personal invites are never held.
+                require_draft_approval: Creators upload a draft for review before publishing, and each submitted post must name an approved draft.
+                store_account_id: A connected Shopify or WooCommerce store account. On `commission` and smart `retainer` economics its orders pay commission: required there, and fixed once such a campaign leaves draft.
+
+        On any campaign creators can ask for free samples of its products (`sampleProductIds`). Changing it without `sampleProductIds` clears the sample products; null removes the store and the products.
+                sample_product_ids: Product ids in the store that creators can ask a free sample of. Each is read from the store and saved as `sampleProducts`; an unknown product answers 404 `product_not_found`. Needs a store, otherwise 400 `missing_required_field` (`param: storeAccountId`).
+                sample_content_due_days: Days after a sample is approved before a creator with no post since shows as owing content."""
         client = _get_client()
         try:
             response = client.creator_campaigns.update_creator_campaign(
@@ -29849,6 +29888,13 @@ def register_generated_tools(mcp, _get_client):
                 economics=economics,
                 caps=caps,
                 branding=branding,
+                landing_url=landing_url,
+                code_discount_percent=code_discount_percent,
+                join_approval=join_approval,
+                require_draft_approval=require_draft_approval,
+                store_account_id=store_account_id,
+                sample_product_ids=sample_product_ids,
+                sample_content_due_days=sample_content_due_days,
             )
             return _format_response(response)
         except Exception as e:
@@ -30016,7 +30062,10 @@ def register_generated_tools(mcp, _get_client):
     )
     def creator_campaigns_list_campaign_participants(
         campaign_id: str,
-        status: Literal["invited", "active", "suspended", "removed"] | None = None,
+        status: Literal[
+            "invited", "pending", "active", "suspended", "removed", "denied"
+        ]
+        | None = None,
         limit: int = 50,
         skip: int = 0,
     ) -> str:
@@ -30059,6 +30108,71 @@ def register_generated_tools(mcp, _get_client):
         client = _get_client()
         try:
             response = client.creator_campaigns.get_campaign_participant(
+                campaign_id=campaign_id, participant_id=participant_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Approve pending campaign participant",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def creator_campaigns_approve_campaign_participant(
+        campaign_id: str, participant_id: str
+    ) -> str:
+        """Approve pending campaign participant
+
+        Lets a `pending` creator into the campaign: they become `active`, `joinedAt` is set, the creator is emailed and `campaign_participant.approved` fires (not `campaign_participant.joined`).
+
+        A creator is `pending` when they joined through the open link of a campaign with `joinApproval: manual`. Personal invites are never held.
+
+        ### Creator limit
+
+        Pending creators do not count toward `caps.maxParticipants`; the limit is checked here instead. A full campaign refuses the approval with 403 `feature_not_available` and the creator stays `pending`.
+
+        ### Errors
+
+        - 403 `feature_not_available`: the campaign reached `caps.maxParticipants`.
+        - 409 `invalid_resource_state`: the participant is not `pending`, or the campaign is closed.
+
+        Args:
+            campaign_id: Campaign ID. (required)
+            participant_id: Participant ID. (required)"""
+        client = _get_client()
+        try:
+            response = client.creator_campaigns.approve_campaign_participant(
+                campaign_id=campaign_id, participant_id=participant_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Deny pending campaign participant",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def creator_campaigns_deny_campaign_participant(
+        campaign_id: str, participant_id: str
+    ) -> str:
+        """Deny pending campaign participant
+
+        Turns a `pending` creator away: they become `denied`, the creator is emailed and `campaign_participant.denied` fires. A denied creator cannot submit posts, drafts or sample requests. Any status other than `pending` answers 409.
+
+        Args:
+            campaign_id: Campaign ID. (required)
+            participant_id: Participant ID. (required)"""
+        client = _get_client()
+        try:
+            response = client.creator_campaigns.deny_campaign_participant(
                 campaign_id=campaign_id, participant_id=participant_id
             )
             return _format_response(response)
@@ -30634,6 +30748,297 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="List campaign drafts",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def creator_campaigns_list_campaign_drafts(
+        campaign_id: str,
+        status: Literal["submitted", "approved", "revision_requested", "rejected"]
+        | None = None,
+        participant_id: str | None = None,
+        limit: int = 50,
+        skip: int = 0,
+    ) -> str:
+        """List campaign drafts
+
+        Lists the drafts creators uploaded for review on a campaign with `requireDraftApproval`, newest first.
+
+        Each draft is a chain of versions: a revision is a new version in the same `chainId`. Only the latest version of each chain is listed, so `status` is the chain's current state and `total` counts chains. Earlier versions come with `GET /v1/creator-campaigns/{campaignId}/drafts/{draftId}`.
+
+        Args:
+            campaign_id: Campaign ID. (required)
+            status: Only drafts whose latest version is in this status. `submitted` is the review queue.
+            participant_id: Only drafts of this participant.
+            limit
+            skip"""
+        client = _get_client()
+        try:
+            response = client.creator_campaigns.list_campaign_drafts(
+                campaign_id=campaign_id,
+                status=status,
+                participant_id=participant_id,
+                limit=limit,
+                skip=skip,
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get campaign draft",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def creator_campaigns_get_campaign_draft(campaign_id: str, draft_id: str) -> str:
+        """Get campaign draft
+
+        Returns one draft version and every version of its chain (`versions`, newest first, including this one), each with its review comments.
+
+        Args:
+            campaign_id: Campaign ID. (required)
+            draft_id: Draft version ID. (required)"""
+        client = _get_client()
+        try:
+            response = client.creator_campaigns.get_campaign_draft(
+                campaign_id=campaign_id, draft_id=draft_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Approve campaign draft",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def creator_campaigns_approve_campaign_draft(
+        campaign_id: str, draft_id: str
+    ) -> str:
+        """Approve campaign draft
+
+        Approves a `submitted` draft version, emails the creator and fires `campaign_draft.approved`. The creator can then publish it and submit the live post with this `draftId`; each approved draft backs one post only.
+
+        Each version is decided once: a version that is no longer `submitted` answers 409.
+
+        Args:
+            campaign_id: Campaign ID. (required)
+            draft_id: Draft version ID. (required)"""
+        client = _get_client()
+        try:
+            response = client.creator_campaigns.approve_campaign_draft(
+                campaign_id=campaign_id, draft_id=draft_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Request changes on a campaign draft",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def creator_campaigns_request_campaign_draft_revision(
+        campaign_id: str,
+        draft_id: str,
+        note: str | None = None,
+        comments: list[dict[str, Any]] | None = None,
+    ) -> str:
+        """Request changes on a campaign draft
+
+        Marks a `submitted` draft version `revision_requested`, emails the creator and fires `campaign_draft.revision_requested`. The creator answers with one new version (`revisionOf` set to this version).
+
+        Send a `note`, at least one entry in `comments`, or both; neither answers 400 `missing_required_field`. A comment with `atMs` is pinned to that moment of the video.
+
+        Each version is decided once: a version that is no longer `submitted` answers 409.
+
+        Args:
+            campaign_id: Campaign ID. (required)
+            draft_id: Draft version ID. (required)
+            note: What to change overall. Stored as `reviewNote`.
+            comments: Each item is an object with keys: atMs (integer or null) - Milliseconds into the video the comment is about. Null or omitted for a general comment.; body (string, required)"""
+        client = _get_client()
+        try:
+            response = client.creator_campaigns.request_campaign_draft_revision(
+                campaign_id=campaign_id, draft_id=draft_id, note=note, comments=comments
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Reject campaign draft",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def creator_campaigns_reject_campaign_draft(
+        campaign_id: str, draft_id: str, reason: str
+    ) -> str:
+        """Reject campaign draft
+
+        Rejects a `submitted` draft version for good, emails the creator and fires `campaign_draft.rejected`. The reason is stored as `reviewNote`. A rejected draft takes no new version and backs no post.
+
+        Each version is decided once: a version that is no longer `submitted` answers 409.
+
+        Args:
+            campaign_id: Campaign ID. (required)
+            draft_id: Draft version ID. (required)
+            reason: (required)"""
+        client = _get_client()
+        try:
+            response = client.creator_campaigns.reject_campaign_draft(
+                campaign_id=campaign_id, draft_id=draft_id, reason=reason
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List campaign sample requests",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def creator_campaigns_list_campaign_samples(
+        campaign_id: str,
+        status: Literal["pending", "approved", "shipped", "declined"] | None = None,
+        participant_id: str | None = None,
+        limit: int = 50,
+        skip: int = 0,
+    ) -> str:
+        """List campaign sample requests
+
+        Lists the free product samples creators asked for, newest first. `contentOwed` marks an approved or shipped sample whose creator submitted no post in the `sampleContentDueDays` since the approval.
+
+        Args:
+            campaign_id: Campaign ID. (required)
+            status: Only requests in this status. `pending` is the review queue.
+            participant_id: Only requests of this participant.
+            limit
+            skip"""
+        client = _get_client()
+        try:
+            response = client.creator_campaigns.list_campaign_samples(
+                campaign_id=campaign_id,
+                status=status,
+                participant_id=participant_id,
+                limit=limit,
+                skip=skip,
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Approve campaign sample request",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def creator_campaigns_approve_campaign_sample(
+        campaign_id: str, sample_id: str
+    ) -> str:
+        """Approve campaign sample request
+
+        Approves a `pending` sample request. Zernio creates a 100%-off, single-use discount code (`SAMPLE-XXXXXXXX`) limited to the requested product in the campaign's store (Shopify or WooCommerce), returns it as `discountCode`, emails it to the creator and fires `campaign_sample.approved`. The creator redeems it at checkout.
+
+        The code is created before the request changes, so when the store refuses (missing discount permission, an unsupported store, a store error) its error is returned and the request stays `pending`. The approval also starts the `sampleContentDueDays` clock behind `contentDueAt` and `contentOwed`.
+
+        ### Errors
+
+        - 400 `platform_not_supported`: the store cannot create discounts.
+        - 403: the store has not granted the permission discounts need.
+        - 409 `invalid_resource_state`: the request is not `pending`.
+        - 502 `platform_api_error`: the store is unavailable.
+
+        Args:
+            campaign_id: Campaign ID. (required)
+            sample_id: Sample request ID. (required)"""
+        client = _get_client()
+        try:
+            response = client.creator_campaigns.approve_campaign_sample(
+                campaign_id=campaign_id, sample_id=sample_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Decline campaign sample request",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def creator_campaigns_decline_campaign_sample(
+        campaign_id: str, sample_id: str, reason: str
+    ) -> str:
+        """Decline campaign sample request
+
+        Declines a `pending` sample request with a reason, emails the creator and fires `campaign_sample.declined`. The creator can ask for the same product again. Any other status answers 409.
+
+        Args:
+            campaign_id: Campaign ID. (required)
+            sample_id: Sample request ID. (required)
+            reason: Shown to the creator. (required)"""
+        client = _get_client()
+        try:
+            response = client.creator_campaigns.decline_campaign_sample(
+                campaign_id=campaign_id, sample_id=sample_id, reason=reason
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Mark campaign sample shipped",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def creator_campaigns_ship_campaign_sample(
+        campaign_id: str, sample_id: str, tracking_url: str | None = None
+    ) -> str:
+        """Mark campaign sample shipped
+
+        Records that you sent an `approved` sample yourself, with an optional tracking link, emails the creator and fires `campaign_sample.shipped`. No store call or money is involved. Any other status answers 409.
+
+        Args:
+            campaign_id: Campaign ID. (required)
+            sample_id: Sample request ID. (required)
+            tracking_url: The carrier tracking link, shown to the creator."""
+        client = _get_client()
+        try:
+            response = client.creator_campaigns.ship_campaign_sample(
+                campaign_id=campaign_id, sample_id=sample_id, tracking_url=tracking_url
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="List campaign payables",
             readOnlyHint=True,
             destructiveHint=False,
@@ -30753,6 +31158,49 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="List campaign orders",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def creator_campaigns_list_campaign_orders(
+        campaign_id: str,
+        participant_id: str | None = None,
+        status: Literal["pending", "matched", "unmatched"] | None = None,
+        limit: int = 50,
+        skip: int = 0,
+    ) -> str:
+        """List campaign orders
+
+        Lists the store orders a commission or smart retainer campaign credited to its creators, newest first, and every
+        active creator's discount code and tracking link.
+
+        An order is `pending` while the store is still attributing it (Shopify does so for a few minutes after checkout),
+        `matched` once it is credited to a creator and `unmatched` when it never was. Commission is approved `holdDays`
+        after the order was placed.
+
+        Args:
+            campaign_id: Campaign ID. (required)
+            participant_id: Only this creator's orders.
+            status
+            limit
+            skip"""
+        client = _get_client()
+        try:
+            response = client.creator_campaigns.list_campaign_orders(
+                campaign_id=campaign_id,
+                participant_id=participant_id,
+                status=status,
+                limit=limit,
+                skip=skip,
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="Get campaign report",
             readOnlyHint=True,
             destructiveHint=False,
@@ -30771,6 +31219,120 @@ def register_generated_tools(mcp, _get_client):
         try:
             response = client.creator_campaigns.get_campaign_report(
                 campaign_id=campaign_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Launch campaign posts as ads",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def creator_campaigns_launch_campaign_ads(
+        campaign_id: str,
+        submission_ids: list[str] | None,
+        network: Literal["meta", "tiktok"],
+        account_id: str,
+        ad_account_id: str,
+        identity: Literal["brand", "creator"],
+        ad_set_id: str | None = None,
+        existing_campaign_id: str | None = None,
+        daily_budget: float | None = None,
+        body: str | None = None,
+        headline: str | None = None,
+        call_to_action: str | None = None,
+        link_url: str | None = None,
+        status: Literal["ACTIVE", "PAUSED"] = "PAUSED",
+    ) -> str:
+        """Launch campaign posts as ads
+
+        Runs approved posts of an active campaign as ads, each post on its own: a post that cannot run is reported
+        in `results` and never stops the rest.
+
+        A post already launched (or launching) into the same placement is
+        reported as `already_launched` or `in_progress` and never gets a second ad, so a retry is safe.
+
+        ### What each post becomes
+
+        - **Meta, `identity: brand`**: a new ad from the post media in the existing ad set `adSetId`, under the brand's Page.
+        - **Meta, `identity: creator`**: a Partnership Ad of the Instagram post under the creator's handle. Partnership Ads are a limited release while Meta reviews the permission they need (`capabilities.partnershipAds` in `GET /v1/creator-campaigns/{campaignId}/ad-results`); without it these posts fail with a message to launch them with brand identity. Facebook posts only run with brand identity.
+        - **TikTok** (`identity: creator` only): a Spark Ad of the creator's post in its own ad group with `dailyBudget`, inside the existing campaign ...
+
+        Args:
+            campaign_id: Campaign ID. (required)
+            submission_ids: Approved submissions to run as ads. (required)
+            network: Meta runs Instagram and Facebook posts; TikTok runs TikTok posts. (required)
+            account_id: The brand's connected ads account (Facebook or TikTok) the ads run from, as in `/v1/accounts`. (required)
+            ad_account_id: Platform ad account ID. (required)
+            ad_set_id: Existing Meta ad set the ads go into. Required when `network` is `meta`.
+            existing_campaign_id: Existing TikTok campaign that gets one ad group per post. Required when `network` is `tiktok`.
+            daily_budget: Daily budget of each TikTok ad group, in the ad account currency. Required when `network` is `tiktok`.
+            identity: Whose handle the ad runs under. TikTok takes `creator` only. (required)
+            body: Primary text of brand ads. Defaults to the post caption.
+            headline
+            call_to_action: Call to action, as in `POST /v1/ads/create`.
+            link_url: Destination URL (http or https).
+            status: Ads launch paused unless set to `ACTIVE`."""
+        client = _get_client()
+        try:
+            response = client.creator_campaigns.launch_campaign_ads(
+                campaign_id=campaign_id,
+                submission_ids=submission_ids,
+                network=network,
+                account_id=account_id,
+                ad_account_id=ad_account_id,
+                ad_set_id=ad_set_id,
+                existing_campaign_id=existing_campaign_id,
+                daily_budget=daily_budget,
+                identity=identity,
+                body=body,
+                headline=headline,
+                call_to_action=call_to_action,
+                link_url=link_url,
+                status=status,
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get campaign ad results",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def creator_campaigns_get_campaign_ad_results(
+        campaign_id: str,
+        rank_by: Literal["spend", "roas", "purchases"] = "spend",
+        from_: str | None = None,
+        to: str | None = None,
+    ) -> str:
+        """Get campaign ad results
+
+        What the campaign's posts did as ads: totals, each post with its ads and launches, and the creators ranked
+        by `rankBy`.
+
+        An ad counts for a post when it was launched from the post, or when it runs the post (a boosted
+        post, the Instagram media it shows, or a TikTok Spark item).
+
+        Figures come from the ads' daily metrics; money is in the campaign currency, and ads billed in
+        another currency are left out of money figures.
+
+        Args:
+            campaign_id: Campaign ID. (required)
+            rank_by: How `creators` is ranked.
+            from_: First day counted (YYYY-MM-DD, UTC). Omit to count from the first day of data.
+            to: Last day counted (YYYY-MM-DD, UTC). Omit to count through the latest day of data."""
+        client = _get_client()
+        try:
+            response = client.creator_campaigns.get_campaign_ad_results(
+                campaign_id=campaign_id, rank_by=rank_by, from_=from_, to=to
             )
             return _format_response(response)
         except Exception as e:
@@ -30825,7 +31387,7 @@ def register_generated_tools(mcp, _get_client):
         `token` is one of:
 
         - An open invite token (from `POST /v1/creator-campaigns/{campaignId}/invite-link`): answers `kind: invite` with the campaign only.
-        - A participant token (from an invite or a join): answers `kind: participant` with the creator's connected accounts, latest 100 submissions, earnings and payout setup.
+        - A participant token (from an invite or a join): answers `kind: participant` with the creator's connected accounts, latest 100 submissions, draft versions, sample requests, earnings and payout setup. A creator held for approval reads it with `participant.status` `pending` (or `denied` once turned away).
 
         Reading a participant page also re-checks the creator's connected accounts."""
         client = _get_client()
@@ -30852,6 +31414,7 @@ def register_generated_tools(mcp, _get_client):
 
         - Participant token: the body is ignored and the invite is accepted.
         - Open invite token: a new participant is created from `displayName` (required) and `email` (optional), and a fresh participant token comes back. Keep it: it is the creator's only key to their page.
+        - On a campaign with `joinApproval: manual`, an open-link joiner lands `pending` and `campaign_participant.pending` fires instead of `campaign_participant.joined`. A pending creator holds no place under `caps.maxParticipants` (the limit is checked when the operator approves them) and cannot submit posts, drafts or sample requests until approved. Personal invites always get straight in.
 
         Open-link joins are limited to about 20 per IP address and 60 per link every 10 minutes.
 
@@ -30899,7 +31462,9 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=True,
         )
     )
-    def creator_portal_submit_creator_post(url: str) -> str:
+    def creator_portal_submit_creator_post(
+        url: str, draft_id: str | None = None
+    ) -> str:
         """Submit a post
 
         Submits the link to a post the creator published from a connected account. The post opens
@@ -30907,10 +31472,134 @@ def register_generated_tools(mcp, _get_client):
         attempts and 10 accepted posts per participant every 10 minutes.
 
         Args:
-            url: The public link to the post. (required)"""
+            url: The public link to the post. (required)
+            draft_id: The approved draft this post publishes. Required when the campaign has `requireDraftApproval`: it must be one of the creator's own drafts, `approved`, and not used by another post yet (each draft backs one post only)."""
         client = _get_client()
         try:
-            response = client.creator_portal.submit_creator_post(url=url)
+            response = client.creator_portal.submit_creator_post(
+                url=url, draft_id=draft_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get an upload URL for a draft",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def creator_portal_presign_creator_draft_upload(
+        filename: str,
+        content_type: Literal[
+            "video/mp4",
+            "video/quicktime",
+            "video/webm",
+            "image/jpeg",
+            "image/png",
+            "image/webp",
+        ],
+        size: int | None = None,
+    ) -> str:
+        """Get an upload URL for a draft
+
+        Returns a presigned URL to upload one draft file to, on a campaign with `requireDraftApproval`. `PUT` the file to `uploadUrl` with the same `Content-Type`, then pass `publicUrl` as `mediaUrl` to `POST /public/creator-campaigns/{token}/drafts`. The URL expires after `expiresIn` seconds.
+
+        Accepted files: MP4, MOV or WebM video, JPG, PNG or WebP image, up to 500 MB. About 20 uploads per participant every 10 minutes.
+
+        Args:
+            filename: (required)
+            content_type: (required)
+            size: File size in bytes. Optional; over 500 MB answers 400."""
+        client = _get_client()
+        try:
+            response = client.creator_portal.presign_creator_draft_upload(
+                filename=filename, content_type=content_type, size=size
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Submit a draft for review",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def creator_portal_submit_creator_draft(
+        media_url: str,
+        media_type: Literal["video", "image"],
+        caption: str = "",
+        revision_of: str | None = None,
+    ) -> str:
+        """Submit a draft for review
+
+        Sends a draft for the campaign team to review before the creator publishes, on a campaign with `requireDraftApproval`, and fires `campaign_draft.submitted`. `mediaUrl` must be a `publicUrl` from `POST /public/creator-campaigns/{token}/drafts/upload`.
+
+        ### Revisions
+
+        - Without `revisionOf` the draft starts a new chain at version 1.
+        - With `revisionOf` it is the next version of that chain. Only one of the creator's own versions marked `revision_requested` takes a new version, and only once.
+
+        About 20 drafts per participant every 10 minutes.
+
+        Args:
+            media_url: The `publicUrl` of the uploaded file. (required)
+            media_type: (required)
+            caption
+            revision_of: The version marked `revision_requested` that this draft answers."""
+        client = _get_client()
+        try:
+            response = client.creator_portal.submit_creator_draft(
+                media_url=media_url,
+                media_type=media_type,
+                caption=caption,
+                revision_of=revision_of,
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Request a product sample",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def creator_portal_request_creator_sample(
+        product_id: str,
+        shipping_address: dict[str, Any] | None,
+        variant_id: str | None = None,
+        note: str | None = None,
+    ) -> str:
+        """Request a product sample
+
+        Asks for a free sample of one of the campaign's `sampleProducts`, shipped to `shippingAddress`, and fires `campaign_sample.requested`. The request waits for the campaign team; on approval the creator gets a single-use discount code for the product.
+
+        - A product with `variants` needs `variantId`.
+        - One open request per product: asking again while one is pending, approved or shipped answers 409. A declined product can be asked again.
+
+        About 10 requests per participant every 10 minutes.
+
+        Args:
+            product_id: A `productId` from the campaign's `sampleProducts`. (required)
+            variant_id: Required when the product lists `variants`.
+            shipping_address: Object with keys: name (string, required); line1 (string, required); line2 (string); city (string, required); region (string); postalCode (string, required); country (string, required) - ISO 3166-1 alpha-2 country code.; phone (string) (required)
+            note"""
+        client = _get_client()
+        try:
+            response = client.creator_portal.request_creator_sample(
+                product_id=product_id,
+                variant_id=variant_id,
+                shipping_address=shipping_address,
+                note=note,
+            )
             return _format_response(response)
         except Exception as e:
             raise ToolError(f"Error: {e}") from e
@@ -30936,6 +31625,33 @@ def register_generated_tools(mcp, _get_client):
         client = _get_client()
         try:
             response = client.creator_portal.remove_creator_account()
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Set a post's Spark code",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def creator_portal_set_creator_spark_code(spark_auth_code: str) -> str:
+        """Set a post's Spark code
+
+        The creator pastes the Spark code of one of their TikTok posts (generated in the TikTok app under the post's
+        ad settings), so the brand can run the post as a Spark Ad under the creator's handle.
+
+        Send `null` to clear it. The code is never returned: submissions only expose `hasSparkCode`.
+
+        Args:
+            spark_auth_code: The Spark code, or null to clear it. (required)"""
+        client = _get_client()
+        try:
+            response = client.creator_portal.set_creator_spark_code(
+                spark_auth_code=spark_auth_code
+            )
             return _format_response(response)
         except Exception as e:
             raise ToolError(f"Error: {e}") from e
@@ -47619,6 +48335,17 @@ def register_generated_tools(mcp, _get_client):
                 "balance.low",
                 "balance.empty",
                 "balance.charged",
+                "campaign_participant.pending",
+                "campaign_participant.approved",
+                "campaign_participant.denied",
+                "campaign_draft.submitted",
+                "campaign_draft.approved",
+                "campaign_draft.revision_requested",
+                "campaign_draft.rejected",
+                "campaign_sample.requested",
+                "campaign_sample.approved",
+                "campaign_sample.shipped",
+                "campaign_sample.declined",
             ]
         ]
         | None,
@@ -47845,6 +48572,17 @@ def register_generated_tools(mcp, _get_client):
                 "balance.low",
                 "balance.empty",
                 "balance.charged",
+                "campaign_participant.pending",
+                "campaign_participant.approved",
+                "campaign_participant.denied",
+                "campaign_draft.submitted",
+                "campaign_draft.approved",
+                "campaign_draft.revision_requested",
+                "campaign_draft.rejected",
+                "campaign_sample.requested",
+                "campaign_sample.approved",
+                "campaign_sample.shipped",
+                "campaign_sample.declined",
             ]
         ]
         | None = None,
@@ -48149,8 +48887,19 @@ def register_generated_tools(mcp, _get_client):
             "campaign_payout.settled",
             "campaign_payout.failed",
             "campaign_participant.joined",
+            "campaign_participant.pending",
+            "campaign_participant.approved",
+            "campaign_participant.denied",
             "campaign_participant.suspended",
             "campaign_participant.removed",
+            "campaign_draft.submitted",
+            "campaign_draft.approved",
+            "campaign_draft.revision_requested",
+            "campaign_draft.rejected",
+            "campaign_sample.requested",
+            "campaign_sample.approved",
+            "campaign_sample.shipped",
+            "campaign_sample.declined",
             "call.received",
             "call.ended",
             "call.failed",

@@ -108,19 +108,83 @@ class CreatorPortalResource:
             "/public/creator-campaigns/{token}/connect", data=payload
         )
 
-    def submit_creator_post(self, url: str) -> dict[str, Any]:
+    def submit_creator_post(
+        self, url: str, *, draft_id: str | None = None
+    ) -> dict[str, Any]:
         """Submit a post"""
         payload = self._build_payload(
             url=url,
+            draft_id=draft_id,
         )
         return self._client._post(
             "/public/creator-campaigns/{token}/submissions", data=payload
+        )
+
+    def presign_creator_draft_upload(
+        self, filename: str, content_type: str, *, size: int | None = None
+    ) -> dict[str, Any]:
+        """Get an upload URL for a draft"""
+        payload = self._build_payload(
+            filename=filename,
+            content_type=content_type,
+            size=size,
+        )
+        return self._client._post(
+            "/public/creator-campaigns/{token}/drafts/upload", data=payload
+        )
+
+    def submit_creator_draft(
+        self,
+        media_url: str,
+        media_type: str,
+        *,
+        caption: str | None = "",
+        revision_of: str | None = None,
+    ) -> dict[str, Any]:
+        """Submit a draft for review"""
+        payload = self._build_payload(
+            media_url=media_url,
+            media_type=media_type,
+            caption=caption,
+            revision_of=revision_of,
+        )
+        return self._client._post(
+            "/public/creator-campaigns/{token}/drafts", data=payload
+        )
+
+    def request_creator_sample(
+        self,
+        product_id: str,
+        shipping_address: Any,
+        *,
+        variant_id: str | None = None,
+        note: str | None = None,
+    ) -> dict[str, Any]:
+        """Request a product sample"""
+        payload = self._build_payload(
+            product_id=product_id,
+            variant_id=variant_id,
+            shipping_address=shipping_address,
+            note=note,
+        )
+        return self._client._post(
+            "/public/creator-campaigns/{token}/samples", data=payload
         )
 
     def remove_creator_account(self) -> dict[str, Any]:
         """Remove a connected account"""
         return self._client._delete(
             "/public/creator-campaigns/{token}/accounts/{accountId}"
+        )
+
+    def set_creator_spark_code(self, spark_auth_code: Any) -> dict[str, Any]:
+        """Set a post's Spark code"""
+        payload = self._build_payload(
+            spark_auth_code=spark_auth_code,
+        )
+        return self._client._put(
+            "/public/creator-campaigns/{token}/submissions/{submissionId}/spark-code",
+            data=payload,
         )
 
     def get_creator_payouts(
@@ -194,19 +258,83 @@ class CreatorPortalResource:
             "/public/creator-campaigns/{token}/connect", data=payload
         )
 
-    async def asubmit_creator_post(self, url: str) -> dict[str, Any]:
+    async def asubmit_creator_post(
+        self, url: str, *, draft_id: str | None = None
+    ) -> dict[str, Any]:
         """Submit a post (async)"""
         payload = self._build_payload(
             url=url,
+            draft_id=draft_id,
         )
         return await self._client._apost(
             "/public/creator-campaigns/{token}/submissions", data=payload
+        )
+
+    async def apresign_creator_draft_upload(
+        self, filename: str, content_type: str, *, size: int | None = None
+    ) -> dict[str, Any]:
+        """Get an upload URL for a draft (async)"""
+        payload = self._build_payload(
+            filename=filename,
+            content_type=content_type,
+            size=size,
+        )
+        return await self._client._apost(
+            "/public/creator-campaigns/{token}/drafts/upload", data=payload
+        )
+
+    async def asubmit_creator_draft(
+        self,
+        media_url: str,
+        media_type: str,
+        *,
+        caption: str | None = "",
+        revision_of: str | None = None,
+    ) -> dict[str, Any]:
+        """Submit a draft for review (async)"""
+        payload = self._build_payload(
+            media_url=media_url,
+            media_type=media_type,
+            caption=caption,
+            revision_of=revision_of,
+        )
+        return await self._client._apost(
+            "/public/creator-campaigns/{token}/drafts", data=payload
+        )
+
+    async def arequest_creator_sample(
+        self,
+        product_id: str,
+        shipping_address: Any,
+        *,
+        variant_id: str | None = None,
+        note: str | None = None,
+    ) -> dict[str, Any]:
+        """Request a product sample (async)"""
+        payload = self._build_payload(
+            product_id=product_id,
+            variant_id=variant_id,
+            shipping_address=shipping_address,
+            note=note,
+        )
+        return await self._client._apost(
+            "/public/creator-campaigns/{token}/samples", data=payload
         )
 
     async def aremove_creator_account(self) -> dict[str, Any]:
         """Remove a connected account (async)"""
         return await self._client._adelete(
             "/public/creator-campaigns/{token}/accounts/{accountId}"
+        )
+
+    async def aset_creator_spark_code(self, spark_auth_code: Any) -> dict[str, Any]:
+        """Set a post's Spark code (async)"""
+        payload = self._build_payload(
+            spark_auth_code=spark_auth_code,
+        )
+        return await self._client._aput(
+            "/public/creator-campaigns/{token}/submissions/{submissionId}/spark-code",
+            data=payload,
         )
 
     async def aget_creator_payouts(
