@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.556.1"
+  version: "1.560.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -190,6 +190,8 @@ x-documentation:
     - `email.thread_replied` - Mail from someone other than the mailbox arrived in the thread of a message sent with `trackReplies`
     - `email.send_failed` - A scheduled email could not be sent at its `scheduledFor` time; nothing reached the recipients
     - `email.bounced` - A delivery failure report (bounce) for mail the mailbox sent arrived. One event per failed recipient, with the status code, the diagnostic and whether it is hard or soft
+    - `email.updated` - A message in the mailbox changed: read state, star or flag, labels or categories, or folder (archived, trashed, moved). Gmail and Outlook
+    - `email.deleted` - A message was deleted from the mailbox for good. Gmail and Outlook
     - `analytics.synced` - One connected account's analytics sync cycle finished. A trigger, not a transport: it carries no metrics and no cursor, so call `GET /v1/analytics/delta` with your own last `nextCursor` to read what changed across every account. Poll-driven (~hourly per account), not real-time. High volume: subscribe to it on a dedicated endpoint.
     - `post.tracking_completed` - A post's tracking window ended and its final analytics read finished. Carries the closing metrics (or `final: null` when none could be read) and why the window completed: `final_read`, `unreachable` or `post_deleted`
     - `post.authenticity_changed` - A tracked post's authenticity score crossed the flag threshold of 40, in either direction. Carries the new and previous score, confidence and reasons. A post's first score never fires it
@@ -735,7 +737,7 @@ tags:
       - Contacts and automations: `contact.tag_added`, `contact.tag_removed`, `contact.field_changed`, `contact.updated`, `contact.deleted`, `sequence.enrolled`, `sequence.exited`, `workflow.run.started`, `workflow.run.completed`, `workflow.run.failed`, `support.run.completed`, `support.run.failed`, `automation.check.completed`, `automation.action.applied`, `automation.action.failed`, `automation.action.unknown`, `automation.alert.opened`, `automation.alert.escalated`, `automation.alert.resolved`
       - Creator campaigns: `campaign_submission.received`, `campaign_submission.flagged`, `campaign_submission.pending_review`, `campaign_submission.approved`, `campaign_submission.rejected`, `creator_campaign.budget_exhausted`, `creator_campaign.closed`, `campaign_payout.payable`, `campaign_payout.settled`, `campaign_payout.failed`, `campaign_participant.joined`, `campaign_participant.pending`, `campaign_participant.approved`, `campaign_participant.denied`, `campaign_participant.suspended`, `campaign_participant.removed`, `campaign_draft.submitted`, `campaign_draft.approved`, `campaign_draft.revision_requested`, `campaign_draft.rejected`, `campaign_sample.requested`, `campaign_sample.approved`, `campaign_sample.shipped`, `campaign_sample.declined`
       - Calendar and files: `calendar.event.created`, `calendar.event.updated`, `calendar.event.deleted`, `file.created`, `file.updated`, `file.deleted`, `file.picked`
-      - Email: `email.sent`, `email.opened`, `email.link_clicked`, `email.thread_replied`, `email.send_failed`, `email.bounced`
+      - Email: `email.sent`, `email.opened`, `email.link_clicked`, `email.thread_replied`, `email.send_failed`, `email.bounced`, `email.updated`, `email.deleted`
       - Billing: `balance.low`, `balance.empty`, `balance.charged`
       - Other: `api.changelog.published`, `webhook.test`
 
@@ -5441,7 +5443,7 @@ components:
           type: array
           items:
             type: string
-            enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.permissions_changed, account.ads.initial_sync_completed, account.ads.sync_failed, account.ads.sync_recovered, analytics.synced, post.tracking_completed, post.authenticity_changed, message.received, conversation.started, conversation.control_changed, call.received, call.ended, call.failed, call.permission_request, call.transcript_segment, call.recording_ready, message.sent, message.edited, message.deleted, message.delivered, message.read, message.played, message.failed, reaction.received, referral.received, comment.received, mention.received, review.new, review.updated, review.deleted, review.restored, lead.received, ad.status_changed, ad.created, ad.updated, campaign.created, campaign.updated, ad_set.created, ad_set.updated, ad.review.approved, ad.review.rejected, ad.delivery_issue, campaign.budget.depleted, ad_account.status_changed, ad.video.processed, ad_rule.triggered, automation.check.completed, automation.action.applied, automation.action.failed, automation.action.unknown, automation.alert.opened, automation.alert.escalated, automation.alert.resolved, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.account.quality_updated, whatsapp.account.status_updated, whatsapp.account.alert_received, whatsapp.contact.identity_changed, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, phone_number.stock_available, verification.approved, verification.failed, api.changelog.published, sms.registration.action_required, sms.registration.status_updated, branded_calling.identity.status_updated, branded_calling.identity.action_required, branded_calling.number.status_updated, rcs.agent.status_updated, commerce.product.created, commerce.product.updated, commerce.product.deleted, commerce.order.created, commerce.order.updated, commerce.order.refunded, contact.tag_added, contact.tag_removed, contact.field_changed, sequence.enrolled, sequence.exited, workflow.run.started, workflow.run.completed, workflow.run.failed, support.run.completed, support.run.failed, campaign_submission.received, campaign_submission.flagged, campaign_submission.pending_review, campaign_submission.approved, campaign_submission.rejected, creator_campaign.budget_exhausted, creator_campaign.closed, campaign_payout.payable, campaign_payout.settled, campaign_payout.failed, campaign_participant.joined, campaign_participant.suspended, campaign_participant.removed, account.rate_limited, calendar.event.created, calendar.event.updated, calendar.event.deleted, email.sent, email.opened, email.link_clicked, email.thread_replied, email.send_failed, email.bounced, file.created, file.updated, file.deleted, file.picked, contact.updated, contact.deleted, balance.low, balance.empty, balance.charged, campaign_participant.pending, campaign_participant.approved, campaign_participant.denied, campaign_draft.submitted, campaign_draft.approved, campaign_draft.revision_requested, campaign_draft.rejected, campaign_sample.requested, campaign_sample.approved, campaign_sample.shipped, campaign_sample.declined]
+            enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.permissions_changed, account.ads.initial_sync_completed, account.ads.sync_failed, account.ads.sync_recovered, analytics.synced, post.tracking_completed, post.authenticity_changed, message.received, conversation.started, conversation.control_changed, call.received, call.ended, call.failed, call.permission_request, call.transcript_segment, call.recording_ready, message.sent, message.edited, message.deleted, message.delivered, message.read, message.played, message.failed, reaction.received, referral.received, comment.received, mention.received, review.new, review.updated, review.deleted, review.restored, lead.received, ad.status_changed, ad.created, ad.updated, campaign.created, campaign.updated, ad_set.created, ad_set.updated, ad.review.approved, ad.review.rejected, ad.delivery_issue, campaign.budget.depleted, ad_account.status_changed, ad.video.processed, ad_rule.triggered, automation.check.completed, automation.action.applied, automation.action.failed, automation.action.unknown, automation.alert.opened, automation.alert.escalated, automation.alert.resolved, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.account.quality_updated, whatsapp.account.status_updated, whatsapp.account.alert_received, whatsapp.contact.identity_changed, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, phone_number.stock_available, verification.approved, verification.failed, api.changelog.published, sms.registration.action_required, sms.registration.status_updated, branded_calling.identity.status_updated, branded_calling.identity.action_required, branded_calling.number.status_updated, rcs.agent.status_updated, commerce.product.created, commerce.product.updated, commerce.product.deleted, commerce.order.created, commerce.order.updated, commerce.order.refunded, contact.tag_added, contact.tag_removed, contact.field_changed, sequence.enrolled, sequence.exited, workflow.run.started, workflow.run.completed, workflow.run.failed, support.run.completed, support.run.failed, campaign_submission.received, campaign_submission.flagged, campaign_submission.pending_review, campaign_submission.approved, campaign_submission.rejected, creator_campaign.budget_exhausted, creator_campaign.closed, campaign_payout.payable, campaign_payout.settled, campaign_payout.failed, campaign_participant.joined, campaign_participant.suspended, campaign_participant.removed, account.rate_limited, calendar.event.created, calendar.event.updated, calendar.event.deleted, email.sent, email.opened, email.link_clicked, email.thread_replied, email.send_failed, email.bounced, email.updated, email.deleted, file.created, file.updated, file.deleted, file.picked, contact.updated, contact.deleted, balance.low, balance.empty, balance.charged, campaign_participant.pending, campaign_participant.approved, campaign_participant.denied, campaign_draft.submitted, campaign_draft.approved, campaign_draft.revision_requested, campaign_draft.rejected, campaign_sample.requested, campaign_sample.approved, campaign_sample.shipped, campaign_sample.declined]
           description: Events subscribed to
         isActive:
           type: boolean
@@ -6850,6 +6852,10 @@ components:
         payableCents: { type: integer, description: "What the campaign's creators can be paid now, summed over every participant's payable balance." }
         landingUrl: { type: [string, "null"], description: 'The page creator tracking links open.' }
         codeDiscountPercent: { type: [integer, "null"], description: 'What each creator discount code takes off.' }
+        autoPayout:
+          oneOf:
+            - $ref: '#/components/schemas/CreatorCampaignAutoPayout'
+            - { type: "null" }
         pendingParticipantCount: { type: integer, description: 'Creators who asked to join through the open link and wait for a decision. Not counted in `participantCount`.' }
         draftCounts: { $ref: '#/components/schemas/CampaignDraftCounts' }
         sampleCounts: { $ref: '#/components/schemas/CampaignSampleCounts' }
@@ -6882,6 +6888,11 @@ components:
             - { type: "null" }
         landingUrl: { type: [string, "null"], format: uri, maxLength: 2000, description: 'The page creator tracking links open. Required unless `attribution` is `code`.' }
         codeDiscountPercent: { type: [integer, "null"], minimum: 1, maximum: 100, description: 'What each creator''s discount code takes off an order. Required unless `attribution` is `link`.' }
+        autoPayout:
+          description: 'Treasury campaigns only. Pays every ready creator at 15:00 UTC, daily or on Mondays, with one payout batch on your saved card, paid out 7 days later. A refused card charges nothing and we email you. Needs a money mover and a saved card.'
+          oneOf:
+            - $ref: '#/components/schemas/CreatorCampaignAutoPayout'
+            - { type: "null" }
         joinApproval: { type: string, enum: [auto, manual], default: auto, description: 'manual holds creators who join through the open link as `pending` until you approve them. Personal invites are never held.' }
         requireDraftApproval: { type: boolean, default: false, description: 'Creators upload a draft for review before publishing, and each submitted post must name an approved draft.' }
         storeAccountId:
@@ -6896,6 +6907,12 @@ components:
           items: { type: string, minLength: 1, maxLength: 64 }
           description: 'Product ids in the store that creators can ask a free sample of. Each is read from the store and saved as `sampleProducts`; an unknown product answers 404 `product_not_found`. Needs a store, otherwise 400 `missing_required_field` (`param: storeAccountId`).'
         sampleContentDueDays: { type: integer, minimum: 1, maximum: 365, default: 14, description: 'Days after a sample is approved before a creator with no post since shows as owing content.' }
+    CreatorCampaignAutoPayout:
+      type: object
+      required: [enabled, cadence]
+      properties:
+        enabled: { type: boolean }
+        cadence: { type: string, enum: [weekly, daily] }
     UpdateCreatorCampaignRequest:
       type: object
       minProperties: 1
@@ -6921,6 +6938,11 @@ components:
             - { type: "null" }
         landingUrl: { type: [string, "null"], format: uri, maxLength: 2000, description: 'The page creator tracking links open. Required unless `attribution` is `code`.' }
         codeDiscountPercent: { type: [integer, "null"], minimum: 1, maximum: 100, description: 'What each creator''s discount code takes off an order. Required unless `attribution` is `link`.' }
+        autoPayout:
+          description: 'Treasury campaigns only. Pays every ready creator at 15:00 UTC, daily or on Mondays, with one payout batch on your saved card, paid out 7 days later. A refused card charges nothing and we email you. Needs a money mover and a saved card.'
+          oneOf:
+            - $ref: '#/components/schemas/CreatorCampaignAutoPayout'
+            - { type: "null" }
         joinApproval: { type: string, enum: [auto, manual], description: 'manual holds creators who join through the open link as `pending` until you approve them. Personal invites are never held.' }
         requireDraftApproval: { type: boolean, description: 'Creators upload a draft for review before publishing, and each submitted post must name an approved draft.' }
         storeAccountId:
@@ -14281,13 +14303,17 @@ components:
         trackOpens: { type: boolean, description: 'Adds an open pixel to the html and fires `email.opened`. Needs `html`.' }
         trackLinks: { type: boolean, description: 'Rewrites every http(s) link in the html through a Zernio redirect and fires `email.link_clicked`. Needs `html`.' }
         trackReplies: { type: boolean, description: 'Fires `email.thread_replied` when someone else writes in this message''s thread. Works with text or html.' }
+    EmailDraftObject:
+      type: string
+      enum: [draft]
+      description: Always `draft`.
     EmailDraft:
       description: 'A draft in the mailbox. Carries the message fields; `id` is the draft id the drafts endpoints take. Store `id`, not `messageId`.'
       allOf:
         - $ref: '#/components/schemas/EmailMessage'
         - type: object
           properties:
-            object: { type: string, enum: [draft] }
+            object: { $ref: '#/components/schemas/EmailDraftObject' }
             id: { type: string, description: 'The draft id: the Gmail draft id, or the Outlook message id.' }
             kind: { type: string, enum: [new, reply, forward], description: 'Fixed when the draft is created. A draft the user wrote in their mail client is read from its headers.' }
             version: { type: string, description: 'Changes on every edit, the user''s in their mail app included. Pass it as `If-Match` to update or send only that version. Also the `ETag` response header.' }
@@ -14380,6 +14406,12 @@ components:
         timezone: { type: [string, "null"] }
         color: { type: [string, "null"] }
         readOnly: { type: boolean }
+    FreeBusyError:
+      type: object
+      description: Why this account, calendar or address could not be read. The provider's code when it gave one.
+      properties:
+        code: { type: string }
+        message: { type: string }
     CalendarEventFields:
       type: object
       properties:
@@ -14390,8 +14422,17 @@ components:
         end: { type: string, description: 'Exclusive for all-day events.' }
         allDay: { type: boolean }
         timezone: { type: string, description: "IANA zone the event is scheduled in. Defaults to the calendar's zone on Google and the mailbox's working-hours zone on Microsoft (UTC when Outlook has none, as on personal accounts). A PATCH that moves an event without a zone keeps the zone the event already has." }
-        participants: { type: array, maxItems: 100, items: { $ref: '#/components/schemas/EmailAddress' } }
-        recurrence: { type: array, maxItems: 5, items: { type: string }, description: 'RRULE lines, e.g. `RRULE:FREQ=WEEKLY;BYDAY=MO,WE;COUNT=10`.' }
+        participants:
+          type: array
+          maxItems: 100
+          items:
+            allOf:
+              - $ref: '#/components/schemas/EmailAddress'
+              - type: object
+                properties:
+                  optional: { type: boolean, description: The guest may skip the event. }
+                  resource: { type: boolean, description: 'A room or equipment address: Google and Outlook book it as a resource.' }
+        recurrence: { type: array, maxItems: 5, items: { type: string }, description: 'RRULE lines, e.g. `RRULE:FREQ=WEEKLY;BYDAY=MO,WE;COUNT=10`. Microsoft takes one RRULE plus EXDATE lines; Zernio removes the EXDATE occurrences after saving the series.' }
         reminders:
           type: object
           properties:
@@ -14437,6 +14478,10 @@ components:
                 properties:
                   status: { type: string, enum: [accepted, declined, tentative, pending] }
                   comment: { type: [string, "null"] }
+                  optional: { type: boolean, description: The guest may skip the event. }
+                  resource: { type: boolean, description: 'A room or equipment address.' }
+                  self: { type: boolean, description: This guest is the connected mailbox. }
+                  organizer: { type: boolean }
         organizer: { oneOf: [{ $ref: '#/components/schemas/EmailAddress' }, { type: "null" }] }
         recurrence: { type: [array, "null"], items: { type: string } }
         reminders:
@@ -14454,6 +14499,11 @@ components:
         status: { type: string, enum: [confirmed, tentative, cancelled] }
         icalUid: { type: [string, "null"] }
         masterEventId: { type: [string, "null"] }
+        type:
+          type: string
+          enum: [single, series, occurrence, exception]
+          description: "`series` is a recurring master, `occurrence` one of its instances, and `exception` an instance changed on its own. Google flags an instance as an exception only when it was moved off its slot."
+        originalStart: { type: [string, "null"], description: 'For an occurrence or exception, the start it has in the series pattern.' }
         htmlLink: { type: [string, "null"] }
         readOnly: { type: boolean }
         metadata: { type: object, additionalProperties: { type: string } }
@@ -14523,6 +14573,8 @@ components:
           properties:
             id: { type: string }
             changeType: { type: string, enum: [created, updated, deleted] }
+            calendarId: { type: [string, "null"], description: "The calendar holding the event, to pass as `calendarId` when reading it: `primary` for the user's main calendar. Null when it is not known, as for a deleted Outlook event." }
+            masterEventId: { type: [string, "null"], description: 'The series this event belongs to, when it is an occurrence or exception.' }
         timestamp: { type: string, format: date-time }
     WebhookEmailTrackedMessage:
       type: object
@@ -14693,6 +14745,70 @@ components:
             bounceMessageId: { type: string, description: 'Provider id of the bounce report in the mailbox.' }
             bouncedAt: { type: string, format: date-time, description: 'When the report arrived in the mailbox.' }
             detectedAt: { type: string, format: date-time, description: 'When Zernio read it. Reports can arrive minutes to days after the send.' }
+        timestamp: { type: string, format: date-time }
+    WebhookPayloadEmailUpdated:
+      type: object
+      description: 'Webhook payload for email.updated. Gmail sends `changes`; Outlook sends the message as it is now and `changes: null`.'
+      required: [id, event, account, email, changes, timestamp]
+      properties:
+        id: { type: string }
+        profiles: { $ref: '#/components/schemas/WebhookProfiles' }
+        test:
+          type: boolean
+          description: 'Always true when present: only a sample sent by POST /v1/webhooks/test with an event carries it. Real deliveries never do.'
+        event: { type: string, enum: [email.updated] }
+        account:
+          type: object
+          properties:
+            accountId: { type: string }
+            profileId: { type: string }
+            platform: { type: string }
+            username: { type: string }
+            displayName: { type: [string, "null"] }
+        email:
+          type: object
+          description: 'The message as it is after the change.'
+          properties:
+            messageId: { type: string }
+            threadId: { type: [string, "null"] }
+            folder: { type: [string, "null"], description: '`inbox`, `sent`, `archive`, `trash`, `spam`, `drafts`, or the provider folder id for any other folder.' }
+            unread: { type: [boolean, "null"] }
+            starred: { type: [boolean, "null"], description: 'Gmail star or Outlook flag.' }
+            labels: { type: [array, "null"], items: { type: string }, description: 'Gmail user label ids or Outlook category names.' }
+        changes:
+          type: [object, "null"]
+          description: 'What changed. Gmail only; null on Outlook.'
+          properties:
+            unread: { type: boolean }
+            starred: { type: boolean }
+            folder: { type: string }
+            labelsAdded: { type: array, items: { type: string } }
+            labelsRemoved: { type: array, items: { type: string } }
+        timestamp: { type: string, format: date-time }
+    WebhookPayloadEmailDeleted:
+      type: object
+      description: 'Webhook payload for email.deleted.'
+      required: [id, event, account, email, timestamp]
+      properties:
+        id: { type: string }
+        profiles: { $ref: '#/components/schemas/WebhookProfiles' }
+        test:
+          type: boolean
+          description: 'Always true when present: only a sample sent by POST /v1/webhooks/test with an event carries it. Real deliveries never do.'
+        event: { type: string, enum: [email.deleted] }
+        account:
+          type: object
+          properties:
+            accountId: { type: string }
+            profileId: { type: string }
+            platform: { type: string }
+            username: { type: string }
+            displayName: { type: [string, "null"] }
+        email:
+          type: object
+          properties:
+            messageId: { type: string }
+            threadId: { type: [string, "null"] }
         timestamp: { type: string, format: date-time }
     WebhookPayloadEmailSent:
       type: object
@@ -23114,6 +23230,8 @@ webhooks:
               calendarEvent:
                 id: 7kq3v2m1n0abcdefghijklmnop
                 changeType: created
+                calendarId: primary
+                masterEventId: null
               profiles:
                 - id: 507f1f77bcf86cd799439012
                   externalId: cus_8f3a2
@@ -23146,6 +23264,8 @@ webhooks:
               calendarEvent:
                 id: 7kq3v2m1n0abcdefghijklmnop
                 changeType: updated
+                calendarId: primary
+                masterEventId: null
               profiles:
                 - id: 507f1f77bcf86cd799439012
                   externalId: cus_8f3a2
@@ -23381,6 +23501,82 @@ webhooks:
       responses:
         '200':
           description: Webhook received successfully
+  email.updated:
+    post:
+      operationId: onEmailUpdated
+      summary: Email updated
+      description: |
+        A message in the mailbox changed: it was read or marked unread, starred or flagged, labelled or categorized, archived, trashed or moved. Covers the Inbox, and Sent on Gmail. A change can arrive more than once; key on `email.messageId`.
+
+        Gmail reports exactly what changed in `changes`. Outlook reports the message as it is now, with `changes: null`. A message deleted for good fires `email.deleted` instead. IMAP mailboxes do not send it.
+      tags: [Webhook Events]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              id: 00000000-0000-4000-8000-000000000000
+              event: email.updated
+              timestamp: '2026-01-15T10:00:00Z'
+              account:
+                accountId: 507f1f77bcf86cd799439011
+                profileId: 507f1f77bcf86cd799439012
+                platform: google
+                username: jane@example.com
+                displayName: Jane Doe
+              email:
+                messageId: 18c2f3a4b5d6e7f8
+                threadId: 18c2f3a4b5d6e7f0
+                folder: inbox
+                unread: false
+                starred: true
+                labels:
+                  - Label_7
+              changes:
+                unread: false
+                starred: true
+                labelsAdded:
+                  - Label_7
+              profiles:
+                - id: 507f1f77bcf86cd799439012
+                  externalId: cus_8f3a2
+            schema:
+              $ref: '#/components/schemas/WebhookPayloadEmailUpdated'
+      responses:
+        '200':
+          description: Webhook received successfully
+  email.deleted:
+    post:
+      operationId: onEmailDeleted
+      summary: Email deleted
+      description: |
+        A message was deleted from the mailbox for good. Moving it to Trash is `email.updated` with `folder: "trash"`. IMAP mailboxes do not send it.
+      tags: [Webhook Events]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              id: 00000000-0000-4000-8000-000000000000
+              event: email.deleted
+              timestamp: '2026-01-15T10:00:00Z'
+              account:
+                accountId: 507f1f77bcf86cd799439011
+                profileId: 507f1f77bcf86cd799439012
+                platform: google
+                username: jane@example.com
+                displayName: Jane Doe
+              email:
+                messageId: 18c2f3a4b5d6e7f8
+                threadId: 18c2f3a4b5d6e7f0
+              profiles:
+                - id: 507f1f77bcf86cd799439012
+                  externalId: cus_8f3a2
+            schema:
+              $ref: '#/components/schemas/WebhookPayloadEmailDeleted'
+      responses:
+        '200':
+          description: Webhook received successfully
   email.sent:
     post:
       operationId: onEmailSent
@@ -23461,6 +23657,8 @@ webhooks:
               calendarEvent:
                 id: 7kq3v2m1n0abcdefghijklmnop
                 changeType: deleted
+                calendarId: primary
+                masterEventId: null
               profiles:
                 - id: 507f1f77bcf86cd799439012
                   externalId: cus_8f3a2
@@ -53744,6 +53942,8 @@ paths:
                     - email.thread_replied
                     - email.send_failed
                     - email.bounced
+                    - email.updated
+                    - email.deleted
                     - file.created
                     - file.updated
                     - file.deleted
@@ -55419,6 +55619,41 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
         '412': { $ref: '#/components/responses/MailboxPreconditionFailed' }
+  /v1/calendar/events/{eventId}/instances:
+    get:
+      x-resource-group: "calendar"
+      operationId: listCalendarEventInstances
+      tags: [Calendar]
+      summary: List the occurrences of a recurring event
+      description: Lists the occurrences and exceptions of a series between `from` and `to`. Each one has its own `id` to read, update or delete just that occurrence, and `originalStart` for its place in the pattern.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: eventId, in: path, required: true, schema: { type: string }, description: The series (master) event id. }
+        - { name: accountId, in: query, required: true, schema: { type: string } }
+        - { name: calendarId, in: query, schema: { type: string }, description: "The calendar holding the event (an id from GET /v1/calendar/calendars). Defaults to the primary calendar." }
+        - { name: from, in: query, required: true, schema: { type: string, format: date-time } }
+        - { name: to, in: query, required: true, schema: { type: string, format: date-time } }
+        - { name: timezone, in: query, schema: { type: string }, description: 'IANA zone the `start` and `end` offsets are rendered in.' }
+        - { name: cursor, in: query, schema: { type: string } }
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 200, default: 50 } }
+      responses:
+        '200':
+          description: Occurrences in the window
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { type: array, items: { $ref: '#/components/schemas/CalendarEvent' } }
+                  pagination:
+                    type: object
+                    properties:
+                      hasMore: { type: boolean }
+                      nextCursor: { type: [string, "null"] }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '412': { $ref: '#/components/responses/MailboxPreconditionFailed' }
   /v1/calendar/events/{eventId}/rsvp:
     post:
       x-resource-group: "calendar"
@@ -55461,6 +55696,14 @@ paths:
       operationId: calendarFreeBusy
       tags: [Calendar]
       summary: Busy blocks for one or more accounts
+      description: |
+        Reads busy time for up to 10 connected accounts, Google and Microsoft mixed, in parallel.
+
+        By default a Google account reads every calendar shown in Google Calendar, and a Microsoft account reads the mailbox's schedule. Name calendars with `accounts[].calendarIds`.
+
+        Check coworkers who never connected with `accounts[].emails`, read through that account (Google: up to 50 calendars and addresses per account; Microsoft: up to 19 coworkers, work accounts only).
+
+        An account that cannot be read gets `busy: null` and an `error`, and the others still answer. When no account can be read, the first error is returned as the response.
       security: [{ bearerAuth: [] }]
       requestBody:
         required: true
@@ -55468,9 +55711,21 @@ paths:
           application/json:
             schema:
               type: object
-              required: [accountIds, from, to]
+              required: [from, to]
               properties:
-                accountIds: { type: array, minItems: 1, maxItems: 10, items: { type: string } }
+                accountIds: { type: array, minItems: 1, maxItems: 10, items: { type: string }, description: 'Accounts to read with their defaults. Send this or `accounts`.' }
+                accounts:
+                  type: array
+                  minItems: 1
+                  maxItems: 10
+                  description: Accounts with per-account options. Send this or `accountIds`.
+                  items:
+                    type: object
+                    required: [accountId]
+                    properties:
+                      accountId: { type: string }
+                      calendarIds: { type: array, minItems: 1, maxItems: 50, items: { type: string }, description: 'Calendars to read (ids from GET /v1/calendar/calendars, or `primary`).' }
+                      emails: { type: array, maxItems: 20, items: { type: string, format: email }, description: "Coworkers whose free-busy this account can see, usually people in the same organization." }
                 from: { type: string, format: date-time }
                 to: { type: string, format: date-time }
       responses:
@@ -55489,7 +55744,24 @@ paths:
                         accountId: { type: string }
                         from: { type: string, format: date-time }
                         to: { type: string, format: date-time }
-                        busy: { type: array, items: { $ref: '#/components/schemas/BusyBlock' } }
+                        busy: { type: [array, 'null'], items: { $ref: '#/components/schemas/BusyBlock' }, description: "The account's own busy time across the calendars read, merged. Null when the account could not be read." }
+                        calendars:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              id: { type: string }
+                              busy: { type: array, items: { $ref: '#/components/schemas/BusyBlock' } }
+                              error: { $ref: '#/components/schemas/FreeBusyError' }
+                        people:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              email: { type: string }
+                              busy: { type: array, items: { $ref: '#/components/schemas/BusyBlock' } }
+                              error: { $ref: '#/components/schemas/FreeBusyError' }
+                        error: { $ref: '#/components/schemas/FreeBusyError' }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '412': { $ref: '#/components/responses/MailboxPreconditionFailed' }

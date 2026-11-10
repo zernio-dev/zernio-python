@@ -848,6 +848,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 ### Calendar
 | Method | Description |
 |--------|-------------|
+| `calendar.list_calendar_event_instances()` | List the occurrences of a recurring event |
 | `calendar.list_calendar_events()` | List events in a window |
 | `calendar.list_calendars()` | List calendars |
 | `calendar.create_calendar_event()` | Create an event |

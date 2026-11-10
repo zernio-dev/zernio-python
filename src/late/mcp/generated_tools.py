@@ -20449,7 +20449,7 @@ def register_generated_tools(mcp, _get_client):
             all_day
             timezone: IANA zone the event is scheduled in. Defaults to the calendar's zone on Google and the mailbox's working-hours zone on Microsoft (UTC when Outlook has none, as on personal accounts). A PATCH that moves an event without a zone keeps the zone the event already has.
             participants: Each item is an object with keys: email (string, required); name (string or null)
-            recurrence: RRULE lines, e.g. `RRULE:FREQ=WEEKLY;BYDAY=MO,WE;COUNT=10`.
+            recurrence: RRULE lines, e.g. `RRULE:FREQ=WEEKLY;BYDAY=MO,WE;COUNT=10`. Microsoft takes one RRULE plus EXDATE lines; Zernio removes the EXDATE occurrences after saving the series.
             reminders: Object with keys: useDefault (boolean); overrides (list of objects with keys minutes)
             conferencing
             busy
@@ -20556,7 +20556,7 @@ def register_generated_tools(mcp, _get_client):
             all_day
             timezone: IANA zone the event is scheduled in. Defaults to the calendar's zone on Google and the mailbox's working-hours zone on Microsoft (UTC when Outlook has none, as on personal accounts). A PATCH that moves an event without a zone keeps the zone the event already has.
             participants: Each item is an object with keys: email (string, required); name (string or null)
-            recurrence: RRULE lines, e.g. `RRULE:FREQ=WEEKLY;BYDAY=MO,WE;COUNT=10`.
+            recurrence: RRULE lines, e.g. `RRULE:FREQ=WEEKLY;BYDAY=MO,WE;COUNT=10`. Microsoft takes one RRULE plus EXDATE lines; Zernio removes the EXDATE occurrences after saving the series.
             reminders: Object with keys: useDefault (boolean); overrides (list of objects with keys minutes)
             conferencing
             busy
@@ -20624,6 +20624,53 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="List the occurrences of a recurring event",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def calendar_list_calendar_event_instances(
+        event_id: str,
+        account_id: str,
+        from_: str,
+        to: str,
+        calendar_id: str | None = None,
+        timezone: str | None = None,
+        cursor: str | None = None,
+        limit: int = 50,
+    ) -> str:
+        """List the occurrences of a recurring event
+
+        Lists the occurrences and exceptions of a series between `from` and `to`. Each one has its own `id` to read, update or delete just that occurrence, and `originalStart` for its place in the pattern.
+
+        Args:
+            event_id: The series (master) event id. (required)
+            account_id: (required)
+            calendar_id: The calendar holding the event (an id from GET /v1/calendar/calendars). Defaults to the primary calendar.
+            from_: (required)
+            to: (required)
+            timezone: IANA zone the `start` and `end` offsets are rendered in.
+            cursor
+            limit"""
+        client = _get_client()
+        try:
+            response = client.calendar.list_calendar_event_instances(
+                event_id=event_id,
+                account_id=account_id,
+                calendar_id=calendar_id,
+                from_=from_,
+                to=to,
+                timezone=timezone,
+                cursor=cursor,
+                limit=limit,
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="Respond to an invitation",
             readOnlyHint=False,
             destructiveHint=True,
@@ -20671,17 +20718,31 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=True,
         )
     )
-    def calendar_free_busy(account_ids: list[str] | None, from_: str, to: str) -> str:
+    def calendar_free_busy(
+        from_: str,
+        to: str,
+        account_ids: list[str] | None = None,
+        accounts: list[dict[str, Any]] | None = None,
+    ) -> str:
         """Busy blocks for one or more accounts
 
+        Reads busy time for up to 10 connected accounts, Google and Microsoft mixed, in parallel.
+
+        By default a Google account reads every calendar shown in Google Calendar, and a Microsoft account reads the mailbox's schedule. Name calendars with `accounts[].calendarIds`.
+
+        Check coworkers who never connected with `accounts[].emails`, read through that account (Google: up to 50 calendars and addresses per account; Microsoft: up to 19 coworkers, work accounts only).
+
+        An account that cannot be read gets `busy: null` and an `error`, and the others still answer. When no account can be read, the first error is returned as the response.
+
         Args:
-            account_ids: (required)
+            account_ids: Accounts to read with their defaults. Send this or `accounts`.
+            accounts: Accounts with per-account options. Send this or `accountIds`. Each item is an object with keys: accountId (string, required); calendarIds (list of string) - Calendars to read (ids from GET /v1/calendar/calendars, or `primary`).; emails (list of string) - Coworkers whose free-busy this account can see, usually people in the same organization.
             from_: (required)
             to: (required)"""
         client = _get_client()
         try:
             response = client.calendar.calendar_free_busy(
-                account_ids=account_ids, from_=from_, to=to
+                account_ids=account_ids, accounts=accounts, from_=from_, to=to
             )
             return _format_response(response)
         except Exception as e:
@@ -29825,6 +29886,7 @@ def register_generated_tools(mcp, _get_client):
         branding: str | None = None,
         landing_url: str | None = None,
         code_discount_percent: str | None = None,
+        auto_payout: str | None = None,
         join_approval: Literal["auto", "manual"] = "auto",
         require_draft_approval: bool = False,
         store_account_id: str | None = None,
@@ -29857,6 +29919,7 @@ def register_generated_tools(mcp, _get_client):
                 branding
                 landing_url: The page creator tracking links open. Required unless `attribution` is `code`.
                 code_discount_percent: What each creator's discount code takes off an order. Required unless `attribution` is `link`.
+                auto_payout: Treasury campaigns only. Pays every ready creator at 15:00 UTC, daily or on Mondays, with one payout batch on your saved card, paid out 7 days later. A refused card charges nothing and we email you. Needs a money mover and a saved card.
                 join_approval: manual holds creators who join through the open link as `pending` until you approve them. Personal invites are never held.
                 require_draft_approval: Creators upload a draft for review before publishing, and each submitted post must name an approved draft.
                 store_account_id: A connected Shopify or WooCommerce store account. On `commission` and smart `retainer` economics its orders pay commission: required there, and fixed once such a campaign leaves draft.
@@ -29883,6 +29946,7 @@ def register_generated_tools(mcp, _get_client):
                 branding=branding,
                 landing_url=landing_url,
                 code_discount_percent=code_discount_percent,
+                auto_payout=auto_payout,
                 join_approval=join_approval,
                 require_draft_approval=require_draft_approval,
                 store_account_id=store_account_id,
@@ -29987,6 +30051,7 @@ def register_generated_tools(mcp, _get_client):
         branding: str | None = None,
         landing_url: str | None = None,
         code_discount_percent: str | None = None,
+        auto_payout: str | None = None,
         join_approval: Literal["auto", "manual"] | None = None,
         require_draft_approval: bool | None = None,
         store_account_id: str | None = None,
@@ -30017,6 +30082,7 @@ def register_generated_tools(mcp, _get_client):
                 branding
                 landing_url: The page creator tracking links open. Required unless `attribution` is `code`.
                 code_discount_percent: What each creator's discount code takes off an order. Required unless `attribution` is `link`.
+                auto_payout: Treasury campaigns only. Pays every ready creator at 15:00 UTC, daily or on Mondays, with one payout batch on your saved card, paid out 7 days later. A refused card charges nothing and we email you. Needs a money mover and a saved card.
                 join_approval: manual holds creators who join through the open link as `pending` until you approve them. Personal invites are never held.
                 require_draft_approval: Creators upload a draft for review before publishing, and each submitted post must name an approved draft.
                 store_account_id: A connected Shopify or WooCommerce store account. On `commission` and smart `retainer` economics its orders pay commission: required there, and fixed once such a campaign leaves draft.
@@ -30043,6 +30109,7 @@ def register_generated_tools(mcp, _get_client):
                 branding=branding,
                 landing_url=landing_url,
                 code_discount_percent=code_discount_percent,
+                auto_payout=auto_payout,
                 join_approval=join_approval,
                 require_draft_approval=require_draft_approval,
                 store_account_id=store_account_id,
@@ -49007,6 +49074,8 @@ def register_generated_tools(mcp, _get_client):
             "email.thread_replied",
             "email.send_failed",
             "email.bounced",
+            "email.updated",
+            "email.deleted",
             "file.created",
             "file.updated",
             "file.deleted",
