@@ -28433,7 +28433,7 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Adjust uploaded conversions
 
-        Retracts, restates the value of, or enhances conversions you already sent to Google Ads, for refunds or late customer data.
+        Retracts, restates the value of, or enhances conversions you already sent to Google Ads, for refunds or late customer data. To change Zernio's stored event too, and every platform at once, use `PATCH` or `DELETE /v1/events/{eventId}`.
 
         It adjusts conversions previously uploaded via `POST /v1/ads/conversions`: retract them, restate their value, or enhance them with first-party data. Requires the Ads add-on.
 
@@ -28445,7 +28445,7 @@ def register_generated_tools(mcp, _get_client):
 
         - `RETRACTION`: remove the conversion entirely (refund, chargeback, cancelled order, churn).
         - `RESTATEMENT`: change the conversion's value (upgrade / downgrade / partial refund). Send the corrected **total** value in `restatementValue` (not a delta).
-        - `ENHANCEMENT`: attach first-party identifiers (hashed email / phone) to an existing conversion (enhanced conversions applied ...
+        - `ENHANCEMENT`: ...
 
         Platforms: google
 
@@ -29087,6 +29087,64 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="Change a stored event's value",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def conversions_restate_event(
+        event_id: str, profile_id: str, value: float, currency: str | None = None
+    ) -> str:
+        """Change a stored event's value
+
+        Changes the value of an event you already sent, for a partial refund or an upgrade. Send the corrected total, not a difference.
+
+        Zernio stores a new version of the event, so campaign results count the new value at once. It then passes the change to each destination the event reached: Google Ads restates the conversion, and platforms without a correction API report `not_supported` and keep their count.
+
+        Args:
+            event_id: The `eventId` the event was sent with. (required)
+            profile_id: Profile the event belongs to. (required)
+            value: The corrected total value. (required)
+            currency: ISO 4217 code such as USD. Defaults to the currency the event was sent with."""
+        client = _get_client()
+        try:
+            response = client.conversions.restate_event(
+                event_id=event_id, profile_id=profile_id, value=value, currency=currency
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Retract a stored event",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def conversions_retract_event(event_id: str, profile_id: str) -> str:
+        """Retract a stored event
+
+        Retracts an event you already sent, for a refund, a cancelled order or a lost deal. It stops counting in campaign results and ad rules.
+
+        Each destination the event reached is told where the platform allows it: Google Ads retracts the conversion, and the other platforms report `not_supported` and keep their count. Sending the same `eventId` again stores it anew.
+
+        Args:
+            event_id: The `eventId` the event was sent with. (required)
+            profile_id: Profile the event belongs to. (required)"""
+        client = _get_client()
+        try:
+            response = client.conversions.retract_event(
+                event_id=event_id, profile_id=profile_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="List event destinations",
             readOnlyHint=True,
             destructiveHint=False,
@@ -29096,7 +29154,7 @@ def register_generated_tools(mcp, _get_client):
     def conversions_list_event_destinations(profile_id: str | None = None) -> str:
         """List event destinations
 
-        Lists the ad platform destinations that receive events sent to `POST /v1/events`, for one profile or every profile you can access.
+        The first name of `GET /v1/events/forwarding-rules`, which lists the same rules. It keeps working and answers under `destinations`.
 
         Args:
             profile_id"""
@@ -29123,9 +29181,7 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Add an event destination
 
-        Saves an ad platform destination for a profile, so events sent to `POST /v1/events` for that profile are forwarded
-        to it. Pick `destinationId` from `GET /v1/accounts/{accountId}/conversion-destinations`. Set `eventNames` to forward
-        only those events (for example only `Purchase`); leave it out to forward every event.
+        The first name of `POST /v1/events/forwarding-rules`, which saves the same rule. It keeps working and answers under `destination`.
 
         Args:
             profile_id: (required)
@@ -29155,7 +29211,7 @@ def register_generated_tools(mcp, _get_client):
     def conversions_delete_event_destination(destination_id: str) -> str:
         """Remove an event destination
 
-        Stops forwarding events to this destination. `destinationId` is the event destination `id`, not the platform destination.
+        The first name of `DELETE /v1/events/forwarding-rules/{ruleId}`. `destinationId` here is the rule `id`, not the platform destination.
 
         Args:
             destination_id: (required)"""
@@ -29164,6 +29220,87 @@ def register_generated_tools(mcp, _get_client):
             response = client.conversions.delete_event_destination(
                 destination_id=destination_id
             )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List forwarding rules",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def conversions_list_forwarding_rules(profile_id: str | None = None) -> str:
+        """List forwarding rules
+
+        Lists the forwarding rules of one profile, or of every profile you can access. A rule sends a profile's events to one ad platform destination.
+
+        Args:
+            profile_id"""
+        client = _get_client()
+        try:
+            response = client.conversions.list_forwarding_rules(profile_id=profile_id)
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Add a forwarding rule",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def conversions_create_forwarding_rule(
+        profile_id: str,
+        account_id: str,
+        destination_id: str,
+        event_names: list[str] | None = None,
+    ) -> str:
+        """Add a forwarding rule
+
+        Saves where a profile's events go: every event sent to `POST /v1/events` for that profile is then forwarded to this destination.
+
+        Pick `destinationId` from `GET /v1/accounts/{accountId}/conversion-destinations`. Set `eventNames` to forward only those events, such as only `Purchase`; leave it out to forward every event.
+
+        Args:
+            profile_id: (required)
+            account_id: Connected ads account ID that owns the destination. (required)
+            destination_id: The platform destination: a pixel, a conversion action or a conversion rule. (required)
+            event_names"""
+        client = _get_client()
+        try:
+            response = client.conversions.create_forwarding_rule(
+                profile_id=profile_id,
+                account_id=account_id,
+                destination_id=destination_id,
+                event_names=event_names,
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Remove a forwarding rule",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def conversions_delete_forwarding_rule(rule_id: str) -> str:
+        """Remove a forwarding rule
+
+        Stops forwarding events to this rule's destination. Events already sent are not affected.
+
+        Args:
+            rule_id: The rule `id`. (required)"""
+        client = _get_client()
+        try:
+            response = client.conversions.delete_forwarding_rule(rule_id=rule_id)
             return _format_response(response)
         except Exception as e:
             raise ToolError(f"Error: {e}") from e

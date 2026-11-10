@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.554.0"
+  version: "1.555.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -20866,6 +20866,30 @@ components:
           properties:
             text: { type: string, minLength: 1, maxLength: 80 }
             matchType: { type: string, enum: [exact, phrase, broad], description: 'Defaults to broad. Accepted in any case (EXACT, Exact) and stored lowercase.' }
+    ForwardingRule:
+      type: object
+      properties:
+        id: { type: string, description: 'Rule ID, used to delete it.' }
+        profileId: { type: string }
+        accountId: { type: string }
+        destinationId: { type: string, description: 'Platform destination (pixel, conversion action, rule, ...).' }
+        eventNames:
+          type: [array, "null"]
+          items: { type: string }
+          description: 'Event names forwarded to this destination; null forwards every event.'
+        createdAt: { type: string, format: date-time }
+    EventCorrection:
+      type: object
+      description: What happened to a correction at one destination the event was forwarded to.
+      properties:
+        accountId: { type: string }
+        destinationId: { type: string }
+        platform: { type: [string, "null"] }
+        status:
+          type: string
+          enum: [corrected, not_supported, failed]
+          description: '`corrected`: the platform changed its count. `not_supported`: the platform has no API to change a conversion it already counted. `failed`: see `error`.'
+        error: { type: [string, "null"] }
     EventDestination:
       type: object
       properties:
@@ -95170,7 +95194,7 @@ paths:
       x-platforms: ["google"]
       summary: Adjust uploaded conversions
       description: |
-        Retracts, restates the value of, or enhances conversions you already sent to Google Ads, for refunds or late customer data.
+        Retracts, restates the value of, or enhances conversions you already sent to Google Ads, for refunds or late customer data. To change Zernio's stored event too, and every platform at once, use `PATCH` or `DELETE /v1/events/{eventId}`.
 
         It adjusts conversions previously uploaded via `POST /v1/ads/conversions`: retract them, restate their value, or enhance them with first-party data. Requires the Ads add-on.
 
@@ -96016,13 +96040,97 @@ paths:
                         sentAt: { type: string, format: date-time }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
+    patch:
+      x-resource-group: "ads"
+      operationId: restateEvent
+      tags: [Conversions]
+      summary: Change a stored event's value
+      description: |
+        Changes the value of an event you already sent, for a partial refund or an upgrade. Send the corrected total, not a difference.
+
+        Zernio stores a new version of the event, so campaign results count the new value at once. It then passes the change to each destination the event reached: Google Ads restates the conversion, and platforms without a correction API report `not_supported` and keep their count.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: eventId
+          in: path
+          required: true
+          description: The `eventId` the event was sent with.
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [profileId, value]
+              additionalProperties: false
+              properties:
+                profileId: { type: string, description: 'Profile the event belongs to.' }
+                value: { type: number, minimum: 0, description: 'The corrected total value.' }
+                currency: { type: string, description: 'ISO 4217 code such as USD. Defaults to the currency the event was sent with.' }
+      responses:
+        '200':
+          description: The event was restated. Check each destination.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  eventId: { type: string }
+                  value: { type: number }
+                  destinations:
+                    type: array
+                    items: { $ref: '#/components/schemas/EventCorrection' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    delete:
+      x-resource-group: "ads"
+      operationId: retractEvent
+      tags: [Conversions]
+      summary: Retract a stored event
+      description: |
+        Retracts an event you already sent, for a refund, a cancelled order or a lost deal. It stops counting in campaign results and ad rules.
+
+        Each destination the event reached is told where the platform allows it: Google Ads retracts the conversion, and the other platforms report `not_supported` and keep their count. Sending the same `eventId` again stores it anew.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: eventId
+          in: path
+          required: true
+          description: The `eventId` the event was sent with.
+          schema: { type: string }
+        - name: profileId
+          in: query
+          required: true
+          description: Profile the event belongs to.
+          schema: { type: string }
+      responses:
+        '200':
+          description: The event was retracted. Check each destination.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  eventId: { type: string }
+                  deleted: { type: boolean }
+                  destinations:
+                    type: array
+                    items: { $ref: '#/components/schemas/EventCorrection' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
   /v1/events/destinations:
     get:
       x-resource-group: "ads"
       operationId: listEventDestinations
       tags: [Conversions]
+      deprecated: true
       summary: List event destinations
-      description: Lists the ad platform destinations that receive events sent to `POST /v1/events`, for one profile or every profile you can access.
+      description: The first name of `GET /v1/events/forwarding-rules`, which lists the same rules. It keeps working and answers under `destinations`.
       security:
         - bearerAuth: []
       parameters:
@@ -96048,11 +96156,9 @@ paths:
       x-resource-group: "ads"
       operationId: createEventDestination
       tags: [Conversions]
+      deprecated: true
       summary: Add an event destination
-      description: |
-        Saves an ad platform destination for a profile, so events sent to `POST /v1/events` for that profile are forwarded
-        to it. Pick `destinationId` from `GET /v1/accounts/{accountId}/conversion-destinations`. Set `eventNames` to forward
-        only those events (for example only `Purchase`); leave it out to forward every event.
+      description: The first name of `POST /v1/events/forwarding-rules`, which saves the same rule. It keeps working and answers under `destination`.
       security:
         - bearerAuth: []
       requestBody:
@@ -96094,8 +96200,9 @@ paths:
       x-resource-group: "ads"
       operationId: deleteEventDestination
       tags: [Conversions]
+      deprecated: true
       summary: Remove an event destination
-      description: Stops forwarding events to this destination. `destinationId` is the event destination `id`, not the platform destination.
+      description: The first name of `DELETE /v1/events/forwarding-rules/{ruleId}`. `destinationId` here is the rule `id`, not the platform destination.
       security:
         - bearerAuth: []
       parameters:
@@ -96106,6 +96213,106 @@ paths:
       responses:
         '200':
           description: Destination removed.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  deleted: { type: boolean }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /v1/events/forwarding-rules:
+    get:
+      x-resource-group: "ads"
+      operationId: listForwardingRules
+      tags: [Conversions]
+      summary: List forwarding rules
+      description: Lists the forwarding rules of one profile, or of every profile you can access. A rule sends a profile's events to one ad platform destination.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: profileId
+          in: query
+          required: false
+          schema: { type: string }
+      responses:
+        '200':
+          description: Forwarding rules.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  forwardingRules:
+                    type: array
+                    items: { $ref: '#/components/schemas/ForwardingRule' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    post:
+      x-resource-group: "ads"
+      operationId: createForwardingRule
+      tags: [Conversions]
+      summary: Add a forwarding rule
+      description: |
+        Saves where a profile's events go: every event sent to `POST /v1/events` for that profile is then forwarded to this destination.
+
+        Pick `destinationId` from `GET /v1/accounts/{accountId}/conversion-destinations`. Set `eventNames` to forward only those events, such as only `Purchase`; leave it out to forward every event.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [profileId, accountId, destinationId]
+              additionalProperties: false
+              properties:
+                profileId: { type: string }
+                accountId: { type: string, description: 'Connected ads account ID that owns the destination.' }
+                destinationId: { type: string, description: 'The platform destination: a pixel, a conversion action or a conversion rule.' }
+                eventNames:
+                  type: array
+                  minItems: 1
+                  maxItems: 50
+                  items: { type: string }
+      responses:
+        '201':
+          description: Rule saved.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  forwardingRule: { $ref: '#/components/schemas/ForwardingRule' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409':
+          description: 'The profile already forwards events to this destination (code `invalid_resource_state`).'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+  /v1/events/forwarding-rules/{ruleId}:
+    delete:
+      x-resource-group: "ads"
+      operationId: deleteForwardingRule
+      tags: [Conversions]
+      summary: Remove a forwarding rule
+      description: Stops forwarding events to this rule's destination. Events already sent are not affected.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: ruleId
+          in: path
+          required: true
+          description: The rule `id`.
+          schema: { type: string }
+      responses:
+        '200':
+          description: Rule removed.
           content:
             application/json:
               schema:

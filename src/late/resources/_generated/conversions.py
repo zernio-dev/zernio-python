@@ -364,6 +364,29 @@ class ConversionsResource:
         )
         return self._client._get(f"/v1/events/{event_id}", params=params)
 
+    def restate_event(
+        self,
+        event_id: str,
+        profile_id: str,
+        value: float,
+        *,
+        currency: str | None = None,
+    ) -> dict[str, Any]:
+        """Change a stored event's value"""
+        payload = self._build_payload(
+            profile_id=profile_id,
+            value=value,
+            currency=currency,
+        )
+        return self._client._patch(f"/v1/events/{event_id}", data=payload)
+
+    def retract_event(self, event_id: str, profile_id: str) -> dict[str, Any]:
+        """Retract a stored event"""
+        params = self._build_params(
+            profile_id=profile_id,
+        )
+        return self._client._delete(f"/v1/events/{event_id}", params=params)
+
     def list_event_destinations(
         self, *, profile_id: str | None = None
     ) -> dict[str, Any]:
@@ -393,6 +416,34 @@ class ConversionsResource:
     def delete_event_destination(self, destination_id: str) -> dict[str, Any]:
         """Remove an event destination"""
         return self._client._delete(f"/v1/events/destinations/{destination_id}")
+
+    def list_forwarding_rules(self, *, profile_id: str | None = None) -> dict[str, Any]:
+        """List forwarding rules"""
+        params = self._build_params(
+            profile_id=profile_id,
+        )
+        return self._client._get("/v1/events/forwarding-rules", params=params)
+
+    def create_forwarding_rule(
+        self,
+        profile_id: str,
+        account_id: str,
+        destination_id: str,
+        *,
+        event_names: list[str] | None = None,
+    ) -> dict[str, Any]:
+        """Add a forwarding rule"""
+        payload = self._build_payload(
+            profile_id=profile_id,
+            account_id=account_id,
+            destination_id=destination_id,
+            event_names=event_names,
+        )
+        return self._client._post("/v1/events/forwarding-rules", data=payload)
+
+    def delete_forwarding_rule(self, rule_id: str) -> dict[str, Any]:
+        """Remove a forwarding rule"""
+        return self._client._delete(f"/v1/events/forwarding-rules/{rule_id}")
 
     def list_conversion_destinations(self, account_id: str) -> dict[str, Any]:
         """List conversion destinations"""
@@ -849,6 +900,29 @@ class ConversionsResource:
         )
         return await self._client._aget(f"/v1/events/{event_id}", params=params)
 
+    async def arestate_event(
+        self,
+        event_id: str,
+        profile_id: str,
+        value: float,
+        *,
+        currency: str | None = None,
+    ) -> dict[str, Any]:
+        """Change a stored event's value (async)"""
+        payload = self._build_payload(
+            profile_id=profile_id,
+            value=value,
+            currency=currency,
+        )
+        return await self._client._apatch(f"/v1/events/{event_id}", data=payload)
+
+    async def aretract_event(self, event_id: str, profile_id: str) -> dict[str, Any]:
+        """Retract a stored event (async)"""
+        params = self._build_params(
+            profile_id=profile_id,
+        )
+        return await self._client._adelete(f"/v1/events/{event_id}", params=params)
+
     async def alist_event_destinations(
         self, *, profile_id: str | None = None
     ) -> dict[str, Any]:
@@ -878,6 +952,36 @@ class ConversionsResource:
     async def adelete_event_destination(self, destination_id: str) -> dict[str, Any]:
         """Remove an event destination (async)"""
         return await self._client._adelete(f"/v1/events/destinations/{destination_id}")
+
+    async def alist_forwarding_rules(
+        self, *, profile_id: str | None = None
+    ) -> dict[str, Any]:
+        """List forwarding rules (async)"""
+        params = self._build_params(
+            profile_id=profile_id,
+        )
+        return await self._client._aget("/v1/events/forwarding-rules", params=params)
+
+    async def acreate_forwarding_rule(
+        self,
+        profile_id: str,
+        account_id: str,
+        destination_id: str,
+        *,
+        event_names: list[str] | None = None,
+    ) -> dict[str, Any]:
+        """Add a forwarding rule (async)"""
+        payload = self._build_payload(
+            profile_id=profile_id,
+            account_id=account_id,
+            destination_id=destination_id,
+            event_names=event_names,
+        )
+        return await self._client._apost("/v1/events/forwarding-rules", data=payload)
+
+    async def adelete_forwarding_rule(self, rule_id: str) -> dict[str, Any]:
+        """Remove a forwarding rule (async)"""
+        return await self._client._adelete(f"/v1/events/forwarding-rules/{rule_id}")
 
     async def alist_conversion_destinations(self, account_id: str) -> dict[str, Any]:
         """List conversion destinations (async)"""

@@ -1012,10 +1012,12 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `conversions.list_custom_conversion_goals()` | List custom conversion goals |
 | `conversions.list_event_destinations()` | List event destinations |
 | `conversions.list_events()` | List stored events |
+| `conversions.list_forwarding_rules()` | List forwarding rules |
 | `conversions.create_conversion_action()` | Create website conversion action |
 | `conversions.create_conversion_destination()` | Create a conversion destination |
 | `conversions.create_custom_conversion_goal()` | Create a custom conversion goal |
 | `conversions.create_event_destination()` | Add an event destination |
+| `conversions.create_forwarding_rule()` | Add a forwarding rule |
 | `conversions.get_conversion_destination()` | Get a conversion destination |
 | `conversions.get_conversion_metrics()` | Get attribution metrics |
 | `conversions.get_conversions_quality()` | Get Event Match Quality |
@@ -1026,10 +1028,13 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `conversions.update_custom_conversion_goal()` | Update a custom conversion goal |
 | `conversions.delete_conversion_destination()` | Delete a conversion destination |
 | `conversions.delete_event_destination()` | Remove an event destination |
+| `conversions.delete_forwarding_rule()` | Remove a forwarding rule |
 | `conversions.add_conversion_associations()` | Associate campaigns |
 | `conversions.adjust_conversions()` | Adjust uploaded conversions |
 | `conversions.remove_conversion_associations()` | Remove associated campaigns |
 | `conversions.remove_custom_conversion_goal()` | Remove a custom conversion goal |
+| `conversions.restate_event()` | Change a stored event's value |
+| `conversions.retract_event()` | Retract a stored event |
 | `conversions.send_conversions()` | Send conversion events |
 | `conversions.send_events()` | Send events to every destination |
 
