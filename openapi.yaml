@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.551.0"
+  version: "1.551.1"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -58998,11 +58998,13 @@ paths:
 
         - 400 with `details.privateReplyConsumed: true`: the comment's single private reply is spent (by this call or an earlier one). Never retry it.
         - 502: Meta answered a server error after receiving the reply. It carries `details.privateReplyOutcome: "unknown"`. The reply is usually delivered and the comment's private reply spent, so check the conversation before retrying.
-        - Meta-originated failures carry Meta's error object in `platformError` (`code`, `error_subcode`, `message`, `type`, `fbtrace_id`). Common Instagram subcodes: 2534014 commenter not found, 2534023 already replied, 2534024 older than 7 days, 2534025 not eligible for a private reply, 2534066 declined.
+        - Meta-originated failures carry Meta's error object in `platformError` (`code`, `error_subcode`, `message`, `type`, `fbtrace_id`). Common Instagram subcodes: 2534014 commenter not found (no reason given), 2534023 already replied, 2534024 older than 7 days, 2534025 not eligible for a private reply, 2534066 declined.
 
         ### Recording
 
         The reply is recorded in the inbox conversation with the commenter (`sentVia` `api` for key auth, `human` for a session) and fires `message.sent` once.
+
+        A success response and `message.sent` mean Meta accepted the reply, not that the commenter saw it. Instagram has no delivery event, and the reply can land in the commenter's Message Requests folder, where they may never open it.
       tags: [Comments]
       security: [{ bearerAuth: [] }]
       parameters:
@@ -59174,9 +59176,9 @@ paths:
                     details:
                       privateReplyConsumed: true
                 commentNotFound:
-                  summary: "Commenter account not found (Meta subcode 2534014)"
+                  summary: "Meta could not find the commenter (subcode 2534014)"
                   value:
-                    error: "The commenter's account was not found. They may have deactivated or restricted their account."
+                    error: "Instagram could not find this commenter for a private reply (Meta error 2534014). Meta does not say why, and it also happens on commenters whose accounts are active. It is not a token or permission problem, so reconnecting the account will not help."
                     type: "platform_error"
                     code: "platform_api_error"
                     platform: "instagram"
