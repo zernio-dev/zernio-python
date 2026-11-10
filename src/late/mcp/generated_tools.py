@@ -34199,10 +34199,13 @@ def register_generated_tools(mcp, _get_client):
         """List active Instagram stories
 
         Returns the IG Business/Creator account's currently-active stories.
-        Meta keeps stories live for 24h. Pass `includeExpired=true` to also get the
-        stories Zernio archived before they expired: their media is copied into Zernio
-        storage while the story is live, so `mediaUrl` and `thumbnailUrl` keep working
-        after Meta deletes the story. Archiving needs the insights permission and covers
+        Meta keeps stories live for 24h.
+
+        Pass `includeExpired=true` to also get the stories Zernio archived before they
+        expired: their media is copied into Zernio storage while the story is live, so
+        `mediaUrl` and `thumbnailUrl` keep working after Meta deletes the story.
+
+        Archiving needs the insights permission and covers
         stories posted since the account was connected (hourly readings, a final one at 23h,
         then Meta's end-of-story numbers when its webhook arrives).
 
