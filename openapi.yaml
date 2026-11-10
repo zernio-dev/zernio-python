@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.546.0"
+  version: "1.547.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -24569,7 +24569,7 @@ webhooks:
       operationId: onLeadReceived
       summary: Lead received event
       description: |
-        A new lead was submitted against a Meta Lead Gen (Instant) form (ingested via the Page `leadgen` webhook), a Google Ads lead form or a LinkedIn Lead Gen Form (both read every 15 minutes). `lead.platform` names the network.
+        A new lead was submitted against a Meta Lead Gen (Instant) form or a TikTok Instant Form (both pushed by the network), or a Google Ads or LinkedIn lead form (read every 15 minutes). `lead.platform` names the network.
 
         Leads older than 7 days when Zernio first reads them are stored without this event.
 
@@ -71652,6 +71652,7 @@ paths:
         ### Targeting (comment trigger)
 
         - Per-post: set `platformPostId` to scope to one specific post (only one active per-post automation is allowed per post).
+          On Instagram this is the Graph media id (`platformPostId` from GET /v1/external-posts), not the number inside an instagram.com link. A link id (19 digits) is swapped for the media id of the matching synced post, or rejected with a 400 when that post has not synced yet.
         - Account-wide ("any post"): omit `platformPostId` (and `postId`). The automation evaluates every comment on every post on the account.
 
         You can stack unlimited account-wide automations, each with its own keyword set, and they all run independently. Per-post automations take priority on their post.
@@ -89356,7 +89357,7 @@ paths:
 
         ### LinkedIn
 
-        LinkedIn lead form responses are also stored and listed with the other networks (`platform: linkedin`), usually within 15 minutes, once they reach Zernio.
+        LinkedIn lead form responses are also stored and listed with the other networks (`platform: linkedin`), usually within 15 minutes, once they reach Zernio. So are TikTok Instant Form leads (`platform: tiktok`), as TikTok sends them.
 
         When `accountId` is a LinkedIn ads account, `adAccountId` is required. Leads are fetched live from LinkedIn's `leadFormResponses`: LinkedIn has no webhook and enforces 90-day retention, so nothing is persisted.
 

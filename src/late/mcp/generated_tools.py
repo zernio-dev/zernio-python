@@ -34745,9 +34745,7 @@ def register_generated_tools(mcp, _get_client):
 
         ### LinkedIn
 
-        LinkedIn lead form responses are also stored and listed with the other networks (`platform: linkedin`), usually within 15 minutes, once they reach Zernio.
-
-        When `accountId` is a ...
+        LinkedIn lead form responses are also stored and listed with the other networks (`platform: linkedin`), usually within 15 minutes, once they reach Zernio. So are TikTok Instant Form ...
 
         Platforms: meta, google, linkedin
 
