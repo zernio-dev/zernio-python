@@ -34564,22 +34564,16 @@ def register_generated_tools(mcp, _get_client):
     def instagram_get_instagram_story_insights(account_id: str, story_id: str) -> str:
         """Get Instagram story insights
 
-        Returns metrics for a single story. The `source` field discriminates between three states:
+        Returns metrics for a single story. The `source` field discriminates between four states:
 
         - `live`: fetched from Meta in real time (story is still active)
-        - `cached`: fetched from a persisted `story_insights` webhook payload (story has expired but we received its final-state metrics from Meta)
-        - `unavailable`: story has expired and Meta sent no `story_insights` webhook for it
+        - `archived`: the story has expired and Zernio archived it while it was live. Metrics are the last archived reading, raised to Meta's final numbers when its `story_insights` webhook arrived (which also adds the tap breakdown).
+        - `cached`: fetched from a persisted `story_insights` webhook payload (story has expired and was not archived)
+        - `unavailable`: story has expired, was not archived, and Meta sent no `story_insights` webhook for it
 
         Meta sends that webhook most reliably for accounts connected with Facebook Login or with their linked Facebook Page connected. So read insights while the story is live if you need final numbers.
 
-        Meta can report an expired story as an empty successful result rather than an error. So an expired story resolves to `cached` or `unavailable` even though the upstream request itself succeeded.
-
-        ### Field semantics
-
-        Field semantics follow Meta's API.
-
-        - Counts below 5 may be returned as 0 due to Meta's privacy floor on small audiences.
-        - The `navigation` field is the sum of `tapsForward + tapsBack + exits + ...
+        Meta can report an expired story as an empty successful result rather than an error. So an expired story resolves to `archived`, `cached` or `unavailable` even though the upstream request itself ...
 
         Args:
             account_id: The Instagram account ID (required)
