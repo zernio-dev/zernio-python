@@ -39452,7 +39452,7 @@ def register_generated_tools(mcp, _get_client):
 
         ### What happens next
 
-        - A reply to a comment-style ask moves the number back to \"in review\".
+        - A text reply to a comment-style ask moves the number back to \"in review\". A reply with only files keeps the ask open, so send the fix through the structured form or add a written answer.
         - A reply on a formal decline is supplementary, and you must still resubmit the fix.
 
         Args:
