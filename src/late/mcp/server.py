@@ -65,6 +65,10 @@ _ACCOUNTS_MAX_PAGE_SIZE = 500
 _PROFILES_PAGE_SIZE = 100
 _PROFILES_MAX_PAGE_SIZE = 1000
 _RETRY_ALL_BUDGET_SECONDS = 300.0
+# The agent already retries a failed tool call, so the SDK retries once, not
+# twice: a read that keeps timing out holds a tool thread ~60 s instead of
+# ~91 s, and an overloaded API sees two attempts per call instead of three.
+_UPSTREAM_MAX_ATTEMPTS = 2
 
 # Always-visible core: the 20 hand-written ergonomic tools (guardrails +
 # LLM-shaped args, preferred over their raw generated twins) plus the generated
@@ -305,7 +309,7 @@ def _get_client() -> Late:
         )
 
     base_url = os.getenv("ZERNIO_BASE_URL") or os.getenv("LATE_BASE_URL", None)
-    return Late(api_key=api_key, base_url=base_url)
+    return Late(api_key=api_key, base_url=base_url, max_retries=_UPSTREAM_MAX_ATTEMPTS)
 
 
 # ============================================================================
