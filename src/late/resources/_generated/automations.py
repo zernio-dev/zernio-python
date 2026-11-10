@@ -271,7 +271,7 @@ class AutomationsResource:
         template_id: str,
         *,
         idempotency_key: str | None = None,
-        inputs: dict[str, Any] | None = {},
+        inputs: dict[str, Any] | None = None,
         targets: list[dict[str, Any]] | None = None,
         status: str | None = "paused",
     ) -> dict[str, Any]:
@@ -299,7 +299,7 @@ class AutomationsResource:
         share_token: str,
         *,
         idempotency_key: str | None = None,
-        inputs: dict[str, Any] | None = {},
+        inputs: dict[str, Any] | None = None,
         targets: list[dict[str, Any]] | None = None,
         status: str | None = "paused",
     ) -> dict[str, Any]:
@@ -327,7 +327,7 @@ class AutomationsResource:
         template_id: str,
         *,
         idempotency_key: str | None = None,
-        inputs: dict[str, Any] | None = {},
+        inputs: dict[str, Any] | None = None,
         targets: list[dict[str, Any]] | None = None,
         status: str | None = "paused",
     ) -> dict[str, Any]:
@@ -638,7 +638,7 @@ class AutomationsResource:
         template_id: str,
         *,
         idempotency_key: str | None = None,
-        inputs: dict[str, Any] | None = {},
+        inputs: dict[str, Any] | None = None,
         targets: list[dict[str, Any]] | None = None,
         status: str | None = "paused",
     ) -> dict[str, Any]:
@@ -668,7 +668,7 @@ class AutomationsResource:
         share_token: str,
         *,
         idempotency_key: str | None = None,
-        inputs: dict[str, Any] | None = {},
+        inputs: dict[str, Any] | None = None,
         targets: list[dict[str, Any]] | None = None,
         status: str | None = "paused",
     ) -> dict[str, Any]:
@@ -698,7 +698,7 @@ class AutomationsResource:
         template_id: str,
         *,
         idempotency_key: str | None = None,
-        inputs: dict[str, Any] | None = {},
+        inputs: dict[str, Any] | None = None,
         targets: list[dict[str, Any]] | None = None,
         status: str | None = "paused",
     ) -> dict[str, Any]:

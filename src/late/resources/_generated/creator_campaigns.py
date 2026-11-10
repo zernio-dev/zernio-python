@@ -585,7 +585,7 @@ class CreatorCampaignsResource:
         *,
         idempotency_key: str | None = None,
         note: str | None = None,
-        comments: list[dict[str, Any]] | None = [],
+        comments: list[dict[str, Any]] | None = None,
     ) -> dict[str, Any]:
         """Request changes on a campaign draft"""
         payload = self._build_payload(
@@ -1350,7 +1350,7 @@ class CreatorCampaignsResource:
         *,
         idempotency_key: str | None = None,
         note: str | None = None,
-        comments: list[dict[str, Any]] | None = [],
+        comments: list[dict[str, Any]] | None = None,
     ) -> dict[str, Any]:
         """Request changes on a campaign draft (async)"""
         payload = self._build_payload(
