@@ -45596,14 +45596,13 @@ def register_generated_tools(mcp, _get_client):
 
         When this month's auto top-ups plus the next one would pass `monthlyLimitCents`, the card is not charged and you get one email that month. At $0, pay-per-use then answers 402 `usage_limit_reached`.
 
-        - 400: a field is out of range, or `toCents` is not more than $5 above `belowCents`.
-        - 409 `balance_billing_required`: the ...
+        - 400: a field is out of range, `toCents` is not more than $5 above `belowCents`, or, while auto top-up is on, ...
 
         Args:
             enabled: Turns auto top-up on or off. A rule switched off by failed charges stays off until the card is updated.
             below_cents: Auto top-up charges the card when the balance drops below this, in cents. At least $5.
             to_cents: Top back up to this, in cents. More than $5 above belowCents.
-            monthly_limit_cents: Most auto top-up may add per calendar month (UTC), before tax. Null for no limit.
+            monthly_limit_cents: Most auto top-up may add per calendar month (UTC), before tax. At least toCents while auto top-up is on. Null for no limit.
             alert_below_cents: Email the billing owner once each time the balance drops below this. Null for no email."""
         client = _get_client()
         try:
