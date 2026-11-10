@@ -56800,6 +56800,8 @@ paths:
           description: |
             Invalid request. Also returned when:
 
+            - `postId` is the literal `null` or `undefined` (code invalid_field_value, param postId);
+            - on TikTok, `postId` does not resolve to a numeric TikTok video ID, e.g. a draft or still-processing post that only has a publish ID (code invalid_field_value, param postId);
             - the postId belongs to a Meta ad creative / ad ID rather than an organic post (code USE_AD_COMMENTS_ENDPOINT; the response includes `adId` and `adCommentsUrl`);
             - the upstream platform rejected the request (type platform_error, code platform_api_error; the provider's payload is in platformError).
 
