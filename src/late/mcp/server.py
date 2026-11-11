@@ -27,6 +27,7 @@ import asyncio
 import json
 import os
 import re
+import threading
 import time
 from contextvars import ContextVar
 from dataclasses import dataclass
@@ -69,6 +70,19 @@ _RETRY_ALL_BUDGET_SECONDS = 300.0
 # twice: a read that keeps timing out holds a tool thread ~60 s instead of
 # ~91 s, and an overloaded API sees two attempts per call instead of three.
 _UPSTREAM_MAX_ATTEMPTS = 2
+
+# A client per call cost a TLS handshake and ~6 ms CPU each, so connections are
+# reused, whatever the caller's key. The pool is per thread, not per process:
+# httpcore's sync pool scans every connection under one lock on each request,
+# and 40 tool threads sharing it made call_tool 40% slower than no pooling.
+_thread_state = threading.local()
+
+
+def _api_transport() -> httpx.HTTPTransport:
+    transport = getattr(_thread_state, "transport", None)
+    if transport is None:
+        transport = _thread_state.transport = httpx.HTTPTransport()
+    return transport
 
 # Always-visible core: the 20 hand-written ergonomic tools (guardrails +
 # LLM-shaped args, preferred over their raw generated twins) plus the generated
@@ -309,7 +323,12 @@ def _get_client() -> Late:
         )
 
     base_url = os.getenv("ZERNIO_BASE_URL") or os.getenv("LATE_BASE_URL", None)
-    return Late(api_key=api_key, base_url=base_url, max_retries=_UPSTREAM_MAX_ATTEMPTS)
+    return Late(
+        api_key=api_key,
+        base_url=base_url,
+        max_retries=_UPSTREAM_MAX_ATTEMPTS,
+        transport=_api_transport(),
+    )
 
 
 # ============================================================================
