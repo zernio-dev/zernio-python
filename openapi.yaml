@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.571.0"
+  version: "1.572.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -1711,6 +1711,7 @@ components:
       type: object
       properties:
         eventId: { type: string }
+        source: { type: string, description: 'Where the event came from: `api`, `relay`, `web`, `shopify`, `woocommerce`, `hubspot`, `meta_leads`, `google_leads`, `linkedin_leads` or `tiktok_leads`.' }
         eventName: { type: string }
         eventTime: { type: string, format: date-time }
         receivedAt: { type: string, format: date-time }
@@ -97320,7 +97321,19 @@ paths:
                 properties:
                   events:
                     type: array
-                    items: { $ref: '#/components/schemas/StoredEvent' }
+                    items:
+                      allOf:
+                        - $ref: '#/components/schemas/StoredEvent'
+                        - type: object
+                          properties:
+                            deliveries:
+                              type: array
+                              description: 'Each destination the event was forwarded to, with its latest send status. The full detail is on GET /v1/events/{eventId}.'
+                              items:
+                                type: object
+                                properties:
+                                  platform: { type: string, description: 'Ad platform of the destination, such as `metaads`; empty when the send failed before the platform was known.' }
+                                  status: { type: string, enum: [sent, retrying, failed] }
                   nextCursor: { type: [string, "null"], description: 'Pass as `cursor` to get the next page; `null` on the last page.' }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
@@ -97453,6 +97466,89 @@ paths:
         '404': { $ref: '#/components/responses/NotFound' }
         '409': { $ref: '#/components/responses/IdempotencyKeyInFlight' }
         '422': { $ref: '#/components/responses/IdempotencyKeyReused' }
+  /v1/events/overview:
+    get:
+      x-resource-group: "ads"
+      operationId: getEventsOverview
+      tags: [Conversions]
+      summary: Get today's tracking overview
+      description: |
+        How a profile's conversion tracking is doing today (UTC day): events stored, how many reached the ad platforms,
+        each forwarding rule's destination, each event source and, when the profile has a tracking site, the site's funnel.
+        Requires the Ads add-on.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: profileId
+          in: query
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: The profile's tracking overview.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  today:
+                    type: object
+                    properties:
+                      conversions: { type: integer, description: 'Stored events that occurred today, retracted ones excluded.' }
+                      value: { type: number, description: 'Value of those events in `currency`. Events in other currencies are left out.' }
+                      currency: { type: [string, "null"], description: 'The currency most of today''s valued events use; `null` when none carried a value.' }
+                      sent: { type: integer, description: 'Event sends to a destination today, one per event and destination.' }
+                      accepted: { type: integer, description: 'Those whose latest send the platform accepted.' }
+                      matched: { type: integer, description: 'Today''s events matched to an ad campaign.' }
+                  platforms:
+                    type: array
+                    description: One entry per forwarding rule of the profile.
+                    items:
+                      type: object
+                      properties:
+                        accountId: { type: string }
+                        platform: { type: string, description: 'Ad platform, such as `metaads` or `googleads`.' }
+                        accountName: { type: string }
+                        destinationName: { type: string, description: 'The destination (pixel, dataset or conversion action) id.' }
+                        sentToday: { type: integer, description: 'Events the platform accepted today.' }
+                        failedToday: { type: integer, description: 'Events that failed for good today.' }
+                        lastSentAt: { type: [string, "null"], format: date-time, description: 'Last accepted send in the last 30 days.' }
+                        lastEventName: { type: [string, "null"], description: 'Name of the event in that send.' }
+                        lastError: { type: [string, "null"], description: 'The platform''s error on the last failed send in the last 30 days.' }
+                        fixUrl: { type: [string, "null"], description: 'Where to fix a failing destination. Always `null` for now.' }
+                  sources:
+                    type: array
+                    description: 'Each source that stored an event in the last 30 days, most recent first.'
+                    items:
+                      type: object
+                      properties:
+                        source: { type: string, description: 'Source id, such as `web`, `shopify` or `api` (which also covers `relay`).' }
+                        label: { type: string, description: 'The source in plain words, such as `Shopify orders`.' }
+                        state: { type: string, enum: ['on', available, connect], description: 'Always `on` for now: the source is sending events.' }
+                        eventsToday: { type: integer }
+                        lastSeenAt: { type: [string, "null"], format: date-time }
+                  website:
+                    type: [object, "null"]
+                    description: '`null` when the profile has no tracking site. Hit counts are approximate distinct counts.'
+                    properties:
+                      steps:
+                        type: array
+                        description: 'The funnel: page views, product views, add to cart, checkouts and purchases today.'
+                        items:
+                          type: object
+                          properties:
+                            name: { type: string, description: 'Event name, such as `PageView`.' }
+                            label: { type: string }
+                            count: { type: integer }
+                      recovered: { type: integer, description: 'Purchases with ad consent for which no browser pixel fired, so only the server reported them.' }
+                      conversions: { type: integer, description: Purchases today. }
+                      consented: { type: integer, description: Page views with ad storage consent. }
+                      visits: { type: integer, description: Page views today. }
+                      bots: { type: integer, description: Page views from bots. }
+                      serverPlatforms: { type: array, items: { type: string }, description: 'Platforms of the forwarding rules that receive website events.' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
   /v1/events/{eventId}:
     get:
       x-resource-group: "ads"

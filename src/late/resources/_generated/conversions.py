@@ -359,6 +359,13 @@ class ConversionsResource:
             headers["Idempotency-Key"] = idempotency_key
         return self._client._post("/v1/events", data=payload, headers=headers)
 
+    def get_events_overview(self, profile_id: str) -> dict[str, Any]:
+        """Get today's tracking overview"""
+        params = self._build_params(
+            profile_id=profile_id,
+        )
+        return self._client._get("/v1/events/overview", params=params)
+
     def get_event(self, event_id: str, profile_id: str) -> dict[str, Any]:
         """Get one stored event and its deliveries"""
         params = self._build_params(
@@ -1097,6 +1104,13 @@ class ConversionsResource:
         if idempotency_key is not None:
             headers["Idempotency-Key"] = idempotency_key
         return await self._client._apost("/v1/events", data=payload, headers=headers)
+
+    async def aget_events_overview(self, profile_id: str) -> dict[str, Any]:
+        """Get today's tracking overview (async)"""
+        params = self._build_params(
+            profile_id=profile_id,
+        )
+        return await self._client._aget("/v1/events/overview", params=params)
 
     async def aget_event(self, event_id: str, profile_id: str) -> dict[str, Any]:
         """Get one stored event and its deliveries (async)"""

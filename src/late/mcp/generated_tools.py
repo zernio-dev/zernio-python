@@ -29674,6 +29674,30 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="Get today's tracking overview",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def conversions_get_events_overview(profile_id: str) -> str:
+        """Get today's tracking overview
+
+        How a profile's conversion tracking is doing today (UTC day): events stored, how many reached the ad platforms,
+        each forwarding rule's destination, each event source and, when the profile has a tracking site, the site's funnel.
+        Requires the Ads add-on.
+
+        Args:
+            profile_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.conversions.get_events_overview(profile_id=profile_id)
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="Get one stored event and its deliveries",
             readOnlyHint=True,
             destructiveHint=False,
