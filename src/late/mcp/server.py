@@ -24,7 +24,6 @@ Usage:
 from __future__ import annotations
 
 import asyncio
-import difflib
 import json
 import os
 import re
@@ -34,24 +33,17 @@ from contextvars import ContextVar
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from functools import cached_property
-from itertools import zip_longest
 from typing import TYPE_CHECKING, Any
 
 import httpx
 from fastmcp import FastMCP
 from fastmcp.server.dependencies import get_access_token
 from fastmcp.server.transforms.search import BM25SearchTransform
-from fastmcp.server.transforms.search.base import serialize_tools_for_output_markdown
 from mcp.types import ToolAnnotations
 
 from late import Late, MediaType, PostStatus
 from late.client.exceptions import LateAPIError, LateError, LateRateLimitError
 
-from .agent_guidance import (
-    FEEDBACK_TOOL,
-    FeedbackSourceMiddleware,
-    ToolGuidanceMiddleware,
-)
 from .auth import build_auth_provider
 from .idempotency import same_arguments_key
 from .resources import register_resources
@@ -135,13 +127,7 @@ _PINNED_TOOLS = [
     # Campaign tags & usage
     "tracking_tags_list_tracking_tags", "tracking_tags_get_tracking_tag_stats",
     "usage_get_usage",
-    # Report bugs and missing features to Zernio
-    FEEDBACK_TOOL,
 ]
-
-_SEARCH_TOOL = "search_tools"
-_CALL_TOOL = "call_tool"
-_MAX_TOOL_SUGGESTIONS = 3
 
 
 class _AnnotatedBM25SearchTransform(BM25SearchTransform):
@@ -168,11 +154,6 @@ class _AnnotatedBM25SearchTransform(BM25SearchTransform):
         # Pure in-memory catalog search: no external calls, no state change.
         return super()._make_search_tool().model_copy(
             update={
-                "description": (
-                    "Search the tools that are not listed up front, by what you want "
-                    "to do. Returns the best matches as markdown: name, description "
-                    "and parameters. Run one with call_tool using its exact name."
-                ),
                 "annotations": ToolAnnotations(
                     title="Search available tools",
                     readOnlyHint=True,
@@ -189,11 +170,6 @@ class _AnnotatedBM25SearchTransform(BM25SearchTransform):
         # client approval for every write reachable through the proxy.
         return super()._make_call_tool().model_copy(
             update={
-                "description": (
-                    "Run a tool found with search_tools, by its exact name, with the "
-                    "arguments its parameters describe. An unknown name returns the "
-                    "closest matching tools."
-                ),
                 "annotations": ToolAnnotations(
                     title="Call a tool discovered via search",
                     readOnlyHint=False,
@@ -220,26 +196,6 @@ class _AnnotatedBM25SearchTransform(BM25SearchTransform):
         if tools is not self._indexed_tools:
             return await super()._search(tools, query)
         return [tools[i] for i in self._index.query(query, self._max_results)]
-
-    async def closest_tools(self, name: str, ctx: Context | None) -> list[str]:
-        """Real tool names nearest a mistyped or guessed one, pinned tools included."""
-        hidden = await self._get_visible_tools(ctx)
-        names = [t.name for t in hidden] + sorted(self._always_visible)
-        by_words = [t.name for t in await self._search(hidden, name)]
-        by_spelling = difflib.get_close_matches(name, names, n=_MAX_TOOL_SUGGESTIONS)
-        # Word matches lead: they named the intended tool first for every
-        # guessed name seen in production, spelling only for some.
-        interleaved = [n for pair in zip_longest(by_words, by_spelling) for n in pair if n]
-        return list(dict.fromkeys(interleaved))[:_MAX_TOOL_SUGGESTIONS]
-
-
-_search_transform = _AnnotatedBM25SearchTransform(
-    always_visible=_PINNED_TOOLS,
-    max_results=8,
-    search_tool_name=_SEARCH_TOOL,
-    call_tool_name=_CALL_TOOL,
-    search_result_serializer=serialize_tools_for_output_markdown,
-)
 
 
 # Initialize MCP server
@@ -275,36 +231,14 @@ If account_id is omitted and the selection is ambiguous, the write tools
 return an error containing the candidate list - read it, pick the right
 account, and retry with account_id set. Never guess. The legacy behaviour
 of silently picking the first matching account has been removed.
-
-FINDING TOOLS:
-Most tools are not listed up front. Call search_tools with what you want to
-do (e.g. "list inbox conversations"), then call_tool with the exact name and
-arguments it returns. Never guess tool names: an unknown name returns the
-closest matches instead.
-
-FEEDBACK:
-When a tool fails in a way that looks like a Zernio bug, or Zernio lacks
-something you need, call feedback_submit_feedback once: a type, a one-line
-summary, and the endpoint and request_id when you have them. Never include
-credentials, API keys or customer data such as message text or contact
-details.
 """,
     # Resource-server auth: validates the bearer against the Zernio API and
     # auto-serves RFC 9728 protected-resource discovery (see late.mcp.auth).
     auth=build_auth_provider(),
-    # Collapse the ~1,200 generated tools behind search_tools/call_tool; the
+    # Collapse the ~383 generated tools behind search_tools/call_tool; the
     # pinned ergonomic tools remain always-visible.
-    transforms=[_search_transform],
+    transforms=[_AnnotatedBM25SearchTransform(always_visible=_PINNED_TOOLS, max_results=8)],
 )
-
-mcp.add_middleware(
-    ToolGuidanceMiddleware(
-        search_tool=_SEARCH_TOOL,
-        call_tool=_CALL_TOOL,
-        closest_tools=_search_transform.closest_tools,
-    )
-)
-mcp.add_middleware(FeedbackSourceMiddleware())
 
 register_resources(mcp)
 
