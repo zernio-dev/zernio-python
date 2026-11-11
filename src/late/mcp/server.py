@@ -45,6 +45,7 @@ from late import Late, MediaType, PostStatus
 from late.client.exceptions import LateAPIError, LateError, LateRateLimitError
 
 from .auth import build_auth_provider
+from .feedback_source import FEEDBACK_TOOL, FeedbackSourceMiddleware
 from .idempotency import same_arguments_key
 from .resources import register_resources
 from .tool_definitions import TOOL_DEFINITIONS
@@ -127,6 +128,8 @@ _PINNED_TOOLS = [
     # Campaign tags & usage
     "tracking_tags_list_tracking_tags", "tracking_tags_get_tracking_tag_stats",
     "usage_get_usage",
+    # Report bugs and missing features to Zernio
+    FEEDBACK_TOOL,
 ]
 
 
@@ -231,6 +234,13 @@ If account_id is omitted and the selection is ambiguous, the write tools
 return an error containing the candidate list - read it, pick the right
 account, and retry with account_id set. Never guess. The legacy behaviour
 of silently picking the first matching account has been removed.
+
+FEEDBACK:
+When a tool fails in a way that looks like a Zernio bug, or Zernio lacks
+something you need, call feedback_submit_feedback once: a type, a one-line
+summary, and the endpoint and request_id when you have them. Never include
+credentials, API keys or customer data such as message text or contact
+details.
 """,
     # Resource-server auth: validates the bearer against the Zernio API and
     # auto-serves RFC 9728 protected-resource discovery (see late.mcp.auth).
@@ -239,6 +249,8 @@ of silently picking the first matching account has been removed.
     # pinned ergonomic tools remain always-visible.
     transforms=[_AnnotatedBM25SearchTransform(always_visible=_PINNED_TOOLS, max_results=8)],
 )
+
+mcp.add_middleware(FeedbackSourceMiddleware())
 
 register_resources(mcp)
 
