@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.565.1"
+  version: "1.565.2"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -12471,7 +12471,7 @@ components:
               mediaItems:
                 type: array
                 items: { $ref: '#/components/schemas/MediaItem' }
-      description: Up to 10 images per carousel (no videos). Videos must be H.264/AAC MP4, max 5 min. Images JPEG/PNG, max 8 MB. Use threadItems for reply chains.
+      description: Up to 20 images per carousel, or up to 10 items when it includes a video. Videos must be H.264/AAC MP4, max 5 min. Images JPEG/PNG, max 8 MB. Use threadItems for reply chains.
 
     FacebookPlatformData:
       type: object
