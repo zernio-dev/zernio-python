@@ -29646,6 +29646,21 @@ def register_generated_tools(mcp, _get_client):
         account_id: str,
         destination_id: str,
         event_names: list[str] | None = None,
+        sources: list[
+            Literal[
+                "api",
+                "relay",
+                "hubspot",
+                "meta_leads",
+                "google_leads",
+                "linkedin_leads",
+                "tiktok_leads",
+                "shopify",
+                "woocommerce",
+                "web",
+            ]
+        ]
+        | None = None,
     ) -> str:
         """Add a forwarding rule
 
@@ -29657,7 +29672,8 @@ def register_generated_tools(mcp, _get_client):
             profile_id: (required)
             account_id: Connected ads account ID that owns the destination. (required)
             destination_id: The platform destination: a pixel, a conversion action or a conversion rule. (required)
-            event_names"""
+            event_names
+            sources: Forward only events from these sources, such as only `web` for a tracked website. Leave it out to forward events from every source."""
         client = _get_client()
         try:
             response = client.conversions.create_forwarding_rule(
@@ -29665,6 +29681,7 @@ def register_generated_tools(mcp, _get_client):
                 account_id=account_id,
                 destination_id=destination_id,
                 event_names=event_names,
+                sources=sources,
             )
             return _format_response(response)
         except Exception as e:

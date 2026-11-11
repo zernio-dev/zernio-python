@@ -431,6 +431,7 @@ class ConversionsResource:
         destination_id: str,
         *,
         event_names: list[str] | None = None,
+        sources: list[str] | None = None,
     ) -> dict[str, Any]:
         """Add a forwarding rule"""
         payload = self._build_payload(
@@ -438,6 +439,7 @@ class ConversionsResource:
             account_id=account_id,
             destination_id=destination_id,
             event_names=event_names,
+            sources=sources,
         )
         return self._client._post("/v1/events/forwarding-rules", data=payload)
 
@@ -1168,6 +1170,7 @@ class ConversionsResource:
         destination_id: str,
         *,
         event_names: list[str] | None = None,
+        sources: list[str] | None = None,
     ) -> dict[str, Any]:
         """Add a forwarding rule (async)"""
         payload = self._build_payload(
@@ -1175,6 +1178,7 @@ class ConversionsResource:
             account_id=account_id,
             destination_id=destination_id,
             event_names=event_names,
+            sources=sources,
         )
         return await self._client._apost("/v1/events/forwarding-rules", data=payload)
 

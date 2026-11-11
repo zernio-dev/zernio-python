@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.566.0"
+  version: "1.567.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -21132,6 +21132,10 @@ components:
           type: [array, "null"]
           items: { type: string }
           description: 'Event names forwarded to this destination; null forwards every event.'
+        sources:
+          type: [array, "null"]
+          items: { type: string, enum: [api, relay, hubspot, meta_leads, google_leads, linkedin_leads, tiktok_leads, shopify, woocommerce, web] }
+          description: 'Event sources forwarded to this destination; null forwards events from every source.'
         createdAt: { type: string, format: date-time }
     EventCorrection:
       type: object
@@ -97221,6 +97225,11 @@ paths:
                   minItems: 1
                   maxItems: 50
                   items: { type: string }
+                sources:
+                  type: array
+                  minItems: 1
+                  items: { type: string, enum: [api, relay, hubspot, meta_leads, google_leads, linkedin_leads, tiktok_leads, shopify, woocommerce, web] }
+                  description: 'Forward only events from these sources, such as only `web` for a tracked website. Leave it out to forward events from every source.'
       responses:
         '201':
           description: Rule saved.
