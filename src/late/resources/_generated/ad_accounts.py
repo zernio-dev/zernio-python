@@ -1104,9 +1104,14 @@ class AdAccountsResource:
         )
         return self._client._get("/v1/ads/accounts/live", params=params)
 
-    def create_ad_account(self, body: dict[str, Any]) -> dict[str, Any]:
+    def create_ad_account(
+        self, body: dict[str, Any], *, idempotency_key: str | None = None
+    ) -> dict[str, Any]:
         """Create ad account"""
-        return self._client._post("/v1/ads/accounts", data=body)
+        headers: dict[str, str] = {}
+        if idempotency_key is not None:
+            headers["Idempotency-Key"] = idempotency_key
+        return self._client._post("/v1/ads/accounts", data=body, headers=headers)
 
     def list_ad_accounts(
         self,
@@ -2270,9 +2275,14 @@ class AdAccountsResource:
         )
         return await self._client._aget("/v1/ads/accounts/live", params=params)
 
-    async def acreate_ad_account(self, body: dict[str, Any]) -> dict[str, Any]:
+    async def acreate_ad_account(
+        self, body: dict[str, Any], *, idempotency_key: str | None = None
+    ) -> dict[str, Any]:
         """Create ad account (async)"""
-        return await self._client._apost("/v1/ads/accounts", data=body)
+        headers: dict[str, str] = {}
+        if idempotency_key is not None:
+            headers["Idempotency-Key"] = idempotency_key
+        return await self._client._apost("/v1/ads/accounts", data=body, headers=headers)
 
     async def alist_ad_accounts(
         self,
