@@ -90,6 +90,8 @@ Since Claude can't access local files, use the browser upload flow:
 
 These core commands are always visible. The full Zernio API catalog (~400 tools) is reachable on demand through tool search: `search_tools` finds a capability by description and `call_tool` invokes it — and every underlying tool also stays directly callable by name.
 
+`feedback_submit_feedback` is always visible too: agents report bugs, missing features and documentation gaps with it. Reports filed through the MCP server are labelled `zernio-mcp` plus the client's user agent, so triage can tell them apart from direct API reports.
+
 ## Remote Access (HTTP)
 
 The remote MCP server speaks **Streamable HTTP** (`POST /mcp`) — the modern single-endpoint transport supported by all current MCP clients. It survives idle timeouts on proxies and bridges like `mcp-remote`. The legacy SSE transport (`GET /sse`) is kept for backward compatibility.
