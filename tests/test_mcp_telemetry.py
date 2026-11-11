@@ -225,8 +225,7 @@ async def test_an_sdk_model_that_rejects_a_response_is_a_sentry_issue(
     assert issue["exception"]["values"][0]["type"] == "ValidationError"
 
 
-async def test_a_tool_behind_call_tool_is_logged_under_its_own_name(caplog) -> None:
-    caplog.set_level(logging.INFO, logger="late.mcp.tools")
+def _proxied_server() -> FastMCP:
     server = FastMCP("t", transforms=[BM25SearchTransform(max_results=1)])
 
     @server.tool
@@ -234,11 +233,53 @@ async def test_a_tool_behind_call_tool_is_logged_under_its_own_name(caplog) -> N
         return "ok"
 
     server.add_middleware(ToolTelemetryMiddleware("mcp"))
+    return server
 
-    async with Client(server) as client:
+
+async def test_a_tool_behind_call_tool_is_logged_once_under_its_own_name(
+    caplog,
+) -> None:
+    caplog.set_level(logging.INFO, logger="late.mcp.tools")
+
+    async with Client(_proxied_server()) as client:
         await client.call_tool("call_tool", {"name": "hidden_tool", "arguments": {}})
 
-    assert [line["tool"] for line in _logged(caplog)] == ["hidden_tool", "call_tool"]
+    [line] = _logged(caplog)
+    assert (line["tool"], line["via"]) == ("hidden_tool", "call_tool")
+
+
+async def test_a_tool_behind_call_tool_is_one_sentry_transaction(sentry_events) -> None:
+    async with Client(_proxied_server()) as client:
+        await client.call_tool("call_tool", {"name": "hidden_tool", "arguments": {}})
+
+    [transaction] = sentry_events.payloads("transaction")
+    assert transaction["transaction"] == "tools/call hidden_tool"
+    assert transaction["tags"]["mcp.via"] == "call_tool"
+
+
+async def test_a_direct_call_is_tagged_direct_with_its_caller(
+    sentry_events, monkeypatch
+) -> None:
+    monkeypatch.setattr(telemetry, "_caller_key", lambda: "a1b2c3d4e5f6")
+
+    async with Client(_server()) as client:
+        await client.call_tool("fine", {})
+
+    [transaction] = sentry_events.payloads("transaction")
+    assert transaction["tags"]["mcp.via"] == "direct"
+    assert transaction["tags"]["mcp.caller"] == "a1b2c3d4e5f6"
+
+
+async def test_call_tool_failing_before_it_dispatches_is_still_recorded(caplog) -> None:
+    caplog.set_level(logging.INFO, logger="late.mcp.tools")
+
+    async with Client(_proxied_server()) as client:
+        await client.call_tool(
+            "call_tool", {"name": "call_tool", "arguments": {}}, raise_on_error=False
+        )
+
+    [line] = _logged(caplog)
+    assert (line["tool"], line["outcome"]) == ("call_tool", "error")
 
 
 @respx.mock
