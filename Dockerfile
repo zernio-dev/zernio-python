@@ -20,4 +20,6 @@ EXPOSE 8080
 # Health check for Railway monitoring (Railway will use /health endpoint)
 
 # Run HTTP server (Railway sets PORT env var automatically)
-CMD ["sh", "-c", "uv run late-mcp-http --host 0.0.0.0 --port ${PORT:-8080}"]
+# exec makes the server PID 1, so the SIGTERM a deploy sends reaches uvicorn and
+# in-flight tool calls finish. A shell or `uv run` in between can swallow it.
+CMD ["sh", "-c", "exec /app/.venv/bin/late-mcp-http --host 0.0.0.0 --port ${PORT:-8080}"]
