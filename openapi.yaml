@@ -69414,6 +69414,7 @@ paths:
                   expiresAt: { type: string, format: date-time }
         '400': { description: Country does not require KYC (not a regulated country). }
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '402': { $ref: '#/components/responses/BalanceRequired' }
 
   /v1/phone-numbers/port-in:
     post:
@@ -70474,6 +70475,7 @@ paths:
                   expiresAt: { type: string, format: date-time }
         '400': { description: Country does not require KYC (not a regulated country). }
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '402': { $ref: '#/components/responses/BalanceRequired' }
 
   /v1/whatsapp/phone-numbers/{id}/profile:
     patch:
