@@ -119,6 +119,7 @@ class BaseClient:
         timeout: float = DEFAULT_TIMEOUT,
         max_retries: int = DEFAULT_MAX_RETRIES,
         publish_timeout: float = DEFAULT_PUBLISH_TIMEOUT,
+        transport: httpx.BaseTransport | None = None,
     ) -> None:
         """
         Initialize the base client.
@@ -134,6 +135,10 @@ class BaseClient:
                               creates, updates and duplicates, ad video uploads
                               and media prepares
                               (default: 300)
+            transport: Sync transport shared across requests and clients, so
+                       connections and TLS sessions are reused. The caller owns
+                       it: the client never closes it. Default: a new
+                       connection per request.
         """
         if not api_key:
             raise ValueError("API key is required")
@@ -143,6 +148,7 @@ class BaseClient:
         self.timeout = timeout
         self.max_retries = max_retries
         self.publish_timeout = publish_timeout
+        self._transport = transport
         self._rate_limiter = RateLimiter()
 
         self._headers = {
@@ -186,17 +192,23 @@ class BaseClient:
     # =========================================================================
 
     @contextmanager
-    def _sync_client(self) -> Iterator[httpx.Client]:
+    def _sync_client(
+        self, headers: dict[str, str] | None = None
+    ) -> Iterator[httpx.Client]:
         """Create a sync HTTP client context."""
         client = httpx.Client(
             base_url=self.base_url,
-            headers=self._headers,
+            headers=self._headers if headers is None else headers,
             timeout=self.timeout,
+            transport=self._transport,
         )
         try:
             yield client
         finally:
-            client.close()
+            # Closing a client closes its transport, and a shared one belongs
+            # to the caller.
+            if self._transport is None:
+                client.close()
 
     def _handle_response(self, response: httpx.Response) -> dict[str, Any]:
         """Handle HTTP response and raise appropriate exceptions."""
@@ -340,11 +352,7 @@ class BaseClient:
             client_headers = {
                 k: v for k, v in self._headers.items() if k != "Content-Type"
             }
-            with httpx.Client(
-                base_url=self.base_url,
-                headers=client_headers,
-                timeout=self.timeout,
-            ) as client:
+            with self._sync_client(client_headers) as client:
                 return self._request_with_retry(
                     client, "POST", path, files=files, params=params, headers=headers
                 )
