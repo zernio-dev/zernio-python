@@ -1268,7 +1268,7 @@ components:
       description: |
         Balance billing only. The balance is at or below $0 and auto top-up could not lift it, so new pay-per-use is refused.
 
-        - `insufficient_balance`: the balance is empty, or, when buying a phone number with auto top-up off, it is below the number's first month (the message says how much to add).
+        - `insufficient_balance`: the balance is empty, or, when buying a phone number or submitting its KYC, it is below the number's first month and auto top-up cannot refill it (off, no card, or past its monthly limit). The message says how much to add, and `required_cents` is what the balance must hold.
         - `usage_limit_reached`: the monthly limit kept it there.
 
         `funding_url` opens Billing with the Add funds drawer (the add-card drawer first when there is no card). Inbound traffic and connected calls are never refused.
@@ -4320,6 +4320,9 @@ components:
               type: string
               format: uri
               description: 'Dashboard link to Billing that opens the Add funds drawer (the add-card drawer first when there is no card). Send the user there, then retry.'
+            required_cents:
+              type: integer
+              description: 'Only when an item debited later (a phone number''s first month, all numbers of the order) is refused: what the balance must hold, in cents.'
           example:
             error: 'Your balance is at $0, so SMS is paused. Add funds in Billing to continue.'
             type: invalid_request_error
@@ -68292,7 +68295,7 @@ paths:
                   country: { type: string }
                   numberType: { type: string, description: The type that will be ordered after KYC approval. }
                   kycUrl: { type: string }
-        '402': { x-summary: "A payment method is required because the usage-based account has no card on file: add a card, then retry.", description: 'Payment method required (usage-based billing account with no card on file): code PAYMENT_REQUIRED, add a card, then retry. On balance billing with the balance at $0: code insufficient_balance or usage_limit_reached, add funds at `funding_url`, then retry.' }
+        '402': { x-summary: "A payment method is required because the usage-based account has no card on file: add a card, then retry.", description: 'Payment method required (usage-based billing account with no card on file): code PAYMENT_REQUIRED, add a card, then retry. On balance billing with the balance at $0, or below the number''s first month while auto top-up cannot refill it (off, no card, or past its monthly limit): code insufficient_balance (with `required_cents`, what the balance must hold) or usage_limit_reached, add funds at `funding_url`, then retry.' }
         '422': { x-summary: "International numbers require usage-based billing, and legacy Stripe users are limited to the US: switch to usage-based billing.", description: 'International numbers require usage-based billing (legacy Stripe users are US-only). Response body code: USAGE_BILLING_REQUIRED.' }
 
   /v1/phone-numbers/claims/{claimId}:
@@ -68830,7 +68833,7 @@ paths:
                   country: { type: string }
                   numberType: { type: string, description: The type that will be ordered after KYC approval. }
                   kycUrl: { type: string }
-        '402': { x-summary: "A payment method is required because the usage-based account has no card on file: add a card, then retry.", description: 'Payment method required (usage-based billing account with no card on file): code PAYMENT_REQUIRED, add a card, then retry. On balance billing with the balance at $0, or below the first month with auto top-up off: code insufficient_balance or usage_limit_reached, add funds at `funding_url`, then retry.' }
+        '402': { x-summary: "A payment method is required because the usage-based account has no card on file: add a card, then retry.", description: 'Payment method required (usage-based billing account with no card on file): code PAYMENT_REQUIRED, add a card, then retry. On balance billing with the balance at $0, or below the first month of every number ordered while auto top-up cannot refill it (off, no card, or past its monthly limit): code insufficient_balance (with `required_cents`, what the balance must hold) or usage_limit_reached, add funds at `funding_url`, then retry.' }
         '422': { x-summary: "International numbers require usage-based billing, and legacy Stripe users are limited to the US: switch to usage-based billing.", description: 'International numbers require usage-based billing (legacy Stripe users are US-only). Response body code: USAGE_BILLING_REQUIRED.' }
 
   /v1/whatsapp/phone-numbers/countries:
@@ -69211,6 +69214,7 @@ paths:
         '400': { description: "Validation error (e.g. address not in-country, file too large)" }
         '409': { x-summary: "Nothing was created because the area or number has no stock: resend with `preOrder` when offered, or pick another area or number.", description: "Conflict. The `code` says which case:\n\n- **area_pre_order_available:** the country requires the number to cover the registered address and that area has no stock, but the carrier can source one. Nothing was created. details carries { areaCode, areaName, estimatedWeeks: \"2-4\", billedWhenActive: true }.\n- **area_pre_order_available, next step:** show it to the customer and, once they agree, resend the same body with preOrder true (optionally with details.areaCode as areaCode).\n- **area_code_unavailable:** the requested areaCode (or, in a geographic-match country, the area covering the registered address) has no deliverable inventory and cannot be pre-ordered. Pick another area, or a registered address in an area with stock.\n- **country_out_of_stock:** the whole country and type pool has nothing deliverable and cannot be pre-ordered. Choose an area with stock or set a stock watch.\n- **phone_number_unavailable** (param phoneNumber): phoneNumber was sent and that exact number is no longer available (or WhatsApp cannot use it). Nothing was ordered; pick another number.\n- **Reuse with no prior verification:** reuse was requested but no prior approved verification exists for this country.\n\nWhen the only numbers the carrier lists recently failed WhatsApp registration and are held back, the message names the date the first one clears, and details.undeliverableUntil carries it as an ISO timestamp." }
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '402': { $ref: '#/components/responses/BalanceRequired' }
 
   /v1/phone-numbers/kyc/document/{documentId}:
     get:
