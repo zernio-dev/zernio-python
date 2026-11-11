@@ -24818,6 +24818,7 @@ def register_generated_tools(mcp, _get_client):
         profile_id: str,
         reconnect_account_id: str | None = None,
         oauth_app_id: str | None = None,
+        purpose: Literal["notifications"] | None = None,
         expected_platform_user_id: str | None = None,
         expected_username: str | None = None,
         force_reauth: bool = False,
@@ -24877,6 +24878,9 @@ def register_generated_tools(mcp, _get_client):
         - If the platform refuses a permission your app is not approved for, the redirect carries `error=oauth_app_scope_not_allowed`.
 
         The account remembers the app, and token refresh, publishing and inbox run on it. Reconnecting through another app, or without one, moves the account to that app.
+                purpose: Connect the account for notifications only. Slack and Telegram only: `GET /v1/connect/{platform}` returns 400 for any other platform, and other platforms' own connect endpoints ignore it.
+
+        The account is free, receives Zernio notifications, and cannot publish. To publish with it, connect it again without `purpose`. Refused with 400 when the channel or chat is already connected for publishing: connect a separate one for notifications.
                 expected_platform_user_id: Only connect if the login lands on this platform account. Any other account ends the flow with `error=account_mismatch` (a 409 `account_mismatch` on POST /v1/connect/instagram/select-account) and nothing is written.
 
         Compared with every id the platform reports for the authorized account:
@@ -25101,6 +25105,7 @@ def register_generated_tools(mcp, _get_client):
                 profile_id=profile_id,
                 reconnect_account_id=reconnect_account_id,
                 oauth_app_id=oauth_app_id,
+                purpose=purpose,
                 expected_platform_user_id=expected_platform_user_id,
                 expected_username=expected_username,
                 force_reauth=force_reauth,
@@ -27142,6 +27147,7 @@ def register_generated_tools(mcp, _get_client):
         account_id: str | None = None,
         redirect_url: str | None = None,
         scopes: str | None = None,
+        purpose: Literal["notifications"] | None = None,
     ) -> str:
         """List Slack channels for the channel picker
 
@@ -27173,7 +27179,12 @@ def register_generated_tools(mcp, _get_client):
 
         - `posting`: installs the bot with the channel scopes it needs to post.
         - `messaging`: adds the history, DM and reaction scopes the inbox reads.
-        - `analytics`, `comments`, `ads`: add nothing on Slack."""
+        - `analytics`, `comments`, `ads`: add nothing on Slack.
+                purpose: Start-OAuth mode only. Connect the account for notifications only. Slack and Telegram only: `GET /v1/connect/{platform}` returns 400 for any other platform, and other platforms' own connect endpoints ignore it.
+
+        The account is free, receives Zernio notifications, and cannot publish. To publish with it, connect it again without `purpose`. Refused with 400 when the channel or chat is already connected for publishing: connect a separate one for notifications.
+
+        Adding another channel with `accountId` keeps the notifications-only setting of the account whose workspace token it reuses."""
         client = _get_client()
         try:
             response = client.connect.list_slack_channels(
@@ -27182,6 +27193,7 @@ def register_generated_tools(mcp, _get_client):
                 account_id=account_id,
                 redirect_url=redirect_url,
                 scopes=scopes,
+                purpose=purpose,
             )
             return _format_response(response)
         except Exception as e:
@@ -27347,16 +27359,23 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=False,
         )
     )
-    def connect_get_telegram_connect_status(profile_id: str) -> str:
+    def connect_get_telegram_connect_status(
+        profile_id: str, purpose: Literal["notifications"] | None = None
+    ) -> str:
         """Generate Telegram code
 
-        Generate an access code (valid 15 minutes) for connecting a Telegram channel or group. Add the bot as admin, then send the code + @yourchannel to the bot. Poll PATCH /v1/connect/telegram to check status.
+            Generate an access code (valid 15 minutes) for connecting a Telegram channel or group. Add the bot as admin, then send the code + @yourchannel to the bot. Poll PATCH /v1/connect/telegram to check status.
 
-        Args:
-            profile_id: The profile ID to connect the Telegram account to (required)"""
+            Args:
+                profile_id: The profile ID to connect the Telegram account to (required)
+                purpose: Connect the account for notifications only. Slack and Telegram only: `GET /v1/connect/{platform}` returns 400 for any other platform, and other platforms' own connect endpoints ignore it.
+
+        The account is free, receives Zernio notifications, and cannot publish. To publish with it, connect it again without `purpose`. If the chat is already connected for publishing, the bot refuses the code in the private chat and the code stays pending."""
         client = _get_client()
         try:
-            response = client.connect.get_telegram_connect_status(profile_id=profile_id)
+            response = client.connect.get_telegram_connect_status(
+                profile_id=profile_id, purpose=purpose
+            )
             return _format_response(response)
         except Exception as e:
             raise ToolError(f"Error: {e}") from e
@@ -27369,18 +27388,23 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=True,
         )
     )
-    def connect_initiate_telegram_connect(chat_id: str, profile_id: str) -> str:
+    def connect_initiate_telegram_connect(
+        chat_id: str, profile_id: str, purpose: Literal["notifications"] | None = None
+    ) -> str:
         """Connect Telegram directly
 
-        Connect a Telegram channel/group directly using the chat ID. Alternative to the access code flow. The bot must already be an admin in the channel/group.
+            Connect a Telegram channel/group directly using the chat ID. Alternative to the access code flow. The bot must already be an admin in the channel/group.
 
-        Args:
-            chat_id: The Telegram chat ID. Numeric ID (e.g. "-1001234567890") or username with @ prefix (e.g. "@mychannel"). (required)
-            profile_id: The profile ID to connect the account to (required)"""
+            Args:
+                chat_id: The Telegram chat ID. Numeric ID (e.g. "-1001234567890") or username with @ prefix (e.g. "@mychannel"). (required)
+                profile_id: The profile ID to connect the account to (required)
+                purpose: Connect the account for notifications only. Slack and Telegram only: `GET /v1/connect/{platform}` returns 400 for any other platform, and other platforms' own connect endpoints ignore it.
+
+        The account is free, receives Zernio notifications, and cannot publish. To publish with it, connect it again without `purpose`. Refused with 400 when the channel or chat is already connected for publishing: connect a separate one for notifications."""
         client = _get_client()
         try:
             response = client.connect.initiate_telegram_connect(
-                chat_id=chat_id, profile_id=profile_id
+                chat_id=chat_id, profile_id=profile_id, purpose=purpose
             )
             return _format_response(response)
         except Exception as e:
@@ -49684,6 +49708,7 @@ def register_generated_tools(mcp, _get_client):
                 "campaign_sample.approved",
                 "campaign_sample.shipped",
                 "campaign_sample.declined",
+                "notification.sent",
             ]
         ]
         | None,
@@ -49922,6 +49947,7 @@ def register_generated_tools(mcp, _get_client):
                 "campaign_sample.approved",
                 "campaign_sample.shipped",
                 "campaign_sample.declined",
+                "notification.sent",
             ]
         ]
         | None = None,
@@ -50310,6 +50336,7 @@ def register_generated_tools(mcp, _get_client):
             "balance.low",
             "balance.empty",
             "balance.charged",
+            "notification.sent",
             "api.changelog.published",
         ]
         | None = None,

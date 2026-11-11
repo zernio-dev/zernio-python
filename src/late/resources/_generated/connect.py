@@ -99,6 +99,7 @@ class ConnectResource:
         *,
         reconnect_account_id: str | None = None,
         oauth_app_id: str | None = None,
+        purpose: str | None = None,
         expected_platform_user_id: str | None = None,
         expected_username: str | None = None,
         force_reauth: bool | None = False,
@@ -122,6 +123,7 @@ class ConnectResource:
             profile_id=profile_id,
             reconnect_account_id=reconnect_account_id,
             oauth_app_id=oauth_app_id,
+            purpose=purpose,
             expected_platform_user_id=expected_platform_user_id,
             expected_username=expected_username,
             force_reauth=force_reauth,
@@ -893,6 +895,7 @@ class ConnectResource:
         account_id: str | None = None,
         redirect_url: str | None = None,
         scopes: str | None = None,
+        purpose: str | None = None,
     ) -> dict[str, Any]:
         """List Slack channels for the channel picker"""
         params = self._build_params(
@@ -901,6 +904,7 @@ class ConnectResource:
             account_id=account_id,
             redirect_url=redirect_url,
             scopes=scopes,
+            purpose=purpose,
         )
         return self._client._get("/v1/connect/slack", params=params)
 
@@ -965,20 +969,24 @@ class ConnectResource:
         """Get WeChat IP whitelist"""
         return self._client._get("/v1/connect/wechat/ip-whitelist")
 
-    def get_telegram_connect_status(self, profile_id: str) -> dict[str, Any]:
+    def get_telegram_connect_status(
+        self, profile_id: str, *, purpose: str | None = None
+    ) -> dict[str, Any]:
         """Generate Telegram code"""
         params = self._build_params(
             profile_id=profile_id,
+            purpose=purpose,
         )
         return self._client._get("/v1/connect/telegram", params=params)
 
     def initiate_telegram_connect(
-        self, chat_id: str, profile_id: str
+        self, chat_id: str, profile_id: str, *, purpose: str | None = None
     ) -> dict[str, Any]:
         """Connect Telegram directly"""
         payload = self._build_payload(
             chat_id=chat_id,
             profile_id=profile_id,
+            purpose=purpose,
         )
         return self._client._post("/v1/connect/telegram", data=payload)
 
@@ -1382,6 +1390,7 @@ class ConnectResource:
         *,
         reconnect_account_id: str | None = None,
         oauth_app_id: str | None = None,
+        purpose: str | None = None,
         expected_platform_user_id: str | None = None,
         expected_username: str | None = None,
         force_reauth: bool | None = False,
@@ -1405,6 +1414,7 @@ class ConnectResource:
             profile_id=profile_id,
             reconnect_account_id=reconnect_account_id,
             oauth_app_id=oauth_app_id,
+            purpose=purpose,
             expected_platform_user_id=expected_platform_user_id,
             expected_username=expected_username,
             force_reauth=force_reauth,
@@ -2200,6 +2210,7 @@ class ConnectResource:
         account_id: str | None = None,
         redirect_url: str | None = None,
         scopes: str | None = None,
+        purpose: str | None = None,
     ) -> dict[str, Any]:
         """List Slack channels for the channel picker (async)"""
         params = self._build_params(
@@ -2208,6 +2219,7 @@ class ConnectResource:
             account_id=account_id,
             redirect_url=redirect_url,
             scopes=scopes,
+            purpose=purpose,
         )
         return await self._client._aget("/v1/connect/slack", params=params)
 
@@ -2272,20 +2284,24 @@ class ConnectResource:
         """Get WeChat IP whitelist (async)"""
         return await self._client._aget("/v1/connect/wechat/ip-whitelist")
 
-    async def aget_telegram_connect_status(self, profile_id: str) -> dict[str, Any]:
+    async def aget_telegram_connect_status(
+        self, profile_id: str, *, purpose: str | None = None
+    ) -> dict[str, Any]:
         """Generate Telegram code (async)"""
         params = self._build_params(
             profile_id=profile_id,
+            purpose=purpose,
         )
         return await self._client._aget("/v1/connect/telegram", params=params)
 
     async def ainitiate_telegram_connect(
-        self, chat_id: str, profile_id: str
+        self, chat_id: str, profile_id: str, *, purpose: str | None = None
     ) -> dict[str, Any]:
         """Connect Telegram directly (async)"""
         payload = self._build_payload(
             chat_id=chat_id,
             profile_id=profile_id,
+            purpose=purpose,
         )
         return await self._client._apost("/v1/connect/telegram", data=payload)
 
