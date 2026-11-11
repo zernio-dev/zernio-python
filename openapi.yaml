@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.576.3"
+  version: "1.577.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -33908,6 +33908,13 @@ paths:
                   balanceBilling: { type: boolean, description: 'True when the account pays pay-per-use from this prepaid balance (new signups). Absent otherwise: that pay-per-use is on the monthly invoice.' }
                   spendableCents: { type: integer, description: 'Balance billing only (absent otherwise). What pay-per-use can still spend: availableCents plus promoCents, minus usage not yet posted. At 0 or below, new pay-per-use answers 402 `insufficient_balance`.' }
                   promoCents: { type: integer, description: 'Balance billing only (absent otherwise). Promotional and support credit Zernio added to your balance. Pay-per-use spends it before availableCents. It is never paid out to payees and is not part of availableCents.' }
+                  held:
+                    type: object
+                    description: 'Balance billing only (absent otherwise). First months set aside from availableCents for phone numbers under review (KYC). Billed when the number activates, returned if it is declined. Not part of availableCents or spendableCents.'
+                    required: [cents, count]
+                    properties:
+                      cents: { type: integer, description: 'Total held, in USD cents.' }
+                      count: { type: integer, description: 'Numbers with a held first month.' }
                   payoutLockedCents: { type: integer, deprecated: true, description: 'Always 0. The balance no longer pays creators, so none of it is locked from them.' }
                   payoutLocks:
                     type: array
