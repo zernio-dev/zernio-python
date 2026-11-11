@@ -130,6 +130,11 @@ def _is_rejected(result: Any) -> bool:
     )
 
 
+def _result_chars(result: Any) -> int:
+    content = getattr(result, "content", None) or []
+    return sum(len(block.text) for block in content if isinstance(block, TextContent))
+
+
 def _error_fields(exc: Exception) -> dict[str, Any]:
     cause = exc.__cause__ if isinstance(exc.__cause__, Exception) else exc
     fields: dict[str, Any] = {"error_type": type(cause).__name__}
@@ -194,6 +199,8 @@ class ToolTelemetryMiddleware(Middleware):
                 result = await call_next(context)
                 if _is_rejected(result):
                     fields["outcome"] = "rejected"
+                fields["result_chars"] = _result_chars(result)
+                transaction.set_data("mcp.tool.result.chars", fields["result_chars"])
                 return result
             except asyncio.CancelledError:
                 fields = {"outcome": "cancelled"}
