@@ -41,8 +41,22 @@ curl -H "Authorization: Bearer your_zernio_api_key" \
 
 1. Push code to GitHub
 2. Create new Railway project from repo
-3. Railway auto-detects Dockerfile and deploys
+3. Railway builds the `Dockerfile` and deploys
 4. No environment variables needed! (users provide their own API keys)
+
+### Deploy configuration
+
+The service's deploy settings live in [`.railway/railway.ts`](../.railway/railway.ts) (Railway [Infrastructure as Code](https://docs.railway.com/infrastructure-as-code)). It replaces `railway.toml`, which Railway stops reading on 2026-12-01. It sets the Dockerfile build, the `/health` check (100 s timeout), restart on failure (3 retries), one replica in `us-west2`, the GitHub repo and branch each environment deploys from, and the `mcp.zernio.com` domain in production. It sets no start command, so the `Dockerfile` `CMD` starts the server; do not add one. Variables are declared with `preserve()`, so their values stay managed in Railway.
+
+Railway does not read this file at deploy time. A change only takes effect once it is applied with the Railway CLI, once per environment. The root `package.json` pins the CLI and the `railway` package the file imports (Node 22 or newer):
+
+```bash
+npm ci
+npx railway login
+npx railway link           # pick project zernio-mcp and the environment
+npm run railway:plan       # preview only
+npm run railway:apply
+```
 
 ### Environment Variables
 
