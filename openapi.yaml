@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.576.2"
+  version: "1.576.3"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -1270,7 +1270,8 @@ components:
       description: |
         Balance billing only. The balance is at or below $0 and auto top-up could not lift it, so new pay-per-use is refused.
 
-        - `insufficient_balance`: the balance is empty, or below a phone number's first month (purchase or KYC) while auto top-up cannot refill it (off, no card, or past its monthly limit). The message says how much to add; `required_cents` is what the balance must hold.
+        - `insufficient_balance`: the balance is empty, or it cannot hold an order's fees billed later plus those still owed by orders awaiting approval, while auto top-up cannot refill it (off, no card, or past its monthly limit).
+        - The message says how much to add; `required_cents` is what the balance must hold. Later fees: a number's first month, an RCS agent's fees up to launch, an iMessage sender's or caller identity's first month, 10DLC fees.
         - `usage_limit_reached`: the monthly limit kept it there.
         - On a call start, `insufficient_balance` also means the balance, plus what auto top-up can still add this month, cannot fund one minute of the call; `required_cents` is what the balance must hold.
 
@@ -64799,7 +64800,7 @@ paths:
                   account: { $ref: '#/components/schemas/ImessageSender' }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '402': { x-summary: "A valid payment method is required, or the last payment failed and is unpaid: pay the invoice or update the card.", description: 'A valid payment method is required (code: payment_method_required), or the last payment failed and is still unpaid (code: payment_required). Pay the open invoice or update the card in Billing, then retry.' }
+        '402': { x-summary: "A valid payment method is required, the last payment failed, or the balance cannot fund the first month.", description: 'No valid card (payment_method_required), or the last payment is unpaid (payment_required). On balance billing, the balance must hold the first month plus what orders awaiting approval owe, unless auto top-up can refill it (insufficient_balance, with `funding_url` and `required_cents`). Fix it in Billing, then retry.' }
         '404': { description: Profile not found or access denied }
         '409': { x-summary: "The sender is registered to another profile, or billing setup is incomplete and support must finish it: contact support.", description: 'Sender already registered to another profile (code: imessage_sender_conflict), or billing setup is incomplete and support must finish it (code: billing_setup_incomplete)' }
 
@@ -64889,7 +64890,7 @@ paths:
                   sender: { $ref: '#/components/schemas/ImessageSenderLifecycle' }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '402': { x-summary: "A valid payment method is required, or a payment failed, and nothing was ordered: update the card in Billing, then order again.", description: 'Nothing is ordered. A valid payment method is required (code: payment_method_required), the last payment failed or the first month was declined (code: payment_required), or, on balance billing, the balance is at $0 (code: insufficient_balance or usage_limit_reached, with `funding_url` to add funds). Fix it in Billing, then order again.' }
+        '402': { x-summary: "A valid payment method is required, or a payment failed, and nothing was ordered: update the card in Billing, then order again.", description: 'Nothing is ordered. No valid card (payment_method_required), a failed payment or declined first month (payment_required), or, on balance billing, a balance that cannot hold the first month plus what orders awaiting approval owe (insufficient_balance or usage_limit_reached, with `funding_url` and `required_cents`). Fix it in Billing, then order again.' }
         '403': { description: 'Sender limit reached (code: imessage_sender_limit)' }
         '404': { description: Profile not found or access denied }
         '409': { description: 'Billing setup is incomplete and support must finish it (code: billing_setup_incomplete).' }
@@ -65590,7 +65591,7 @@ paths:
                   agent: { $ref: '#/components/schemas/RcsAgent' }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '402': { x-summary: "No payment method is on file, or the balance is at $0: fund it and retry.", description: 'No payment method on file (payment_method_required): add a card and retry. On balance billing with the balance at $0: code insufficient_balance or usage_limit_reached, add funds at `funding_url`, then retry.' }
+        '402': { x-summary: "No payment method is on file, or the balance cannot fund the agent: fund it and retry.", description: 'No payment method on file (payment_method_required): add a card and retry. On balance billing, the balance must hold every fee up to launch plus what orders awaiting approval owe, unless auto top-up can refill it: insufficient_balance, add funds at `funding_url` (`required_cents` is the amount), then retry.' }
         '403': { description: 'Your plan does not include the inbox, which RCS requires.' }
         '404': { description: Profile or brand not found }
         '409': { description: 'The brand was rejected, or the Idempotency-Key is still in flight' }
@@ -66282,6 +66283,8 @@ paths:
         - `enterpriseId`: a new identity for a registered business.
         - Neither: the business registers itself and its first identity.
 
+        On balance billing, a link that creates an identity needs its first month in the balance first (402 otherwise).
+
         The person opening the link can forward a fresh one to someone else, which retires theirs.
       security:
         - bearerAuth: []
@@ -66306,6 +66309,7 @@ paths:
                   expiresAt: { type: string, format: date-time }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '402': { $ref: '#/components/responses/BalanceRequired' }
         '404': { description: 'Business or identity not found, or the identity is not in review' }
   /v1/branded-calling/call-reasons:
     get:
