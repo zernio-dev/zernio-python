@@ -63,7 +63,7 @@ Writing to stdout or stderr can block when the platform's log collector falls be
 
 ## Tool call logs
 
-Every tool call on the HTTP server prints one JSON line to stdout, whatever `SENTRY_DSN` says, with `event: "mcp_tool_call"`, `surface`, `tool`, `duration_ms`, `outcome` (`ok`, `rejected`, `cancelled` or `error`), `error_type`, `status_code`, `caller` (the first 12 characters of the SHA-256 of the bearer) and, on calls that return, `result_chars` (characters of text sent back to the agent, also set as `mcp.tool.result.chars` on the Sentry transaction). Arguments, results and tokens are never logged. Tools reached through `call_tool` log two lines: the outer `call_tool` and the tool itself.
+Every tool call on the HTTP server prints one JSON line to stdout, whatever `SENTRY_DSN` says, with `event: "mcp_tool_call"`, `surface`, `tool`, `via` (`direct` or `call_tool`), `duration_ms`, `outcome` (`ok`, `rejected`, `cancelled` or `error`), `error_type`, `status_code`, `caller` (the first 12 characters of the SHA-256 of the bearer) and, on calls that return, `result_chars` (characters of text sent back to the agent). Arguments, results and tokens are never logged. A tool reached through `call_tool` logs one line under its own name with `via: "call_tool"`; `call_tool` logs a line of its own only when it fails before dispatching. The Sentry transaction per tool call follows the same rule and carries the tags `mcp.tool`, `mcp.via`, `mcp.caller`, `mcp.outcome` and `mcp.surface`, plus the span attribute `mcp.tool.result.chars` (same value as `result_chars`).
 
 ## Connecting Clients
 

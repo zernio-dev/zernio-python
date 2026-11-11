@@ -4,7 +4,8 @@ import pytest
 from starlette.applications import Starlette
 from starlette.testclient import TestClient
 
-from late.mcp import workers
+from late.mcp import http_server, workers
+from late.mcp.config import ServerConfig
 from late.mcp.http_server import _drain_logs_on_shutdown, build_app
 
 
@@ -77,3 +78,13 @@ def test_worker_logs_drain_after_the_app_shuts_down():
         events.append("serving")
 
     assert events == ["serving", "drain 2.0"]
+
+
+def test_workers_get_longer_than_their_startup_to_answer_uvicorn(monkeypatch):
+    started: dict = {}
+    monkeypatch.setattr(http_server.uvicorn, "run", lambda *_, **kw: started.update(kw))
+
+    http_server._serve_workers(ServerConfig(host="127.0.0.1", port=8080), workers=4)
+
+    assert started["workers"] == 4
+    assert started["timeout_worker_healthcheck"] >= 30
