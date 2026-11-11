@@ -8316,10 +8316,10 @@ def register_generated_tools(mcp, _get_client):
         set's `regional_regulated_categories`, same values as on POST /v1/ads/create
         (AUSTRALIA_FINSERV, AUSTRALIA_UNIVERSAL, BRAZIL_REGULATION, INDIA_FINSERV,
         MALAYSIA_UNIVERSAL, SINGAPORE_UNIVERSAL, TAIWAN_FINSERV, TAIWAN_UNIVERSAL,
-        THAILAND_UNIVERSAL). Send it with `regionalRegulationIdentities`. An empty array is a 400.
+        THAILAND_UNIVERSAL, US_SECURITIES_LICENSING). Send it with `regionalRegulationIdentities`. An empty array is a 400.
                 regional_regulation_identities: Meta only (400 elsewhere, before anything in the request is written). Writes the ad set's `regional_regulation_identities`: the Verified identity IDs of the beneficiary and payer for each declared category.
 
-        - Same keys and validation as on POST /v1/ads/create (for example `universal_beneficiary` / `universal_payer` for BRAZIL_REGULATION, MALAYSIA_UNIVERSAL and THAILAND_UNIVERSAL).
+        - Same keys and validation as on POST /v1/ads/create (for example `universal_beneficiary` / `universal_payer` for BRAZIL_REGULATION, MALAYSIA_UNIVERSAL, THAILAND_UNIVERSAL and US_SECURITIES_LICENSING).
         - Send each ID as a string of digits; an empty object is a 400.
         - When Meta refuses the ad set for a missing verified advertiser, the 400 `platform_api_error` names the expected keys in `details.expectedIdentityKeys`, as on create.
 
@@ -9920,7 +9920,7 @@ def register_generated_tools(mcp, _get_client):
         - TikTok also refuses Smart Targeting (`smartTargeting`) and lookalike audiences (`targeting.audienceInclude` / `targeting.audienceExclude`). Without an age, the ad group targets 18+.
         - TikTok sets the category when the campaign is created, so it is a 400 with `smartPlus` or `existingCampaignId`.
                 special_ad_category_country: Meta (metaads) only. 2-letter ISO country codes the special ad category applies to. Requires specialAdCategories to be set (400 otherwise).
-                regional_regulated_categories: Meta only. Regional regulation categories required when the ad set targets certain countries (e.g. AUSTRALIA_FINSERV, AUSTRALIA_UNIVERSAL, BRAZIL_REGULATION, INDIA_FINSERV, MALAYSIA_UNIVERSAL, SINGAPORE_UNIVERSAL, TAIWAN_FINSERV, TAIWAN_UNIVERSAL, THAILAND_UNIVERSAL). Forwarded to the ad set.
+                regional_regulated_categories: Meta only. Regional regulation categories required when the ad set targets certain countries (e.g. AUSTRALIA_FINSERV, AUSTRALIA_UNIVERSAL, BRAZIL_REGULATION, INDIA_FINSERV, MALAYSIA_UNIVERSAL, SINGAPORE_UNIVERSAL, TAIWAN_FINSERV, TAIWAN_UNIVERSAL, THAILAND_UNIVERSAL, US_SECURITIES_LICENSING). Forwarded to the ad set.
                 regional_regulation_identities: Meta only. Verified identity IDs of the beneficiary and payer for each declared regionalRegulatedCategories value. Ignored when adSetId adds the ad to an existing ad set.
 
         Meta may require them on ad sets created through the API even when Ads Manager advertising settings have a default beneficiary and payer (seen on AUSTRALIA_FINSERV), so sending them explicitly is the reliable path.
@@ -9936,7 +9936,7 @@ def register_generated_tools(mcp, _get_client):
         - INDIA_FINSERV: india_finserv_beneficiary / india_finserv_payer
         - TAIWAN_UNIVERSAL: taiwan_universal_beneficiary / taiwan_universal_payer
         - SINGAPORE_UNIVERSAL: singapore_universal_beneficiary / singapore_universal_payer
-        - AUSTRALIA_UNIVERSAL, BRAZIL_REGULATION, MALAYSIA_UNIVERSAL and THAILAND_UNIVERSAL: universal_beneficiary / universal_payer
+        - AUSTRALIA_UNIVERSAL, BRAZIL_REGULATION, MALAYSIA_UNIVERSAL, THAILAND_UNIVERSAL and US_SECURITIES_LICENSING: universal_beneficiary / universal_payer
 
         When Meta rejects the ad set for a missing verified advertiser, the error carries param regionalRegulationIdentities, details.expectedIdentityKeys (the keys the declared categories expect), details.suggestedCategories (the markets Meta ties to that subcode) and Meta's metaCode, metaSubcode and fbtraceId.
                 link_url: Website URL for non-messaging CTA buttons. Send it with `callToAction`. Omit for messaging boosts.
@@ -11161,7 +11161,7 @@ def register_generated_tools(mcp, _get_client):
         existingCampaignId (the existing campaign's category/country already governs it).
                 regional_regulated_categories: Meta only. Regional regulation categories required when the ad set targets certain countries.
         Known values: AUSTRALIA_FINSERV, AUSTRALIA_UNIVERSAL, BRAZIL_REGULATION, INDIA_FINSERV,
-        MALAYSIA_UNIVERSAL, SINGAPORE_UNIVERSAL, TAIWAN_FINSERV, TAIWAN_UNIVERSAL, THAILAND_UNIVERSAL. Meta rejects the ad set without this when
+        MALAYSIA_UNIVERSAL, SINGAPORE_UNIVERSAL, TAIWAN_FINSERV, TAIWAN_UNIVERSAL, THAILAND_UNIVERSAL, US_SECURITIES_LICENSING (securities and investments ad sets targeting the United States). Meta rejects the ad set without this when
         the targeting geo includes the corresponding country.
                 regional_regulation_identities: Meta only. Verified identity IDs of the beneficiary and payer for each declared regionalRegulatedCategories value. Ignored when adSetId adds the ad to an existing ad set.
 
@@ -11178,7 +11178,7 @@ def register_generated_tools(mcp, _get_client):
         - INDIA_FINSERV: india_finserv_beneficiary / india_finserv_payer
         - TAIWAN_UNIVERSAL: taiwan_universal_beneficiary / taiwan_universal_payer
         - SINGAPORE_UNIVERSAL: singapore_universal_beneficiary / singapore_universal_payer
-        - AUSTRALIA_UNIVERSAL, BRAZIL_REGULATION, MALAYSIA_UNIVERSAL and THAILAND_UNIVERSAL: universal_beneficiary / universal_payer
+        - AUSTRALIA_UNIVERSAL, BRAZIL_REGULATION, MALAYSIA_UNIVERSAL, THAILAND_UNIVERSAL and US_SECURITIES_LICENSING: universal_beneficiary / universal_payer
 
         **Errors**: when Meta rejects the ad set for a missing verified advertiser, the error carries param regionalRegulationIdentities, details.expectedIdentityKeys (the keys the declared categories expect), details.suggestedCategories (the markets Meta ties to that subcode) and Meta's metaCode, metaSubcode and fbtraceId.
                 end_date: When the ad ends. If omitted: on a lifetime budget, the ad ends 7 days after it starts (reported in `appliedDefaults.endDate`); a daily budget runs until paused.
@@ -39207,7 +39207,7 @@ def register_generated_tools(mcp, _get_client):
         (for example, an agency paying for a client's ads). Same rules as
         `dsaBeneficiary`: required for EU targeting unless the ad account has
         a default payor.
-                regional_regulated_categories: Meta only. Regional regulation categories required when the ad set targets certain countries (e.g. AUSTRALIA_FINSERV, AUSTRALIA_UNIVERSAL, BRAZIL_REGULATION, INDIA_FINSERV, MALAYSIA_UNIVERSAL, SINGAPORE_UNIVERSAL, TAIWAN_FINSERV, TAIWAN_UNIVERSAL, THAILAND_UNIVERSAL). Forwarded to the ad set.
+                regional_regulated_categories: Meta only. Regional regulation categories required when the ad set targets certain countries (e.g. AUSTRALIA_FINSERV, AUSTRALIA_UNIVERSAL, BRAZIL_REGULATION, INDIA_FINSERV, MALAYSIA_UNIVERSAL, SINGAPORE_UNIVERSAL, TAIWAN_FINSERV, TAIWAN_UNIVERSAL, THAILAND_UNIVERSAL, US_SECURITIES_LICENSING). Forwarded to the ad set.
                 regional_regulation_identities: Meta only. Verified identity IDs of the beneficiary and payer for each declared regionalRegulatedCategories value. Ignored when adSetId adds the ad to an existing ad set.
 
         Meta may require them on API-created ad sets even when a default beneficiary and payer are set in Ads Manager (seen on AUSTRALIA_FINSERV), so sending them explicitly is the reliable path.
@@ -39223,7 +39223,7 @@ def register_generated_tools(mcp, _get_client):
         - INDIA_FINSERV: india_finserv_beneficiary / india_finserv_payer
         - TAIWAN_UNIVERSAL: taiwan_universal_beneficiary / taiwan_universal_payer
         - SINGAPORE_UNIVERSAL: singapore_universal_beneficiary / singapore_universal_payer
-        - AUSTRALIA_UNIVERSAL, BRAZIL_REGULATION, MALAYSIA_UNIVERSAL and THAILAND_UNIVERSAL: universal_beneficiary / universal_payer
+        - AUSTRALIA_UNIVERSAL, BRAZIL_REGULATION, MALAYSIA_UNIVERSAL, THAILAND_UNIVERSAL and US_SECURITIES_LICENSING: universal_beneficiary / universal_payer
 
         When Meta rejects the ad set for a missing verified advertiser, the error carries param regionalRegulationIdentities, details.expectedIdentityKeys (keys the declared categories expect), details.suggestedCategories (markets Meta ties to that subcode) and Meta's metaCode, metaSubcode and fbtraceId.
                 destination: Where the conversation opens when the ad is tapped. Set this OR `destinations`, not both.
@@ -39734,7 +39734,7 @@ def register_generated_tools(mcp, _get_client):
         (for example, an agency paying for a client's ads). Same rules as
         `dsaBeneficiary`: required for EU targeting unless the ad account has
         a default payor.
-                regional_regulated_categories: Meta only. Regional regulation categories required when the ad set targets certain countries (e.g. AUSTRALIA_FINSERV, AUSTRALIA_UNIVERSAL, BRAZIL_REGULATION, INDIA_FINSERV, MALAYSIA_UNIVERSAL, SINGAPORE_UNIVERSAL, TAIWAN_FINSERV, TAIWAN_UNIVERSAL, THAILAND_UNIVERSAL). Forwarded to the ad set.
+                regional_regulated_categories: Meta only. Regional regulation categories required when the ad set targets certain countries (e.g. AUSTRALIA_FINSERV, AUSTRALIA_UNIVERSAL, BRAZIL_REGULATION, INDIA_FINSERV, MALAYSIA_UNIVERSAL, SINGAPORE_UNIVERSAL, TAIWAN_FINSERV, TAIWAN_UNIVERSAL, THAILAND_UNIVERSAL, US_SECURITIES_LICENSING). Forwarded to the ad set.
                 regional_regulation_identities: Meta only. Verified identity IDs of the beneficiary and payer for each declared regionalRegulatedCategories value. Ignored when adSetId adds the ad to an existing ad set.
 
         Meta may require them on API-created ad sets even when a default beneficiary and payer are set in Ads Manager (seen on AUSTRALIA_FINSERV), so sending them explicitly is the reliable path.
@@ -39750,7 +39750,7 @@ def register_generated_tools(mcp, _get_client):
         - INDIA_FINSERV: india_finserv_beneficiary / india_finserv_payer
         - TAIWAN_UNIVERSAL: taiwan_universal_beneficiary / taiwan_universal_payer
         - SINGAPORE_UNIVERSAL: singapore_universal_beneficiary / singapore_universal_payer
-        - AUSTRALIA_UNIVERSAL, BRAZIL_REGULATION, MALAYSIA_UNIVERSAL and THAILAND_UNIVERSAL: universal_beneficiary / universal_payer
+        - AUSTRALIA_UNIVERSAL, BRAZIL_REGULATION, MALAYSIA_UNIVERSAL, THAILAND_UNIVERSAL and US_SECURITIES_LICENSING: universal_beneficiary / universal_payer
 
         When Meta rejects the ad set for a missing verified advertiser, the error carries param regionalRegulationIdentities, details.expectedIdentityKeys (keys the declared categories expect), details.suggestedCategories (markets Meta ties to that subcode) and Meta's metaCode, metaSubcode and fbtraceId.
                 phone_number: E.164 number the CALL_NOW CTA dials (e.g. +34600111222). (required)
@@ -40234,7 +40234,7 @@ def register_generated_tools(mcp, _get_client):
         (for example, an agency paying for a client's ads). Same rules as
         `dsaBeneficiary`: required for EU targeting unless the ad account has
         a default payor.
-                regional_regulated_categories: Meta only. Regional regulation categories required when the ad set targets certain countries (e.g. AUSTRALIA_FINSERV, AUSTRALIA_UNIVERSAL, BRAZIL_REGULATION, INDIA_FINSERV, MALAYSIA_UNIVERSAL, SINGAPORE_UNIVERSAL, TAIWAN_FINSERV, TAIWAN_UNIVERSAL, THAILAND_UNIVERSAL). Forwarded to the ad set.
+                regional_regulated_categories: Meta only. Regional regulation categories required when the ad set targets certain countries (e.g. AUSTRALIA_FINSERV, AUSTRALIA_UNIVERSAL, BRAZIL_REGULATION, INDIA_FINSERV, MALAYSIA_UNIVERSAL, SINGAPORE_UNIVERSAL, TAIWAN_FINSERV, TAIWAN_UNIVERSAL, THAILAND_UNIVERSAL, US_SECURITIES_LICENSING). Forwarded to the ad set.
                 regional_regulation_identities: Meta only. Verified identity IDs of the beneficiary and payer for each declared regionalRegulatedCategories value. Ignored when adSetId adds the ad to an existing ad set.
 
         Meta may require them on API-created ad sets even when a default beneficiary and payer are set in Ads Manager (seen on AUSTRALIA_FINSERV), so sending them explicitly is the reliable path.
@@ -40250,7 +40250,7 @@ def register_generated_tools(mcp, _get_client):
         - INDIA_FINSERV: india_finserv_beneficiary / india_finserv_payer
         - TAIWAN_UNIVERSAL: taiwan_universal_beneficiary / taiwan_universal_payer
         - SINGAPORE_UNIVERSAL: singapore_universal_beneficiary / singapore_universal_payer
-        - AUSTRALIA_UNIVERSAL, BRAZIL_REGULATION, MALAYSIA_UNIVERSAL and THAILAND_UNIVERSAL: universal_beneficiary / universal_payer
+        - AUSTRALIA_UNIVERSAL, BRAZIL_REGULATION, MALAYSIA_UNIVERSAL, THAILAND_UNIVERSAL and US_SECURITIES_LICENSING: universal_beneficiary / universal_payer
 
         When Meta rejects the ad set for a missing verified advertiser, the error carries param regionalRegulationIdentities, details.expectedIdentityKeys (keys the declared categories expect), details.suggestedCategories (markets Meta ties to that subcode) and Meta's metaCode, metaSubcode and fbtraceId."""
         client = _get_client()
