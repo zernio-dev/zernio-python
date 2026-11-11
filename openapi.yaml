@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.575.1"
+  version: "1.575.2"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -4430,7 +4430,11 @@ components:
 
             Meta's own error stays in the message and in `platformError`.
 
-            **Private replies.** `privateReplyConsumed` appears on the private-reply endpoint's 400 when the comment's single reply is already spent. `privateReplyOutcome: "unknown"` appears on its 502 when Meta answered a server error and the reply may have been delivered.
+            **Private replies.** The private-reply endpoint adds:
+
+            - `privateReplyConsumed` on a 400: the comment's single reply is already spent.
+            - `privateReplyOutcome: "unknown"` on a 502: Meta answered a server error and the reply may have been delivered.
+            - `privateReplyOutcome: "not_sent"` on a 429: Instagram's rate limit refused the reply, so retry later.
 
             **Google quota 429.** On a Google Ads or YouTube Analytics 429, `quotaExhausted: true` marks the failure as Google's own quota, not a Zernio rate limit, so you can keep calling other platforms instead of backing off everywhere. When Google names the scope, `quotaScope` is also set:
 
@@ -62008,6 +62012,7 @@ paths:
         ### Errors
 
         - 400 with `details.privateReplyConsumed: true`: the comment's single private reply is spent (by this call or an earlier one). Never retry it.
+        - 429 with `details.privateReplyOutcome: "not_sent"`: Instagram's messaging rate limit for the account (Meta code 613). The reply was not sent and the comment's private reply is not spent. Retry after the `Retry-After` header.
         - 502: Meta answered a server error after receiving the reply. It carries `details.privateReplyOutcome: "unknown"`. The reply is usually delivered and the comment's private reply spent, so check the conversation before retrying.
         - Meta-originated failures carry Meta's error object in `platformError` (`code`, `error_subcode`, `message`, `type`, `fbtrace_id`). Common Instagram subcodes: 2534014 commenter not found (no reason given), 2534023 already replied, 2534024 older than 7 days, 2534025 not eligible for a private reply, 2534066 declined.
 
