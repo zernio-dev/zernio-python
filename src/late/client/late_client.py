@@ -7,6 +7,10 @@ The ``Late`` alias is kept for backwards compatibility.
 from __future__ import annotations
 
 import os
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    import httpx
 
 from ..resources import (
     AccountGroupsResource,
@@ -136,6 +140,7 @@ class Zernio(BaseClient):
         timeout: float = 30.0,
         max_retries: int = 3,
         publish_timeout: float = 300.0,
+        transport: httpx.BaseTransport | None = None,
     ) -> None:
         """
         Initialize the Zernio client.
@@ -149,6 +154,9 @@ class Zernio(BaseClient):
             publish_timeout: Timeout in seconds for writes that do their work inside the
                              request and can outlast `timeout`, such as publishNow
                              creates and ad creates and updates (default: 300)
+            transport: Sync httpx transport shared across requests and clients,
+                       so connections and TLS sessions are reused. The caller
+                       owns it and closes it (default: a new connection per request)
 
         Raises:
             ValueError: If no API key is provided and neither ZERNIO_API_KEY
@@ -168,6 +176,7 @@ class Zernio(BaseClient):
             timeout=timeout,
             max_retries=max_retries,
             publish_timeout=publish_timeout,
+            transport=transport,
         )
 
         # --- auto-registered resources (do not edit) ---
