@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.575.2"
+  version: "1.576.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -19602,6 +19602,7 @@ components:
           type: string
           anyOf:
             - enum: [today, yesterday, last_3d, last_7d, last_14d, last_30d, this_month, last_month]
+            - enum: [last_complete_hour, last_3h, today_so_far]
             - pattern: '^[0-9]{1,2}_to_[0-9]{1,2}_days_ago$'
           description: |
             Days in the ad account's own timezone. `last_7d` is the 7 full days before today; only `today` and `this_month` read the day in progress.
@@ -19609,6 +19610,8 @@ components:
             `this_month` runs from the 1st through today; `last_month` is the whole previous calendar month.
 
             `<from>_to_<to>_days_ago` is any range of full days, both ends included, such as `8_to_2_days_ago` to skip the 2 most recent days while their conversions still arrive. `from` is at least `to` and at most 90.
+
+            `last_complete_hour`, `last_3h` and `today_so_far` read campaign totals hour by hour, on campaign rules for Meta and Google, and end at the latest hour whose numbers have settled, not at now. They take `spend`, `impressions`, `clicks`, `ctr`, `cpc` and `cpm`, and no `top` or `bottom`.
           example: last_7d
         op:
           type: string
@@ -19623,7 +19626,19 @@ components:
             `previous_period` is the same number of days just before `window`. For `this_month` it is the same days of last month, and for `last_month` the month before.
 
             Spend, impressions, clicks, conversions and reach are compared per day, so windows of different lengths compare fairly; rates such as `cpc` compare as they are. A comparison window with no value never matches.
+
+            `usual` compares with the median of the same window on the 4 previous weeks. For an hourly window that is the same hours on the 4 previous same weekdays, and for a window of up to 7 full days (not `today`) the same days moved back 1 to 4 weeks.
+
+            `usual` needs at least 3 of those weeks with a value, and takes no reach, frequency, budget or calendar metric.
+
+            On an hourly window, `compareTo` is `usual`, or for `ctr`, `cpc` and `cpm` a window of full days ending by yesterday and starting at most 35 days ago, read from the same hourly totals.
+
+            For example, `cpc` over `last_complete_hour` `>=` 5 against `last_30d` means the last hour's clicks cost 5 times their 30-day price.
           example: previous_period
+        of:
+          type: string
+          enum: [usual]
+          description: 'Reads the usual value of the metric over `window` (as `compareTo: usual` defines it) instead of its current value, such as campaigns that usually get at least 50 impressions in the last 3 hours. Not combined with `compareTo`.'
     AdRuleConditions:
       description: |
         A group: `all` (every item must hold) or `any` (one is enough). An item is a condition or another group, nested up to 3 levels, with at most 10 conditions in total. A rate with no denominator (a CPA with no conversions) never matches.
