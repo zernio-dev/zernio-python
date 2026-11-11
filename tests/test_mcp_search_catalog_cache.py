@@ -1,4 +1,4 @@
-import re
+import json
 
 import pytest
 from fastmcp import Client
@@ -25,7 +25,7 @@ def transform(monkeypatch):
 
 async def _search_names(client: Client, query: str) -> list[str]:
     result = await client.call_tool("search_tools", {"query": query})
-    return re.findall(r"^### ([a-z0-9]+(?:_[a-z0-9]+)+)$", result.content[0].text, re.MULTILINE)
+    return [tool["name"] for tool in json.loads(result.content[0].text)]
 
 
 async def test_repeated_searches_read_the_tool_catalog_once(transform, monkeypatch):
