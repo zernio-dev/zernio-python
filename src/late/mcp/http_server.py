@@ -49,6 +49,8 @@ from late.mcp.constants import (
     TRANSPORT_TYPE,
 )
 from late.mcp.non_blocking_logging import (
+    LogPump,
+    drain_before_exit,
     exit_after_draining_on_signals,
     install_non_blocking_logging,
 )
@@ -59,6 +61,7 @@ from late.mcp.telemetry import (
     log_tool_calls_to_stdout,
     quiet_routine_logs,
 )
+from late.mcp.workers import all_workers_ready, mark_worker_ready, worker_count
 
 mcp.add_middleware(ToolTelemetryMiddleware("mcp"))
 chatgpt_mcp.add_middleware(ToolTelemetryMiddleware("chatgpt"))
@@ -116,6 +119,8 @@ async def handle_root(_request: Request) -> JSONResponse:
 @mcp.custom_route(ENDPOINT_HEALTH, methods=["GET"])
 async def handle_health(_request: Request) -> JSONResponse:
     """Health check endpoint (public, no auth)."""
+    if not all_workers_ready():
+        return JSONResponse({"status": "starting"}, status_code=503)
     return JSONResponse(
         {
             "status": "healthy",
@@ -384,28 +389,78 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
+def _configure_process(debug: bool) -> None:
+    init_sentry()
+    log_tool_calls_to_stdout()
+    if not debug:
+        quiet_routine_logs()
+
+
+def _drain_logs_on_shutdown(app: Starlette, pump: LogPump) -> None:
+    serve_lifespan = app.router.lifespan_context
+
+    @asynccontextmanager
+    async def lifespan(starlette_app: Starlette):
+        async with serve_lifespan(starlette_app) as state:
+            yield state
+        drain_before_exit(pump)
+
+    app.router.lifespan_context = lifespan
+
+
+def build_worker_app() -> Starlette:
+    """uvicorn factory, run once inside each worker process.
+
+    Logging and Sentry are per process, so each worker sets them up itself.
+    Log draining runs at lifespan shutdown instead of from a signal handler:
+    uvicorn owns SIGTERM in a worker while it serves, and a handler installed
+    here would replace its graceful shutdown and cut in-flight requests.
+    """
+    _configure_process(debug=False)
+    pump = install_non_blocking_logging()
+    app = build_app()
+    _drain_logs_on_shutdown(app, pump)
+    mark_worker_ready()
+    return app
+
+
+def _serve_workers(config: ServerConfig, workers: int) -> None:
+    print(f"   Workers:         {workers}", file=sys.stderr)
+    uvicorn.run(
+        "late.mcp.http_server:build_worker_app",
+        factory=True,
+        host=config.host,
+        port=config.port,
+        workers=workers,
+        log_level="info",
+    )
+
+
 def main() -> None:
     """Entry point for the HTTP server (Streamable HTTP)."""
     validate_environment()
     args = parse_args()
     config = ServerConfig.from_env(host=args.host, port=args.port, debug=args.debug)
 
-    init_sentry()
-    log_tool_calls_to_stdout()
-    if not config.debug:
-        quiet_routine_logs()
-    app = build_app()
-
     print("Zernio MCP HTTP Server starting...", file=sys.stderr)
     print(f"   Streamable HTTP: http://{config.host}:{config.port}{ENDPOINT_MCP}", file=sys.stderr)
     print(f"   Health check:    http://{config.host}:{config.port}{ENDPOINT_HEALTH}", file=sys.stderr)
 
+    workers = worker_count()
+    if workers > 1:
+        _serve_workers(config, workers)
+        return
+
+    _configure_process(config.debug)
+    app = build_app()
     server = uvicorn.Server(
         uvicorn.Config(
             app,
             host=config.host,
             port=config.port,
             log_level="debug" if config.debug else "info",
+            # uvicorn otherwise parses WEB_CONCURRENCY itself and crashes on "".
+            workers=1,
         )
     )
     exit_after_draining_on_signals(install_non_blocking_logging())

@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **`WEB_CONCURRENCY` runs the hosted MCP server as several processes.** One Python process tops out at one core, which saturated `mcp.zernio.com` on Nov 10. Unset, nothing changes. Above 1, `/health` returns 503 until every worker is up, so a deploy only takes traffic once connections can spread: without it, connections opened during startup all stayed on the first worker (64 of 64 locally). Locally, over HTTPS against a stub API with 60 clients: 151 calls/s on 1 core with one process, 221/s on 2.2 cores with 4. Legacy `/sse` does not work with more than one worker.
 - **Tool call telemetry on the hosted MCP server.** One JSON log line per tool call (tool, latency, outcome, hashed caller), and with `SENTRY_DSN` one Sentry transaction per tool call. `/health` reports the deployed commit.
 
 ### Fixed

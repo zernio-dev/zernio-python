@@ -105,9 +105,13 @@ def install_non_blocking_logging(pump: LogPump | None = None) -> LogPump:
     return pump
 
 
+def drain_before_exit(pump: LogPump) -> None:
+    pump.drain(_DRAIN_ON_EXIT_SECONDS)
+
+
 def exit_after_draining_on_signals(pump: LogPump) -> None:
     def drain_then_exit(signum: int, _frame: FrameType | None) -> None:
-        pump.drain(_DRAIN_ON_EXIT_SECONDS)
+        drain_before_exit(pump)
         signal.signal(signum, signal.SIG_DFL)
         signal.raise_signal(signum)
 
