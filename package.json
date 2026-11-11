@@ -1,0 +1,13 @@
+{
+  "private": true,
+  "type": "module",
+  "description": "Railway Infrastructure as Code tooling for the hosted MCP server (.railway/railway.ts)",
+  "scripts": {
+    "railway:plan": "railway config plan",
+    "railway:apply": "railway config apply"
+  },
+  "devDependencies": {
+    "@railway/cli": "5.71.0",
+    "railway": "3.16.0"
+  }
+}

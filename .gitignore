@@ -82,3 +82,6 @@ Thumbs.db
 # Project specific
 *.log
 chatgpt-app-submission.json
+
+# Railway IaC tooling (package.json)
+node_modules/
