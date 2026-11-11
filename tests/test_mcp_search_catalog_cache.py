@@ -1,8 +1,10 @@
 import json
+import re
 
 import pytest
 from fastmcp import Client
 from fastmcp.server.transforms.search import BM25SearchTransform, bm25
+from fastmcp.server.transforms.search.base import serialize_tools_for_output_json
 
 from late.mcp.server import mcp
 
@@ -25,7 +27,11 @@ def transform(monkeypatch):
 
 async def _search_names(client: Client, query: str) -> list[str]:
     result = await client.call_tool("search_tools", {"query": query})
-    return [tool["name"] for tool in json.loads(result.content[0].text)]
+    # Tool blocks start with "### <snake_case_name>"; descriptions can hold
+    # their own ### headings, which are never snake_case.
+    return re.findall(
+        r"^### ([a-z0-9]+(?:_[a-z0-9]+)+)$", result.content[0].text, re.MULTILINE
+    )
 
 
 async def test_repeated_searches_read_the_tool_catalog_once(transform, monkeypatch):
@@ -76,3 +82,14 @@ async def test_cached_search_ranks_tools_like_fastmcp(transform):
         for query in QUERIES:
             expected = [t.name for t in await uncached._search(hidden, query)]
             assert await _search_names(client, query) == expected
+
+
+async def test_search_results_are_markdown_and_lighter_than_json(transform):
+    async with Client(mcp) as client:
+        result = await client.call_tool("search_tools", {"query": QUERIES[1]})
+        markdown = result.content[0].text
+        tools = await transform._search(transform._visible_tools, QUERIES[1])
+
+    as_json = json.dumps(serialize_tools_for_output_json(tools))
+    assert markdown.startswith("### ")
+    assert len(markdown) < len(as_json)

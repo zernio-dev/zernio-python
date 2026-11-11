@@ -41,6 +41,7 @@ import httpx
 from fastmcp import FastMCP
 from fastmcp.server.dependencies import get_access_token
 from fastmcp.server.transforms.search import BM25SearchTransform
+from fastmcp.server.transforms.search.base import serialize_tools_for_output_markdown
 from mcp.types import ToolAnnotations
 
 from late import Late, MediaType, PostStatus
@@ -164,6 +165,11 @@ class _AnnotatedBM25SearchTransform(BM25SearchTransform):
         # Pure in-memory catalog search: no external calls, no state change.
         return super()._make_search_tool().model_copy(
             update={
+                "description": (
+                    "Search the tools that are not listed up front, by what you want "
+                    "to do. Returns the best matches as markdown: name, description "
+                    "and parameters. Run one with call_tool using its exact name."
+                ),
                 "annotations": ToolAnnotations(
                     title="Search available tools",
                     readOnlyHint=True,
@@ -229,6 +235,7 @@ _search_transform = _AnnotatedBM25SearchTransform(
     max_results=8,
     search_tool_name=_SEARCH_TOOL,
     call_tool_name=_CALL_TOOL,
+    search_result_serializer=serialize_tools_for_output_markdown,
 )
 
 
