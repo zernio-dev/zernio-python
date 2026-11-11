@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.568.0"
+  version: "1.569.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -15097,6 +15097,30 @@ components:
             id: { type: string }
             changeType: { type: string, enum: [updated, deleted] }
         timestamp: { type: string, format: date-time }
+    StripeSettings:
+      type: object
+      required:
+        - _id
+        - platform
+        - stripeAccountId
+        - livemode
+        - forwardSales
+      properties:
+        _id:
+          type: string
+          description: Zernio account ID of the Stripe connection.
+        platform:
+          type: string
+          enum: [stripe]
+        stripeAccountId:
+          type: string
+          description: The connected Stripe account ID (`acct_...`).
+        livemode:
+          type: boolean
+          description: Whether the connection counts live payments (`true`) or test payments (`false`).
+        forwardSales:
+          type: boolean
+          description: Whether new customers' first payments go to the profile's forwarding rules.
     HubSpotSettings:
       type: object
       required:
@@ -21134,7 +21158,7 @@ components:
           description: 'Event names forwarded to this destination; null forwards every event.'
         sources:
           type: [array, "null"]
-          items: { type: string, enum: [api, relay, hubspot, meta_leads, google_leads, linkedin_leads, tiktok_leads, shopify, woocommerce, web] }
+          items: { type: string, enum: [api, relay, hubspot, meta_leads, google_leads, linkedin_leads, tiktok_leads, shopify, woocommerce, stripe, web] }
           description: 'Event sources forwarded to this destination; null forwards events from every source.'
         createdAt: { type: string, format: date-time }
     EventCorrection:
@@ -52013,6 +52037,84 @@ paths:
                     type: string
                   account:
                     $ref: '#/components/schemas/HubSpotSettings'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: Account not found
+  /v1/accounts/{accountId}/stripe-settings:
+    get:
+      x-resource-group: accounts
+      operationId: getStripeSettings
+      tags:
+        - Accounts
+      summary: Get Stripe account settings
+      description: Read a connected Stripe account and whether its sales go to the ad platforms.
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Stripe settings
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  account:
+                    $ref: '#/components/schemas/StripeSettings'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: Account not found
+    patch:
+      x-resource-group: accounts
+      operationId: updateStripeSettings
+      tags:
+        - Accounts
+      summary: Update Stripe account settings
+      description: >-
+        Turn sending Stripe sales to the ad platforms on or off for a connected Stripe account. Sales are always
+        stored and counted in campaign results; this only decides whether they are also forwarded.
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - forwardSales
+              properties:
+                forwardSales:
+                  type: boolean
+                  description: >-
+                    Send one-off sales as `Purchase`, a subscription's first payment as `Subscribe` and trial starts
+                    as `StartTrial` through the profile's forwarding rules that take the `stripe` source. Renewals and
+                    refunds are never sent.
+      responses:
+        '200':
+          description: Updated settings
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  account:
+                    $ref: '#/components/schemas/StripeSettings'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -97306,7 +97408,7 @@ paths:
                 sources:
                   type: array
                   minItems: 1
-                  items: { type: string, enum: [api, relay, hubspot, meta_leads, google_leads, linkedin_leads, tiktok_leads, shopify, woocommerce, web] }
+                  items: { type: string, enum: [api, relay, hubspot, meta_leads, google_leads, linkedin_leads, tiktok_leads, shopify, woocommerce, stripe, web] }
                   description: 'Forward only events from these sources, such as only `web` for a tracked website. Leave it out to forward events from every source.'
       responses:
         '201':

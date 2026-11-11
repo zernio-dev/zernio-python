@@ -652,6 +652,21 @@ class AccountsResource:
             f"/v1/accounts/{account_id}/hubspot-settings", data=payload
         )
 
+    def get_stripe_settings(self, account_id: str) -> dict[str, Any]:
+        """Get Stripe account settings"""
+        return self._client._get(f"/v1/accounts/{account_id}/stripe-settings")
+
+    def update_stripe_settings(
+        self, account_id: str, forward_sales: bool
+    ) -> dict[str, Any]:
+        """Update Stripe account settings"""
+        payload = self._build_payload(
+            forward_sales=forward_sales,
+        )
+        return self._client._patch(
+            f"/v1/accounts/{account_id}/stripe-settings", data=payload
+        )
+
     def get_slack_settings(self, account_id: str) -> dict[str, Any]:
         """Get Slack account settings"""
         return self._client._get(f"/v1/accounts/{account_id}/slack-settings")
@@ -1270,6 +1285,21 @@ class AccountsResource:
         )
         return await self._client._apatch(
             f"/v1/accounts/{account_id}/hubspot-settings", data=payload
+        )
+
+    async def aget_stripe_settings(self, account_id: str) -> dict[str, Any]:
+        """Get Stripe account settings (async)"""
+        return await self._client._aget(f"/v1/accounts/{account_id}/stripe-settings")
+
+    async def aupdate_stripe_settings(
+        self, account_id: str, forward_sales: bool
+    ) -> dict[str, Any]:
+        """Update Stripe account settings (async)"""
+        payload = self._build_payload(
+            forward_sales=forward_sales,
+        )
+        return await self._client._apatch(
+            f"/v1/accounts/{account_id}/stripe-settings", data=payload
         )
 
     async def aget_slack_settings(self, account_id: str) -> dict[str, Any]:

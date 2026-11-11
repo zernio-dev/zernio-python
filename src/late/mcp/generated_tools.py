@@ -2298,6 +2298,53 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="Get Stripe account settings",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def accounts_get_stripe_settings(account_id: str) -> str:
+        """Get Stripe account settings
+
+        Read a connected Stripe account and whether its sales go to the ad platforms.
+
+        Args:
+            account_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.accounts.get_stripe_settings(account_id=account_id)
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Update Stripe account settings",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def accounts_update_stripe_settings(account_id: str, forward_sales: bool) -> str:
+        """Update Stripe account settings
+
+        Turn sending Stripe sales to the ad platforms on or off for a connected Stripe account. Sales are always stored and counted in campaign results; this only decides whether they are also forwarded.
+
+        Args:
+            account_id: (required)
+            forward_sales: Send one-off sales as `Purchase`, a subscription's first payment as `Subscribe` and trial starts as `StartTrial` through the profile's forwarding rules that take the `stripe` source. Renewals and refunds are never sent. (required)"""
+        client = _get_client()
+        try:
+            response = client.accounts.update_stripe_settings(
+                account_id=account_id, forward_sales=forward_sales
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="Get Slack account settings",
             readOnlyHint=True,
             destructiveHint=False,
@@ -29717,6 +29764,7 @@ def register_generated_tools(mcp, _get_client):
                 "tiktok_leads",
                 "shopify",
                 "woocommerce",
+                "stripe",
                 "web",
             ]
         ]

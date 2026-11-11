@@ -213,11 +213,13 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `accounts.get_instagram_follow_status()` | Check whether an Instagram user follows the account |
 | `accounts.get_linked_in_mentions()` | Resolve LinkedIn mention |
 | `accounts.get_slack_settings()` | Get Slack account settings |
+| `accounts.get_stripe_settings()` | Get Stripe account settings |
 | `accounts.get_tik_tok_creator_info()` | Get TikTok creator info |
 | `accounts.update_account()` | Update account |
 | `accounts.update_bluesky_settings()` | Update Bluesky account settings |
 | `accounts.update_hub_spot_settings()` | Update HubSpot account settings |
 | `accounts.update_slack_settings()` | Update Slack account settings |
+| `accounts.update_stripe_settings()` | Update Stripe account settings |
 | `accounts.delete_account()` | Disconnect account |
 | `accounts.delete_google_business_review_reply()` | Delete a review reply |
 | `accounts.batch_get_google_business_reviews()` | Batch get reviews |
