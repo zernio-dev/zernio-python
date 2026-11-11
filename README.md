@@ -1017,7 +1017,10 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 ### Conversions
 | Method | Description |
 |--------|-------------|
+| `conversions.list_ad_conversion_associations()` | List associated campaigns |
+| `conversions.list_ad_conversion_destinations()` | List conversion destinations |
 | `conversions.list_ad_conversion_goals()` | List account conversion goals |
+| `conversions.list_ad_custom_conversions()` | List custom conversions |
 | `conversions.list_conversion_actions()` | List conversion actions |
 | `conversions.list_conversion_associations()` | List associated campaigns |
 | `conversions.list_conversion_destinations()` | List conversion destinations |
@@ -1025,24 +1028,32 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `conversions.list_event_destinations()` | List event destinations |
 | `conversions.list_events()` | List stored events |
 | `conversions.list_forwarding_rules()` | List forwarding rules |
-| `conversions.create_conversion_action()` | Create website conversion action |
+| `conversions.create_ad_conversion_destination()` | Create a conversion destination |
+| `conversions.create_ad_custom_conversion()` | Create custom conversion |
+| `conversions.create_conversion_action()` | Create conversion action |
 | `conversions.create_conversion_destination()` | Create a conversion destination |
 | `conversions.create_custom_conversion_goal()` | Create a custom conversion goal |
 | `conversions.create_event_destination()` | Add an event destination |
 | `conversions.create_forwarding_rule()` | Add a forwarding rule |
+| `conversions.get_ad_conversion_destination()` | Get a conversion destination |
+| `conversions.get_ad_conversion_metrics()` | Get attribution metrics |
 | `conversions.get_conversion_destination()` | Get a conversion destination |
 | `conversions.get_conversion_metrics()` | Get attribution metrics |
 | `conversions.get_conversions_quality()` | Get Event Match Quality |
 | `conversions.get_event()` | Get one stored event and its deliveries |
+| `conversions.update_ad_conversion_destination()` | Update a conversion destination |
 | `conversions.update_ad_conversion_goals()` | Update account conversion goals |
 | `conversions.update_conversion_action()` | Update a conversion action's settings |
 | `conversions.update_conversion_destination()` | Update a conversion destination |
 | `conversions.update_custom_conversion_goal()` | Update a custom conversion goal |
+| `conversions.delete_ad_conversion_destination()` | Delete a conversion destination |
 | `conversions.delete_conversion_destination()` | Delete a conversion destination |
 | `conversions.delete_event_destination()` | Remove an event destination |
 | `conversions.delete_forwarding_rule()` | Remove a forwarding rule |
+| `conversions.add_ad_conversion_associations()` | Associate campaigns |
 | `conversions.add_conversion_associations()` | Associate campaigns |
 | `conversions.adjust_conversions()` | Adjust uploaded conversions |
+| `conversions.remove_ad_conversion_associations()` | Remove associated campaigns |
 | `conversions.remove_conversion_associations()` | Remove associated campaigns |
 | `conversions.remove_custom_conversion_goal()` | Remove a custom conversion goal |
 | `conversions.restate_event()` | Change a stored event's value |

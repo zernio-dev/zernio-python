@@ -5480,9 +5480,7 @@ def register_generated_tools(mcp, _get_client):
     def ad_accounts_list_custom_conversions(account_id: str, ad_account_id: str) -> str:
         """List custom conversions
 
-        Lists a Meta ad account's custom conversions, including archived ones.
-
-        The ad account's Meta custom conversions, including archived ones (`isArchived`).
+        The first path of `GET /v1/ads/conversions/custom-conversions` (`listAdCustomConversions`), which does the same with `accountId` as a parameter. It keeps working.
 
         Platforms: meta
 
@@ -5516,19 +5514,7 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Create custom conversion
 
-        Creates a Meta custom conversion for ads to optimise toward, reusing an existing one with the same name and pixel.
-
-        It provisions the Meta custom conversion an ads flow optimises toward, and hands back the `customConversionId` for `promotedObject.customConversionId` on POST /v1/ads/create. This removes the manual \"create it in Ads Manager first\" step.
-
-        ### Reuse is ours, not Meta's
-
-        Meta's create is not idempotent, so a retried request would otherwise mint a duplicate carrying none of the original's optimisation history.
-
-        A non-archived conversion with the same `name` on the same `pixelId` is returned instead of created, with `reused: true` and a 200 rather than a 201.
-
-        ### Rule
-
-        `rule` is forwarded verbatim in Meta's own grammar (e.g. `{\"url\": {\"i_contains\": \"thank-you\"}}`). Meta validates it and rejects a malformed one with \"A conversion rule is required at creation time\".
+        The first path of `POST /v1/ads/conversions/custom-conversions` (`createAdCustomConversion`), which does the same with `accountId` as a parameter. It keeps working.
 
         Platforms: meta
 
@@ -28916,7 +28902,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
-            title="Create website conversion action",
+            title="Create conversion action",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
@@ -28925,7 +28911,7 @@ def register_generated_tools(mcp, _get_client):
     def conversions_create_conversion_action(
         account_id: str,
         name: str,
-        type: Literal["WEBPAGE"],
+        type: Literal["WEBPAGE", "UPLOAD_CLICKS"],
         ad_account_id: str | None = None,
         customer_id: str | None = None,
         default_value: float | None = None,
@@ -28960,15 +28946,17 @@ def register_generated_tools(mcp, _get_client):
         view_through_lookback_window_days: int | None = None,
         primary_for_goal: bool | None = None,
     ) -> str:
-        """Create website conversion action
+        """Create conversion action
 
-        Creates a Google Ads website conversion action and returns the tag snippets to install on your site.
+        Creates a Google Ads conversion action: a website one counted by a tag on your site, or one counted from the conversions you send to Zernio.
 
-        Creates a `WEBPAGE` conversion action (category `DEFAULT`) and returns it with
-        its tag snippets, read back after creation since Google never returns them on
-        the create response itself. Invalidates the cached list `GET` on this resource
-        would otherwise keep serving. Google-only; other platforms return `501`.
-        Requires the Ads add-on.
+        - `type: WEBPAGE` creates a website action and returns it with the tag snippets to install, read back after creation since Google never returns them on the create response itself.
+        - `type: UPLOAD_CLICKS` creates an action for the conversions sent with `POST /v1/events`, the same action `POST /v1/ads/conversions/destinations` creates. It is secondary unless `primaryForGoal: true`.
+
+        The category defaults to `DEFAULT`. A name already used by another action returns Google's error.
+
+        Clears the cached list that `GET` on this resource would otherwise keep serving.
+        Google-only; other platforms return `501`. Requires the Ads add-on.
 
         Platforms: google
 
@@ -28977,7 +28965,7 @@ def register_generated_tools(mcp, _get_client):
             ad_account_id: Platform ad account ID (Google customer ID, digits only). Resolved automatically when the connection has exactly one accessible customer.
             customer_id: Alias of adAccountId, kept for existing callers
             name: (required)
-            type: Only WEBPAGE is supported for creation today. (required)
+            type: WEBPAGE for a website tag, UPLOAD_CLICKS for the conversions you send to Zernio. (required)
             default_value: Default conversion value used when an event doesn't carry its own value.
             always_use_default_value: When true, always use defaultValue and ignore any value sent with the event. Defaults to true when defaultValue is set.
             category: conversion_action.category. Defaults to DEFAULT on create.
@@ -28985,7 +28973,7 @@ def register_generated_tools(mcp, _get_client):
             default_currency: ISO 4217 currency of defaultValue (value_settings.default_currency_code).
             click_through_lookback_window_days: Days after an ad click a conversion still counts.
             view_through_lookback_window_days: Days after an ad view a view-through conversion still counts.
-            primary_for_goal: true = primary (counts toward bidding when its goal is biddable), false = secondary."""
+            primary_for_goal: true = primary (counts toward bidding when its goal is biddable), false = secondary. Defaults to secondary for UPLOAD_CLICKS."""
         client = _get_client()
         try:
             response = client.conversions.create_conversion_action(
@@ -29441,7 +29429,7 @@ def register_generated_tools(mcp, _get_client):
         Args:
             profile_id: Profile the events belong to. Its saved destinations receive the events. (required)
             events: Each item is an object with keys: eventName (string, required) - Standard event name (Purchase, Lead, CompleteRegistration, AddToCart, InitiateCheckout, AddPaymentInfo, Subscribe, StartTrial, ViewContent, Search, Contact, ...; eventTime (integer, required) - When the conversion happened, in unix seconds.; eventId (string, required) - Unique dedup key. Use the same eventId on pixel + CAPI to prevent double-counting. Mapped to: - Meta: event_id. - Google: transactionId. - LinkedIn: eventId. ...; value (number) - Conversion value in the specified currency.; currency (string) - ISO 4217 currency code.; user (object with keys email, phone, firstName, lastName, externalId, ipAddress, userAgent, country, city, state, zip, dob, gender, leadId, clickIds, required) - User identity fields. More signals mean higher match rates.; items (list of objects with keys id, name, price, quantity, category) - Item-level detail for ecommerce events.; sourceUrl (string) - URL where the conversion originated (used by Meta).; campaign (object with keys id, name) - The ad campaign behind the event, when you know it. Read only by `POST /v1/events`, which ties the event to the campaign named by `campaign.id`, then by the ...; actionSource (one of: web, app, offline, crm, phone_call, system_generated, business_messaging) - Where the conversion happened. Used by Meta. Google also requires an event source internally; omitting this field sends OTHER to Google. Send an explicit ...; messaging (object with keys channel, wabaId, ctwaClid, pageId, instagramBusinessAccountId, pageScopedUserId, instagramScopedUserId) - Meta only, read when `actionSource` is `business_messaging` (Conversions API for Business Messaging). - `channel` is sent as the event's `messaging_channel` ...; platformData (object) - Escape hatch for platform-specific fields we haven't normalized. On Meta, keys are shallow-merged into `custom_data` only: fields Zernio already builds ... (required)
-            destinations: Send to these destinations instead of the saved ones (every event goes to each). Each item is an object with keys: accountId (string, required) - Connected ads account ID (metaads, googleads, linkedinads, tiktokads, openaiads, pinterestads or redditads).; destinationId (string, required) - Platform destination, as listed by GET /v1/accounts/{accountId}/conversion-destinations.
+            destinations: Send to these destinations instead of the saved ones (every event goes to each). Each item is an object with keys: accountId (string, required) - Connected ads account ID (metaads, googleads, linkedinads, tiktokads, openaiads, pinterestads or redditads).; destinationId (string, required) - Platform destination, as listed by GET /v1/ads/conversions/destinations.
             consent: Batch-level user consent, forwarded to every destination (see POST /v1/ads/conversions). Object with keys: adUserData (one of: GRANTED, DENIED); adPersonalization (one of: GRANTED, DENIED)
             test_code: Forwarded as each platform test code (see POST /v1/ads/conversions). A root-level `test_event_code` is accepted as an alias. Test events are not stored.
             mode: `sync` sends to every destination before answering (200, per-destination results). `async` stores and queues the sends, then answers 202 at once; each send is retried while the platform fails for now, and its outcome shows on GET /v1/events/{eventId}. Requests with `testCode` always send now."""
@@ -29663,7 +29651,7 @@ def register_generated_tools(mcp, _get_client):
 
         Saves where a profile's events go: every event sent to `POST /v1/events` for that profile is then forwarded to this destination.
 
-        Pick `destinationId` from `GET /v1/accounts/{accountId}/conversion-destinations`. Set `eventNames` to forward only those events, such as only `Purchase`; leave it out to forward every event.
+        Pick `destinationId` from `GET /v1/ads/conversions/destinations`. Set `eventNames` to forward only those events, such as only `Purchase`; leave it out to forward every event.
 
         Args:
             profile_id: (required)
@@ -29712,7 +29700,7 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=False,
         )
     )
-    def conversions_list_conversion_destinations(account_id: str) -> str:
+    def conversions_list_ad_conversion_destinations(account_id: str) -> str:
         """List conversion destinations
 
         Lists where an ad account can receive conversion events (pixels, conversion actions or rules), so you know where to send them.
@@ -29733,6 +29721,541 @@ def register_generated_tools(mcp, _get_client):
 
         For LinkedIn, destinations are returned across every sponsored ad
         account the connected token ...
+
+        Platforms: meta, google, tiktok, linkedin, pinterest, reddit
+
+        Args:
+            account_id: SocialAccount ID (metaads, googleads, linkedinads, tiktokads, openaiads, pinterestads, or redditads). (required)"""
+        client = _get_client()
+        try:
+            response = client.conversions.list_ad_conversion_destinations(
+                account_id=account_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Create a conversion destination",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def conversions_create_ad_conversion_destination(
+        account_id: str,
+        ad_account_id: str,
+        name: str,
+        type: str,
+        attribution_type: Literal["LAST_TOUCH_BY_CAMPAIGN", "LAST_TOUCH_BY_CONVERSION"]
+        | None = None,
+        post_click_attribution_window_size: int | None = None,
+        view_through_attribution_window_size: int | None = None,
+        value_type: Literal["DYNAMIC", "FIXED", "NO_VALUE"] | None = None,
+        value: dict[str, Any] | None = None,
+        auto_association_type: Literal[
+            "ALL_CAMPAIGNS", "OBJECTIVE_BASED", "NONE"
+        ] = "ALL_CAMPAIGNS",
+        counting_type: Literal["MANY_PER_CLICK", "ONE_PER_CLICK"] | None = None,
+        primary_for_goal: bool | None = None,
+    ) -> str:
+        """Create a conversion destination
+
+            Creates a new place to send conversion events: a Google Ads conversion action or a LinkedIn conversion rule.
+
+            Supported for LinkedIn (conversion rule) and Google Ads (conversion action). It returns 405 for:
+
+            - Meta and OpenAI Ads: their pixels are created via their own tracking-tags flow instead (`POST /v1/accounts/{accountId}/tracking-tags`)
+            - Reddit: create Reddit pixels in Reddit Ads Manager
+
+            ### LinkedIn
+
+            Creation is NOT idempotent. A retry creates a second destination. Deduplicate before retrying.
+
+            The rule is created with `conversionMethod=CONVERSIONS_API` and (by default) auto-associated with all of the ad account's campaigns via `autoAssociationType=ALL_CAMPAIGNS`. Pass `autoAssociationType: NONE` to opt out and manage associations explicitly via the associations endpoints below.
+
+            365-day attribution windows are only valid for these rule types; the API rejects other combinations locally:
+
+            - `SUBMIT_APPLICATION`
+            - `PURCHASE`
+            - `ADD_TO_CART`
+            - `QUALIFIED_LEAD`
+            - `LEAD`
+
+            ### ...
+
+            Platforms: google, linkedin
+
+            Args:
+                account_id: The connected ads account (SocialAccount ID). (required)
+                ad_account_id: Ad account ID. For LinkedIn: numeric (e.g. "5123456") or
+        full `urn:li:sponsoredAccount:{id}` URN. For Google: numeric
+        customer ID (e.g. "1234567890") or `customers/{id}` form.
+         (required)
+                name: (required)
+                type: Conversion type. Unknown values pass through to the platform.
+
+        - LinkedIn: a unified standard event name (e.g. "Purchase", "Lead", "AddToCart") or a LinkedIn rule type enum (e.g. "PURCHASE", "QUALIFIED_LEAD").
+        - Google: a unified standard event name (Purchase, Subscribe, CompleteRegistration, Lead, Schedule) or a Google ConversionActionCategory enum value directly (e.g. "PURCHASE", "SUBSCRIBE_PAID", "SIGNUP", "IMPORTED_LEAD", "BOOK_APPOINTMENT").
+         (required)
+                attribution_type: LinkedIn only.
+                post_click_attribution_window_size: LinkedIn only. Default 30. 365 only allowed for LEAD,
+        PURCHASE, ADD_TO_CART, QUALIFIED_LEAD, SUBMIT_APPLICATION
+        rule types; the API rejects other combinations locally.
+                view_through_attribution_window_size: LinkedIn only. Default 7. Same 365-day-window type
+        restriction applies as `postClickAttributionWindowSize`.
+                value_type: LinkedIn only. DYNAMIC (default) uses the per-event `value`
+        from `sendConversions`. FIXED uses the rule's `value` field.
+        NO_VALUE drops monetary value entirely.
+                value: LinkedIn only. Static conversion value. Used when `valueType=FIXED`. The currency should match the ad account's currency. Object with keys: currencyCode (string, required) - ISO 4217 (e.g. \"USD\").; amount (string, required) - Decimal string (e.g. \"49.99\").
+                auto_association_type: LinkedIn only. Controls campaign association at rule-creation time:
+
+        - ALL_CAMPAIGNS: associate the rule with every active, paused, and draft campaign in the ad account.
+        - OBJECTIVE_BASED: associate only campaigns whose objective matches the rule's type.
+        - NONE: don't auto-associate. Manage associations via the `/associations` endpoints below.
+
+        Auto-association runs once at create time; campaigns added after the rule still need explicit association.
+                counting_type: Google Ads only. Whether to count multiple conversions from
+        the same click (MANY_PER_CLICK) or at most one
+        (ONE_PER_CLICK). Defaults to MANY_PER_CLICK if omitted.
+                primary_for_goal: Google Ads only. When true, the conversion action is marked
+        as primary and immediately influences Smart Bidding. Defaults
+        to false (secondary, record-only) to avoid unintentionally
+        steering the customer's campaigns on creation."""
+        client = _get_client()
+        try:
+            response = client.conversions.create_ad_conversion_destination(
+                account_id=account_id,
+                ad_account_id=ad_account_id,
+                name=name,
+                type=type,
+                attribution_type=attribution_type,
+                post_click_attribution_window_size=post_click_attribution_window_size,
+                view_through_attribution_window_size=view_through_attribution_window_size,
+                value_type=value_type,
+                value=value,
+                auto_association_type=auto_association_type,
+                counting_type=counting_type,
+                primary_for_goal=primary_for_goal,
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get a conversion destination",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def conversions_get_ad_conversion_destination(
+        account_id: str, destination_id: str, ad_account_id: str
+    ) -> str:
+        """Get a conversion destination
+
+        Shows one LinkedIn conversion rule with its full settings.
+
+        LinkedIn-only today. Returns the full destination record for one
+        conversion rule. The `adAccountId` query parameter is required because
+        LinkedIn rules are scoped to a sponsored ad account.
+
+        Platforms: linkedin
+
+        Args:
+            account_id: The connected ads account (SocialAccount ID). (required)
+            destination_id: (required)
+            ad_account_id: Numeric ID or full `urn:li:sponsoredAccount:{id}` URN. (required)"""
+        client = _get_client()
+        try:
+            response = client.conversions.get_ad_conversion_destination(
+                account_id=account_id,
+                destination_id=destination_id,
+                ad_account_id=ad_account_id,
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Update a conversion destination",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def conversions_update_ad_conversion_destination(
+        destination_id: str,
+        account_id: str,
+        ad_account_id: str,
+        name: str | None = None,
+        enabled: bool | None = None,
+        attribution_type: Literal["LAST_TOUCH_BY_CAMPAIGN", "LAST_TOUCH_BY_CONVERSION"]
+        | None = None,
+        post_click_attribution_window_size: int | None = None,
+        view_through_attribution_window_size: int | None = None,
+        value_type: Literal["DYNAMIC", "FIXED", "NO_VALUE"] | None = None,
+        value: dict[str, Any] | None = None,
+    ) -> str:
+        """Update a conversion destination
+
+            Changes a LinkedIn conversion rule's name, value, attribution windows, or turns it on or off.
+
+            Partial-update a conversion rule. LinkedIn-only today. Whitelisted
+            fields: `name`, `enabled`, attribution windows, `valueType`, `value`,
+            `attributionType`. The rule's `type` and parent ad account are
+            intentionally not exposed for update. Recreate the rule if those
+            need to change.
+
+            Platforms: linkedin
+
+            Args:
+                destination_id: (required)
+                account_id: The connected ads account (SocialAccount ID). (required)
+                ad_account_id: (required)
+                name
+                enabled: Setting `false` is equivalent to calling DELETE: the
+        rule will appear as `inactive` afterwards.
+                attribution_type
+                post_click_attribution_window_size: 365 only allowed for LEAD, PURCHASE, ADD_TO_CART,
+        QUALIFIED_LEAD, SUBMIT_APPLICATION rule types.
+                view_through_attribution_window_size: 365 only allowed for LEAD, PURCHASE, ADD_TO_CART,
+        QUALIFIED_LEAD, SUBMIT_APPLICATION rule types.
+                value_type
+                value: Used when `valueType=FIXED`. Object with keys: currencyCode (string) - ISO 4217.; amount (string) - Decimal string (e.g. \"49.99\")."""
+        client = _get_client()
+        try:
+            response = client.conversions.update_ad_conversion_destination(
+                destination_id=destination_id,
+                account_id=account_id,
+                ad_account_id=ad_account_id,
+                name=name,
+                enabled=enabled,
+                attribution_type=attribution_type,
+                post_click_attribution_window_size=post_click_attribution_window_size,
+                view_through_attribution_window_size=view_through_attribution_window_size,
+                value_type=value_type,
+                value=value,
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Delete a conversion destination",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def conversions_delete_ad_conversion_destination(
+        account_id: str, destination_id: str, ad_account_id: str | None = None
+    ) -> str:
+        """Delete a conversion destination
+
+        Disables a LinkedIn conversion rule, which is how LinkedIn deletes it; the rule can still be read afterwards.
+
+        LinkedIn-only today. LinkedIn does not expose hard-delete on conversion
+        rules; what their UI calls \"delete\" is the same `enabled: false` flip
+        we apply here. The rule remains fetchable via GET with
+        `status: 'inactive'`; the unified discovery endpoint hides it by
+        default.
+
+        `adAccountId` may be passed as a query parameter (recommended) or as
+        a JSON body field for clients that can send DELETE bodies.
+
+        Platforms: linkedin
+
+        Args:
+            account_id: The connected ads account (SocialAccount ID). (required)
+            destination_id: (required)
+            ad_account_id: Required as query OR in JSON body."""
+        client = _get_client()
+        try:
+            response = client.conversions.delete_ad_conversion_destination(
+                account_id=account_id,
+                destination_id=destination_id,
+                ad_account_id=ad_account_id,
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List associated campaigns",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def conversions_list_ad_conversion_associations(
+        account_id: str, destination_id: str, ad_account_id: str
+    ) -> str:
+        """List associated campaigns
+
+        Lists the LinkedIn campaigns that track a conversion rule, so you can spot newer campaigns that still need linking.
+
+        LinkedIn-only today. Returns the campaigns currently associated with
+        this conversion rule. Auto-association on rule creation
+        runs once at create time; campaigns created after the rule still need
+        explicit association.
+
+        Platforms: linkedin
+
+        Args:
+            account_id: The connected ads account (SocialAccount ID). (required)
+            destination_id: (required)
+            ad_account_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.conversions.list_ad_conversion_associations(
+                account_id=account_id,
+                destination_id=destination_id,
+                ad_account_id=ad_account_id,
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Associate campaigns",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def conversions_add_ad_conversion_associations(
+        destination_id: str,
+        account_id: str,
+        ad_account_id: str,
+        campaign_ids: list[str] | None,
+    ) -> str:
+        """Associate campaigns
+
+        Links campaigns to a LinkedIn conversion rule so they track it, reporting which links succeeded or failed.
+
+        Returns a
+        per-campaign success/failure result so callers can retry only the
+        rows that failed (e.g. wrong campaign type for the rule's objective).
+
+        Platforms: linkedin
+
+        Args:
+            destination_id: (required)
+            account_id: The connected ads account (SocialAccount ID). (required)
+            ad_account_id: (required)
+            campaign_ids: (required)"""
+        client = _get_client()
+        try:
+            response = client.conversions.add_ad_conversion_associations(
+                destination_id=destination_id,
+                account_id=account_id,
+                ad_account_id=ad_account_id,
+                campaign_ids=campaign_ids,
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Remove associated campaigns",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def conversions_remove_ad_conversion_associations(
+        account_id: str, destination_id: str, ad_account_id: str, campaign_ids: str
+    ) -> str:
+        """Remove associated campaigns
+
+        Unlinks campaigns from a LinkedIn conversion rule so they stop tracking it.
+
+        Pass `adAccountId` and `campaignIds` as query parameters (`campaignIds` is comma-separated).
+
+        The route also accepts a JSON body with the same fields, for clients that prefer DELETE-with-body. The documented surface is query-only because some SDK code generators (e.g. Python) collapse query + body parameters with the same name into a single kwarg.
+
+        Platforms: linkedin
+
+        Args:
+            account_id: The connected ads account (SocialAccount ID). (required)
+            destination_id: (required)
+            ad_account_id: (required)
+            campaign_ids: Comma-separated list of campaign IDs. (required)"""
+        client = _get_client()
+        try:
+            response = client.conversions.remove_ad_conversion_associations(
+                account_id=account_id,
+                destination_id=destination_id,
+                ad_account_id=ad_account_id,
+                campaign_ids=campaign_ids,
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get attribution metrics",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def conversions_get_ad_conversion_metrics(
+        account_id: str,
+        destination_id: str,
+        ad_account_id: str,
+        start_date: str,
+        end_date: str | None = None,
+        granularity: Literal["ALL", "DAILY", "MONTHLY", "YEARLY"] = "DAILY",
+    ) -> str:
+        """Get attribution metrics
+
+        Shows a LinkedIn conversion rule's attributed conversions, value, leads and cost over time.
+
+        LinkedIn-only today. Returns conversion-attribution metrics
+        (`externalWebsiteConversions`, `externalWebsitePostClickConversions`,
+        `externalWebsitePostViewConversions`, `conversionValueInLocalCurrency`,
+        `qualifiedLeads`, `costInLocalCurrency`) bucketed by date.
+
+        Date-range constraints (passed through from LinkedIn):
+        - `granularity=DAILY` is retained for ~6 months only
+        - `granularity=ALL` with a range > 6 months auto-rounds to month boundaries
+        - `granularity=MONTHLY`/`YEARLY` retains 24 months
+
+        Throttle: LinkedIn caps adAnalytics at 45M metric values per 5-minute
+        window across the calling token. Single-rule queries are well within
+        that limit; surfaces as 429 if hit.
+
+        Platforms: linkedin
+
+        Args:
+            account_id: The connected ads account (SocialAccount ID). (required)
+            destination_id: (required)
+            ad_account_id: (required)
+            start_date: (required)
+            end_date
+            granularity"""
+        client = _get_client()
+        try:
+            response = client.conversions.get_ad_conversion_metrics(
+                account_id=account_id,
+                destination_id=destination_id,
+                ad_account_id=ad_account_id,
+                start_date=start_date,
+                end_date=end_date,
+                granularity=granularity,
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List custom conversions",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def conversions_list_ad_custom_conversions(
+        account_id: str, ad_account_id: str
+    ) -> str:
+        """List custom conversions
+
+        Lists a Meta ad account's custom conversions, including archived ones.
+
+        The ad account's Meta custom conversions, including archived ones (`isArchived`).
+
+        Platforms: meta
+
+        Args:
+            account_id: Meta ads SocialAccount id. (required)
+            ad_account_id: Meta ad account id (act_<n>). (required)"""
+        client = _get_client()
+        try:
+            response = client.conversions.list_ad_custom_conversions(
+                account_id=account_id, ad_account_id=ad_account_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Create custom conversion",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def conversions_create_ad_custom_conversion(
+        account_id: str,
+        ad_account_id: str,
+        name: str,
+        pixel_id: str,
+        custom_event_type: str,
+        rule: dict[str, Any] | None,
+    ) -> str:
+        """Create custom conversion
+
+        Creates a Meta custom conversion for ads to optimise toward, reusing an existing one with the same name and pixel.
+
+        It provisions the Meta custom conversion an ads flow optimises toward, and hands back the `customConversionId` for `promotedObject.customConversionId` on POST /v1/ads/create. This removes the manual \"create it in Ads Manager first\" step.
+
+        ### Reuse is ours, not Meta's
+
+        Meta's create is not idempotent, so a retried request would otherwise mint a duplicate carrying none of the original's optimisation history.
+
+        A non-archived conversion with the same `name` on the same `pixelId` is returned instead of created, with `reused: true` and a 200 rather than a 201.
+
+        ### Rule
+
+        `rule` is forwarded verbatim in Meta's own grammar (e.g. `{\"url\": {\"i_contains\": \"thank-you\"}}`). Meta validates it and rejects a malformed one with \"A conversion rule is required at creation time\".
+
+        Platforms: meta
+
+        Args:
+            account_id: The connected ads account (SocialAccount ID). (required)
+            ad_account_id: Platform ad account id (Meta act_<n>, Google customer id, LinkedIn account id, ...). (required)
+            name: Also the reuse key, together with pixelId. (required)
+            pixel_id: Meta pixel id (event_source_id). From GET /v1/accounts/{accountId}/tracking-tags. (required)
+            custom_event_type: Meta custom_event_type, e.g. LEAD, PURCHASE, OTHER. (required)
+            rule: Meta conversion rule, forwarded verbatim. (required)"""
+        client = _get_client()
+        try:
+            response = client.conversions.create_ad_custom_conversion(
+                account_id=account_id,
+                ad_account_id=ad_account_id,
+                name=name,
+                pixel_id=pixel_id,
+                custom_event_type=custom_event_type,
+                rule=rule,
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List conversion destinations",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def conversions_list_conversion_destinations(account_id: str) -> str:
+        """List conversion destinations
+
+        The first path of `GET /v1/ads/conversions/destinations` (`listAdConversionDestinations`), which does the same with `accountId` as a parameter. It keeps working.
 
         Platforms: meta, google, tiktok, linkedin, pinterest, reddit
 
@@ -29774,28 +30297,7 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Create a conversion destination
 
-            Creates a new place to send conversion events: a Google Ads conversion action or a LinkedIn conversion rule.
-
-            Supported for LinkedIn (conversion rule) and Google Ads (conversion action). It returns 405 for:
-
-            - Meta and OpenAI Ads: their pixels are created via their own tracking-tags flow instead (`POST /v1/accounts/{accountId}/tracking-tags`)
-            - Reddit: create Reddit pixels in Reddit Ads Manager
-
-            ### LinkedIn
-
-            Creation is NOT idempotent. A retry creates a second destination. Deduplicate before retrying.
-
-            The rule is created with `conversionMethod=CONVERSIONS_API` and (by default) auto-associated with all of the ad account's campaigns via `autoAssociationType=ALL_CAMPAIGNS`. Pass `autoAssociationType: NONE` to opt out and manage associations explicitly via the associations endpoints below.
-
-            365-day attribution windows are only valid for these rule types; the API rejects other combinations locally:
-
-            - `SUBMIT_APPLICATION`
-            - `PURCHASE`
-            - `ADD_TO_CART`
-            - `QUALIFIED_LEAD`
-            - `LEAD`
-
-            ### ...
+            The first path of `POST /v1/ads/conversions/destinations` (`createAdConversionDestination`), which does the same with `accountId` as a parameter. It keeps working.
 
             Platforms: google, linkedin
 
@@ -29868,11 +30370,7 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Get a conversion destination
 
-        Shows one LinkedIn conversion rule with its full settings.
-
-        LinkedIn-only today. Returns the full destination record for one
-        conversion rule. The `adAccountId` query parameter is required because
-        LinkedIn rules are scoped to a sponsored ad account.
+        The first path of `GET /v1/ads/conversions/destinations/{destinationId}` (`getAdConversionDestination`), which does the same with `accountId` as a parameter. It keeps working.
 
         Platforms: linkedin
 
@@ -29914,13 +30412,7 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Update a conversion destination
 
-            Changes a LinkedIn conversion rule's name, value, attribution windows, or turns it on or off.
-
-            Partial-update a conversion rule. LinkedIn-only today. Whitelisted
-            fields: `name`, `enabled`, attribution windows, `valueType`, `value`,
-            `attributionType`. The rule's `type` and parent ad account are
-            intentionally not exposed for update. Recreate the rule if those
-            need to change.
+            The first path of `PATCH /v1/ads/conversions/destinations/{destinationId}` (`updateAdConversionDestination`), which does the same with `accountId` as a parameter. It keeps working.
 
             Platforms: linkedin
 
@@ -29969,16 +30461,7 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Delete a conversion destination
 
-        Disables a LinkedIn conversion rule, which is how LinkedIn deletes it; the rule can still be read afterwards.
-
-        LinkedIn-only today. LinkedIn does not expose hard-delete on conversion
-        rules; what their UI calls \"delete\" is the same `enabled: false` flip
-        we apply here. The rule remains fetchable via GET with
-        `status: 'inactive'`; the unified discovery endpoint hides it by
-        default.
-
-        `adAccountId` may be passed as a query parameter (recommended) or as
-        a JSON body field for clients that can send DELETE bodies.
+        The first path of `DELETE /v1/ads/conversions/destinations/{destinationId}` (`deleteAdConversionDestination`), which does the same with `accountId` as a parameter. It keeps working.
 
         Platforms: linkedin
 
@@ -30010,12 +30493,7 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """List associated campaigns
 
-        Lists the LinkedIn campaigns that track a conversion rule, so you can spot newer campaigns that still need linking.
-
-        LinkedIn-only today. Returns the campaigns currently associated with
-        this conversion rule. Auto-association on rule creation
-        runs once at create time; campaigns created after the rule still need
-        explicit association.
+        The first path of `GET /v1/ads/conversions/destinations/{destinationId}/associations` (`listAdConversionAssociations`), which does the same with `accountId` as a parameter. It keeps working.
 
         Platforms: linkedin
 
@@ -30050,11 +30528,7 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Associate campaigns
 
-        Links campaigns to a LinkedIn conversion rule so they track it, reporting which links succeeded or failed.
-
-        Returns a
-        per-campaign success/failure result so callers can retry only the
-        rows that failed (e.g. wrong campaign type for the rule's objective).
+        The first path of `POST /v1/ads/conversions/destinations/{destinationId}/associations` (`addAdConversionAssociations`), which does the same with `accountId` as a parameter. It keeps working.
 
         Platforms: linkedin
 
@@ -30088,11 +30562,7 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Remove associated campaigns
 
-        Unlinks campaigns from a LinkedIn conversion rule so they stop tracking it.
-
-        Pass `adAccountId` and `campaignIds` as query parameters (`campaignIds` is comma-separated).
-
-        The route also accepts a JSON body with the same fields, for clients that prefer DELETE-with-body. The documented surface is query-only because some SDK code generators (e.g. Python) collapse query + body parameters with the same name into a single kwarg.
+        The first path of `DELETE /v1/ads/conversions/destinations/{destinationId}/associations` (`removeAdConversionAssociations`), which does the same with `accountId` as a parameter. It keeps working.
 
         Platforms: linkedin
 
@@ -30131,21 +30601,7 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Get attribution metrics
 
-        Shows a LinkedIn conversion rule's attributed conversions, value, leads and cost over time.
-
-        LinkedIn-only today. Returns conversion-attribution metrics
-        (`externalWebsiteConversions`, `externalWebsitePostClickConversions`,
-        `externalWebsitePostViewConversions`, `conversionValueInLocalCurrency`,
-        `qualifiedLeads`, `costInLocalCurrency`) bucketed by date.
-
-        Date-range constraints (passed through from LinkedIn):
-        - `granularity=DAILY` is retained for ~6 months only
-        - `granularity=ALL` with a range > 6 months auto-rounds to month boundaries
-        - `granularity=MONTHLY`/`YEARLY` retains 24 months
-
-        Throttle: LinkedIn caps adAnalytics at 45M metric values per 5-minute
-        window across the calling token. Single-rule queries are well within
-        that limit; surfaces as 429 if hit.
+        The first path of `GET /v1/ads/conversions/destinations/{destinationId}/metrics` (`getAdConversionMetrics`), which does the same with `accountId` as a parameter. It keeps working.
 
         Platforms: linkedin
 
@@ -45647,7 +46103,7 @@ def register_generated_tools(mcp, _get_client):
         **Not pixels.** Despite the shared path segment, this endpoint has nothing to do with
         measurement tags. For an ad account's pixels use
         `GET /v1/accounts/{accountId}/tracking-tags?adAccountId=act_...` (Meta Pixels, with `kind`
-        and `ownerAdAccountId`) or `GET /v1/accounts/{accountId}/conversion-destinations`.
+        and `ownerAdAccountId`) or `GET /v1/ads/conversions/destinations`.
 
         Platforms: meta, google, linkedin
 
