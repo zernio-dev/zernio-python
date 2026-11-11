@@ -618,7 +618,10 @@ def generate_tool_handler(
 
     lines.append("")
     lines.append("")
-    lines.append(f"@mcp.tool({annotation})")
+    # output_schema=None: FastMCP otherwise derives {"result": string} from the
+    # `-> str` return and sends the whole text again as structuredContent,
+    # doubling every result on the wire (and in ChatGPT, in the model context).
+    lines.append(f"@mcp.tool(output_schema=None, {annotation})")
     lines.append(f"def {tool_name}({sig}) -> str:")
     lines.append(f'    """{docstring}"""')
     lines.append("    client = _get_client()")

@@ -136,6 +136,7 @@ def register_resources(mcp: FastMCP) -> None:
 
     @mcp.tool(
         name="zernio_overview",
+        output_schema=None,
         description="Show an overview of what this Zernio MCP server can do (accounts, posts, analytics, ads, inbox) and how to find the right tool.",
         annotations=ToolAnnotations(
             title="Zernio server overview",

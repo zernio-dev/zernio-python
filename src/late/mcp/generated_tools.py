@@ -90,12 +90,13 @@ def register_generated_tools(mcp, _get_client):
     # ACCOUNT_GROUPS
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List groups",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def account_groups_list_account_groups() -> str:
         """List groups
@@ -112,12 +113,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Create group",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def account_groups_create_account_group(
         name: str, account_ids: list[str] | None, profile_id: str | None = None
@@ -143,12 +145,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Update group",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def account_groups_update_account_group(
         group_id: str, name: str | None = None, account_ids: list[str] | None = None
@@ -171,12 +174,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Delete group",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def account_groups_delete_account_group(group_id: str) -> str:
         """Delete group
@@ -195,12 +199,13 @@ def register_generated_tools(mcp, _get_client):
     # ACCOUNT_SETTINGS
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get a Facebook Page's public info",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def account_settings_get_facebook_page_info(account_id: str) -> str:
         """Get a Facebook Page's public info
@@ -221,12 +226,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Update a Facebook Page's public info",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def account_settings_update_facebook_page_info(
         account_id: str,
@@ -271,12 +277,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get persistent menu",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def account_settings_get_messenger_menu(account_id: str) -> str:
         """Get persistent menu
@@ -293,12 +300,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Set persistent menu",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def account_settings_set_messenger_menu(
         account_id: str, persistent_menu: list[dict[str, Any]] | None
@@ -323,12 +331,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Delete persistent menu",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def account_settings_delete_messenger_menu(account_id: str) -> str:
         """Delete persistent menu
@@ -347,12 +356,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get FB Get Started button",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def account_settings_get_messenger_get_started(account_id: str) -> str:
         """Get FB Get Started button
@@ -371,12 +381,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Set FB Get Started button",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def account_settings_set_messenger_get_started(
         account_id: str, payload: str
@@ -402,12 +413,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Delete FB Get Started button",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def account_settings_delete_messenger_get_started(account_id: str) -> str:
         """Delete FB Get Started button
@@ -426,12 +438,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get FB greeting text",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def account_settings_get_messenger_greeting(account_id: str) -> str:
         """Get FB greeting text
@@ -450,12 +463,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Set FB greeting text",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def account_settings_set_messenger_greeting(
         account_id: str, greeting: list[dict[str, Any]] | None
@@ -477,12 +491,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Delete FB greeting text",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def account_settings_delete_messenger_greeting(account_id: str) -> str:
         """Delete FB greeting text
@@ -501,12 +516,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get FB ice breakers",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def account_settings_get_messenger_ice_breakers(account_id: str) -> str:
         """Get FB ice breakers
@@ -525,12 +541,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Set FB ice breakers",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def account_settings_set_messenger_ice_breakers(
         account_id: str, ice_breakers: list[dict[str, Any]] | None
@@ -556,12 +573,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Delete FB ice breakers",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def account_settings_delete_messenger_ice_breakers(account_id: str) -> str:
         """Delete FB ice breakers
@@ -580,12 +598,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get IG ice breakers",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def account_settings_get_instagram_ice_breakers(account_id: str) -> str:
         """Get IG ice breakers
@@ -604,12 +623,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Set IG ice breakers",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def account_settings_set_instagram_ice_breakers(
         account_id: str, ice_breakers: list[dict[str, Any]] | None
@@ -631,12 +651,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Delete IG ice breakers",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def account_settings_delete_instagram_ice_breakers(account_id: str) -> str:
         """Delete IG ice breakers
@@ -655,12 +676,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get TG bot commands",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def account_settings_get_telegram_commands(account_id: str) -> str:
         """Get TG bot commands
@@ -679,12 +701,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Set TG bot commands",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def account_settings_set_telegram_commands(
         account_id: str, commands: list[dict[str, Any]] | None
@@ -706,12 +729,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Delete TG bot commands",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def account_settings_delete_telegram_commands(account_id: str) -> str:
         """Delete TG bot commands
@@ -732,12 +756,13 @@ def register_generated_tools(mcp, _get_client):
     # ACCOUNTS
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List accounts",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def accounts_list_accounts(
         profile_id: str | None = None,
@@ -839,12 +864,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get follower stats",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def accounts_get_follower_stats(
         account_ids: str | None = None,
@@ -891,12 +917,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Update account",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def accounts_update_account(
         account_id: str,
@@ -959,12 +986,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Move account to another profile",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def accounts_move_account_to_profile(account_id: str, profile_id: str) -> str:
         """Move account to another profile
@@ -989,12 +1017,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Disconnect account",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def accounts_delete_account(account_id: str) -> str:
         """Disconnect account
@@ -1015,12 +1044,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Check accounts health",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def accounts_get_all_accounts_health(
         profile_id: str | None = None,
@@ -1081,12 +1111,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Check account health",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def accounts_get_account_health(account_id: str) -> str:
         """Check account health
@@ -1119,12 +1150,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List posts published on the platform",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def accounts_get_account_posts(account_id: str) -> str:
         """List posts published on the platform
@@ -1156,12 +1188,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Check whether an Instagram user follows the account",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def accounts_get_instagram_follow_status(
         account_id: str, user_id: str, refresh: bool | None = None
@@ -1203,12 +1236,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List trending commercial music",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def accounts_list_tik_tok_commercial_music(
         account_id: str, country_code: str | None = None
@@ -1238,12 +1272,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Search TikTok location tags",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def accounts_search_tik_tok_locations(account_id: str, query: str) -> str:
         """Search TikTok location tags
@@ -1267,12 +1302,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get TikTok creator info",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def accounts_get_tik_tok_creator_info(
         account_id: str, media_type: Literal["video", "photo"] = "video"
@@ -1294,12 +1330,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get reviews",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def accounts_get_google_business_reviews(
         account_id: str,
@@ -1329,12 +1366,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get food menus",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def accounts_get_google_business_food_menus(
         account_id: str, location_id: str | None = None
@@ -1356,12 +1394,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Update food menus",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def accounts_update_google_business_food_menus(
         account_id: str,
@@ -1391,12 +1430,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get location details",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def accounts_get_google_business_location_details(
         account_id: str, location_id: str | None = None, read_mask: str | None = None
@@ -1423,12 +1463,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Update location details",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def accounts_update_google_business_location_details(
         account_id: str,
@@ -1505,12 +1546,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List media",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def accounts_list_google_business_media(
         account_id: str,
@@ -1541,12 +1583,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Upload photo",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def accounts_create_google_business_media(
         account_id: str,
@@ -1600,12 +1643,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Delete photo",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def accounts_delete_google_business_media(
         account_id: str, media_id: str, location_id: str | None = None
@@ -1628,12 +1672,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get attribute metadata",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def accounts_get_gmb_attribute_metadata(
         account_id: str,
@@ -1685,12 +1730,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get attributes",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def accounts_get_google_business_attributes(
         account_id: str, location_id: str | None = None
@@ -1712,12 +1758,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Update attributes",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def accounts_update_google_business_attributes(
         account_id: str,
@@ -1749,12 +1796,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List action links",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def accounts_list_google_business_place_actions(
         account_id: str,
@@ -1786,12 +1834,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Create action link",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def accounts_create_google_business_place_action(
         account_id: str,
@@ -1831,12 +1880,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Delete action link",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def accounts_delete_google_business_place_action(
         account_id: str, name: str, location_id: str | None = None
@@ -1859,12 +1909,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Update action link",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def accounts_update_google_business_place_action(
         account_id: str,
@@ -1907,12 +1958,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Batch get reviews",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def accounts_batch_get_google_business_reviews(
         account_id: str,
@@ -1962,12 +2014,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get a review",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def accounts_get_google_business_review(
         account_id: str, review_id: str, location_id: str | None = None
@@ -1994,12 +2047,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Reply to a review",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def accounts_reply_to_google_business_review(
         account_id: str, review_id: str, comment: str
@@ -2030,12 +2084,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Delete a review reply",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def accounts_delete_google_business_review_reply(
         account_id: str, review_id: str
@@ -2057,12 +2112,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List partner businesses of the Page",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def accounts_list_business_partners(account_id: str) -> str:
         """List partner businesses of the Page
@@ -2084,12 +2140,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Share the Page with a partner business",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def accounts_grant_business_partner(
         account_id: str,
@@ -2166,12 +2223,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Revoke a partner business from the Page",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def accounts_revoke_business_partner(account_id: str, business_id: str) -> str:
         """Revoke a partner business from the Page
@@ -2193,12 +2251,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Resolve LinkedIn mention",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def accounts_get_linked_in_mentions(
         account_id: str, url: str, display_name: str | None = None
@@ -2239,12 +2298,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get HubSpot account settings",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def accounts_get_hub_spot_settings(account_id: str) -> str:
         """Get HubSpot account settings
@@ -2261,12 +2321,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Update HubSpot account settings",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def accounts_update_hub_spot_settings(
         account_id: str,
@@ -2299,12 +2360,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get Stripe account settings",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def accounts_get_stripe_settings(account_id: str) -> str:
         """Get Stripe account settings
@@ -2321,12 +2383,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Update Stripe account settings",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def accounts_update_stripe_settings(account_id: str, forward_sales: bool) -> str:
         """Update Stripe account settings
@@ -2346,12 +2409,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get Slack account settings",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def accounts_get_slack_settings(account_id: str) -> str:
         """Get Slack account settings
@@ -2368,12 +2432,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Update Slack account settings",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def accounts_update_slack_settings(
         account_id: str,
@@ -2403,12 +2468,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get Bluesky account settings",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def accounts_get_bluesky_settings(account_id: str) -> str:
         """Get Bluesky account settings
@@ -2425,12 +2491,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Update Bluesky account settings",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def accounts_update_bluesky_settings(account_id: str, default_langs: str) -> str:
         """Update Bluesky account settings
@@ -2452,12 +2519,13 @@ def register_generated_tools(mcp, _get_client):
     # AD_ACCOUNTS
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List comments on an ad",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def ad_accounts_get_ad_comments(
         ad_id: str,
@@ -2511,12 +2579,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Reply to an ad comment",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def ad_accounts_reply_to_ad_comment(
         ad_id: str,
@@ -2566,12 +2635,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Hide or unhide an ad comment",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def ad_accounts_hide_ad_comment(
         ad_id: str,
@@ -2622,12 +2692,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Delete an ad comment",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def ad_accounts_delete_ad_comment(
         ad_id: str, comment_id: str, since: str | None = None, until: str | None = None
@@ -2673,12 +2744,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List TikTok Business Centers",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def ad_accounts_list_ads_business_centers(account_id: str) -> str:
         """List TikTok Business Centers
@@ -2703,12 +2775,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Ad account change / audit log",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def ad_accounts_get_ads_activity_log(
         account_id: str,
@@ -2772,12 +2845,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="A/B tests and lift studies",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def ad_accounts_list_ad_studies(
         account_id: str,
@@ -2816,12 +2890,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List Instagram ad identities",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def ad_accounts_list_ads_instagram_accounts(
         account_id: str, ad_account_id: str
@@ -2849,12 +2924,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List Instagram posts to boost",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def ad_accounts_list_ads_instagram_posts(
         account_id: str,
@@ -2900,12 +2976,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List advertisable apps",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def ad_accounts_list_advertisable_applications(
         account_id: str, ad_account_id: str
@@ -2931,12 +3008,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get iOS 14 campaign limits",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def ad_accounts_get_ios_fourteen_campaign_limits(
         account_id: str, ad_account_id: str, application_id: str
@@ -2965,12 +3043,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Businesses list",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def ad_accounts_list_meta_businesses(
         account_id: str, limit: int = 25, after: str | None = None
@@ -3000,12 +3079,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Business users",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def ad_accounts_list_meta_business_users(account_id: str, business_id: str) -> str:
         """Business users
@@ -3031,12 +3111,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Page users of a business",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def ad_accounts_list_page_users(
         account_id: str, page_id: str, business_id: str
@@ -3064,12 +3145,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Assign a user to a Page",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def ad_accounts_assign_page_user(
         account_id: str,
@@ -3119,12 +3201,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Remove a user from a Page",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def ad_accounts_remove_page_user(
         account_id: str, page_id: str, user_id: str
@@ -3149,12 +3232,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List ad labels",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def ad_accounts_list_ad_labels(
         account_id: str,
@@ -3201,12 +3285,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Create a Google Ads label",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def ad_accounts_create_ad_label(
         account_id: str,
@@ -3248,12 +3333,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Update a Google Ads label",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def ad_accounts_update_ad_label(
         label_id: str,
@@ -3296,12 +3382,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Remove a Google Ads label",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def ad_accounts_remove_ad_label(
         label_id: str,
@@ -3335,12 +3422,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Attach a Google Ads label",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def ad_accounts_attach_ad_label(
         label_id: str,
@@ -3395,12 +3483,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Detach a Google Ads label",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def ad_accounts_detach_ad_label(
         label_id: str,
@@ -3446,12 +3535,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List high-demand periods",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def ad_accounts_list_high_demand_periods(
         account_id: str,
@@ -3491,12 +3581,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Schedule a budget increase",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def ad_accounts_create_high_demand_period(
         account_id: str,
@@ -3551,12 +3642,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List value rule sets",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def ad_accounts_list_value_rule_sets(
         account_id: str, ad_account_id: str, limit: int = 25, after: str | None = None
@@ -3603,12 +3695,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Create a value rule set",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def ad_accounts_create_value_rule_set(
         account_id: str,
@@ -3659,12 +3752,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Read a value rule set",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def ad_accounts_get_value_rule_set(value_rule_set_id: str, account_id: str) -> str:
         """Read a value rule set
@@ -3694,12 +3788,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Replace a value rule set",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def ad_accounts_update_value_rule_set(
         value_rule_set_id: str,
@@ -3748,12 +3843,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Delete a value rule set",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def ad_accounts_delete_value_rule_set(
         value_rule_set_id: str, account_id: str
@@ -3782,12 +3878,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List negative keyword lists",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def ad_accounts_list_ad_negative_keyword_lists(
         account_id: str,
@@ -3832,12 +3929,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Create a negative keyword list",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def ad_accounts_create_ad_negative_keyword_list(
         account_id: str,
@@ -3888,12 +3986,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get a negative keyword list",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def ad_accounts_get_ad_negative_keyword_list(
         list_id: str,
@@ -3941,12 +4040,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Rename a negative keyword list",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def ad_accounts_update_ad_negative_keyword_list(
         list_id: str,
@@ -3997,12 +4097,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Delete a negative keyword list",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def ad_accounts_delete_ad_negative_keyword_list(
         list_id: str,
@@ -4050,12 +4151,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Replace negative list keywords",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def ad_accounts_replace_ad_negative_keyword_list_keywords(
         list_id: str,
@@ -4113,12 +4215,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List account callouts",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def ad_accounts_list_account_callouts(
         account_id: str,
@@ -4149,12 +4252,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Add account callouts",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def ad_accounts_add_account_callouts(
         account_id: str,
@@ -4188,12 +4292,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Update account callouts",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def ad_accounts_update_account_callouts(
         account_id: str,
@@ -4227,12 +4332,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Remove account callout",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def ad_accounts_remove_account_callout(
         account_id: str,
@@ -4266,12 +4372,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List account sitelinks",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def ad_accounts_list_account_sitelinks(
         account_id: str,
@@ -4302,12 +4409,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Add account sitelinks",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def ad_accounts_add_account_sitelinks(
         account_id: str,
@@ -4341,12 +4449,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Update account sitelinks",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def ad_accounts_update_account_sitelinks(
         account_id: str,
@@ -4380,12 +4489,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Remove account sitelink",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def ad_accounts_remove_account_sitelink(
         account_id: str,
@@ -4419,12 +4529,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List account snippets",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def ad_accounts_list_account_structured_snippets(
         account_id: str,
@@ -4455,12 +4566,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Add account snippets",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def ad_accounts_add_account_structured_snippets(
         account_id: str,
@@ -4494,12 +4606,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Update account snippets",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def ad_accounts_update_account_structured_snippets(
         account_id: str,
@@ -4533,12 +4646,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Remove account snippet",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def ad_accounts_remove_account_structured_snippet(
         account_id: str,
@@ -4572,12 +4686,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get manager account hierarchy",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def ad_accounts_get_ad_account_hierarchy(
         account_id: str,
@@ -4619,12 +4734,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Invite a client account to a manager",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def ad_accounts_invite_ad_account_to_manager(
         account_id: str,
@@ -4665,12 +4781,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Accept, decline, cancel or end a manager link",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def ad_accounts_update_ad_account_manager_link(
         account_id: str,
@@ -4718,12 +4835,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get ad account billing",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def ad_accounts_get_ad_account_billing(
         account_id: str, ad_account_id: str | None = None
@@ -4757,12 +4875,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Set up ad account billing (monthly invoicing)",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def ad_accounts_set_up_ad_account_billing(
         account_id: str,
@@ -4822,12 +4941,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List user access invitations",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def ad_accounts_list_ad_account_user_invitations(
         account_id: str, ad_account_id: str | None = None
@@ -4864,12 +4984,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Invite a user to an ad account by email",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def ad_accounts_invite_ad_account_user(
         account_id: str,
@@ -4920,12 +5041,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Revoke a user access invitation",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def ad_accounts_revoke_ad_account_user_invitation(
         account_id: str, ad_account_id: str, invitation_id: str
@@ -4954,12 +5076,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List invitations awaiting multi-party approval",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def ad_accounts_list_ad_account_user_invitation_approvals(
         account_id: str, ad_account_id: str | None = None
@@ -4991,12 +5114,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Withdraw an invitation awaiting multi-party approval",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def ad_accounts_withdraw_ad_account_user_invitation_approval(
         account_id: str, ad_account_id: str, multi_party_auth_review_id: str
@@ -5029,12 +5153,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Ad account users",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def ad_accounts_list_ad_account_users(
         account_id: str, ad_account_id: str, business_id: str
@@ -5063,12 +5188,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Assign a user to an ad account",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def ad_accounts_assign_ad_account_user(
         account_id: str,
@@ -5104,12 +5230,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Remove a user from an ad account",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def ad_accounts_remove_ad_account_user(
         account_id: str, ad_account_id: str, user_id: str
@@ -5134,12 +5261,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Ad account finances",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def ad_accounts_get_ad_account_finance(account_id: str, ad_account_id: str) -> str:
         """Ad account finances
@@ -5165,12 +5293,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Check an ad account before creating ads",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def ad_accounts_get_ad_account_health(account_id: str, ad_account_id: str) -> str:
         """Check an ad account before creating ads
@@ -5214,12 +5343,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Read an ad account's campaigns and ad sets live",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def ad_accounts_get_ad_account_live_entities(
         account_id: str,
@@ -5273,12 +5403,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Create ad account",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def ad_accounts_create_ad_account(body: dict[str, Any]) -> str:
         """Create ad account
@@ -5316,12 +5447,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List ad accounts",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def ad_accounts_list_ad_accounts(
         account_id: str,
@@ -5383,12 +5515,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Update ad account settings",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def ad_accounts_update_ad_account(
         account_id: str,
@@ -5452,12 +5585,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get ad account DSA defaults",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def ad_accounts_get_dsa_defaults(account_id: str, ad_account_id: str) -> str:
         """Get ad account DSA defaults
@@ -5483,12 +5617,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get DSA recommendations",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def ad_accounts_get_dsa_recommendations(account_id: str, ad_account_id: str) -> str:
         """Get DSA recommendations
@@ -5519,12 +5654,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List custom conversions",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def ad_accounts_list_custom_conversions(account_id: str, ad_account_id: str) -> str:
         """List custom conversions
@@ -5546,12 +5682,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Create custom conversion",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def ad_accounts_create_custom_conversion(
         account_id: str,
@@ -5589,12 +5726,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List TikTok ad pixels",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def ad_accounts_list_tik_tok_ad_pixels(
         account_id: str,
@@ -5628,12 +5766,13 @@ def register_generated_tools(mcp, _get_client):
     # AD_AUDIENCES
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List custom audiences",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def ad_audiences_list_ad_audiences(
         account_id: str,
@@ -5693,12 +5832,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Create custom audience",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def ad_audiences_create_ad_audience(body: dict[str, Any]) -> str:
         """Create custom audience
@@ -5734,12 +5874,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get audience details",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def ad_audiences_get_ad_audience(audience_id: str) -> str:
         """Get audience details
@@ -5760,12 +5901,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Update an audience",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def ad_audiences_update_ad_audience(
         audience_id: str,
@@ -5806,12 +5948,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Delete custom audience",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def ad_audiences_delete_ad_audience(audience_id: str) -> str:
         """Delete custom audience
@@ -5844,12 +5987,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Add users to audience",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def ad_audiences_add_users_to_ad_audience(
         audience_id: str, users: list[dict[str, Any]] | None
@@ -5892,12 +6036,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Remove users from audience",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def ad_audiences_remove_users_from_ad_audience(
         audience_id: str, users: list[dict[str, Any]] | None
@@ -5927,12 +6072,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Replace audience companies",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def ad_audiences_replace_ad_audience_companies(
         audience_id: str, companies: list[dict[str, Any]] | None
@@ -5972,12 +6118,13 @@ def register_generated_tools(mcp, _get_client):
     # AD_CAMPAIGN_RESULTS
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Upload your results per campaign",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def ad_campaign_results_upload_campaign_results(
         rows: list[dict[str, Any]] | None,
@@ -6002,12 +6149,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List your results per campaign",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def ad_campaign_results_list_campaign_results(
         from_date: str,
@@ -6046,12 +6194,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Check a results upload",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def ad_campaign_results_get_campaign_results_upload(upload_id: str) -> str:
         """Check a results upload
@@ -6076,12 +6225,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get your results totals",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def ad_campaign_results_get_campaign_results_totals(
         from_date: str, to_date: str, ad_account_ids: str | None = None
@@ -6110,12 +6260,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List your result metrics",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def ad_campaign_results_list_campaign_result_metrics() -> str:
         """List your result metrics
@@ -6131,12 +6282,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Name a result metric or define a formula",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def ad_campaign_results_set_campaign_result_metric(
         key: str,
@@ -6173,12 +6325,13 @@ def register_generated_tools(mcp, _get_client):
     # AD_CAMPAIGNS
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List ads",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def ad_campaigns_list_ads(
         page: int = 1,
@@ -6285,12 +6438,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List Google Ads recommendations",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def ad_campaigns_list_google_recommendations(
         account_id: str,
@@ -6336,12 +6490,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Apply Google Ads recommendations",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def ad_campaigns_apply_google_recommendations(
         account_id: str,
@@ -6383,12 +6538,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Dismiss Google Ads recommendations",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def ad_campaigns_dismiss_google_recommendations(
         account_id: str,
@@ -6419,12 +6575,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List portfolio bid strategies",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def ad_campaigns_list_bid_strategies(
         account_id: str,
@@ -6467,12 +6624,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Create portfolio bid strategy",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def ad_campaigns_create_bid_strategy(
         account_id: str,
@@ -6524,12 +6682,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Update portfolio bid strategy",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def ad_campaigns_update_bid_strategy(
         strategy_id: str,
@@ -6594,12 +6753,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List shared budgets",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def ad_campaigns_list_shared_budgets(
         account_id: str, ad_account_id: str | None = None
@@ -6627,12 +6787,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Create a shared budget",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def ad_campaigns_create_shared_budget(
         account_id: str,
@@ -6672,12 +6833,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List Search keywords",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def ad_campaigns_list_ad_keywords(
         page: int = 1,
@@ -6741,12 +6903,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Add Search ad-group keywords",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def ad_campaigns_add_ad_keywords(
         account_id: str,
@@ -6784,12 +6947,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Pause or enable a Search keyword",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def ad_campaigns_update_ad_keyword(
         keyword_id: str, status: Literal["active", "paused"]
@@ -6816,12 +6980,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Remove a Search keyword",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def ad_campaigns_remove_ad_keyword(keyword_id: str) -> str:
         """Remove a Search keyword
@@ -6842,12 +7007,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List campaigns",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def ad_campaigns_list_ad_campaigns(
         include_empty: bool | None = None,
@@ -6965,12 +7131,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Create a standalone campaign",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def ad_campaigns_create_ad_campaign(
         account_id: str,
@@ -7121,12 +7288,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Pause or resume a campaign",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def ad_campaigns_update_ad_campaign_status(
         campaign_id: str,
@@ -7180,12 +7348,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Read a campaign's ad schedule (dayparting)",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def ad_campaigns_get_campaign_ad_schedule(
         campaign_id: str,
@@ -7237,12 +7406,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Replace a campaign's ad schedule (dayparting)",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def ad_campaigns_update_campaign_ad_schedule(
         campaign_id: str, schedule: list[dict[str, Any]] | None
@@ -7285,12 +7455,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Read a campaign's current bidding",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def ad_campaigns_get_campaign_bidding(
         campaign_id: str,
@@ -7344,12 +7515,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get live campaign details",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def ad_campaigns_get_ad_campaign_details(
         campaign_id: str, account_id: str, fields: str | None = None
@@ -7383,12 +7555,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Update a campaign",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def ad_campaigns_update_ad_campaign(
         campaign_id: str,
@@ -7496,12 +7669,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Delete a campaign",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def ad_campaigns_delete_ad_campaign(
         campaign_id: str,
@@ -7561,12 +7735,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List campaign-level negative keywords",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def ad_campaigns_list_campaign_negative_keywords(
         campaign_id: str,
@@ -7614,12 +7789,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Replace campaign-level negative keywords",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def ad_campaigns_replace_campaign_negative_keywords(
         campaign_id: str,
@@ -7665,12 +7841,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Pause or resume many campaigns",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def ad_campaigns_bulk_update_ad_campaign_status(
         status: Literal["active", "paused"], campaigns: list[dict[str, Any]] | None
@@ -7700,12 +7877,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Duplicate a campaign",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def ad_campaigns_duplicate_ad_campaign(
         campaign_id: str,
@@ -7782,12 +7960,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Read a Google campaign's device, location, excluded location, and language targe",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def ad_campaigns_get_campaign_targeting(
         campaign_id: str, platform: Literal["google"] | None = None
@@ -7831,12 +8010,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Edit a Google campaign's device, location, excluded location, or language target",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def ad_campaigns_update_campaign_targeting(
         campaign_id: str, platform: Literal["google"], targeting: dict[str, Any] | None
@@ -7873,12 +8053,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List ad sets",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def ad_campaigns_list_ad_sets(
         account_id: str | None = None,
@@ -7970,12 +8151,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Create a standalone ad group",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def ad_campaigns_create_ad_set(
         account_id: str,
@@ -8068,12 +8250,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Duplicate an ad set",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def ad_campaigns_duplicate_ad_set(
         ad_set_id: str,
@@ -8144,12 +8327,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Duplicate an ad",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def ad_campaigns_duplicate_ad(
         ad_id: str,
@@ -8212,12 +8396,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get live ad-set details",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def ad_campaigns_get_ad_set_details(
         ad_set_id: str, account_id: str, fields: str | None = None
@@ -8251,12 +8436,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Update an ad set",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def ad_campaigns_update_ad_set(
         ad_set_id: str,
@@ -8432,12 +8618,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Delete an ad set",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def ad_campaigns_delete_ad_set(ad_set_id: str) -> str:
         """Delete an ad set
@@ -8464,12 +8651,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Read a Reddit ad group's targeting and schedule",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def ad_campaigns_get_ad_set_targeting(
         ad_set_id: str, platform: Literal["reddit"] | None = None
@@ -8502,12 +8690,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Pause or resume a single ad set",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def ad_campaigns_update_ad_set_status(
         ad_set_id: str,
@@ -8570,12 +8759,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get campaign tree",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def ad_campaigns_get_ad_tree(
         page: int = 1,
@@ -8719,12 +8909,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Rank ads by performance",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def ad_campaigns_list_ads_by_performance(
         account_id: str,
@@ -8785,12 +8976,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get daily account metrics",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def ad_campaigns_get_ads_timeline(
         account_id: str,
@@ -8854,12 +9046,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get ad details",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def ad_campaigns_get_ad(
         ad_id: str, live: bool = False, account_id: str | None = None
@@ -8923,12 +9116,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Update ad",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def ad_campaigns_update_ad(
         ad_id: str,
@@ -8998,12 +9192,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Cancel an ad",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def ad_campaigns_delete_ad(ad_id: str) -> str:
         """Cancel an ad
@@ -9039,12 +9234,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Pause or resume a single ad",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def ad_campaigns_update_ad_status(
         ad_id: str, status: Literal["active", "paused"]
@@ -9090,12 +9286,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List campaign assets",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def ad_campaigns_list_campaign_assets(
         campaign_id: str,
@@ -9129,12 +9326,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Attach campaign assets",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def ad_campaigns_attach_campaign_assets(
         campaign_id: str,
@@ -9180,12 +9378,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Update campaign assets",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def ad_campaigns_update_campaign_assets(
         campaign_id: str,
@@ -9222,12 +9421,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Remove campaign assets",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def ad_campaigns_remove_campaign_assets(
         campaign_id: str,
@@ -9267,12 +9467,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List ad-group assets",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def ad_campaigns_list_ad_group_assets(
         ad_set_id: str,
@@ -9306,12 +9507,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Attach ad-group assets",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def ad_campaigns_attach_ad_group_assets(
         ad_set_id: str,
@@ -9357,12 +9559,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Update ad-group assets",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def ad_campaigns_update_ad_group_assets(
         ad_set_id: str,
@@ -9399,12 +9602,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Remove ad-group assets",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def ad_campaigns_remove_ad_group_assets(
         ad_set_id: str,
@@ -9444,12 +9648,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Read the platform's review verdict for an ad",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def ad_campaigns_get_ad_review(ad_id: str, account_id: str | None = None) -> str:
         """Read the platform's review verdict for an ad
@@ -9496,12 +9701,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Review status of each creative in a TikTok Smart+ ad",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def ad_campaigns_get_tik_tok_smart_plus_ad_review(ad_id: str) -> str:
         """Review status of each creative in a TikTok Smart+ ad
@@ -9533,12 +9739,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List ads that need attention",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def ad_campaigns_list_ads_alerts(
         account_id: str | None = None,
@@ -9579,12 +9786,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Dismiss an ads alert",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def ad_campaigns_dismiss_ads_alert(alert_id: str) -> str:
         """Dismiss an ads alert
@@ -9604,12 +9812,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Review status of every TikTok Smart+ ad of an advertiser",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def ad_campaigns_list_tik_tok_smart_plus_reviews(
         account_id: str,
@@ -9659,12 +9868,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List campaign negative lists",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def ad_campaigns_list_campaign_negative_keyword_lists(
         campaign_id: str,
@@ -9702,12 +9912,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Replace campaign negative lists",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def ad_campaigns_replace_campaign_negative_keyword_lists(
         campaign_id: str,
@@ -9747,12 +9958,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Boost post as ad",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def ad_campaigns_boost_post(
         account_id: str,
@@ -10178,12 +10390,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List Performance Max asset groups",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def ad_campaigns_list_google_asset_groups(campaign_id: str) -> str:
         """List Performance Max asset groups
@@ -10215,12 +10428,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Create a Performance Max asset group",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def ad_campaigns_create_google_asset_group(
         campaign_id: str,
@@ -10274,12 +10488,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get a Performance Max asset group",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def ad_campaigns_get_google_asset_group(
         campaign_id: str, asset_group_id: str
@@ -10305,12 +10520,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Update a Performance Max asset group",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def ad_campaigns_update_google_asset_group(
         campaign_id: str,
@@ -10359,12 +10575,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Remove a Performance Max asset group",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def ad_campaigns_remove_google_asset_group(
         campaign_id: str, asset_group_id: str, validate_only: bool = False
@@ -10393,12 +10610,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Link or unlink asset group assets",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def ad_campaigns_edit_google_asset_group_assets(
         campaign_id: str,
@@ -10439,12 +10657,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Replace an asset group's listing-group tree",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def ad_campaigns_replace_google_listing_group_filters(
         campaign_id: str,
@@ -10481,12 +10700,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Create standalone ad",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def ad_campaigns_create_standalone_ad(
         account_id: str,
@@ -11627,12 +11847,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get campaign conversion goals",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def ad_campaigns_get_campaign_conversion_goals(campaign_id: str) -> str:
         """Get campaign conversion goals
@@ -11658,12 +11879,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Update campaign conversion goals",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def ad_campaigns_update_campaign_conversion_goals(
         campaign_id: str,
@@ -11707,12 +11929,13 @@ def register_generated_tools(mcp, _get_client):
     # AD_CREATIVES
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Render pre-create ad previews",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def ad_creatives_generate_ad_previews(
         account_id: str,
@@ -11752,12 +11975,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Render previews of an existing ad",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def ad_creatives_get_ad_previews(
         ad_id: str, account_id: str | None = None, formats: str | None = None
@@ -11799,12 +12023,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Direct video and image URLs for an ad",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def ad_creatives_get_ad_media(ad_id: str, account_id: str | None = None) -> str:
         """Direct video and image URLs for an ad
@@ -11858,12 +12083,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List TikTok ad identities",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def ad_creatives_list_ads_tik_tok_identities(
         account_id: str, ad_account_id: str
@@ -11893,12 +12119,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Creative library",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def ad_creatives_list_ad_creatives(
         account_id: str,
@@ -11939,12 +12166,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Create a standalone creative",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def ad_creatives_create_ad_creative(
         account_id: str,
@@ -12046,12 +12274,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Creative details",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def ad_creatives_get_ad_creative(
         creative_id: str,
@@ -12089,12 +12318,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Rename a creative",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def ad_creatives_update_ad_creative(
         creative_id: str, account_id: str, name: str
@@ -12123,12 +12353,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Delete a creative",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def ad_creatives_delete_ad_creative(creative_id: str, account_id: str) -> str:
         """Delete a creative
@@ -12153,12 +12384,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Upload an ad image from base64",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def ad_creatives_upload_ad_image(
         account_id: str,
@@ -12194,12 +12426,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Ad image library",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def ad_creatives_list_ad_images(
         account_id: str,
@@ -12239,12 +12472,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Upload an ad video",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def ad_creatives_upload_ad_video(
         account_id: str,
@@ -12304,12 +12538,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Ad video library",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def ad_creatives_list_ad_videos(
         account_id: str,
@@ -12360,12 +12595,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get ad video processing status",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def ad_creatives_get_ad_video_status(
         video_id: str, account_id: str, ad_account_id: str
@@ -12399,12 +12635,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Delete an ad video",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def ad_creatives_delete_ad_video(
         video_id: str, account_id: str, ad_account_id: str
@@ -12435,12 +12672,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List partnership ad content",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def ad_creatives_list_partnership_ad_content(
         account_id: str,
@@ -12474,12 +12712,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List partnership permissions",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def ad_creatives_list_partnership_ad_permissions(
         account_id: str, creator_username: str | None = None
@@ -12505,12 +12744,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Set partnership permission",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def ad_creatives_set_partnership_ad_permission(
         account_id: str, creator_username: str, revoke: bool | None = None
@@ -12539,12 +12779,13 @@ def register_generated_tools(mcp, _get_client):
     # AD_INSIGHTS
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Google Ads search terms report",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def ad_insights_get_ads_search_terms(
         account_id: str,
@@ -12600,12 +12841,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Google Local Services Ads leads",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def ad_insights_list_local_services_leads(
         account_id: str,
@@ -12659,12 +12901,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List lead conversations",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def ad_insights_list_local_services_lead_conversations(
         lead_id: str,
@@ -12705,12 +12948,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get campaign analytics",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def ad_insights_get_campaign_analytics(
         campaign_id: str,
@@ -12774,12 +13018,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Generate keyword ideas",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def ad_insights_generate_keyword_ideas(
         account_id: str,
@@ -12839,12 +13084,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get historical keyword metrics",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def ad_insights_generate_keyword_historical_metrics(
         account_id: str,
@@ -12898,12 +13144,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Flexible live insights query",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def ad_insights_query_ad_insights(
         account_id: str,
@@ -13020,12 +13267,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Submit async insights report",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def ad_insights_create_ad_insights_report(
         account_id: str,
@@ -13092,12 +13340,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Poll an async insights report run",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def ad_insights_get_ad_insights_report(
         report_run_id: str, account_id: str, limit: int = 25, after: str | None = None
@@ -13130,12 +13379,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get ad analytics",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def ad_insights_get_ad_analytics(
         ad_id: str,
@@ -13188,12 +13438,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Per-creative performance inside TikTok Smart+ ads",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def ad_insights_get_tik_tok_smart_plus_material_report(
         account_id: str,
@@ -13263,12 +13514,13 @@ def register_generated_tools(mcp, _get_client):
     # AD_LIBRARY
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Search the public Ad Library",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def ad_library_search_ad_library(
         platform: Literal["meta", "linkedin"] | None = None,
@@ -13363,12 +13615,13 @@ def register_generated_tools(mcp, _get_client):
     # AD_RULES
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List ad rules",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def ad_rules_list_ad_rules(
         account_id: str | None = None,
@@ -13400,12 +13653,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Create an ad rule",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def ad_rules_create_ad_rule(
         name: str,
@@ -13488,12 +13742,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List ready-made ad rules",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def ad_rules_list_ad_rule_templates() -> str:
         """List ready-made ad rules
@@ -13511,12 +13766,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List every change ad rules made",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def ad_rules_list_ad_rule_activity(
         rule_id: str | None = None,
@@ -13568,12 +13824,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Undo a change an ad rule made",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def ad_rules_undo_ad_rule_activity(activity_id: str) -> str:
         """Undo a change an ad rule made
@@ -13594,12 +13851,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get an ad rule",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def ad_rules_get_ad_rule() -> str:
         """Get an ad rule
@@ -13615,12 +13873,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Update an ad rule",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def ad_rules_update_ad_rule(
         name: str | None = None,
@@ -13675,12 +13934,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Delete an ad rule",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def ad_rules_delete_ad_rule() -> str:
         """Delete an ad rule
@@ -13696,12 +13956,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Preview an ad rule",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def ad_rules_preview_ad_rule(rule_id: str) -> str:
         """Preview an ad rule
@@ -13721,12 +13982,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List a rule's alerts",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def ad_rules_list_ad_rule_alerts(
         rule_id: str,
@@ -13755,12 +14017,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List an ad rule's runs",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def ad_rules_list_ad_rule_runs(rule_id: str, limit: int = 20, skip: int = 0) -> str:
         """List an ad rule's runs
@@ -13787,12 +14050,13 @@ def register_generated_tools(mcp, _get_client):
     # AD_TARGETING
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Search targeting interests",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def ad_targeting_search_ad_interests(q: str, account_id: str) -> str:
         """Search targeting interests
@@ -13817,12 +14081,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Search targeting options",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def ad_targeting_search_ad_targeting(
         account_id: str,
@@ -13922,12 +14187,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Browse targeting categories",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def ad_targeting_browse_ad_targeting(
         account_id: str,
@@ -13975,12 +14241,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Estimate audience reach",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def ad_targeting_estimate_ad_reach(
         account_id: str,
@@ -14036,12 +14303,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Suggested bid and budget bounds",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def ad_targeting_get_linked_in_bid_pricing(
         account_id: str,
@@ -14099,12 +14367,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Forecast ad delivery",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def ad_targeting_get_linked_in_supply_forecast(
         account_id: str,
@@ -14182,12 +14451,13 @@ def register_generated_tools(mcp, _get_client):
     # ANALYTICS
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get post analytics",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def analytics_get_analytics(
         post_id: str | None = None,
@@ -14274,12 +14544,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Analytics changed since a cursor",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def analytics_get_analytics_delta(
         cursor: str | None = None,
@@ -14320,12 +14591,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get YouTube channel insights",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def analytics_get_you_tube_channel_insights(
         account_id: str,
@@ -14391,12 +14663,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get LinkedIn org analytics",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def analytics_get_linked_in_org_aggregate_analytics(
         account_id: str,
@@ -14479,12 +14752,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get TikTok account-level insights",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def analytics_get_tik_tok_account_insights(
         account_id: str,
@@ -14553,12 +14827,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get Pinterest account-level insights",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def analytics_get_pinterest_account_insights(
         account_id: str,
@@ -14616,12 +14891,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get TikTok follower demographics",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def analytics_get_tik_tok_demographics(
         account_id: str, breakdown: str | None = None
@@ -14654,12 +14930,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get YouTube daily views",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def analytics_get_you_tube_daily_views(
         video_id: str,
@@ -14700,12 +14977,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get YouTube video retention curve",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def analytics_get_you_tube_video_retention(
         video_id: str,
@@ -14756,12 +15034,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get Facebook Page insights",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def analytics_get_facebook_page_insights(
         account_id: str,
@@ -14849,12 +15128,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get Facebook post monetization earnings",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def analytics_get_facebook_post_earnings(
         account_id: str, post_id: str, metrics: str | None = None
@@ -14904,12 +15184,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get Instagram insights",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def analytics_get_instagram_account_insights(
         account_id: str,
@@ -14964,12 +15245,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get Instagram follower history",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def analytics_get_instagram_follower_history(
         account_id: str,
@@ -15018,12 +15300,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get Facebook Page demographics",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def analytics_get_facebook_demographics(
         account_id: str, breakdown: str | None = None
@@ -15057,12 +15340,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get LinkedIn organization follower demographics",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def analytics_get_linked_in_demographics(
         account_id: str, breakdown: str | None = None
@@ -15098,12 +15382,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get Instagram demographics",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def analytics_get_instagram_demographics(
         account_id: str,
@@ -15138,12 +15423,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get Instagram online followers",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def analytics_get_instagram_online_followers(account_id: str) -> str:
         """Get Instagram online followers
@@ -15167,12 +15453,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get YouTube demographics",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def analytics_get_you_tube_demographics(
         account_id: str,
@@ -15222,12 +15509,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get daily aggregated metrics",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def analytics_get_daily_metrics(
         platform: str | None = None,
@@ -15273,12 +15561,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get an analytics dashboard",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def analytics_get_analytics_dashboard(
         from_date: str,
@@ -15327,12 +15616,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get best times to post",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def analytics_get_best_time_to_post(
         platform: str | None = None,
@@ -15364,12 +15654,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get content performance decay",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def analytics_get_content_decay(
         platform: str | None = None,
@@ -15401,12 +15692,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get frequency vs engagement",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def analytics_get_posting_frequency(
         platform: str | None = None,
@@ -15438,12 +15730,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get post analytics timeline",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def analytics_get_post_timeline(
         post_id: str, from_date: str | None = None, to_date: str | None = None
@@ -15469,12 +15762,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Run a Google Analytics (GA4) report",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def analytics_run_google_analytics_report(
         account_id: str,
@@ -15533,12 +15827,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Run a Google Analytics (GA4) realtime report",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def analytics_run_google_analytics_realtime_report(
         account_id: str,
@@ -15582,12 +15877,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List Google Analytics (GA4) dimensions and metrics",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def analytics_get_google_analytics_metadata(account_id: str) -> str:
         """List Google Analytics (GA4) dimensions and metrics
@@ -15607,12 +15903,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Open a tracking window",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def analytics_open_tracking_window(
         post_id: str | None = None,
@@ -15663,12 +15960,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List tracking windows",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def analytics_list_tracking_windows(
         account_id: str | None = None,
@@ -15698,12 +15996,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get a tracking window",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def analytics_get_tracking_window(window_id: str) -> str:
         """Get a tracking window
@@ -15723,12 +16022,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Cancel a tracking window",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def analytics_cancel_tracking_window(window_id: str) -> str:
         """Cancel a tracking window
@@ -15749,12 +16049,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get post samples",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def analytics_get_post_samples(
         post_id: str,
@@ -15790,12 +16091,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get a post's authenticity score",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def analytics_get_post_authenticity(post_id: str) -> str:
         """Get a post's authenticity score
@@ -15821,12 +16123,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List authenticity scores",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def analytics_list_post_authenticity(
         account_id: str,
@@ -15874,12 +16177,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get Google Business Profile performance metrics",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def analytics_get_google_business_performance(
         account_id: str,
@@ -15922,12 +16226,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get Google Business Profile search keywords",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def analytics_get_google_business_search_keywords(
         account_id: str,
@@ -15965,12 +16270,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Sync an external post",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def analytics_sync_external_posts(
         account_id: str, url: str | None = None, post_id: str | None = None
@@ -16004,12 +16310,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get LinkedIn aggregate stats",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def analytics_get_linked_in_aggregate_analytics(
         account_id: str,
@@ -16052,12 +16359,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get LinkedIn post stats",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def analytics_get_linked_in_post_analytics(account_id: str, urn: str) -> str:
         """Get LinkedIn post stats
@@ -16077,12 +16385,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get LinkedIn post reactions",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def analytics_get_linked_in_post_reactions(
         account_id: str, urn: str, limit: int = 25, cursor: int = 0
@@ -16109,12 +16418,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get Facebook post reactions",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def analytics_get_facebook_post_reactions(account_id: str, post_id: str) -> str:
         """Get Facebook post reactions
@@ -16139,12 +16449,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List visitor posts on a Facebook Page",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def analytics_list_facebook_visitor_posts(
         account_id: str, limit: int = 25, cursor: str | None = None
@@ -16186,12 +16497,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List the posts a Facebook Page is tagged in",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def analytics_list_facebook_tagged_posts(
         account_id: str, limit: int = 25, cursor: str | None = None
@@ -16227,12 +16539,13 @@ def register_generated_tools(mcp, _get_client):
     # API_KEYS
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Verify credential",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def api_keys_verify_credential() -> str:
         """Verify credential
@@ -16248,12 +16561,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List keys",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def api_keys_list_api_keys() -> str:
         """List keys
@@ -16267,12 +16581,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Create key",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def api_keys_create_api_key(
         name: str,
@@ -16337,12 +16652,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Delete key",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def api_keys_delete_api_key(key_id: str) -> str:
         """Delete key
@@ -16361,12 +16677,13 @@ def register_generated_tools(mcp, _get_client):
     # AUTOMATIONS
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List automations",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def automations_list_automations(
         account_id: str | None = None,
@@ -16396,12 +16713,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Create an automation",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def automations_create_automation(body: dict[str, Any]) -> str:
         """Create an automation
@@ -16424,12 +16742,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get the automations catalog",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def automations_get_automation_catalog() -> str:
         """Get the automations catalog
@@ -16447,12 +16766,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List automation actions",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def automations_list_automation_actions(
         automation_id: str | None = None,
@@ -16501,12 +16821,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List an automation's checks",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def automations_list_automation_checks(
         automation_id: str, limit: int = 20, cursor: str | None = None
@@ -16529,12 +16850,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Preview an unsaved automation",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def automations_preview_automation_draft(
         body: dict[str, Any], limit: int = 100
@@ -16558,12 +16880,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get an automation",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def automations_get_automation() -> str:
         """Get an automation
@@ -16577,12 +16900,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Edit an automation",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def automations_update_automation(
         name: str | None = None,
@@ -16631,12 +16955,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Delete an automation",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def automations_delete_automation() -> str:
         """Delete an automation"""
@@ -16648,12 +16973,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Turn an automation on",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def automations_activate_automation(automation_id: str) -> str:
         """Turn an automation on
@@ -16672,12 +16998,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Turn an automation off",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def automations_pause_automation(automation_id: str) -> str:
         """Turn an automation off
@@ -16694,12 +17021,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Preview a saved automation",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def automations_preview_automation(automation_id: str, limit: int = 100) -> str:
         """Preview a saved automation
@@ -16719,12 +17047,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List automation templates",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def automations_list_automation_templates(scope: Literal["team"] = "team") -> str:
         """List automation templates
@@ -16741,12 +17070,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Create an automation template",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def automations_create_automation_template(
         name: str,
@@ -16779,12 +17109,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get an automation template",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def automations_get_automation_template(template_id: str) -> str:
         """Get an automation template
@@ -16803,12 +17134,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Update an automation template",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def automations_update_automation_template(
         template_id: str,
@@ -16848,12 +17180,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Delete an automation template",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def automations_delete_automation_template(template_id: str) -> str:
         """Delete an automation template
@@ -16872,12 +17205,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Install an automation template",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def automations_install_automation_template(
         template_id: str,
@@ -16906,12 +17240,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get a shared automation template",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def automations_get_shared_automation_template(share_token: str) -> str:
         """Get a shared automation template
@@ -16930,12 +17265,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Install a shared automation template",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def automations_install_shared_automation_template(
         share_token: str,
@@ -16964,12 +17300,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get a Zernio automation template",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def automations_get_zernio_automation_template(template_id: str) -> str:
         """Get a Zernio automation template
@@ -16988,12 +17325,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Install a Zernio automation template",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def automations_install_zernio_automation_template(
         template_id: str,
@@ -17022,12 +17360,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get automation controls",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def automations_get_automation_controls() -> str:
         """Get automation controls
@@ -17043,12 +17382,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Turn every ad automation off or on",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def automations_update_automation_controls(paused: bool) -> str:
         """Turn every ad automation off or on
@@ -17071,12 +17411,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Update one ad account's controls",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def automations_update_automation_ad_account_controls(
         account_id: str,
@@ -17110,12 +17451,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List an automation's approval requests",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def automations_list_automation_approvals(
         automation_id: str,
@@ -17143,12 +17485,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get an approval request",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def automations_get_automation_approval(
         automation_id: str, approval_id: str
@@ -17170,12 +17513,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Approve an approval request",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def automations_approve_automation_approval(
         automation_id: str, approval_id: str, token: str | None = None
@@ -17202,12 +17546,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Reject an approval request",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def automations_reject_automation_approval(
         automation_id: str, approval_id: str, token: str | None = None
@@ -17232,12 +17577,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Backtest an unsaved automation",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def automations_backtest_automation_draft(
         body: dict[str, Any], days: int = 30
@@ -17263,12 +17609,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Backtest a saved automation",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def automations_backtest_automation(automation_id: str, days: int = 30) -> str:
         """Backtest a saved automation
@@ -17294,12 +17641,13 @@ def register_generated_tools(mcp, _get_client):
     # BLOGS
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List blogs",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def blogs_list_blogs(
         account_id: str, limit: int = 20, cursor: str | None = None
@@ -17334,12 +17682,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Create a blog",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def blogs_create_blog(
         account_id: str, title: str, handle: str | None = None
@@ -17368,12 +17717,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get a blog",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def blogs_get_blog(account_id: str, blog_id: str) -> str:
         """Get a blog
@@ -17396,12 +17746,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Update a blog",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def blogs_update_blog(
         account_id: str,
@@ -17434,12 +17785,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Delete a blog",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def blogs_delete_blog(account_id: str, blog_id: str) -> str:
         """Delete a blog
@@ -17463,12 +17815,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List blog articles",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def blogs_list_blog_articles(
         account_id: str, blog_id: str, limit: int = 20, cursor: str | None = None
@@ -17504,12 +17857,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Create a blog article",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def blogs_create_blog_article(
         account_id: str,
@@ -17591,12 +17945,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get a blog article",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def blogs_get_blog_article(account_id: str, blog_id: str, article_id: str) -> str:
         """Get a blog article
@@ -17624,12 +17979,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Update a blog article",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def blogs_update_blog_article(
         account_id: str,
@@ -17711,12 +18067,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Delete a blog article",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def blogs_delete_blog_article(
         account_id: str, blog_id: str, article_id: str
@@ -17750,12 +18107,13 @@ def register_generated_tools(mcp, _get_client):
     # BRANDED_CALLING
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Register a business for Branded Calling",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def branded_calling_create_branded_calling_enterprise(
         legal_name: str,
@@ -17823,12 +18181,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List registered businesses",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def branded_calling_list_branded_calling_enterprises() -> str:
         """List registered businesses"""
@@ -17840,12 +18199,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get a registered business",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def branded_calling_get_branded_calling_enterprise(id: str) -> str:
         """Get a registered business
@@ -17860,12 +18220,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Delete a registered business",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def branded_calling_delete_branded_calling_enterprise(id: str) -> str:
         """Delete a registered business
@@ -17882,12 +18243,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Create a caller identity share link",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def branded_calling_share_branded_calling_identity_form(
         enterprise_id: str | None = None, identity_id: str | None = None
@@ -17919,12 +18281,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List pre-approved call reasons",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def branded_calling_list_branded_calling_call_reasons() -> str:
         """List pre-approved call reasons
@@ -17938,12 +18301,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Create a caller identity",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def branded_calling_create_branded_calling_identity(
         enterprise_id: str,
@@ -17994,12 +18358,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List caller identities",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def branded_calling_list_branded_calling_identities() -> str:
         """List caller identities"""
@@ -18011,12 +18376,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Dry-run a caller identity before creating it",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def branded_calling_preflight_branded_calling_identity(
         enterprise_id: str,
@@ -18059,12 +18425,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get a caller identity",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def branded_calling_get_branded_calling_identity(id: str) -> str:
         """Get a caller identity
@@ -18081,12 +18448,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Edit or resubmit a caller identity",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def branded_calling_update_branded_calling_identity(
         id: str,
@@ -18131,12 +18499,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Delete a caller identity",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def branded_calling_delete_branded_calling_identity(id: str) -> str:
         """Delete a caller identity
@@ -18153,12 +18522,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Resend the authorizer's code",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def branded_calling_resend_branded_calling_authorizer_code(id: str) -> str:
         """Resend the authorizer's code
@@ -18177,12 +18547,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Confirm the authorizer's code",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def branded_calling_confirm_branded_calling_authorizer_email(
         id: str, code: str
@@ -18207,12 +18578,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List the numbers on a caller identity",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def branded_calling_list_branded_calling_identity_numbers(id: str) -> str:
         """List the numbers on a caller identity
@@ -18229,12 +18601,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Attach numbers to a verified identity",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def branded_calling_attach_branded_calling_numbers(
         id: str, phone_number_ids: list[str] | None, signature: dict[str, Any] | None
@@ -18261,12 +18634,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Detach numbers from an identity",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def branded_calling_detach_branded_calling_numbers(
         id: str, phone_numbers: list[str] | None
@@ -18290,12 +18664,13 @@ def register_generated_tools(mcp, _get_client):
     # BROADCASTS
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List broadcasts",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def broadcasts_list_broadcasts(
         profile_id: str | None = None,
@@ -18331,12 +18706,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Create broadcast draft",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def broadcasts_create_broadcast(
         profile_id: str,
@@ -18390,12 +18766,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get broadcast details",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def broadcasts_get_broadcast(broadcast_id: str) -> str:
         """Get broadcast details
@@ -18412,12 +18789,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Update broadcast",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def broadcasts_update_broadcast(
         broadcast_id: str,
@@ -18453,12 +18831,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Delete broadcast",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def broadcasts_delete_broadcast(broadcast_id: str) -> str:
         """Delete broadcast
@@ -18475,12 +18854,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Send broadcast now",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def broadcasts_send_broadcast(broadcast_id: str) -> str:
         """Send broadcast now
@@ -18497,12 +18877,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Schedule broadcast for later",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def broadcasts_schedule_broadcast(broadcast_id: str, scheduled_at: str) -> str:
         """Schedule broadcast for later
@@ -18522,12 +18903,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Cancel broadcast",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def broadcasts_cancel_broadcast(broadcast_id: str) -> str:
         """Cancel broadcast
@@ -18544,12 +18926,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List broadcast recipients",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def broadcasts_list_broadcast_recipients(
         broadcast_id: str,
@@ -18576,12 +18959,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Add recipients to a broadcast",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def broadcasts_add_broadcast_recipients(
         broadcast_id: str,
@@ -18613,12 +18997,13 @@ def register_generated_tools(mcp, _get_client):
     # BUSINESS_AGENT
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get agent setup status",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def business_agent_get_business_agent_status(account_id: str) -> str:
         """Get agent setup status
@@ -18650,12 +19035,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Create the agent",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def business_agent_onboard_business_agent(account_id: str) -> str:
         """Create the agent
@@ -18685,12 +19071,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List agent settings",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def business_agent_list_business_agent_settings(
         account_id: str, agent_id: str | None = None
@@ -18712,12 +19099,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Update agent settings",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def business_agent_update_business_agent_settings(
         account_id: str,
@@ -18761,12 +19149,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List allowlisted consumers",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def business_agent_list_business_agent_allowlist(account_id: str) -> str:
         """List allowlisted consumers
@@ -18785,12 +19174,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Allowlist a consumer",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def business_agent_add_business_agent_allowlist_entry(
         account_id: str, consumer_phone_number: str
@@ -18812,12 +19202,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Remove an allowlisted consumer",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def business_agent_remove_business_agent_allowlist_entry(
         account_id: str, entry_id: str
@@ -18837,12 +19228,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get business information",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def business_agent_get_business_agent_business_information(account_id: str) -> str:
         """Get business information
@@ -18861,12 +19253,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Replace business information",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def business_agent_replace_business_agent_business_information(
         account_id: str,
@@ -18907,12 +19300,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Reset business information",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def business_agent_reset_business_agent_business_information(
         account_id: str,
@@ -18931,12 +19325,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List FAQs",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def business_agent_list_business_agent_faqs(account_id: str) -> str:
         """List FAQs
@@ -18953,12 +19348,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Create a FAQ",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def business_agent_create_business_agent_faq(
         account_id: str,
@@ -18988,12 +19384,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get a FAQ",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def business_agent_get_business_agent_faq(account_id: str, faq_id: str) -> str:
         """Get a FAQ
@@ -19011,12 +19408,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Update a FAQ",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def business_agent_update_business_agent_faq(
         account_id: str,
@@ -19047,12 +19445,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Delete a FAQ",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def business_agent_delete_business_agent_faq(account_id: str, faq_id: str) -> str:
         """Delete a FAQ
@@ -19070,12 +19469,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List crawled websites",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def business_agent_list_business_agent_websites(account_id: str) -> str:
         """List crawled websites
@@ -19092,12 +19492,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Add a website to crawl",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def business_agent_add_business_agent_website(
         account_id: str,
@@ -19136,12 +19537,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get a crawled website",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def business_agent_get_business_agent_website(
         account_id: str, website_id: str
@@ -19161,12 +19563,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Update a crawled website",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def business_agent_update_business_agent_website(
         account_id: str,
@@ -19206,12 +19609,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Remove a crawled website",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def business_agent_delete_business_agent_website(
         account_id: str, website_id: str
@@ -19231,12 +19635,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List knowledge files",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def business_agent_list_business_agent_files(account_id: str) -> str:
         """List knowledge files
@@ -19253,12 +19658,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Upload a knowledge file",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def business_agent_upload_business_agent_file(
         account_id: str, url: str, file_name: str | None = None
@@ -19288,12 +19694,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get a knowledge file",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def business_agent_get_business_agent_file(account_id: str, file_id: str) -> str:
         """Get a knowledge file
@@ -19311,12 +19718,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Delete a knowledge file",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def business_agent_delete_business_agent_file(account_id: str, file_id: str) -> str:
         """Delete a knowledge file
@@ -19334,12 +19742,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List skills",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def business_agent_list_business_agent_skills(account_id: str) -> str:
         """List skills
@@ -19356,12 +19765,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Create a skill",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def business_agent_create_business_agent_skill(
         account_id: str,
@@ -19388,12 +19798,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get a skill",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def business_agent_get_business_agent_skill(account_id: str, skill_id: str) -> str:
         """Get a skill
@@ -19411,12 +19822,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Update a skill",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def business_agent_update_business_agent_skill(
         account_id: str,
@@ -19447,12 +19859,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Delete a skill",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def business_agent_delete_business_agent_skill(
         account_id: str, skill_id: str
@@ -19472,12 +19885,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List UI skills",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def business_agent_list_business_agent_ui_skills(
         account_id: str,
@@ -19504,12 +19918,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Create a UI skill",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def business_agent_create_business_agent_ui_skill(
         account_id: str,
@@ -19555,12 +19970,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get a UI skill",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def business_agent_get_business_agent_ui_skill(
         account_id: str, ui_skill_id: str
@@ -19580,12 +19996,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Update a UI skill",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def business_agent_update_business_agent_ui_skill(
         account_id: str,
@@ -19632,12 +20049,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Delete a UI skill",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def business_agent_delete_business_agent_ui_skill(
         account_id: str, ui_skill_id: str
@@ -19657,12 +20075,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List connectors",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def business_agent_list_business_agent_connectors(account_id: str) -> str:
         """List connectors
@@ -19681,12 +20100,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Create a connector",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def business_agent_create_business_agent_connector(
         account_id: str,
@@ -19731,12 +20151,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get a connector",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def business_agent_get_business_agent_connector(
         account_id: str, connector_id: str
@@ -19756,12 +20177,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Update a connector",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def business_agent_update_business_agent_connector(
         account_id: str,
@@ -19807,12 +20229,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Delete a connector",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def business_agent_delete_business_agent_connector(
         account_id: str, connector_id: str
@@ -19832,12 +20255,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Set connector credentials",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def business_agent_set_business_agent_connector_credentials(
         account_id: str, connector_id: str, body: dict[str, Any]
@@ -19862,12 +20286,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Refresh MCP connector tools",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def business_agent_refresh_business_agent_connector_tools(
         account_id: str, connector_id: str
@@ -19889,12 +20314,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get connector failure logs",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def business_agent_get_business_agent_connector_logs(
         account_id: str,
@@ -19939,12 +20365,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List connector tools",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def business_agent_list_business_agent_connector_tools(
         account_id: str, connector_id: str
@@ -19964,12 +20391,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Create a connector tool",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def business_agent_create_business_agent_connector_tool(
         account_id: str,
@@ -20011,12 +20439,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get a connector tool",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def business_agent_get_business_agent_connector_tool(
         account_id: str, connector_id: str, tool_id: str
@@ -20037,12 +20466,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Update a connector tool",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def business_agent_update_business_agent_connector_tool(
         account_id: str,
@@ -20085,12 +20515,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Delete a connector tool",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def business_agent_delete_business_agent_connector_tool(
         account_id: str, connector_id: str, tool_id: str
@@ -20111,12 +20542,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Run a connector tool once",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def business_agent_run_business_agent_connector_tool(
         account_id: str, connector_id: str, tool_id: str, input: str
@@ -20143,12 +20575,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get usage budgets",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def business_agent_get_business_agent_budget(account_id: str) -> str:
         """Get usage budgets
@@ -20167,12 +20600,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Replace usage budgets",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def business_agent_replace_business_agent_budget(
         account_id: str, budgets: list[dict[str, Any]] | None
@@ -20194,12 +20628,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Send a test message",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def business_agent_send_business_agent_test_message(
         account_id: str, message: str, conversation_id: str | None = None
@@ -20222,12 +20657,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Send a business event",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def business_agent_send_business_agent_event(
         account_id: str, to: str, type: str, description: str, payload: str
@@ -20256,12 +20692,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get a business event status",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def business_agent_get_business_agent_event(account_id: str, event_id: str) -> str:
         """Get a business event status
@@ -20279,12 +20716,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Read evaluation data",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def business_agent_read_business_agent_evals(
         account_id: str,
@@ -20316,12 +20754,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Start an evaluation run",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def business_agent_start_business_agent_eval_run(
         account_id: str, eval_case_ids: list[str] | None
@@ -20345,12 +20784,13 @@ def register_generated_tools(mcp, _get_client):
     # CALENDAR
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List calendars",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def calendar_list_calendars(account_id: str) -> str:
         """List calendars
@@ -20367,12 +20807,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List events in a window",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def calendar_list_calendar_events(
         account_id: str,
@@ -20429,12 +20870,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Create an event",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def calendar_create_calendar_event(
         account_id: str,
@@ -20518,12 +20960,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get an event",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def calendar_get_calendar_event(
         event_id: str,
@@ -20551,12 +20994,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Update an event",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def calendar_update_calendar_event(
         event_id: str,
@@ -20626,12 +21070,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Delete an event",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def calendar_delete_calendar_event(
         event_id: str,
@@ -20659,12 +21104,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List the occurrences of a recurring event",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def calendar_list_calendar_event_instances(
         event_id: str,
@@ -20706,12 +21152,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Respond to an invitation",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def calendar_rsvp_calendar_event(
         event_id: str,
@@ -20747,12 +21194,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Busy blocks for one or more accounts",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def calendar_free_busy(
         from_: str,
@@ -20785,12 +21233,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Find meeting slots across accounts",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def calendar_availability(
         participants: list[dict[str, Any]] | None,
@@ -20837,12 +21286,13 @@ def register_generated_tools(mcp, _get_client):
     # CALLS
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List all calls (unified history)",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def calls_list_calls(
         channel: Literal["whatsapp", "pstn"] | None = None,
@@ -20893,12 +21343,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get a call (any channel)",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def calls_get_call(id: str) -> str:
         """Get a call (any channel)
@@ -20919,12 +21370,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get a call recording",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def calls_get_call_recording(id: str, as_: Literal["json"] | None = None) -> str:
         """Get a call recording
@@ -20948,12 +21400,13 @@ def register_generated_tools(mcp, _get_client):
     # CHANGELOG
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List API changelog entries",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def changelog_list_changelog(
         type: Literal[
@@ -20995,12 +21448,13 @@ def register_generated_tools(mcp, _get_client):
     # COMMENT_AUTOMATIONS
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List comment-to-DM automations",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def comment_automations_list_comment_automations(
         profile_id: str | None = None,
@@ -21021,12 +21475,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Create comment-to-DM automation",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def comment_automations_create_comment_automation(
         profile_id: str,
@@ -21168,12 +21623,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get automation details",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def comment_automations_get_comment_automation(automation_id: str) -> str:
         """Get automation details
@@ -21192,12 +21648,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Update automation settings",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def comment_automations_update_comment_automation(
         automation_id: str,
@@ -21326,12 +21783,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Delete automation",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def comment_automations_delete_comment_automation(automation_id: str) -> str:
         """Delete automation
@@ -21350,12 +21808,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List automation logs",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def comment_automations_list_comment_automation_logs(
         automation_id: str,
@@ -21384,12 +21843,13 @@ def register_generated_tools(mcp, _get_client):
     # COMMENTS
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List commented posts",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def comments_list_inbox_comments(
         profile_id: str | None = None,
@@ -21467,12 +21927,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get post comments",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def comments_get_inbox_post_comments(
         post_id: str,
@@ -21530,12 +21991,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Reply to comment",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def comments_reply_to_inbox_post(
         post_id: str,
@@ -21598,12 +22060,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Delete comment",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def comments_delete_inbox_comment(
         post_id: str, account_id: str, comment_id: str
@@ -21633,12 +22096,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Edit comment",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def comments_edit_inbox_comment(
         post_id: str,
@@ -21675,12 +22139,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Set comment moderation status",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def comments_set_comment_moderation(
         post_id: str,
@@ -21725,12 +22190,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Hide comment",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def comments_hide_inbox_comment(
         post_id: str, comment_id: str, account_id: str
@@ -21759,12 +22225,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Unhide comment",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def comments_unhide_inbox_comment(
         post_id: str, comment_id: str, account_id: str
@@ -21788,12 +22255,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Pin comment",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def comments_pin_inbox_comment(
         post_id: str, comment_id: str, account_id: str
@@ -21817,12 +22285,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Unpin comment",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def comments_unpin_inbox_comment(
         post_id: str, comment_id: str, account_id: str
@@ -21846,12 +22315,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Like comment",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def comments_like_inbox_comment(
         post_id: str,
@@ -21901,12 +22371,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Unlike comment",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def comments_unlike_inbox_comment(
         post_id: str, comment_id: str, account_id: str, like_uri: str | None = None
@@ -21936,12 +22407,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Like post",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def comments_like_post(
         post_id: str,
@@ -21990,12 +22462,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Unlike post",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def comments_unlike_post(
         post_id: str, account_id: str, like_uri: str | None = None
@@ -22025,12 +22498,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Send private reply",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def comments_send_private_reply_to_comment(
         post_id: str,
@@ -22085,12 +22559,13 @@ def register_generated_tools(mcp, _get_client):
     # COMMERCE
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get a store",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def commerce_get_commerce_store(account_id: str) -> str:
         """Get a store
@@ -22116,12 +22591,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List orders",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def commerce_list_commerce_orders(
         account_id: str,
@@ -22177,12 +22653,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get an order",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def commerce_get_commerce_order(order_id: str, account_id: str) -> str:
         """Get an order
@@ -22204,12 +22681,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List products",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def commerce_list_commerce_products(
         account_id: str,
@@ -22260,12 +22738,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Create a product",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def commerce_create_commerce_product(
         account_id: str,
@@ -22325,12 +22804,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Activate, deactivate, archive or delete products",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def commerce_change_commerce_product_state(
         account_id: str,
@@ -22359,12 +22839,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get a product",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def commerce_get_commerce_product(product_id: str, account_id: str) -> str:
         """Get a product
@@ -22386,12 +22867,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Update a product",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def commerce_update_commerce_product(
         product_id: str,
@@ -22441,12 +22923,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Update variant prices",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def commerce_update_commerce_product_prices(
         product_id: str, account_id: str, variants: list[dict[str, Any]] | None
@@ -22473,12 +22956,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List collections",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def commerce_list_commerce_collections(
         account_id: str,
@@ -22508,12 +22992,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Create a collection",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def commerce_create_commerce_collection(
         account_id: str,
@@ -22570,12 +23055,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get a collection",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def commerce_get_commerce_collection(collection_id: str, account_id: str) -> str:
         """Get a collection
@@ -22597,12 +23083,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Update a collection",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def commerce_update_commerce_collection(
         collection_id: str,
@@ -22657,12 +23144,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Delete a collection",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def commerce_delete_commerce_collection(collection_id: str, account_id: str) -> str:
         """Delete a collection
@@ -22684,12 +23172,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Add or remove products in a collection",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def commerce_change_commerce_collection_products(
         collection_id: str,
@@ -22724,12 +23213,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Add variants",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def commerce_create_commerce_product_variants(
         product_id: str, account_id: str, variants: list[dict[str, Any]] | None
@@ -22754,12 +23244,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Delete variants",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def commerce_delete_commerce_product_variants(
         product_id: str, account_id: str, variant_ids: str
@@ -22784,12 +23275,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Add options",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def commerce_create_commerce_product_options(
         product_id: str,
@@ -22821,12 +23313,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Delete options",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def commerce_delete_commerce_product_options(
         product_id: str, account_id: str, names: str
@@ -22851,12 +23344,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Add images",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def commerce_add_commerce_product_images(
         product_id: str, account_id: str, images: list[dict[str, Any]] | None
@@ -22881,12 +23375,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Remove images",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def commerce_remove_commerce_product_images(
         product_id: str, account_id: str, image_ids: str
@@ -22911,12 +23406,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Reorder images",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def commerce_reorder_commerce_product_images(
         product_id: str, account_id: str, image_ids: list[str] | None
@@ -22941,12 +23437,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Duplicate a product",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def commerce_duplicate_commerce_product(
         product_id: str,
@@ -22981,12 +23478,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List product metafields",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def commerce_list_commerce_product_metafields(
         product_id: str, account_id: str
@@ -23010,12 +23508,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Set product metafields",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def commerce_set_commerce_product_metafields(
         product_id: str, account_id: str, metafields: list[dict[str, Any]] | None
@@ -23040,12 +23539,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Delete product metafields",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def commerce_delete_commerce_product_metafields(
         product_id: str, account_id: str, keys: str
@@ -23070,12 +23570,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Publish or unpublish a product",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def commerce_change_commerce_product_channels(
         product_id: str,
@@ -23107,12 +23608,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List collection metafields",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def commerce_list_commerce_collection_metafields(
         collection_id: str, account_id: str
@@ -23136,12 +23638,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Set collection metafields",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def commerce_set_commerce_collection_metafields(
         collection_id: str, account_id: str, metafields: list[dict[str, Any]] | None
@@ -23168,12 +23671,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Delete collection metafields",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def commerce_delete_commerce_collection_metafields(
         collection_id: str, account_id: str, keys: str
@@ -23198,12 +23702,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Publish or unpublish a collection",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def commerce_change_commerce_collection_channels(
         collection_id: str,
@@ -23235,12 +23740,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Add or remove tags in bulk",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def commerce_change_commerce_product_tags(
         account_id: str,
@@ -23269,12 +23775,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Reorder products in a collection",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def commerce_reorder_commerce_collection_products(
         collection_id: str, account_id: str, moves: list[dict[str, Any]] | None
@@ -23299,12 +23806,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List pages",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def commerce_list_commerce_pages(
         account_id: str,
@@ -23333,12 +23841,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Create a page",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def commerce_create_commerce_page(
         account_id: str,
@@ -23373,12 +23882,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get a page",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def commerce_get_commerce_page(page_id: str, account_id: str) -> str:
         """Get a page
@@ -23400,12 +23910,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Update a page",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def commerce_update_commerce_page(
         page_id: str,
@@ -23443,12 +23954,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Delete a page",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def commerce_delete_commerce_page(page_id: str, account_id: str) -> str:
         """Delete a page
@@ -23470,12 +23982,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List locations",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def commerce_list_commerce_locations(account_id: str) -> str:
         """List locations
@@ -23494,12 +24007,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get a product's stock",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def commerce_list_commerce_inventory(account_id: str, product_id: str) -> str:
         """Get a product's stock
@@ -23521,12 +24035,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Set or adjust stock",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def commerce_change_commerce_inventory(
         product_id: str,
@@ -23555,12 +24070,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List sales channels",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def commerce_list_commerce_channels(account_id: str) -> str:
         """List sales channels
@@ -23579,12 +24095,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List discounts",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def commerce_list_commerce_discounts(
         account_id: str,
@@ -23613,12 +24130,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Create a discount",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def commerce_create_commerce_discount(
         account_id: str,
@@ -23686,12 +24204,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get a discount",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def commerce_get_commerce_discount(discount_id: str, account_id: str) -> str:
         """Get a discount
@@ -23713,12 +24232,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Update a discount",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def commerce_update_commerce_discount(
         discount_id: str,
@@ -23777,12 +24297,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Delete a discount",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def commerce_delete_commerce_discount(discount_id: str, account_id: str) -> str:
         """Delete a discount
@@ -23804,12 +24325,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Activate or deactivate a discount",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def commerce_set_commerce_discount_active(
         discount_id: str, account_id: str, active: bool
@@ -23834,12 +24356,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Add codes to a discount",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def commerce_add_commerce_discount_codes(
         discount_id: str, account_id: str, codes: list[str] | None
@@ -23864,12 +24387,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List URL redirects",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def commerce_list_commerce_redirects(
         account_id: str,
@@ -23898,12 +24422,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Create a URL redirect",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def commerce_create_commerce_redirect(
         account_id: str, path: str, target: str
@@ -23928,12 +24453,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Update a URL redirect",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def commerce_update_commerce_redirect(
         redirect_id: str,
@@ -23962,12 +24488,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Delete a URL redirect",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def commerce_delete_commerce_redirect(redirect_id: str, account_id: str) -> str:
         """Delete a URL redirect
@@ -23989,12 +24516,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List navigation menus",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def commerce_list_commerce_menus(account_id: str) -> str:
         """List navigation menus
@@ -24013,12 +24541,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Create a navigation menu",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def commerce_create_commerce_menu(
         account_id: str, title: str, handle: str, items: list[dict[str, Any]] | None
@@ -24044,12 +24573,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get a navigation menu",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def commerce_get_commerce_menu(menu_id: str, account_id: str) -> str:
         """Get a navigation menu
@@ -24071,12 +24601,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Replace a navigation menu",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def commerce_update_commerce_menu(
         menu_id: str,
@@ -24111,12 +24642,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Delete a navigation menu",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def commerce_delete_commerce_menu(menu_id: str, account_id: str) -> str:
         """Delete a navigation menu
@@ -24138,12 +24670,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List metaobject definitions",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def commerce_list_commerce_metaobject_definitions(account_id: str) -> str:
         """List metaobject definitions
@@ -24164,12 +24697,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List metaobjects of a type",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def commerce_list_commerce_metaobjects(
         account_id: str, type: str, limit: int = 20, cursor: str | None = None
@@ -24195,12 +24729,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Create a metaobject",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def commerce_create_commerce_metaobject(
         account_id: str,
@@ -24229,12 +24764,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get a metaobject",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def commerce_get_commerce_metaobject(metaobject_id: str, account_id: str) -> str:
         """Get a metaobject
@@ -24256,12 +24792,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Update a metaobject",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def commerce_update_commerce_metaobject(
         metaobject_id: str,
@@ -24293,12 +24830,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Delete a metaobject",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def commerce_delete_commerce_metaobject(metaobject_id: str, account_id: str) -> str:
         """Delete a metaobject
@@ -24320,12 +24858,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List markets",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def commerce_list_commerce_markets(account_id: str) -> str:
         """List markets
@@ -24344,12 +24883,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List price lists",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def commerce_list_commerce_price_lists(account_id: str) -> str:
         """List price lists
@@ -24368,12 +24908,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Set fixed prices",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def commerce_set_commerce_price_list_prices(
         price_list_id: str, account_id: str, prices: list[dict[str, Any]] | None
@@ -24398,12 +24939,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Remove fixed prices",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def commerce_delete_commerce_price_list_prices(
         price_list_id: str, account_id: str, variant_ids: str
@@ -24430,12 +24972,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Record a marketing activity",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def commerce_upsert_commerce_marketing_activity(
         account_id: str,
@@ -24504,12 +25047,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Delete a marketing activity",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def commerce_delete_commerce_marketing_activity(
         remote_id: str, account_id: str
@@ -24533,12 +25077,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Report daily engagement",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def commerce_add_commerce_marketing_engagement(
         remote_id: str,
@@ -24588,12 +25133,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List catalog syncs",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def commerce_list_commerce_catalog_syncs(account_id: str) -> str:
         """List catalog syncs
@@ -24614,12 +25160,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Sync a store into a Meta catalog",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def commerce_create_commerce_catalog_sync(
         account_id: str, catalog_account_id: str, catalog_id: str
@@ -24660,12 +25207,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get a catalog sync",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def commerce_get_commerce_catalog_sync(sync_id: str) -> str:
         """Get a catalog sync
@@ -24684,12 +25232,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Stop a catalog sync",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def commerce_delete_commerce_catalog_sync(sync_id: str) -> str:
         """Stop a catalog sync
@@ -24708,12 +25257,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Run a catalog sync now",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def commerce_run_commerce_catalog_sync(sync_id: str) -> str:
         """Run a catalog sync now
@@ -24734,12 +25284,13 @@ def register_generated_tools(mcp, _get_client):
     # CONNECT
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Create a connect link",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def connect_create_platform_invite(
         profile_id: str,
@@ -24787,12 +25338,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get OAuth connect URL",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def connect_get_connect_url(
         platform: Literal[
@@ -25124,12 +25676,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Complete OAuth callback",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def connect_handle_o_auth_callback(
         platform: Literal[
@@ -25171,12 +25724,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Connect ads for a platform",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def connect_ads(
         platform: Literal[
@@ -25345,12 +25899,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Complete Meta business login",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def connect_complete_meta_ads_business_login(
         state: str, code: str | None = None, error: str | None = None
@@ -25388,12 +25943,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get Shopify OAuth connect URL",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def connect_get_shopify_connect_url(
         profile_id: str, shop: str, redirect_url: str | None = None
@@ -25432,12 +25988,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Connect a Shopify store with a custom-app Admin token",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def connect_shopify_with_token(
         profile_id: str, shop: str, access_token: str
@@ -25468,12 +26025,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get Google Analytics OAuth connect URL",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def connect_get_google_analytics_connect_url(
         profile_id: str,
@@ -25517,12 +26075,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List Google Analytics properties for a pending connect",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def connect_list_google_analytics_properties(pending_data_token: str) -> str:
         """List Google Analytics properties for a pending connect
@@ -25554,12 +26113,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Connect the chosen Google Analytics property",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def connect_select_google_analytics_property(
         pending_data_token: str, property_id: str
@@ -25588,12 +26148,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get HubSpot OAuth connect URL",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def connect_get_hub_spot_connect_url(
         profile_id: str, redirect_url: str | None = None
@@ -25629,12 +26190,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get Stripe connect URL",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def connect_get_stripe_connect_url(
         profile_id: str,
@@ -25673,12 +26235,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get WordPress.com OAuth connect URL",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def connect_get_word_press_auth_url(
         profile_id: str, redirect_url: str | None = None
@@ -25716,12 +26279,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get Wix site install URL",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def connect_get_wix_connect_url(
         profile_id: str, redirect_url: str | None = None
@@ -25755,12 +26319,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get Webflow OAuth URL",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def connect_get_webflow_connect_url(
         profile_id: str, redirect_url: str | None = None
@@ -25796,12 +26361,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Connect Webflow with a site API token",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def connect_webflow_with_site_token(profile_id: str, site_token: str) -> str:
         """Connect Webflow with a site API token
@@ -25830,12 +26396,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get a hosted link to connect any mailbox",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def connect_get_email_connect_url(
         profile_id: str,
@@ -25868,12 +26435,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Connect self-hosted WordPress with an application password",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def connect_word_press_with_application_password(
         profile_id: str, site_url: str, username: str, application_password: str
@@ -25907,12 +26475,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Set TikTok brand identity",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def connect_configure_tik_tok_ads_brand_identity(
         account_id: str, display_name: str, image_url: str
@@ -25953,12 +26522,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List Facebook pages",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def connect_list_facebook_pages(
         profile_id: str | None = None,
@@ -25998,12 +26568,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Select Facebook page",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def connect_select_facebook_page(body: dict[str, Any]) -> str:
         """Select Facebook page
@@ -26035,12 +26606,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List Pages with a linked Instagram account",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def connect_list_instagram_pages(
         profile_id: str, temp_token: str | None = None, connect_flow: str | None = None
@@ -26073,12 +26645,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Select the Page whose Instagram account to connect",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def connect_select_instagram_account(
         profile_id: str,
@@ -26122,12 +26695,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List Google Business Profile locations",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def connect_list_google_business_locations(
         profile_id: str | None = None,
@@ -26160,12 +26734,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Select Google Business Profile location",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def connect_select_google_business_location(
         profile_id: str,
@@ -26201,12 +26776,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get a phone handoff",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def connect_get_connect_handoff(handoff_id: str) -> str:
         """Get a phone handoff
@@ -26237,12 +26813,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get the saved welcome screen",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def connect_get_connect_welcome_screen() -> str:
         """Get the saved welcome screen
@@ -26256,12 +26833,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Save the welcome screen",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def connect_update_connect_welcome_screen(
         show_by_default: bool,
@@ -26291,12 +26869,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List your OAuth apps",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def connect_list_o_auth_apps(limit: int = 50, cursor: str | None = None) -> str:
         """List your OAuth apps
@@ -26322,12 +26901,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Add an OAuth app",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def connect_create_o_auth_app(
         platform: str,
@@ -26379,12 +26959,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get an OAuth app",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def connect_get_o_auth_app() -> str:
         """Get an OAuth app"""
@@ -26396,12 +26977,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Update an OAuth app",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def connect_update_o_auth_app(
         label: str | None = None,
@@ -26442,12 +27024,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Remove an OAuth app",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def connect_delete_o_auth_app(confirm: bool = False) -> str:
         """Remove an OAuth app
@@ -26464,12 +27047,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Check an OAuth app's keys",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def connect_test_o_auth_app(app_id: str) -> str:
         """Check an OAuth app's keys
@@ -26486,12 +27070,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get pending OAuth data",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def connect_get_pending_o_auth_data(token: str) -> str:
         """Get pending OAuth data
@@ -26528,12 +27113,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List LinkedIn orgs",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def connect_list_linked_in_organizations(temp_token: str, org_ids: str) -> str:
         """List LinkedIn orgs
@@ -26553,12 +27139,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Select LinkedIn org",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def connect_select_linked_in_organization(
         profile_id: str,
@@ -26597,12 +27184,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List Pinterest boards",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def connect_list_pinterest_boards_for_selection(
         x_connect_token: str, profile_id: str, temp_token: str
@@ -26627,12 +27215,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Select Pinterest board",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def connect_select_pinterest_board(
         profile_id: str,
@@ -26677,12 +27266,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List Snapchat profiles",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def connect_list_snapchat_profiles(
         x_connect_token: str, profile_id: str, temp_token: str
@@ -26707,12 +27297,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Select Snapchat profile",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def connect_select_snapchat_profile(
         profile_id: str,
@@ -26754,12 +27345,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Connect Bluesky account",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def connect_bluesky_credentials(
         identifier: str,
@@ -26793,12 +27385,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Connect an OpenAI Ads account",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def connect_open_ai_ads_credentials(
         api_key: str,
@@ -26840,12 +27433,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Connect a Whop account",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def connect_whop_ads_credentials(
         api_key: str,
@@ -26882,12 +27476,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Connect WhatsApp via credentials",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def connect_whats_app_credentials(
         profile_id: str,
@@ -26941,12 +27536,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List numbers for selection",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def connect_list_whats_app_phone_numbers(profile_id: str, temp_token: str) -> str:
         """List numbers for selection
@@ -26972,12 +27568,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Complete number selection",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def connect_complete_whats_app_phone_selection(
         profile_id: str,
@@ -27013,12 +27610,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Connect WhatsApp from Embedded Signup",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def connect_whats_app_embedded_signup(
         code: str,
@@ -27068,12 +27666,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get Embedded Signup SDK config",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def connect_get_whats_app_sdk_config() -> str:
         """Get Embedded Signup SDK config
@@ -27091,12 +27690,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Connect a Discord channel",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def connect_discord_channel(
         guild_id: str,
@@ -27129,12 +27729,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List Slack channels for the channel picker",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def connect_list_slack_channels(
         profile_id: str,
@@ -27188,12 +27789,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Connect a Slack channel",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def connect_slack_channel(
         profile_id: str,
@@ -27229,12 +27831,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Connect LINE Official Account",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def connect_line_credentials(
         channel_id: str,
@@ -27274,12 +27877,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Connect WeChat Official Account",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def connect_wechat_credentials(
         app_id: str,
@@ -27321,12 +27925,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get WeChat IP whitelist",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def connect_get_wechat_ip_whitelist() -> str:
         """Get WeChat IP whitelist
@@ -27340,12 +27945,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Generate Telegram code",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def connect_get_telegram_connect_status(profile_id: str) -> str:
         """Generate Telegram code
@@ -27362,12 +27968,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Connect Telegram directly",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def connect_initiate_telegram_connect(chat_id: str, profile_id: str) -> str:
         """Connect Telegram directly
@@ -27387,12 +27994,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Check Telegram status",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def connect_complete_telegram_connect(code: str) -> str:
         """Check Telegram status
@@ -27410,12 +28018,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Read an account's webhook subscription",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def connect_get_page_webhook_subscription(account_id: str) -> str:
         """Read an account's webhook subscription
@@ -27442,12 +28051,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Re-subscribe an account to Zernio's webhooks",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def connect_resync_page_webhook_subscription(account_id: str) -> str:
         """Re-subscribe an account to Zernio's webhooks
@@ -27478,12 +28088,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List Facebook pages",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def connect_get_facebook_pages(account_id: str, refresh: bool | None = None) -> str:
         """List Facebook pages
@@ -27508,12 +28119,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Update Facebook page",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def connect_update_facebook_page(account_id: str, selected_page_id: str) -> str:
         """Update Facebook page
@@ -27539,12 +28151,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List LinkedIn orgs",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def connect_get_linked_in_organizations(account_id: str) -> str:
         """List LinkedIn orgs
@@ -27561,12 +28174,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Switch LinkedIn account type",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def connect_update_linked_in_organization(
         account_id: str,
@@ -27593,12 +28207,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List Pinterest boards",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def connect_get_pinterest_boards(account_id: str) -> str:
         """List Pinterest boards
@@ -27615,12 +28230,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Set default Pinterest board",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def connect_update_pinterest_boards(
         account_id: str, default_board_id: str, default_board_name: str | None = None
@@ -27645,12 +28261,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Create Pinterest board",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def connect_create_pinterest_board(
         account_id: str,
@@ -27680,12 +28297,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get a YouTube video transcript",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def connect_get_youtube_captions(
         account_id: str,
@@ -27732,12 +28350,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List YouTube playlists",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def connect_get_youtube_playlists(account_id: str) -> str:
         """List YouTube playlists
@@ -27754,12 +28373,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Create YouTube playlist",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def connect_create_youtube_playlist(
         account_id: str,
@@ -27804,12 +28424,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Set default YouTube playlist",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def connect_update_youtube_default_playlist(
         account_id: str,
@@ -27836,12 +28457,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List Google Business Profile locations",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def connect_get_gmb_locations(
         account_id: str,
@@ -27873,12 +28495,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Update Google Business Profile location",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def connect_update_gmb_location(
         account_id: str, selected_location_id: str, google_account_id: str | None = None
@@ -27907,12 +28530,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Assign Google Business Profile location to another profile",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def connect_assign_google_business_location(
         account_id: str,
@@ -27954,12 +28578,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List Reddit subreddits",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def connect_get_reddit_subreddits(account_id: str) -> str:
         """List Reddit subreddits
@@ -27978,12 +28603,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Set default subreddit",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def connect_update_reddit_subreddits(
         account_id: str, default_subreddit: str
@@ -28007,12 +28633,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get subreddit rules",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def connect_get_subreddit_rules(account_id: str, subreddit: str) -> str:
         """Get subreddit rules
@@ -28038,12 +28665,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Vote on a Reddit post or comment",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def connect_vote_reddit_thing(
         account_id: str, thing_id: str, direction: int
@@ -28075,12 +28703,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List subreddit flairs",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def connect_get_reddit_flairs(account_id: str, subreddit: str) -> str:
         """List subreddit flairs
@@ -28102,12 +28731,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Set Reddit post flair",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def connect_set_reddit_post_flair(
         account_id: str,
@@ -28149,12 +28779,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Admin-consent link for a Microsoft tenant",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def connect_start_microsoft_admin_consent(
         account_id: str, redirect_url: str | None = None
@@ -28186,12 +28817,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Start a Google Workspace organization connection",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def connect_create_google_org_connection(
         profile_id: str,
@@ -28231,12 +28863,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Start a Microsoft 365 organization connection",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def connect_create_microsoft_org_connection(
         profile_id: str,
@@ -28270,12 +28903,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List organization connections",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def connect_list_org_connections(profile_id: str) -> str:
         """List organization connections
@@ -28292,12 +28926,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get an organization connection",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def connect_get_org_connection() -> str:
         """Get an organization connection
@@ -28311,12 +28946,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Update an organization connection",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def connect_update_org_connection(
         allowed_emails: str | None = None, admin_email: str | None = None
@@ -28340,12 +28976,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Delete an organization connection",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def connect_delete_org_connection() -> str:
         """Delete an organization connection
@@ -28361,12 +28998,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Verify an organization connection",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def connect_verify_org_connection(
         org_connection_id: str, email: str | None = None
@@ -28392,12 +29030,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List an organization's users",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def connect_list_org_connection_users(
         org_connection_id: str, cursor: str | None = None
@@ -28421,12 +29060,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Add a mailbox from an organization connection",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def connect_add_org_connection_mailbox(
         org_connection_id: str, email: str, name: str | None = None
@@ -28453,12 +29093,13 @@ def register_generated_tools(mcp, _get_client):
     # CONNECTED_APPS
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List connected apps",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def connected_apps_list_connected_apps() -> str:
         """List connected apps
@@ -28478,12 +29119,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Revoke connected app",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def connected_apps_revoke_connected_app(client_id: str) -> str:
         """Revoke connected app
@@ -28510,12 +29152,13 @@ def register_generated_tools(mcp, _get_client):
     # CONTACTS
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List contacts",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def contacts_list_contacts(
         profile_id: str | None = None,
@@ -28576,12 +29219,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Create contact",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def contacts_create_contact(
         profile_id: str,
@@ -28645,12 +29289,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List contact groups",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def contacts_list_contact_groups(account_id: str) -> str:
         """List contact groups
@@ -28669,12 +29314,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Search people",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def contacts_autocomplete_contacts(account_id: str, q: str, limit: int = 10) -> str:
         """Search people
@@ -28697,12 +29343,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get contact",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def contacts_get_contact(contact_id: str) -> str:
         """Get contact
@@ -28719,12 +29366,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Update contact",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def contacts_update_contact(
         contact_id: str,
@@ -28769,12 +29417,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Delete contact",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def contacts_delete_contact(contact_id: str) -> str:
         """Delete contact
@@ -28791,12 +29440,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List channels for a contact",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def contacts_get_contact_channels(contact_id: str) -> str:
         """List channels for a contact
@@ -28813,12 +29463,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Bulk create contacts",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def contacts_bulk_create_contacts(
         profile_id: str,
@@ -28860,12 +29511,13 @@ def register_generated_tools(mcp, _get_client):
     # CONTENT_RETENTION
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get content retention mode",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def content_retention_get_content_retention() -> str:
         """Get content retention mode
@@ -28879,12 +29531,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Turn zero content retention on or off",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def content_retention_update_content_retention(
         mode: Literal["standard", "none"],
@@ -28909,12 +29562,13 @@ def register_generated_tools(mcp, _get_client):
     # CONVERSIONS
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get Event Match Quality",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def conversions_get_conversions_quality(
         account_id: str, destination_id: str
@@ -28947,12 +29601,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Send conversion events",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def conversions_send_conversions(
         account_id: str,
@@ -29015,12 +29670,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Adjust uploaded conversions",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def conversions_adjust_conversions(
         account_id: str, destination_id: str, adjustments: list[dict[str, Any]] | None
@@ -29059,12 +29715,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List conversion actions",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def conversions_list_conversion_actions(
         account_id: str,
@@ -29110,12 +29767,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Create conversion action",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def conversions_create_conversion_action(
         account_id: str,
@@ -29205,12 +29863,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List account conversion goals",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def conversions_list_ad_conversion_goals(
         account_id: str,
@@ -29248,12 +29907,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Update account conversion goals",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def conversions_update_ad_conversion_goals(
         account_id: str,
@@ -29289,12 +29949,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Update a conversion action's settings",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def conversions_update_conversion_action(
         action_id: str,
@@ -29392,12 +30053,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List custom conversion goals",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def conversions_list_custom_conversion_goals(
         account_id: str,
@@ -29428,12 +30090,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Create a custom conversion goal",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def conversions_create_custom_conversion_goal(
         account_id: str,
@@ -29470,12 +30133,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Update a custom conversion goal",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def conversions_update_custom_conversion_goal(
         goal_id: str,
@@ -29515,12 +30179,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Remove a custom conversion goal",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def conversions_remove_custom_conversion_goal(
         goal_id: str,
@@ -29554,12 +30219,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List stored events",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def conversions_list_events(
         profile_id: str,
@@ -29615,12 +30281,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Send events to every destination",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def conversions_send_events(
         profile_id: str,
@@ -29673,12 +30340,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get today's tracking overview",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def conversions_get_events_overview(profile_id: str) -> str:
         """Get today's tracking overview
@@ -29697,12 +30365,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get one stored event and its deliveries",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def conversions_get_event(event_id: str, profile_id: str) -> str:
         """Get one stored event and its deliveries
@@ -29722,12 +30391,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Change a stored event's value",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def conversions_restate_event(
         event_id: str, profile_id: str, value: float, currency: str | None = None
@@ -29753,12 +30423,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Retract a stored event",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def conversions_retract_event(event_id: str, profile_id: str) -> str:
         """Retract a stored event
@@ -29780,12 +30451,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List event destinations",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def conversions_list_event_destinations(profile_id: str | None = None) -> str:
         """List event destinations
@@ -29802,12 +30474,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Add an event destination",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def conversions_create_event_destination(
         profile_id: str,
@@ -29837,12 +30510,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Remove an event destination",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def conversions_delete_event_destination(destination_id: str) -> str:
         """Remove an event destination
@@ -29861,12 +30535,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List forwarding rules",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def conversions_list_forwarding_rules(profile_id: str | None = None) -> str:
         """List forwarding rules
@@ -29883,12 +30558,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Add a forwarding rule",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def conversions_create_forwarding_rule(
         profile_id: str,
@@ -29938,12 +30614,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Remove a forwarding rule",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def conversions_delete_forwarding_rule(rule_id: str) -> str:
         """Remove a forwarding rule
@@ -29960,12 +30637,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List conversion destinations",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def conversions_list_ad_conversion_destinations(account_id: str) -> str:
         """List conversion destinations
@@ -30003,12 +30681,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Create a conversion destination",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def conversions_create_ad_conversion_destination(
         account_id: str,
@@ -30111,12 +30790,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get a conversion destination",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def conversions_get_ad_conversion_destination(
         account_id: str, destination_id: str, ad_account_id: str
@@ -30147,12 +30827,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Update a conversion destination",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def conversions_update_ad_conversion_destination(
         destination_id: str,
@@ -30212,12 +30893,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Delete a conversion destination",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def conversions_delete_ad_conversion_destination(
         account_id: str, destination_id: str, ad_account_id: str | None = None
@@ -30253,12 +30935,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List associated campaigns",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def conversions_list_ad_conversion_associations(
         account_id: str, destination_id: str, ad_account_id: str
@@ -30290,12 +30973,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Associate campaigns",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def conversions_add_ad_conversion_associations(
         destination_id: str,
@@ -30331,12 +31015,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Remove associated campaigns",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def conversions_remove_ad_conversion_associations(
         account_id: str, destination_id: str, ad_account_id: str, campaign_ids: str
@@ -30369,12 +31054,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get attribution metrics",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def conversions_get_ad_conversion_metrics(
         account_id: str,
@@ -30426,12 +31112,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List custom conversions",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def conversions_list_ad_custom_conversions(
         account_id: str, ad_account_id: str
@@ -30457,12 +31144,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Create custom conversion",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def conversions_create_ad_custom_conversion(
         account_id: str,
@@ -30512,12 +31200,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List conversion destinations",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def conversions_list_conversion_destinations(account_id: str) -> str:
         """List conversion destinations
@@ -30538,12 +31227,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Create a conversion destination",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def conversions_create_conversion_destination(
         account_id: str,
@@ -30625,12 +31315,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get a conversion destination",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def conversions_get_conversion_destination(
         account_id: str, destination_id: str, ad_account_id: str
@@ -30657,12 +31348,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Update a conversion destination",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def conversions_update_conversion_destination(
         account_id: str,
@@ -30716,12 +31408,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Delete a conversion destination",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def conversions_delete_conversion_destination(
         account_id: str, destination_id: str, ad_account_id: str | None = None
@@ -30748,12 +31441,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List associated campaigns",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def conversions_list_conversion_associations(
         account_id: str, destination_id: str, ad_account_id: str
@@ -30780,12 +31474,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Associate campaigns",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def conversions_add_conversion_associations(
         account_id: str,
@@ -30817,12 +31512,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Remove associated campaigns",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def conversions_remove_conversion_associations(
         account_id: str, destination_id: str, ad_account_id: str, campaign_ids: str
@@ -30851,12 +31547,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get attribution metrics",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def conversions_get_conversion_metrics(
         account_id: str,
@@ -30896,12 +31593,13 @@ def register_generated_tools(mcp, _get_client):
     # CREATOR_CAMPAIGNS
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Create creator campaign",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def creator_campaigns_create_creator_campaign(
         profile_id: str,
@@ -31003,12 +31701,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List creator campaigns",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def creator_campaigns_list_creator_campaigns(
         status: Literal["draft", "active", "paused", "closed"] | None = None,
@@ -31037,12 +31736,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get creator campaign",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def creator_campaigns_get_creator_campaign(campaign_id: str) -> str:
         """Get creator campaign
@@ -31061,12 +31761,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Update creator campaign",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def creator_campaigns_update_creator_campaign(
         campaign_id: str,
@@ -31166,12 +31867,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Raise creator campaign budget",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def creator_campaigns_raise_creator_campaign_budget(
         campaign_id: str, budget_cents: int
@@ -31199,12 +31901,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Activate creator campaign",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def creator_campaigns_activate_creator_campaign(campaign_id: str) -> str:
         """Activate creator campaign
@@ -31225,12 +31928,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Pause creator campaign",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def creator_campaigns_pause_creator_campaign(campaign_id: str) -> str:
         """Pause creator campaign
@@ -31250,12 +31954,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Close creator campaign",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def creator_campaigns_close_creator_campaign(campaign_id: str) -> str:
         """Close creator campaign
@@ -31278,12 +31983,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Invite campaign participant",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def creator_campaigns_create_campaign_participant(
         campaign_id: str, display_name: str, email: str | None = None
@@ -31318,12 +32024,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List campaign participants",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def creator_campaigns_list_campaign_participants(
         campaign_id: str,
@@ -31353,12 +32060,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get campaign participant",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def creator_campaigns_get_campaign_participant(
         campaign_id: str, participant_id: str
@@ -31380,12 +32088,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Approve pending campaign participant",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def creator_campaigns_approve_campaign_participant(
         campaign_id: str, participant_id: str
@@ -31418,12 +32127,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Deny pending campaign participant",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def creator_campaigns_deny_campaign_participant(
         campaign_id: str, participant_id: str
@@ -31445,12 +32155,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Suspend campaign participant",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def creator_campaigns_suspend_campaign_participant(
         campaign_id: str, participant_id: str
@@ -31472,12 +32183,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Reinstate campaign participant",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def creator_campaigns_reinstate_campaign_participant(
         campaign_id: str, participant_id: str
@@ -31499,12 +32211,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Remove campaign participant",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def creator_campaigns_remove_campaign_participant(
         campaign_id: str, participant_id: str
@@ -31528,12 +32241,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Move participant to another campaign",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def creator_campaigns_move_campaign_participant(
         campaign_id: str, participant_id: str, target_campaign_id: str
@@ -31569,12 +32283,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Resend campaign participant invite",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def creator_campaigns_resend_campaign_participant_invite(
         campaign_id: str, participant_id: str
@@ -31601,12 +32316,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Settle campaign participant",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def creator_campaigns_settle_campaign_participant(
         campaign_id: str,
@@ -31647,12 +32363,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Pay creators with one card payment",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def creator_campaigns_create_campaign_payout_batch(
         participant_ids: list[str] | None = None,
@@ -31689,12 +32406,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List payout batches",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def creator_campaigns_list_campaign_payout_batches(
         limit: int = 20, skip: int = 0
@@ -31716,12 +32434,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Preview a payout batch",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def creator_campaigns_preview_campaign_payout_batch(
         campaign_id: str,
@@ -31752,12 +32471,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Create campaign invite link",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def creator_campaigns_create_campaign_invite_link(campaign_id: str) -> str:
         """Create campaign invite link
@@ -31778,12 +32498,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List campaign submissions",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def creator_campaigns_list_campaign_submissions(
         campaign_id: str,
@@ -31877,12 +32598,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get campaign submission",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def creator_campaigns_get_campaign_submission(
         campaign_id: str, submission_id: str
@@ -31904,12 +32626,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Approve campaign submission",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def creator_campaigns_approve_campaign_submission(
         campaign_id: str, submission_id: str
@@ -31944,12 +32667,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Reject campaign submission",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def creator_campaigns_reject_campaign_submission(
         campaign_id: str, submission_id: str, reason: str
@@ -31974,12 +32698,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Reopen campaign submission",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def creator_campaigns_reopen_campaign_submission(
         campaign_id: str, submission_id: str
@@ -32012,12 +32737,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List campaign drafts",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def creator_campaigns_list_campaign_drafts(
         campaign_id: str,
@@ -32053,12 +32779,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get campaign draft",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def creator_campaigns_get_campaign_draft(campaign_id: str, draft_id: str) -> str:
         """Get campaign draft
@@ -32078,12 +32805,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Approve campaign draft",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def creator_campaigns_approve_campaign_draft(
         campaign_id: str, draft_id: str
@@ -32107,12 +32835,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Request changes on a campaign draft",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def creator_campaigns_request_campaign_draft_revision(
         campaign_id: str,
@@ -32143,12 +32872,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Reject campaign draft",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def creator_campaigns_reject_campaign_draft(
         campaign_id: str, draft_id: str, reason: str
@@ -32173,12 +32903,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List campaign sample requests",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def creator_campaigns_list_campaign_samples(
         campaign_id: str,
@@ -32211,12 +32942,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Approve campaign sample request",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def creator_campaigns_approve_campaign_sample(
         campaign_id: str, sample_id: str
@@ -32247,12 +32979,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Decline campaign sample request",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def creator_campaigns_decline_campaign_sample(
         campaign_id: str, sample_id: str, reason: str
@@ -32275,12 +33008,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Mark campaign sample shipped",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def creator_campaigns_ship_campaign_sample(
         campaign_id: str, sample_id: str, tracking_url: str | None = None
@@ -32303,12 +33037,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List campaign payables",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def creator_campaigns_list_campaign_payables(campaign_id: str) -> str:
         """List campaign payables
@@ -32328,12 +33063,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Create campaign adjustment",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def creator_campaigns_create_campaign_adjustment(
         campaign_id: str, participant_id: str, amount_cents: int, cause: str
@@ -32362,12 +33098,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List campaign ledger",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def creator_campaigns_list_campaign_ledger(
         campaign_id: str,
@@ -32422,12 +33159,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List campaign orders",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def creator_campaigns_list_campaign_orders(
         campaign_id: str,
@@ -32465,12 +33203,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get campaign report",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def creator_campaigns_get_campaign_report(campaign_id: str) -> str:
         """Get campaign report
@@ -32490,12 +33229,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Launch campaign posts as ads",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def creator_campaigns_launch_campaign_ads(
         campaign_id: str,
@@ -32565,12 +33305,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get campaign ad results",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def creator_campaigns_get_campaign_ad_results(
         campaign_id: str,
@@ -32606,12 +33347,13 @@ def register_generated_tools(mcp, _get_client):
     # CREATOR_PORTAL
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Email a creator their campaign links",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def creator_portal_recover_creator_portal_links(
         email: str, campaign_id: str | None = None
@@ -32637,12 +33379,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Read a creator invite or participant page",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def creator_portal_get_creator_portal() -> str:
         """Read a creator invite or participant page
@@ -32663,12 +33406,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Join a campaign",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def creator_portal_join_creator_campaign(
         display_name: str | None = None, email: str | None = None
@@ -32696,12 +33440,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Start connecting a creator account",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def creator_portal_start_creator_connect(
         platform: str, window_url: str | None = None
@@ -32729,12 +33474,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Submit a post",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def creator_portal_submit_creator_post(
         url: str, draft_id: str | None = None
@@ -32758,12 +33504,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get an upload URL for a draft",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def creator_portal_presign_creator_draft_upload(
         filename: str,
@@ -32797,12 +33544,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Submit a draft for review",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def creator_portal_submit_creator_draft(
         media_url: str,
@@ -32839,12 +33587,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Request a product sample",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def creator_portal_request_creator_sample(
         product_id: str,
@@ -32879,12 +33628,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Remove a connected account",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def creator_portal_remove_creator_account() -> str:
         """Remove a connected account
@@ -32904,12 +33654,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Set a post's Spark code",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def creator_portal_set_creator_spark_code(spark_auth_code: str) -> str:
         """Set a post's Spark code
@@ -32931,12 +33682,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List a creator's earnings history",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def creator_portal_get_creator_payouts(limit: int = 50, skip: int = 0) -> str:
         """List a creator's earnings history
@@ -32956,12 +33708,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Start payout onboarding",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def creator_portal_start_creator_payouts(
         action: Literal["onboard"], country: str | None = None
@@ -32986,12 +33739,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Open the creator's Stripe dashboard",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def creator_portal_create_creator_payout_login() -> str:
         """Open the creator's Stripe dashboard
@@ -33007,12 +33761,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Download a payout statement",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def creator_portal_get_creator_payout_statement() -> str:
         """Download a payout statement
@@ -33032,12 +33787,13 @@ def register_generated_tools(mcp, _get_client):
     # CUSTOM_FIELDS
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Set custom field value",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def custom_fields_set_contact_field_value(
         contact_id: str, slug: str, value: str
@@ -33060,12 +33816,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Clear custom field value",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def custom_fields_clear_contact_field_value(contact_id: str, slug: str) -> str:
         """Clear custom field value
@@ -33085,12 +33842,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List custom field definitions",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def custom_fields_list_custom_fields(profile_id: str | None = None) -> str:
         """List custom field definitions
@@ -33107,12 +33865,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Create custom field",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def custom_fields_create_custom_field(
         profile_id: str,
@@ -33141,12 +33900,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Update custom field",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def custom_fields_update_custom_field(
         field_id: str, name: str | None = None, options: list[str] | None = None
@@ -33169,12 +33929,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Delete custom field",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def custom_fields_delete_custom_field(field_id: str) -> str:
         """Delete custom field
@@ -33193,12 +33954,13 @@ def register_generated_tools(mcp, _get_client):
     # DISCORD
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get Discord account settings",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def discord_get_discord_settings(account_id: str) -> str:
         """Get Discord account settings
@@ -33215,12 +33977,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Update Discord settings",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def discord_update_discord_settings(
         account_id: str,
@@ -33254,12 +34017,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List Discord guild channels",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def discord_get_discord_channels(account_id: str) -> str:
         """List Discord guild channels
@@ -33276,12 +34040,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Send a Discord Direct Message",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def discord_send_discord_direct_message(
         account_id: str,
@@ -33331,12 +34096,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List Discord guild roles",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def discord_list_discord_guild_roles(guild_id: str, account_id: str) -> str:
         """List Discord guild roles
@@ -33364,12 +34130,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Create a Discord guild role",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def discord_create_discord_guild_role(
         guild_id: str,
@@ -33416,12 +34183,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Edit a Discord guild role",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def discord_edit_discord_guild_role(
         guild_id: str,
@@ -33467,12 +34235,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Delete a Discord guild role",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def discord_delete_discord_guild_role(
         guild_id: str, role_id: str, account_id: str
@@ -33499,12 +34268,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List Discord guild members",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def discord_list_discord_guild_members(
         guild_id: str, account_id: str, limit: int = 100, after: str | None = None
@@ -33534,12 +34304,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Search Discord guild members",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def discord_search_discord_guild_members(
         guild_id: str, account_id: str, query: str, limit: int = 25
@@ -33567,12 +34338,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get a Discord guild member",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def discord_get_discord_guild_member(
         guild_id: str, user_id: str, account_id: str
@@ -33598,12 +34370,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Assign a role to a guild member",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def discord_add_discord_member_role(
         guild_id: str, user_id: str, role_id: str, account_id: str
@@ -33638,12 +34411,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Remove a role from a guild member",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def discord_remove_discord_member_role(
         guild_id: str, user_id: str, role_id: str, account_id: str
@@ -33673,12 +34447,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Delete a Discord channel message",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def discord_delete_discord_message(
         channel_id: str, message_id: str, account_id: str
@@ -33708,12 +34483,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Crosspost Discord message",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def discord_crosspost_discord_message(
         channel_id: str, message_id: str, account_id: str
@@ -33741,12 +34517,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Create a Discord public thread",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def discord_create_discord_thread(
         channel_id: str,
@@ -33783,12 +34560,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List pinned messages",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def discord_list_discord_pinned_messages(channel_id: str, account_id: str) -> str:
         """List pinned messages
@@ -33813,12 +34591,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Pin a Discord message",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def discord_pin_discord_message(
         channel_id: str, message_id: str, account_id: str
@@ -33849,12 +34628,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Unpin a Discord message",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def discord_unpin_discord_message(
         channel_id: str, message_id: str, account_id: str
@@ -33878,12 +34658,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List Discord scheduled events",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def discord_list_discord_scheduled_events(
         guild_id: str, account_id: str, with_user_count: bool | None = None
@@ -33913,12 +34694,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Create a Discord scheduled event",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def discord_create_discord_scheduled_event(
         guild_id: str,
@@ -33968,12 +34750,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get a Discord scheduled event",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def discord_get_discord_scheduled_event(
         guild_id: str, event_id: str, account_id: str
@@ -33994,12 +34777,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Update a Discord scheduled event",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def discord_update_discord_scheduled_event(
         guild_id: str,
@@ -34052,12 +34836,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Delete a Discord scheduled event",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def discord_delete_discord_scheduled_event(
         guild_id: str, event_id: str, account_id: str
@@ -34083,12 +34868,13 @@ def register_generated_tools(mcp, _get_client):
     # EMAIL
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List email threads",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def email_list_email_threads(
         account_id: str,
@@ -34161,12 +34947,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get an email thread with its messages",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def email_get_email_thread(
         thread_id: str, account_id: str, clean: bool = False
@@ -34187,12 +34974,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Update every message in a thread",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def email_update_email_thread(
         thread_id: str,
@@ -34231,12 +35019,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List email messages",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def email_list_email_messages(
         account_id: str,
@@ -34311,12 +35100,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Send an email",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def email_send_email_message(
         account_id: str,
@@ -34407,12 +35197,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List scheduled emails",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def email_list_scheduled_emails(
         account_id: str,
@@ -34440,12 +35231,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get a scheduled email",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def email_get_scheduled_email(schedule_id: str, account_id: str) -> str:
         """Get a scheduled email
@@ -34463,12 +35255,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Cancel a scheduled email",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def email_cancel_scheduled_email(schedule_id: str, account_id: str) -> str:
         """Cancel a scheduled email
@@ -34488,12 +35281,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get an email message",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def email_get_email_message(
         message_id: str,
@@ -34524,12 +35318,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Mark read or starred, label, or move a message",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def email_update_email_message(
         message_id: str,
@@ -34568,12 +35363,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Move a message to trash",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def email_trash_email_message(message_id: str, account_id: str) -> str:
         """Move a message to trash
@@ -34591,12 +35387,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Reply to a message",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def email_reply_email_message(
         message_id: str,
@@ -34682,12 +35479,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Forward a message",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def email_forward_email_message(
         message_id: str,
@@ -34769,12 +35567,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List drafts",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def email_list_email_drafts(
         account_id: str, limit: int = 25, cursor: str | None = None
@@ -34797,12 +35596,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Create a draft",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def email_create_email_draft(
         account_id: str,
@@ -34891,12 +35691,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get a draft",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def email_get_email_draft(draft_id: str, account_id: str) -> str:
         """Get a draft
@@ -34916,12 +35717,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Update a draft",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def email_update_email_draft(
         draft_id: str,
@@ -34972,12 +35774,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Delete a draft",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def email_delete_email_draft(draft_id: str, account_id: str) -> str:
         """Delete a draft
@@ -34995,12 +35798,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Send a draft",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def email_send_email_draft(
         draft_id: str, account_id: str, send_at: str | None = None
@@ -35027,12 +35831,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List mailbox folders",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def email_list_email_folders(account_id: str) -> str:
         """List mailbox folders
@@ -35049,12 +35854,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Find the mail settings for an address",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def email_discover_imap_settings(email: str) -> str:
         """Find the mail settings for an address
@@ -35071,12 +35877,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Connect an IMAP mailbox",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def email_create_imap_account(
         profile_id: str,
@@ -35126,12 +35933,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List labels",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def email_list_email_labels(account_id: str) -> str:
         """List labels
@@ -35148,12 +35956,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Create a label",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def email_create_email_label(
         account_id: str, name: str, color: dict[str, Any] | None = None
@@ -35176,12 +35985,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List send-as addresses",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def email_list_email_send_as(account_id: str) -> str:
         """List send-as addresses
@@ -35198,12 +36008,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Declare a send-as address",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def email_declare_email_send_as(
         account_id: str, email: str, name: str | None = None
@@ -35226,12 +36037,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Remove a declared send-as address",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def email_delete_email_send_as(email: str, account_id: str) -> str:
         """Remove a declared send-as address
@@ -35251,12 +36063,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List shared mailboxes",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def email_list_email_shared_mailboxes(account_id: str) -> str:
         """List shared mailboxes
@@ -35273,12 +36086,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Add a shared mailbox",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def email_add_email_shared_mailbox(
         account_id: str, address: str, display_name: str | None = None
@@ -35307,12 +36121,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List signatures",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def email_list_email_signatures(account_id: str | None = None) -> str:
         """List signatures
@@ -35329,12 +36144,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Create a signature",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def email_create_email_signature(
         name: str,
@@ -35367,12 +36183,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Import Gmail signatures",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def email_import_email_signatures(account_id: str) -> str:
         """Import Gmail signatures
@@ -35389,12 +36206,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get a signature",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def email_get_email_signature(signature_id: str) -> str:
         """Get a signature
@@ -35409,12 +36227,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Update a signature",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def email_update_email_signature(
         signature_id: str,
@@ -35447,12 +36266,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Delete a signature",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def email_delete_email_signature(signature_id: str) -> str:
         """Delete a signature
@@ -35467,12 +36287,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Delete a label",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def email_delete_email_label(label_id: str, account_id: str) -> str:
         """Delete a label
@@ -35492,12 +36313,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Download an attachment",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def email_download_email_attachment(
         attachment_id: str, account_id: str, message_id: str
@@ -35524,12 +36346,13 @@ def register_generated_tools(mcp, _get_client):
     # FEEDBACK
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Submit feedback",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def feedback_submit_feedback(
         type: Literal["bug", "missing_feature", "docs", "other"],
@@ -35583,12 +36406,13 @@ def register_generated_tools(mcp, _get_client):
     # FILES
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List files in a folder or search the drive",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def files_list_files(
         account_id: str,
@@ -35627,12 +36451,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Upload a file",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def files_upload_file(
         account_id: str,
@@ -35673,12 +36498,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Create a folder",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def files_create_folder(
         account_id: str, name: str, parent_id: str | None = None
@@ -35699,12 +36525,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Create a hosted Google Picker session",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def files_create_file_picker_session(
         account_id: str,
@@ -35757,12 +36584,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get a file or folder",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def files_get_file(file_id: str, account_id: str) -> str:
         """Get a file or folder
@@ -35780,12 +36608,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Rename or move a file",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def files_update_file(
         file_id: str,
@@ -35812,12 +36641,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Move a file to the trash",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def files_trash_file(file_id: str, account_id: str) -> str:
         """Move a file to the trash
@@ -35835,12 +36665,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Download a file",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def files_download_file(file_id: str, account_id: str) -> str:
         """Download a file
@@ -35860,12 +36691,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get an anyone-with-the-link share link",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def files_get_file_share_link(file_id: str, account_id: str) -> str:
         """Get an anyone-with-the-link share link
@@ -35887,12 +36719,13 @@ def register_generated_tools(mcp, _get_client):
     # GMB_SERVICES
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get services",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def gmb_services_get_google_business_services(
         account_id: str, location_id: str | None = None
@@ -35915,12 +36748,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Replace services",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def gmb_services_update_google_business_services(
         account_id: str,
@@ -35951,12 +36785,13 @@ def register_generated_tools(mcp, _get_client):
     # GMB_VERIFICATIONS
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get verification state",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def gmb_verifications_get_google_business_verifications(
         account_id: str, location_id: str | None = None
@@ -35978,12 +36813,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Start a verification",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def gmb_verifications_start_google_business_verification(
         account_id: str,
@@ -36027,12 +36863,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Fetch verification options",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def gmb_verifications_fetch_google_business_verification_options(
         account_id: str,
@@ -36064,12 +36901,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Complete a verification",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def gmb_verifications_complete_google_business_verification(
         account_id: str, verification_id: str, pin: str, location_id: str | None = None
@@ -36098,12 +36936,13 @@ def register_generated_tools(mcp, _get_client):
     # IMESSAGE
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List iMessage senders",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def imessage_list_imessage_senders() -> str:
         """List iMessage senders
@@ -36117,12 +36956,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Register an iMessage sender",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def imessage_register_imessage_sender(
         profile_id: str,
@@ -36163,12 +37003,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List iMessage sender orders",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def imessage_list_imessage_sender_orders(include_canceled: bool = False) -> str:
         """List iMessage sender orders
@@ -36187,12 +37028,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Order a new iMessage sender",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def imessage_order_imessage_sender(
         profile_id: str,
@@ -36259,12 +37101,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get iMessage sender status",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def imessage_get_imessage_sender(sender_id: str) -> str:
         """Get iMessage sender status
@@ -36281,12 +37124,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Update an iMessage sender",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def imessage_update_imessage_sender(
         sender_id: str,
@@ -36311,12 +37155,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Cancel an iMessage sender",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def imessage_cancel_imessage_sender(sender_id: str) -> str:
         """Cancel an iMessage sender
@@ -36337,12 +37182,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List iMessage audience",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def imessage_list_imessage_audience(
         account_id: str | None = None,
@@ -36375,12 +37221,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List iMessage sandbox contacts",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def imessage_list_imessage_sandbox_contacts() -> str:
         """List iMessage sandbox contacts
@@ -36405,12 +37252,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Add an iMessage sandbox contact",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def imessage_add_imessage_sandbox_contact(handle: str) -> str:
         """Add an iMessage sandbox contact
@@ -36427,12 +37275,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Remove an iMessage sandbox contact",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def imessage_remove_imessage_sandbox_contact(contact_id: str) -> str:
         """Remove an iMessage sandbox contact
@@ -36451,12 +37300,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Subscribe or opt out an iMessage contact",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def imessage_set_imessage_subscription(
         account_id: str, conversation_id: str, subscribed: bool
@@ -36481,12 +37331,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Create a tracked iMessage opt-in link",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def imessage_create_imessage_opt_in_link(
         sender_id: str,
@@ -36530,12 +37381,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List instantly available iMessage numbers",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def imessage_list_imessage_available_numbers(
         region: Literal["US", "GB"] | None = None,
@@ -36563,12 +37415,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Reserve an available iMessage number",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def imessage_reserve_imessage_available_number(number_id: str) -> str:
         """Reserve an available iMessage number
@@ -36587,12 +37440,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Start an iMessage group chat",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def imessage_create_imessage_group(
         account_id: str,
@@ -36632,12 +37486,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get an iMessage group",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def imessage_get_imessage_group(conversation_id: str, account_id: str) -> str:
         """Get an iMessage group
@@ -36657,12 +37512,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Rename an iMessage group or change its photo",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def imessage_update_imessage_group(
         conversation_id: str,
@@ -36692,12 +37548,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Add a participant to an iMessage group",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def imessage_add_imessage_group_participant(
         conversation_id: str, account_id: str, contact: str
@@ -36720,12 +37577,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Remove a participant from an iMessage group",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def imessage_remove_imessage_group_participant(
         conversation_id: str, account_id: str, contact: str
@@ -36750,12 +37608,13 @@ def register_generated_tools(mcp, _get_client):
     # INBOX_ANALYTICS
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get inbox messaging volume",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def inbox_analytics_get_inbox_volume(
         from_date: str,
@@ -36794,12 +37653,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get day × hour heatmap",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def inbox_analytics_get_inbox_heatmap(
         from_date: str,
@@ -36843,12 +37703,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get inbox source breakdown",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def inbox_analytics_get_inbox_source_breakdown(
         from_date: str,
@@ -36885,12 +37746,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get inbox response-time stats",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def inbox_analytics_get_inbox_response_time(
         from_date: str,
@@ -36933,12 +37795,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get top accounts by inbox volume",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def inbox_analytics_get_inbox_top_accounts(
         from_date: str,
@@ -36977,12 +37840,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List conversation analytics",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def inbox_analytics_list_inbox_conversation_analytics(
         from_date: str,
@@ -37047,12 +37911,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get conversation analytics",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def inbox_analytics_get_inbox_conversation_analytics(
         conversation_id: str, from_date: str, to_date: str | None = None
@@ -37087,12 +37952,13 @@ def register_generated_tools(mcp, _get_client):
     # INSTAGRAM
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List active Instagram stories",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def instagram_list_instagram_stories(
         account_id: str, include_expired: bool = False, limit: int = 100
@@ -37131,12 +37997,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get Instagram publishing limit",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def instagram_get_instagram_publishing_limit(account_id: str) -> str:
         """Get Instagram publishing limit
@@ -37161,12 +38028,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Search Instagram audio",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def instagram_search_instagram_audio(
         account_id: str,
@@ -37203,12 +38071,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get Instagram audio metadata",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def instagram_get_instagram_audio(account_id: str, audio_id: str) -> str:
         """Get Instagram audio metadata
@@ -37233,12 +38102,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Look up a public Instagram Business account",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def instagram_get_instagram_business_discovery(
         account_id: str, username: str, limit: int = 12
@@ -37275,12 +38145,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List the collaborators of an Instagram post",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def instagram_list_instagram_media_collaborators(
         account_id: str, media_id: str
@@ -37314,12 +38185,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List the live broadcasts of an Instagram account",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def instagram_list_instagram_live_media(account_id: str) -> str:
         """List the live broadcasts of an Instagram account
@@ -37346,12 +38218,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List the posts an Instagram account is tagged in",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def instagram_list_instagram_tagged_media(
         account_id: str, limit: int = 25, cursor: str | None = None
@@ -37386,12 +38259,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get a post that mentions an Instagram account in its caption",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def instagram_get_instagram_mentioned_media(account_id: str, media_id: str) -> str:
         """Get a post that mentions an Instagram account in its caption
@@ -37420,12 +38294,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get a comment that mentions an Instagram account",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def instagram_get_instagram_mentioned_comment(
         account_id: str, comment_id: str
@@ -37455,12 +38330,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get Instagram story insights",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def instagram_get_instagram_story_insights(account_id: str, story_id: str) -> str:
         """Get Instagram story insights
@@ -37491,12 +38367,13 @@ def register_generated_tools(mcp, _get_client):
     # INVITES
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Create invite token",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def invites_create_invite_token(
         scope: Literal["all", "profiles"],
@@ -37556,12 +38433,13 @@ def register_generated_tools(mcp, _get_client):
     # LEAD_GEN
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List submitted leads",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def lead_gen_list_leads(
         form_id: str | None = None,
@@ -37633,12 +38511,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Count leads by status",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def lead_gen_count_leads(
         account_id: str | None = None, campaign_id: str | None = None
@@ -37664,12 +38543,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Update a lead's status",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def lead_gen_update_lead(
         id: str,
@@ -37708,12 +38588,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List lead forms",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def lead_gen_list_lead_forms(
         account_id: str,
@@ -37750,12 +38631,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Create a lead form",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def lead_gen_create_lead_form(
         account_id: str,
@@ -37835,12 +38717,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get a lead form",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def lead_gen_get_lead_form(
         form_id: str, account_id: str, fields: str | None = None
@@ -37874,12 +38757,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Archive a lead form",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def lead_gen_archive_lead_form(form_id: str, account_id: str) -> str:
         """Archive a lead form
@@ -37906,12 +38790,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List leads for a single form",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def lead_gen_list_form_leads(
         form_id: str,
@@ -37963,12 +38848,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Create a test lead",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def lead_gen_create_test_lead(
         form_id: str, account_id: str, field_data: list[dict[str, Any]] | None
@@ -37995,12 +38881,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Delete a test lead",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def lead_gen_delete_test_lead(
         form_id: str, account_id: str, lead_id: str | None = None
@@ -38032,12 +38919,13 @@ def register_generated_tools(mcp, _get_client):
     # LEDGER
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get ledger balances",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def ledger_get_ledger_balances(
         scope_type: str, scope_id: str, currency: str = "usd"
@@ -38065,12 +38953,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List ledger entries",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def ledger_list_ledger_entries(
         scope_type: str | None = None,
@@ -38135,12 +39024,13 @@ def register_generated_tools(mcp, _get_client):
     # LOGS
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List activity logs",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def logs_list_logs(
         type: Literal[
@@ -38240,12 +39130,13 @@ def register_generated_tools(mcp, _get_client):
     # MEDIA
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get upload URL",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def media_get_media_presigned_url(
         filename: str,
@@ -38293,12 +39184,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Prepare media for a platform",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def media_prepare_media(
         url: str,
@@ -38350,12 +39242,13 @@ def register_generated_tools(mcp, _get_client):
     # MENTIONS
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List mentions",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def mentions_list_inbox_mentions(
         account_id: str | None = None,
@@ -38408,12 +39301,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Reply to a mention",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def mentions_reply_to_mention(
         account_id: str, media_id: str, message: str, comment_id: str | None = None
@@ -38454,12 +39348,13 @@ def register_generated_tools(mcp, _get_client):
     # MESSAGES
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List conversations",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def messages_list_inbox_conversations(
         profile_id: str | None = None,
@@ -38536,12 +39431,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Create conversation",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def messages_create_inbox_conversation(
         account_id: str,
@@ -38648,12 +39544,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Search conversations",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def messages_search_inbox_conversations(
         query: str,
@@ -38722,12 +39619,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get conversation",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def messages_get_inbox_conversation(conversation_id: str, account_id: str) -> str:
         """Get conversation
@@ -38747,12 +39645,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Update conversation status",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def messages_update_inbox_conversation(
         conversation_id: str, account_id: str, status: Literal["active", "archived"]
@@ -38775,12 +39674,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Delete conversation",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def messages_delete_inbox_conversation(
         conversation_id: str, account_id: str
@@ -38816,12 +39716,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List messages",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def messages_get_inbox_conversation_messages(
         conversation_id: str,
@@ -38875,12 +39776,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Send message",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def messages_send_inbox_message(
         conversation_id: str,
@@ -39037,12 +39939,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Edit message",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def messages_edit_inbox_message(
         conversation_id: str,
@@ -39078,12 +39981,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Delete message",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def messages_delete_inbox_message(
         conversation_id: str, message_id: str, account_id: str
@@ -39115,12 +40019,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Send typing indicator",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def messages_send_typing_indicator(conversation_id: str, account_id: str) -> str:
         """Send typing indicator
@@ -39155,12 +40060,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Change who answers a conversation (handover)",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def messages_set_conversation_thread_control(
         conversation_id: str,
@@ -39204,12 +40110,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Accept a message request",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def messages_accept_conversation_request(
         conversation_id: str, account_id: str, message: str
@@ -39238,12 +40145,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List the Page's conversation labels",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def messages_list_inbox_labels(account_id: str) -> str:
         """List the Page's conversation labels
@@ -39260,12 +40168,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Create a conversation label",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def messages_create_inbox_label(account_id: str, name: str) -> str:
         """Create a conversation label
@@ -39285,12 +40194,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Delete a conversation label",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def messages_delete_inbox_label(label_id: str, account_id: str) -> str:
         """Delete a conversation label
@@ -39310,12 +40220,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List the labels on a conversation",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def messages_list_conversation_labels(conversation_id: str, account_id: str) -> str:
         """List the labels on a conversation
@@ -39335,12 +40246,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Add a label to a conversation",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def messages_add_conversation_label(
         conversation_id: str, account_id: str, label_id: str
@@ -39365,12 +40277,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Remove a label from a conversation",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def messages_remove_conversation_label(
         conversation_id: str, label_id: str, account_id: str
@@ -39395,12 +40308,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Mark a conversation as read",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def messages_mark_conversation_read(conversation_id: str, account_id: str) -> str:
         """Mark a conversation as read
@@ -39435,12 +40349,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Add reaction",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def messages_add_message_reaction(
         conversation_id: str, message_id: str, account_id: str, emoji: str
@@ -39476,12 +40391,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Remove reaction",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def messages_remove_message_reaction(
         conversation_id: str, message_id: str, account_id: str
@@ -39515,12 +40431,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Upload media file",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def messages_upload_media_direct() -> str:
         """Upload media file
@@ -39546,12 +40463,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Resolve message attachment",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def messages_get_message_attachment(
         conversation_id: str,
@@ -39605,12 +40523,13 @@ def register_generated_tools(mcp, _get_client):
     # MESSAGING_ADS
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Create messaging ad",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def messaging_ads_create_messaging_ad(
         account_id: str,
@@ -40142,12 +41061,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Create Click-to-Call ad",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def messaging_ads_create_call_ad(
         account_id: str,
@@ -40648,12 +41568,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Create CTWA ad (deprecated)",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def messaging_ads_create_ctwa_ad(
         account_id: str,
@@ -41144,12 +42065,13 @@ def register_generated_tools(mcp, _get_client):
     # PHONE_NUMBERS
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List phone numbers",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def phone_numbers_list_phone_numbers(
         status: Literal[
@@ -41189,12 +42111,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get phone number",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def phone_numbers_get_phone_number(id: str) -> str:
         """Get phone number
@@ -41218,12 +42141,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Release phone number",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def phone_numbers_release_phone_number(id: str) -> str:
         """Release phone number
@@ -41244,12 +42168,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Purchase phone number",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def phone_numbers_purchase_phone_number(
         profile_id: str,
@@ -41330,12 +42255,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Resolve a number claim",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def phone_numbers_get_phone_number_claim(claim_id: str) -> str:
         """Resolve a number claim
@@ -41356,12 +42282,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List offerable number countries",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def phone_numbers_list_phone_number_countries() -> str:
         """List offerable number countries
@@ -41386,12 +42313,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Search available numbers",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def phone_numbers_search_available_phone_numbers(
         country: str = "US",
@@ -41452,12 +42380,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Check country availability",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def phone_numbers_check_phone_number_availability(
         country: str,
@@ -41492,12 +42421,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get KYC form spec",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def phone_numbers_get_phone_number_kyc_form(
         country: str,
@@ -41522,12 +42452,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Submit KYC",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def phone_numbers_submit_phone_number_kyc(
         profile_id: str,
@@ -41616,12 +42547,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="View a KYC document on file",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def phone_numbers_view_phone_number_kyc_document(document_id: str) -> str:
         """View a KYC document on file
@@ -41644,12 +42576,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Upload a KYC document",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def phone_numbers_upload_phone_number_kyc_document(
         x_filename: str, content_base64: str
@@ -41677,12 +42610,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Pre-validate KYC address",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def phone_numbers_validate_phone_number_kyc_address(
         country: str,
@@ -41724,12 +42658,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Create a hosted KYC link",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def phone_numbers_create_phone_number_kyc_link(
         profile_id: str,
@@ -41782,12 +42717,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Port numbers in",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def phone_numbers_create_phone_number_port_in(
         phone_numbers: list[str] | None,
@@ -41848,12 +42784,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List port-in orders",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def phone_numbers_list_phone_number_port_ins() -> str:
         """List port-in orders
@@ -41868,12 +42805,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Check portability",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def phone_numbers_check_phone_number_portability(
         phone_numbers: list[str] | None, claim_links: bool | None = None
@@ -41915,12 +42853,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Resolve a port claim",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def phone_numbers_get_phone_number_port_claim(claim_id: str) -> str:
         """Resolve a port claim
@@ -41942,12 +42881,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Upload a porting document",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def phone_numbers_upload_phone_number_port_in_document() -> str:
         """Upload a porting document
@@ -41971,12 +42911,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Country porting requirements",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def phone_numbers_get_phone_number_port_in_requirements(
         country: str,
@@ -42007,12 +42948,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="A port-in order's pending requirements",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def phone_numbers_get_phone_number_port_in_order_requirements(id: str) -> str:
         """A port-in order's pending requirements
@@ -42035,12 +42977,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Cancel a port-in",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def phone_numbers_cancel_phone_number_port_in(id: str) -> str:
         """Cancel a port-in
@@ -42061,12 +43004,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Pre-review a KYC packet",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def phone_numbers_review_phone_number_kyc_packet(
         country: str,
@@ -42103,12 +43047,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get declined requirements",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def phone_numbers_get_phone_number_remediation(id: str) -> str:
         """Get declined requirements
@@ -42129,12 +43074,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Resubmit a declined number",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def phone_numbers_remediate_phone_number(
         id: str,
@@ -42165,12 +43111,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Reply to the regulatory reviewer",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def phone_numbers_reply_to_phone_number_reviewer(
         id: str,
@@ -42202,12 +43149,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Respond to the regulatory reviewer (message + corrections)",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def phone_numbers_respond_to_phone_number_reviewer(
         id: str,
@@ -42254,12 +43202,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Watch an out-of-stock country",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def phone_numbers_create_phone_number_stock_watch(
         country: str,
@@ -42295,12 +43244,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List stock watches",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def phone_numbers_list_phone_number_stock_watches() -> str:
         """List stock watches"""
@@ -42312,12 +43262,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Stop watching a country",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def phone_numbers_delete_phone_number_stock_watch(id: str) -> str:
         """Stop watching a country
@@ -42332,12 +43283,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Request the WhatsApp verification code for a number",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def phone_numbers_request_phone_number_whats_app_code(
         id: str, method: Literal["SMS", "VOICE"] | None = None
@@ -42370,12 +43322,13 @@ def register_generated_tools(mcp, _get_client):
     # POSTS
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List posts",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def posts_list_posts(
         page: int = 1,
@@ -42483,12 +43436,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Create post",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def posts_create_post(
         title: str | None = None,
@@ -42618,12 +43572,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get post",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def posts_get_post(post_id: str) -> str:
         """Get post
@@ -42640,12 +43595,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Update post",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def posts_update_post(
         post_id: str,
@@ -42730,12 +43686,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Delete post",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def posts_delete_post(post_id: str) -> str:
         """Delete post
@@ -42776,12 +43733,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Bulk upload from CSV",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def posts_bulk_upload_posts(dry_run: bool = False) -> str:
         """Bulk upload from CSV
@@ -42820,12 +43778,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Approve or reject a post",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def posts_review_post(post_id: str, decision: Literal["approve", "reject"]) -> str:
         """Approve or reject a post
@@ -42846,12 +43805,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Unpublish post",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def posts_unpublish_post(
         post_id: str,
@@ -42888,12 +43848,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Pin post",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def posts_pin_post(
         post_id: str, platform: str, account_id: str | None = None
@@ -42916,12 +43877,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Unpin post",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def posts_unpin_post(
         post_id: str, platform: str, account_id: str | None = None
@@ -42944,12 +43906,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Edit published post",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def posts_edit_post(
         post_id: str,
@@ -43011,12 +43974,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Update post metadata",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def posts_update_post_metadata(
         post_id: str,
@@ -43103,12 +44067,13 @@ def register_generated_tools(mcp, _get_client):
     # PRODUCT_CATALOGS
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List Meta product catalogs",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def product_catalogs_list_ad_catalogs(
         account_id: str,
@@ -43157,12 +44122,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Create a Meta product catalog",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def product_catalogs_create_ad_catalog(
         account_id: str,
@@ -43220,12 +44186,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get a product catalog",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def product_catalogs_get_ad_catalog(
         catalog_id: str, account_id: str, catalog_account_id: str | None = None
@@ -43252,12 +44219,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Delete a product catalog",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def product_catalogs_delete_ad_catalog(
         catalog_id: str, account_id: str, catalog_account_id: str | None = None
@@ -43286,12 +44254,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List a catalog's products",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def product_catalogs_list_ad_catalog_products(
         catalog_id: str,
@@ -43331,12 +44300,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Add a product to a catalog",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def product_catalogs_create_ad_catalog_product(
         catalog_id: str,
@@ -43370,12 +44340,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Create, update or delete products in bulk",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def product_catalogs_batch_ad_catalog_products(
         catalog_id: str,
@@ -43409,12 +44380,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get a bulk request's status",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def product_catalogs_get_ad_catalog_batch(
         catalog_id: str,
@@ -43446,12 +44418,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get a product",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def product_catalogs_get_ad_catalog_product(
         catalog_id: str,
@@ -43483,12 +44456,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Update a product",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def product_catalogs_update_ad_catalog_product(
         catalog_id: str,
@@ -43525,12 +44499,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Delete a product",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def product_catalogs_delete_ad_catalog_product(
         catalog_id: str,
@@ -43562,12 +44537,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List a catalog's product feeds",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def product_catalogs_list_ad_catalog_feeds(
         catalog_id: str, account_id: str, catalog_account_id: str | None = None
@@ -43594,12 +44570,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Create a product feed",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def product_catalogs_create_ad_catalog_feed(
         catalog_id: str,
@@ -43636,12 +44613,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List a feed's uploads",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def product_catalogs_list_ad_catalog_feed_uploads(
         catalog_id: str,
@@ -43673,12 +44651,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Fetch a feed file now",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def product_catalogs_create_ad_catalog_feed_upload(
         catalog_id: str,
@@ -43715,12 +44694,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List a catalog's product sets",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def product_catalogs_list_ad_catalog_product_sets(
         catalog_id: str, account_id: str, catalog_account_id: str | None = None
@@ -43749,12 +44729,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Create a product set",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def product_catalogs_create_ad_catalog_product_set(
         catalog_id: str,
@@ -43791,12 +44772,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Update a product set",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def product_catalogs_update_ad_catalog_product_set(
         catalog_id: str,
@@ -43834,12 +44816,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Delete a product set",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def product_catalogs_delete_ad_catalog_product_set(
         catalog_id: str,
@@ -43873,12 +44856,13 @@ def register_generated_tools(mcp, _get_client):
     # PRODUCTS
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List products",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def products_list_products(
         account_id: str,
@@ -43924,12 +44908,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get a product",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def products_get_product(account_id: str, product_id: str) -> str:
         """Get a product
@@ -43956,12 +44941,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Update a product",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def products_update_product(
         account_id: str,
@@ -44036,12 +45022,13 @@ def register_generated_tools(mcp, _get_client):
     # PROFILES
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List profiles",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def profiles_list_profiles(
         include_over_limit: bool = False,
@@ -44074,12 +45061,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Create profile",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def profiles_create_profile(
         name: str,
@@ -44124,12 +45112,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get profile",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def profiles_get_profile(profile_id: str) -> str:
         """Get profile
@@ -44146,12 +45135,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Update profile",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def profiles_update_profile(
         profile_id: str,
@@ -44193,12 +45183,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Delete profile",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def profiles_delete_profile(profile_id: str) -> str:
         """Delete profile
@@ -44217,12 +45208,13 @@ def register_generated_tools(mcp, _get_client):
     # QUEUE
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List schedules",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def queue_list_queue_slots(
         profile_id: str,
@@ -44247,12 +45239,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Create schedule",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def queue_create_queue_slot(
         profile_id: str,
@@ -44286,12 +45279,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Update schedule",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def queue_update_queue_slot(
         profile_id: str,
@@ -44333,12 +45327,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Delete schedule",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def queue_delete_queue_slot(profile_id: str, queue_id: str | None = None) -> str:
         """Delete schedule
@@ -44360,12 +45355,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Preview upcoming slots",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def queue_preview_queue(
         profile_id: str, queue_id: str | None = None, count: int = 20
@@ -44388,12 +45384,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get next available slot",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def queue_get_next_queue_slot(profile_id: str, queue_id: str | None = None) -> str:
         """Get next available slot
@@ -44415,12 +45412,13 @@ def register_generated_tools(mcp, _get_client):
     # RCS
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List RCS brands",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def rcs_list_rcs_brands() -> str:
         """List RCS brands
@@ -44434,12 +45432,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List RCS agents",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def rcs_list_rcs_agents(include_closed: bool | None = None) -> str:
         """List RCS agents
@@ -44454,12 +45453,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Request an RCS agent",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def rcs_create_rcs_agent(
         profile_id: str,
@@ -44503,12 +45503,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get an RCS agent",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def rcs_get_rcs_agent(agent_id: str) -> str:
         """Get an RCS agent
@@ -44523,12 +45524,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Update an RCS agent",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def rcs_update_rcs_agent(
         agent_id: str,
@@ -44567,12 +45569,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Deactivate an RCS agent",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def rcs_deactivate_rcs_agent(agent_id: str) -> str:
         """Deactivate an RCS agent
@@ -44589,12 +45592,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Send the launch filing",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def rcs_request_rcs_agent_launch(
         agent_id: str,
@@ -44641,12 +45645,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List RCS test phones",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def rcs_list_rcs_test_devices(agent_id: str) -> str:
         """List RCS test phones
@@ -44661,12 +45666,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Invite an RCS test phone",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def rcs_add_rcs_test_device(agent_id: str, phone_number: str) -> str:
         """Invite an RCS test phone
@@ -44688,12 +45694,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Remove an RCS test phone",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def rcs_remove_rcs_test_device(agent_id: str, test_device_id: str) -> str:
         """Remove an RCS test phone
@@ -44711,12 +45718,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Upload an RCS logo or banner",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def rcs_upload_rcs_asset() -> str:
         """Upload an RCS logo or banner
@@ -44732,12 +45740,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Send an RCS message",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def rcs_send_rcs_message(
         agent_id: str,
@@ -44788,12 +45797,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Check RCS capability",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def rcs_get_rcs_capabilities(agent_id: str, numbers: str) -> str:
         """Check RCS capability
@@ -44815,12 +45825,13 @@ def register_generated_tools(mcp, _get_client):
     # REACH_AND_FREQUENCY
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Create reach-frequency prediction",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def reach_and_frequency_create_rf_prediction(
         account_id: str,
@@ -44891,12 +45902,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get reach-frequency prediction",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def reach_and_frequency_get_rf_prediction(
         prediction_id: str, account_id: str, ad_account_id: str
@@ -44923,12 +45935,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Cancel reach-frequency booking",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def reach_and_frequency_cancel_rf_reservation(
         prediction_id: str, account_id: str, ad_account_id: str
@@ -44957,12 +45970,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Reserve reach-frequency inventory",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def reach_and_frequency_reserve_rf_prediction(
         prediction_id: str, account_id: str, ad_account_id: str
@@ -44995,12 +46009,13 @@ def register_generated_tools(mcp, _get_client):
     # REDDIT
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Search posts",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def reddit_search_reddit(
         account_id: str,
@@ -45041,12 +46056,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get subreddit feed",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def reddit_get_reddit_feed(
         account_id: str,
@@ -45084,12 +46100,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get the comments of a Reddit post",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def reddit_get_reddit_post_comments(
         post_id: str,
@@ -45140,12 +46157,13 @@ def register_generated_tools(mcp, _get_client):
     # REVIEWS
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List reviews",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def reviews_list_inbox_reviews(
         profile_id: str | None = None,
@@ -45196,12 +46214,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Reply to review",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def reviews_reply_to_inbox_review(
         review_id: str, account_id: str, message: str
@@ -45240,12 +46259,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Delete review reply",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def reviews_delete_inbox_review_reply(review_id: str, account_id: str) -> str:
         """Delete review reply
@@ -45267,12 +46287,13 @@ def register_generated_tools(mcp, _get_client):
     # SEQUENCES
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List sequences",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def sequences_list_sequences(
         profile_id: str | None = None,
@@ -45299,12 +46320,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Create sequence",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def sequences_create_sequence(
         profile_id: str,
@@ -45358,12 +46380,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get sequence with steps",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def sequences_get_sequence(sequence_id: str) -> str:
         """Get sequence with steps
@@ -45380,12 +46403,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Update sequence",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def sequences_update_sequence(
         sequence_id: str,
@@ -45421,12 +46445,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Delete sequence",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def sequences_delete_sequence(sequence_id: str) -> str:
         """Delete sequence
@@ -45443,12 +46468,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Activate sequence",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def sequences_activate_sequence(sequence_id: str) -> str:
         """Activate sequence
@@ -45465,12 +46491,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Pause sequence",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def sequences_pause_sequence(sequence_id: str) -> str:
         """Pause sequence
@@ -45487,12 +46514,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Enroll contacts in a sequence",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def sequences_enroll_contacts(
         sequence_id: str,
@@ -45519,12 +46547,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Unenroll contact",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def sequences_unenroll_contact(sequence_id: str, contact_id: str) -> str:
         """Unenroll contact
@@ -45544,12 +46573,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List enrollments for a sequence",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def sequences_list_sequence_enrollments(
         sequence_id: str,
@@ -45578,12 +46608,13 @@ def register_generated_tools(mcp, _get_client):
     # SLACK
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List Slack workspace members",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def slack_list_slack_members(
         account_id: str, query: str | None = None, limit: int = 50
@@ -45608,12 +46639,13 @@ def register_generated_tools(mcp, _get_client):
     # SMS
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Send an SMS/MMS",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def sms_send_sms(
         from_: str,
@@ -45661,12 +46693,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Look up carrier + line type",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def sms_lookup_sms_number(number: str) -> str:
         """Look up carrier + line type
@@ -45687,12 +46720,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List SMS opt-outs",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def sms_list_sms_opt_outs(
         format: Literal["json", "csv"] = "json", limit: int = 500
@@ -45715,12 +46749,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Create an alphanumeric sender ID",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def sms_create_sms_sender_id(sender_id: str) -> str:
         """Create an alphanumeric sender ID
@@ -45750,12 +46785,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List alphanumeric sender IDs",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def sms_list_sms_sender_ids() -> str:
         """List alphanumeric sender IDs"""
@@ -45767,12 +46803,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Request a higher sender ID daily limit",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def sms_request_sms_sender_id_limit_increase(
         requested_cap: int, reason: str
@@ -45796,12 +46833,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Delete an alphanumeric sender ID",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def sms_delete_sms_sender_id(id: str) -> str:
         """Delete an alphanumeric sender ID
@@ -45819,12 +46857,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Start a carrier registration",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def sms_start_sms_registration(
         registration_type: Literal["standard_10dlc", "sole_prop_10dlc", "toll_free"],
@@ -45876,12 +46915,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List carrier registrations",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def sms_list_sms_registrations(include_deactivated: bool | None = None) -> str:
         """List carrier registrations
@@ -45898,12 +46938,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Pre-check a carrier registration",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def sms_preflight_sms_registration(
         registration_type: Literal["standard_10dlc", "sole_prop_10dlc"],
@@ -45944,12 +46985,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Deactivate a brand/campaign registration",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def sms_deactivate_sms_registration(id: str) -> str:
         """Deactivate a brand/campaign registration
@@ -45969,12 +47011,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get a carrier registration",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def sms_get_sms_registration(id: str) -> str:
         """Get a carrier registration
@@ -45991,12 +47034,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Submit the sole-prop OTP",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def sms_verify_sms_registration_otp(id: str, otp_pin: str) -> str:
         """Submit the sole-prop OTP
@@ -46016,12 +47060,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Re-send the sole-prop OTP",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def sms_resend_sms_registration_otp(id: str) -> str:
         """Re-send the sole-prop OTP
@@ -46041,12 +47086,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Appeal a rejected campaign",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def sms_appeal_sms_registration(
         id: str,
@@ -46089,12 +47135,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Reply to a change request",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def sms_respond_to_sms_registration_review(
         id: str,
@@ -46132,12 +47179,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Upload opt-in form proof",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def sms_upload_sms_opt_in_proof_file() -> str:
         """Upload opt-in form proof
@@ -46155,12 +47203,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Upload opt-in form proof for an appeal",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def sms_upload_sms_opt_in_proof(id: str) -> str:
         """Upload opt-in form proof for an appeal
@@ -46181,12 +47230,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Create a registration share link",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def sms_share_sms_registration(number_id: str) -> str:
         """Create a registration share link
@@ -46206,12 +47256,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Enable SMS on a number",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def sms_enable_sms_on_number(id: str) -> str:
         """Enable SMS on a number
@@ -46243,12 +47294,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Disable SMS on a number",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def sms_disable_sms_on_number(id: str) -> str:
         """Disable SMS on a number
@@ -46267,12 +47319,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Add number to SMS registration",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def sms_reuse_sms_registration_for_number(id: str) -> str:
         """Add number to SMS registration
@@ -46295,12 +47348,13 @@ def register_generated_tools(mcp, _get_client):
     # SUPPORT_ASSISTANT
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List a thread's support answers",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def support_assistant_list_support_answers(
         thread_id: str, limit: int = 20, cursor: str | None = None
@@ -46328,12 +47382,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get a support answer",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def support_assistant_get_support_answer(run_id: str) -> str:
         """Get a support answer
@@ -46356,12 +47411,13 @@ def register_generated_tools(mcp, _get_client):
     # TRACKING_TAGS
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get ad tracking tags",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def tracking_tags_get_ad_tracking_tags(ad_id: str) -> str:
         """Get ad tracking tags
@@ -46391,12 +47447,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Set ad tracking tags",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def tracking_tags_update_ad_tracking_tags(
         ad_id: str,
@@ -46453,12 +47510,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List tracking tags",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def tracking_tags_list_tracking_tags(
         account_id: str, ad_account_id: str | None = None
@@ -46496,12 +47554,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Create a tracking tag",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def tracking_tags_create_tracking_tag(
         account_id: str,
@@ -46589,12 +47648,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get a tracking tag",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def tracking_tags_get_tracking_tag(
         account_id: str, tag_id: str, ad_account_id: str | None = None
@@ -46641,12 +47701,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Update a tracking tag",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def tracking_tags_update_tracking_tag(
         account_id: str,
@@ -46739,12 +47800,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List accounts it is shared with",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def tracking_tags_list_tracking_tag_shared_accounts(
         account_id: str, tag_id: str
@@ -46777,12 +47839,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Share with an ad account",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def tracking_tags_add_tracking_tag_shared_account(
         account_id: str, tag_id: str, ad_account_id: str
@@ -46824,12 +47887,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Stop sharing with an account",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def tracking_tags_remove_tracking_tag_shared_account(
         account_id: str, tag_id: str, ad_account_id: str | None = None
@@ -46864,12 +47928,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Install on a Shopify, WordPress, Wix or Webflow site",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def tracking_tags_install_tracking_tag_on_store(
         account_id: str,
@@ -46931,12 +47996,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get store install status",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def tracking_tags_get_tracking_tag_store_install(
         account_id: str,
@@ -46984,12 +48050,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Remove from a Shopify, WordPress, Wix or Webflow site",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def tracking_tags_remove_tracking_tag_from_store(
         account_id: str,
@@ -47033,12 +48100,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List conversion events",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def tracking_tags_list_tracking_tag_events(
         account_id: str, tag_id: str, ad_account_id: str | None = None
@@ -47087,12 +48155,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Create a conversion event",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def tracking_tags_create_tracking_tag_event(
         account_id: str,
@@ -47169,12 +48238,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Update a conversion event",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def tracking_tags_update_tracking_tag_event(
         account_id: str,
@@ -47261,12 +48331,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Delete a conversion event",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def tracking_tags_delete_tracking_tag_event(
         account_id: str, tag_id: str, event_id: str, ad_account_id: str | None = None
@@ -47311,12 +48382,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List tag users",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def tracking_tags_list_tracking_tag_users(account_id: str, tag_id: str) -> str:
         """List tag users
@@ -47346,12 +48418,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Assign a user to a tag",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def tracking_tags_assign_tracking_tag_user(
         account_id: str, tag_id: str, user_id: str, tasks: list[str] | None
@@ -47384,12 +48457,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Remove a user from a tag",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def tracking_tags_remove_tracking_tag_user(
         account_id: str, tag_id: str, user_id: str
@@ -47416,12 +48490,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List partner businesses of a tag",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def tracking_tags_list_tracking_tag_partners(account_id: str, tag_id: str) -> str:
         """List partner businesses of a tag
@@ -47450,12 +48525,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get tag diagnostics",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def tracking_tags_get_tracking_tag_diagnostics(account_id: str, tag_id: str) -> str:
         """Get tag diagnostics
@@ -47482,12 +48558,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get aggregated event stats",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def tracking_tags_get_tracking_tag_stats(
         account_id: str,
@@ -47567,12 +48644,13 @@ def register_generated_tools(mcp, _get_client):
     # TREASURY
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get balance",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def treasury_get_balance() -> str:
         """Get balance
@@ -47596,12 +48674,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get auto top-up settings",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def treasury_get_auto_recharge() -> str:
         """Get auto top-up settings
@@ -47623,12 +48702,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Update auto top-up settings",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def treasury_update_auto_recharge(
         enabled: bool | None = None,
@@ -47671,12 +48751,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Add funds",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def treasury_create_topup(
         amount_cents: int,
@@ -47712,12 +48793,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List top-ups",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def treasury_list_topups(limit: int = 50, skip: int = 0) -> str:
         """List top-ups
@@ -47733,12 +48815,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Preview a top-up's tax",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def treasury_preview_topup(amount_cents: int) -> str:
         """Preview a top-up's tax
@@ -47759,12 +48842,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get a top-up receipt",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def treasury_get_topup_receipt(topup_id: str, download: bool | None = None) -> str:
         """Get a top-up receipt
@@ -47786,12 +48870,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get a top-up invoice",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def treasury_get_topup_invoice(topup_id: str) -> str:
         """Get a top-up invoice
@@ -47815,12 +48900,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get a top-up invoice (alias)",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def treasury_get_topup_statement(topup_id: str) -> str:
         """Get a top-up invoice (alias)
@@ -47846,12 +48932,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Confirm a top-up",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def treasury_confirm_topup(topup_id: str) -> str:
         """Confirm a top-up
@@ -47874,12 +48961,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Cancel a top-up",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def treasury_cancel_topup(topup_id: str) -> str:
         """Cancel a top-up
@@ -47902,12 +48990,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List payees",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def treasury_list_payees() -> str:
         """List payees
@@ -47921,12 +49010,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Create a payee onboarding link",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def treasury_create_payee_onboarding_link(payee_id: str) -> str:
         """Create a payee onboarding link
@@ -47943,12 +49033,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Create a transfer (removed)",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def treasury_create_transfer(
         payee_id: str, amount_cents: int, reference: dict[str, Any] | None = None
@@ -47973,12 +49064,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List transfers",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def treasury_list_transfers(limit: int = 50, skip: int = 0) -> str:
         """List transfers
@@ -47994,12 +49086,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get a transfer",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def treasury_get_transfer(transfer_id: str) -> str:
         """Get a transfer
@@ -48014,12 +49107,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get a payout batch",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def treasury_get_payout_batch(batch_id: str) -> str:
         """Get a payout batch
@@ -48036,12 +49130,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Confirm a payout batch payment",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def treasury_confirm_payout_batch(batch_id: str) -> str:
         """Confirm a payout batch payment
@@ -48064,12 +49159,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Cancel an unpaid payout batch",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def treasury_cancel_payout_batch(batch_id: str) -> str:
         """Cancel an unpaid payout batch
@@ -48093,12 +49189,13 @@ def register_generated_tools(mcp, _get_client):
     # TWITTER_ENGAGEMENT
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Retweet a post",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def twitter_engagement_retweet_post(account_id: str, tweet_id: str) -> str:
         """Retweet a post
@@ -48119,12 +49216,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Undo retweet",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def twitter_engagement_undo_retweet(account_id: str, tweet_id: str) -> str:
         """Undo retweet
@@ -48144,12 +49242,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Bookmark a tweet",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def twitter_engagement_bookmark_post(account_id: str, tweet_id: str) -> str:
         """Bookmark a tweet
@@ -48171,12 +49270,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Remove bookmark",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def twitter_engagement_remove_bookmark(account_id: str, tweet_id: str) -> str:
         """Remove bookmark
@@ -48196,12 +49296,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Follow a user",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def twitter_engagement_follow_user(account_id: str, target_user_id: str) -> str:
         """Follow a user
@@ -48223,12 +49324,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Unfollow a user",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def twitter_engagement_unfollow_user(account_id: str, target_user_id: str) -> str:
         """Unfollow a user
@@ -48248,12 +49350,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Search recent tweets",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def twitter_engagement_search_tweets(
         account_id: str,
@@ -48312,12 +49415,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Look up a tweet",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def twitter_engagement_get_tweet(
         account_id: str, tweet_id: str, id: str | None = None
@@ -48349,12 +49453,13 @@ def register_generated_tools(mcp, _get_client):
     # USAGE
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Account billing snapshot (plan, cycle, balance, caps, status)",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def usage_get_billing() -> str:
         """Account billing snapshot (plan, cycle, balance, caps, status)
@@ -48376,12 +49481,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get X API pricing table",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def usage_get_x_api_pricing() -> str:
         """Get X API pricing table
@@ -48404,12 +49510,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Usage snapshot (default) or billed-spend metering (with params)",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def usage_get_usage(
         reconcile: bool | None = None,
@@ -48476,12 +49583,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get plan and usage snapshot (plan, limits, payment status)",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def usage_get_usage_stats(reconcile: bool | None = None) -> str:
         """Get plan and usage snapshot (plan, limits, payment status)
@@ -48518,12 +49626,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Calling usage and cost",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def usage_get_calls_usage(
         since: str | None = None,
@@ -48567,12 +49676,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="SMS usage (volumes)",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def usage_get_sms_usage(
         since: str | None = None,
@@ -48607,12 +49717,13 @@ def register_generated_tools(mcp, _get_client):
     # USERS
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List users",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def users_list_users() -> str:
         """List users
@@ -48626,12 +49737,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get user",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def users_get_user(user_id: str) -> str:
         """Get user
@@ -48650,12 +49762,13 @@ def register_generated_tools(mcp, _get_client):
     # VALIDATE
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Validate character count",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def validate_post_length(text: str) -> str:
         """Validate character count
@@ -48692,12 +49805,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Validate post content",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def validate_post(
         platforms: list[dict[str, Any]] | None,
@@ -48730,12 +49844,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Validate media URL",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def validate_media(url: str) -> str:
         """Validate media URL
@@ -48763,12 +49878,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Check subreddit existence",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def validate_subreddit(name: str, account_id: str | None = None) -> str:
         """Check subreddit existence
@@ -48794,12 +49910,13 @@ def register_generated_tools(mcp, _get_client):
     # VERIFY
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Send a verification code",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def verify_create_verification(
         channel: Literal["sms", "whatsapp"],
@@ -48848,12 +49965,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get a verification",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def verify_get_verification(verification_id: str) -> str:
         """Get a verification
@@ -48872,12 +49990,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Check a verification code",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def verify_check_verification(verification_id: str, code: str) -> str:
         """Check a verification code
@@ -48904,12 +50023,13 @@ def register_generated_tools(mcp, _get_client):
     # VOICE
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Place an outbound phone call",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def voice_create_voice_call(
         to: str,
@@ -48969,12 +50089,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List phone calls",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def voice_list_voice_calls(
         status: Literal["ringing", "answered", "ended", "failed"] | None = None,
@@ -49010,12 +50131,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get a phone call",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def voice_get_voice_call(id: str) -> str:
         """Get a phone call
@@ -49032,12 +50154,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Hang up a live call",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def voice_end_voice_call(id: str) -> str:
         """Hang up a live call
@@ -49067,12 +50190,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get a call recording",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def voice_get_voice_call_recording(
         id: str, as_: Literal["json"] | None = None
@@ -49095,12 +50219,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Blind-transfer a live call",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def voice_transfer_voice_call(id: str, to: str) -> str:
         """Blind-transfer a live call
@@ -49120,12 +50245,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Estimate call cost",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def voice_get_voice_call_estimate(
         to: str,
@@ -49169,12 +50295,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Mint a browser softphone session",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def voice_create_voice_web_session() -> str:
         """Mint a browser softphone session
@@ -49193,12 +50320,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Dial from the browser softphone",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def voice_dial_voice_web_call(
         to: str,
@@ -49236,12 +50364,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Enable phone calling on a number",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def voice_enable_voice_on_number(
         id: str,
@@ -49315,12 +50444,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Disable phone calling on a number",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def voice_disable_voice_on_number(id: str) -> str:
         """Disable phone calling on a number
@@ -49338,12 +50468,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Create a SIP trunk",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def voice_create_sip_trunk(
         label: str,
@@ -49380,12 +50511,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List SIP trunks",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def voice_list_sip_trunks() -> str:
         """List SIP trunks"""
@@ -49397,12 +50529,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get a SIP trunk",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def voice_get_sip_trunk(id: str) -> str:
         """Get a SIP trunk
@@ -49417,12 +50550,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Delete a SIP trunk",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def voice_delete_sip_trunk(id: str) -> str:
         """Delete a SIP trunk
@@ -49440,12 +50574,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Rotate a SIP trunk's password",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def voice_rotate_sip_trunk_credentials(id: str) -> str:
         """Rotate a SIP trunk's password
@@ -49463,12 +50598,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Attach a number to a SIP trunk",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def voice_attach_number_to_sip_trunk(id: str, trunk_id: str) -> str:
         """Attach a number to a SIP trunk
@@ -49490,12 +50626,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Detach a number from its SIP trunk",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def voice_detach_number_from_sip_trunk(id: str) -> str:
         """Detach a number from its SIP trunk
@@ -49515,12 +50652,13 @@ def register_generated_tools(mcp, _get_client):
     # WEBHOOKS
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List webhooks",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def webhooks_get_webhook_settings() -> str:
         """List webhooks
@@ -49534,12 +50672,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Create webhook",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def webhooks_create_webhook_settings(
         name: str,
@@ -49769,12 +50908,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Update webhook",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def webhooks_update_webhook_settings(
         webhook_id: str | None = None,
@@ -50025,12 +51165,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Delete webhook",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def webhooks_delete_webhook_settings(
         webhook_id: str | None = None, id: str | None = None
@@ -50052,12 +51193,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List webhook delivery logs",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def webhooks_get_webhook_logs(
         limit: int = 50,
@@ -50108,12 +51250,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Redeliver a webhook event",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def webhooks_redeliver_webhook_event(webhook_id: str, event_id: str) -> str:
         """Redeliver a webhook event
@@ -50145,12 +51288,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Send test webhook",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def webhooks_test_webhook(
         webhook_id: str,
@@ -50346,12 +51490,13 @@ def register_generated_tools(mcp, _get_client):
     # WHATSAPP
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Register a connected WhatsApp number on the Cloud API",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def whatsapp_register_whats_app_number(
         account_id: str, pin: str | None = None
@@ -50379,12 +51524,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Request a Meta re-verification code for a BYO WhatsApp number",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def whatsapp_request_whats_app_verification_code(
         account_id: str,
@@ -50413,12 +51559,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Verify the Meta re-verification code for a BYO WhatsApp number",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def whatsapp_verify_whats_app_number(account_id: str, code: str) -> str:
         """Verify the Meta re-verification code for a BYO WhatsApp number
@@ -50440,12 +51587,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Download WhatsApp media",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def whatsapp_get_whats_app_media(media_id: str, account_id: str) -> str:
         """Download WhatsApp media
@@ -50477,12 +51625,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List templates",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def whatsapp_get_whats_app_templates(
         account_id: str,
@@ -50520,12 +51669,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Create template",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def whatsapp_create_whats_app_template(
         account_id: str,
@@ -50592,12 +51742,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get template",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def whatsapp_get_whats_app_template(
         template_name: str, account_id: str, language: str | None = None
@@ -50631,12 +51782,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Update template",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def whatsapp_update_whats_app_template(
         template_name: str,
@@ -50692,12 +51844,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Delete template",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def whatsapp_delete_whats_app_template(
         template_name: str, account_id: str, language: str | None = None
@@ -50725,12 +51878,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get template by id",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def whatsapp_get_whats_app_template_by_id(template_id: str, account_id: str) -> str:
         """Get template by id
@@ -50751,12 +51905,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Update template by id",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def whatsapp_update_whats_app_template_by_id(
         template_id: str,
@@ -50808,12 +51963,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Delete template by id",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def whatsapp_delete_whats_app_template_by_id(
         template_id: str, account_id: str
@@ -50836,12 +51992,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List the catalogs linked to a WhatsApp number",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def whatsapp_list_whats_app_catalogs(
         account_id: str, catalog_account_id: str | None = None
@@ -50869,12 +52026,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Link a catalog to a WhatsApp number",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def whatsapp_link_whats_app_catalog(
         account_id: str, catalog_id: str, catalog_account_id: str | None = None
@@ -50899,12 +52057,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Unlink a catalog from a WhatsApp number",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def whatsapp_unlink_whats_app_catalog(
         account_id: str, catalog_id: str, catalog_account_id: str | None = None
@@ -50927,12 +52086,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get a number's commerce settings",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def whatsapp_get_whats_app_commerce_settings(
         account_id: str, catalog_account_id: str | None = None
@@ -50954,12 +52114,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Update a number's commerce settings",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def whatsapp_update_whats_app_commerce_settings(
         account_id: str,
@@ -50987,12 +52148,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get ice breakers and commands",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def whatsapp_get_whats_app_conversational_automation(account_id: str) -> str:
         """Get ice breakers and commands
@@ -51011,12 +52173,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Set ice breakers and commands",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def whatsapp_set_whats_app_conversational_automation(
         account_id: str,
@@ -51046,12 +52209,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Clear ice breakers and commands",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def whatsapp_delete_whats_app_conversational_automation(account_id: str) -> str:
         """Clear ice breakers and commands
@@ -51070,12 +52234,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get business profile",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def whatsapp_get_whats_app_business_profile(account_id: str) -> str:
         """Get business profile
@@ -51094,12 +52259,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Update business profile",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def whatsapp_update_whats_app_business_profile(
         account_id: str,
@@ -51142,12 +52308,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Upload profile picture",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def whatsapp_upload_whats_app_profile_photo(account_id: str, url: str) -> str:
         """Upload profile picture
@@ -51174,12 +52341,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get display name status",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def whatsapp_get_whats_app_display_name(account_id: str) -> str:
         """Get display name status
@@ -51197,12 +52365,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Request display name change",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def whatsapp_update_whats_app_display_name(
         account_id: str, display_name: str
@@ -51226,12 +52395,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get business username",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def whatsapp_get_whatsapp_business_username(account_id: str) -> str:
         """Get business username
@@ -51253,12 +52423,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Set business username",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def whatsapp_set_whatsapp_business_username(
         account_id: str,
@@ -51309,12 +52480,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Delete business username",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def whatsapp_delete_whatsapp_business_username(account_id: str) -> str:
         """Delete business username
@@ -51334,12 +52506,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get username suggestions",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def whatsapp_get_whatsapp_business_username_suggestions(account_id: str) -> str:
         """Get username suggestions
@@ -51359,12 +52532,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Check if a user is blocked",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def whatsapp_get_whats_app_block_status(account_id: str, user: str) -> str:
         """Check if a user is blocked
@@ -51388,12 +52562,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List blocked users",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def whatsapp_get_whats_app_blocked_users(
         account_id: str, limit: int | None = None, after: str | None = None
@@ -51418,12 +52593,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Block users",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def whatsapp_block_whats_app_users(account_id: str, users: list[str] | None) -> str:
         """Block users
@@ -51451,12 +52627,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Unblock users",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def whatsapp_unblock_whats_app_users(
         account_id: str, users: list[str] | None
@@ -51480,12 +52657,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List account notifications",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def whatsapp_list_whats_app_account_events(account_id: str, limit: int = 50) -> str:
         """List account notifications
@@ -51512,12 +52690,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get CTWA conversions dataset",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def whatsapp_get_whats_app_dataset(account_id: str) -> str:
         """Get CTWA conversions dataset
@@ -51538,12 +52717,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Provision CTWA dataset",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def whatsapp_create_whats_app_dataset(account_id: str) -> str:
         """Provision CTWA dataset
@@ -51571,12 +52751,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List active groups",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def whatsapp_list_whats_app_group_chats(
         account_id: str, limit: int = 25, after: str | None = None
@@ -51602,12 +52783,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Create group",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def whatsapp_create_whats_app_group_chat(
         account_id: str,
@@ -51639,12 +52821,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get group info",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def whatsapp_get_whats_app_group_chat(group_id: str, account_id: str) -> str:
         """Get group info
@@ -51667,12 +52850,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Update group settings",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def whatsapp_update_whats_app_group_chat(
         group_id: str,
@@ -51707,12 +52891,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Delete group",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def whatsapp_delete_whats_app_group_chat(group_id: str, account_id: str) -> str:
         """Delete group
@@ -51734,12 +52919,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Add participants",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def whatsapp_add_whats_app_group_participants(
         group_id: str, account_id: str, phone_numbers: list[str] | None
@@ -51764,12 +52950,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Remove participants",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def whatsapp_remove_whats_app_group_participants(
         group_id: str, account_id: str, phone_numbers: list[str] | None
@@ -51794,12 +52981,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Create invite link",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def whatsapp_create_whats_app_group_invite_link(
         group_id: str, account_id: str
@@ -51823,12 +53011,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List join requests",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def whatsapp_list_whats_app_group_join_requests(
         group_id: str, account_id: str
@@ -51852,12 +53041,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Approve join requests",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def whatsapp_approve_whats_app_group_join_requests(
         group_id: str, account_id: str, phone_numbers: list[str] | None
@@ -51882,12 +53072,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Reject join requests",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def whatsapp_reject_whats_app_group_join_requests(
         group_id: str, account_id: str, phone_numbers: list[str] | None
@@ -51912,12 +53103,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List conversion events",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def whatsapp_list_whats_app_conversions(account_id: str, limit: int = 50) -> str:
         """List conversion events
@@ -51951,12 +53143,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Send WhatsApp conversion event",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def whatsapp_send_whats_app_conversion(
         account_id: str,
@@ -52073,12 +53266,13 @@ def register_generated_tools(mcp, _get_client):
     # WHATSAPP_CALLING
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get calling config for an account",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def whatsapp_calling_get_whats_app_calling_config(account_id: str) -> str:
         """Get calling config for an account
@@ -52105,12 +53299,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Enable calling on a number",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def whatsapp_calling_enable_whats_app_calling_legacy(
         id: str,
@@ -52161,12 +53356,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Update calling config",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def whatsapp_calling_update_whats_app_calling_legacy(
         id: str,
@@ -52218,12 +53414,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Disable calling on a number",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def whatsapp_calling_disable_whats_app_calling_legacy(
         id: str, account_id: str
@@ -52250,12 +53447,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Check call permission",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def whatsapp_calling_get_whats_app_call_permissions(
         account_id: str, to: str
@@ -52280,12 +53478,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Initiate outbound call",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def whatsapp_calling_initiate_whats_app_call(
         account_id: str,
@@ -52341,12 +53540,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List call history for an account",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def whatsapp_calling_list_whats_app_calls(
         account_id: str,
@@ -52391,12 +53591,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get a single call",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def whatsapp_calling_get_whats_app_call(id: str, account_id: str) -> str:
         """Get a single call
@@ -52414,12 +53615,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get a call recording",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def whatsapp_calling_get_whats_app_call_recording(
         id: str, account_id: str, as_: Literal["json"] | None = None
@@ -52447,12 +53649,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Estimate per-minute cost",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def whatsapp_calling_get_whats_app_call_estimate(
         account_id: str,
@@ -52481,12 +53684,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get calling config for a number",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def whatsapp_calling_get_whats_app_calling(id: str) -> str:
         """Get calling config for a number
@@ -52507,12 +53711,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Enable calling on a number",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def whatsapp_calling_enable_whats_app_calling(
         id: str,
@@ -52560,12 +53765,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Update calling config",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def whatsapp_calling_update_whats_app_calling(
         id: str,
@@ -52614,12 +53820,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Disable calling on a number",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def whatsapp_calling_disable_whats_app_calling(id: str, account_id: str) -> str:
         """Disable calling on a number
@@ -52641,12 +53848,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Start caller-ID verification for a customer-brought number",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def whatsapp_calling_start_whats_app_caller_id_verification(
         id: str, method: Literal["sms", "call"] = "sms"
@@ -52672,12 +53880,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Confirm the caller-ID verification code",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def whatsapp_calling_verify_whats_app_caller_id(id: str, code: str) -> str:
         """Confirm the caller-ID verification code
@@ -52701,12 +53910,13 @@ def register_generated_tools(mcp, _get_client):
     # WHATSAPP_FLOWS
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List flows",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def whatsapp_flows_list_whats_app_flows(account_id: str) -> str:
         """List flows
@@ -52723,12 +53933,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Create flow",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def whatsapp_flows_create_whats_app_flow(
         account_id: str,
@@ -52777,12 +53988,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get flow",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def whatsapp_flows_get_whats_app_flow(
         flow_id: str, account_id: str, fields: str | None = None
@@ -52805,12 +54017,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Update flow",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def whatsapp_flows_update_whats_app_flow(
         flow_id: str,
@@ -52855,12 +54068,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Delete flow",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def whatsapp_flows_delete_whats_app_flow(flow_id: str, account_id: str) -> str:
         """Delete flow
@@ -52880,12 +54094,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get flow JSON asset",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def whatsapp_flows_get_whats_app_flow_json(flow_id: str, account_id: str) -> str:
         """Get flow JSON asset
@@ -52905,12 +54120,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Upload flow JSON",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def whatsapp_flows_upload_whats_app_flow_json(
         flow_id: str, account_id: str, flow_json: str
@@ -52937,12 +54153,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get flow preview URL",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def whatsapp_flows_get_whats_app_flow_preview(
         flow_id: str, account_id: str, invalidate: bool | None = None
@@ -52967,12 +54184,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List flow versions",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def whatsapp_flows_list_whats_app_flow_versions(
         flow_id: str, account_id: str
@@ -52996,12 +54214,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Publish flow",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def whatsapp_flows_publish_whats_app_flow(flow_id: str, account_id: str) -> str:
         """Publish flow
@@ -53023,12 +54242,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Deprecate flow",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def whatsapp_flows_deprecate_whats_app_flow(flow_id: str, account_id: str) -> str:
         """Deprecate flow
@@ -53049,12 +54269,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get Flows encryption key status",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def whatsapp_flows_get_whats_app_flows_encryption_key(account_id: str) -> str:
         """Get Flows encryption key status
@@ -53082,12 +54303,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Register a Flows encryption key",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def whatsapp_flows_set_whats_app_flows_encryption_key(
         account_id: str, business_public_key: str
@@ -53112,12 +54334,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Send flow message",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def whatsapp_flows_send_whats_app_flow_message(
         account_id: str,
@@ -53170,12 +54393,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List flow responses",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def whatsapp_flows_list_whats_app_flow_responses(
         account_id: str, flow_id: str | None = None, limit: int = 50
@@ -53204,12 +54428,13 @@ def register_generated_tools(mcp, _get_client):
     # WHATSAPP_PHONE_NUMBERS
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get number status",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def whatsapp_phone_numbers_get_whats_app_number_info(account_id: str) -> str:
         """Get number status
@@ -53250,12 +54475,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get pricing analytics",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def whatsapp_phone_numbers_get_whats_app_pricing_analytics(
         account_id: str,
@@ -53307,12 +54533,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List phone numbers",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def whatsapp_phone_numbers_get_whats_app_phone_numbers(
         status: Literal[
@@ -53355,12 +54582,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Purchase phone number",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def whatsapp_phone_numbers_purchase_whats_app_phone_number(
         profile_id: str,
@@ -53408,12 +54636,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List offerable number countries",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def whatsapp_phone_numbers_list_whats_app_number_countries() -> str:
         """List offerable number countries
@@ -53433,12 +54662,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Search available numbers",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def whatsapp_phone_numbers_search_available_whats_app_numbers(
         country: str = "US",
@@ -53485,12 +54715,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Check country availability",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def whatsapp_phone_numbers_check_whats_app_number_availability(
         country: str,
@@ -53525,12 +54756,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get KYC form spec",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def whatsapp_phone_numbers_get_whats_app_number_kyc_form(
         country: str, profile_id: str
@@ -53557,12 +54789,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Submit KYC",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def whatsapp_phone_numbers_submit_whats_app_number_kyc(
         profile_id: str,
@@ -53654,12 +54887,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Upload a KYC document",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def whatsapp_phone_numbers_upload_whats_app_number_kyc_document(
         x_filename: str, content_base64: str
@@ -53693,12 +54927,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Pre-validate KYC address",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def whatsapp_phone_numbers_validate_whats_app_number_kyc_address(
         country: str,
@@ -53743,12 +54978,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Create a hosted KYC link",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def whatsapp_phone_numbers_create_whats_app_number_kyc_link(
         profile_id: str,
@@ -53799,12 +55035,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Move a number to another profile",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def whatsapp_phone_numbers_move_whats_app_number_to_profile(
         id: str, profile_id: str
@@ -53843,12 +55080,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get declined requirements",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def whatsapp_phone_numbers_get_whats_app_number_remediation(id: str) -> str:
         """Get declined requirements
@@ -53873,12 +55111,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Resubmit a declined number",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def whatsapp_phone_numbers_remediate_whats_app_number(
         id: str,
@@ -53912,12 +55151,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get phone number",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def whatsapp_phone_numbers_get_whats_app_phone_number(phone_number_id: str) -> str:
         """Get phone number
@@ -53945,12 +55185,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Release phone number",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def whatsapp_phone_numbers_release_whats_app_phone_number(
         phone_number_id: str,
@@ -53980,12 +55221,13 @@ def register_generated_tools(mcp, _get_client):
     # WHATSAPP_SANDBOX
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List your sandbox sessions",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def whatsapp_sandbox_list_whats_app_sandbox_sessions() -> str:
         """List your sandbox sessions
@@ -54002,12 +55244,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Start a sandbox activation",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def whatsapp_sandbox_create_whats_app_sandbox_session(phone: str) -> str:
         """Start a sandbox activation
@@ -54039,12 +55282,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Revoke a sandbox session",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def whatsapp_sandbox_delete_whats_app_sandbox_session(session_id: str) -> str:
         """Revoke a sandbox session
@@ -54071,12 +55315,13 @@ def register_generated_tools(mcp, _get_client):
     # WHATSAPP_TEMPLATES
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Look up a library template",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def whatsapp_templates_get_whats_app_library_template(
         account_id: str, name: str, language: str | None = None
@@ -54103,12 +55348,13 @@ def register_generated_tools(mcp, _get_client):
     # WORKFLOWS
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List workflows",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def workflows_list_workflows(
         profile_id: str | None = None,
@@ -54135,12 +55381,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Create workflow",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def workflows_create_workflow(
         profile_id: str,
@@ -54193,12 +55440,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get workflow with graph",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def workflows_get_workflow(workflow_id: str) -> str:
         """Get workflow with graph
@@ -54215,12 +55463,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Update workflow",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def workflows_update_workflow(
         workflow_id: str,
@@ -54276,12 +55525,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Delete workflow",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def workflows_delete_workflow(workflow_id: str) -> str:
         """Delete workflow
@@ -54298,12 +55548,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Activate workflow",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def workflows_activate_workflow(workflow_id: str) -> str:
         """Activate workflow
@@ -54320,12 +55571,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Pause workflow",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def workflows_pause_workflow(workflow_id: str) -> str:
         """Pause workflow
@@ -54342,12 +55594,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List workflow runs",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def workflows_list_workflow_executions(
         workflow_id: str,
@@ -54375,12 +55628,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Manually start a workflow run",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def workflows_trigger_workflow(
         workflow_id: str,
@@ -54410,12 +55664,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Start an API-triggered workflow",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def workflows_trigger_api_call_workflow(
         workflow_id: str,
@@ -54456,12 +55711,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get an execution's timeline",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def workflows_list_workflow_execution_events(
         workflow_id: str, execution_id: str
@@ -54483,12 +55739,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Duplicate a workflow",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def workflows_duplicate_workflow(workflow_id: str) -> str:
         """Duplicate a workflow
@@ -54505,12 +55762,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="List a workflow's version history",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def workflows_list_workflow_versions(workflow_id: str) -> str:
         """List a workflow's version history
@@ -54527,12 +55785,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Get a specific workflow version",
             readOnlyHint=True,
             destructiveHint=False,
             openWorldHint=False,
-        )
+        ),
     )
     def workflows_get_workflow_version(workflow_id: str, version: int) -> str:
         """Get a specific workflow version
@@ -54552,12 +55811,13 @@ def register_generated_tools(mcp, _get_client):
             raise ToolError(f"Error: {e}") from e
 
     @mcp.tool(
+        output_schema=None,
         annotations=ToolAnnotations(
             title="Restore a workflow version",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
-        )
+        ),
     )
     def workflows_restore_workflow_version(workflow_id: str, version: int) -> str:
         """Restore a workflow version

@@ -341,6 +341,9 @@ def tool_def(name: str):
         read_only = name in _READ_ONLY_TOOLS
         title = td.summary.rstrip(".") if td else name
         return mcp.tool(
+            # Text only: an automatic {"result": string} schema would send the
+            # same text again as structuredContent.
+            output_schema=None,
             annotations=ToolAnnotations(
                 title=title,
                 readOnlyHint=read_only,
