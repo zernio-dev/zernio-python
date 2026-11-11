@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.565.4"
+  version: "1.565.5"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -1268,7 +1268,7 @@ components:
       description: |
         Balance billing only. The balance is at or below $0 and auto top-up could not lift it, so new pay-per-use is refused.
 
-        - `insufficient_balance`: the balance is empty, or, when buying a phone number or submitting its KYC, it is below the number's first month and auto top-up cannot refill it (off, no card, or past its monthly limit). The message says how much to add, and `required_cents` is what the balance must hold.
+        - `insufficient_balance`: the balance is empty, or below a phone number's first month (purchase or KYC) while auto top-up cannot refill it (off, no card, or past its monthly limit). The message says how much to add; `required_cents` is what the balance must hold.
         - `usage_limit_reached`: the monthly limit kept it there.
 
         `funding_url` opens Billing with the Add funds drawer (the add-card drawer first when there is no card). Inbound traffic and connected calls are never refused.
@@ -68295,7 +68295,7 @@ paths:
                   country: { type: string }
                   numberType: { type: string, description: The type that will be ordered after KYC approval. }
                   kycUrl: { type: string }
-        '402': { x-summary: "A payment method is required because the usage-based account has no card on file: add a card, then retry.", description: 'Payment method required (usage-based billing account with no card on file): code PAYMENT_REQUIRED, add a card, then retry. On balance billing with the balance at $0, or below the number''s first month while auto top-up cannot refill it (off, no card, or past its monthly limit): code insufficient_balance (with `required_cents`, what the balance must hold) or usage_limit_reached, add funds at `funding_url`, then retry.' }
+        '402': { x-summary: "A payment method is required because the usage-based account has no card on file: add a card, then retry.", description: 'No card on file (usage-based account): code PAYMENT_REQUIRED, add a card, then retry. Balance billing: code insufficient_balance (balance at $0, or below the number''s first month while auto top-up cannot refill it) or usage_limit_reached; add funds at `funding_url` (`required_cents` is what the balance must hold), then retry.' }
         '422': { x-summary: "International numbers require usage-based billing, and legacy Stripe users are limited to the US: switch to usage-based billing.", description: 'International numbers require usage-based billing (legacy Stripe users are US-only). Response body code: USAGE_BILLING_REQUIRED.' }
 
   /v1/phone-numbers/claims/{claimId}:
@@ -68833,7 +68833,7 @@ paths:
                   country: { type: string }
                   numberType: { type: string, description: The type that will be ordered after KYC approval. }
                   kycUrl: { type: string }
-        '402': { x-summary: "A payment method is required because the usage-based account has no card on file: add a card, then retry.", description: 'Payment method required (usage-based billing account with no card on file): code PAYMENT_REQUIRED, add a card, then retry. On balance billing with the balance at $0, or below the first month of every number ordered while auto top-up cannot refill it (off, no card, or past its monthly limit): code insufficient_balance (with `required_cents`, what the balance must hold) or usage_limit_reached, add funds at `funding_url`, then retry.' }
+        '402': { x-summary: "A payment method is required because the usage-based account has no card on file: add a card, then retry.", description: 'No card on file (usage-based account): code PAYMENT_REQUIRED, add a card, then retry. Balance billing: code insufficient_balance (balance at $0, or below the numbers'' first month while auto top-up cannot refill it) or usage_limit_reached; add funds at `funding_url` (`required_cents` is what the balance must hold), then retry.' }
         '422': { x-summary: "International numbers require usage-based billing, and legacy Stripe users are limited to the US: switch to usage-based billing.", description: 'International numbers require usage-based billing (legacy Stripe users are US-only). Response body code: USAGE_BILLING_REQUIRED.' }
 
   /v1/whatsapp/phone-numbers/countries:
