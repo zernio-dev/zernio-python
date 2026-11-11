@@ -88,7 +88,9 @@ Since Claude can't access local files, use the browser upload flow:
 | `posts_retry` | Retry a failed post |
 | `media_generate_upload_link` | Get link to upload media |
 
-These core commands are always visible. The full Zernio API catalog (~400 tools) is reachable on demand through tool search: `search_tools` finds a capability by description and `call_tool` invokes it — and every underlying tool also stays directly callable by name.
+These core commands are always visible. The full Zernio API catalog (~1,200 tools) is reachable on demand through tool search: `search_tools` finds a capability by description and returns the matches as markdown, and `call_tool` invokes one — and every underlying tool also stays directly callable by name. An unknown tool name returns the closest real tools instead of a bare error.
+
+`feedback_submit_feedback` is always visible too: agents report bugs, missing features and documentation gaps with it. Reports filed through the MCP server are labelled `zernio-mcp` plus the client's user agent, so triage can tell them apart from direct API reports.
 
 ## Remote Access (HTTP)
 
