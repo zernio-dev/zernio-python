@@ -433,6 +433,10 @@ def _serve_workers(config: ServerConfig, workers: int) -> None:
         port=config.port,
         workers=workers,
         log_level="info",
+        # uvicorn kills a worker that misses its 5 s default ping. A worker can
+        # only answer once it has imported the tool catalog, 4-5 s on Railway,
+        # so the default killed every worker in a loop and failed a deploy.
+        timeout_worker_healthcheck=60,
     )
 
 
