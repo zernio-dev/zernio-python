@@ -925,6 +925,46 @@ class ConnectResource:
         )
         return self._client._post("/v1/connect/slack", data=payload)
 
+    def connect_line_credentials(
+        self,
+        channel_id: str,
+        channel_secret: str,
+        state: str,
+        *,
+        redirect_url: str | None = None,
+    ) -> dict[str, Any]:
+        """Connect LINE Official Account"""
+        payload = self._build_payload(
+            channel_id=channel_id,
+            channel_secret=channel_secret,
+            state=state,
+            redirect_url=redirect_url,
+        )
+        return self._client._post("/v1/connect/line/credentials", data=payload)
+
+    def connect_wechat_credentials(
+        self,
+        app_id: str,
+        app_secret: str,
+        state: str,
+        *,
+        display_name: str | None = None,
+        redirect_url: str | None = None,
+    ) -> dict[str, Any]:
+        """Connect WeChat Official Account"""
+        payload = self._build_payload(
+            app_id=app_id,
+            app_secret=app_secret,
+            state=state,
+            display_name=display_name,
+            redirect_url=redirect_url,
+        )
+        return self._client._post("/v1/connect/wechat/credentials", data=payload)
+
+    def get_wechat_ip_whitelist(self) -> dict[str, Any]:
+        """Get WeChat IP whitelist"""
+        return self._client._get("/v1/connect/wechat/ip-whitelist")
+
     def get_telegram_connect_status(self, profile_id: str) -> dict[str, Any]:
         """Generate Telegram code"""
         params = self._build_params(
@@ -2191,6 +2231,46 @@ class ConnectResource:
             account_id=account_id,
         )
         return await self._client._apost("/v1/connect/slack", data=payload)
+
+    async def aconnect_line_credentials(
+        self,
+        channel_id: str,
+        channel_secret: str,
+        state: str,
+        *,
+        redirect_url: str | None = None,
+    ) -> dict[str, Any]:
+        """Connect LINE Official Account (async)"""
+        payload = self._build_payload(
+            channel_id=channel_id,
+            channel_secret=channel_secret,
+            state=state,
+            redirect_url=redirect_url,
+        )
+        return await self._client._apost("/v1/connect/line/credentials", data=payload)
+
+    async def aconnect_wechat_credentials(
+        self,
+        app_id: str,
+        app_secret: str,
+        state: str,
+        *,
+        display_name: str | None = None,
+        redirect_url: str | None = None,
+    ) -> dict[str, Any]:
+        """Connect WeChat Official Account (async)"""
+        payload = self._build_payload(
+            app_id=app_id,
+            app_secret=app_secret,
+            state=state,
+            display_name=display_name,
+            redirect_url=redirect_url,
+        )
+        return await self._client._apost("/v1/connect/wechat/credentials", data=payload)
+
+    async def aget_wechat_ip_whitelist(self) -> dict[str, Any]:
+        """Get WeChat IP whitelist (async)"""
+        return await self._client._aget("/v1/connect/wechat/ip-whitelist")
 
     async def aget_telegram_connect_status(self, profile_id: str) -> dict[str, Any]:
         """Generate Telegram code (async)"""

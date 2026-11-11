@@ -396,6 +396,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `connect.get_subreddit_rules()` | Get subreddit rules |
 | `connect.get_telegram_connect_status()` | Generate Telegram code |
 | `connect.get_webflow_connect_url()` | Get Webflow OAuth URL |
+| `connect.get_wechat_ip_whitelist()` | Get WeChat IP whitelist |
 | `connect.get_whats_app_sdk_config()` | Get Embedded Signup SDK config |
 | `connect.get_wix_connect_url()` | Get Wix site install URL |
 | `connect.get_word_press_auth_url()` | Get WordPress.com OAuth connect URL |
@@ -421,10 +422,12 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `connect.connect_ads()` | Connect ads for a platform |
 | `connect.connect_bluesky_credentials()` | Connect Bluesky account |
 | `connect.connect_discord_channel()` | Connect a Discord channel |
+| `connect.connect_line_credentials()` | Connect LINE Official Account |
 | `connect.connect_open_ai_ads_credentials()` | Connect an OpenAI Ads account |
 | `connect.connect_shopify_with_token()` | Connect a Shopify store with a custom-app Admin token |
 | `connect.connect_slack_channel()` | Connect a Slack channel |
 | `connect.connect_webflow_with_site_token()` | Connect Webflow with a site API token |
+| `connect.connect_wechat_credentials()` | Connect WeChat Official Account |
 | `connect.connect_whats_app_credentials()` | Connect WhatsApp via credentials |
 | `connect.connect_whats_app_embedded_signup()` | Connect WhatsApp from Embedded Signup |
 | `connect.connect_whop_ads_credentials()` | Connect a Whop account |

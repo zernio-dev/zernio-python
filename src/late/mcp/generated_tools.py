@@ -1057,6 +1057,8 @@ def register_generated_tools(mcp, _get_client):
             "hubspot",
             "webflow",
             "googleanalytics",
+            "line",
+            "wechat",
         ]
         | None = None,
         status: Literal["healthy", "warning", "error"] | None = None,
@@ -18350,6 +18352,7 @@ def register_generated_tools(mcp, _get_client):
             "sms",
             "slack",
             "imessage",
+            "line",
         ],
         name: str,
         description: str | None = None,
@@ -27227,6 +27230,117 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="Connect LINE Official Account",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def connect_line_credentials(
+        channel_id: str,
+        channel_secret: str,
+        state: str,
+        redirect_url: str | None = None,
+    ) -> str:
+        """Connect LINE Official Account
+
+        Connect a LINE Official Account with the Channel ID and Channel secret of its Messaging API channel (LINE Official Account Manager > Settings > Messaging API, also shown in the LINE Developers Console under the channel's Basic settings).
+
+        Zernio issues a channel access token, reads the bot's profile and sets the channel's webhook URL for you. A channel has one webhook URL, so if it already pointed somewhere else, that integration stops receiving events; the response names it in `webhook.previousUrl`.
+
+        Two settings stay on the customer's side, in LINE Official Account Manager > Settings > Response settings. `nextSteps` in the response lists them:
+
+        - Turn on Webhooks. Until it is on, LINE delivers nothing to Zernio.
+        - Turn off auto-response and greeting messages.
+
+        Reconnecting the same channel on the same profile updates the existing account.
+        To get your userId for the state parameter, call GET /v1/users which includes a currentUserId field.
+
+        Args:
+            channel_id: The Messaging API channel's Channel ID (digits only). (required)
+            channel_secret: The Messaging API channel's Channel secret (32 hex characters). (required)
+            state: Required state formatted as {userId}-{profileId}. Get userId from GET /v1/users and profileId from GET /v1/profiles. (required)
+            redirect_url: Optional URL to redirect to after a successful connection."""
+        client = _get_client()
+        try:
+            response = client.connect.connect_line_credentials(
+                channel_id=channel_id,
+                channel_secret=channel_secret,
+                state=state,
+                redirect_url=redirect_url,
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Connect WeChat Official Account",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def connect_wechat_credentials(
+        app_id: str,
+        app_secret: str,
+        state: str,
+        display_name: str | None = None,
+        redirect_url: str | None = None,
+    ) -> str:
+        """Connect WeChat Official Account
+
+        Connect a verified WeChat Official Account (Service Account) with its AppID and AppSecret (Weixin Official Accounts Platform > Settings and Development > Basic Configuration).
+
+        Before calling this, add every IP from GET /v1/connect/wechat/ip-whitelist to the account's API IP whitelist on the same page. WeChat refuses calls from any other IP, and this endpoint then returns 400 with code `wechat_ip_not_whitelisted`.
+
+        The response carries a Server URL, a Token and an EncodingAESKey. Paste them into Server Configuration on the same page, choose Safe mode for message encryption, and enable the configuration. Until then WeChat delivers nothing to Zernio.
+
+        Enabling Server Configuration turns off the auto-replies and menus set in the WeChat dashboard.
+
+        Reconnecting the same AppID on the same profile keeps the existing Token and EncodingAESKey, so nothing has to be pasted again.
+        To get your userId for the state parameter, call GET /v1/users which includes a currentUserId field.
+
+        Args:
+            app_id: The Official Account's AppID (starts with wx). (required)
+            app_secret: The Official Account's AppSecret (32 characters). (required)
+            state: Required state formatted as {userId}-{profileId}. Get userId from GET /v1/users and profileId from GET /v1/profiles. (required)
+            display_name: Name to show for the account. Defaults to "WeChat Official Account".
+            redirect_url: Optional URL to redirect to after a successful connection."""
+        client = _get_client()
+        try:
+            response = client.connect.connect_wechat_credentials(
+                app_id=app_id,
+                app_secret=app_secret,
+                state=state,
+                display_name=display_name,
+                redirect_url=redirect_url,
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get WeChat IP whitelist",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def connect_get_wechat_ip_whitelist() -> str:
+        """Get WeChat IP whitelist
+
+        The IPs Zernio calls WeChat from. Add all of them to the Official Account's API IP whitelist before calling POST /v1/connect/wechat/credentials."""
+        client = _get_client()
+        try:
+            response = client.connect.get_wechat_ip_whitelist()
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="Generate Telegram code",
             readOnlyHint=True,
             destructiveHint=False,
@@ -28419,6 +28533,8 @@ def register_generated_tools(mcp, _get_client):
             "whatsapp",
             "slack",
             "sms",
+            "line",
+            "wechat",
         ]
         | None = None,
         group: str | None = None,
@@ -28486,6 +28602,8 @@ def register_generated_tools(mcp, _get_client):
             "whatsapp",
             "slack",
             "sms",
+            "line",
+            "wechat",
         ]
         | None = None,
         platform_identifier: str | None = None,
@@ -38331,6 +38449,8 @@ def register_generated_tools(mcp, _get_client):
             "whatsapp",
             "imessage",
             "sms",
+            "line",
+            "wechat",
         ]
         | None = None,
         status: Literal["active", "archived"] | None = None,
@@ -38524,6 +38644,8 @@ def register_generated_tools(mcp, _get_client):
             "rcs",
             "slack",
             "imessage",
+            "line",
+            "wechat",
         ]
         | None = None,
         account_id: str | None = None,
