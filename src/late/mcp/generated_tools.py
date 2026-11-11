@@ -25580,6 +25580,50 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="Get Stripe connect URL",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def connect_get_stripe_connect_url(
+        profile_id: str,
+        redirect_url: str | None = None,
+        reconnect_account_id: str | None = None,
+    ) -> str:
+        """Get Stripe connect URL
+
+        Initiates Stripe Connect OAuth for the customer's own Stripe account, with read-only access. Stripe is a connect-only sales source: each paid charge becomes a `Purchase` event in `GET /v1/events` (source `stripe`), and refunds lower or retract it.
+
+        One Stripe account can be connected per profile. Connecting a different account to a profile that already has one redirects with `error=stripe_profile_has_account`.
+
+        ### Flow
+
+        1. Redirect the user to `authUrl`.
+        2. After authorization, Stripe returns the browser to Zernio's internal callback.
+        3. Zernio redirects to `redirect_url` (or the dashboard when omitted).
+
+        On success the redirect carries `connected=stripe`, `profileId`, `accountId` and `username` (the Stripe account name). On failure it carries `error`, `platform=stripe` and `error_message`.
+
+        To match a payment to the ad campaign behind it, set `zrn`, `gclid`, `fbclid` or `utm_*` keys (and optionally `landing_url`) in the metadata of the Checkout Session, PaymentIntent or subscription.
+
+        Args:
+            profile_id: Your Zernio profile ID (get from /v1/profiles). (required)
+            redirect_url: Custom redirect after connection. Must be an absolute http(s) URL or custom app scheme such as `myapp://callback`; relative and unsafe URLs return 400.
+            reconnect_account_id: The Stripe connection being reconnected. The callback refuses to write to any other account."""
+        client = _get_client()
+        try:
+            response = client.connect.get_stripe_connect_url(
+                profile_id=profile_id,
+                redirect_url=redirect_url,
+                reconnect_account_id=reconnect_account_id,
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="Get WordPress.com OAuth connect URL",
             readOnlyHint=True,
             destructiveHint=False,
@@ -29358,6 +29402,20 @@ def register_generated_tools(mcp, _get_client):
         from_: str | None = None,
         to: str | None = None,
         event_name: str | None = None,
+        source: Literal[
+            "api",
+            "relay",
+            "hubspot",
+            "meta_leads",
+            "google_leads",
+            "linkedin_leads",
+            "tiktok_leads",
+            "shopify",
+            "woocommerce",
+            "stripe",
+            "web",
+        ]
+        | None = None,
         cursor: str | None = None,
     ) -> str:
         """List stored events
@@ -29374,6 +29432,7 @@ def register_generated_tools(mcp, _get_client):
             from_: Only events at or after this time (ISO 8601, on the event time).
             to: Only events before this time (ISO 8601, on the event time).
             event_name: Only events with this name, such as `Purchase`.
+            source: Only events from this source, such as `stripe` for the payments of a connected Stripe account.
             cursor: `nextCursor` from the previous page."""
         client = _get_client()
         try:
@@ -29383,6 +29442,7 @@ def register_generated_tools(mcp, _get_client):
                 from_=from_,
                 to=to,
                 event_name=event_name,
+                source=source,
                 cursor=cursor,
             )
             return _format_response(response)

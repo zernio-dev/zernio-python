@@ -276,6 +276,21 @@ class ConnectResource:
         )
         return self._client._get("/v1/connect/hubspot", params=params)
 
+    def get_stripe_connect_url(
+        self,
+        profile_id: str,
+        *,
+        redirect_url: str | None = None,
+        reconnect_account_id: str | None = None,
+    ) -> dict[str, Any]:
+        """Get Stripe connect URL"""
+        params = self._build_params(
+            profile_id=profile_id,
+            redirect_url=redirect_url,
+            reconnect_account_id=reconnect_account_id,
+        )
+        return self._client._get("/v1/connect/stripe", params=params)
+
     def get_word_press_auth_url(
         self, profile_id: str, *, redirect_url: str | None = None
     ) -> dict[str, Any]:
@@ -1503,6 +1518,21 @@ class ConnectResource:
             redirect_url=redirect_url,
         )
         return await self._client._aget("/v1/connect/hubspot", params=params)
+
+    async def aget_stripe_connect_url(
+        self,
+        profile_id: str,
+        *,
+        redirect_url: str | None = None,
+        reconnect_account_id: str | None = None,
+    ) -> dict[str, Any]:
+        """Get Stripe connect URL (async)"""
+        params = self._build_params(
+            profile_id=profile_id,
+            redirect_url=redirect_url,
+            reconnect_account_id=reconnect_account_id,
+        )
+        return await self._client._aget("/v1/connect/stripe", params=params)
 
     async def aget_word_press_auth_url(
         self, profile_id: str, *, redirect_url: str | None = None

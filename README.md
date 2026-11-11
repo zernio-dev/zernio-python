@@ -390,6 +390,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `connect.get_reddit_flairs()` | List subreddit flairs |
 | `connect.get_reddit_subreddits()` | List Reddit subreddits |
 | `connect.get_shopify_connect_url()` | Get Shopify OAuth connect URL |
+| `connect.get_stripe_connect_url()` | Get Stripe connect URL |
 | `connect.get_subreddit_rules()` | Get subreddit rules |
 | `connect.get_telegram_connect_status()` | Generate Telegram code |
 | `connect.get_webflow_connect_url()` | Get Webflow OAuth URL |
