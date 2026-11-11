@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.576.1"
+  version: "1.576.2"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -1272,6 +1272,7 @@ components:
 
         - `insufficient_balance`: the balance is empty, or below a phone number's first month (purchase or KYC) while auto top-up cannot refill it (off, no card, or past its monthly limit). The message says how much to add; `required_cents` is what the balance must hold.
         - `usage_limit_reached`: the monthly limit kept it there.
+        - On a call start, `insufficient_balance` also means the balance, plus what auto top-up can still add this month, cannot fund one minute of the call; `required_cents` is what the balance must hold.
 
         `funding_url` opens Billing with the Add funds drawer (the add-card drawer first when there is no card). Inbound traffic and connected calls are never refused.
       content:
@@ -64038,6 +64039,11 @@ paths:
         **Idempotency:** send an `Idempotency-Key` header to make retries
         safe; same key + same body replays the original response instead of
         dialing (and billing) a second call.
+
+        **Balance time limit:** on balance billing the call runs only as long
+        as the balance, plus what auto top-up can still add this month, funds
+        (never past the number's `maxCallDurationSeconds`). Under one minute
+        is refused with 402.
       security:
         - bearerAuth: []
       parameters:
@@ -64381,6 +64387,10 @@ paths:
 
         Outbound calls are capped per rolling hour (429 when hit).
 
+        ### Balance time limit
+
+        On balance billing a call runs only as long as the balance, plus what auto top-up can still add this month, funds at its per-minute price, minus calls already in progress. Then it ends with `hangup_cause: time_limit`. Under one minute is refused with 402.
+
         ### Idempotency
 
         Send an `Idempotency-Key` header to make retries safe. Same key + same body replays the original response instead of dialing (and billing) a second call.
@@ -64689,6 +64699,7 @@ paths:
 
         - The call is logged as outbound (from = your number, to = target) and recorded per the number's settings.
         - `ringTimeoutSeconds` applies to the target's phone, not to the browser.
+        - On balance billing the call gets the same time limit as `POST /v1/voice/calls`.
       security:
         - bearerAuth: []
       requestBody:
