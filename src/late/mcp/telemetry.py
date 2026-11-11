@@ -5,6 +5,7 @@ import os
 import sys
 import time
 from collections.abc import Callable
+from contextvars import ContextVar
 from datetime import datetime, timezone
 from typing import Any
 
@@ -33,6 +34,15 @@ _SENTRY_STATUS_BY_OUTCOME = {
 }
 
 _tool_logger = logging.getLogger("late.mcp.tools")
+
+_CALL_TOOL = "call_tool"
+# Tools the in-flight call_tool dispatched. FastMCP runs the middleware again
+# for the dispatched tool, which records itself with via=call_tool, so the
+# wrapper records only when it failed before dispatching anything: each call
+# counts once in the logs and in Sentry.
+_dispatched_by_call_tool: ContextVar[list[str] | None] = ContextVar(
+    "dispatched_by_call_tool", default=None
+)
 
 
 def _tool_call_sampler(rate: float) -> Callable[[dict[str, Any]], float]:
@@ -144,6 +154,32 @@ class ToolTelemetryMiddleware(Middleware):
         call_next: CallNext[CallToolRequestParams, Any],
     ) -> Any:
         tool = context.message.name
+        if tool != _CALL_TOOL:
+            dispatched = _dispatched_by_call_tool.get()
+            if dispatched is not None:
+                dispatched.append(tool)
+            via = _CALL_TOOL if dispatched is not None else "direct"
+            return await self._record(context, call_next, via=via)
+
+        dispatched = []
+        token = _dispatched_by_call_tool.set(dispatched)
+        try:
+            return await self._record(
+                context, call_next, via="direct", silent=lambda: bool(dispatched)
+            )
+        finally:
+            _dispatched_by_call_tool.reset(token)
+
+    async def _record(
+        self,
+        context: MiddlewareContext[CallToolRequestParams],
+        call_next: CallNext[CallToolRequestParams, Any],
+        *,
+        via: str,
+        silent: Callable[[], bool] = lambda: False,
+    ) -> Any:
+        tool = context.message.name
+        caller = _caller_key()
         fields: dict[str, Any] = {"outcome": "ok"}
         started = time.perf_counter()
         with sentry_sdk.start_transaction(
@@ -151,6 +187,9 @@ class ToolTelemetryMiddleware(Middleware):
         ) as transaction:
             transaction.set_tag("mcp.tool", tool)
             transaction.set_tag("mcp.surface", self._surface)
+            transaction.set_tag("mcp.via", via)
+            if caller:
+                transaction.set_tag("mcp.caller", caller)
             try:
                 result = await call_next(context)
                 if _is_rejected(result):
@@ -167,20 +206,26 @@ class ToolTelemetryMiddleware(Middleware):
             finally:
                 transaction.set_tag("mcp.outcome", fields["outcome"])
                 transaction.set_status(_SENTRY_STATUS_BY_OUTCOME[fields["outcome"]])
-                _tool_logger.info(
-                    json.dumps(
-                        {
-                            "event": "mcp_tool_call",
-                            "ts": datetime.now(timezone.utc).isoformat(
-                                timespec="milliseconds"
-                            ),
-                            "surface": self._surface,
-                            "tool": tool,
-                            "duration_ms": round(
-                                (time.perf_counter() - started) * 1000
-                            ),
-                            "caller": _caller_key(),
-                            **fields,
-                        }
+                if silent():
+                    # The tool call_tool dispatched recorded itself; an
+                    # unsampled transaction is dropped at finish, not sent.
+                    transaction.sampled = False
+                else:
+                    _tool_logger.info(
+                        json.dumps(
+                            {
+                                "event": "mcp_tool_call",
+                                "ts": datetime.now(timezone.utc).isoformat(
+                                    timespec="milliseconds"
+                                ),
+                                "surface": self._surface,
+                                "tool": tool,
+                                "via": via,
+                                "duration_ms": round(
+                                    (time.perf_counter() - started) * 1000
+                                ),
+                                "caller": caller,
+                                **fields,
+                            }
+                        )
                     )
-                )
