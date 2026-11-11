@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - **`transport=` on `Late` / `Zernio`.** Pass an `httpx.BaseTransport` to reuse connections and TLS sessions across requests and clients. The caller owns it; the client never closes it. Without it nothing changes: a new connection per request.
 - **Tool call telemetry on the hosted MCP server.** One JSON log line per tool call (tool, latency, outcome, hashed caller), and with `SENTRY_DSN` one Sentry transaction per tool call. `/health` reports the deployed commit.
+- **Tool result size on the hosted MCP server.** `mcp_tool_call` gains `result_chars` and the Sentry transaction gains `mcp.tool.result.chars`, the characters of text a tool returned, so oversized results (one `ad_campaigns_get_ad_tree` call returned 284,873 characters) show per tool. Only the length is recorded, never the content.
 
 ### Fixed
 - **Every MCP tool call opened a new HTTPS connection to the Zernio API**, a TLS handshake and about 6 ms of CPU each, on the single server process that saturated on Nov 10. Tool calls now reuse a connection pool per worker thread. One pool shared by the 40 tool threads was slower than no pooling: httpcore scans every connection under one lock on each request. Measured over HTTPS against a stub API, 40 clients: 141 calls/s at 272 ms p50 before, 173/s at 220 ms after.

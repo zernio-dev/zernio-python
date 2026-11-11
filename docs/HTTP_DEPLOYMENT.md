@@ -63,7 +63,7 @@ Writing to stdout or stderr can block when the platform's log collector falls be
 
 ## Tool call logs
 
-Every tool call on the HTTP server prints one JSON line to stdout, whatever `SENTRY_DSN` says, with `event: "mcp_tool_call"`, `surface`, `tool`, `duration_ms`, `outcome` (`ok`, `rejected`, `cancelled` or `error`), `error_type`, `status_code` and `caller` (the first 12 characters of the SHA-256 of the bearer). Arguments and tokens are never logged. Tools reached through `call_tool` log two lines: the outer `call_tool` and the tool itself.
+Every tool call on the HTTP server prints one JSON line to stdout, whatever `SENTRY_DSN` says, with `event: "mcp_tool_call"`, `surface`, `tool`, `duration_ms`, `outcome` (`ok`, `rejected`, `cancelled` or `error`), `error_type`, `status_code`, `caller` (the first 12 characters of the SHA-256 of the bearer) and, on calls that return, `result_chars` (characters of text sent back to the agent, also set as `mcp.tool.result.chars` on the Sentry transaction). Arguments, results and tokens are never logged. Tools reached through `call_tool` log two lines: the outer `call_tool` and the tool itself.
 
 ## Connecting Clients
 

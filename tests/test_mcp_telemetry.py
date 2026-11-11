@@ -140,6 +140,18 @@ async def test_each_tool_call_is_one_named_sentry_transaction(sentry_events) -> 
     assert transactions[0]["tags"]["mcp.outcome"] == "ok"
 
 
+async def test_result_size_is_logged_and_sent_to_sentry(caplog, sentry_events) -> None:
+    caplog.set_level(logging.INFO, logger="late.mcp.tools")
+
+    async with Client(_server()) as client:
+        await client.call_tool("fine", {})
+
+    [line] = _logged(caplog)
+    assert line["result_chars"] == len("ok")
+    [transaction] = sentry_events.payloads("transaction")
+    assert transaction["contexts"]["trace"]["data"]["mcp.tool.result.chars"] == 2
+
+
 async def test_api_errors_are_counted_but_only_bugs_become_sentry_issues(
     sentry_events,
 ) -> None:
