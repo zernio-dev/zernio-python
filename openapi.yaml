@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.597.0"
+  version: "1.598.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -7108,6 +7108,10 @@ components:
               type: string
               enum: [not_started, onboarding, ready, restricted]
               description: '`not_started`: no payout account yet. `onboarding`: setup started or under review. `ready`: payouts enabled. `restricted`: Stripe needs more information before paying out.'
+            country:
+              type: [string, 'null']
+              example: MX
+              description: 'ISO 3166-1 alpha-2 country of the payout account, null before setup starts. Zernio pays out only to the US, Canada, the UK, the EEA, Switzerland and Gibraltar; pay creators elsewhere yourself and record it with `recordOnly: true`.'
     CampaignSubmissionFlag:
       type: object
       required: [code, detail, raisedAt]
