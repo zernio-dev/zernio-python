@@ -76497,6 +76497,7 @@ paths:
         - { name: effectiveInstagramMediaId, in: query, schema: { type: string }, description: "Instagram media ID of the boosted post (Meta `effective_instagram_media_id`). Use to map a Business-Manager-visible IG post back to the Zernio ad." }
         - { name: fromDate, in: query, schema: { type: string, format: date }, description: "Start of metrics date range (YYYY-MM-DD). Defaults to 90 days ago." }
         - { name: toDate, in: query, schema: { type: string, format: date }, description: "End of metrics date range (YYYY-MM-DD). Defaults to today. Max 730-day range." }
+        - { name: view, in: query, schema: { type: string, enum: [full, summary], default: full }, description: "`full` (default) returns every field. `summary` is about 80% smaller per ad and keeps only:\n\n- `_id`, `name`, `platform`, `status`, `platformStatus`, `servingStatuses` (left out when empty), `configuredStatus`, `reviewStatus`, `rejectionReason`, `goal`.\n- The platform ids, `accountId`, `profileId`, `campaignName`, `adSetName`, `budget`, `currency`, `isExternal`, `creativeType`, `platformCreatedAt`, `createdAt`.\n- `postId` as the post id, not the expanded post.\n- `creative` with only `headline`, `body` (cut to 200 characters), `linkUrl`, `callToAction` and `effectiveObjectStoryId`.\n- `metrics` without `costPerAction` and without any metric that is 0: an absent metric means 0.\n\nRead one ad with `platformAdId` and `view=full` for the rest." }
       responses:
         '200':
           description: Paginated ads
@@ -81299,6 +81300,7 @@ paths:
         - { name: page, in: query, schema: { type: integer, minimum: 1, default: 1 } }
         - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 500, default: 500 } }
         - $ref: '#/components/parameters/LiveStatusRead'
+        - { name: view, in: query, schema: { type: string, enum: [full, summary], default: full }, description: "`full` returns every field. `summary` leaves `targeting` out of each ad set, which is most of a row's size; read one ad set's targeting with `adSetId` and `view=full`." }
       responses:
         '200':
           description: Ad sets
@@ -82334,6 +82336,7 @@ paths:
         - { name: dailyLevel, in: query, schema: { type: string, enum: [campaign, adset, ad], default: campaign }, description: "Which tree levels get the `daily[]` series when `timeIncrement=1`. Ignored when `timeIncrement` is unset.\n\n- `campaign` (default): on campaign nodes only. The common per-campaign-trend case, and the smallest payload.\n- `adset`: on ad sets too.\n- `ad`: on every ad in `ads[]` as well. Heaviest (a long range × up to 100 ads per ad set); scope with `campaignId` to keep responses small." }
         - { name: compare, in: query, schema: { type: string, enum: [previous] }, description: "Set to `previous` to also read the period of the same length that ends the day before `fromDate`. Every campaign, ad set and ad gains `previousMetrics` (same fields as `metrics`) and the response gains `previousRange`, so a table can show the change against the previous period in one call." }
         - { name: results, in: query, schema: { type: boolean }, description: "Set to `true` to add your own results (see [Campaign results](/guides/campaign-results)): every campaign gains `results`, the values you sent for the range plus each formula they allow, and the response gains `resultMetrics` to label them." }
+        - { name: depth, in: query, schema: { type: string, enum: [campaign, adset, ad], default: ad }, description: "How deep the tree goes. Metrics always roll up over every ad, whatever the depth.\n\n- `ad` (default): campaigns, their ad sets and each ad set's ads.\n- `adset`: campaigns and ad sets; every `ads[]` is empty and `adCount` still counts the ads.\n- `campaign`: campaigns only; every `adSets[]` is empty and `adSetCount` / `adCount` still count them." }
       responses:
         '200':
           description: Nested campaign tree with pagination

@@ -6220,48 +6220,58 @@ def register_generated_tools(mcp, _get_client):
         effective_instagram_media_id: str | None = None,
         from_date: str | None = None,
         to_date: str | None = None,
+        view: Literal["full", "summary"] = "summary",
     ) -> str:
         """List ads
 
-        Lists your ads with their performance over a date range, including ads created directly in each platform's ads manager.
+            Lists your ads with their performance over a date range, including ads created directly in each platform's ads manager.
 
-        Returns a paginated list of ads with metrics computed over an optional date range. Use source=all to include externally-synced ads from platform ad managers.
+            Returns a paginated list of ads with metrics computed over an optional date range. Use source=all to include externally-synced ads from platform ad managers.
 
-        If no date range is provided, it defaults to the last 90 days. The date range is capped at 730 days max.
+            If no date range is provided, it defaults to the last 90 days. The date range is capped at 730 days max.
 
-        ### History
+            ### History
 
-        When an ad account connects, Zernio imports its last 90 days of metrics, so the metrics hold no data for days before that.
+            When an ad account connects, Zernio imports its last 90 days of metrics, so the metrics hold no data for days before that.
 
-        When `accountId` or `adAccountId` resolves to a Meta ad account, a range reaching further back answers `202` with `backfillPending: true` and the covered part. The older days (up to 730 days back) are imported in the background; repeat the request until it returns 200.
+            When `accountId` or `adAccountId` resolves to a Meta ad account, a range reaching further back answers `202` with `backfillPending: true` and the covered part. The older days (up to 730 days back) are imported in the background; repeat the request until it returns 200.
 
-        A request scoped to no Meta account never returns `202`.
+            A request scoped to no Meta account never returns `202`.
 
-        ### Finding the ad behind a comment
+            ### Finding the ad behind a comment
 
-        To find the Zernio ad behind a comment you see in Meta Business Manager:
+            To find the Zernio ad behind a comment you see in Meta Business Manager:
 
-        1. Filter by platformAdId (the Meta ...
+            1. Filter by platformAdId (the Meta ...
 
-        Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit, microsoft
+            Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit, microsoft
 
-        Args:
-            page: Page number (1-based)
-            limit: Default 10, at most 20 per call; page through for more.
-            source: all (default) = Zernio-created + platform-discovered ads. zernio = restrict to Zernio-created only.
-            status
-            platform
-            account_id: Account ID
-            ad_account_id: Platform ad account ID (e.g. act_123 for Meta). Mirrors the same filter on /v1/ads/campaigns and /v1/ads/tree.
-            page_id: Meta only: Facebook Page ID. Returns only ads whose creative is backed by this Page (a Meta ad account serves ads for every Page in the Business Manager). Matches each ad's `creative.pageId`; ads with no page signal (rare IG-only creatives) never match. Mirrors the same filter on /v1/ads/campaigns and /v1/ads/tree.
-            profile_id: Profile ID
-            campaign_id: Platform campaign ID (filter ads within a campaign)
-            ad_set_id: Platform ad set ID (filter ads within an ad set, the /{adset_id}/ads read of an adset-centric dashboard).
-            platform_ad_id: Meta ad ID. Returns the ad with this platform-side ad ID.
-            effective_object_story_id: Facebook `{pageId}_{postId}` of the post the ad's engagement lives on (Meta `effective_object_story_id`). Use to map a Business-Manager-visible post back to the Zernio ad.
-            effective_instagram_media_id: Instagram media ID of the boosted post (Meta `effective_instagram_media_id`). Use to map a Business-Manager-visible IG post back to the Zernio ad.
-            from_date: Start of metrics date range (YYYY-MM-DD). Defaults to 90 days ago.
-            to_date: End of metrics date range (YYYY-MM-DD). Defaults to today. Max 730-day range."""
+            Args:
+                page: Page number (1-based)
+                limit: Default 10, at most 20 per call; page through for more.
+                source: all (default) = Zernio-created + platform-discovered ads. zernio = restrict to Zernio-created only.
+                status
+                platform
+                account_id: Account ID
+                ad_account_id: Platform ad account ID (e.g. act_123 for Meta). Mirrors the same filter on /v1/ads/campaigns and /v1/ads/tree.
+                page_id: Meta only: Facebook Page ID. Returns only ads whose creative is backed by this Page (a Meta ad account serves ads for every Page in the Business Manager). Matches each ad's `creative.pageId`; ads with no page signal (rare IG-only creatives) never match. Mirrors the same filter on /v1/ads/campaigns and /v1/ads/tree.
+                profile_id: Profile ID
+                campaign_id: Platform campaign ID (filter ads within a campaign)
+                ad_set_id: Platform ad set ID (filter ads within an ad set, the /{adset_id}/ads read of an adset-centric dashboard).
+                platform_ad_id: Meta ad ID. Returns the ad with this platform-side ad ID.
+                effective_object_story_id: Facebook `{pageId}_{postId}` of the post the ad's engagement lives on (Meta `effective_object_story_id`). Use to map a Business-Manager-visible post back to the Zernio ad.
+                effective_instagram_media_id: Instagram media ID of the boosted post (Meta `effective_instagram_media_id`). Use to map a Business-Manager-visible IG post back to the Zernio ad.
+                from_date: Start of metrics date range (YYYY-MM-DD). Defaults to 90 days ago.
+                to_date: End of metrics date range (YYYY-MM-DD). Defaults to today. Max 730-day range.
+                view: `full` (default) returns every field. `summary` is about 80% smaller per ad and keeps only:
+
+        - `_id`, `name`, `platform`, `status`, `platformStatus`, `servingStatuses` (left out when empty), `configuredStatus`, `reviewStatus`, `rejectionReason`, `goal`.
+        - The platform ids, `accountId`, `profileId`, `campaignName`, `adSetName`, `budget`, `currency`, `isExternal`, `creativeType`, `platformCreatedAt`, `createdAt`.
+        - `postId` as the post id, not the expanded post.
+        - `creative` with only `headline`, `body` (cut to 200 characters), `linkUrl`, `callToAction` and `effectiveObjectStoryId`.
+        - `metrics` without `costPerAction` and without any metric that is 0: an absent metric means 0.
+
+        Read one ad with `platformAdId` and `view=full` for the rest. Defaults to summary here; pass full for everything."""
         client = _get_client()
         try:
             response = client.ad_campaigns.list_ads(
@@ -6281,6 +6291,7 @@ def register_generated_tools(mcp, _get_client):
                 effective_instagram_media_id=effective_instagram_media_id,
                 from_date=from_date,
                 to_date=to_date,
+                view=view,
             )
             return _format_response(response)
         except Exception as e:
@@ -7912,6 +7923,7 @@ def register_generated_tools(mcp, _get_client):
         page: int = 1,
         limit: int = 20,
         live: bool = False,
+        view: Literal["full", "summary"] = "summary",
     ) -> str:
         """List ad sets
 
@@ -7953,7 +7965,8 @@ def register_generated_tools(mcp, _get_client):
         **On X** the budget is read live too:
 
         - GET /v1/ads/{adId}: `budget`, `adSetBudget`, `campaignBudget` and `budgetLevel` are the line item and campaign budgets X holds now (stored like the switches).
-        - Ad set and campaign listings: `budget` is what that line item or campaign holds now (returned, not stored). A row whose budget the other level holds keeps its synced `budget`."""
+        - Ad set and campaign listings: `budget` is what that line item or campaign holds now (returned, not stored). A row whose budget the other level holds keeps its synced `budget`.
+                view: `full` returns every field. `summary` leaves `targeting` out of each ad set, which is most of a row's size; read one ad set's targeting with `adSetId` and `view=full`. Defaults to summary here; pass full for everything."""
         client = _get_client()
         try:
             response = client.ad_campaigns.list_ad_sets(
@@ -7966,6 +7979,7 @@ def register_generated_tools(mcp, _get_client):
                 page=page,
                 limit=max(1, min(limit, 40)),
                 live=live,
+                view=view,
             )
             return _format_response(response)
         except Exception as e:
@@ -8622,6 +8636,7 @@ def register_generated_tools(mcp, _get_client):
         daily_level: Literal["campaign", "adset", "ad"] = "campaign",
         compare: Literal["previous"] | None = None,
         results: bool | None = None,
+        depth: Literal["campaign", "adset", "ad"] = "adset",
     ) -> str:
         """Get campaign tree
 
@@ -8690,7 +8705,12 @@ def register_generated_tools(mcp, _get_client):
         - `adset`: on ad sets too.
         - `ad`: on every ad in `ads[]` as well. Heaviest (a long range × up to 100 ads per ad set); scope with `campaignId` to keep responses small.
                 compare: Set to `previous` to also read the period of the same length that ends the day before `fromDate`. Every campaign, ad set and ad gains `previousMetrics` (same fields as `metrics`) and the response gains `previousRange`, so a table can show the change against the previous period in one call.
-                results: Set to `true` to add your own results (see [Campaign results](/guides/campaign-results)): every campaign gains `results`, the values you sent for the range plus each formula they allow, and the response gains `resultMetrics` to label them."""
+                results: Set to `true` to add your own results (see [Campaign results](/guides/campaign-results)): every campaign gains `results`, the values you sent for the range plus each formula they allow, and the response gains `resultMetrics` to label them.
+                depth: How deep the tree goes. Metrics always roll up over every ad, whatever the depth.
+
+        - `ad` (default): campaigns, their ad sets and each ad set's ads.
+        - `adset`: campaigns and ad sets; every `ads[]` is empty and `adCount` still counts the ads.
+        - `campaign`: campaigns only; every `adSets[]` is empty and `adSetCount` / `adCount` still count them. Defaults to adset here; pass ad for everything."""
         client = _get_client()
         try:
             response = client.ad_campaigns.get_ad_tree(
@@ -8715,6 +8735,7 @@ def register_generated_tools(mcp, _get_client):
                 daily_level=daily_level,
                 compare=compare,
                 results=results,
+                depth=depth,
             )
             return _format_response(response)
         except Exception as e:
@@ -14256,7 +14277,7 @@ def register_generated_tools(mcp, _get_client):
             sort_by: Sort by date, engagement, or a specific metric. Platform-specific metrics (follows, reposts, reels_skip_rate, ig_reels_*, completion_rate, profile_views, website_clicks) sort a null value as 0.
             order: Sort order
             tags: Comma-separated tags (at most 20). Lists only posts created through Zernio that carry every listed tag, matched exactly and case-sensitively. Up to 200 published posts can match within the date range; more returns 400 asking to narrow fromDate and toDate. Ignored when postId is set.
-            view: full returns the listing as before. summary leaves out the accounts list, each platform entry's copy of analytics, the impressionSources, audienceTypes, audienceCountries and retentionCurve maps, and mediaItems (thumbnailUrl stays). Ignored when postId is set. Defaults to summary here; pass full for every field."""
+            view: full returns the listing as before. summary leaves out the accounts list, each platform entry's copy of analytics, the impressionSources, audienceTypes, audienceCountries and retentionCurve maps, and mediaItems (thumbnailUrl stays). Ignored when postId is set. Defaults to summary here; pass full for everything."""
         client = _get_client()
         try:
             response = client.analytics.get_analytics(

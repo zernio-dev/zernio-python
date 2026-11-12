@@ -94,6 +94,7 @@ class AdCampaignsResource:
         effective_instagram_media_id: str | None = None,
         from_date: str | None = None,
         to_date: str | None = None,
+        view: str | None = "full",
     ) -> dict[str, Any]:
         """List ads"""
         params = self._build_params(
@@ -113,6 +114,7 @@ class AdCampaignsResource:
             effective_instagram_media_id=effective_instagram_media_id,
             from_date=from_date,
             to_date=to_date,
+            view=view,
         )
         return self._client._get("/v1/ads", params=params)
 
@@ -658,6 +660,7 @@ class AdCampaignsResource:
         page: int | None = 1,
         limit: int | None = 500,
         live: bool | None = False,
+        view: str | None = "full",
     ) -> dict[str, Any]:
         """List ad sets"""
         params = self._build_params(
@@ -670,6 +673,7 @@ class AdCampaignsResource:
             page=page,
             limit=limit,
             live=live,
+            view=view,
         )
         return self._client._get("/v1/ads/ad-sets", params=params)
 
@@ -893,6 +897,7 @@ class AdCampaignsResource:
         daily_level: str | None = "campaign",
         compare: str | None = None,
         results: bool | None = None,
+        depth: str | None = "ad",
     ) -> dict[str, Any]:
         """Get campaign tree"""
         params = self._build_params(
@@ -917,6 +922,7 @@ class AdCampaignsResource:
             daily_level=daily_level,
             compare=compare,
             results=results,
+            depth=depth,
         )
         return self._client._get("/v1/ads/tree", params=params)
 
@@ -1810,6 +1816,7 @@ class AdCampaignsResource:
         effective_instagram_media_id: str | None = None,
         from_date: str | None = None,
         to_date: str | None = None,
+        view: str | None = "full",
     ) -> dict[str, Any]:
         """List ads (async)"""
         params = self._build_params(
@@ -1829,6 +1836,7 @@ class AdCampaignsResource:
             effective_instagram_media_id=effective_instagram_media_id,
             from_date=from_date,
             to_date=to_date,
+            view=view,
         )
         return await self._client._aget("/v1/ads", params=params)
 
@@ -2386,6 +2394,7 @@ class AdCampaignsResource:
         page: int | None = 1,
         limit: int | None = 500,
         live: bool | None = False,
+        view: str | None = "full",
     ) -> dict[str, Any]:
         """List ad sets (async)"""
         params = self._build_params(
@@ -2398,6 +2407,7 @@ class AdCampaignsResource:
             page=page,
             limit=limit,
             live=live,
+            view=view,
         )
         return await self._client._aget("/v1/ads/ad-sets", params=params)
 
@@ -2625,6 +2635,7 @@ class AdCampaignsResource:
         daily_level: str | None = "campaign",
         compare: str | None = None,
         results: bool | None = None,
+        depth: str | None = "ad",
     ) -> dict[str, Any]:
         """Get campaign tree (async)"""
         params = self._build_params(
@@ -2649,6 +2660,7 @@ class AdCampaignsResource:
             daily_level=daily_level,
             compare=compare,
             results=results,
+            depth=depth,
         )
         return await self._client._aget("/v1/ads/tree", params=params)
 
