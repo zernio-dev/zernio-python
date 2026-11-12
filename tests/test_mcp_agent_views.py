@@ -87,7 +87,9 @@ def test_listings_default_to_the_summary_view_for_agents(
     )
 
 
-def test_the_ads_tree_defaults_to_ad_set_depth_for_agents(mcp_generator) -> None:
+def test_the_ads_tree_defaults_to_campaign_depth_and_says_how_to_drill_down(
+    mcp_generator,
+) -> None:
     operation = _operation("getAdTree", "depth", ["campaign", "adset", "ad"], "ad")
     params = mcp_generator._with_agent_view(
         "getAdTree", mcp_generator.extract_parameters(operation, {})
@@ -102,8 +104,11 @@ def test_the_ads_tree_defaults_to_ad_set_depth_for_agents(mcp_generator) -> None
         "Get ad tree",
     )
 
-    assert "depth: Literal['campaign', 'adset', 'ad'] = \"adset\"" in handler
-    assert "Defaults to adset here; pass ad for everything." in handler
+    assert "depth: Literal['campaign', 'adset', 'ad'] = \"campaign\"" in handler
+    assert (
+        "Defaults to campaign here; pass adset with campaignId for one campaign's ad sets, or ad for everything."
+        in handler
+    )
 
 
 def test_a_tree_spec_without_the_depth_parameter_warns_and_keeps_its_parameters(
