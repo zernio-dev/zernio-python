@@ -85,6 +85,7 @@ class CommentsResource:
         sort_by: str | None = "date",
         sort_order: str | None = "desc",
         limit: int | None = 50,
+        view: str | None = "full",
         cursor: str | None = None,
         account_id: str | None = None,
     ) -> dict[str, Any]:
@@ -97,6 +98,7 @@ class CommentsResource:
             sort_by=sort_by,
             sort_order=sort_order,
             limit=limit,
+            view=view,
             cursor=cursor,
             account_id=account_id,
         )
@@ -111,6 +113,7 @@ class CommentsResource:
         limit: int | None = 25,
         cursor: str | None = None,
         comment_id: str | None = None,
+        view: str | None = "full",
     ) -> dict[str, Any]:
         """Get post comments"""
         params = self._build_params(
@@ -119,6 +122,7 @@ class CommentsResource:
             limit=limit,
             cursor=cursor,
             comment_id=comment_id,
+            view=view,
         )
         return self._client._get(f"/v1/inbox/comments/{post_id}", params=params)
 
@@ -340,6 +344,7 @@ class CommentsResource:
         sort_by: str | None = "date",
         sort_order: str | None = "desc",
         limit: int | None = 50,
+        view: str | None = "full",
         cursor: str | None = None,
         account_id: str | None = None,
     ) -> dict[str, Any]:
@@ -352,6 +357,7 @@ class CommentsResource:
             sort_by=sort_by,
             sort_order=sort_order,
             limit=limit,
+            view=view,
             cursor=cursor,
             account_id=account_id,
         )
@@ -366,6 +372,7 @@ class CommentsResource:
         limit: int | None = 25,
         cursor: str | None = None,
         comment_id: str | None = None,
+        view: str | None = "full",
     ) -> dict[str, Any]:
         """Get post comments (async)"""
         params = self._build_params(
@@ -374,6 +381,7 @@ class CommentsResource:
             limit=limit,
             cursor=cursor,
             comment_id=comment_id,
+            view=view,
         )
         return await self._client._aget(f"/v1/inbox/comments/{post_id}", params=params)
 

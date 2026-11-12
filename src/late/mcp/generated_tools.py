@@ -21439,6 +21439,7 @@ def register_generated_tools(mcp, _get_client):
         sort_by: Literal["date", "comments"] = "date",
         sort_order: Literal["asc", "desc"] = "desc",
         limit: int = 50,
+        view: Literal["full", "summary"] = "summary",
         cursor: str | None = None,
         account_id: str | None = None,
     ) -> str:
@@ -21471,6 +21472,7 @@ def register_generated_tools(mcp, _get_client):
                 sort_by: Sort field
                 sort_order: Sort order
                 limit
+                view: full returns every post as before. summary leaves out `picture` and cuts `content` to 280 characters, marking a cut caption with `contentTruncated: true`. Defaults to summary here; pass full for everything.
                 cursor
                 account_id: Filter by specific account ID.
 
@@ -21487,6 +21489,7 @@ def register_generated_tools(mcp, _get_client):
                 sort_by=sort_by,
                 sort_order=sort_order,
                 limit=limit,
+                view=view,
                 cursor=cursor,
                 account_id=account_id,
             )
@@ -21509,6 +21512,7 @@ def register_generated_tools(mcp, _get_client):
         limit: int = 25,
         cursor: str | None = None,
         comment_id: str | None = None,
+        view: Literal["full", "summary"] = "summary",
     ) -> str:
         """Get post comments
 
@@ -21542,7 +21546,12 @@ def register_generated_tools(mcp, _get_client):
                 subreddit: (Reddit only) Subreddit name
                 limit: Maximum number of comments to return
                 cursor: Pagination cursor, returned by a previous call as `pagination.cursor`. This is the platform's own opaque paging value passed through verbatim: never construct, decode or validate it client-side.
-                comment_id: (Facebook, Instagram, Reddit and TikTok) Get replies to a specific comment. On Facebook and Instagram, the requested comment is returned in the top-level `comment` field and comments[] holds its replies."""
+                comment_id: (Facebook, Instagram, Reddit and TikTok) Get replies to a specific comment. On Facebook and Instagram, the requested comment is returned in the top-level `comment` field and comments[] holds its replies.
+                view: `full` returns every comment as before. `summary` is a lighter page for agents and large polls:
+
+        - Each comment leaves out `from.picture`, `url`, `platform` and every flag that is false.
+        - At most 3 nested replies per comment. A comment with more replies than it carries has `repliesHasMore: true`: fetch the rest with `commentId` (Facebook, Instagram, Reddit, TikTok) or with view=full.
+        - `post` leaves out `thumbnailUrl` and `mediaUrl`. Defaults to summary here; pass full for everything."""
         client = _get_client()
         try:
             response = client.comments.get_inbox_post_comments(
@@ -21552,6 +21561,7 @@ def register_generated_tools(mcp, _get_client):
                 limit=limit,
                 cursor=cursor,
                 comment_id=comment_id,
+                view=view,
             )
             return _format_response(response)
         except Exception as e:
@@ -42822,6 +42832,7 @@ def register_generated_tools(mcp, _get_client):
         offset: int | None = None,
         cursor: str | None = None,
         fields: str | None = None,
+        view: Literal["full", "summary"] = "summary",
         updated_since: str | None = None,
         source: Literal["zernio", "external"] = "zernio",
         status: Literal[
@@ -42874,6 +42885,13 @@ def register_generated_tools(mcp, _get_client):
         Accepted: `userId`, `title`, `content`, `mediaItems`, `platforms`, `scheduledFor`, `timezone`, `status`, `tags`, `hashtags`, `mentions`, `visibility`, `metadata`, `recycling`, `recycledFromPostId`, `queuedFromProfile`, `queueId`, `createdAt`, `updatedAt`.
 
         An unknown field returns 400 naming it. `fields=_id` returns ids only. Omit it (or send it empty) for the full post. Not available with `source=external`.
+                view: `full` returns the whole post. `summary` returns only what an agent needs to read a page of posts:
+
+        - Post: `_id`, `title`, `content`, `status`, `scheduledFor`, `timezone`, `tags`, `createdAt`, `updatedAt`, and `contentNotRetained` when set.
+        - Each platform: `platform`, `status`, `accountId` (the id), `username`, `scheduledFor`, `publishedAt`, `platformPostId`, `platformPostUrl`, `errorMessage`, `errorCategory`.
+        - Left out: the author (`userId`), `mediaItems`, `metadata`, `recycling`, and each platform's custom content, custom media and `platformSpecificData`. Null values are left out too.
+
+        Works with both sources. Send either `fields` or `view=summary`: both together return 400. Defaults to summary here; pass full for everything.
                 updated_since: Only posts whose `updatedAt` is at or after this ISO 8601 timestamp (an offset or `Z` required).
 
         `updatedAt` moves when the post or any of its platforms changes (an edit, a status change, a platform publishing or failing). To keep a copy in sync, send the time of your previous sync instead of reading every page again.
@@ -42901,6 +42919,7 @@ def register_generated_tools(mcp, _get_client):
                 offset=offset,
                 cursor=cursor,
                 fields=fields,
+                view=view,
                 updated_since=updated_since,
                 source=source,
                 status=status,

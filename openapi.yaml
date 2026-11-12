@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.589.0"
+  version: "1.590.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -19587,10 +19587,16 @@ components:
         metric:
           type: string
           anyOf:
-            - enum: [spend, impressions, clicks, conversions, ctr, cpc, cpm, cpa, roas, reach, frequency, daily_budget, budget_used, day_of_month, working_day_of_month]
+            - enum: [spend, impressions, clicks, conversions, ctr, cpc, cpm, cpa, roas, reach, frequency, daily_budget, budget_used, day_of_month, working_day_of_month, search_impression_share, search_budget_lost_impression_share, search_rank_lost_impression_share]
             - pattern: '^result:[a-z][a-z0-9_]{0,39}$'
           description: |
             `ctr` is a percentage. `spend`, `cpc`, `cpm` and `cpa` are in the ad account currency. `reach` and `frequency` use the platform's de-duplicated reach, so they are accepted on Meta and TikTok only.
+
+            On Google campaign rules, `frequency` reads Google's own average impressions per user over the window.
+
+            `search_impression_share`, `search_budget_lost_impression_share` and `search_rank_lost_impression_share` are Google's Search impression share and the shares lost to budget and to ad rank, in percent. Campaign rules on Google only.
+
+            They are read live from Google, not in groups and not with `usual`. A campaign Google gives no value for (one not on Search) never matches.
 
             `daily_budget` is the object's synced daily budget. `budget_used` is spend over the window as a percent of that budget for each day of the window: `today` `>=` 200 means twice the budget spent.
 
@@ -19748,7 +19754,7 @@ components:
           description: Exactly one of `percent` and `amount`.
           properties:
             type: { type: string, enum: [reallocate_budget], description: "Move daily budget from the matched objects ranked worst by `metric` to those ranked best, keeping the total the same. Not with `lifecycle` or `groups`.\n\nCampaign or ad set rules where the budget sits at that level: objects whose budget sits at another level (Meta CBO and ad set budgets), Google shared budgets and lifetime budgets are left out.\n\nChanges are reserved all at once: when `maxChangesPerDay` would hold back any of them, none is made. A receiver is raised only after every giver's cut applied (else it fails with `reallocation_incomplete` and the move is tried again next run).\n\nAmounts move in the currency's smallest unit (whole units for JPY or KRW). Counts as raising live spend for the free ads allowance." }
-            metric: { type: string, description: "What objects are ranked by: any condition metric except `day_of_month` and `working_day_of_month`, or a result metric (`result:<key>`) on campaign rules.\n\nObjects without a value are not ranked, except one that spent with no result on a metric where lower is best (a CPA with no conversions): it ranks worst and only gives." }
+            metric: { type: string, description: "What objects are ranked by: any condition metric except `day_of_month`, `working_day_of_month` and the Google impression shares, or a result metric (`result:<key>`) on campaign rules.\n\nObjects without a value are not ranked, except one that spent with no result on a metric where lower is best (a CPA with no conversions): it ranks worst and only gives." }
             window: { type: string, description: 'The period the metric is read over, like a condition window.' }
             best: { type: string, enum: [highest, lowest], description: 'Which end of the ranking is best. Defaults to `lowest` for `cpa`, `cpc`, `cpm`, `frequency` and result metrics whose formula has spend above the line (cost per sale, %CAC), `highest` otherwise.' }
             from: { type: object, required: [count], properties: { count: { type: integer, minimum: 1, maximum: 10 } }, description: 'How many of the worst-ranked objects give budget.' }
@@ -19822,7 +19828,7 @@ components:
     AdRuleFilters:
       type: array
       maxItems: 10
-      description: 'Narrows the objects the rule checks. Every filter must hold. A campaign rule reads `name`, `campaign_id`, `goal`, `days_live`, `days_since_change` and `budget_level`; an ad set rule all but `days_since_change`, plus `campaign_name` and `adset_id`; an ad rule also `adset_name` and `ad_id`.'
+      description: 'Narrows the objects the rule checks. Every filter must hold. A campaign rule reads `name`, `campaign_id`, `goal`, `days_live`, `days_since_change`, `budget_level` and `channel_type`; an ad set rule all but `days_since_change`, plus `campaign_name` and `adset_id`; an ad rule also `adset_name` and `ad_id`.'
       items:
         oneOf:
           - type: object
@@ -19849,6 +19855,14 @@ components:
               field: { type: string, enum: [budget_level] }
               op: { type: string, enum: [equals] }
               value: { type: string, enum: [campaign, adset] }
+          - type: object
+            title: Channel type
+            required: [field, op, values]
+            description: 'Picks (`in`) or leaves out (`not_in`) objects by their Google campaign type. Google rules only.'
+            properties:
+              field: { type: string, enum: [channel_type] }
+              op: { type: string, enum: [in, not_in] }
+              values: { type: array, minItems: 1, maxItems: 12, items: { type: string, enum: [SEARCH, DISPLAY, SHOPPING, HOTEL, VIDEO, MULTI_CHANNEL, LOCAL, SMART, PERFORMANCE_MAX, LOCAL_SERVICES, TRAVEL, DEMAND_GEN] } }
           - type: object
             title: Days live
             required: [field, op, value]
@@ -20068,6 +20082,14 @@ components:
             field: { type: string, const: budget_level }
             op: { type: string, const: equals }
             value: { type: string, enum: [campaign, adset] }
+        - type: object
+          required: [field, op, values]
+          additionalProperties: false
+          description: 'Picks or leaves out objects by their Google campaign type. Google ad accounts only.'
+          properties:
+            field: { type: string, const: channel_type }
+            op: { type: string, enum: [in, not_in] }
+            values: { type: array, minItems: 1, maxItems: 12, items: { type: string, enum: [SEARCH, DISPLAY, SHOPPING, HOTEL, VIDEO, MULTI_CHANNEL, LOCAL, SMART, PERFORMANCE_MAX, LOCAL_SERVICES, TRAVEL, DEMAND_GEN] } }
     AutomationSubjects:
       type: object
       required: [each, adAccounts]
@@ -38088,6 +38110,17 @@ paths:
             Accepted: `userId`, `title`, `content`, `mediaItems`, `platforms`, `scheduledFor`, `timezone`, `status`, `tags`, `hashtags`, `mentions`, `visibility`, `metadata`, `recycling`, `recycledFromPostId`, `queuedFromProfile`, `queueId`, `createdAt`, `updatedAt`.
 
             An unknown field returns 400 naming it. `fields=_id` returns ids only. Omit it (or send it empty) for the full post. Not available with `source=external`.
+        - name: view
+          in: query
+          schema: { type: string, enum: [full, summary], default: full }
+          description: |
+            `full` returns the whole post. `summary` returns only what an agent needs to read a page of posts:
+
+            - Post: `_id`, `title`, `content`, `status`, `scheduledFor`, `timezone`, `tags`, `createdAt`, `updatedAt`, and `contentNotRetained` when set.
+            - Each platform: `platform`, `status`, `accountId` (the id), `username`, `scheduledFor`, `publishedAt`, `platformPostId`, `platformPostUrl`, `errorMessage`, `errorCategory`.
+            - Left out: the author (`userId`), `mediaItems`, `metadata`, `recycling`, and each platform's custom content, custom media and `platformSpecificData`. Null values are left out too.
+
+            Works with both sources. Send either `fields` or `view=summary`: both together return 400.
         - name: updatedSince
           in: query
           schema: { type: string, format: date-time }
@@ -61178,6 +61211,12 @@ paths:
         - name: limit
           in: query
           schema: { type: integer, minimum: 1, maximum: 100, default: 50 }
+        - name: view
+          in: query
+          schema: { type: string, enum: [full, summary], default: full }
+          description: >-
+            full returns every post as before. summary leaves out `picture` and cuts `content` to 280 characters,
+            marking a cut caption with `contentTruncated: true`.
         - name: cursor
           in: query
           schema: { type: string }
@@ -61209,6 +61248,7 @@ paths:
                         accountUsername: { type: string }
                         content: { type: string, description: "The post text/caption. On ad rows (isAd: true) this is the AD NAME, not the underlying post's caption. The creative text isn't exposed here." }
                         picture: { type: [string, "null"], description: 'Post media thumbnail. On ad rows this is the ad creative thumbnail.' }
+                        contentTruncated: { type: boolean, description: 'Only with view=summary, and only when `content` was cut to 280 characters.' }
                         permalink: { type: [string, "null"], description: 'Public URL of the post. On ad rows: the Facebook dark-post URL (facebook placement) or the IG media permalink (instagram placement); may be null when unknown.' }
                         createdTime: { type: string, format: date-time }
                         commentCount: { type: integer }
@@ -61329,6 +61369,15 @@ paths:
           in: query
           schema: { type: string }
           description: '(Facebook, Instagram, Reddit and TikTok) Get replies to a specific comment. On Facebook and Instagram, the requested comment is returned in the top-level `comment` field and comments[] holds its replies.'
+        - name: view
+          in: query
+          schema: { type: string, enum: [full, summary], default: full }
+          description: |
+            `full` returns every comment as before. `summary` is a lighter page for agents and large polls:
+
+            - Each comment leaves out `from.picture`, `url`, `platform` and every flag that is false.
+            - At most 3 nested replies per comment. A comment with more replies than it carries has `repliesHasMore: true`: fetch the rest with `commentId` (Facebook, Instagram, Reddit, TikTok) or with view=full.
+            - `post` leaves out `thumbnailUrl` and `mediaUrl`.
       responses:
         '200':
           description: Comments for the post
@@ -61374,7 +61423,7 @@ paths:
 
                             Fetch the rest by passing the comment id as the `commentId` query parameter to GET /v1/inbox/comments/{postId} (or, for backwards compatibility, as `postId`).
 
-                            Absent (not false) on every other platform, including Instagram, which has no equivalent signal.
+                            Absent (not false) on every other platform, including Instagram, which has no equivalent signal, except with view=summary, where it is also true on any comment whose `replyCount` is higher than the replies it carries (nested replies are cut to 3 there).
                         canReply: { type: boolean, description: "Whether this comment can be replied to. Always present." }
                         canDelete: { type: boolean, description: "Whether DELETE is expected to work on this comment. True for the account's own comments, and for anyone's comment on Facebook, Instagram, YouTube and LinkedIn organization accounts. On TikTok, TikTok's own flag decides. False does not block the call: the platform decides. Always present." }
                         canHide: { type: boolean, description: "Whether hide is supported for this comment's platform (Facebook, Instagram, Threads, X, TikTok). It does not check each comment: X needs a conversation started by the account, and Threads only hides top-level replies. Always present." }
