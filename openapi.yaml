@@ -15556,10 +15556,11 @@ components:
             accountStats:
               type: object
               description: |
-                Platform-specific account stats from the latest daily snapshot.
-                Fields vary by platform. Only present if metadata has been captured.
+                Platform-specific account counters from the latest daily snapshot.
+                Each platform reports its own subset of the keys below, and no other key is returned. Absent when the platform reports none of them.
               properties:
-                followingCount: { type: number, description: Number of accounts being followed }
+                followingCount: { type: number, description: "Number of accounts being followed (TikTok, X, Pinterest, Bluesky)" }
+                followsCount: { type: number, description: Number of accounts being followed (Instagram) }
                 mediaCount: { type: number, description: Total media posts (Instagram) }
                 videoCount: { type: number, description: "Total videos (YouTube, TikTok)" }
                 tweetCount: { type: number, description: Total tweets (X) }
@@ -15567,7 +15568,7 @@ components:
                 pinCount: { type: number, description: Total pins (Pinterest) }
                 totalViews: { type: number, description: Total channel views (YouTube) }
                 likesCount: { type: number, description: Total likes received (TikTok) }
-                monthlyViews: { type: number, description: Monthly profile views (Pinterest) }
+                monthlyViews: { type: [number, "null"], description: "Monthly profile views (Pinterest). null when Pinterest reports no window" }
                 listedCount: { type: number, description: Lists the user appears on (X) }
                 boardCount: { type: number, description: Total boards (Pinterest) }
     ApiKey:
