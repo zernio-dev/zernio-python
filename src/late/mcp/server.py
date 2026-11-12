@@ -109,13 +109,10 @@ def _api_transport() -> httpx.BaseTransport:
 
 # Always-visible core: the 20 hand-written ergonomic tools (guardrails +
 # LLM-shaped args, preferred over their raw generated twins) plus the generated
-# tools most sessions need, chosen by measured use: posting, pre-publish
-# validation, account health, cross-platform analytics basics, engagement on
-# published posts, and the inbox conversation and media URL reads that 6-13% of
-# sessions otherwise reached through a search. Every pinned definition is sent
-# on every turn of every session, so a tool few sessions call (the scheduling
-# queue, tracking tags, usage) stays behind the BM25 tool-search transform
-# (search_tools / call_tool) with the rest of the ~1,200 generated tools.
+# tools most sessions need, chosen by measured use. Every pinned definition is
+# sent on every turn of every session, so a tool few sessions call stays behind
+# the BM25 tool-search transform (search_tools / call_tool) with the rest of the
+# generated tools.
 _PINNED_TOOLS = [
     # Hand-written ergonomic tools
     "accounts_list", "accounts_get",
@@ -248,7 +245,8 @@ class _AnnotatedBM25SearchTransform(BM25SearchTransform):
 
 
 def _names_sharing_words(guess: str, names: Sequence[str]) -> list[str]:
-    guess_words = set(guess.lower().split("_"))
+    split_camel_case = re.sub(r"([a-z0-9])([A-Z])", r"\1_\2", guess)
+    guess_words = set(re.findall(r"[a-z0-9]+", split_camel_case.lower()))
     shared = {name: len(guess_words & set(name.split("_"))) for name in names}
     ranked = sorted(
         (n for n, count in shared.items() if count >= 2), key=lambda n: -shared[n]

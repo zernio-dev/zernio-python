@@ -14,6 +14,8 @@ async def _call(name: str, arguments: dict) -> tuple[bool, str]:
     ("guess", "real"),
     [
         ("inbox_list_conversations", "messages_list_inbox_conversations"),
+        ("inboxListConversations", "messages_list_inbox_conversations"),
+        ("inbox-get-conversation-messages", "messages_get_inbox_conversation_messages"),
         ("ads_list_ads", "ad_campaigns_list_ads"),
         ("comment_automations_list", "comment_automations_list_comment_automations"),
     ],
