@@ -1,8 +1,10 @@
 """Authentication module for Zernio MCP HTTP server."""
 
+import asyncio
 import hashlib
 import logging
 import os
+import threading
 import time
 from collections import OrderedDict
 from enum import Enum
@@ -88,11 +90,11 @@ _VERIFY_TIMEOUT = 10.0
 # --workers), and a shared store would put a new dependency in front of auth,
 # which is how you rebuild this same outage.
 _VERIFIED_AT: OrderedDict[str, float] = OrderedDict()
+_VERIFIED_CACHE_LOCK = threading.Lock()
 _VERIFIED_CACHE_MAX = 10_000
-# Mirrors the 60s Redis TTL the API itself keeps on apikey:{keyHash}
-# (Schedule-Posts-API libs/api-auth.ts:471), so this adds no revocation window
-# the platform does not already have.
-_FRESH_TTL_SECONDS = 60.0
+_FRESH_TTL_SECONDS = 600.0
+_VERIFY_KEEPALIVE_SECONDS = 60.0
+_IN_FLIGHT: dict[str, "asyncio.Task[Verification]"] = {}
 # Only used when upstream could not answer. Blast radius is bounded to
 # nothing: the MCP stores no data and every tool call re-presents the same
 # key to the same API, so a revoked key honoured here still cannot read or
@@ -140,10 +142,32 @@ def token_cache_key(token: str) -> str:
 
 
 def _remember(token_key: str, now: float) -> None:
-    _VERIFIED_AT[token_key] = now
-    _VERIFIED_AT.move_to_end(token_key)
-    while len(_VERIFIED_AT) > _VERIFIED_CACHE_MAX:
-        _VERIFIED_AT.popitem(last=False)
+    with _VERIFIED_CACHE_LOCK:
+        _VERIFIED_AT[token_key] = now
+        _VERIFIED_AT.move_to_end(token_key)
+        while len(_VERIFIED_AT) > _VERIFIED_CACHE_MAX:
+            _VERIFIED_AT.popitem(last=False)
+
+
+def _touch(token_key: str) -> None:
+    with _VERIFIED_CACHE_LOCK:
+        if token_key in _VERIFIED_AT:
+            _VERIFIED_AT.move_to_end(token_key)
+
+
+def _forget(token_key: str) -> None:
+    with _VERIFIED_CACHE_LOCK:
+        _VERIFIED_AT.pop(token_key, None)
+
+
+def forget_rejected_token(token: str) -> None:
+    _forget(token_cache_key(token))
+
+
+def _new_verify_client() -> httpx.AsyncClient:
+    return httpx.AsyncClient(
+        limits=httpx.Limits(keepalive_expiry=_VERIFY_KEEPALIVE_SECONDS)
+    )
 
 
 async def verify_late_api_key(
@@ -155,8 +179,8 @@ async def verify_late_api_key(
     Returns a three-valued Verification, NOT a bool: never write
     ``if await verify_late_api_key(...)``, every Enum member is truthy.
 
-    client is injected by tests (httpx.MockTransport); production opens a
-    per-call client and must not close an injected one.
+    Without a client this opens and closes one per call; ZernioTokenVerifier
+    passes its long-lived client so verifications reuse warm connections.
     """
     owns_client = client is None
     client = client or httpx.AsyncClient()
@@ -198,7 +222,7 @@ class ZernioTokenVerifier(TokenVerifier):
 
     def __init__(self, *, client: httpx.AsyncClient | None = None) -> None:
         super().__init__()
-        self._client = client
+        self._client = client or _new_verify_client()
 
     async def verify_token(self, token: str) -> AccessToken | None:
         token_key = token_cache_key(token)
@@ -206,17 +230,20 @@ class ZernioTokenVerifier(TokenVerifier):
         verified_at = _VERIFIED_AT.get(token_key)
 
         if verified_at is not None and now - verified_at < _FRESH_TTL_SECONDS:
-            _VERIFIED_AT.move_to_end(token_key)
-            return self._grant(token)
+            _touch(token_key)
+            return self._grant(token, resolved_by="cache")
 
-        verdict = await verify_late_api_key(token, client=self._client)
+        joined = token_key in _IN_FLIGHT
+        verdict = await self._verify_once(token, token_key)
+        waited_ms = round((time.monotonic() - now) * 1000)
+        resolved_by = "joined" if joined else "upstream"
 
         if verdict is Verification.VALID:
             _remember(token_key, now)
-            return self._grant(token)
+            return self._grant(token, resolved_by=resolved_by, waited_ms=waited_ms)
 
         if verdict is Verification.INVALID:
-            _VERIFIED_AT.pop(token_key, None)
+            _forget(token_key)
             return None
 
         # UNKNOWN. Honour a token upstream confirmed recently; refuse to
@@ -228,24 +255,41 @@ class ZernioTokenVerifier(TokenVerifier):
         # type OTHER than AuthenticationError escapes as a 500 with the
         # message swallowed.
         if verified_at is not None and now - verified_at < _GRACE_TTL_SECONDS:
-            # Guarded because the await above can suspend for the full verify
-            # timeout, and a concurrent request may LRU-evict this key while
-            # we are parked. A bare move_to_end would raise KeyError, which is
-            # not AuthenticationError and so escapes as a 500.
-            if token_key in _VERIFIED_AT:
-                _VERIFIED_AT.move_to_end(token_key)
+            _touch(token_key)
             logger.warning(
                 "Granting %s... from cache: upstream unreachable",
                 token_key[:12],
             )
-            return self._grant(token)
+            return self._grant(token, resolved_by="grace", waited_ms=waited_ms)
         raise AuthenticationError(
             "Zernio API is temporarily unreachable, so this token could not "
             "be verified. Your credentials are fine; retry in a moment."
         )
 
-    def _grant(self, token: str) -> AccessToken:
-        return AccessToken(token=token, client_id="zernio", scopes=list(OAUTH_SCOPES))
+    async def _verify_once(self, token: str, token_key: str) -> Verification:
+        task = _IN_FLIGHT.get(token_key)
+        if task is None:
+            task = asyncio.ensure_future(
+                verify_late_api_key(token, client=self._client)
+            )
+            _IN_FLIGHT[token_key] = task
+            task.add_done_callback(lambda done: _release_in_flight(token_key, done))
+        return await asyncio.shield(task)
+
+    def _grant(
+        self, token: str, *, resolved_by: str, waited_ms: int = 0
+    ) -> AccessToken:
+        return AccessToken(
+            token=token,
+            client_id="zernio",
+            scopes=list(OAUTH_SCOPES),
+            claims={"resolved_by": resolved_by, "waited_ms": waited_ms},
+        )
+
+
+def _release_in_flight(token_key: str, task: "asyncio.Task[Verification]") -> None:
+    if _IN_FLIGHT.get(token_key) is task:
+        del _IN_FLIGHT[token_key]
 
 
 class VerbatimIssuerRemoteAuthProvider(RemoteAuthProvider):

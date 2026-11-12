@@ -47,7 +47,7 @@ from mcp.types import ToolAnnotations
 from late import Late, MediaType, PostStatus
 from late.client.exceptions import LateAPIError, LateError, LateRateLimitError
 
-from .auth import build_auth_provider
+from .auth import build_auth_provider, forget_rejected_token
 from .feedback_source import FEEDBACK_TOOL, FeedbackSourceMiddleware
 from .idempotency import same_arguments_key
 from .resources import register_resources
@@ -86,10 +86,25 @@ _UPSTREAM_MAX_ATTEMPTS = 2
 _thread_state = threading.local()
 
 
-def _api_transport() -> httpx.HTTPTransport:
+class _ApiTransport(httpx.BaseTransport):
+    def __init__(self, inner: httpx.BaseTransport | None = None) -> None:
+        self._inner = inner or httpx.HTTPTransport()
+
+    def handle_request(self, request: httpx.Request) -> httpx.Response:
+        response = self._inner.handle_request(request)
+        if response.status_code == 401:
+            bearer = request.headers.get("Authorization", "")
+            forget_rejected_token(bearer.removeprefix("Bearer "))
+        return response
+
+    def close(self) -> None:
+        self._inner.close()
+
+
+def _api_transport() -> httpx.BaseTransport:
     transport = getattr(_thread_state, "transport", None)
     if transport is None:
-        transport = _thread_state.transport = httpx.HTTPTransport()
+        transport = _thread_state.transport = _ApiTransport()
     return transport
 
 # Always-visible core: the 20 hand-written ergonomic tools (guardrails +
