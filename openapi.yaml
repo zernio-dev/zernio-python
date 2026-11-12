@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.600.0"
+  version: "1.601.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -10911,7 +10911,7 @@ components:
           properties:
             id: { type: string }
             slot: { type: string, format: date-time, description: The scheduled time the check ran for. }
-            outcome: { type: string, enum: [triggered, no_match, cooldown, daily_limit, failed] }
+            outcome: { type: string, enum: [triggered, no_match, cooldown, daily_limit, failed, paused], description: '`paused`: the team used its free automation runs with no payment method on file, so the check did not run. `error` says why.' }
             subjectsEvaluated: { type: integer, description: How many objects the check read. }
             actionsCount: { type: integer, description: How many actions it recorded. }
             error: { type: [string, "null"] }
@@ -20591,7 +20591,7 @@ components:
         id: { type: string }
         automationId: { type: string }
         checkedAt: { type: string, format: date-time }
-        outcome: { type: string, enum: [triggered, no_match, cooldown, daily_limit, failed] }
+        outcome: { type: string, enum: [triggered, no_match, cooldown, daily_limit, failed, paused], description: '`paused`: the team used its free automation runs with no payment method on file, so the check did not run. `error` says why.' }
         evaluated: { type: integer }
         event: { type: [string, 'null'], example: post.failed }
         eventId: { type: [string, 'null'] }
@@ -20620,7 +20620,7 @@ components:
         id: { type: string }
         automationId: { type: string }
         checkedAt: { type: string, format: date-time }
-        outcome: { type: string, enum: [triggered, no_match, cooldown, daily_limit, failed] }
+        outcome: { type: string, enum: [triggered, no_match, cooldown, daily_limit, failed, paused], description: '`paused`: the team used its free automation runs with no payment method on file, so the check did not run. `error` says why.' }
         evaluated: { type: integer, description: Posts judged. }
         analyticsSyncedAt: { type: [string, 'null'], format: date-time, description: 'The oldest analytics sync among the posts judged: their numbers are as of then.' }
         matched:
@@ -75806,6 +75806,7 @@ paths:
                       conversationId: { type: string }
         '400': { description: "Missing target, invalid graph, or `to` used on a non-WhatsApp workflow" }
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'Code `automation_runs_allowance_exceeded`: the team used its 2,000 free automation runs this month with no payment method on file. Add a card to resume.' }
         '404': { $ref: '#/components/responses/NotFound' }
 
   /v1/workflows/{workflowId}/trigger:
@@ -75850,6 +75851,7 @@ paths:
                   executionId: { type: string }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'Code `automation_runs_allowance_exceeded`: the team used its 2,000 free automation runs this month with no payment method on file. Add a card to resume.' }
         '404': { $ref: '#/components/responses/NotFound' }
 
   /v1/workflows/{workflowId}/executions/{executionId}/events:
@@ -76380,6 +76382,7 @@ paths:
                         error: { type: string, description: Present when success is false }
         '400': { description: Invalid request }
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'Code `automation_runs_allowance_exceeded`: the team used its 2,000 free automation runs this month with no payment method on file. Add a card to resume.' }
         '404': { $ref: '#/components/responses/NotFound' }
 
   /v1/sequences/{sequenceId}/enroll/{contactId}:
