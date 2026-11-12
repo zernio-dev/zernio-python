@@ -13,6 +13,7 @@ import respx
 import sentry_sdk
 from fastmcp import Client, FastMCP
 from fastmcp.exceptions import ToolError
+from fastmcp.server.auth import AccessToken
 from fastmcp.server.transforms.search import BM25SearchTransform
 from sentry_sdk.transport import Transport
 
@@ -280,6 +281,28 @@ async def test_a_direct_call_is_tagged_direct_with_its_caller(
     [transaction] = sentry_events.payloads("transaction")
     assert transaction["tags"]["mcp.via"] == "direct"
     assert transaction["tags"]["mcp.caller"] == "a1b2c3d4e5f6"
+
+
+async def test_a_call_records_whether_its_request_waited_on_token_verification(
+    sentry_events, caplog, monkeypatch
+) -> None:
+    caplog.set_level(logging.INFO, logger="late.mcp.tools")
+    token = AccessToken(
+        token="sk_live",
+        client_id="zernio",
+        scopes=[],
+        claims={"resolved_by": "upstream", "waited_ms": 312},
+    )
+    monkeypatch.setattr(telemetry, "get_access_token", lambda: token)
+
+    async with Client(_server()) as client:
+        await client.call_tool("fine", {})
+
+    [transaction] = sentry_events.payloads("transaction")
+    assert transaction["tags"]["mcp.auth"] == "upstream"
+    assert transaction["contexts"]["trace"]["data"]["mcp.auth.wait_ms"] == 312
+    [line] = _logged(caplog)
+    assert (line["auth"], line["auth_wait_ms"]) == ("upstream", 312)
 
 
 async def test_call_tool_failing_before_it_dispatches_is_still_recorded(caplog) -> None:
