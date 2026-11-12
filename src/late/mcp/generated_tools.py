@@ -50149,7 +50149,7 @@ def register_generated_tools(mcp, _get_client):
     def webhooks_get_webhook_settings() -> str:
         """List webhooks
 
-        Retrieve all configured webhooks for the authenticated user. Supports up to 50 webhooks per user."""
+        Retrieve all configured webhooks for the authenticated user. Supports up to 50 webhooks per user. A profile-scoped API key, or a team member limited to specific profiles, gets 403."""
         client = _get_client()
         try:
             response = client.webhooks.get_webhook_settings()
@@ -50699,6 +50699,8 @@ def register_generated_tools(mcp, _get_client):
 
         Retrieve recorded webhook delivery attempts for the authenticated user, most recent first.
 
+        A profile-scoped API key, or a team member limited to specific profiles, gets 403.
+
         Logs are retained for 30 days. Supports filtering by status, event type, webhook ID, and event ID, plus offset-based pagination.
 
         ### Restricted keys
@@ -50759,6 +50761,8 @@ def register_generated_tools(mcp, _get_client):
         the payload is gone and the request fails with a 422. Replays run the same
         resource-group checks as live delivery, against both the key's groups and the
         subscription's `disabledResourceGroups`.
+
+        A profile-scoped API key, or a team member limited to specific profiles, gets 403.
 
         Args:
             webhook_id: ID of the webhook subscription that delivered the event (required)
@@ -50948,6 +50952,8 @@ def register_generated_tools(mcp, _get_client):
 
         Send a test webhook to verify your endpoint is configured correctly. The test payload includes event: \"webhook.test\" to distinguish it from real events.
 
+        A profile-scoped API key, or a team member limited to specific profiles, gets 403.
+
         ### Sample payload for a specific event
 
         Pass `event` to receive a sample payload of that event instead. This exercises the handler for an event that only fires on a real outage or lifecycle change (e.g. `account.ads.sync_failed`).
@@ -50957,11 +50963,7 @@ def register_generated_tools(mcp, _get_client):
         - It carries a top-level `test: true` and placeholder ids, never your data.
         - The delivery shows up in the webhook logs with `test: true`.
 
-        The webhook does not have to be subscribed to the event. But a webhook that lists the event's resource group in its `disabledResourceGroups` answers 403, as does an API key with that group disabled.
-
-        ### Resource group checks
-
-        `webhook.test` belongs to the `webhooks` ...
+        The webhook does not have to be subscribed to the event. But a webhook that lists the event's resource group in its `disabledResourceGroups` answers 403, as does an API key with that ...
 
         Args:
             webhook_id: ID of the webhook to test (required)

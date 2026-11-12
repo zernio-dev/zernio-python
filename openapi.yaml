@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.596.0"
+  version: "1.596.1"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -54813,7 +54813,7 @@ paths:
       operationId: getWebhookSettings
       tags: [Webhooks]
       summary: List webhooks
-      description: Retrieve all configured webhooks for the authenticated user. Supports up to 50 webhooks per user.
+      description: 'Retrieve all configured webhooks for the authenticated user. Supports up to 50 webhooks per user. A profile-scoped API key, or a team member limited to specific profiles, gets 403.'
       security:
         - bearerAuth: []
       responses:
@@ -55196,6 +55196,8 @@ paths:
       description: |
         Retrieve recorded webhook delivery attempts for the authenticated user, most recent first.
 
+        A profile-scoped API key, or a team member limited to specific profiles, gets 403.
+
         Logs are retained for 30 days. Supports filtering by status, event type, webhook ID, and event ID, plus offset-based pagination.
 
         ### Restricted keys
@@ -55310,6 +55312,8 @@ paths:
         the payload is gone and the request fails with a 422. Replays run the same
         resource-group checks as live delivery, against both the key's groups and the
         subscription's `disabledResourceGroups`.
+
+        A profile-scoped API key, or a team member limited to specific profiles, gets 403.
       security:
         - bearerAuth: []
       requestBody:
@@ -55372,6 +55376,8 @@ paths:
       summary: Send test webhook
       description: |
         Send a test webhook to verify your endpoint is configured correctly. The test payload includes event: "webhook.test" to distinguish it from real events.
+
+        A profile-scoped API key, or a team member limited to specific profiles, gets 403.
 
         ### Sample payload for a specific event
 
