@@ -153,6 +153,14 @@ async def test_picking_fields_on_posts_leaves_out_the_summary_view_the_api_rejec
     assert "view" not in params
 
 
+async def test_an_empty_fields_value_is_not_sent_next_to_the_summary_view(posts_api) -> None:
+    await _list_posts({"fields": "", "limit": 1})
+
+    params = posts_api.calls.last.request.url.params
+    assert "fields" not in params
+    assert params["view"] == "summary"
+
+
 async def test_posts_without_fields_still_ask_for_the_summary_view(posts_api) -> None:
     await _list_posts({"limit": 1})
 

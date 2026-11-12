@@ -43079,7 +43079,7 @@ def register_generated_tools(mcp, _get_client):
                 limit=max(1, min(limit, 40)),
                 offset=offset,
                 cursor=cursor,
-                fields=fields,
+                fields=fields or None,
                 view=None if fields else view,
                 updated_since=updated_since,
                 source=source,
