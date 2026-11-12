@@ -90,6 +90,7 @@ class AnalyticsResource:
         sort_by: str | None = "date",
         order: str | None = "desc",
         tags: str | None = None,
+        view: str | None = "full",
     ) -> dict[str, Any]:
         """Get post analytics"""
         params = self._build_params(
@@ -105,6 +106,7 @@ class AnalyticsResource:
             sort_by=sort_by,
             order=order,
             tags=tags,
+            view=view,
         )
         return self._client._get("/v1/analytics", params=params)
 
@@ -851,6 +853,7 @@ class AnalyticsResource:
         sort_by: str | None = "date",
         order: str | None = "desc",
         tags: str | None = None,
+        view: str | None = "full",
     ) -> dict[str, Any]:
         """Get post analytics (async)"""
         params = self._build_params(
@@ -866,6 +869,7 @@ class AnalyticsResource:
             sort_by=sort_by,
             order=order,
             tags=tags,
+            view=view,
         )
         return await self._client._aget("/v1/analytics", params=params)
 

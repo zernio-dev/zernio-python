@@ -30964,6 +30964,10 @@ paths:
           in: query
           schema: { type: string, example: job }
           description: 'Comma-separated tags (at most 20). Lists only posts created through Zernio that carry every listed tag, matched exactly and case-sensitively. Up to 200 published posts can match within the date range; more returns 400 asking to narrow fromDate and toDate. Ignored when postId is set.'
+        - name: view
+          in: query
+          schema: { type: string, enum: [full, summary], default: full }
+          description: 'full returns the listing as before. summary leaves out the accounts list, each platform entry''s copy of analytics, the impressionSources, audienceTypes, audienceCountries and retentionCurve maps, and mediaItems (thumbnailUrl stays). Ignored when postId is set.'
       responses:
         '200':
           description: Analytics result

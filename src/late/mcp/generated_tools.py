@@ -14223,6 +14223,7 @@ def register_generated_tools(mcp, _get_client):
         ] = "date",
         order: Literal["asc", "desc"] = "desc",
         tags: str | None = None,
+        view: Literal["full", "summary"] = "summary",
     ) -> str:
         """Get post analytics
 
@@ -14254,7 +14255,8 @@ def register_generated_tools(mcp, _get_client):
             page: Page number (default 1)
             sort_by: Sort by date, engagement, or a specific metric. Platform-specific metrics (follows, reposts, reels_skip_rate, ig_reels_*, completion_rate, profile_views, website_clicks) sort a null value as 0.
             order: Sort order
-            tags: Comma-separated tags (at most 20). Lists only posts created through Zernio that carry every listed tag, matched exactly and case-sensitively. Up to 200 published posts can match within the date range; more returns 400 asking to narrow fromDate and toDate. Ignored when postId is set."""
+            tags: Comma-separated tags (at most 20). Lists only posts created through Zernio that carry every listed tag, matched exactly and case-sensitively. Up to 200 published posts can match within the date range; more returns 400 asking to narrow fromDate and toDate. Ignored when postId is set.
+            view: full returns the listing as before. summary leaves out the accounts list, each platform entry's copy of analytics, the impressionSources, audienceTypes, audienceCountries and retentionCurve maps, and mediaItems (thumbnailUrl stays). Ignored when postId is set. Defaults to summary here; pass full for every field."""
         client = _get_client()
         try:
             response = client.analytics.get_analytics(
@@ -14270,6 +14272,7 @@ def register_generated_tools(mcp, _get_client):
                 sort_by=sort_by,
                 order=order,
                 tags=tags,
+                view=view,
             )
             return _format_response(response)
         except Exception as e:
