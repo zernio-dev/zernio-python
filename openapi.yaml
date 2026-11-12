@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.587.0"
+  version: "1.588.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -20588,6 +20588,7 @@ components:
         timezone: { type: string }
         timezoneAssumed: { type: boolean, description: True when the ad account timezone is unknown and UTC was used. }
         currency: { type: [string, 'null'] }
+        hourlyThrough: { type: [string, 'null'], format: date-time, description: "Where the hourly windows (`last_complete_hour`, `last_3h`, `today_so_far`) ended: the end of the latest hour a sync has settled. Null when the rule has none or they could not be read." }
         evaluated: { type: integer }
         matched: { type: integer }
         truncated: { type: boolean, description: 'True when more subjects were judged than `limit` lists.' }
@@ -21087,6 +21088,7 @@ components:
         timezone: { type: string, description: IANA timezone of the ad account. }
         timezoneAssumed: { type: boolean, description: True when the ad account has no known timezone and UTC was assumed. }
         currency: { type: [string, "null"] }
+        hourlyThrough: { type: [string, "null"], format: date-time, description: "Where the hourly windows (`last_complete_hour`, `last_3h`, `today_so_far`) ended: the end of the latest hour a sync has settled. Null when the rule has none or they could not be read." }
         matched: { type: integer, description: How many objects meet every condition. }
         objects:
           type: array
@@ -21139,6 +21141,7 @@ components:
             timezone: { type: string }
             timezoneAssumed: { type: boolean }
             currency: { type: [string, "null"] }
+            hourlyThrough: { type: [string, "null"], format: date-time, description: "Where the run's hourly windows ended. Absent on runs recorded before November 2026." }
             matched:
               type: array
               items: { $ref: '#/components/schemas/AdRuleObjectEvaluation' }
