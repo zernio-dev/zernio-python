@@ -215,6 +215,10 @@ class AccountSettingsResource:
         """Delete TG bot commands"""
         return self._client._delete(f"/v1/accounts/{account_id}/telegram-commands")
 
+    def get_wechat_server_config(self, account_id: str) -> dict[str, Any]:
+        """Get WeChat server config"""
+        return self._client._get(f"/v1/accounts/{account_id}/wechat-server-config")
+
     async def aget_facebook_page_info(self, account_id: str) -> dict[str, Any]:
         """Get a Facebook Page's public info (async)"""
         return await self._client._aget(f"/v1/accounts/{account_id}/facebook-page-info")
@@ -371,4 +375,10 @@ class AccountSettingsResource:
         """Delete TG bot commands (async)"""
         return await self._client._adelete(
             f"/v1/accounts/{account_id}/telegram-commands"
+        )
+
+    async def aget_wechat_server_config(self, account_id: str) -> dict[str, Any]:
+        """Get WeChat server config (async)"""
+        return await self._client._aget(
+            f"/v1/accounts/{account_id}/wechat-server-config"
         )

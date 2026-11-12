@@ -730,6 +730,32 @@ def register_generated_tools(mcp, _get_client):
         except Exception as e:
             raise ToolError(f"Error: {e}") from e
 
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get WeChat server config",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def account_settings_get_wechat_server_config(account_id: str) -> str:
+        """Get WeChat server config
+
+        Returns the Server URL, Token and EncodingAESKey of a connected WeChat Official Account: the same values the connect response carries, for pasting into Server Configuration in the Official Accounts Platform (Safe mode). The AppSecret is never returned.
+
+        Needs write access from a session or an API key: read-only team members, read-only API keys and OAuth access tokens get 403.
+
+        Args:
+            account_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.account_settings.get_wechat_server_config(
+                account_id=account_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
     # ACCOUNTS
 
     @mcp.tool(

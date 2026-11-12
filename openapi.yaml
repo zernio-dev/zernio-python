@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.599.1"
+  version: "1.600.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -61502,6 +61502,51 @@ paths:
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
 
+  /v1/accounts/{accountId}/wechat-server-config:
+    get:
+      x-resource-group: "accounts"
+      operationId: getWechatServerConfig
+      summary: Get WeChat server config
+      description: |
+        Returns the Server URL, Token and EncodingAESKey of a connected WeChat Official Account: the same values the connect response carries, for pasting into Server Configuration in the Official Accounts Platform (Safe mode). The AppSecret is never returned.
+
+        Needs write access from a session or an API key: read-only team members, read-only API keys and OAuth access tokens get 403.
+      tags: [Account Settings]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Server configuration
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  server:
+                    type: object
+                    properties:
+                      url: { type: string, format: uri }
+                      token: { type: string }
+                      encodingAESKey: { type: string }
+                      encryptionMode: { type: string, enum: [safe] }
+              example:
+                server:
+                  url: https://zernio.com/api/webhook/wechat/6507a1b2c3d4e5f6a7b8c9e1
+                  token: Zq8x2LmP4vR7tY1wK9sD3fH6jN0bC5eA
+                  encodingAESKey: hT3kP9xQ2mV7wL4rZ8nB1cF6yJ0dG5sA3uE9iO2tR7q
+                  encryptionMode: safe
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403':
+          description: 'Read-only team member, read-only API key or OAuth access token (code `insufficient_permissions`), or an API key without access to the account''s profile.'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+        '404': { $ref: '#/components/responses/NotFound' }
   /v1/inbox/conversations/{conversationId}/messages/{messageId}/attachments/{index}:
     get:
       x-resource-group: "messages"
