@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.599.0"
+  version: "1.599.1"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -39109,7 +39109,7 @@ paths:
         '202': { $ref: '#/components/responses/XPostWaitingForBalance' }
         '402':
           x-summary: 'Publishing now needs X, and the balance is at $0: send the user to `funding_url` to add funds, then retry. Nothing was created.'
-          description: 'Balance billing only. The post publishes now (`publishNow: true` or a due `scheduledFor`) to X, and the balance is at $0 after auto top-up tried the saved card (code `insufficient_balance` or `usage_limit_reached`). Nothing was created. Add funds at `funding_url`, then send the request again.'
+          description: 'Balance billing only: X calls are paid from the balance ($0.015 per post, $0.20 with a link). The post publishes to X now and the balance is at $0 after auto top-up tried the saved card (`insufficient_balance` or `usage_limit_reached`). Nothing was created. Add funds at `funding_url`, then retry.'
           content:
             application/json:
               schema: { $ref: '#/components/schemas/BalanceRequiredError' }
@@ -42851,6 +42851,10 @@ paths:
         Every connection now goes through the TikTok for Business app.
 
         An authorization that leaves out a permission the connected account needs changes nothing at all and comes back as `missing_tiktok_permissions`. Connect again and accept every permission on TikTok's screen.
+
+        ### X (Twitter)
+
+        On prepaid-balance billing, connecting X is free, but every X API call is paid from the balance (a post is $0.015, or $0.20 with a link). At a $0 balance, POST /v1/posts to X returns 402 `insufficient_balance` with `funding_url`: fund the balance before the first post.
       parameters:
         - name: platform
           in: path
