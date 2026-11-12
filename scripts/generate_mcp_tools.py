@@ -71,7 +71,7 @@ AGENT_VIEWS = {
 }
 
 AGENT_DEPTHS = {
-    "getAdTree": "adset",
+    "getAdTree": "campaign",
 }
 
 SAME_ARGUMENTS_IDEMPOTENT_OPERATIONS = {
@@ -449,7 +449,7 @@ def _with_agent_default(
     *,
     name: str,
     value: str | None,
-    widest: str,
+    hint: str,
 ) -> list[dict[str, Any]]:
     if value is None:
         return params
@@ -459,7 +459,7 @@ def _with_agent_default(
         {
             **p,
             "default": f'"{value}"',
-            "description": f"{p['description'].strip()} Defaults to {value} here; pass {widest} for everything.".strip(),
+            "description": f"{p['description'].strip()} Defaults to {value} here; {hint}".strip(),
         }
         if p["name"] == name
         else p
@@ -468,8 +468,14 @@ def _with_agent_default(
 
 
 def _with_agent_view(operation_id: str, params: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    params = _with_agent_default(operation_id, params, name="view", value=AGENT_VIEWS.get(operation_id), widest="full")
-    return _with_agent_default(operation_id, params, name="depth", value=AGENT_DEPTHS.get(operation_id), widest="ad")
+    params = _with_agent_default(operation_id, params, name="view", value=AGENT_VIEWS.get(operation_id), hint="pass full for everything.")
+    return _with_agent_default(
+        operation_id,
+        params,
+        name="depth",
+        value=AGENT_DEPTHS.get(operation_id),
+        hint="pass adset with campaignId for one campaign's ad sets, or ad for everything.",
+    )
 
 
 def extract_parameters(
