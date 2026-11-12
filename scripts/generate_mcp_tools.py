@@ -477,7 +477,7 @@ def _with_agent_view(operation_id: str, params: list[dict[str, Any]]) -> list[di
         params,
         name="depth",
         value=AGENT_DEPTHS.get(operation_id),
-        hint="pass adset with campaignId for one campaign's ad sets, or ad for everything.",
+        hint="pass adset with campaign_id for one campaign's ad sets, or ad for everything.",
     )
 
 

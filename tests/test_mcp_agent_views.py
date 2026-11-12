@@ -106,7 +106,7 @@ def test_the_ads_tree_defaults_to_campaign_depth_and_says_how_to_drill_down(
 
     assert "depth: Literal['campaign', 'adset', 'ad'] = \"campaign\"" in handler
     assert (
-        "Defaults to campaign here; pass adset with campaignId for one campaign's ad sets, or ad for everything."
+        "Defaults to campaign here; pass adset with campaign_id for one campaign's ad sets, or ad for everything."
         in handler
     )
 
