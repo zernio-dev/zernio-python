@@ -38,11 +38,11 @@ async def test_a_guessed_name_through_call_tool_suggests_the_real_tool():
 async def test_call_tool_runs_a_proxied_search_instead_of_refusing_it():
     is_error, text = await _call(
         "call_tool",
-        {"name": "search_tools", "arguments": {"query": "list inbox conversations"}},
+        {"name": "search_tools", "arguments": {"query": "search inbox conversations"}},
     )
 
     assert not is_error
-    assert "messages_list_inbox_conversations" in text
+    assert "messages_search_inbox_conversations" in text
 
 
 async def test_call_tool_still_refuses_to_call_itself():
