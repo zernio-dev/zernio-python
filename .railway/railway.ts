@@ -14,6 +14,8 @@ const SOURCES: Record<string, ReturnType<typeof github>> = {
 // Variables stay managed in Railway; preserve() keeps the current values.
 const VARIABLES: Record<string, string[]> = {
   production: [
+    "AXIOM_DATASET",
+    "AXIOM_TOKEN",
     "PORT",
     "RAILWAY_DEPLOYMENT_DRAINING_SECONDS",
     "SENTRY_DSN",
