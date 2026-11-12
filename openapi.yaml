@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.581.0"
+  version: "1.583.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -97668,6 +97668,7 @@ paths:
                         platform: { type: string, description: 'Ad platform, such as `metaads` or `googleads`.' }
                         accountName: { type: string }
                         destinationName: { type: string, description: 'The destination (pixel, dataset or conversion action) id.' }
+                        destinationId: { type: string, description: 'The destination (pixel, dataset or conversion action) id, the same as the forwarding rule''s destinationId.' }
                         sentToday: { type: integer, description: 'Events the platform accepted today.' }
                         failedToday: { type: integer, description: 'Events that failed for good today.' }
                         lastSentAt: { type: [string, "null"], format: date-time, description: 'Last accepted send in the last 30 days.' }
