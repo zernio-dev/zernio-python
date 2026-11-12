@@ -23,7 +23,7 @@ from fastmcp.tools.tool import ToolResult
 from mcp.types import TextContent, ToolAnnotations
 from pydantic import BaseModel, Field
 
-from late.mcp.auth import build_auth_provider
+from late.mcp.auth import build_auth_provider, forget_rejected_token
 
 API_BASE = (
     os.getenv("ZERNIO_BASE_URL")
@@ -231,11 +231,14 @@ def _error_message(response: httpx.Response) -> str:
 async def _api(
     method: str, path: str, *, params: dict[str, Any] | None = None, json: Any = None
 ) -> Any:
-    headers = {"Authorization": f"Bearer {_bearer()}", "Accept": "application/json"}
+    bearer = _bearer()
+    headers = {"Authorization": f"Bearer {bearer}", "Accept": "application/json"}
     async with httpx.AsyncClient(base_url=API_BASE, timeout=_TIMEOUT) as client:
         response = await client.request(
             method, path, params=params, json=json, headers=headers
         )
+    if response.status_code == 401:
+        forget_rejected_token(bearer)
     if response.status_code >= 400:
         raise ToolError(_error_message(response))
     return response.json() if response.content else {}

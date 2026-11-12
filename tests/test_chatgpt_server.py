@@ -17,7 +17,7 @@ import pytest
 import respx
 from fastmcp import Client
 
-from late.mcp import chatgpt_server
+from late.mcp import auth, chatgpt_server
 from late.mcp.chatgpt_server import chatgpt_mcp
 
 API = chatgpt_server.API_BASE
@@ -328,3 +328,16 @@ async def test_best_time_returns_named_days_best_first():
         "post_count": 1,
     }
     assert result.structured_content["based_on_posts"] == 3
+
+
+@respx.mock
+async def test_an_api_401_evicts_the_cached_token_so_chatgpt_gets_a_401_and_refreshes():
+    auth._VERIFIED_AT[auth.token_cache_key("sk_test")] = 0.0
+    respx.get(f"{API}/v1/accounts").mock(
+        return_value=httpx.Response(401, json={"error": "Invalid API key"})
+    )
+
+    result = await _call("list_social_accounts")
+
+    assert result.is_error
+    assert auth.token_cache_key("sk_test") not in auth._VERIFIED_AT

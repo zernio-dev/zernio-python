@@ -11,6 +11,7 @@ from typing import Any
 
 import sentry_sdk
 from fastmcp.exceptions import FastMCPError, NotFoundError, ToolError
+from fastmcp.server.auth import AccessToken
 from fastmcp.server.dependencies import get_access_token, get_http_headers
 from fastmcp.server.middleware import CallNext, Middleware, MiddlewareContext
 from mcp.types import CallToolRequestParams, TextContent
@@ -115,19 +116,20 @@ def quiet_routine_logs() -> None:
     logging.getLogger("fastmcp.server.server").addFilter(ToolFailureLogFilter())
 
 
-def _caller_key() -> str | None:
+def _current_token() -> AccessToken | None:
     try:
-        token = get_access_token()
+        return get_access_token()
     except Exception:
         return None
+
+
+def _caller_key() -> str | None:
+    token = _current_token()
     return token_cache_key(token.token)[:12] if token and token.token else None
 
 
 def _auth_fields() -> dict[str, Any]:
-    try:
-        token = get_access_token()
-    except Exception:
-        return {}
+    token = _current_token()
     claims = token.claims if token else {}
     if "resolved_by" not in claims:
         return {}
