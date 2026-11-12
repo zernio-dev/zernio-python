@@ -43052,7 +43052,7 @@ def register_generated_tools(mcp, _get_client):
         - Each platform: `platform`, `status`, `accountId` (the id), `username`, `scheduledFor`, `publishedAt`, `platformPostId`, `platformPostUrl`, `errorMessage`, `errorCategory`.
         - Left out: the author (`userId`), `mediaItems`, `metadata`, `recycling`, and each platform's custom content, custom media and `platformSpecificData`. Null values are left out too.
 
-        Works with both sources. Send either `fields` or `view=summary`: both together return 400. Defaults to summary here; pass full for everything.
+        Works with both sources. Send either `fields` or `view=summary`: both together return 400. Defaults to summary here; pass full for everything. Not sent when fields is set.
                 updated_since: Only posts whose `updatedAt` is at or after this ISO 8601 timestamp (an offset or `Z` required).
 
         `updatedAt` moves when the post or any of its platforms changes (an edit, a status change, a platform publishing or failing). To keep a copy in sync, send the time of your previous sync instead of reading every page again.
@@ -43080,7 +43080,7 @@ def register_generated_tools(mcp, _get_client):
                 offset=offset,
                 cursor=cursor,
                 fields=fields,
-                view=view,
+                view=None if fields else view,
                 updated_since=updated_since,
                 source=source,
                 status=status,

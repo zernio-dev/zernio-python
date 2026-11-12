@@ -470,8 +470,25 @@ def _with_agent_default(
     ]
 
 
+def _without_view_when_fields_are_picked(params: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    if not any(p["name"] == "fields" for p in params):
+        return params
+    return [
+        {
+            **p,
+            "sdk_value": "None if fields else view",
+            "description": f"{p['description'].strip()} Not sent when fields is set.",
+        }
+        if p["name"] == "view"
+        else p
+        for p in params
+    ]
+
+
 def _with_agent_view(operation_id: str, params: list[dict[str, Any]]) -> list[dict[str, Any]]:
     params = _with_agent_default(operation_id, params, name="view", value=AGENT_VIEWS.get(operation_id), hint="pass full for everything.")
+    if operation_id in AGENT_VIEWS:
+        params = _without_view_when_fields_are_picked(params)
     return _with_agent_default(
         operation_id,
         params,
