@@ -13,6 +13,7 @@ from fastmcp.exceptions import ToolError
 from mcp.types import ToolAnnotations
 
 from .idempotency import same_arguments_key
+from .response_format import format_payload
 
 
 def _decode_base64(value: str) -> bytes:
@@ -57,7 +58,7 @@ def _format_response(response: Any) -> str:
             # generic 'accounts' branch (which would print only 'platform: username' and
             # drop currentFollowers/growth and the daily series). 'stats' attr is unique
             # to FollowerStatsResponse, so no other tool's response matches.
-            return response.model_dump_json(by_alias=True, exclude_none=True)
+            return format_payload(response)
         if hasattr(response, "accounts") and response.accounts:
             accs = response.accounts
             lines = [f"Found {len(accs)} account(s):"]
@@ -81,7 +82,7 @@ def _format_response(response: Any) -> str:
         if hasattr(response, "profile") and response.profile:
             p = response.profile
             return f"Profile: {getattr(p, 'name', 'N/A')} (ID: {getattr(p, 'field_id', 'N/A')})"
-    return str(response)
+    return format_payload(response)
 
 
 def register_generated_tools(mcp, _get_client):
@@ -6182,7 +6183,7 @@ def register_generated_tools(mcp, _get_client):
     )
     def ad_campaigns_list_ads(
         page: int = 1,
-        limit: int = 50,
+        limit: int = 10,
         source: Literal["zernio", "all"] = "all",
         status: Literal[
             "active",
@@ -6245,7 +6246,7 @@ def register_generated_tools(mcp, _get_client):
 
         Args:
             page: Page number (1-based)
-            limit
+            limit: Default 10, at most 20 per call; page through for more.
             source: all (default) = Zernio-created + platform-discovered ads. zernio = restrict to Zernio-created only.
             status
             platform
@@ -6264,7 +6265,7 @@ def register_generated_tools(mcp, _get_client):
         try:
             response = client.ad_campaigns.list_ads(
                 page=page,
-                limit=limit,
+                limit=max(1, min(limit, 20)),
                 source=source,
                 status=status,
                 platform=platform,
@@ -7908,7 +7909,7 @@ def register_generated_tools(mcp, _get_client):
         ]
         | None = None,
         page: int = 1,
-        limit: int = 500,
+        limit: int = 20,
         live: bool = False,
     ) -> str:
         """List ad sets
@@ -7939,7 +7940,7 @@ def register_generated_tools(mcp, _get_client):
                 platform
                 status: Filter by the ad set's stored `status`, the value each row returns. A live read does not change it. Rows whose `status` is null match no filter.
                 page
-                limit
+                limit: Default 20, at most 40 per call; page through for more.
                 live: Read the on/off switches live from the platform instead of returning synced values. See "Status freshness" in the operation description.
 
         - The fresh values are stored (later reads return them too), and the response carries `statusReadAt`, the time of the read.
@@ -7962,7 +7963,7 @@ def register_generated_tools(mcp, _get_client):
                 platform=platform,
                 status=status,
                 page=page,
-                limit=limit,
+                limit=max(1, min(limit, 40)),
                 live=live,
             )
             return _format_response(response)
@@ -8579,7 +8580,7 @@ def register_generated_tools(mcp, _get_client):
     )
     def ad_campaigns_get_ad_tree(
         page: int = 1,
-        limit: int = 20,
+        limit: int = 10,
         source: Literal["zernio", "all"] = "all",
         platform: Literal[
             "facebook",
@@ -8645,7 +8646,7 @@ def register_generated_tools(mcp, _get_client):
 
             Args:
                 page: Page number (1-based)
-                limit: Campaigns per page
+                limit: Campaigns per page. Default 10, at most 20 per call; page through for more.
                 source: `all` (default) returns both Zernio-created ads and those discovered from the platform's ad manager. Matches the web UI's default view. Pass `zernio` to restrict to isExternal=false only. Status is NOT filtered by default; use the `status` param for that.
                 platform
                 status: Filter by derived campaign status (post-aggregation). `not_deleted` keeps every status except `cancelled`.
@@ -8693,7 +8694,7 @@ def register_generated_tools(mcp, _get_client):
         try:
             response = client.ad_campaigns.get_ad_tree(
                 page=page,
-                limit=limit,
+                limit=max(1, min(limit, 20)),
                 source=source,
                 platform=platform,
                 status=status,
@@ -14197,7 +14198,7 @@ def register_generated_tools(mcp, _get_client):
         source: Literal["all", "late", "external"] = "all",
         from_date: str | None = None,
         to_date: str | None = None,
-        limit: int = 50,
+        limit: int = 20,
         page: int = 1,
         sort_by: Literal[
             "date",
@@ -14248,7 +14249,7 @@ def register_generated_tools(mcp, _get_client):
             source: Filter by post source: late (posted via Zernio API), external (synced from platform), all (default)
             from_date: Inclusive lower bound (YYYY-MM-DD). Defaults to 90 days ago if omitted. Max range is 366 days.
             to_date: Inclusive upper bound (YYYY-MM-DD). Defaults to today if omitted.
-            limit: Page size (default 50)
+            limit: Page size. Default 20, at most 40 per call; page through for more.
             page: Page number (default 1)
             sort_by: Sort by date, engagement, or a specific metric. Platform-specific metrics (follows, reposts, reels_skip_rate, ig_reels_*, completion_rate, profile_views, website_clicks) sort a null value as 0.
             order: Sort order
@@ -14263,7 +14264,7 @@ def register_generated_tools(mcp, _get_client):
                 source=source,
                 from_date=from_date,
                 to_date=to_date,
-                limit=limit,
+                limit=max(1, min(limit, 40)),
                 page=page,
                 sort_by=sort_by,
                 order=order,
@@ -42448,7 +42449,7 @@ def register_generated_tools(mcp, _get_client):
 
             Args:
                 page: Page number (1-based)
-                limit: Page size. Values above the maximum return 400 rather than being clamped.
+                limit: Page size. Default 10, at most 40 per call; page through for more.
                 offset: Row offset. Takes precedence over page when both are sent; the response pagination.page is derived from it.
                 cursor: Opaque cursor from a previous response's `pagination.nextCursor`. Returns the next page in the same `sortBy` order and takes precedence over `page` and `offset`.
 
@@ -42484,7 +42485,7 @@ def register_generated_tools(mcp, _get_client):
         try:
             response = client.posts.list_posts(
                 page=page,
-                limit=limit,
+                limit=max(1, min(limit, 40)),
                 offset=offset,
                 cursor=cursor,
                 fields=fields,
