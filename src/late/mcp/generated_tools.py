@@ -6122,7 +6122,7 @@ def register_generated_tools(mcp, _get_client):
     def ad_campaign_results_list_campaign_result_metrics() -> str:
         """List your result metrics
 
-        The metric keys your team has sent, with their label and kind, then the formulas: your own and the built-in ones (`cac_percent`, `cost_per_sale`, `cost_per_qualified_lead`, `lead_to_sale`). A new key appears as a `count` labelled from the key; name it, or define a formula, with `PUT /v1/ads/campaign-results/metrics/{key}`.
+        The metric keys your team has sent, with their label and kind, then the formulas: your own and the built-in ones (`cac_percent`, `cost_per_sale`, `cost_per_qualified_lead`, `lead_to_sale`, `qualified_rate`). A new key appears as a `count` labelled from the key; name it, or define a formula, with `PUT /v1/ads/campaign-results/metrics/{key}`.
 
         Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit"""
         client = _get_client()
@@ -8636,7 +8636,7 @@ def register_generated_tools(mcp, _get_client):
         daily_level: Literal["campaign", "adset", "ad"] = "campaign",
         compare: Literal["previous"] | None = None,
         results: bool | None = None,
-        depth: Literal["campaign", "adset", "ad"] = "adset",
+        depth: Literal["campaign", "adset", "ad"] = "campaign",
     ) -> str:
         """Get campaign tree
 
@@ -8710,7 +8710,7 @@ def register_generated_tools(mcp, _get_client):
 
         - `ad` (default): campaigns, their ad sets and each ad set's ads.
         - `adset`: campaigns and ad sets; every `ads[]` is empty and `adCount` still counts the ads.
-        - `campaign`: campaigns only; every `adSets[]` is empty and `adSetCount` / `adCount` still count them. Defaults to adset here; pass ad for everything."""
+        - `campaign`: campaigns only; every `adSets[]` is empty and `adSetCount` / `adCount` still count them. Defaults to campaign here; pass adset with campaign_id for one campaign's ad sets, or ad for everything."""
         client = _get_client()
         try:
             response = client.ad_campaigns.get_ad_tree(
