@@ -60,6 +60,7 @@ from late.mcp.telemetry import (
     init_sentry,
     log_tool_calls_to_stdout,
     quiet_routine_logs,
+    ship_tool_calls_to_axiom,
 )
 from late.mcp.workers import all_workers_ready, mark_worker_ready, worker_count
 
@@ -392,6 +393,7 @@ def parse_args() -> argparse.Namespace:
 def _configure_process(debug: bool) -> None:
     init_sentry()
     log_tool_calls_to_stdout()
+    ship_tool_calls_to_axiom()
     if not debug:
         quiet_routine_logs()
 
