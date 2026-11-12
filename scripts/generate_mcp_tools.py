@@ -64,6 +64,10 @@ LISTING_PAGE_SIZES = {
     "getAnalytics": (20, 40),
 }
 
+AGENT_VIEWS = {
+    "getAnalytics": "summary",
+}
+
 SAME_ARGUMENTS_IDEMPOTENT_OPERATIONS = {
     "createCallAd",
     "createCtwaAd",
@@ -433,6 +437,22 @@ def _with_page_size(operation_id: str, params: list[dict[str, Any]]) -> list[dic
     ]
 
 
+def _with_agent_view(operation_id: str, params: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    view = AGENT_VIEWS.get(operation_id)
+    if view is None:
+        return params
+    return [
+        {
+            **p,
+            "default": f'"{view}"',
+            "description": f"{p['description'].strip()} Defaults to {view} here; pass full for every field.".strip(),
+        }
+        if p["name"] == "view"
+        else p
+        for p in params
+    ]
+
+
 def extract_parameters(
     operation: dict[str, Any],
     spec: dict[str, Any] | None = None,
@@ -740,7 +760,10 @@ def main() -> int:
                 # Human-readable title for the annotation. First line of the
                 # OpenAPI summary, capped so it stays a short label.
                 "title": summary.split("\n")[0].strip()[:80],
-                "params": _with_page_size(operation_id, _with_bounded_limit(operation_id, extract_parameters(operation, spec))),
+                "params": _with_agent_view(
+                    operation_id,
+                    _with_page_size(operation_id, _with_bounded_limit(operation_id, extract_parameters(operation, spec))),
+                ),
                 "idempotency_scope": tool_name if operation_id in SAME_ARGUMENTS_IDEMPOTENT_OPERATIONS else None,
             })
 
