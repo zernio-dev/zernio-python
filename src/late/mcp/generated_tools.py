@@ -29965,6 +29965,8 @@ def register_generated_tools(mcp, _get_client):
             "web",
         ]
         | None = None,
+        platform: str | None = None,
+        delivery_status: Literal["sent", "failed"] | None = None,
         cursor: str | None = None,
     ) -> str:
         """List stored events
@@ -29982,6 +29984,8 @@ def register_generated_tools(mcp, _get_client):
             to: Only events before this time (ISO 8601, on the event time).
             event_name: Only events with this name, such as `Purchase`.
             source: Only events from this source, such as `stripe` for the payments of a connected Stripe account.
+            platform: Only events sent to this ad platform, such as `metaads` or `googleads`.
+            delivery_status: Only events whose latest send to a destination (of `platform`, when given) was accepted (`sent`) or was not (`failed`: failed or still retrying).
             cursor: `nextCursor` from the previous page."""
         client = _get_client()
         try:
@@ -29992,6 +29996,8 @@ def register_generated_tools(mcp, _get_client):
                 to=to,
                 event_name=event_name,
                 source=source,
+                platform=platform,
+                delivery_status=delivery_status,
                 cursor=cursor,
             )
             return _format_response(response)

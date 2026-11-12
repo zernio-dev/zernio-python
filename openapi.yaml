@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.585.0"
+  version: "1.586.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -97677,6 +97677,16 @@ paths:
           required: false
           description: 'Only events from this source, such as `stripe` for the payments of a connected Stripe account.'
           schema: { type: string, enum: [api, relay, hubspot, meta_leads, google_leads, linkedin_leads, tiktok_leads, shopify, woocommerce, stripe, web] }
+        - name: platform
+          in: query
+          required: false
+          description: 'Only events sent to this ad platform, such as `metaads` or `googleads`.'
+          schema: { type: string }
+        - name: deliveryStatus
+          in: query
+          required: false
+          description: 'Only events whose latest send to a destination (of `platform`, when given) was accepted (`sent`) or was not (`failed`: failed or still retrying).'
+          schema: { type: string, enum: [sent, failed] }
         - name: cursor
           in: query
           required: false

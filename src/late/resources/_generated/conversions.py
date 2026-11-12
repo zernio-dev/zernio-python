@@ -320,6 +320,8 @@ class ConversionsResource:
         to: datetime | str | None = None,
         event_name: str | None = None,
         source: str | None = None,
+        platform: str | None = None,
+        delivery_status: str | None = None,
         cursor: str | None = None,
     ) -> dict[str, Any]:
         """List stored events"""
@@ -330,6 +332,8 @@ class ConversionsResource:
             to=to,
             event_name=event_name,
             source=source,
+            platform=platform,
+            delivery_status=delivery_status,
             cursor=cursor,
         )
         return self._client._get("/v1/events", params=params)
@@ -1077,6 +1081,8 @@ class ConversionsResource:
         to: datetime | str | None = None,
         event_name: str | None = None,
         source: str | None = None,
+        platform: str | None = None,
+        delivery_status: str | None = None,
         cursor: str | None = None,
     ) -> dict[str, Any]:
         """List stored events (async)"""
@@ -1087,6 +1093,8 @@ class ConversionsResource:
             to=to,
             event_name=event_name,
             source=source,
+            platform=platform,
+            delivery_status=delivery_status,
             cursor=cursor,
         )
         return await self._client._aget("/v1/events", params=params)
