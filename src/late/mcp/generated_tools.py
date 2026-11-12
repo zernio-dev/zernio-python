@@ -25213,6 +25213,7 @@ def register_generated_tools(mcp, _get_client):
         expected_platform_user_id: str | None = None,
         expected_username: str | None = None,
         force_reauth: bool = False,
+        allow_no_location: bool = False,
         redirect_url: str | None = None,
         scopes: str | None = None,
         login_hint: str | None = None,
@@ -25289,6 +25290,11 @@ def register_generated_tools(mcp, _get_client):
                 force_reauth: Instagram Login only (the default loginMethod); ignored elsewhere. Makes Instagram show its login page and ask for the credentials of the account to connect, even when another Instagram account is logged in on the device or app. Also hides the Facebook login option on that page.
 
         Use it when the person connecting manages several Instagram accounts on one phone: otherwise Instagram logs in, and converts to a professional account, whichever account is active, before any consent screen. Pair it with expectedUsername to also refuse a wrong account at the end.
+                allow_no_location: Google Business only (`platform=googlebusiness`); any other platform answers 400. Lets a Google account with no Business Profile location finish the connect instead of ending with `error=no_google_locations`.
+
+        The selection step (`step=select_location`, or the hosted page) then lists no locations. Call `POST /v1/connect/googlebusiness/select-location` without `locationId` or `locations` to connect the account with no location (`needsLocation: true`).
+
+        Without it, a sign-in that lists no location still ends with `no_google_locations`. The marker travels in the redirect_url we hand you, so pass that URL back unchanged in headless mode.
                 redirect_url: Your custom redirect URL after the connection completes. It MUST be an absolute http(s) URL or a custom app scheme for mobile deeplinks (e.g. myapp://callback). A relative path is rejected with 400 `INVALID_REDIRECT_URL`.
 
         **Exit notice:** when `redirect_url` is an http(s) URL on another site (anything but zernio.com), every redirect of the flow lands first on `https://zernio.com/connect/continue?to=<your URL>`, a Zernio page that names your site and continues to it with one click. All params below reach your URL unchanged.
@@ -25500,6 +25506,7 @@ def register_generated_tools(mcp, _get_client):
                 expected_platform_user_id=expected_platform_user_id,
                 expected_username=expected_username,
                 force_reauth=force_reauth,
+                allow_no_location=allow_no_location,
                 redirect_url=redirect_url,
                 scopes=scopes,
                 login_hint=login_hint,
@@ -26569,6 +26576,7 @@ def register_generated_tools(mcp, _get_client):
         location_id: str | None = None,
         locations: list[dict[str, Any]] | None = None,
         account_id: str | None = None,
+        google_account_id: str | None = None,
         redirect_url: str | None = None,
     ) -> str:
         """Select Google Business Profile location
@@ -26577,9 +26585,10 @@ def register_generated_tools(mcp, _get_client):
 
         Args:
             profile_id: Profile ID from your connection flow (required)
-            location_id: The Google Business Profile location ID selected by the user. Send this or locations, not both.
+            location_id: The Google Business Profile location ID selected by the user. Send this or locations, not both. Omit both to connect with no location (`needsLocation: true`), allowed only when the connect used allowNoLocation=true, the sign-in listed no locations and it is not a reconnect.
             locations: Several locations to connect from one sign-in, each as its own account. A single location behaves exactly like locationId. The sign-in is used once for the whole batch and handed back only if none connected. With two or more distinct locations, the response lists `accounts` and `failed` instead of `account`, and the request is refused with 400 on a reconnect. Each item is an object with keys: locationId (string, required); accountId (string) - The location's Google Business Profile Account resource name, as for the top-level accountId.
             account_id: Optional but recommended. The Google Business Profile Account resource name ("accounts/123") that owns the selected location (returned per-location by GET /v1/connect/googlebusiness/locations). When provided, the location is resolved directly instead of by enumerating the account, which is required for accounts that own many locations. Omit only for small accounts.
+            google_account_id: Only when connecting with no location. The Google Business Profile Account resource name ("accounts/123") to attach. Defaults to the sign-in's personal account, else its first account. Must be one of the accounts the sign-in lists, otherwise 400.
             pending_data_token: Token from the OAuth callback redirect (pendingDataToken query param). Tokens and profile data are retrieved server-side from this token. (required)
             redirect_url: Optional custom redirect URL to return to after selection"""
         client = _get_client()
@@ -26589,8 +26598,52 @@ def register_generated_tools(mcp, _get_client):
                 location_id=location_id,
                 locations=locations,
                 account_id=account_id,
+                google_account_id=google_account_id,
                 pending_data_token=pending_data_token,
                 redirect_url=redirect_url,
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List Google Business Profile categories",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def connect_list_google_business_categories(
+        account_id: str,
+        region_code: str,
+        language_code: str,
+        query: str | None = None,
+        page_token: str | None = None,
+    ) -> str:
+        """List Google Business Profile categories
+
+        Lists the business categories Google accepts for a region, localized to `languageCode`.
+        Use the returned `name` (e.g. `categories/gcid:afghani_restaurant`) as the primary category when creating or updating a location.
+
+        Not location-scoped: works for a Google Business Profile account that has no location yet.
+
+        `query` matches only the START of the display name in `languageCode` (`Restaurante` returns `Restaurante afgano`, but `afgano` returns nothing). Results are paginated with `nextPageToken`, 100 per page.
+
+        Args:
+            account_id: The Zernio account ID (from /v1/accounts) (required)
+            region_code: CLDR region code the categories are relevant for (e.g. "US", "ES"). (required)
+            language_code: BCP-47 language code the category names are returned in (e.g. "en", "es"). (required)
+            query: Prefix of the localized category display name.
+            page_token: Pagination token from a previous response's nextPageToken field."""
+        client = _get_client()
+        try:
+            response = client.connect.list_google_business_categories(
+                account_id=account_id,
+                region_code=region_code,
+                language_code=language_code,
+                query=query,
+                page_token=page_token,
             )
             return _format_response(response)
         except Exception as e:
@@ -28316,6 +28369,114 @@ def register_generated_tools(mcp, _get_client):
                 account_id=account_id,
                 selected_location_id=selected_location_id,
                 google_account_id=google_account_id,
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Create Google Business Profile location",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def connect_create_google_business_location(
+        account_id: str,
+        title: str,
+        language_code: str,
+        primary_category: str,
+        additional_categories: list[str] | None = None,
+        storefront_address: dict[str, Any] | None = None,
+        service_area: dict[str, Any] | None = None,
+        phone: str | None = None,
+        website_uri: str | None = None,
+        description: str | None = None,
+        regular_hours: dict[str, Any] | None = None,
+        validate_only: bool | None = None,
+    ) -> str:
+        """Create Google Business Profile location
+
+        Creates a Google Business Profile listing under the Google account of this Zernio account and attaches it to this account, so verification, details, posts and reviews work on it right away.
+
+        Only for an account with no location yet (connected with `allowNoLocation`). If the account already has a location, the request is rejected with 409 and nothing is created.
+
+        Search first with `POST /v1/accounts/{accountId}/gmb-locations/search` to avoid duplicating an existing listing, and pick `primaryCategory` from `GET /v1/accounts/{accountId}/gmb-categories`.
+
+        Required by Google: `title`, `languageCode` (immutable once set) and `primaryCategory`. At least one of `storefrontAddress` or `serviceArea` is required. When `storefrontAddress` is absent, at least one of `phone` or `websiteUri` is required. Both rules are checked before Google is called and a violation returns 400 naming the field.
+
+        Set `validateOnly` to check the request with Google without creating anything: the response carries the ...
+
+        Args:
+            account_id: (required)
+            title: Business name as shown on Google. (required)
+            language_code: BCP-47 language of the listing (e.g. "es"). Immutable after creation. (required)
+            primary_category: Category name from GET gmb-categories (e.g. "categories/gcid:cafe"). A bare "gcid:cafe" is also accepted. (required)
+            additional_categories: Further category names, same format as primaryCategory.
+            storefront_address: Physical address of the business. Required unless serviceArea is provided. Object with keys: regionCode (string, required) - CLDR region code (e.g. \"ES\").; languageCode (string); postalCode (string); administrativeArea (string); locality (string); addressLines (list of string, required)
+            service_area: Areas the business serves. Required unless storefrontAddress is provided. Object with keys: businessType (one of: CUSTOMER_LOCATION_ONLY, CUSTOMER_AND_BUSINESS_LOCATION; required); regionCode (string) - Required when businessType is CUSTOMER_LOCATION_ONLY.; places (object with keys placeInfos)
+            phone: Primary phone number. Required when storefrontAddress is absent and websiteUri is not set.
+            website_uri: Website URL. Required when storefrontAddress is absent and phone is not set.
+            description: Business description (Google profile.description).
+            regular_hours: Google `regularHours` object (periods with openDay, openTime, closeDay, closeTime).
+            validate_only: Validate with Google without creating the listing or attaching anything."""
+        client = _get_client()
+        try:
+            response = client.connect.create_google_business_location(
+                account_id=account_id,
+                title=title,
+                language_code=language_code,
+                primary_category=primary_category,
+                additional_categories=additional_categories,
+                storefront_address=storefront_address,
+                service_area=service_area,
+                phone=phone,
+                website_uri=website_uri,
+                description=description,
+                regular_hours=regular_hours,
+                validate_only=validate_only,
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Search existing Google listings",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def connect_search_google_business_locations(
+        account_id: str,
+        query: str | None = None,
+        location: dict[str, Any] | None = None,
+        page_size: int | None = None,
+    ) -> str:
+        """Search existing Google listings
+
+        Searches Google Maps for listings that match a business name or a partial location, so you can check whether the business already exists before creating a new listing.
+
+        Not location-scoped: works for a Google Business Profile account that has no location yet.
+
+        Send exactly one of `query` (free text) or `location` (a partial location with at least `title`). Google returns at most 10 matches and does not paginate.
+
+        `requestAdminRightsUri` is present only when the listing is already claimed; send the business owner there to request admin rights instead of creating a duplicate.
+
+        Args:
+            account_id: The Zernio account ID (from /v1/accounts) (required)
+            query: Free-text search (business name and address). Mutually exclusive with location.
+            location: Partial Google Business Information location (e.g. title and storefrontAddress). Mutually exclusive with query. Object with keys: title (string, required); storefrontAddress (object)
+            page_size: Maximum matches to return. Google defaults to 3."""
+        client = _get_client()
+        try:
+            response = client.connect.search_google_business_locations(
+                account_id=account_id,
+                query=query,
+                location=location,
+                page_size=page_size,
             )
             return _format_response(response)
         except Exception as e:
