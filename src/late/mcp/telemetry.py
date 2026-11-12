@@ -20,6 +20,7 @@ from sentry_sdk.integrations.mcp import MCPIntegration
 
 from late.client.exceptions import LateAPIError, LateError
 from late.mcp.auth import token_cache_key
+from late.mcp.axiom_sink import axiom_handler_from_env
 from late.mcp.constants import SERVICE_VERSION
 from late.mcp.response_format import format_stats
 
@@ -71,6 +72,14 @@ def init_sentry() -> bool:
         send_default_pii=False,
         disabled_integrations=[MCPIntegration()],
     )
+    return True
+
+
+def ship_tool_calls_to_axiom() -> bool:
+    handler = axiom_handler_from_env()
+    if handler is None:
+        return False
+    _tool_logger.addHandler(handler)
     return True
 
 

@@ -69,6 +69,7 @@ Optional variables:
 - `MCP_ALLOWED_ORIGINS` — comma-separated hostnames appended to the browser Origin allowlist (DNS-rebinding protection).
 - `SENTRY_DSN` — sends one transaction per tool call (`tools/call <tool>`) and unexpected errors to Sentry. Unset, nothing is sent.
 - `SENTRY_TRACES_SAMPLE_RATE` (default: 1.0) — share of tool calls traced in Sentry.
+- `AXIOM_TOKEN` and `AXIOM_DATASET` — with both set, every `mcp_tool_call` line below is also sent to that Axiom dataset, in batches every 5 s from a background thread, with `release` (commit), `environment` and `worker` (process id) added. Unset, nothing is sent. The token needs ingest permission on that dataset only. A failed batch is dropped and logged, never retried, and never slows a tool call; when more than 20,000 lines wait, new ones are dropped and counted in an `mcp_axiom_dropped` event.
 - `WEB_CONCURRENCY` (default: 1) — number of server processes. One process uses one CPU core at most. Above 1, `/health` returns 503 until every process is up, and legacy `/sse` breaks: its `/messages` POSTs can reach a process that does not hold the stream.
 
 ## Logging
