@@ -72,8 +72,8 @@ def _operation(operation_id: str, name: str, values: list[str], default: str) ->
     }
 
 
-@pytest.mark.parametrize("operation_id", ["listAds", "listAdSets"])
-def test_ads_listings_default_to_the_summary_view_for_agents(
+@pytest.mark.parametrize("operation_id", ["listAds", "listAdSets", "listPosts", "getInboxPostComments", "listInboxComments"])
+def test_listings_default_to_the_summary_view_for_agents(
     mcp_generator, operation_id: str
 ) -> None:
     operation = _operation(operation_id, "view", ["full", "summary"], "full")
