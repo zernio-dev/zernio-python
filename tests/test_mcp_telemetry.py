@@ -190,7 +190,7 @@ async def test_a_cancelled_tool_call_is_not_logged_as_ok(caplog) -> None:
     async def cancelled_call(_context):
         raise asyncio.CancelledError
 
-    context = SimpleNamespace(message=SimpleNamespace(name="slow"))
+    context = SimpleNamespace(message=SimpleNamespace(name="slow", arguments=None))
     with pytest.raises(asyncio.CancelledError):
         await ToolTelemetryMiddleware("mcp").on_call_tool(context, cancelled_call)
 
