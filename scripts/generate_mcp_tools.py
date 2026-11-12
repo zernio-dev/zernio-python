@@ -66,6 +66,12 @@ LISTING_PAGE_SIZES = {
 
 AGENT_VIEWS = {
     "getAnalytics": "summary",
+    "listAds": "summary",
+    "listAdSets": "summary",
+}
+
+AGENT_DEPTHS = {
+    "getAdTree": "adset",
 }
 
 SAME_ARGUMENTS_IDEMPOTENT_OPERATIONS = {
@@ -437,22 +443,33 @@ def _with_page_size(operation_id: str, params: list[dict[str, Any]]) -> list[dic
     ]
 
 
-def _with_agent_view(operation_id: str, params: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    view = AGENT_VIEWS.get(operation_id)
-    if view is None:
+def _with_agent_default(
+    operation_id: str,
+    params: list[dict[str, Any]],
+    *,
+    name: str,
+    value: str | None,
+    widest: str,
+) -> list[dict[str, Any]]:
+    if value is None:
         return params
-    if not any(p["name"] == "view" for p in params):
-        print(f"Warning: {operation_id} has no `view` parameter; its agent default is not applied.", file=sys.stderr)
+    if not any(p["name"] == name for p in params):
+        print(f"Warning: {operation_id} has no `{name}` parameter; its agent default is not applied.", file=sys.stderr)
     return [
         {
             **p,
-            "default": f'"{view}"',
-            "description": f"{p['description'].strip()} Defaults to {view} here; pass full for every field.".strip(),
+            "default": f'"{value}"',
+            "description": f"{p['description'].strip()} Defaults to {value} here; pass {widest} for everything.".strip(),
         }
-        if p["name"] == "view"
+        if p["name"] == name
         else p
         for p in params
     ]
+
+
+def _with_agent_view(operation_id: str, params: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    params = _with_agent_default(operation_id, params, name="view", value=AGENT_VIEWS.get(operation_id), widest="full")
+    return _with_agent_default(operation_id, params, name="depth", value=AGENT_DEPTHS.get(operation_id), widest="ad")
 
 
 def extract_parameters(
