@@ -30121,6 +30121,7 @@ def register_generated_tools(mcp, _get_client):
             ]
         ]
         | None = None,
+        api_secret: str | None = None,
     ) -> str:
         """Add a forwarding rule
 
@@ -30131,9 +30132,10 @@ def register_generated_tools(mcp, _get_client):
         Args:
             profile_id: (required)
             account_id: Connected ads account ID that owns the destination. (required)
-            destination_id: The platform destination: a pixel, a conversion action or a conversion rule. (required)
+            destination_id: The platform destination: a pixel, a conversion action, a conversion rule, or a GA4 web stream measurement id (`G-…`). (required)
             event_names
-            sources: Forward only events from these sources, such as only `web` for a tracked website. Leave it out to forward events from every source."""
+            sources: Forward only events from these sources, such as only `web` for a tracked website. Leave it out to forward events from every source.
+            api_secret: Google Analytics destinations only, and required for them: the data stream's Measurement Protocol API secret, from GA4 Admin › Data streams › Measurement Protocol API secrets. Checked with one hit to Google's validation server (which cannot confirm the secret itself), stored encrypted and never returned. Change it later with `PATCH /v1/events/forwarding-rules/{ruleId}`."""
         client = _get_client()
         try:
             response = client.conversions.create_forwarding_rule(
@@ -30142,6 +30144,32 @@ def register_generated_tools(mcp, _get_client):
                 destination_id=destination_id,
                 event_names=event_names,
                 sources=sources,
+                api_secret=api_secret,
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Change a forwarding rule's API secret",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def conversions_update_forwarding_rule(rule_id: str, api_secret: str) -> str:
+        """Change a forwarding rule's API secret
+
+        Replaces the `apiSecret` of a rule whose destination needs one, such as a Google Analytics data stream's Measurement Protocol API secret. Before saving, Zernio sends one hit to Google's validation server; Google does not confirm the secret itself, so check GA4 Realtime after the next events.
+
+        Args:
+            rule_id: The rule `id`. (required)
+            api_secret: (required)"""
+        client = _get_client()
+        try:
+            response = client.conversions.update_forwarding_rule(
+                rule_id=rule_id, api_secret=api_secret
             )
             return _format_response(response)
         except Exception as e:

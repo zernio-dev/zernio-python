@@ -441,6 +441,7 @@ class ConversionsResource:
         *,
         event_names: list[str] | None = None,
         sources: list[str] | None = None,
+        api_secret: str | None = None,
     ) -> dict[str, Any]:
         """Add a forwarding rule"""
         payload = self._build_payload(
@@ -449,8 +450,18 @@ class ConversionsResource:
             destination_id=destination_id,
             event_names=event_names,
             sources=sources,
+            api_secret=api_secret,
         )
         return self._client._post("/v1/events/forwarding-rules", data=payload)
+
+    def update_forwarding_rule(self, rule_id: str, api_secret: str) -> dict[str, Any]:
+        """Change a forwarding rule's API secret"""
+        payload = self._build_payload(
+            api_secret=api_secret,
+        )
+        return self._client._patch(
+            f"/v1/events/forwarding-rules/{rule_id}", data=payload
+        )
 
     def delete_forwarding_rule(self, rule_id: str) -> dict[str, Any]:
         """Remove a forwarding rule"""
@@ -1189,6 +1200,7 @@ class ConversionsResource:
         *,
         event_names: list[str] | None = None,
         sources: list[str] | None = None,
+        api_secret: str | None = None,
     ) -> dict[str, Any]:
         """Add a forwarding rule (async)"""
         payload = self._build_payload(
@@ -1197,8 +1209,20 @@ class ConversionsResource:
             destination_id=destination_id,
             event_names=event_names,
             sources=sources,
+            api_secret=api_secret,
         )
         return await self._client._apost("/v1/events/forwarding-rules", data=payload)
+
+    async def aupdate_forwarding_rule(
+        self, rule_id: str, api_secret: str
+    ) -> dict[str, Any]:
+        """Change a forwarding rule's API secret (async)"""
+        payload = self._build_payload(
+            api_secret=api_secret,
+        )
+        return await self._client._apatch(
+            f"/v1/events/forwarding-rules/{rule_id}", data=payload
+        )
 
     async def adelete_forwarding_rule(self, rule_id: str) -> dict[str, Any]:
         """Remove a forwarding rule (async)"""

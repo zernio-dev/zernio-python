@@ -1057,6 +1057,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `conversions.update_conversion_action()` | Update a conversion action's settings |
 | `conversions.update_conversion_destination()` | Update a conversion destination |
 | `conversions.update_custom_conversion_goal()` | Update a custom conversion goal |
+| `conversions.update_forwarding_rule()` | Change a forwarding rule's API secret |
 | `conversions.delete_ad_conversion_destination()` | Delete a conversion destination |
 | `conversions.delete_conversion_destination()` | Delete a conversion destination |
 | `conversions.delete_event_destination()` | Remove an event destination |
