@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.578.0"
+  version: "1.579.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -21637,7 +21637,7 @@ components:
     CommerceCapability:
       type: string
       description: 'An operation a store supports. Calling an operation outside this list answers 400 platform_not_supported.'
-      enum: [products.read, products.create, products.update, products.status, products.price, products.variants, products.images, products.images_remove, collections.read, collections.write, collections.metafields, metafields.read, metafields.write, pages.read, pages.write, inventory.read, inventory.write, channels.read, channels.write, discounts.read, discounts.write, discounts.codes, navigation.read, navigation.write, metaobjects.read, metaobjects.write, markets.read, markets.write, marketing.write, orders.read]
+      enum: [products.read, products.create, products.update, products.status, products.price, products.variants, products.images, products.images_remove, collections.read, collections.write, collections.metafields, metafields.read, metafields.write, pages.read, pages.write, inventory.read, inventory.write, channels.read, channels.write, discounts.read, discounts.write, discounts.codes, navigation.read, navigation.write, metaobjects.read, metaobjects.write, markets.read, markets.write, marketing.write, orders.read, orders.refund, orders.cancel, customers.read]
     CommerceImage:
       type: object
       properties:
@@ -21714,6 +21714,102 @@ components:
         title: { type: string, example: 'TVA 20%' }
         ratePercent: { type: [number, "null"], description: 'Percent, e.g. 20 for 20%. Null when the platform does not say.' }
         amount: { $ref: '#/components/schemas/CommerceMoney' }
+    CommerceOrderRefund:
+      type: object
+      properties:
+        id: { type: string }
+        createdAt: { type: [string, "null"], format: date-time }
+        note: { type: [string, "null"] }
+        amount: { $ref: '#/components/schemas/CommerceMoney' }
+        lineItems:
+          type: array
+          items:
+            type: object
+            properties:
+              lineItemId: { type: string }
+              quantity: { type: integer }
+              amount: { $ref: '#/components/schemas/CommerceMoney', description: 'Before tax.' }
+    CommerceRefundRequest:
+      type: object
+      description: 'What to refund. Pass at least one of lineItems, shipping or amount.'
+      required: [accountId]
+      properties:
+        accountId: { type: string, description: 'Connected store SocialAccount id.' }
+        lineItems:
+          type: array
+          maxItems: 250
+          items:
+            type: object
+            required: [lineItemId, quantity]
+            properties:
+              lineItemId: { type: string, description: 'A line item id from the order (`lineItems[].id`).' }
+              quantity: { type: integer, minimum: 1 }
+              restock: { type: boolean, default: false, description: 'Put the units back in stock. Unshipped units are cancelled and shipped ones count as returned.' }
+        shipping:
+          description: 'Refund the shipping: `{ "full": true }` for what is left of it, or `{ "amount": "5.00" }` for part of it.'
+          oneOf:
+            - type: object
+              required: [full]
+              properties:
+                full: { type: boolean, description: 'Must be true.' }
+            - type: object
+              required: [amount]
+              properties:
+                amount: { type: string, example: '5.00' }
+        amount:
+          type: string
+          example: '10.00'
+          description: 'Refund this much money instead of what the lines and shipping are worth, for a goodwill refund or a partial one. Taken from the order''s payments in order, up to what each can still refund.'
+        currency:
+          type: string
+          example: EUR
+          description: 'The currency your amounts are in. Refused (400) unless it is the one the buyer paid in, which every refund amount uses.'
+    CommerceRefundPreview:
+      type: object
+      description: 'What a refund would return, computed by the platform. Amounts are in the currency the buyer paid in, which refunds are made in.'
+      properties:
+        amount: { $ref: '#/components/schemas/CommerceMoney' }
+        maximumRefundable: { $ref: '#/components/schemas/CommerceMoney' }
+        subtotal: { $ref: '#/components/schemas/CommerceMoney' }
+        tax: { $ref: '#/components/schemas/CommerceMoney' }
+        shipping: { $ref: '#/components/schemas/CommerceMoney' }
+        lineItems:
+          type: array
+          items:
+            type: object
+            properties:
+              lineItemId: { type: string }
+              quantity: { type: integer }
+              restock: { type: string, enum: [none, restock] }
+              amount: { $ref: '#/components/schemas/CommerceMoney' }
+        transactions:
+          type: array
+          description: 'The payments the money goes back to.'
+          items:
+            type: object
+            properties:
+              gateway: { type: [string, "null"] }
+              amount: { $ref: '#/components/schemas/CommerceMoney' }
+    CommerceCustomer:
+      type: object
+      properties:
+        id: { type: string }
+        accountId: { type: string }
+        platform: { type: string, enum: [shopify, woocommerce] }
+        firstName: { type: [string, "null"] }
+        lastName: { type: [string, "null"] }
+        email: { type: [string, "null"] }
+        phone: { type: [string, "null"] }
+        ordersCount: { type: integer }
+        totalSpent: { $ref: '#/components/schemas/CommerceMoney' }
+        tags: { type: array, items: { type: string } }
+        note: { type: [string, "null"] }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+        defaultAddress:
+          oneOf:
+            - $ref: '#/components/schemas/CommerceAddress'
+            - type: "null"
     CommerceAddress:
       type: object
       properties:
@@ -21855,20 +21951,7 @@ components:
         refunds:
           type: array
           items:
-            type: object
-            properties:
-              id: { type: string }
-              createdAt: { type: [string, "null"], format: date-time }
-              note: { type: [string, "null"] }
-              amount: { $ref: '#/components/schemas/CommerceMoney' }
-              lineItems:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    lineItemId: { type: string }
-                    quantity: { type: integer }
-                    amount: { $ref: '#/components/schemas/CommerceMoney', description: 'Before tax.' }
+            $ref: '#/components/schemas/CommerceOrderRefund'
         fulfillments:
           type: array
           items:
@@ -103848,6 +103931,18 @@ paths:
             type: string
             format: date-time
           description: Only orders changed after this time, oldest change first.
+        - name: customerId
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Only this customer's orders (`customer.id` on an order, or `id` from the customers endpoints).
+        - name: email
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Only orders placed with this email. Shopify only; WooCommerce answers 400 platform_not_supported.
       responses:
         '200':
           description: Orders listed
@@ -103929,6 +104024,274 @@ paths:
           description: Account not found (code account_not_found) or order not found (code resource_not_found).
         '429':
           x-summary: "Zernio or the platform rate limited the request: retry later."
+          description: Rate limited, either by Zernio or by the platform. Retry later.
+  /v1/commerce/orders/{orderId}/refunds:
+    post:
+      x-resource-group: commerce
+      operationId: createCommerceRefund
+      tags:
+        - Commerce
+      x-platforms:
+        - shopify
+      summary: Refund an order
+      description: |
+        Refunds line items, shipping or an amount of money to the buyer's original payment methods. Needs orders.refund.
+
+        - Preview first with `validateOnly: true`: it returns what the buyer gets back and to which payments, without refunding anything.
+        - A real refund needs an `Idempotency-Key` header (a UUID per refund): a retry with the same key never refunds twice.
+        - Every amount, sent or returned, is in the currency the buyer paid in, the one refunds are made in. Send `currency` to have a mismatch refused instead of guessed.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Platform-native order id.
+        - name: Idempotency-Key
+          in: header
+          required: false
+          schema:
+            type: string
+            maxLength: 255
+          description: 'Required unless validateOnly is true. A retry with the same key returns the first response and never refunds twice.'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/CommerceRefundRequest'
+                - type: object
+                  properties:
+                    note: { type: string, maxLength: 1000, description: 'Kept on the refund, visible to staff.' }
+                    notifyCustomer: { type: boolean, default: false, description: 'Email the buyer about the refund.' }
+                    validateOnly: { type: boolean, default: false, description: 'Return the refund the platform would make, without refunding anything.' }
+      responses:
+        '200':
+          description: 'validateOnly: the refund the platform would make'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  validateOnly: { type: boolean }
+                  refund:
+                    $ref: '#/components/schemas/CommerceRefundPreview'
+        '201':
+          description: Refund created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  refund:
+                    $ref: '#/components/schemas/CommerceOrderRefund'
+                  order:
+                    $ref: '#/components/schemas/CommerceOrder'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          x-summary: 'The store has not granted the permission: have the store owner approve it using `grantPermissionsUrl` from the store endpoint.'
+          description: 'The store has not granted orders.refund, or the platform has not yet approved Zernio''s access to order and customer data (code insufficient_permissions; the message says which). GET /v1/commerce/store returns grantPermissionsUrl for the store owner to approve it.'
+        '404':
+          description: 'Account not found (code account_not_found) or order not found (code resource_not_found).'
+        '429':
+          x-summary: 'Zernio or the platform rate limited the request: retry later.'
+          description: Rate limited, either by Zernio or by the platform. Retry later.
+  /v1/commerce/orders/{orderId}/cancel:
+    post:
+      x-resource-group: commerce
+      operationId: cancelCommerceOrder
+      tags:
+        - Commerce
+      x-platforms:
+        - shopify
+      summary: Cancel an order
+      description: |
+        Cancels an order, by default refunding it to the original payment methods and restocking it. Needs orders.cancel.
+
+        The platform cancels in the background. The call waits a few seconds: `200` with `cancelled: true` when it finished, `202` with `cancelled: false` when it is still running (the `commerce.order.updated` webhook reports the outcome).
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Platform-native order id.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [accountId, reason]
+              properties:
+                accountId: { type: string, description: 'Connected store SocialAccount id.' }
+                reason: { type: string, enum: [customer, declined, fraud, inventory, staff, other] }
+                refund: { type: boolean, default: true, description: 'Refund the payments to the original methods. Authorized payments are voided either way.' }
+                restock: { type: boolean, default: true }
+                notifyCustomer: { type: boolean, default: false }
+                staffNote: { type: string, maxLength: 255, description: 'Visible to staff only.' }
+      responses:
+        '200':
+          description: Order cancelled
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  order: { $ref: '#/components/schemas/CommerceOrder' }
+                  cancelled: { type: boolean, description: 'True: the cancel finished.' }
+        '202':
+          description: 'Still cancelling: the order webhook reports when it is done'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  order: { $ref: '#/components/schemas/CommerceOrder' }
+                  cancelled: { type: boolean, description: 'False: the platform is still cancelling.' }
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          x-summary: 'The store has not granted the permission: have the store owner approve it using `grantPermissionsUrl` from the store endpoint.'
+          description: 'The store has not granted orders.cancel, or the platform has not yet approved Zernio''s access to order and customer data (code insufficient_permissions; the message says which). GET /v1/commerce/store returns grantPermissionsUrl for the store owner to approve it.'
+        '404':
+          description: 'Account not found (code account_not_found) or order not found (code resource_not_found).'
+        '429':
+          x-summary: 'Zernio or the platform rate limited the request: retry later.'
+          description: Rate limited, either by Zernio or by the platform. Retry later.
+  /v1/commerce/customers:
+    get:
+      x-resource-group: commerce
+      operationId: listCommerceCustomers
+      tags:
+        - Commerce
+      x-platforms:
+        - shopify
+      summary: List customers
+      description: |
+        The store's customers, most recently updated first. Needs customers.read.
+
+        Find the customer behind a support ticket with `email`, `phone` or `search`, then read their orders with `GET /v1/commerce/orders?customerId=`.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: accountId
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Connected store SocialAccount id.
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+            default: 20
+        - name: cursor
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: email
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: phone
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: search
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Free text matched against name, email and phone.
+      responses:
+        '200':
+          description: Customers listed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  customers:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/CommerceCustomer'
+                  nextCursor:
+                    type: [string, "null"]
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          x-summary: 'The store has not granted the permission: have the store owner approve it using `grantPermissionsUrl` from the store endpoint.'
+          description: 'The store has not granted customers.read, or the platform has not yet approved Zernio''s access to order and customer data (code insufficient_permissions; the message says which). GET /v1/commerce/store returns grantPermissionsUrl for the store owner to approve it.'
+        '404':
+          description: 'Account not found (code account_not_found) or store not found (code resource_not_found).'
+        '429':
+          x-summary: 'Zernio or the platform rate limited the request: retry later.'
+          description: Rate limited, either by Zernio or by the platform. Retry later.
+  /v1/commerce/customers/{customerId}:
+    get:
+      x-resource-group: commerce
+      operationId: getCommerceCustomer
+      tags:
+        - Commerce
+      x-platforms:
+        - shopify
+      summary: Get a customer
+      description: One customer with their order count, total spent and default address. Needs customers.read.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: customerId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Platform-native customer id.
+        - name: accountId
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Connected store SocialAccount id.
+      responses:
+        '200':
+          description: The customer
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  customer:
+                    $ref: '#/components/schemas/CommerceCustomer'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          x-summary: 'The store has not granted the permission: have the store owner approve it using `grantPermissionsUrl` from the store endpoint.'
+          description: 'The store has not granted customers.read, or the platform has not yet approved Zernio''s access to order and customer data (code insufficient_permissions; the message says which). GET /v1/commerce/store returns grantPermissionsUrl for the store owner to approve it.'
+        '404':
+          description: 'Account not found (code account_not_found) or customer not found (code resource_not_found).'
+        '429':
+          x-summary: 'Zernio or the platform rate limited the request: retry later.'
           description: Rate limited, either by Zernio or by the platform. Retry later.
   /v1/commerce/products:
     get:

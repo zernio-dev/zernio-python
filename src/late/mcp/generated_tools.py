@@ -22133,6 +22133,8 @@ def register_generated_tools(mcp, _get_client):
         created_after: str | None = None,
         created_before: str | None = None,
         updated_after: str | None = None,
+        customer_id: str | None = None,
+        email: str | None = None,
     ) -> str:
         """List orders
 
@@ -22164,7 +22166,9 @@ def register_generated_tools(mcp, _get_client):
             cursor
             created_after
             created_before
-            updated_after: Only orders changed after this time, oldest change first."""
+            updated_after: Only orders changed after this time, oldest change first.
+            customer_id: Only this customer's orders (`customer.id` on an order, or `id` from the customers endpoints).
+            email: Only orders placed with this email. Shopify only; WooCommerce answers 400 platform_not_supported."""
         client = _get_client()
         try:
             response = client.commerce.list_commerce_orders(
@@ -22174,6 +22178,8 @@ def register_generated_tools(mcp, _get_client):
                 created_after=created_after,
                 created_before=created_before,
                 updated_after=updated_after,
+                customer_id=customer_id,
+                email=email,
             )
             return _format_response(response)
         except Exception as e:
@@ -22201,6 +22207,182 @@ def register_generated_tools(mcp, _get_client):
         try:
             response = client.commerce.get_commerce_order(
                 order_id=order_id, account_id=account_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Refund an order",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def commerce_create_commerce_refund(
+        order_id: str,
+        account_id: str,
+        line_items: list[dict[str, Any]] | None = None,
+        shipping: dict[str, Any] | None = None,
+        amount: str | None = None,
+        currency: str | None = None,
+        note: str | None = None,
+        notify_customer: bool = False,
+        validate_only: bool = False,
+    ) -> str:
+        """Refund an order
+
+        Refunds line items, shipping or an amount of money to the buyer's original payment methods. Needs orders.refund.
+
+        - Preview first with `validateOnly: true`: it returns what the buyer gets back and to which payments, without refunding anything.
+        - A real refund needs an `Idempotency-Key` header (a UUID per refund): a retry with the same key never refunds twice.
+        - Every amount, sent or returned, is in the currency the buyer paid in, the one refunds are made in. Send `currency` to have a mismatch refused instead of guessed.
+
+        Platforms: shopify
+
+        Args:
+            order_id: Platform-native order id. (required)
+            account_id: Connected store SocialAccount id. (required)
+            line_items: Each item is an object with keys: lineItemId (string, required) - A line item id from the order (`lineItems[].id`).; quantity (integer, required); restock (boolean) - Put the units back in stock. Unshipped units are cancelled and shipped ones count as returned.
+            shipping: Refund the shipping: `{ "full": true }` for what is left of it, or `{ "amount": "5.00" }` for part of it. Object with keys: full (boolean, required) - Must be true.
+            amount: Refund this much money instead of what the lines and shipping are worth, for a goodwill refund or a partial one. Taken from the order's payments in order, up to what each can still refund.
+            currency: The currency your amounts are in. Refused (400) unless it is the one the buyer paid in, which every refund amount uses.
+            note: Kept on the refund, visible to staff.
+            notify_customer: Email the buyer about the refund.
+            validate_only: Return the refund the platform would make, without refunding anything."""
+        client = _get_client()
+        try:
+            response = client.commerce.create_commerce_refund(
+                order_id=order_id,
+                account_id=account_id,
+                line_items=line_items,
+                shipping=shipping,
+                amount=amount,
+                currency=currency,
+                note=note,
+                notify_customer=notify_customer,
+                validate_only=validate_only,
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Cancel an order",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def commerce_cancel_commerce_order(
+        order_id: str,
+        account_id: str,
+        reason: Literal["customer", "declined", "fraud", "inventory", "staff", "other"],
+        refund: bool = True,
+        restock: bool = True,
+        notify_customer: bool = False,
+        staff_note: str | None = None,
+    ) -> str:
+        """Cancel an order
+
+        Cancels an order, by default refunding it to the original payment methods and restocking it. Needs orders.cancel.
+
+        The platform cancels in the background. The call waits a few seconds: `200` with `cancelled: true` when it finished, `202` with `cancelled: false` when it is still running (the `commerce.order.updated` webhook reports the outcome).
+
+        Platforms: shopify
+
+        Args:
+            order_id: Platform-native order id. (required)
+            account_id: Connected store SocialAccount id. (required)
+            reason: (required)
+            refund: Refund the payments to the original methods. Authorized payments are voided either way.
+            restock
+            notify_customer
+            staff_note: Visible to staff only."""
+        client = _get_client()
+        try:
+            response = client.commerce.cancel_commerce_order(
+                order_id=order_id,
+                account_id=account_id,
+                reason=reason,
+                refund=refund,
+                restock=restock,
+                notify_customer=notify_customer,
+                staff_note=staff_note,
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List customers",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def commerce_list_commerce_customers(
+        account_id: str,
+        limit: int = 20,
+        cursor: str | None = None,
+        email: str | None = None,
+        phone: str | None = None,
+        search: str | None = None,
+    ) -> str:
+        """List customers
+
+        The store's customers, most recently updated first. Needs customers.read.
+
+        Find the customer behind a support ticket with `email`, `phone` or `search`, then read their orders with `GET /v1/commerce/orders?customerId=`.
+
+        Platforms: shopify
+
+        Args:
+            account_id: Connected store SocialAccount id. (required)
+            limit
+            cursor
+            email
+            phone
+            search: Free text matched against name, email and phone."""
+        client = _get_client()
+        try:
+            response = client.commerce.list_commerce_customers(
+                account_id=account_id,
+                limit=limit,
+                cursor=cursor,
+                email=email,
+                phone=phone,
+                search=search,
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get a customer",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def commerce_get_commerce_customer(customer_id: str, account_id: str) -> str:
+        """Get a customer
+
+        One customer with their order count, total spent and default address. Needs customers.read.
+
+        Platforms: shopify
+
+        Args:
+            customer_id: Platform-native customer id. (required)
+            account_id: Connected store SocialAccount id. (required)"""
+        client = _get_client()
+        try:
+            response = client.commerce.get_commerce_customer(
+                customer_id=customer_id, account_id=account_id
             )
             return _format_response(response)
         except Exception as e:

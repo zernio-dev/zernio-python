@@ -922,6 +922,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `commerce.list_commerce_channels()` | List sales channels |
 | `commerce.list_commerce_collection_metafields()` | List collection metafields |
 | `commerce.list_commerce_collections()` | List collections |
+| `commerce.list_commerce_customers()` | List customers |
 | `commerce.list_commerce_discounts()` | List discounts |
 | `commerce.list_commerce_inventory()` | Get a product's stock |
 | `commerce.list_commerce_locations()` | List locations |
@@ -945,8 +946,10 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `commerce.create_commerce_product_options()` | Add options |
 | `commerce.create_commerce_product_variants()` | Add variants |
 | `commerce.create_commerce_redirect()` | Create a URL redirect |
+| `commerce.create_commerce_refund()` | Refund an order |
 | `commerce.get_commerce_catalog_sync()` | Get a catalog sync |
 | `commerce.get_commerce_collection()` | Get a collection |
+| `commerce.get_commerce_customer()` | Get a customer |
 | `commerce.get_commerce_discount()` | Get a discount |
 | `commerce.get_commerce_menu()` | Get a navigation menu |
 | `commerce.get_commerce_metaobject()` | Get a metaobject |
@@ -978,6 +981,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `commerce.add_commerce_discount_codes()` | Add codes to a discount |
 | `commerce.add_commerce_marketing_engagement()` | Report daily engagement |
 | `commerce.add_commerce_product_images()` | Add images |
+| `commerce.cancel_commerce_order()` | Cancel an order |
 | `commerce.change_commerce_collection_channels()` | Publish or unpublish a collection |
 | `commerce.change_commerce_collection_products()` | Add or remove products in a collection |
 | `commerce.change_commerce_inventory()` | Set or adjust stock |

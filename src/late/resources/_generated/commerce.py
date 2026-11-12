@@ -91,6 +91,8 @@ class CommerceResource:
         created_after: datetime | str | None = None,
         created_before: datetime | str | None = None,
         updated_after: datetime | str | None = None,
+        customer_id: str | None = None,
+        email: str | None = None,
     ) -> dict[str, Any]:
         """List orders"""
         params = self._build_params(
@@ -100,6 +102,8 @@ class CommerceResource:
             created_after=created_after,
             created_before=created_before,
             updated_after=updated_after,
+            customer_id=customer_id,
+            email=email,
         )
         return self._client._get("/v1/commerce/orders", params=params)
 
@@ -109,6 +113,92 @@ class CommerceResource:
             account_id=account_id,
         )
         return self._client._get(f"/v1/commerce/orders/{order_id}", params=params)
+
+    def create_commerce_refund(
+        self,
+        order_id: str,
+        account_id: str,
+        *,
+        idempotency_key: str | None = None,
+        line_items: list[dict[str, Any]] | None = None,
+        shipping: Any | None = None,
+        amount: str | None = None,
+        currency: str | None = None,
+        note: str | None = None,
+        notify_customer: bool | None = False,
+        validate_only: bool | None = False,
+    ) -> dict[str, Any]:
+        """Refund an order"""
+        payload = self._build_payload(
+            account_id=account_id,
+            line_items=line_items,
+            shipping=shipping,
+            amount=amount,
+            currency=currency,
+            note=note,
+            notify_customer=notify_customer,
+            validate_only=validate_only,
+        )
+        headers: dict[str, str] = {}
+        if idempotency_key is not None:
+            headers["Idempotency-Key"] = idempotency_key
+        return self._client._post(
+            f"/v1/commerce/orders/{order_id}/refunds", data=payload, headers=headers
+        )
+
+    def cancel_commerce_order(
+        self,
+        order_id: str,
+        account_id: str,
+        reason: str,
+        *,
+        refund: bool | None = True,
+        restock: bool | None = True,
+        notify_customer: bool | None = False,
+        staff_note: str | None = None,
+    ) -> dict[str, Any]:
+        """Cancel an order"""
+        payload = self._build_payload(
+            account_id=account_id,
+            reason=reason,
+            refund=refund,
+            restock=restock,
+            notify_customer=notify_customer,
+            staff_note=staff_note,
+        )
+        return self._client._post(
+            f"/v1/commerce/orders/{order_id}/cancel", data=payload
+        )
+
+    def list_commerce_customers(
+        self,
+        account_id: str,
+        *,
+        limit: int | None = 20,
+        cursor: str | None = None,
+        email: str | None = None,
+        phone: str | None = None,
+        search: str | None = None,
+    ) -> dict[str, Any]:
+        """List customers"""
+        params = self._build_params(
+            account_id=account_id,
+            limit=limit,
+            cursor=cursor,
+            email=email,
+            phone=phone,
+            search=search,
+        )
+        return self._client._get("/v1/commerce/customers", params=params)
+
+    def get_commerce_customer(
+        self, customer_id: str, account_id: str
+    ) -> dict[str, Any]:
+        """Get a customer"""
+        params = self._build_params(
+            account_id=account_id,
+        )
+        return self._client._get(f"/v1/commerce/customers/{customer_id}", params=params)
 
     def list_commerce_products(
         self,
@@ -1172,6 +1262,8 @@ class CommerceResource:
         created_after: datetime | str | None = None,
         created_before: datetime | str | None = None,
         updated_after: datetime | str | None = None,
+        customer_id: str | None = None,
+        email: str | None = None,
     ) -> dict[str, Any]:
         """List orders (async)"""
         params = self._build_params(
@@ -1181,6 +1273,8 @@ class CommerceResource:
             created_after=created_after,
             created_before=created_before,
             updated_after=updated_after,
+            customer_id=customer_id,
+            email=email,
         )
         return await self._client._aget("/v1/commerce/orders", params=params)
 
@@ -1193,6 +1287,94 @@ class CommerceResource:
         )
         return await self._client._aget(
             f"/v1/commerce/orders/{order_id}", params=params
+        )
+
+    async def acreate_commerce_refund(
+        self,
+        order_id: str,
+        account_id: str,
+        *,
+        idempotency_key: str | None = None,
+        line_items: list[dict[str, Any]] | None = None,
+        shipping: Any | None = None,
+        amount: str | None = None,
+        currency: str | None = None,
+        note: str | None = None,
+        notify_customer: bool | None = False,
+        validate_only: bool | None = False,
+    ) -> dict[str, Any]:
+        """Refund an order (async)"""
+        payload = self._build_payload(
+            account_id=account_id,
+            line_items=line_items,
+            shipping=shipping,
+            amount=amount,
+            currency=currency,
+            note=note,
+            notify_customer=notify_customer,
+            validate_only=validate_only,
+        )
+        headers: dict[str, str] = {}
+        if idempotency_key is not None:
+            headers["Idempotency-Key"] = idempotency_key
+        return await self._client._apost(
+            f"/v1/commerce/orders/{order_id}/refunds", data=payload, headers=headers
+        )
+
+    async def acancel_commerce_order(
+        self,
+        order_id: str,
+        account_id: str,
+        reason: str,
+        *,
+        refund: bool | None = True,
+        restock: bool | None = True,
+        notify_customer: bool | None = False,
+        staff_note: str | None = None,
+    ) -> dict[str, Any]:
+        """Cancel an order (async)"""
+        payload = self._build_payload(
+            account_id=account_id,
+            reason=reason,
+            refund=refund,
+            restock=restock,
+            notify_customer=notify_customer,
+            staff_note=staff_note,
+        )
+        return await self._client._apost(
+            f"/v1/commerce/orders/{order_id}/cancel", data=payload
+        )
+
+    async def alist_commerce_customers(
+        self,
+        account_id: str,
+        *,
+        limit: int | None = 20,
+        cursor: str | None = None,
+        email: str | None = None,
+        phone: str | None = None,
+        search: str | None = None,
+    ) -> dict[str, Any]:
+        """List customers (async)"""
+        params = self._build_params(
+            account_id=account_id,
+            limit=limit,
+            cursor=cursor,
+            email=email,
+            phone=phone,
+            search=search,
+        )
+        return await self._client._aget("/v1/commerce/customers", params=params)
+
+    async def aget_commerce_customer(
+        self, customer_id: str, account_id: str
+    ) -> dict[str, Any]:
+        """Get a customer (async)"""
+        params = self._build_params(
+            account_id=account_id,
+        )
+        return await self._client._aget(
+            f"/v1/commerce/customers/{customer_id}", params=params
         )
 
     async def alist_commerce_products(
