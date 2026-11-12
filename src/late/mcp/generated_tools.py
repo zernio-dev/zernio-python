@@ -49715,7 +49715,6 @@ def register_generated_tools(mcp, _get_client):
                 "campaign_sample.approved",
                 "campaign_sample.shipped",
                 "campaign_sample.declined",
-                "notification.sent",
             ]
         ]
         | None,
@@ -49954,7 +49953,6 @@ def register_generated_tools(mcp, _get_client):
                 "campaign_sample.approved",
                 "campaign_sample.shipped",
                 "campaign_sample.declined",
-                "notification.sent",
             ]
         ]
         | None = None,
@@ -50343,7 +50341,6 @@ def register_generated_tools(mcp, _get_client):
             "balance.low",
             "balance.empty",
             "balance.charged",
-            "notification.sent",
             "api.changelog.published",
         ]
         | None = None,
