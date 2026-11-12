@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.594.0"
+  version: "1.595.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -98294,6 +98294,15 @@ paths:
                       visits: { type: integer, description: Page views today. }
                       bots: { type: integer, description: Page views from bots. }
                       serverPlatforms: { type: array, items: { type: string }, description: 'Platforms of the forwarding rules that receive website events.' }
+                  sites:
+                    type: array
+                    description: 'Each tracking site of the profile with its activity. Hit counts are approximate distinct counts without bots.'
+                    items:
+                      type: object
+                      properties:
+                        siteId: { type: string }
+                        hitsToday: { type: integer, description: Hits today. }
+                        lastActiveOn: { type: [string, "null"], format: date, description: 'The last day in the past 7 with a hit. `null` when none.' }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
