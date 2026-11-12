@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.595.0"
+  version: "1.595.1"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -41210,6 +41210,7 @@ paths:
                         status: { type: string, enum: [healthy, warning, error] }
                         canPost: { type: boolean }
                         canFetchAnalytics: { type: boolean }
+                        analyticsSupported: { type: boolean, description: 'Whether analytics is in scope for this account at all (the platform offers analytics and it was requested at connect). False means canFetchAnalytics is not a problem to fix; true with canFetchAnalytics false means analytics needs a reconnect.' }
                         scopeAreas:
                           type: object
                           additionalProperties: { type: string, enum: [granted, missing, not_requested] }
@@ -41579,6 +41580,7 @@ paths:
                             required: { type: boolean }
                       canPost: { type: boolean, description: 'Whether the granted OAuth scopes allow posting. Scopes only: for WhatsApp, whether Meta lets the number send is `platformConnection.phoneStatus` and the overall `status`.' }
                       canFetchAnalytics: { type: boolean }
+                      analyticsSupported: { type: boolean, description: 'Whether analytics is in scope for this account at all (the platform offers analytics and it was requested at connect). False means canFetchAnalytics is not a problem to fix; true with canFetchAnalytics false means analytics needs a reconnect.' }
                       missingRequired: { type: array, items: { type: string } }
                       scopeAreas:
                         type: object
