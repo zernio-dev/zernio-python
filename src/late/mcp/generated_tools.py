@@ -26072,7 +26072,7 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Get Stripe connect URL
 
-        Initiates Stripe Connect OAuth for the customer's own Stripe account, with read-only access. Stripe is a connect-only sales source: each paid charge becomes a `Purchase` event in `GET /v1/events` (source `stripe`), and refunds lower or retract it.
+        Initiates Stripe Connect OAuth for the customer's own Stripe account. Zernio only reads its payments. Stripe is a connect-only sales source: each paid charge becomes a `Purchase` event in `GET /v1/events` (source `stripe`), and refunds lower or retract it.
 
         One Stripe account can be connected per profile. Connecting a different account to a profile that already has one redirects with `error=stripe_profile_has_account`.
 
@@ -26084,7 +26084,7 @@ def register_generated_tools(mcp, _get_client):
 
         On success the redirect carries `connected=stripe`, `profileId`, `accountId` and `username` (the Stripe account name). On failure it carries `error`, `platform=stripe` and `error_message`.
 
-        To match a payment to the ad campaign behind it, set `zrn`, `gclid`, `fbclid` or `utm_*` keys (and optionally `landing_url`) in the metadata of the Checkout Session, PaymentIntent or subscription.
+        To match a payment to the ad campaign behind it, set `zrn`, `gclid`, `fbclid` or `utm_*` keys (and optionally `landing_url`) in the metadata of the Checkout Session, PaymentIntent or ...
 
         Args:
             profile_id: Your Zernio profile ID (get from /v1/profiles). (required)
