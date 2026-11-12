@@ -19758,7 +19758,7 @@ components:
     AdRuleFilters:
       type: array
       maxItems: 10
-      description: 'Narrows the objects the rule checks. Every filter must hold. A campaign rule reads `name`, `campaign_id`, `goal`, `days_live` and `budget_level`; an ad set rule also `campaign_name` and `adset_id`; an ad rule also `adset_name` and `ad_id`.'
+      description: 'Narrows the objects the rule checks. Every filter must hold. A campaign rule reads `name`, `campaign_id`, `goal`, `days_live`, `days_since_change` and `budget_level`; an ad set rule all but `days_since_change`, plus `campaign_name` and `adset_id`; an ad rule also `adset_name` and `ad_id`.'
       items:
         oneOf:
           - type: object
@@ -19793,6 +19793,20 @@ components:
               field: { type: string, enum: [days_live] }
               op: { type: string, enum: ['>=', '<'] }
               value: { type: integer, minimum: 0, maximum: 3650 }
+          - type: object
+            title: Days since change
+            required: [field, change, op, value]
+            description: |
+              Days since the campaign's budget, bidding, status or conversion goal last changed, on the campaign or, on Meta, one of its ad sets. Read from the platform's change history, Meta and Google only.
+
+              A campaign with no such change in the history passes `>=` and fails `<`. Google records an edit of conversion goals as a campaign update naming no field, so `goal` reads those.
+
+              On Google, a change to a shared (portfolio) bid strategy does not count as a `bidding` change of its campaigns.
+            properties:
+              field: { type: string, enum: [days_since_change] }
+              change: { type: string, enum: [budget, bidding, status, goal] }
+              op: { type: string, enum: ['>=', '<'] }
+              value: { type: integer, minimum: 1, maximum: 28 }
     AdRuleSchedule:
       type: object
       description: 'Either `everyMinutes` or `times`. Sending a schedule replaces the rule''s whole timing. Without one, a new rule runs every 60 minutes.'
@@ -19973,6 +19987,15 @@ components:
             field: { type: string, const: days_live }
             op: { type: string, enum: ['>=', '<'] }
             value: { type: integer, minimum: 0, maximum: 3650 }
+        - type: object
+          required: [field, change, op, value]
+          additionalProperties: false
+          description: 'Days since the campaign''s budget, bidding, status or goal last changed, from the platform''s change history. Campaign rules on Meta and Google only.'
+          properties:
+            field: { type: string, const: days_since_change }
+            change: { type: string, enum: [budget, bidding, status, goal] }
+            op: { type: string, enum: ['>=', '<'] }
+            value: { type: integer, minimum: 1, maximum: 28 }
         - type: object
           required: [field, op, value]
           additionalProperties: false
@@ -42769,8 +42792,8 @@ paths:
             - **Copy**: `heading` (up to 120 characters); `trustLine`, `consentLine` and `statusLine` (up to 200 each, `statusLine` being the line above the button); `buttonLabel` (up to 30, the label of the link the button becomes if the redirect stalls).
             - **Closing page** (shown when there is no `redirect_url`): `successHeading` and `errorHeading` (up to 120), `successBody` and `errorBody` (up to 200). All copy may contain the placeholders `{brand}` and `{platform}`.
             - **Colors**: `primaryColor` (the button), `accentColor` (the header gradient, built as a scale of that colour, and the icons), `pageColor`, `cardColor` and `textColor`, all as `#RRGGBB`.
-            - **Style**: `cornerRadius` as an integer from 0 to 24 (pixels); `font` as `sans`, `serif` or `mono`; `bannerStyle` as `halftone` (default), `solid` (a flat tint of `accentColor`) or `plain` (no banner fill).
-            - **Icons**: `trustLineIcon` (default `shield`) and `consentLineIcon` (default `link`), each one of `shield`, `lock`, `link`, `check`, `user`, `sparkles` or `none`.
+            - **Style**: `cornerRadius` as an integer from 0 to 24 (pixels); `font` as `sans`, `serif` or `mono`; `bannerStyle` as `waves` (default, halftone waves in `accentColor`), `halftone` (dots in shades of `accentColor` blooming from the corners), `solid` (a flat tint of `accentColor`) or `plain` (no banner fill).
+            - **Icons**: `trustLineIcon` (default `shield`) and `consentLineIcon` (default `user`), each one of `shield`, `lock`, `link`, `check`, `user`, `sparkles` or `none`.
             - **Visibility**: `hide`, an array of any of `heading`, `trustLine`, `consentLine`, `statusLine`, `successBody` and `errorBody`, removes those lines from the screens.
             - **Links**: `termsUrl` and `privacyUrl` (https, up to 2048 characters) add small Terms and Privacy links at the bottom of every hosted screen.
 
