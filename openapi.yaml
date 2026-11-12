@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.598.0"
+  version: "1.599.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -35420,9 +35420,10 @@ paths:
             application/json:
               schema:
                 type: object
-                required: [url]
+                required: [url, clientSecret]
                 properties:
-                  url: { type: string, format: uri }
+                  url: { type: string, format: uri, description: 'Stripe-hosted onboarding page. Send the creator here; Stripe returns them to their Zernio creator page when done. Expires after a few minutes, so request it when the creator clicks.' }
+                  clientSecret: { type: string, description: "Account session secret for Stripe's embedded onboarding component. Only usable on Zernio's own creator page; integrations use `url`." }
         '400':
           x-summary: "The payout country is missing on the first call or differs from the saved one: send the correct country."
           description: '`country` is missing on the first call ("Choose the country you live in.") or differs from the one already saved ("Payout country cannot be changed.").'
