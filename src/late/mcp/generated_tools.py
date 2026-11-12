@@ -1055,6 +1055,7 @@ def register_generated_tools(mcp, _get_client):
             "redditads",
             "microsoftads",
             "whopads",
+            "applovinads",
             "hubspot",
             "webflow",
             "googleanalytics",

@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.579.0"
+  version: "1.581.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -15290,7 +15290,7 @@ components:
         _id: { type: string }
         platform:
           type: string
-          enum: [tiktok, instagram, facebook, youtube, linkedin, twitter, threads, pinterest, reddit, bluesky, googlebusiness, telegram, snapchat, discord, slack, whatsapp, shopify, wordpress, wix, linkedinads, metaads, pinterestads, tiktokads, xads, googleads, openaiads, redditads, sms, phone, rcs, whopads, google, microsoft, imap, hubspot, webflow, googleanalytics, imessage, tiktokshop, microsoftads, line, wechat]
+          enum: [tiktok, instagram, facebook, youtube, linkedin, twitter, threads, pinterest, reddit, bluesky, googlebusiness, telegram, snapchat, discord, slack, whatsapp, shopify, wordpress, wix, linkedinads, metaads, pinterestads, tiktokads, xads, googleads, openaiads, redditads, sms, phone, rcs, whopads, applovinads, google, microsoft, imap, hubspot, webflow, googleanalytics, imessage, tiktokshop, microsoftads, line, wechat]
         profileId:
           oneOf:
             - type: string
@@ -21328,6 +21328,9 @@ components:
                 epik: { type: string, description: "Pinterest click ID (the `epik` URL param or `_epik` cookie). Sent to Pinterest as `click_id`, not hashed." }
                 rdt_cid: { type: string, description: "Reddit click ID (the `rdt_cid` URL param Reddit adds to ad clicks). Sent to Reddit as `click_id`, not hashed." }
                 rdt_uuid: { type: string, description: "Reddit Pixel browser id (the `_rdt_uuid` first-party cookie). Sent to Reddit as `user.uuid`, not hashed." }
+                aleid: { type: string, description: "Axon (AppLovin) click id (the `aleid` URL param Axon adds to ad clicks, kept by its pixel in the `_axeid` cookie). Sent to Axon as `user_data.aleid`, not hashed." }
+                alart: { type: string, description: "Axon (AppLovin) attribution token (the `alart` URL param, `_axart` cookie). Sent to Axon as `user_data.alart`, not hashed." }
+                axwrt: { type: string, description: "Axon Pixel browser id (the `_axwrt` cookie). Sent to Axon as `user_data.axwrt`, not hashed." }
         items:
           type: array
           description: Item-level detail for ecommerce events.
@@ -22792,7 +22795,7 @@ components:
           description: 'Platforms where each conversion is its own object: the tag''s conversion events, with the id a site sends for each.'
           items: { $ref: '#/components/schemas/TrackingTagEvent' }
         name: { type: string }
-        platform: { type: string, enum: [metaads, openaiads, tiktokads, googleads, xads, linkedinads, pinterestads, whopads] }
+        platform: { type: string, enum: [metaads, openaiads, tiktokads, googleads, xads, linkedinads, pinterestads, whopads, applovinads] }
         kind:
           type: string
           enum: [pixel, tag, insight_tag]
@@ -40919,7 +40922,7 @@ paths:
           description: Filter by platform
           schema:
             type: string
-            enum: [facebook, instagram, linkedin, twitter, tiktok, youtube, threads, pinterest, reddit, bluesky, googlebusiness, telegram, snapchat, discord, slack, whatsapp, shopify, wordpress, wix, linkedinads, metaads, pinterestads, tiktokads, xads, googleads, openaiads, redditads, microsoftads, whopads, hubspot, webflow, googleanalytics, line, wechat]
+            enum: [facebook, instagram, linkedin, twitter, tiktok, youtube, threads, pinterest, reddit, bluesky, googlebusiness, telegram, snapchat, discord, slack, whatsapp, shopify, wordpress, wix, linkedinads, metaads, pinterestads, tiktokads, xads, googleads, openaiads, redditads, microsoftads, whopads, applovinads, hubspot, webflow, googleanalytics, line, wechat]
         - name: status
           in: query
           description: Filter by health status
@@ -101734,7 +101737,7 @@ paths:
               schema:
                 type: object
                 properties:
-                  platform: { type: string, enum: [metaads, openaiads, tiktokads, googleads, xads, linkedinads, pinterestads, whopads] }
+                  platform: { type: string, enum: [metaads, openaiads, tiktokads, googleads, xads, linkedinads, pinterestads, whopads, applovinads] }
                   tags:
                     type: array
                     items: { $ref: '#/components/schemas/TrackingTag' }
@@ -101856,7 +101859,7 @@ paths:
               schema:
                 type: object
                 properties:
-                  platform: { type: string, enum: [metaads, openaiads, tiktokads, googleads, xads, linkedinads, pinterestads, whopads] }
+                  platform: { type: string, enum: [metaads, openaiads, tiktokads, googleads, xads, linkedinads, pinterestads, whopads, applovinads] }
                   tag: { $ref: '#/components/schemas/TrackingTag' }
         '400': { description: 'Invalid body, invalid `adAccountId`, over the per-business pixel cap, or ad account not in a Business Manager.' }
         '401': { $ref: '#/components/responses/Unauthorized' }
@@ -101932,7 +101935,7 @@ paths:
               schema:
                 type: object
                 properties:
-                  platform: { type: string, enum: [metaads, tiktokads, googleads, xads, openaiads, linkedinads, pinterestads, whopads] }
+                  platform: { type: string, enum: [metaads, tiktokads, googleads, xads, openaiads, linkedinads, pinterestads, whopads, applovinads] }
                   tag: { $ref: '#/components/schemas/TrackingTag' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { x-summary: "Ads access is missing or the Meta token lacks ads permissions: enable Ads access or reconnect the account.", description: 'Ads access required (Ads add-on on legacy plans, included on usage-based plans), or the Meta token lacks ads permissions (reconnect required).' }
@@ -102044,7 +102047,7 @@ paths:
               schema:
                 type: object
                 properties:
-                  platform: { type: string, enum: [metaads, tiktokads, googleads, xads, openaiads, linkedinads, pinterestads, whopads] }
+                  platform: { type: string, enum: [metaads, tiktokads, googleads, xads, openaiads, linkedinads, pinterestads, whopads, applovinads] }
                   tag: { $ref: '#/components/schemas/TrackingTag' }
         '400': { x-summary: "The body is invalid, for example no fields were sent, or Meta rejected it: fix the request and resend.", description: Invalid body (e.g. no fields supplied) or Meta validation failure. }
         '401': { $ref: '#/components/responses/Unauthorized' }
@@ -102349,7 +102352,7 @@ paths:
               schema:
                 type: object
                 properties:
-                  platform: { type: string, enum: [metaads, tiktokads, googleads, xads, openaiads, linkedinads, pinterestads, whopads] }
+                  platform: { type: string, enum: [metaads, tiktokads, googleads, xads, openaiads, linkedinads, pinterestads, whopads, applovinads] }
                   install:
                     allOf:
                       - $ref: '#/components/schemas/StorePixelInstall'
@@ -102423,7 +102426,7 @@ paths:
               schema:
                 type: object
                 properties:
-                  platform: { type: string, enum: [metaads, tiktokads, googleads, xads, openaiads, linkedinads, pinterestads, whopads] }
+                  platform: { type: string, enum: [metaads, tiktokads, googleads, xads, openaiads, linkedinads, pinterestads, whopads, applovinads] }
                   install:
                     allOf:
                       - $ref: '#/components/schemas/StorePixelInstall'
@@ -102485,7 +102488,7 @@ paths:
               schema:
                 type: object
                 properties:
-                  platform: { type: string, enum: [metaads, tiktokads, googleads, xads, openaiads, linkedinads, pinterestads, whopads] }
+                  platform: { type: string, enum: [metaads, tiktokads, googleads, xads, openaiads, linkedinads, pinterestads, whopads, applovinads] }
                   install:
                     allOf:
                       - $ref: '#/components/schemas/StorePixelInstall'
@@ -103137,7 +103140,7 @@ paths:
               schema:
                 type: object
                 properties:
-                  platform: { type: string, enum: [metaads, tiktokads, googleads, xads, openaiads, linkedinads, pinterestads, whopads] }
+                  platform: { type: string, enum: [metaads, tiktokads, googleads, xads, openaiads, linkedinads, pinterestads, whopads, applovinads] }
                   stats:
                     type: object
                     properties:
