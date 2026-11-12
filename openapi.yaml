@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.586.0"
+  version: "1.587.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -98219,7 +98219,7 @@ paths:
                   minItems: 1
                   items: { type: string, enum: [api, relay, hubspot, meta_leads, google_leads, linkedin_leads, tiktok_leads, shopify, woocommerce, stripe, web] }
                   description: 'Forward only events from these sources, such as only `web` for a tracked website. Leave it out to forward events from every source.'
-                apiSecret: { type: string, writeOnly: true, maxLength: 200, description: 'Google Analytics destinations only, and required for them: the data stream''s Measurement Protocol API secret, from GA4 Admin › Data streams › Measurement Protocol API secrets. Checked with one hit to Google''s validation server (which cannot confirm the secret itself), stored encrypted and never returned. Change it later with `PATCH /v1/events/forwarding-rules/{ruleId}`.' }
+                apiSecret: { type: string, writeOnly: true, maxLength: 200, description: 'Google Analytics streams only: the stream''s Measurement Protocol API secret (GA4 Admin › Data streams). Optional when the connection has edit access, since Zernio then creates it. Checked against Google''s validation server, stored encrypted, never returned. Change it with `PATCH /v1/events/forwarding-rules/{ruleId}`.' }
       responses:
         '201':
           description: Rule saved.

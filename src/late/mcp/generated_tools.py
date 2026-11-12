@@ -30315,7 +30315,7 @@ def register_generated_tools(mcp, _get_client):
             destination_id: The platform destination: a pixel, a conversion action, a conversion rule, or a GA4 web stream measurement id (`G-…`). (required)
             event_names
             sources: Forward only events from these sources, such as only `web` for a tracked website. Leave it out to forward events from every source.
-            api_secret: Google Analytics destinations only, and required for them: the data stream's Measurement Protocol API secret, from GA4 Admin › Data streams › Measurement Protocol API secrets. Checked with one hit to Google's validation server (which cannot confirm the secret itself), stored encrypted and never returned. Change it later with `PATCH /v1/events/forwarding-rules/{ruleId}`."""
+            api_secret: Google Analytics streams only: the stream's Measurement Protocol API secret (GA4 Admin › Data streams). Optional when the connection has edit access, since Zernio then creates it. Checked against Google's validation server, stored encrypted, never returned. Change it with `PATCH /v1/events/forwarding-rules/{ruleId}`."""
         client = _get_client()
         try:
             response = client.conversions.create_forwarding_rule(
