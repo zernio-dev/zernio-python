@@ -441,6 +441,8 @@ def _with_agent_view(operation_id: str, params: list[dict[str, Any]]) -> list[di
     view = AGENT_VIEWS.get(operation_id)
     if view is None:
         return params
+    if not any(p["name"] == "view" for p in params):
+        print(f"Warning: {operation_id} has no `view` parameter; its agent default is not applied.", file=sys.stderr)
     return [
         {
             **p,
