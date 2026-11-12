@@ -22271,6 +22271,56 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="Edit an order",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def commerce_create_commerce_order_edit(
+        order_id: str,
+        account_id: str,
+        add: list[dict[str, Any]] | None = None,
+        quantities: list[dict[str, Any]] | None = None,
+        notify_customer: bool = False,
+        staff_note: str | None = None,
+        validate_only: bool = False,
+    ) -> str:
+        """Edit an order
+
+        Adds products to an order and changes or removes its lines. Needs orders.edit.
+
+        - Preview first with `validateOnly: true`: it returns the new totals and what the buyer would owe, and changes nothing.
+        - A real edit needs an `Idempotency-Key` header (a UUID per edit): a retry with the same key never applies it twice.
+        - When the edit raises the total, the buyer owes `outstanding`; `notifyCustomer` emails them the change. When it lowers it, refund the difference with the refunds endpoint.
+
+        Platforms: shopify
+
+        Args:
+            order_id: Platform-native order id. (required)
+            account_id: Connected store SocialAccount id. (required)
+            add: Each item is an object with keys: variantId (string, required); quantity (integer, required)
+            quantities: Each item is an object with keys: lineItemId (string, required) - A line item id from the order.; quantity (integer, required) - The new quantity; 0 removes the line.; restock (boolean) - Put removed units back in stock.
+            notify_customer
+            staff_note
+            validate_only: Return the edited totals without changing the order."""
+        client = _get_client()
+        try:
+            response = client.commerce.create_commerce_order_edit(
+                order_id=order_id,
+                account_id=account_id,
+                add=add,
+                quantities=quantities,
+                notify_customer=notify_customer,
+                staff_note=staff_note,
+                validate_only=validate_only,
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="Cancel an order",
             readOnlyHint=False,
             destructiveHint=True,
@@ -22312,6 +22362,127 @@ def register_generated_tools(mcp, _get_client):
                 restock=restock,
                 notify_customer=notify_customer,
                 staff_note=staff_note,
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Create a draft order",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def commerce_create_commerce_draft_order(
+        account_id: str,
+        line_items: list[dict[str, Any]] | None,
+        customer_id: str | None = None,
+        email: str | None = None,
+        discount: dict[str, Any] | None = None,
+        shipping: dict[str, Any] | None = None,
+        shipping_address: dict[str, Any] | None = None,
+        note: str | None = None,
+        tags: list[str] | None = None,
+    ) -> str:
+        """Create a draft order
+
+        Creates a draft order for a customer, for a replacement, a phone order or a custom quote. Needs draft_orders.write.
+
+        Send the buyer its checkout link with the invoice endpoint; the draft becomes an order once they pay. Amounts in the response are in the currency the buyer pays in; custom prices you send are in the store currency.
+
+        Platforms: shopify
+
+        Args:
+            account_id: Connected store SocialAccount id. (required)
+            customer_id: The customer it is for, from the customers endpoints.
+            email
+            line_items: A product variant (variantId) or a custom item (title and price). Each item is an object with keys: variantId (string); title (string) - Custom item only.; price (string) - Custom item only, in the store currency.; quantity (integer, required); taxable (boolean) - Custom item only.; requiresShipping (boolean) - Custom item only. (required)
+            discount: A discount on the whole draft. Object with keys: type (one of: percentage, fixed; required); value (number, required) - A percentage (at most 100) or an amount in the store currency.; title (string)
+            shipping: Object with keys: title (string, required); price (string, required)
+            shipping_address: Where to ship. Without one, the customer's default address is used. Object with keys: firstName (string); lastName (string); company (string); phone (string); line1 (string); line2 (string); city (string); region (string) - State or province code, e.g. CA.; postalCode (string); countryCode (string, required) - ISO 3166 code, e.g. US.
+            note
+            tags"""
+        client = _get_client()
+        try:
+            response = client.commerce.create_commerce_draft_order(
+                account_id=account_id,
+                customer_id=customer_id,
+                email=email,
+                line_items=line_items,
+                discount=discount,
+                shipping=shipping,
+                shipping_address=shipping_address,
+                note=note,
+                tags=tags,
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get a draft order",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def commerce_get_commerce_draft_order(draft_order_id: str, account_id: str) -> str:
+        """Get a draft order
+
+        One draft order with its status, checkout link and, once paid, the order it became. Needs draft_orders.read.
+
+        Platforms: shopify
+
+        Args:
+            draft_order_id: Platform-native draft order id. (required)
+            account_id: Connected store SocialAccount id. (required)"""
+        client = _get_client()
+        try:
+            response = client.commerce.get_commerce_draft_order(
+                draft_order_id=draft_order_id, account_id=account_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Send a draft order invoice",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def commerce_send_commerce_draft_order_invoice(
+        draft_order_id: str,
+        account_id: str,
+        to: str | None = None,
+        subject: str | None = None,
+        custom_message: str | None = None,
+    ) -> str:
+        """Send a draft order invoice
+
+        Emails the buyer the draft's checkout link. The draft becomes an order when they pay. Needs draft_orders.write.
+
+        Platforms: shopify
+
+        Args:
+            draft_order_id: Platform-native draft order id. (required)
+            account_id: Connected store SocialAccount id. (required)
+            to: Defaults to the draft's email.
+            subject
+            custom_message"""
+        client = _get_client()
+        try:
+            response = client.commerce.send_commerce_draft_order_invoice(
+                draft_order_id=draft_order_id,
+                account_id=account_id,
+                to=to,
+                subject=subject,
+                custom_message=custom_message,
             )
             return _format_response(response)
         except Exception as e:

@@ -939,8 +939,10 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `commerce.create_commerce_catalog_sync()` | Sync a store into a Meta catalog |
 | `commerce.create_commerce_collection()` | Create a collection |
 | `commerce.create_commerce_discount()` | Create a discount |
+| `commerce.create_commerce_draft_order()` | Create a draft order |
 | `commerce.create_commerce_menu()` | Create a navigation menu |
 | `commerce.create_commerce_metaobject()` | Create a metaobject |
+| `commerce.create_commerce_order_edit()` | Edit an order |
 | `commerce.create_commerce_page()` | Create a page |
 | `commerce.create_commerce_product()` | Create a product |
 | `commerce.create_commerce_product_options()` | Add options |
@@ -951,6 +953,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `commerce.get_commerce_collection()` | Get a collection |
 | `commerce.get_commerce_customer()` | Get a customer |
 | `commerce.get_commerce_discount()` | Get a discount |
+| `commerce.get_commerce_draft_order()` | Get a draft order |
 | `commerce.get_commerce_menu()` | Get a navigation menu |
 | `commerce.get_commerce_metaobject()` | Get a metaobject |
 | `commerce.get_commerce_order()` | Get an order |
@@ -993,6 +996,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `commerce.reorder_commerce_collection_products()` | Reorder products in a collection |
 | `commerce.reorder_commerce_product_images()` | Reorder images |
 | `commerce.run_commerce_catalog_sync()` | Run a catalog sync now |
+| `commerce.send_commerce_draft_order_invoice()` | Send a draft order invoice |
 | `commerce.set_commerce_collection_metafields()` | Set collection metafields |
 | `commerce.set_commerce_discount_active()` | Activate or deactivate a discount |
 | `commerce.set_commerce_price_list_prices()` | Set fixed prices |

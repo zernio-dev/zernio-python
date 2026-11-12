@@ -146,6 +146,34 @@ class CommerceResource:
             f"/v1/commerce/orders/{order_id}/refunds", data=payload, headers=headers
         )
 
+    def create_commerce_order_edit(
+        self,
+        order_id: str,
+        account_id: str,
+        *,
+        idempotency_key: str | None = None,
+        add: list[dict[str, Any]] | None = None,
+        quantities: list[dict[str, Any]] | None = None,
+        notify_customer: bool | None = False,
+        staff_note: str | None = None,
+        validate_only: bool | None = False,
+    ) -> dict[str, Any]:
+        """Edit an order"""
+        payload = self._build_payload(
+            account_id=account_id,
+            add=add,
+            quantities=quantities,
+            notify_customer=notify_customer,
+            staff_note=staff_note,
+            validate_only=validate_only,
+        )
+        headers: dict[str, str] = {}
+        if idempotency_key is not None:
+            headers["Idempotency-Key"] = idempotency_key
+        return self._client._post(
+            f"/v1/commerce/orders/{order_id}/edits", data=payload, headers=headers
+        )
+
     def cancel_commerce_order(
         self,
         order_id: str,
@@ -168,6 +196,70 @@ class CommerceResource:
         )
         return self._client._post(
             f"/v1/commerce/orders/{order_id}/cancel", data=payload
+        )
+
+    def create_commerce_draft_order(
+        self,
+        account_id: str,
+        line_items: list[dict[str, Any]],
+        *,
+        idempotency_key: str | None = None,
+        customer_id: str | None = None,
+        email: str | None = None,
+        discount: dict[str, Any] | None = None,
+        shipping: dict[str, Any] | None = None,
+        shipping_address: dict[str, Any] | None = None,
+        note: str | None = None,
+        tags: list[str] | None = None,
+    ) -> dict[str, Any]:
+        """Create a draft order"""
+        payload = self._build_payload(
+            account_id=account_id,
+            customer_id=customer_id,
+            email=email,
+            line_items=line_items,
+            discount=discount,
+            shipping=shipping,
+            shipping_address=shipping_address,
+            note=note,
+            tags=tags,
+        )
+        headers: dict[str, str] = {}
+        if idempotency_key is not None:
+            headers["Idempotency-Key"] = idempotency_key
+        return self._client._post(
+            "/v1/commerce/draft-orders", data=payload, headers=headers
+        )
+
+    def get_commerce_draft_order(
+        self, draft_order_id: str, account_id: str
+    ) -> dict[str, Any]:
+        """Get a draft order"""
+        params = self._build_params(
+            account_id=account_id,
+        )
+        return self._client._get(
+            f"/v1/commerce/draft-orders/{draft_order_id}", params=params
+        )
+
+    def send_commerce_draft_order_invoice(
+        self,
+        draft_order_id: str,
+        account_id: str,
+        *,
+        to: str | None = None,
+        subject: str | None = None,
+        custom_message: str | None = None,
+    ) -> dict[str, Any]:
+        """Send a draft order invoice"""
+        payload = self._build_payload(
+            account_id=account_id,
+            to=to,
+            subject=subject,
+            custom_message=custom_message,
+        )
+        return self._client._post(
+            f"/v1/commerce/draft-orders/{draft_order_id}/invoice", data=payload
         )
 
     def list_commerce_customers(
@@ -1321,6 +1413,34 @@ class CommerceResource:
             f"/v1/commerce/orders/{order_id}/refunds", data=payload, headers=headers
         )
 
+    async def acreate_commerce_order_edit(
+        self,
+        order_id: str,
+        account_id: str,
+        *,
+        idempotency_key: str | None = None,
+        add: list[dict[str, Any]] | None = None,
+        quantities: list[dict[str, Any]] | None = None,
+        notify_customer: bool | None = False,
+        staff_note: str | None = None,
+        validate_only: bool | None = False,
+    ) -> dict[str, Any]:
+        """Edit an order (async)"""
+        payload = self._build_payload(
+            account_id=account_id,
+            add=add,
+            quantities=quantities,
+            notify_customer=notify_customer,
+            staff_note=staff_note,
+            validate_only=validate_only,
+        )
+        headers: dict[str, str] = {}
+        if idempotency_key is not None:
+            headers["Idempotency-Key"] = idempotency_key
+        return await self._client._apost(
+            f"/v1/commerce/orders/{order_id}/edits", data=payload, headers=headers
+        )
+
     async def acancel_commerce_order(
         self,
         order_id: str,
@@ -1343,6 +1463,70 @@ class CommerceResource:
         )
         return await self._client._apost(
             f"/v1/commerce/orders/{order_id}/cancel", data=payload
+        )
+
+    async def acreate_commerce_draft_order(
+        self,
+        account_id: str,
+        line_items: list[dict[str, Any]],
+        *,
+        idempotency_key: str | None = None,
+        customer_id: str | None = None,
+        email: str | None = None,
+        discount: dict[str, Any] | None = None,
+        shipping: dict[str, Any] | None = None,
+        shipping_address: dict[str, Any] | None = None,
+        note: str | None = None,
+        tags: list[str] | None = None,
+    ) -> dict[str, Any]:
+        """Create a draft order (async)"""
+        payload = self._build_payload(
+            account_id=account_id,
+            customer_id=customer_id,
+            email=email,
+            line_items=line_items,
+            discount=discount,
+            shipping=shipping,
+            shipping_address=shipping_address,
+            note=note,
+            tags=tags,
+        )
+        headers: dict[str, str] = {}
+        if idempotency_key is not None:
+            headers["Idempotency-Key"] = idempotency_key
+        return await self._client._apost(
+            "/v1/commerce/draft-orders", data=payload, headers=headers
+        )
+
+    async def aget_commerce_draft_order(
+        self, draft_order_id: str, account_id: str
+    ) -> dict[str, Any]:
+        """Get a draft order (async)"""
+        params = self._build_params(
+            account_id=account_id,
+        )
+        return await self._client._aget(
+            f"/v1/commerce/draft-orders/{draft_order_id}", params=params
+        )
+
+    async def asend_commerce_draft_order_invoice(
+        self,
+        draft_order_id: str,
+        account_id: str,
+        *,
+        to: str | None = None,
+        subject: str | None = None,
+        custom_message: str | None = None,
+    ) -> dict[str, Any]:
+        """Send a draft order invoice (async)"""
+        payload = self._build_payload(
+            account_id=account_id,
+            to=to,
+            subject=subject,
+            custom_message=custom_message,
+        )
+        return await self._client._apost(
+            f"/v1/commerce/draft-orders/{draft_order_id}/invoice", data=payload
         )
 
     async def alist_commerce_customers(

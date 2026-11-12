@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.584.0"
+  version: "1.585.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -21666,7 +21666,7 @@ components:
     CommerceCapability:
       type: string
       description: 'An operation a store supports. Calling an operation outside this list answers 400 platform_not_supported.'
-      enum: [products.read, products.create, products.update, products.status, products.price, products.variants, products.images, products.images_remove, collections.read, collections.write, collections.metafields, metafields.read, metafields.write, pages.read, pages.write, inventory.read, inventory.write, channels.read, channels.write, discounts.read, discounts.write, discounts.codes, navigation.read, navigation.write, metaobjects.read, metaobjects.write, markets.read, markets.write, marketing.write, orders.read, orders.refund, orders.cancel, customers.read]
+      enum: [products.read, products.create, products.update, products.status, products.price, products.variants, products.images, products.images_remove, collections.read, collections.write, collections.metafields, metafields.read, metafields.write, pages.read, pages.write, inventory.read, inventory.write, channels.read, channels.write, discounts.read, discounts.write, discounts.codes, navigation.read, navigation.write, metaobjects.read, metaobjects.write, markets.read, markets.write, marketing.write, orders.read, orders.refund, orders.cancel, customers.read, orders.edit, draft_orders.read, draft_orders.write]
     CommerceImage:
       type: object
       properties:
@@ -21839,6 +21839,65 @@ components:
           oneOf:
             - $ref: '#/components/schemas/CommerceAddress'
             - type: "null"
+    CommerceOrderEditPreview:
+      type: object
+      description: 'The order as the edit leaves it. Amounts are in the currency the buyer paid in.'
+      properties:
+        subtotal: { $ref: '#/components/schemas/CommerceMoney' }
+        total: { $ref: '#/components/schemas/CommerceMoney' }
+        outstanding: { $ref: '#/components/schemas/CommerceMoney', description: 'What the buyer still owes. Negative when the edit leaves them overpaid: refund that with the refunds endpoint.' }
+        lineItems:
+          type: array
+          items:
+            type: object
+            properties:
+              lineItemId: { type: [string, "null"], description: 'Null for a line the edit adds.' }
+              variantId: { type: [string, "null"] }
+              title: { type: string }
+              quantity: { type: integer }
+              unitPrice: { $ref: '#/components/schemas/CommerceMoney' }
+    CommerceDraftOrder:
+      type: object
+      properties:
+        id: { type: string }
+        accountId: { type: string }
+        platform: { type: string, enum: [shopify, woocommerce] }
+        name: { type: string, example: '#D12' }
+        status: { type: string, enum: [open, invoice_sent, completed] }
+        invoiceUrl: { type: [string, "null"], description: 'The checkout link the buyer pays through.' }
+        invoiceSentAt: { type: [string, "null"], format: date-time }
+        email: { type: [string, "null"] }
+        customerId: { type: [string, "null"] }
+        note: { type: [string, "null"] }
+        tags: { type: array, items: { type: string } }
+        currency: { type: string, description: 'The currency the buyer pays in; every amount uses it.' }
+        subtotal: { $ref: '#/components/schemas/CommerceMoney' }
+        discountTotal: { $ref: '#/components/schemas/CommerceMoney' }
+        shippingTotal: { $ref: '#/components/schemas/CommerceMoney' }
+        taxTotal: { $ref: '#/components/schemas/CommerceMoney' }
+        total: { $ref: '#/components/schemas/CommerceMoney' }
+        lineItems:
+          type: array
+          items:
+            type: object
+            properties:
+              id: { type: string }
+              productId: { type: [string, "null"] }
+              variantId: { type: [string, "null"] }
+              title: { type: string }
+              variantTitle: { type: [string, "null"] }
+              sku: { type: [string, "null"] }
+              quantity: { type: integer }
+              unitPrice: { $ref: '#/components/schemas/CommerceMoney' }
+              total: { $ref: '#/components/schemas/CommerceMoney', description: 'After the line discount.' }
+        shippingAddress:
+          oneOf:
+            - $ref: '#/components/schemas/CommerceAddress'
+            - type: "null"
+        orderId: { type: [string, "null"], description: 'The order it became once completed.' }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+        completedAt: { type: [string, "null"], format: date-time }
     CommerceAddress:
       type: object
       properties:
@@ -104170,6 +104229,94 @@ paths:
         '429':
           x-summary: 'Zernio or the platform rate limited the request: retry later.'
           description: Rate limited, either by Zernio or by the platform. Retry later.
+  /v1/commerce/orders/{orderId}/edits:
+    post:
+      x-resource-group: commerce
+      operationId: createCommerceOrderEdit
+      tags:
+        - Commerce
+      x-platforms:
+        - shopify
+      summary: Edit an order
+      description: |
+        Adds products to an order and changes or removes its lines. Needs orders.edit.
+
+        - Preview first with `validateOnly: true`: it returns the new totals and what the buyer would owe, and changes nothing.
+        - A real edit needs an `Idempotency-Key` header (a UUID per edit): a retry with the same key never applies it twice.
+        - When the edit raises the total, the buyer owes `outstanding`; `notifyCustomer` emails them the change. When it lowers it, refund the difference with the refunds endpoint.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Platform-native order id.
+        - name: Idempotency-Key
+          in: header
+          required: false
+          schema:
+            type: string
+            maxLength: 255
+          description: 'Required unless validateOnly is true.'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [accountId]
+              description: 'Pass at least one of add or quantities.'
+              properties:
+                accountId: { type: string, description: 'Connected store SocialAccount id.' }
+                add:
+                  type: array
+                  maxItems: 50
+                  items:
+                    type: object
+                    required: [variantId, quantity]
+                    properties:
+                      variantId: { type: string }
+                      quantity: { type: integer, minimum: 1 }
+                quantities:
+                  type: array
+                  maxItems: 100
+                  items:
+                    type: object
+                    required: [lineItemId, quantity]
+                    properties:
+                      lineItemId: { type: string, description: 'A line item id from the order.' }
+                      quantity: { type: integer, minimum: 0, description: 'The new quantity; 0 removes the line.' }
+                      restock: { type: boolean, default: true, description: 'Put removed units back in stock.' }
+                notifyCustomer: { type: boolean, default: false }
+                staffNote: { type: string, maxLength: 255 }
+                validateOnly: { type: boolean, default: false, description: 'Return the edited totals without changing the order.' }
+      responses:
+        '200':
+          description: 'The edit, applied (with the updated order) or previewed (validateOnly)'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  validateOnly: { type: boolean }
+                  order:
+                    $ref: '#/components/schemas/CommerceOrder'
+                  edit:
+                    $ref: '#/components/schemas/CommerceOrderEditPreview'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          x-summary: 'The store has not granted the permission: have the store owner approve it using `grantPermissionsUrl` from the store endpoint.'
+          description: 'The store has not granted orders.edit (code insufficient_permissions). GET /v1/commerce/store returns grantPermissionsUrl for the store owner to approve it.'
+        '404':
+          description: 'Account not found (code account_not_found) or order or line item not found (code resource_not_found).'
+        '429':
+          x-summary: 'Zernio or the platform rate limited the request: retry later.'
+          description: Rate limited, either by Zernio or by the platform. Retry later.
   /v1/commerce/orders/{orderId}/cancel:
     post:
       x-resource-group: commerce
@@ -104234,6 +104381,208 @@ paths:
           description: 'The store has not granted orders.cancel, or the platform has not yet approved Zernio''s access to order and customer data (code insufficient_permissions; the message says which). GET /v1/commerce/store returns grantPermissionsUrl for the store owner to approve it.'
         '404':
           description: 'Account not found (code account_not_found) or order not found (code resource_not_found).'
+        '429':
+          x-summary: 'Zernio or the platform rate limited the request: retry later.'
+          description: Rate limited, either by Zernio or by the platform. Retry later.
+  /v1/commerce/draft-orders:
+    post:
+      x-resource-group: commerce
+      operationId: createCommerceDraftOrder
+      tags:
+        - Commerce
+      x-platforms:
+        - shopify
+      summary: Create a draft order
+      description: |
+        Creates a draft order for a customer, for a replacement, a phone order or a custom quote. Needs draft_orders.write.
+
+        Send the buyer its checkout link with the invoice endpoint; the draft becomes an order once they pay. Amounts in the response are in the currency the buyer pays in; custom prices you send are in the store currency.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: false
+          schema:
+            type: string
+            maxLength: 255
+          description: 'A retry with the same key returns the first draft instead of creating another.'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [accountId, lineItems]
+              properties:
+                accountId: { type: string, description: 'Connected store SocialAccount id.' }
+                customerId: { type: string, description: 'The customer it is for, from the customers endpoints.' }
+                email: { type: string, format: email }
+                lineItems:
+                  type: array
+                  minItems: 1
+                  maxItems: 250
+                  description: 'A product variant (variantId) or a custom item (title and price).'
+                  items:
+                    type: object
+                    required: [quantity]
+                    properties:
+                      variantId: { type: string }
+                      title: { type: string, description: 'Custom item only.' }
+                      price: { type: string, example: '25.00', description: 'Custom item only, in the store currency.' }
+                      quantity: { type: integer, minimum: 1 }
+                      taxable: { type: boolean, default: true, description: 'Custom item only.' }
+                      requiresShipping: { type: boolean, default: true, description: 'Custom item only.' }
+                discount:
+                  type: object
+                  required: [type, value]
+                  description: 'A discount on the whole draft.'
+                  properties:
+                    type: { type: string, enum: [percentage, fixed] }
+                    value: { type: number, description: 'A percentage (at most 100) or an amount in the store currency.' }
+                    title: { type: string }
+                shipping:
+                  type: object
+                  required: [title, price]
+                  properties:
+                    title: { type: string }
+                    price: { type: string, example: '0.00' }
+                shippingAddress:
+                  type: object
+                  description: 'Where to ship. Without one, the customer''s default address is used.'
+                  required: [countryCode]
+                  properties:
+                    firstName: { type: string }
+                    lastName: { type: string }
+                    company: { type: string }
+                    phone: { type: string }
+                    line1: { type: string }
+                    line2: { type: string }
+                    city: { type: string }
+                    region: { type: string, description: 'State or province code, e.g. CA.' }
+                    postalCode: { type: string }
+                    countryCode: { type: string, description: 'ISO 3166 code, e.g. US.' }
+                note: { type: string, maxLength: 5000 }
+                tags: { type: array, items: { type: string } }
+      responses:
+        '201':
+          description: Draft order created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  draftOrder:
+                    $ref: '#/components/schemas/CommerceDraftOrder'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          x-summary: 'The store has not granted the permission: have the store owner approve it using `grantPermissionsUrl` from the store endpoint.'
+          description: 'The store has not granted draft_orders.write (code insufficient_permissions). GET /v1/commerce/store returns grantPermissionsUrl for the store owner to approve it.'
+        '404':
+          description: 'Account not found (code account_not_found) or store not found (code resource_not_found).'
+        '429':
+          x-summary: 'Zernio or the platform rate limited the request: retry later.'
+          description: Rate limited, either by Zernio or by the platform. Retry later.
+  /v1/commerce/draft-orders/{draftOrderId}:
+    get:
+      x-resource-group: commerce
+      operationId: getCommerceDraftOrder
+      tags:
+        - Commerce
+      x-platforms:
+        - shopify
+      summary: Get a draft order
+      description: 'One draft order with its status, checkout link and, once paid, the order it became. Needs draft_orders.read.'
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: draftOrderId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Platform-native draft order id.
+        - name: accountId
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Connected store SocialAccount id.
+      responses:
+        '200':
+          description: The draft order
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  draftOrder:
+                    $ref: '#/components/schemas/CommerceDraftOrder'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          x-summary: 'The store has not granted the permission: have the store owner approve it using `grantPermissionsUrl` from the store endpoint.'
+          description: 'The store has not granted draft_orders.read (code insufficient_permissions). GET /v1/commerce/store returns grantPermissionsUrl for the store owner to approve it.'
+        '404':
+          description: 'Account not found (code account_not_found) or draft order not found (code resource_not_found).'
+        '429':
+          x-summary: 'Zernio or the platform rate limited the request: retry later.'
+          description: Rate limited, either by Zernio or by the platform. Retry later.
+  /v1/commerce/draft-orders/{draftOrderId}/invoice:
+    post:
+      x-resource-group: commerce
+      operationId: sendCommerceDraftOrderInvoice
+      tags:
+        - Commerce
+      x-platforms:
+        - shopify
+      summary: Send a draft order invoice
+      description: 'Emails the buyer the draft''s checkout link. The draft becomes an order when they pay. Needs draft_orders.write.'
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: draftOrderId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Platform-native draft order id.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [accountId]
+              properties:
+                accountId: { type: string, description: 'Connected store SocialAccount id.' }
+                to: { type: string, format: email, description: 'Defaults to the draft''s email.' }
+                subject: { type: string, maxLength: 255 }
+                customMessage: { type: string, maxLength: 5000 }
+      responses:
+        '200':
+          description: Invoice sent
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  draftOrder:
+                    $ref: '#/components/schemas/CommerceDraftOrder'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          x-summary: 'The store has not granted the permission: have the store owner approve it using `grantPermissionsUrl` from the store endpoint.'
+          description: 'The store has not granted draft_orders.write (code insufficient_permissions). GET /v1/commerce/store returns grantPermissionsUrl for the store owner to approve it.'
+        '404':
+          description: 'Account not found (code account_not_found) or draft order not found (code resource_not_found).'
         '429':
           x-summary: 'Zernio or the platform rate limited the request: retry later.'
           description: Rate limited, either by Zernio or by the platform. Retry later.
