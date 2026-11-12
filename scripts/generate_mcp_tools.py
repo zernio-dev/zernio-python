@@ -68,6 +68,9 @@ AGENT_VIEWS = {
     "getAnalytics": "summary",
     "listAds": "summary",
     "listAdSets": "summary",
+    "listPosts": "summary",
+    "getInboxPostComments": "summary",
+    "listInboxComments": "summary",
 }
 
 AGENT_DEPTHS = {
