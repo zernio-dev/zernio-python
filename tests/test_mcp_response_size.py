@@ -31,25 +31,22 @@ def _ids(document: dict, key: str) -> list[str]:
     return [item["_id"] for item in document[key]]
 
 
-def test_output_is_compact_json_that_keeps_unicode_falsey_values_and_drops_empty_ones() -> (
-    None
-):
+def test_output_is_compact_json_that_keeps_unicode_and_drops_only_nulls() -> None:
     text = format_payload(
         {
             "name": "Campanya d'estiu 🌞",
             "spend": 0,
             "isExternal": False,
             "rejectionReason": None,
-            "tags": [],
+            "ads": [],
             "actions": {},
             "note": "",
-            "metrics": {"ctr": 0, "costPerAction": {}},
         }
     )
 
     assert (
         text
-        == '{"name":"Campanya d\'estiu 🌞","spend":0,"isExternal":false,"metrics":{"ctr":0}}'
+        == '{"name":"Campanya d\'estiu 🌞","spend":0,"isExternal":false,"ads":[],"actions":{},"note":""}'
     )
 
 

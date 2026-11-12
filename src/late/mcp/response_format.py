@@ -19,8 +19,7 @@ Path = tuple[str | int, ...]
 
 
 def format_payload(value: Any) -> str:
-    """Compact JSON for the model, cut to MAX_RESULT_CHARS with instructions to fetch the rest."""
-    document = _without_empty_values(value)
+    document = _without_nulls(value)
     text = to_compact_json(document)
     stats = format_stats.get()
     if stats is not None:
@@ -37,7 +36,6 @@ def to_compact_json(value: Any) -> str:
 
 
 def fit_to_size(document: Any, max_chars: int) -> str:
-    """Trim lists from the end, then long strings, until the document fits max_chars."""
     root = document if isinstance(document, dict) else {"items": document}
     trims = _Trims(root)
     budget = max_chars - _NOTE_RESERVE_CHARS
@@ -55,21 +53,18 @@ def fit_to_size(document: Any, max_chars: int) -> str:
     return text[: max_chars - 60] + f"…[cut at {max_chars} characters, not valid JSON]"
 
 
-def _without_empty_values(value: Any) -> Any:
+def _without_nulls(value: Any) -> Any:
     if hasattr(value, "model_dump"):
         value = value.model_dump(mode="json", by_alias=True, exclude_none=True)
     if isinstance(value, Enum):
         return value.value
     if isinstance(value, dict):
-        kept = ((key, _without_empty_values(item)) for key, item in value.items())
-        return {key: item for key, item in kept if not _is_empty(item)}
+        return {
+            key: _without_nulls(item) for key, item in value.items() if item is not None
+        }
     if isinstance(value, (list, tuple)):
-        return [_without_empty_values(item) for item in value]
+        return [_without_nulls(item) for item in value]
     return value
-
-
-def _is_empty(value: Any) -> bool:
-    return value is None or (isinstance(value, (str, list, dict)) and len(value) == 0)
 
 
 class _Trims:
@@ -113,6 +108,7 @@ def _trim_largest_list(root: dict[str, Any], excess: int, trims: _Trims) -> bool
     keep = _items_that_fit(items, excess)
     if path == (trims.page_key,):
         keep = _aligned_to_page_size(keep, root["pagination"])
+        _drop_stale_page_counts(root["pagination"])
     trims.list_totals.setdefault(path, len(items))
     _assign(root, path, items[:keep])
     return True
@@ -168,12 +164,15 @@ def _aligned_to_page_size(keep: int, pagination: dict[str, Any]) -> int:
     )
 
 
+def _drop_stale_page_counts(pagination: dict[str, Any]) -> None:
+    for stale in ("pages", "nextCursor", "hasMore"):
+        pagination.pop(stale, None)
+
+
 def _page_note(
     root: dict[str, Any], key: str, keep: int, total: int, *, pages_by_cursor: bool
 ) -> str:
     pagination = root["pagination"]
-    for stale in ("pages", "nextCursor", "hasMore"):
-        pagination.pop(stale, None)
     shown = f"`{key}` shows {keep} of the {total} items of this page; the full page was too large."
     steps = []
     page, page_size = pagination.get("page"), pagination.get("limit")
