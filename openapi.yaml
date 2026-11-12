@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.596.1"
+  version: "1.597.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -11704,8 +11704,8 @@ components:
           type: object
           required: [category, type, subject, text, url, refs, actions]
           properties:
-            category: { type: string, enum: [postFailures, accountIssues], description: 'The email notification preference this notification belongs to.' }
-            type: { type: string, enum: [post_failed, account_disconnected] }
+            category: { type: string, enum: [postFailures, accountIssues, securityAlerts], description: 'The email notification preference this notification belongs to. securityAlerts has no preference: it is always sent.' }
+            type: { type: string, enum: [post_failed, account_disconnected, api_key_handed_over] }
             subject: { type: string, description: 'The email subject.' }
             text: { type: string, description: 'The email body as plain text, without the greeting.' }
             url: { type: string, format: uri, description: 'Dashboard link for the notification.' }
@@ -11734,6 +11734,13 @@ components:
                     platform: { type: string }
                     username: { type: string }
                     profileId: { type: string }
+                apiKey:
+                  type: object
+                  required: [id, keyPreview, expiresAt]
+                  properties:
+                    id: { type: string, description: 'The handed-over API key id.' }
+                    keyPreview: { type: [string, 'null'], description: 'The key prefix and suffix, never the secret.' }
+                    expiresAt: { type: [string, 'null'], format: date-time, description: 'When the handed-over key stops working.' }
             reason: { type: string, description: 'Why the account was disconnected. Only on account_disconnected.' }
             actions:
               type: array
@@ -29345,7 +29352,7 @@ webhooks:
       operationId: onNotificationSent
       summary: Notification sent event
       description: |
-        Built for agents. One event for every notification we would email the account owner: a scheduled post failed to publish (`type: post_failed`), or a connected account was disconnected (`type: account_disconnected`).
+        Built for agents. One event for every notification we would email the account owner: a scheduled post failed to publish (`type: post_failed`), a connected account was disconnected (`type: account_disconnected`), or a removed team member's recently used API key was handed to the owner (`type: api_key_handed_over`).
 
         It carries the email's `subject` and `text`, references to the post or account, and the `actions` that resolve it, so an agent subscribes to one event and handles every notification the same way.
 
@@ -29357,10 +29364,11 @@ webhooks:
 
         Once for each such notification, in near real time, regardless of the user's email toggles, and even when the owner has no email address or the email is held back by the sender's limits. It fires alongside `post.failed` and `account.disconnected`, which stay as they are.
 
-        The user's notification channel (Slack or Telegram) follows the email toggles, so it only receives the alerts whose toggle is on.
+        The user's notification channel (Slack or Telegram) follows the email toggles, so it only receives the alerts whose toggle is on. The exception is `api_key_handed_over` (category `securityAlerts`), which has no toggle and is always delivered.
 
         - `post_failed`: once the failure is final (a permanent error, or a temporary one on its last retry), once per publish attempt that failed, for scheduled posts only (not "post now"). `refs.platforms` lists every platform that failed in that attempt.
         - `account_disconnected`: every time an account is disconnected, never for creator-profile accounts. `reason` says why.
+        - `api_key_handed_over`: once per API key, when a departing team member's key used in the last 7 days moves to the workspace owner. It stops working within 24 hours: create a new key and switch to it. `refs.apiKey` carries the key id, preview and expiry.
 
         ### Payload notes
 
