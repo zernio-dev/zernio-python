@@ -25259,6 +25259,8 @@ def register_generated_tools(mcp, _get_client):
 
             Initiate an OAuth connection flow. Returns an authUrl to redirect the user to.
 
+            **X on prepaid-balance billing:** connecting is free, but every X post is paid from the balance ($0.015, or $0.20 with a link). At a $0 balance, POST /v1/posts to X returns 402 `insufficient_balance` (or waits for funds when scheduled), so fund the balance before the first post.
+
             ### Modes
 
             - Standard flow: Zernio hosts the selection UI, then redirects to your redirect_url.
@@ -25270,13 +25272,7 @@ def register_generated_tools(mcp, _get_client):
 
             Ads connections stay one per profile.
 
-            On a legacy plan limited to N profiles, a new account is refused with 403 `platform_account_limit` once N accounts of its platform are connected.
-
-            ### TikTok
-
-            Every connection now goes through the TikTok for Business app.
-
-            An authorization that leaves out a permission the connected account needs changes nothing at all and comes back as `missing_tiktok_permissions`. Connect again and accept every ...
+            On a legacy plan limited to N profiles, a new account is refused with 403 `platform_account_limit` once N accounts of ...
 
             Args:
                 platform: Social media platform to connect. `snapchat` is a closed beta with no public release date: it returns 403 `PLATFORM_BETA_RESTRICTED` until the account is approved. (required)
@@ -25334,6 +25330,7 @@ def register_generated_tools(mcp, _get_client):
         **Success params** are appended with the URL API, so an existing query string is preserved:
 
         - Standard mode: connected={platform}&profileId=X&accountId=Y&username=Z.
+        - X on prepaid-balance billing at a $0 balance: `billingNotice=x_balance_required` is added. The account is connected, but X posts wait or are refused (402 `insufficient_balance`) until the balance is funded.
         - Headless mode: OAuth data params for platforms requiring selection (e.g. LinkedIn orgs, Facebook pages). If no selection is needed, the account is created directly and the redirect includes accountId.
 
         **Failure params:** the browser goes to the same redirect_url with `error` and `platform` appended (always present). `error_message`, `is_user_fixable`, `reason`, `dashboard_url`, `missing_scopes`, `error_reason` and the `platform_error*` params are conditional: treat them as optional.
@@ -43162,6 +43159,8 @@ def register_generated_tools(mcp, _get_client):
 
             Create a post, and optionally publish it in the same request. A post published immediately (`publishNow: true`) comes back with `platformPostUrl` in the response.
 
+            On prepaid-balance billing, X posts are paid from the balance ($0.015 per post, $0.20 with a link). At a $0 balance, publishing to X now returns 402 `insufficient_balance` with `funding_url`, and a post saved for later waits for funds (202).
+
             ## Optional content
 
             `content` is optional in four cases:
@@ -43181,13 +43180,7 @@ def register_generated_tools(mcp, _get_client):
             - `publishNow: true`: publish synchronously, inside this request
             - `queuedFromProfile`: publish in the profile's next queue slot
 
-            With none of them and `isDraft` unset, the post is saved as a draft. `platforms` is required unless the post is a draft.
-
-            Precedence:
-
-            - `isDraft: true` wins over `publishNow` and `scheduledFor` (the post is saved, never published).
-            - `publishNow: true` wins over `scheduledFor`.
-            - A ...
+            With none of them and `isDraft` unset, ...
 
             Args:
                 title: Stored on the post for reference/display only. This field is NOT used as the video title when publishing. To set a YouTube video title, use platformSpecificData.title on the youtube platform target (falls back to the first line of content when omitted).
