@@ -16,6 +16,8 @@ logger = logging.getLogger(__name__)
 
 
 class AxiomIngestHandler(logging.Handler):
+    emits_without_blocking = True
+
     def __init__(
         self,
         *,
@@ -87,7 +89,7 @@ class AxiomIngestHandler(logging.Handler):
                 headers=self._headers,
                 json=events,
             )
-        except httpx.HTTPError as exc:
+        except Exception as exc:
             logger.warning(
                 "Axiom ingest failed, %d events lost: %s",
                 len(events),

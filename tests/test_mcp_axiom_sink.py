@@ -179,6 +179,46 @@ def test_nothing_is_shipped_without_both_token_and_dataset(
     assert axiom_handler_from_env() is None
 
 
+def test_an_unexpected_send_error_is_logged_and_the_next_flush_still_sends(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    attempts: list[int] = []
+
+    def first_call_explodes(_request: httpx.Request) -> httpx.Response:
+        attempts.append(1)
+        if len(attempts) == 1:
+            raise RuntimeError("unexpected")
+        return httpx.Response(200)
+
+    handler = AxiomIngestHandler(
+        dataset="zernio-mcp",
+        token="xaat-test",
+        client=httpx.Client(transport=httpx.MockTransport(first_call_explodes)),
+        flush_interval=3600,
+    )
+    handler.emit(_record(json.dumps({"event": "mcp_tool_call"})))
+    handler.flush()
+    handler.emit(_record(json.dumps({"event": "mcp_tool_call"})))
+    handler.flush()
+
+    assert "Axiom ingest failed, 1 events lost: RuntimeError" in caplog.text
+    assert len(attempts) == 2
+
+
+def test_the_log_pump_does_not_wrap_the_axiom_handler(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from late.mcp.non_blocking_logging import LogPump, _wrap_handlers
+
+    handler = _handler(RecordingIngest())
+    probe = logging.getLogger("late.mcp.tests.axiom-pump-probe")
+    monkeypatch.setattr(probe, "handlers", [handler])
+
+    _wrap_handlers(probe, LogPump())
+
+    assert probe.handlers == [handler]
+
+
 @pytest.fixture
 def tool_logger_at_info(monkeypatch: pytest.MonkeyPatch):
     tool_logger = logging.getLogger("late.mcp.tools")

@@ -87,6 +87,7 @@ def _wrap_handlers(logger: logging.Logger, pump: LogPump) -> None:
     logger.handlers = [
         handler
         if isinstance(handler, NonBlockingHandler)
+        or getattr(handler, "emits_without_blocking", False)
         else NonBlockingHandler(handler, pump)
         for handler in logger.handlers
     ]
