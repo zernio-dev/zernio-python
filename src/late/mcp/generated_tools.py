@@ -20449,7 +20449,13 @@ def register_generated_tools(mcp, _get_client):
 
         Events that overlap the window edges are included. `title` and `location` are substring matches applied to the fetched page.
 
-        When the provider does not answer, the last list read for the same account and query within the past hour is returned with `stale: true`, `asOf` and an `X-Zernio-Stale-As-Of` header instead of a 502.
+        When the provider does not answer, the last list read for the same account and query within the past six hours is returned with `stale: true`, `asOf` and an `X-Zernio-Stale-As-Of` header instead of a 502.
+
+        When there is no such list and the window is wider than 31 days, Zernio reads once more with the window cut to one day back and two weeks ahead of now (inside `from` and `to`). It returns that with `partial: true`, `coveredFrom`, `coveredTo` and a `pagination.nextCursor` for the rest.
+
+        Send the same request with that `cursor` until `nextCursor` is null. Each call returns a slice of up to 90 days, future first, then the past.
+
+        Slices are not sorted ...
 
         Args:
             account_id: The connected Google, Microsoft or IMAP account. (required)
