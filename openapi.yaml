@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.604.0"
+  version: "1.605.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -14388,6 +14388,12 @@ components:
       properties:
         sync:
           type: object
+          properties:
+            mode: { type: string, enum: [push, poll] }
+            typicalDelaySeconds: { type: integer }
+        sentItems:
+          type: object
+          description: 'Outlook only: how mail sent from the user''s own mail client reaches you (`message.sent`). `poll` while Microsoft will not give Zernio a Sent Items subscription for this mailbox; it switches back to `push` by itself.'
           properties:
             mode: { type: string, enum: [push, poll] }
             typicalDelaySeconds: { type: integer }
@@ -41666,6 +41672,10 @@ paths:
                     type: string
                     enum: [active, pending, failed, not_applicable]
                     description: 'Google and Microsoft only: state of the provider change-notification subscriptions behind `message.received` and `calendar.event.*`. `pending` means a granted area has no live subscription yet (retried every 6 hours), `failed` that renewals keep failing (reconnect the account).'
+                  sentItemsSync:
+                    type: string
+                    enum: [push, poll]
+                    description: 'Microsoft only: how mail sent from the user''s own mail client reaches `message.sent`. `poll` while Microsoft will not give Zernio a working Sent Items subscription for this mailbox (read every 5 minutes), `push` otherwise.'
                   username: { type: string }
                   displayName: { type: string }
                   status:
