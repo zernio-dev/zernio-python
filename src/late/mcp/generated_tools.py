@@ -20532,6 +20532,13 @@ def register_generated_tools(mcp, _get_client):
 
         `recurrence` takes one RRULE line with FREQ, INTERVAL, COUNT, UNTIL, BYDAY and BYSETPOS. Other parts are rejected with 400 (`param: recurrence`).
 
+        ### Reminders
+
+        Each `reminders.overrides` entry is `{ method, minutes }`, with `method` `popup` (default) or `email`.
+
+        - Google takes up to 5 overrides of either method.
+        - Outlook keeps one popup reminder, the first override. An `email` override answers 400 `reminder_method_unsupported`.
+
         Args:
             account_id: (required)
             calendar_id: Defaults to the primary calendar.
@@ -20544,7 +20551,7 @@ def register_generated_tools(mcp, _get_client):
             timezone: IANA zone the event is scheduled in. Defaults to the calendar's zone on Google and the mailbox's working-hours zone on Microsoft (UTC when Outlook has none, as on personal accounts). A PATCH that moves an event without a zone keeps the zone the event already has.
             participants: Each item is an object with keys: email (string, required); name (string or null)
             recurrence: RRULE lines, e.g. `RRULE:FREQ=WEEKLY;BYDAY=MO,WE;COUNT=10`. Microsoft takes one RRULE plus EXDATE lines; Zernio removes the EXDATE occurrences after saving the series.
-            reminders: Object with keys: useDefault (boolean); overrides (list of objects with keys minutes)
+            reminders: Object with keys: useDefault (boolean) - Use the calendar's default reminders. Ignored when `overrides` has entries.; overrides (list of objects with keys method, minutes) - Google takes up to 5 overrides, `popup` or `email`. Outlook keeps one popup reminder (the first override), and an `email` override answers 400 ...
             conferencing
             busy
             visibility
@@ -20651,7 +20658,7 @@ def register_generated_tools(mcp, _get_client):
             timezone: IANA zone the event is scheduled in. Defaults to the calendar's zone on Google and the mailbox's working-hours zone on Microsoft (UTC when Outlook has none, as on personal accounts). A PATCH that moves an event without a zone keeps the zone the event already has.
             participants: Each item is an object with keys: email (string, required); name (string or null)
             recurrence: RRULE lines, e.g. `RRULE:FREQ=WEEKLY;BYDAY=MO,WE;COUNT=10`. Microsoft takes one RRULE plus EXDATE lines; Zernio removes the EXDATE occurrences after saving the series.
-            reminders: Object with keys: useDefault (boolean); overrides (list of objects with keys minutes)
+            reminders: Object with keys: useDefault (boolean) - Use the calendar's default reminders. Ignored when `overrides` has entries.; overrides (list of objects with keys method, minutes) - Google takes up to 5 overrides, `popup` or `email`. Outlook keeps one popup reminder (the first override), and an `email` override answers 400 ...
             conferencing
             busy
             visibility

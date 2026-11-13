@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.605.0"
+  version: "1.606.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -14723,8 +14723,17 @@ components:
         reminders:
           type: object
           properties:
-            useDefault: { type: boolean }
-            overrides: { type: array, maxItems: 5, items: { type: object, properties: { minutes: { type: integer } } } }
+            useDefault: { type: boolean, description: "Use the calendar's default reminders. Ignored when `overrides` has entries." }
+            overrides:
+              type: array
+              maxItems: 5
+              description: "Google takes up to 5 overrides, `popup` or `email`. Outlook keeps one popup reminder (the first override), and an `email` override answers 400 `reminder_method_unsupported` on a Microsoft account."
+              items:
+                type: object
+                required: [minutes]
+                properties:
+                  method: { type: string, enum: [popup, email], default: popup, description: '`popup` shows a notification in the calendar app. `email` mails the calendar owner (Google only).' }
+                  minutes: { type: integer, minimum: 0, maximum: 40320, description: 'Minutes before the start.' }
         conferencing: { type: string, enum: [google_meet, teams] }
         busy: { type: boolean }
         visibility: { type: string, enum: [default, public, private] }
@@ -14775,7 +14784,13 @@ components:
           type: object
           properties:
             useDefault: { type: boolean }
-            overrides: { type: array, items: { type: object, properties: { minutes: { type: integer } } } }
+            overrides:
+              type: array
+              items:
+                type: object
+                properties:
+                  method: { type: string, enum: [popup, email], description: 'Outlook reminders always read as `popup`.' }
+                  minutes: { type: integer }
         conferencing:
           type: [object, "null"]
           properties:
@@ -57138,12 +57153,32 @@ paths:
         ### Recurrence
 
         `recurrence` takes one RRULE line with FREQ, INTERVAL, COUNT, UNTIL, BYDAY and BYSETPOS. Other parts are rejected with 400 (`param: recurrence`).
+
+        ### Reminders
+
+        Each `reminders.overrides` entry is `{ method, minutes }`, with `method` `popup` (default) or `email`.
+
+        - Google takes up to 5 overrides of either method.
+        - Outlook keeps one popup reminder, the first override. An `email` override answers 400 `reminder_method_unsupported`.
       security: [{ bearerAuth: [] }]
       requestBody:
         required: true
         content:
           application/json:
             schema: { $ref: '#/components/schemas/CreateCalendarEventRequest' }
+            examples:
+              emailAndPopupReminders:
+                summary: Email reminder a day before, popup 10 minutes before
+                value:
+                  accountId: '66b2e19d8c3f5a7e9d0b1c2d'
+                  title: Contract review
+                  start: '2026-11-18T16:00:00+01:00'
+                  end: '2026-11-18T17:00:00+01:00'
+                  reminders:
+                    useDefault: false
+                    overrides:
+                      - { method: email, minutes: 1440 }
+                      - { method: popup, minutes: 10 }
       responses:
         '201':
           description: The created event
