@@ -109,13 +109,10 @@ def _api_transport() -> httpx.BaseTransport:
 
 # Always-visible core: the 20 hand-written ergonomic tools (guardrails +
 # LLM-shaped args, preferred over their raw generated twins) plus the generated
-# tools central to working on a profile — posting, the scheduling queue,
-# pre-publish validation, account health, cross-platform analytics basics, and
-# engagement on published posts. The remaining ~430 generated tools (messaging
-# suite, ads, connect, platform-specific analytics, ...) sit behind the BM25
-# tool-search transform (search_tools / call_tool), so clients see ~51 tools up
-# front instead of 481 — small enough that clients which cap or truncate large
-# tool lists show them all.
+# tools most sessions need, chosen by measured use. Every pinned definition is
+# sent on every turn of every session, so a tool few sessions call stays behind
+# the BM25 tool-search transform (search_tools / call_tool) with the rest of the
+# generated tools.
 _PINNED_TOOLS = [
     # Hand-written ergonomic tools
     "accounts_list", "accounts_get",
@@ -127,26 +124,21 @@ _PINNED_TOOLS = [
     # Paid diagnosis and its poll fallback
     "support_ask", "support_assistant_get_support_answer",
     # Posting operations not covered by the ergonomic set
-    "posts_bulk_upload_posts", "posts_unpublish_post", "posts_edit_post",
-    # Scheduling queue
-    "queue_list_queue_slots", "queue_create_queue_slot", "queue_update_queue_slot",
-    "queue_delete_queue_slot", "queue_preview_queue", "queue_get_next_queue_slot",
+    "posts_unpublish_post", "posts_edit_post", "media_get_media_presigned_url",
     # Pre-publish validation
-    "validate_post", "validate_post_length", "validate_media",
-    # Account health & organisation
+    "validate_post", "validate_media",
+    # Account health
     "accounts_get_all_accounts_health", "accounts_get_account_health",
-    "accounts_get_follower_stats", "accounts_move_account_to_profile",
-    "account_groups_list_account_groups",
+    "accounts_get_follower_stats",
+    # Inbox conversations
+    "messages_list_inbox_conversations", "messages_get_inbox_conversation_messages",
     # Cross-platform analytics basics
     "analytics_get_analytics", "analytics_get_best_time_to_post",
     "analytics_get_daily_metrics", "analytics_get_post_timeline",
     # Engagement on published posts
     "comments_list_inbox_comments", "comments_get_inbox_post_comments",
     "comments_reply_to_inbox_post",
-    "mentions_list_inbox_mentions", "mentions_reply_to_mention",
-    # Campaign tags & usage
-    "tracking_tags_list_tracking_tags", "tracking_tags_get_tracking_tag_stats",
-    "usage_get_usage",
+    "mentions_list_inbox_mentions",
     # Report bugs and missing features to Zernio
     FEEDBACK_TOOL,
 ]
@@ -236,13 +228,30 @@ class _AnnotatedBM25SearchTransform(BM25SearchTransform):
     async def closest_tools(self, name: str, ctx: Context | None) -> list[str]:
         """Real tool names nearest a mistyped or guessed one, pinned tools included."""
         hidden = await self._get_visible_tools(ctx)
-        names = [t.name for t in hidden] + sorted(self._always_visible)
+        pinned = sorted(self._always_visible)
+        names = [t.name for t in hidden] + pinned
         by_words = [t.name for t in await self._search(hidden, name)]
+        by_pinned_words = _names_sharing_words(name, pinned)
         by_spelling = difflib.get_close_matches(name, names, n=_MAX_TOOL_SUGGESTIONS)
         # Word matches lead: they named the intended tool first for every
         # guessed name seen in production, spelling only for some.
-        interleaved = [n for pair in zip_longest(by_words, by_spelling) for n in pair if n]
+        interleaved = [
+            n
+            for group in zip_longest(by_words, by_pinned_words, by_spelling)
+            for n in group
+            if n
+        ]
         return list(dict.fromkeys(interleaved))[:_MAX_TOOL_SUGGESTIONS]
+
+
+def _names_sharing_words(guess: str, names: Sequence[str]) -> list[str]:
+    split_camel_case = re.sub(r"([a-z0-9])([A-Z])", r"\1_\2", guess)
+    guess_words = set(re.findall(r"[a-z0-9]+", split_camel_case.lower()))
+    shared = {name: len(guess_words & set(name.split("_"))) for name in names}
+    ranked = sorted(
+        (n for n, count in shared.items() if count >= 2), key=lambda n: -shared[n]
+    )
+    return ranked[:_MAX_TOOL_SUGGESTIONS]
 
 
 _search_transform = _AnnotatedBM25SearchTransform(
