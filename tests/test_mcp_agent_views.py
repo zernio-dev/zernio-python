@@ -118,3 +118,50 @@ def test_a_tree_spec_without_the_depth_parameter_warns_and_keeps_its_parameters(
 
     assert mcp_generator._with_agent_view("getAdTree", [other]) == [other]
     assert "getAdTree has no `depth` parameter" in capsys.readouterr().err
+
+
+@pytest.fixture
+def posts_api(monkeypatch: pytest.MonkeyPatch):
+    import respx
+
+    monkeypatch.setenv("ZERNIO_API_KEY", "sk_test")
+    monkeypatch.setenv("ZERNIO_BASE_URL", "https://api.test.com")
+    with respx.mock(assert_all_called=False) as router:
+        yield router.get("https://api.test.com/v1/posts").respond(
+            200, json={"posts": [], "pagination": {}}
+        )
+
+
+async def _list_posts(arguments: dict) -> None:
+    from fastmcp import Client
+
+    from late.mcp.server import mcp
+
+    async with Client(mcp) as client:
+        await client.call_tool(
+            "call_tool", {"name": "posts_list_posts", "arguments": arguments}
+        )
+
+
+async def test_picking_fields_on_posts_leaves_out_the_summary_view_the_api_rejects_with_them(
+    posts_api,
+) -> None:
+    await _list_posts({"fields": "_id,status", "limit": 1})
+
+    params = posts_api.calls.last.request.url.params
+    assert params["fields"] == "_id,status"
+    assert "view" not in params
+
+
+async def test_an_empty_fields_value_is_not_sent_next_to_the_summary_view(posts_api) -> None:
+    await _list_posts({"fields": "", "limit": 1})
+
+    params = posts_api.calls.last.request.url.params
+    assert "fields" not in params
+    assert params["view"] == "summary"
+
+
+async def test_posts_without_fields_still_ask_for_the_summary_view(posts_api) -> None:
+    await _list_posts({"limit": 1})
+
+    assert posts_api.calls.last.request.url.params["view"] == "summary"
