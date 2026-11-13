@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.603.0"
+  version: "1.603.1"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -70844,7 +70844,7 @@ paths:
                   url: { type: string, description: The hosted link to send your end customer. }
                   token: { type: string }
                   expiresAt: { type: string, format: date-time }
-        '400': { description: Country does not require KYC (not a regulated country). }
+        '400': { description: 'Country does not require KYC (not a regulated country), or `areaCode` has no stock for the chosen `numberType`.' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '402': { $ref: '#/components/responses/BalanceRequired' }
 
@@ -71905,7 +71905,7 @@ paths:
                   url: { type: string, description: The hosted link to send your end customer. }
                   token: { type: string }
                   expiresAt: { type: string, format: date-time }
-        '400': { description: Country does not require KYC (not a regulated country). }
+        '400': { description: 'Country does not require KYC (not a regulated country), or `areaCode` has no stock for the chosen `numberType`.' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '402': { $ref: '#/components/responses/BalanceRequired' }
 
