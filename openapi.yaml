@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.602.1"
+  version: "1.603.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -57060,7 +57060,12 @@ paths:
       operationId: listCalendarEvents
       tags: [Calendar]
       summary: List events in a window
-      description: 'Recurring series are expanded into their occurrences inside the window by default (`expandRecurring=false` lists the masters instead, including series that started before `from` and still recur in the window). Events that overlap the window edges are included. `title` and `location` are substring matches applied to the fetched page.'
+      description: |
+        Recurring series are expanded into their occurrences inside the window by default. `expandRecurring=false` lists the masters instead, including series that started before `from` and still recur in the window.
+
+        Events that overlap the window edges are included. `title` and `location` are substring matches applied to the fetched page.
+
+        When the provider does not answer, the last list read for the same account and query within the past hour is returned with `stale: true`, `asOf` and an `X-Zernio-Stale-As-Of` header instead of a 502.
       security: [{ bearerAuth: [] }]
       parameters:
         - $ref: '#/components/parameters/EmailAccountId'
@@ -57079,6 +57084,8 @@ paths:
       responses:
         '200':
           description: Events
+          headers:
+            X-Zernio-Stale-As-Of: { description: 'Same time as `asOf`. Present only on a stale list.', schema: { type: string, format: date-time } }
           content:
             application/json:
               schema:
@@ -57086,6 +57093,8 @@ paths:
                 properties:
                   data: { type: array, items: { $ref: '#/components/schemas/CalendarEvent' } }
                   pagination: { $ref: '#/components/schemas/CursorPagination' }
+                  stale: { type: boolean, description: 'Always true when present. Present only when the provider did not answer and this is the last list Zernio read for the same account and query within the past hour.' }
+                  asOf: { type: string, format: date-time, description: 'When a stale list was read from the provider. Present only with `stale`.' }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '412': { $ref: '#/components/responses/MailboxPreconditionFailed' }
