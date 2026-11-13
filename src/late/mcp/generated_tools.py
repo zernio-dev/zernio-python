@@ -35676,6 +35676,8 @@ def register_generated_tools(mcp, _get_client):
 
         On Google, folders are Gmail labels (system labels carry `wellKnown`; `unreadCount` and `totalCount` are present only where Gmail reports them). There is no archive folder on Google; archived mail is listed with `folder=archive`.
 
+        When the provider does not answer, the last list read for the same account within the past 24 hours is returned with `stale: true`, `asOf` and an `X-Zernio-Stale-As-Of` header instead of a 502.
+
         Args:
             account_id: The connected Google, Microsoft or IMAP account. (required)"""
         client = _get_client()

@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.603.1"
+  version: "1.604.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -56487,19 +56487,26 @@ paths:
       operationId: listEmailFolders
       tags: [Email]
       summary: List mailbox folders
-      description: On Google, folders are Gmail labels (system labels carry `wellKnown`; `unreadCount` and `totalCount` are present only where Gmail reports them). There is no archive folder on Google; archived mail is listed with `folder=archive`.
+      description: |
+        On Google, folders are Gmail labels (system labels carry `wellKnown`; `unreadCount` and `totalCount` are present only where Gmail reports them). There is no archive folder on Google; archived mail is listed with `folder=archive`.
+
+        When the provider does not answer, the last list read for the same account within the past 24 hours is returned with `stale: true`, `asOf` and an `X-Zernio-Stale-As-Of` header instead of a 502.
       security: [{ bearerAuth: [] }]
       parameters:
         - $ref: '#/components/parameters/EmailAccountId'
       responses:
         '200':
           description: Folders, with `wellKnown` set on the provider's system folders
+          headers:
+            X-Zernio-Stale-As-Of: { description: 'Same time as `asOf`. Present only on a stale list.', schema: { type: string, format: date-time } }
           content:
             application/json:
               schema:
                 type: object
                 properties:
                   data: { type: array, items: { $ref: '#/components/schemas/EmailFolder' } }
+                  stale: { type: boolean, description: 'Always true when present. Present only when the provider did not answer and `data` is the last folder list Zernio read for the same account within the past 24 hours (`unreadCount` and `totalCount` may be out of date).' }
+                  asOf: { type: string, format: date-time, description: 'When a stale list was read from the provider. Present only with `stale`.' }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '412': { $ref: '#/components/responses/MailboxPreconditionFailed' }
