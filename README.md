@@ -706,6 +706,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `ad_rules.list_ad_rules()` | List ad rules |
 | `ad_rules.create_ad_rule()` | Create an ad rule |
 | `ad_rules.get_ad_rule()` | Get an ad rule |
+| `ad_rules.get_ad_rule_hourly_windows()` | Check whether an ad account has hourly windows |
 | `ad_rules.update_ad_rule()` | Update an ad rule |
 | `ad_rules.delete_ad_rule()` | Delete an ad rule |
 | `ad_rules.preview_ad_rule()` | Preview an ad rule |

@@ -13561,6 +13561,35 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="Check whether an ad account has hourly windows",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def ad_rules_get_ad_rule_hourly_windows(account_id: str, ad_account_id: str) -> str:
+        """Check whether an ad account has hourly windows
+
+        Hourly windows (`last_complete_hour`, `last_3h`, `today_so_far`) read campaign totals hour by hour, which Zernio syncs only for some Meta and Google ad accounts.
+
+        On an ad account without them, an hourly condition always reads as unknown and never matches. `hourlyWindows` says which case applies.
+
+        Platforms: meta, google
+
+        Args:
+            account_id: The ads connection. (required)
+            ad_account_id: The ad account on that connection. (required)"""
+        client = _get_client()
+        try:
+            response = client.ad_rules.get_ad_rule_hourly_windows(
+                account_id=account_id, ad_account_id=ad_account_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="List every change ad rules made",
             readOnlyHint=True,
             destructiveHint=False,

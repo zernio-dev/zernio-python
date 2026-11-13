@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.607.1"
+  version: "1.608.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -79672,6 +79672,43 @@ paths:
                         cooldownMinutes: { type: integer }
                         platforms: { type: [array, "null"], items: { type: string } }
         '401': { $ref: '#/components/responses/Unauthorized' }
+  /v1/ads/rules/hourly-windows:
+    get:
+      x-resource-group: ads
+      operationId: getAdRuleHourlyWindows
+      tags: [Ad Rules]
+      x-platforms: [meta, google]
+      summary: Check whether an ad account has hourly windows
+      description: |
+        Hourly windows (`last_complete_hour`, `last_3h`, `today_so_far`) read campaign totals hour by hour, which Zernio syncs only for some Meta and Google ad accounts.
+
+        On an ad account without them, an hourly condition always reads as unknown and never matches. `hourlyWindows` says which case applies.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: accountId
+          in: query
+          required: true
+          description: The ads connection.
+          schema: { type: string }
+        - name: adAccountId
+          in: query
+          required: true
+          description: The ad account on that connection.
+          schema: { type: string }
+      responses:
+        '200':
+          description: Whether hourly windows read data on the ad account.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [hourlyWindows]
+                properties:
+                  hourlyWindows: { type: boolean }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
   /v1/ads/rules/activity:
     get:
       x-resource-group: ads

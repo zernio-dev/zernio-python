@@ -131,6 +131,16 @@ class AdRulesResource:
         """List ready-made ad rules"""
         return self._client._get("/v1/ads/rules/templates")
 
+    def get_ad_rule_hourly_windows(
+        self, account_id: str, ad_account_id: str
+    ) -> dict[str, Any]:
+        """Check whether an ad account has hourly windows"""
+        params = self._build_params(
+            account_id=account_id,
+            ad_account_id=ad_account_id,
+        )
+        return self._client._get("/v1/ads/rules/hourly-windows", params=params)
+
     def list_ad_rule_activity(
         self,
         *,
@@ -282,6 +292,16 @@ class AdRulesResource:
     async def alist_ad_rule_templates(self) -> dict[str, Any]:
         """List ready-made ad rules (async)"""
         return await self._client._aget("/v1/ads/rules/templates")
+
+    async def aget_ad_rule_hourly_windows(
+        self, account_id: str, ad_account_id: str
+    ) -> dict[str, Any]:
+        """Check whether an ad account has hourly windows (async)"""
+        params = self._build_params(
+            account_id=account_id,
+            ad_account_id=ad_account_id,
+        )
+        return await self._client._aget("/v1/ads/rules/hourly-windows", params=params)
 
     async def alist_ad_rule_activity(
         self,
