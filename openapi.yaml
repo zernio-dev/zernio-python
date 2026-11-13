@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.607.0"
+  version: "1.607.1"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -623,7 +623,7 @@ tags:
 
       **Status model.** Every level keeps its own on/off switch, as in each platform's own UI: Meta `configured_status`, TikTok `operation_status`, Google `status`, LinkedIn `status`, Pinterest `status`, X `entity_status`, ChatGPT (OpenAI) `status`, Reddit `configured_status`.
 
-      - **Own switch** is what you set. Ads return it as `configuredStatus`, ad sets as `platformAdSetStatus`, campaigns as `platformCampaignStatus`. Meta and Reddit ad sets return their `effective_status` in `platformAdSetStatus` instead (e.g. `CAMPAIGN_PAUSED`).
+      - **Own switch** is what you set. Ads return it as `configuredStatus`, ad sets as `platformAdSetStatus`, campaigns as `platformCampaignStatus`. Meta ad sets return their `effective_status` in `platformAdSetStatus` instead (e.g. `CAMPAIGN_PAUSED`).
       - **Delivery status** (`status`, and the raw `platformStatus` on ads) is derived: an object delivers only when its own switch AND every switch above it are on. An ad switched on under a paused campaign reads `configuredStatus: ACTIVE` with `status: paused`.
       - **No cascade.** Pausing or resuming a campaign or ad set writes that object's switch only. Children keep their own switches, so a resume never re-enables an ad or ad set you paused individually. Resume each paused level you want live.
       - No cascade is native platform behavior (Google: "Resuming a campaign only enables the campaign level"; Meta reports the inherited pause as CAMPAIGN_PAUSED / ADSET_PAUSED on the child).
@@ -81936,7 +81936,7 @@ paths:
                         platform: { type: string }
                         adSetName: { type: [string, "null"] }
                         status: { type: [string, "null"], description: "Stored ad set status (active, paused, pending_review, rejected, completed, cancelled, error), as last synced. The `status` filter matches it." }
-                        platformAdSetStatus: { type: [string, "null"], description: "Raw platform ad set status. On TikTok the ad group's own switch `operation_status` (ENABLE / DISABLE), independent of its campaign. On Meta and Reddit the ad set's `effective_status` (e.g. CAMPAIGN_PAUSED)." }
+                        platformAdSetStatus: { type: [string, "null"], description: "Raw platform ad set status. On TikTok the ad group's own switch `operation_status` (ENABLE / DISABLE), independent of its campaign. On Meta the ad set's `effective_status` (e.g. CAMPAIGN_PAUSED). On Reddit the ad group's own switch `configured_status` (ACTIVE / PAUSED / ARCHIVED)." }
                         platformCampaignId: { type: [string, "null"] }
                         platformAdAccountId: { type: string }
                         accountId: { type: [string, "null"] }
@@ -82706,7 +82706,7 @@ paths:
                   budget: { $ref: '#/components/schemas/AdBudget' }
                   budgetLevel: { type: string, enum: [adset] }
                   status: { type: string, enum: [active, paused], description: 'As in PUT /v1/ads/ad-sets/{adSetId}/status: delivery derived from the switches read back.' }
-                  platformAdSetStatus: { type: [string, "null"], description: "The ad set's status read back from the platform, as in PUT /v1/ads/ad-sets/{adSetId}/status (Meta and Reddit return the ad set's effective_status); null when it could not be read." }
+                  platformAdSetStatus: { type: [string, "null"], description: "The ad set's status read back from the platform, as in PUT /v1/ads/ad-sets/{adSetId}/status (Meta returns the ad set's effective_status, Reddit the ad group's configured_status); null when it could not be read." }
                   platformCampaignStatus: { type: [string, "null"] }
                   statusReadAt: { type: [string, "null"], format: date-time }
                   statusUpdated: { type: integer, enum: [0, 1], description: "1 when the ad set's switch was written." }
@@ -82849,7 +82849,7 @@ paths:
 
         A stored switch never skips a write, and when the platform cannot be read the write always goes out.
 
-        On Meta and Reddit the check reads the ad set's own switch (`status` / `configured_status`). So a repeated request skips even while `platformAdSetStatus` reads `CAMPAIGN_PAUSED`, `WITH_ISSUES` or `IN_PROCESS`.
+        On Meta the check reads the ad set's own switch (`status`). So a repeated request skips even while `platformAdSetStatus` reads `CAMPAIGN_PAUSED`, `WITH_ISSUES` or `IN_PROCESS`. On Reddit `platformAdSetStatus` is the ad group's own switch (`configured_status`), so a skipped request returns it as already in the requested state.
       security:
         - bearerAuth: []
       parameters:
@@ -82873,7 +82873,7 @@ paths:
                 type: object
                 properties:
                   status: { type: string, enum: [active, paused], description: "The ad set's delivery status derived from the switches read back: `paused` when its own switch or its campaign's switch is off. Echoes the request when the platform could not be read." }
-                  platformAdSetStatus: { type: [string, "null"], description: "The ad set's own switch as read back from the platform (as GET /v1/ads/ad-sets returns it), in raw platform vocabulary. Null when the platform could not be read, which is always the case on X.\n\n- Meta: effective_status.\n- TikTok: ENABLE / DISABLE.\n- Google: ENABLED / PAUSED.\n- LinkedIn and Pinterest: ACTIVE / PAUSED.\n- ChatGPT (OpenAI): status.\n- Reddit: effective_status, such as CAMPAIGN_PAUSED." }
+                  platformAdSetStatus: { type: [string, "null"], description: "The ad set's own switch as read back from the platform (as GET /v1/ads/ad-sets returns it), in raw platform vocabulary. Null when the platform could not be read, which is always the case on X.\n\n- Meta: effective_status.\n- TikTok: ENABLE / DISABLE.\n- Google: ENABLED / PAUSED.\n- LinkedIn and Pinterest: ACTIVE / PAUSED.\n- ChatGPT (OpenAI): status.\n- Reddit: configured_status (ACTIVE / PAUSED / ARCHIVED)." }
                   platformCampaignStatus: { type: [string, "null"], description: "The parent campaign's switch, read in the same call where the platform returns it, otherwise the stored value." }
                   statusReadAt: { type: [string, "null"], format: date-time, description: 'When the ad set switch was read back. Null when it could not be read.' }
                   updated: { type: integer, enum: [0, 1], description: "1 when the ad set's switch was written." }
