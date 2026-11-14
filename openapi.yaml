@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.611.0"
+  version: "1.611.1"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -51577,7 +51577,7 @@ paths:
               schema: { $ref: '#/components/schemas/ErrorResponse' }
         '404':
           x-summary: "The account is not reachable by the caller, or the media does not exist or lacks a mention: check both IDs."
-          description: 'The account is not reachable by the caller (`account_not_found`), or the media does not exist or does not mention the account in its caption (`resource_not_found`).'
+          description: 'The account is not reachable by the caller (`account_not_found`), or the media does not exist or does not mention the account in its caption, or Meta does not serve it as organic media (`resource_not_found`).'
           content:
             application/json:
               schema: { $ref: '#/components/schemas/ErrorResponse' }
@@ -51631,7 +51631,7 @@ paths:
               schema: { $ref: '#/components/schemas/ErrorResponse' }
         '404':
           x-summary: "The account is not reachable by the caller, or the comment does not exist or does not mention it: check both IDs."
-          description: 'The account is not reachable by the caller (`account_not_found`), or the comment does not exist or does not mention the account (`resource_not_found`).'
+          description: 'The account is not reachable by the caller (`account_not_found`), or the comment does not exist or does not mention the account, or Meta does not serve it as organic media (`resource_not_found`).'
           content:
             application/json:
               schema: { $ref: '#/components/schemas/ErrorResponse' }
@@ -63550,7 +63550,7 @@ paths:
 
         - Only accounts connected through Facebook Login receive them.
         - Comments on the account's own posts are never listed, even when they contain its @handle.
-        - Their text is read from Instagram in the background after the first request, so `content` can be empty on the first read.
+        - Their text is read from Instagram in the background after the first request, so `content` can be empty on the first read, and stays empty when Meta refuses to serve the source (for example media Meta does not treat as organic).
         - Pass `mediaId` and `commentId` to `POST /v1/inbox/mentions/reply` to answer one.
 
         ### Facebook
@@ -63619,20 +63619,20 @@ paths:
                           type: string
                         content:
                           type: [string, "null"]
-                          description: 'Text that mentioned you: the post text on LinkedIn, the caption or comment text on Instagram, the post or comment text on Facebook. Empty until it has been read.'
+                          description: 'Text that mentioned you: the post text on LinkedIn, the caption or comment text on Instagram, the post or comment text on Facebook. Empty until it has been read. Stays empty when Meta refuses to serve the source, for example a comment on media Meta does not treat as organic.'
                         contentNotRetained: { type: boolean, description: 'True when this team does not retain content, so the content fields of this row are null. Identifiers and metadata stay.' }
                         permalink:
                           type: [string, "null"]
                           description: URL to the source post on LinkedIn. Null on Instagram and Facebook.
                         authorUrn:
                           type: [string, "null"]
-                          description: 'LinkedIn URN of the person who mentioned you, the Instagram-scoped ID of the commenter on an Instagram comment mention, or the ID of the Facebook user or Page that mentioned your Page when Meta sends it.'
+                          description: 'LinkedIn URN of the person who mentioned you, or the ID of the Facebook user or Page that mentioned your Page when Meta sends it. Always null on Instagram: comment mentions carry no commenter, and caption mentions expose the media owner only through authorUsername.'
                         authorName:
                           type: [string, "null"]
                           description: 'Display name of the author, resolved from authorUrn on LinkedIn (null when LinkedIn does not allow resolving the profile) and taken from the webhook on Facebook.'
                         authorUsername:
                           type: [string, "null"]
-                          description: 'LinkedIn vanity name of the author (the slug in their profile URL), or the Instagram username of the commenter or media owner.'
+                          description: 'LinkedIn vanity name of the author (the slug in their profile URL), or the Instagram username of the media owner on a caption mention once its caption has been read. Null on Instagram comment mentions.'
                         authorPicture:
                           type: [string, "null"]
                           description: Profile picture URL of the author. LinkedIn CDN URLs expire after some time, so fetch promptly rather than storing long-term.

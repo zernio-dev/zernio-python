@@ -39066,15 +39066,12 @@ def register_generated_tools(mcp, _get_client):
 
         - Only accounts connected through Facebook Login receive them.
         - Comments on the account's own posts are never listed, even when they contain its @handle.
-        - Their text is read from Instagram in the background after the first request, so `content` can be empty on the first read.
+        - Their text is read from Instagram in the background after the first request, so `content` can be empty on the first read, and stays empty when Meta refuses to serve the source (for example media Meta does not treat as organic).
         - Pass `mediaId` and `commentId` to `POST /v1/inbox/mentions/reply` to answer one.
 
         ### Facebook
 
-        Post mentions (someone tags the Page in a post) and comment mentions (someone tags it in a comment), delivered by the Page `mention` webhook with their text.
-
-        - Comments on the Page's own posts and anything the Page wrote itself are never listed.
-        - ...
+        Post mentions (someone tags the Page in a post) and comment mentions (someone tags it in a comment), delivered by the Page `mention` webhook with ...
 
         Args:
             account_id: Filter by account ID
