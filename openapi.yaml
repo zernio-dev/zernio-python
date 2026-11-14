@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.611.1"
+  version: "1.611.2"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -72255,7 +72255,7 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { description: 'The API key is scoped to profiles that do not include this number.' }
         '404': { description: Number not found }
-        '409': { description: 'This number is attached to a SIP trunk; detach it first (code invalid_resource_state).' }
+        '409': { description: 'This number is attached to a SIP trunk (detach it first), or it is a Zernio number that is not active yet or was released (code invalid_resource_state).' }
         '422': { description: "This number is hosted by your own carrier (brought via WhatsApp embedded signup), so calls can't be enabled on it." }
     delete:
       x-resource-group: "telephony"
@@ -72707,6 +72707,7 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { description: 'The API key is scoped to profiles that do not include this number.' }
         '404': { description: Number not found }
+        '409': { description: 'This is a Zernio number that is not active yet or was released, so SMS cannot be enabled on it yet (code invalid_resource_state).' }
         '422': { description: "This number is hosted by your own carrier (brought via WhatsApp embedded signup), so SMS can't be enabled on it." }
     delete:
       x-resource-group: "telephony"
