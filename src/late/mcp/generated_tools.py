@@ -27784,11 +27784,9 @@ def register_generated_tools(mcp, _get_client):
 
         Two settings stay on the customer's side, in LINE Official Account Manager > Settings > Response settings. `nextSteps` in the response lists them:
 
-        - Turn on Webhooks. Until it is on, LINE delivers nothing to Zernio.
-        - Turn off auto-response and greeting messages.
-
-        Reconnecting the same channel on the same profile updates the existing account.
-        To get your userId for the state parameter, call GET /v1/users which includes a currentUserId field.
+        - Turn on Webhooks. Until it is on, LINE delivers nothing to Zernio. LINE's API cannot turn it on, so Zernio reads it back as `webhook.active`.
+          When it is `false`, `message` and the first entry of `nextSteps` say to turn it on. `GET /v1/accounts/{accountId}/health` keeps reporting it after connect.
+        - Turn off auto-response and greeting ...
 
         Args:
             channel_id: The Messaging API channel's Channel ID (digits only). (required)
