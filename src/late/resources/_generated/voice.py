@@ -176,6 +176,10 @@ class VoiceResource:
         """Mint a browser softphone session"""
         return self._client._post("/v1/voice/calls/web")
 
+    def create_voice_web_inbound_session(self) -> dict[str, Any]:
+        """Register a browser to receive calls"""
+        return self._client._post("/v1/voice/calls/web/inbound")
+
     def dial_voice_web_call(
         self,
         to: str,
@@ -200,6 +204,7 @@ class VoiceResource:
         id: str,
         *,
         forward_to: str | None = None,
+        ring_in_browser: bool | None = None,
         recording_enabled: bool | None = None,
         transcription_enabled: bool | None = None,
         transcription_language: str | None = None,
@@ -217,6 +222,7 @@ class VoiceResource:
         """Enable phone calling on a number"""
         payload = self._build_payload(
             forward_to=forward_to,
+            ring_in_browser=ring_in_browser,
             recording_enabled=recording_enabled,
             transcription_enabled=transcription_enabled,
             transcription_language=transcription_language,
@@ -388,6 +394,10 @@ class VoiceResource:
         """Mint a browser softphone session (async)"""
         return await self._client._apost("/v1/voice/calls/web")
 
+    async def acreate_voice_web_inbound_session(self) -> dict[str, Any]:
+        """Register a browser to receive calls (async)"""
+        return await self._client._apost("/v1/voice/calls/web/inbound")
+
     async def adial_voice_web_call(
         self,
         to: str,
@@ -412,6 +422,7 @@ class VoiceResource:
         id: str,
         *,
         forward_to: str | None = None,
+        ring_in_browser: bool | None = None,
         recording_enabled: bool | None = None,
         transcription_enabled: bool | None = None,
         transcription_language: str | None = None,
@@ -429,6 +440,7 @@ class VoiceResource:
         """Enable phone calling on a number (async)"""
         payload = self._build_payload(
             forward_to=forward_to,
+            ring_in_browser=ring_in_browser,
             recording_enabled=recording_enabled,
             transcription_enabled=transcription_enabled,
             transcription_language=transcription_language,

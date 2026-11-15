@@ -1639,6 +1639,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `voice.list_voice_calls()` | List phone calls |
 | `voice.create_sip_trunk()` | Create a SIP trunk |
 | `voice.create_voice_call()` | Place an outbound phone call |
+| `voice.create_voice_web_inbound_session()` | Register a browser to receive calls |
 | `voice.create_voice_web_session()` | Mint a browser softphone session |
 | `voice.get_sip_trunk()` | Get a SIP trunk |
 | `voice.get_voice_call()` | Get a phone call |

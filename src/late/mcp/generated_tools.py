@@ -49993,6 +49993,29 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="Register a browser to receive calls",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def voice_create_voice_web_inbound_session() -> str:
+        """Register a browser to receive calls
+
+        Mints a login token for the `@telnyx/webrtc` SDK so a browser can receive inbound calls to numbers with `ringInBrowser` on.
+
+        The token belongs to one long-lived credential per number owner, so every registered tab (including teammates' with calls access) rings together. Tokens last about 24 hours; request a new one to re-register.
+
+        Dashboard sessions only: API keys and connector tokens get `403`. Returns `{ enabled: false }` when none of the owner's numbers ring in the browser."""
+        client = _get_client()
+        try:
+            response = client.voice.create_voice_web_inbound_session()
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="Dial from the browser softphone",
             readOnlyHint=False,
             destructiveHint=True,
@@ -50046,6 +50069,7 @@ def register_generated_tools(mcp, _get_client):
     def voice_enable_voice_on_number(
         id: str,
         forward_to: str | None = None,
+        ring_in_browser: bool | None = None,
         recording_enabled: bool | None = None,
         transcription_enabled: bool | None = None,
         transcription_language: Literal["auto", "en", "es"] | None = None,
@@ -50078,6 +50102,7 @@ def register_generated_tools(mcp, _get_client):
         Args:
             id: Phone number record ID (from GET /v1/phone-numbers). (required)
             forward_to: tel:+E164, sip:..., or wss://... destination for inbound calls. Empty string clears the forward (outbound-only); omitted preserves the current one.
+            ring_in_browser: Ring the owner's open Zernio dashboard tabs first (registered via POST /v1/voice/calls/web/inbound). Unanswered after 20 seconds, declined, or with no tab open, the call takes the forward destination, else voicemail. Superseded by an active IVR.
             recording_enabled
             transcription_enabled
             transcription_language
@@ -50096,6 +50121,7 @@ def register_generated_tools(mcp, _get_client):
             response = client.voice.enable_voice_on_number(
                 id=id,
                 forward_to=forward_to,
+                ring_in_browser=ring_in_browser,
                 recording_enabled=recording_enabled,
                 transcription_enabled=transcription_enabled,
                 transcription_language=transcription_language,

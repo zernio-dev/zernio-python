@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.614.0"
+  version: "1.615.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -5966,6 +5966,7 @@ components:
         forwardCallerId: { type: string, enum: [business, caller] }
         pstnVoiceEnabled: { type: boolean, description: 'Whether Calls (PSTN voice) is on.' }
         pstnForwardTo: { type: string }
+        ringInBrowser: { type: boolean, description: "Inbound calls ring the owner's open dashboard tabs first, then take the forward or voicemail." }
         voicemailEnabled: { type: boolean }
         voicemailGreeting: { type: string }
         businessHoursEnabled: { type: boolean }
@@ -65560,6 +65561,35 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '502': { description: Failed to mint the WebRTC session }
 
+  /v1/voice/calls/web/inbound:
+    post:
+      x-resource-group: "messages"
+      operationId: createVoiceWebInboundSession
+      tags: [Voice]
+      summary: Register a browser to receive calls
+      description: |
+        Mints a login token for the `@telnyx/webrtc` SDK so a browser can receive inbound calls to numbers with `ringInBrowser` on.
+
+        The token belongs to one long-lived credential per number owner, so every registered tab (including teammates' with calls access) rings together. Tokens last about 24 hours; request a new one to re-register.
+
+        Dashboard sessions only: API keys and connector tokens get `403`. Returns `{ enabled: false }` when none of the owner's numbers ring in the browser.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Token minted, or browser ringing is off.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  enabled: { type: boolean }
+                  token: { type: string, description: "Login token for the browser WebRTC SDK. Present when enabled." }
+                  sdk: { type: string, example: '@telnyx/webrtc' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'Not a dashboard session, or calls are turned off for this team member' }
+        '502': { description: Failed to mint the WebRTC token }
+
   /v1/voice/calls/web/dial:
     post:
       x-resource-group: "messages"
@@ -72290,6 +72320,7 @@ paths:
               type: object
               properties:
                 forwardTo: { type: string, description: "tel:+E164, sip:..., or wss://... destination for inbound calls. Empty string clears the forward (outbound-only); omitted preserves the current one." }
+                ringInBrowser: { type: boolean, description: "Ring the owner's open Zernio dashboard tabs first (registered via POST /v1/voice/calls/web/inbound). Unanswered after 20 seconds, declined, or with no tab open, the call takes the forward destination, else voicemail. Superseded by an active IVR." }
                 recordingEnabled: { type: boolean }
                 transcriptionEnabled: { type: boolean }
                 transcriptionLanguage: { type: string, enum: [auto, en, es] }
@@ -72336,6 +72367,7 @@ paths:
                   enabled: { type: boolean }
                   phoneNumber: { type: string }
                   pstnForwardTo: { type: [string, "null"] }
+                  ringInBrowser: { type: boolean }
                   recordingEnabled: { type: boolean }
                   transcriptionEnabled: { type: boolean }
                   transcriptionLanguage: { type: string, enum: [auto, en, es] }
