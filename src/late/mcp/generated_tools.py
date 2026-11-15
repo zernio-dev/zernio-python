@@ -1087,6 +1087,7 @@ def register_generated_tools(mcp, _get_client):
             "googleanalytics",
             "line",
             "wechat",
+            "googletagmanager",
         ]
         | None = None,
         status: Literal["healthy", "warning", "error"] | None = None,
