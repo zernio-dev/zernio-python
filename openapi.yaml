@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.612.2"
+  version: "1.613.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -1716,6 +1716,7 @@ components:
       type: object
       properties:
         eventId: { type: string }
+        profileId: { type: string, description: The profile the event was stored under. }
         source: { type: string, description: 'Where the event came from: `api`, `relay`, `web`, `shopify`, `woocommerce`, `hubspot`, `meta_leads`, `google_leads`, `linkedin_leads` or `tiktok_leads`.' }
         eventName: { type: string }
         eventTime: { type: string, format: date-time }
@@ -98367,8 +98368,10 @@ paths:
       tags: [Conversions]
       summary: List stored events
       description: |
-        Lists the conversion events stored for a profile by `POST /v1/events`, newest first. Personal data is never
-        returned: `hasEmail`, `hasPhone` and `hasExternalId` only say whether the event carried that identifier.
+        Lists the conversion events stored by `POST /v1/events`, newest first: for one profile, or for every profile you can
+        access when `profileId` is omitted.
+
+        Personal data is never returned: `hasEmail`, `hasPhone` and `hasExternalId` only say whether the event carried that identifier.
         Events sent with `testCode` are not stored, so they never appear here.
 
         Paginate with `cursor`: pass the `nextCursor` of the previous page until it comes back `null`.
@@ -98377,7 +98380,8 @@ paths:
       parameters:
         - name: profileId
           in: query
-          required: true
+          required: false
+          description: The profile to list. Omit to cover every profile you can access.
           schema: { type: string }
         - name: limit
           in: query
@@ -98584,13 +98588,15 @@ paths:
       description: |
         How a profile's conversion tracking is doing today (UTC day): events stored, how many reached the ad platforms,
         each forwarding rule's destination, each event source and, when the profile has a tracking site, the site's funnel.
-        Requires the Ads add-on.
+
+        Without `profileId` it covers every profile you can access, summed across them. Requires the Ads add-on.
       security:
         - bearerAuth: []
       parameters:
         - name: profileId
           in: query
-          required: true
+          required: false
+          description: The profile to read. Omit to cover every profile you can access, summed across them.
           schema: { type: string }
       responses:
         '200':
@@ -98611,10 +98617,11 @@ paths:
                       matched: { type: integer, description: 'Today''s events matched to an ad campaign.' }
                   platforms:
                     type: array
-                    description: One entry per forwarding rule of the profile.
+                    description: One entry per forwarding rule of the profiles covered.
                     items:
                       type: object
                       properties:
+                        profileId: { type: string, description: The profile the forwarding rule belongs to. }
                         accountId: { type: string }
                         platform: { type: string, description: 'Ad platform, such as `metaads` or `googleads`.' }
                         accountName: { type: string }
@@ -98639,7 +98646,7 @@ paths:
                         lastSeenAt: { type: [string, "null"], format: date-time }
                   website:
                     type: [object, "null"]
-                    description: '`null` when the profile has no tracking site. Hit counts are approximate distinct counts.'
+                    description: '`null` when no profile covered has a tracking site. Hit counts are approximate distinct counts.'
                     properties:
                       steps:
                         type: array
@@ -98658,11 +98665,12 @@ paths:
                       serverPlatforms: { type: array, items: { type: string }, description: 'Platforms of the forwarding rules that receive website events.' }
                   sites:
                     type: array
-                    description: 'Each tracking site of the profile with its activity. Hit counts are approximate distinct counts without bots.'
+                    description: 'Each tracking site of the profiles covered, with its activity. Hit counts are approximate distinct counts without bots.'
                     items:
                       type: object
                       properties:
                         siteId: { type: string }
+                        profileId: { type: string, description: The profile the site belongs to. }
                         hitsToday: { type: integer, description: Hits today. }
                         lastActiveOn: { type: [string, "null"], format: date, description: 'The last day in the past 7 with a hit. `null` when none.' }
         '400': { $ref: '#/components/responses/BadRequest' }

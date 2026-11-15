@@ -30257,7 +30257,7 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def conversions_list_events(
-        profile_id: str,
+        profile_id: str | None = None,
         limit: int = 50,
         from_: str | None = None,
         to: str | None = None,
@@ -30282,14 +30282,16 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """List stored events
 
-        Lists the conversion events stored for a profile by `POST /v1/events`, newest first. Personal data is never
-        returned: `hasEmail`, `hasPhone` and `hasExternalId` only say whether the event carried that identifier.
+        Lists the conversion events stored by `POST /v1/events`, newest first: for one profile, or for every profile you can
+        access when `profileId` is omitted.
+
+        Personal data is never returned: `hasEmail`, `hasPhone` and `hasExternalId` only say whether the event carried that identifier.
         Events sent with `testCode` are not stored, so they never appear here.
 
         Paginate with `cursor`: pass the `nextCursor` of the previous page until it comes back `null`.
 
         Args:
-            profile_id: (required)
+            profile_id: The profile to list. Omit to cover every profile you can access.
             limit
             from_: Only events at or after this time (ISO 8601, on the event time).
             to: Only events before this time (ISO 8601, on the event time).
@@ -30381,15 +30383,16 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=False,
         )
     )
-    def conversions_get_events_overview(profile_id: str) -> str:
+    def conversions_get_events_overview(profile_id: str | None = None) -> str:
         """Get today's tracking overview
 
         How a profile's conversion tracking is doing today (UTC day): events stored, how many reached the ad platforms,
         each forwarding rule's destination, each event source and, when the profile has a tracking site, the site's funnel.
-        Requires the Ads add-on.
+
+        Without `profileId` it covers every profile you can access, summed across them. Requires the Ads add-on.
 
         Args:
-            profile_id: (required)"""
+            profile_id: The profile to read. Omit to cover every profile you can access, summed across them."""
         client = _get_client()
         try:
             response = client.conversions.get_events_overview(profile_id=profile_id)

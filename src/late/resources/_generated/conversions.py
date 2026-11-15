@@ -313,8 +313,8 @@ class ConversionsResource:
 
     def list_events(
         self,
-        profile_id: str,
         *,
+        profile_id: str | None = None,
         limit: int | None = 50,
         from_: datetime | str | None = None,
         to: datetime | str | None = None,
@@ -363,7 +363,7 @@ class ConversionsResource:
             headers["Idempotency-Key"] = idempotency_key
         return self._client._post("/v1/events", data=payload, headers=headers)
 
-    def get_events_overview(self, profile_id: str) -> dict[str, Any]:
+    def get_events_overview(self, *, profile_id: str | None = None) -> dict[str, Any]:
         """Get today's tracking overview"""
         params = self._build_params(
             profile_id=profile_id,
@@ -1074,8 +1074,8 @@ class ConversionsResource:
 
     async def alist_events(
         self,
-        profile_id: str,
         *,
+        profile_id: str | None = None,
         limit: int | None = 50,
         from_: datetime | str | None = None,
         to: datetime | str | None = None,
@@ -1124,7 +1124,9 @@ class ConversionsResource:
             headers["Idempotency-Key"] = idempotency_key
         return await self._client._apost("/v1/events", data=payload, headers=headers)
 
-    async def aget_events_overview(self, profile_id: str) -> dict[str, Any]:
+    async def aget_events_overview(
+        self, *, profile_id: str | None = None
+    ) -> dict[str, Any]:
         """Get today's tracking overview (async)"""
         params = self._build_params(
             profile_id=profile_id,
