@@ -93,6 +93,7 @@ class CommerceResource:
         updated_after: datetime | str | None = None,
         customer_id: str | None = None,
         email: str | None = None,
+        number: str | None = None,
     ) -> dict[str, Any]:
         """List orders"""
         params = self._build_params(
@@ -104,6 +105,7 @@ class CommerceResource:
             updated_after=updated_after,
             customer_id=customer_id,
             email=email,
+            number=number,
         )
         return self._client._get("/v1/commerce/orders", params=params)
 
@@ -113,6 +115,16 @@ class CommerceResource:
             account_id=account_id,
         )
         return self._client._get(f"/v1/commerce/orders/{order_id}", params=params)
+
+    def update_commerce_order(
+        self, order_id: str, account_id: str, shipping_address: dict[str, Any]
+    ) -> dict[str, Any]:
+        """Update an order's shipping address"""
+        payload = self._build_payload(
+            account_id=account_id,
+            shipping_address=shipping_address,
+        )
+        return self._client._patch(f"/v1/commerce/orders/{order_id}", data=payload)
 
     def create_commerce_refund(
         self,
@@ -903,6 +915,7 @@ class CommerceResource:
         ends_at: Any | None = None,
         product_ids: list[str] | None = None,
         collection_ids: list[str] | None = None,
+        customer_ids: list[str] | None = None,
     ) -> dict[str, Any]:
         """Create a discount"""
         payload = self._build_payload(
@@ -922,6 +935,7 @@ class CommerceResource:
             ends_at=ends_at,
             product_ids=product_ids,
             collection_ids=collection_ids,
+            customer_ids=customer_ids,
         )
         return self._client._post("/v1/commerce/discounts", data=payload)
 
@@ -1356,6 +1370,7 @@ class CommerceResource:
         updated_after: datetime | str | None = None,
         customer_id: str | None = None,
         email: str | None = None,
+        number: str | None = None,
     ) -> dict[str, Any]:
         """List orders (async)"""
         params = self._build_params(
@@ -1367,6 +1382,7 @@ class CommerceResource:
             updated_after=updated_after,
             customer_id=customer_id,
             email=email,
+            number=number,
         )
         return await self._client._aget("/v1/commerce/orders", params=params)
 
@@ -1379,6 +1395,18 @@ class CommerceResource:
         )
         return await self._client._aget(
             f"/v1/commerce/orders/{order_id}", params=params
+        )
+
+    async def aupdate_commerce_order(
+        self, order_id: str, account_id: str, shipping_address: dict[str, Any]
+    ) -> dict[str, Any]:
+        """Update an order's shipping address (async)"""
+        payload = self._build_payload(
+            account_id=account_id,
+            shipping_address=shipping_address,
+        )
+        return await self._client._apatch(
+            f"/v1/commerce/orders/{order_id}", data=payload
         )
 
     async def acreate_commerce_refund(
@@ -2182,6 +2210,7 @@ class CommerceResource:
         ends_at: Any | None = None,
         product_ids: list[str] | None = None,
         collection_ids: list[str] | None = None,
+        customer_ids: list[str] | None = None,
     ) -> dict[str, Any]:
         """Create a discount (async)"""
         payload = self._build_payload(
@@ -2201,6 +2230,7 @@ class CommerceResource:
             ends_at=ends_at,
             product_ids=product_ids,
             collection_ids=collection_ids,
+            customer_ids=customer_ids,
         )
         return await self._client._apost("/v1/commerce/discounts", data=payload)
 

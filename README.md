@@ -969,6 +969,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `commerce.update_commerce_discount()` | Update a discount |
 | `commerce.update_commerce_menu()` | Replace a navigation menu |
 | `commerce.update_commerce_metaobject()` | Update a metaobject |
+| `commerce.update_commerce_order()` | Update an order's shipping address |
 | `commerce.update_commerce_page()` | Update a page |
 | `commerce.update_commerce_product()` | Update a product |
 | `commerce.update_commerce_product_prices()` | Update variant prices |

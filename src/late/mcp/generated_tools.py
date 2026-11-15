@@ -22243,6 +22243,7 @@ def register_generated_tools(mcp, _get_client):
         updated_after: str | None = None,
         customer_id: str | None = None,
         email: str | None = None,
+        number: str | None = None,
     ) -> str:
         """List orders
 
@@ -22276,7 +22277,8 @@ def register_generated_tools(mcp, _get_client):
             created_before
             updated_after: Only orders changed after this time, oldest change first.
             customer_id: Only this customer's orders (`customer.id` on an order, or `id` from the customers endpoints).
-            email: Only orders placed with this email. Shopify only; WooCommerce answers 400 platform_not_supported."""
+            email: Only orders placed with this email. Shopify only; WooCommerce answers 400 platform_not_supported.
+            number: The order number a buyer quotes, with or without the "#" (`number` on an order). Shopify only; on WooCommerce the number is the order id, so read GET /v1/commerce/orders/{orderId} (this filter answers 400 platform_not_supported)."""
         client = _get_client()
         try:
             response = client.commerce.list_commerce_orders(
@@ -22288,6 +22290,7 @@ def register_generated_tools(mcp, _get_client):
                 updated_after=updated_after,
                 customer_id=customer_id,
                 email=email,
+                number=number,
             )
             return _format_response(response)
         except Exception as e:
@@ -22315,6 +22318,40 @@ def register_generated_tools(mcp, _get_client):
         try:
             response = client.commerce.get_commerce_order(
                 order_id=order_id, account_id=account_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Update an order's shipping address",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def commerce_update_commerce_order(
+        order_id: str, account_id: str, shipping_address: dict[str, Any] | None
+    ) -> str:
+        """Update an order's shipping address
+
+        Replaces the order's shipping address, for a buyer who asks to fix it before the order ships. Needs orders.update. Items and quantities change through POST /v1/commerce/orders/{orderId}/edits.
+
+        The whole address is replaced: send every line, not only the one that changes. Fulfillments already shipped keep the address they were sent to.
+
+        Platforms: shopify
+
+        Args:
+            order_id: Platform-native order id. (required)
+            account_id: Connected store SocialAccount id. (required)
+            shipping_address: Object with keys: firstName (string or null); lastName (string or null); company (string or null); phone (string or null); line1 (string or null); line2 (string or null); city (string or null); region (string or null) - State or province code, e.g. \"CA\".; postalCode (string or null); countryCode (string, required) - ISO 3166 code, e.g. \"US\". (required)"""
+        client = _get_client()
+        try:
+            response = client.commerce.update_commerce_order(
+                order_id=order_id,
+                account_id=account_id,
+                shipping_address=shipping_address,
             )
             return _format_response(response)
         except Exception as e:
@@ -24101,10 +24138,13 @@ def register_generated_tools(mcp, _get_client):
         ends_at: str | None = None,
         product_ids: list[str] | None = None,
         collection_ids: list[str] | None = None,
+        customer_ids: list[str] | None = None,
     ) -> str:
         """Create a discount
 
-        Creates a code discount (buyers enter a code) or an automatic one (applied at checkout), as a percentage, a fixed amount or free shipping. It applies to every product unless productIds or collectionIds narrow it, and to every buyer.
+        Creates a code discount (buyers enter a code) or an automatic one (applied at checkout), as a percentage, a fixed amount or free shipping. It applies to every product unless productIds or collectionIds narrow it.
+
+        It applies to every buyer unless customerIds limits a code discount to chosen customers, for example a goodwill code only one shopper can use.
 
         Platforms: shopify, woocommerce
 
@@ -24124,7 +24164,8 @@ def register_generated_tools(mcp, _get_client):
             starts_at: Defaults to now.
             ends_at
             product_ids
-            collection_ids"""
+            collection_ids
+            customer_ids: Only these customers can use the code (`customer.id` on an order, or `id` from the customers endpoints). Code discounts on Shopify only; WooCommerce answers 400."""
         client = _get_client()
         try:
             response = client.commerce.create_commerce_discount(
@@ -24144,6 +24185,7 @@ def register_generated_tools(mcp, _get_client):
                 ends_at=ends_at,
                 product_ids=product_ids,
                 collection_ids=collection_ids,
+                customer_ids=customer_ids,
             )
             return _format_response(response)
         except Exception as e:

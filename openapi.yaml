@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.611.3"
+  version: "1.612.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -22228,12 +22228,22 @@ components:
             $ref: '#/components/schemas/CommerceOrderRefund'
         fulfillments:
           type: array
+          description: 'One entry per tracking number. A shipment without tracking still has one entry, with the tracking fields null. Always empty on WooCommerce.'
           items:
             type: object
             properties:
+              id: { type: string, description: 'The shipment (fulfillment) id. Entries of one shipment with several tracking numbers share it.' }
               carrierName: { type: [string, "null"] }
               trackingNumber: { type: [string, "null"] }
               trackingUrl: { type: [string, "null"] }
+              deliveryStatus:
+                type: [string, "null"]
+                enum: [pending, in_transit, delayed, out_for_delivery, ready_for_pickup, attempted_delivery, delivered, failed, cancelled, null]
+                description: 'Where the shipment is. pending means no carrier scan yet. Null when the platform has no delivery tracking for it. Shopify only knows it when the carrier sends tracking events.'
+              platformDeliveryStatus: { type: [string, "null"], description: "The platform's raw value, e.g. Shopify ATTEMPTED_DELIVERY." }
+              estimatedDeliveryAt: { type: [string, "null"], format: date-time }
+              inTransitAt: { type: [string, "null"], format: date-time }
+              deliveredAt: { type: [string, "null"], format: date-time }
         platformData: { type: [object, "null"], additionalProperties: true, description: 'Platform-only fields. Null when the platform has none.' }
     CommerceDiscount:
       type: object
@@ -22274,6 +22284,7 @@ components:
             quantity: { type: integer }
         usageLimit: { type: [integer, "null"] }
         oncePerCustomer: { type: boolean }
+        limitedToCustomers: { type: boolean, description: 'True when only the customers chosen at creation (customerIds) can use the code.' }
         usageCount: { type: integer }
         startsAt: { type: string, format: date-time }
         endsAt: { type: [string, "null"], format: date-time }
@@ -104938,6 +104949,13 @@ paths:
           schema:
             type: string
           description: Only orders placed with this email. Shopify only; WooCommerce answers 400 platform_not_supported.
+        - name: number
+          in: query
+          required: false
+          schema:
+            type: string
+            example: '1234'
+          description: 'The order number a buyer quotes, with or without the "#" (`number` on an order). Shopify only; on WooCommerce the number is the order id, so read GET /v1/commerce/orders/{orderId} (this filter answers 400 platform_not_supported).'
       responses:
         '200':
           description: Orders listed
@@ -105019,6 +105037,75 @@ paths:
           description: Account not found (code account_not_found) or order not found (code resource_not_found).
         '429':
           x-summary: "Zernio or the platform rate limited the request: retry later."
+          description: Rate limited, either by Zernio or by the platform. Retry later.
+    patch:
+      x-resource-group: commerce
+      operationId: updateCommerceOrder
+      tags:
+        - Commerce
+      x-platforms:
+        - shopify
+      summary: Update an order's shipping address
+      description: |
+        Replaces the order's shipping address, for a buyer who asks to fix it before the order ships. Needs orders.update. Items and quantities change through POST /v1/commerce/orders/{orderId}/edits.
+
+        The whole address is replaced: send every line, not only the one that changes. Fulfillments already shipped keep the address they were sent to.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Platform-native order id.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [accountId, shippingAddress]
+              properties:
+                accountId: { type: string, description: Connected store SocialAccount id. }
+                shippingAddress:
+                  type: object
+                  required: [countryCode]
+                  properties:
+                    firstName: { type: [string, "null"] }
+                    lastName: { type: [string, "null"] }
+                    company: { type: [string, "null"] }
+                    phone: { type: [string, "null"] }
+                    line1: { type: [string, "null"] }
+                    line2: { type: [string, "null"] }
+                    city: { type: [string, "null"] }
+                    region: { type: [string, "null"], description: 'State or province code, e.g. "CA".' }
+                    postalCode: { type: [string, "null"] }
+                    countryCode: { type: string, description: 'ISO 3166 code, e.g. "US".' }
+            example:
+              accountId: 6a1f0c2b9d4e8a7f3c2b1a09
+              shippingAddress: { firstName: Ana, lastName: Ruiz, line1: 742 Evergreen Terrace, city: Springfield, region: OR, postalCode: '97403', countryCode: US }
+      responses:
+        '200':
+          description: The order with its new shipping address
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  order:
+                    $ref: '#/components/schemas/CommerceOrder'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          x-summary: 'The store has not granted the permission: have the store owner approve it using `grantPermissionsUrl` from the store endpoint.'
+          description: 'The store has not granted orders.update (code insufficient_permissions). GET /v1/commerce/store returns grantPermissionsUrl for the store owner to approve it.'
+        '404':
+          description: 'Account not found (code account_not_found) or order not found (code resource_not_found).'
+        '429':
+          x-summary: 'Zernio or the platform rate limited the request: retry later.'
           description: Rate limited, either by Zernio or by the platform. Retry later.
   /v1/commerce/orders/{orderId}/refunds:
     post:
@@ -107138,7 +107225,9 @@ paths:
       x-platforms: ["shopify", "woocommerce"]
       summary: Create a discount
       description: |
-        Creates a code discount (buyers enter a code) or an automatic one (applied at checkout), as a percentage, a fixed amount or free shipping. It applies to every product unless productIds or collectionIds narrow it, and to every buyer.
+        Creates a code discount (buyers enter a code) or an automatic one (applied at checkout), as a percentage, a fixed amount or free shipping. It applies to every product unless productIds or collectionIds narrow it.
+
+        It applies to every buyer unless customerIds limits a code discount to chosen customers, for example a goodwill code only one shopper can use.
       security:
         - bearerAuth: []
       requestBody:
@@ -107165,6 +107254,7 @@ paths:
                 endsAt: { type: [string, "null"], format: date-time }
                 productIds: { type: array, maxItems: 100, items: { type: string } }
                 collectionIds: { type: array, maxItems: 100, items: { type: string } }
+                customerIds: { type: array, maxItems: 100, items: { type: string }, description: 'Only these customers can use the code (`customer.id` on an order, or `id` from the customers endpoints). Code discounts on Shopify only; WooCommerce answers 400.' }
       responses:
         '201':
           description: Discount created
