@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.612.1"
+  version: "1.612.2"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -57984,10 +57984,10 @@ paths:
       operationId: listOrgConnections
       tags: [Connect]
       summary: List organization connections
-      description: The Google Workspace and Microsoft 365 organization connections on a profile, newest first.
+      description: 'The Google Workspace and Microsoft 365 organization connections, newest first. Pass `profileId` to list one profile; omit it to list every profile the API key can access (a profile-restricted key or team member only sees its own profiles).'
       security: [{ bearerAuth: [] }]
       parameters:
-        - { name: profileId, in: query, required: true, schema: { type: string } }
+        - { name: profileId, in: query, required: false, description: 'Limit the list to one profile. Omit to list across every accessible profile.', schema: { type: string } }
       responses:
         '200':
           description: The connections

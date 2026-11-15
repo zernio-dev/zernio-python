@@ -1383,7 +1383,7 @@ class ConnectResource:
         )
         return self._client._post("/v1/connect/microsoft/org", data=payload)
 
-    def list_org_connections(self, profile_id: str) -> dict[str, Any]:
+    def list_org_connections(self, *, profile_id: str | None = None) -> dict[str, Any]:
         """List organization connections"""
         params = self._build_params(
             profile_id=profile_id,
@@ -2792,7 +2792,9 @@ class ConnectResource:
         )
         return await self._client._apost("/v1/connect/microsoft/org", data=payload)
 
-    async def alist_org_connections(self, profile_id: str) -> dict[str, Any]:
+    async def alist_org_connections(
+        self, *, profile_id: str | None = None
+    ) -> dict[str, Any]:
         """List organization connections (async)"""
         params = self._build_params(
             profile_id=profile_id,

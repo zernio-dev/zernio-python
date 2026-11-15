@@ -28972,13 +28972,13 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=False,
         )
     )
-    def connect_list_org_connections(profile_id: str) -> str:
+    def connect_list_org_connections(profile_id: str | None = None) -> str:
         """List organization connections
 
-        The Google Workspace and Microsoft 365 organization connections on a profile, newest first.
+        The Google Workspace and Microsoft 365 organization connections, newest first. Pass `profileId` to list one profile; omit it to list every profile the API key can access (a profile-restricted key or team member only sees its own profiles).
 
         Args:
-            profile_id: (required)"""
+            profile_id: Limit the list to one profile. Omit to list across every accessible profile."""
         client = _get_client()
         try:
             response = client.connect.list_org_connections(profile_id=profile_id)
