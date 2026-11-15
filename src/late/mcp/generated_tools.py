@@ -46435,10 +46435,11 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """List SMS opt-outs
 
-        The recipients who opted out of SMS (replied STOP) across your numbers,
-        most recent first. Compliance surface: you must be able to see and
-        export your opt-out list. Read-only: a recipient is re-subscribed only
-        by replying START. Pass `format=csv` to download a CSV instead of JSON.
+        The recipients who opted out of SMS across your numbers, most recent
+        first: those who replied STOP and those you recorded with
+        `POST /v1/sms/opt-outs`. `source` says which. Compliance surface: you
+        must be able to see and export your opt-out list. Pass `format=csv` to
+        download a CSV instead of JSON.
 
         Args:
             format
@@ -46446,6 +46447,64 @@ def register_generated_tools(mcp, _get_client):
         client = _get_client()
         try:
             response = client.sms.list_sms_opt_outs(format=format, limit=limit)
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Record an SMS opt-out",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def sms_create_sms_opt_out(account_id: str, phone: str) -> str:
+        """Record an SMS opt-out
+
+        Marks a recipient as opted out on one of your SMS numbers. Use it for
+        opt-outs you collect yourself (for example keywords like UNSUB or
+        REVOKE, which the carrier does not recognize). Sends from that number
+        to the recipient are then refused with `409 recipient_opted_out`.
+
+        Idempotent. If the recipient is already opted out, the call succeeds
+        and `source` keeps the original value (`inbound_stop` when they texted
+        STOP).
+
+        Args:
+            account_id: ID of the SMS number account the opt-out applies to (from `GET /v1/accounts`). (required)
+            phone: Recipient phone number in E.164 format, e.g. +13105559999. (required)"""
+        client = _get_client()
+        try:
+            response = client.sms.create_sms_opt_out(account_id=account_id, phone=phone)
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Remove an SMS opt-out",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def sms_delete_sms_opt_out(account_id: str, phone: str) -> str:
+        """Remove an SMS opt-out
+
+        Re-subscribes a recipient you opted out with `POST /v1/sms/opt-outs`.
+        Succeeds as a no-op when the recipient is not opted out.
+
+        An opt-out the recipient made themselves (texting STOP) cannot be
+        removed here: the carrier keeps blocking the number until they text
+        START, so this returns `409 recipient_opted_out`.
+
+        Args:
+            account_id: ID of the SMS number account the opt-out applies to (from `GET /v1/accounts`). (required)
+            phone: Recipient phone number in E.164 format, e.g. +13105559999. (required)"""
+        client = _get_client()
+        try:
+            response = client.sms.delete_sms_opt_out(account_id=account_id, phone=phone)
             return _format_response(response)
         except Exception as e:
             raise ToolError(f"Error: {e}") from e

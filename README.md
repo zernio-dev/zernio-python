@@ -1527,8 +1527,10 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `sms.list_sms_opt_outs()` | List SMS opt-outs |
 | `sms.list_sms_registrations()` | List carrier registrations |
 | `sms.list_sms_sender_ids()` | List alphanumeric sender IDs |
+| `sms.create_sms_opt_out()` | Record an SMS opt-out |
 | `sms.create_sms_sender_id()` | Create an alphanumeric sender ID |
 | `sms.get_sms_registration()` | Get a carrier registration |
+| `sms.delete_sms_opt_out()` | Remove an SMS opt-out |
 | `sms.delete_sms_sender_id()` | Delete an alphanumeric sender ID |
 | `sms.appeal_sms_registration()` | Appeal a rejected campaign |
 | `sms.deactivate_sms_registration()` | Deactivate a brand/campaign registration |

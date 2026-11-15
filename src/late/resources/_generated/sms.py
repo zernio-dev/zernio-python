@@ -115,6 +115,22 @@ class SmsResource:
         )
         return self._client._get("/v1/sms/opt-outs", params=params)
 
+    def create_sms_opt_out(self, account_id: str, phone: str) -> dict[str, Any]:
+        """Record an SMS opt-out"""
+        payload = self._build_payload(
+            account_id=account_id,
+            phone=phone,
+        )
+        return self._client._post("/v1/sms/opt-outs", data=payload)
+
+    def delete_sms_opt_out(self, account_id: str, phone: str) -> dict[str, Any]:
+        """Remove an SMS opt-out"""
+        payload = self._build_payload(
+            account_id=account_id,
+            phone=phone,
+        )
+        return self._client._delete("/v1/sms/opt-outs", data=payload)
+
     def create_sms_sender_id(self, sender_id: str) -> dict[str, Any]:
         """Create an alphanumeric sender ID"""
         payload = self._build_payload(
@@ -318,6 +334,22 @@ class SmsResource:
             limit=limit,
         )
         return await self._client._aget("/v1/sms/opt-outs", params=params)
+
+    async def acreate_sms_opt_out(self, account_id: str, phone: str) -> dict[str, Any]:
+        """Record an SMS opt-out (async)"""
+        payload = self._build_payload(
+            account_id=account_id,
+            phone=phone,
+        )
+        return await self._client._apost("/v1/sms/opt-outs", data=payload)
+
+    async def adelete_sms_opt_out(self, account_id: str, phone: str) -> dict[str, Any]:
+        """Remove an SMS opt-out (async)"""
+        payload = self._build_payload(
+            account_id=account_id,
+            phone=phone,
+        )
+        return await self._client._adelete("/v1/sms/opt-outs", data=payload)
 
     async def acreate_sms_sender_id(self, sender_id: str) -> dict[str, Any]:
         """Create an alphanumeric sender ID (async)"""

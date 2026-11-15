@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.613.0"
+  version: "1.614.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -1638,6 +1638,12 @@ components:
                   effective_account_limit: 2000
                   current_account_count: 2000
   schemas:
+    SmsOptOutRequest:
+      type: object
+      required: [accountId, phone]
+      properties:
+        accountId: { type: string, description: 'ID of the SMS number account the opt-out applies to (from `GET /v1/accounts`).' }
+        phone: { type: string, description: 'Recipient phone number in E.164 format, e.g. +13105559999.' }
     OrgConnection:
       type: object
       description: A Google Workspace domain or Microsoft 365 tenant whose administrator granted Zernio access to its mailboxes once.
@@ -66837,10 +66843,11 @@ paths:
       tags: [SMS]
       summary: List SMS opt-outs
       description: |
-        The recipients who opted out of SMS (replied STOP) across your numbers,
-        most recent first. Compliance surface: you must be able to see and
-        export your opt-out list. Read-only: a recipient is re-subscribed only
-        by replying START. Pass `format=csv` to download a CSV instead of JSON.
+        The recipients who opted out of SMS across your numbers, most recent
+        first: those who replied STOP and those you recorded with
+        `POST /v1/sms/opt-outs`. `source` says which. Compliance surface: you
+        must be able to see and export your opt-out list. Pass `format=csv` to
+        download a CSV instead of JSON.
       security:
         - bearerAuth: []
       parameters:
@@ -66863,10 +66870,88 @@ paths:
                         optedOutAt: { type: [string, "null"], format: date-time }
                         keyword: { type: [string, "null"], description: "The keyword they sent (e.g. STOP), when the carrier recorded one." }
                         from: { type: [string, "null"], description: Which of your numbers the recipient opted out from. }
+                        source:
+                          type: [string, "null"]
+                          enum: [inbound_stop, api, null]
+                          description: '`inbound_stop` when the recipient texted an opt-out keyword, `api` when recorded with `POST /v1/sms/opt-outs`. Null when unknown.'
                   count: { type: integer }
             text/csv:
-              schema: { type: string, description: "`format=csv` download. Columns: phone_number, opted_out_at, keyword, our_number" }
+              schema: { type: string, description: "`format=csv` download. Columns: phone_number, opted_out_at, keyword, our_number, source" }
         '401': { $ref: '#/components/responses/Unauthorized' }
+    post:
+      x-resource-group: "contacts"
+      operationId: createSmsOptOut
+      tags: [SMS]
+      summary: Record an SMS opt-out
+      description: |
+        Marks a recipient as opted out on one of your SMS numbers. Use it for
+        opt-outs you collect yourself (for example keywords like UNSUB or
+        REVOKE, which the carrier does not recognize). Sends from that number
+        to the recipient are then refused with `409 recipient_opted_out`.
+
+        Idempotent. If the recipient is already opted out, the call succeeds
+        and `source` keeps the original value (`inbound_stop` when they texted
+        STOP).
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/SmsOptOutRequest' }
+      responses:
+        '200':
+          description: Recipient is opted out
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  accountId: { type: string }
+                  phoneNumber: { type: string }
+                  optedOut: { type: boolean, description: Always true. }
+                  source: { type: string, enum: [api, inbound_stop], description: What set the current opt-out. }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    delete:
+      x-resource-group: "contacts"
+      operationId: deleteSmsOptOut
+      tags: [SMS]
+      summary: Remove an SMS opt-out
+      description: |
+        Re-subscribes a recipient you opted out with `POST /v1/sms/opt-outs`.
+        Succeeds as a no-op when the recipient is not opted out.
+
+        An opt-out the recipient made themselves (texting STOP) cannot be
+        removed here: the carrier keeps blocking the number until they text
+        START, so this returns `409 recipient_opted_out`.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/SmsOptOutRequest' }
+      responses:
+        '200':
+          description: Recipient is subscribed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  accountId: { type: string }
+                  phoneNumber: { type: string }
+                  optedOut: { type: boolean, description: Always false. }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409':
+          description: 'The recipient opted out by texting STOP. Only they can re-subscribe, by texting START.'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
 
   /v1/sms/sender-ids:
     post:
