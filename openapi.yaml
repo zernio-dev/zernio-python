@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.617.0"
+  version: "1.618.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -93048,6 +93048,7 @@ paths:
         - PMax rejects ACTIVE creation, portfolio bidding, bid caps, legacy creative fields and attach shapes.
         - Geo and language targeting are supported; omitted geo targets all locations.
         - PMax does not require top-level goal, headline, body or linkUrl.
+        - `merchantCenter` links the campaign to a Merchant Center feed and adds one all-products listing group to the asset group. Google rejects the whole create (nothing is created) when the ad account is not linked to that Merchant Center.
 
         Supported bidding:
 
@@ -94035,6 +94036,15 @@ paths:
                   description: "Google only (400 elsewhere). Set on the new campaign; a request that joins an existing campaign (`existingCampaignId` or `adSetId`) returns 400, change that campaign with PUT /v1/ads/campaigns/{campaignId}/targeting instead. `presence` reaches only people in or regularly in the targeted locations."
                 assetGroup:
                   $ref: '#/components/schemas/GooglePmaxAssetGroupInput'
+                merchantCenter:
+                  type: object
+                  additionalProperties: false
+                  required: [merchantId]
+                  description: "Google Performance Max only; any other campaign type returns 400. Links the new campaign to a Merchant Center account. Google rejects the create, and nothing is created, when the ad account is not linked to that Merchant Center."
+                  properties:
+                    merchantId: { type: string, pattern: '^\d+$', description: "Numeric Merchant Center id." }
+                    feedLabel: { type: string, pattern: '^[A-Z0-9_-]{1,20}$', description: "Feed label to use. Omitted, every feed of the Merchant Center is used." }
+                    listingType: { type: string, enum: [vehicles], description: "Set to `vehicles` for vehicle listings. Omitted, the campaign is a retail Performance Max campaign. Vehicle ads require Google to allowlist the ad account; otherwise Google rejects the create." }
                 demandGen:
                   $ref: '#/components/schemas/GoogleDemandGenInput'
                 keywords: { type: array, maxItems: 1000, items: { $ref: '#/components/schemas/KeywordEntry' }, description: "Google Search only. Keywords on the new ad group; entries are strings (BROAD) or { text, matchType }. Editable later via PUT /v1/ads/{adId} targeting.keywords." }

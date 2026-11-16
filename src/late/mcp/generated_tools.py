@@ -10814,6 +10814,7 @@ def register_generated_tools(mcp, _get_client):
         location_targeting_type: Literal["presence", "presence_or_interest"]
         | None = None,
         asset_group: dict[str, Any] | None = None,
+        merchant_center: dict[str, Any] | None = None,
         demand_gen: dict[str, Any] | None = None,
         keywords: list[Any] | None = None,
         negative_keywords: list[Any] | None = None,
@@ -11317,6 +11318,7 @@ def register_generated_tools(mcp, _get_client):
                 campaign_type: Google only. Omitted, it is display on a new campaign, and the existing campaign's own type with `existingCampaignId` or `adSetId` (Search, Display or Demand Gen; other types return 422). Performance Max requires assetGroup and Demand Gen requires demandGen; both are always created PAUSED.
                 location_targeting_type: Google only (400 elsewhere). Set on the new campaign; a request that joins an existing campaign (`existingCampaignId` or `adSetId`) returns 400, change that campaign with PUT /v1/ads/campaigns/{campaignId}/targeting instead. `presence` reaches only people in or regularly in the targeted locations.
                 asset_group: Object with keys: name (string) - Defaults to the request name.; finalUrl (string, required) - Required destination URL.; headlines (list of string, required); longHeadline (string, required); descriptions (list of string, required) - At least one description must be 60 characters or fewer.; businessName (string, required); images (object with keys landscape, square, logo, required) - Public HTTP(S) image URLs. GIF, JPEG or PNG, at most 5120 KB per image. Google validates dimensions and aspect ratios.; youtubeVideoId (string) - Optional existing YouTube video id. Google can generate video when omitted. Video uploads and arbitrary video URLs are not supported.
+                merchant_center: Google Performance Max only; any other campaign type returns 400. Links the new campaign to a Merchant Center account. Google rejects the create, and nothing is created, when the ad account is not linked to that Merchant Center. Object with keys: merchantId (string, required) - Numeric Merchant Center id.; feedLabel (string) - Feed label to use. Omitted, every feed of the Merchant Center is used.; listingType (one of: vehicles) - Set to `vehicles` for vehicle listings. Omitted, the campaign is a retail Performance Max campaign. Vehicle ads require Google to allowlist the ad account; ...
                 demand_gen: Object with keys: adGroupName (string) - Defaults to the ad name.; finalUrl (string, required); businessName (string, required); headlines (list of string, required) - Distinct texts. A carousel ad takes exactly one.; longHeadlines (list of string) - Video ads only, and required there.; descriptions (list of string, required) - A carousel ad takes exactly one.; callToAction (string) - Image and carousel ads only. Call to action text such as 'Learn more'; Google picks one when omitted.; images (object with keys landscape, square, portrait, logo, required) - Public image URLs. An image ad needs landscape or square; video and carousel ads take only one logo (carousel images go on each card).; youtubeVideoIds (list of string) - Makes the ad a video responsive ad.; carouselCards (list of objects with keys headline, finalUrl, callToAction, images) - Makes the ad a carousel ad. Each card needs its own image (no two cards may share one); use the same image shape on every card. Card images are uploaded to ...; channels (list of string) - Channel controls on the new ad group. Only the listed channels serve; Google Maps, which this list cannot select, is turned off. Omit to send no channel ...; audience (object with keys userLists, userInterests, customAudiences, ageRanges, genders); audienceId (string) - Attach an existing Google Audience by numeric id instead of audience.
                 keywords: Google Search only. Keywords on the new ad group; entries are strings (BROAD) or { text, matchType }. Editable later via PUT /v1/ads/{adId} targeting.keywords.
                 negative_keywords: Google Search only; other platforms return 400. Ad-group-level negative keywords on the new ad group. Editable later via PUT /v1/ads/{adId} targeting.negativeKeywords.
@@ -11517,6 +11519,7 @@ def register_generated_tools(mcp, _get_client):
             "campaign_type": campaign_type,
             "location_targeting_type": location_targeting_type,
             "asset_group": asset_group,
+            "merchant_center": merchant_center,
             "demand_gen": demand_gen,
             "keywords": keywords,
             "negative_keywords": negative_keywords,
@@ -11641,6 +11644,7 @@ def register_generated_tools(mcp, _get_client):
                 campaign_type=campaign_type,
                 location_targeting_type=location_targeting_type,
                 asset_group=asset_group,
+                merchant_center=merchant_center,
                 demand_gen=demand_gen,
                 keywords=keywords,
                 negative_keywords=negative_keywords,
