@@ -2461,7 +2461,9 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=True,
         )
     )
-    def accounts_update_bluesky_settings(account_id: str, default_langs: str) -> str:
+    def accounts_update_bluesky_settings(
+        account_id: str, default_langs: list[str] | None
+    ) -> str:
         """Update Bluesky account settings
 
         Set or clear the account's default post languages. 1-3 BCP-47 codes (e.g. \"pt\", \"en-US\"), the same validation as per-post langs; explicit null clears the default. Per-post platformSpecificData.langs always overrides this default. Applies to posts published after the change; already-published posts cannot be retagged (Bluesky has no post edit).
@@ -5423,7 +5425,7 @@ def register_generated_tools(mcp, _get_client):
         account_id: str,
         ad_account_id: str,
         name: str | None = None,
-        spend_cap: str | None = None,
+        spend_cap: float | None = None,
         reset_amount_spent: bool | None = None,
         default_dsa_beneficiary: str | None = None,
         default_dsa_payor: str | None = None,
@@ -7320,7 +7322,7 @@ def register_generated_tools(mcp, _get_client):
 
         Args:
             campaign_id: Numeric Google platform campaign id. (required)
-            schedule: The complete set of windows. Required, so clearing the schedule is always deliberate rather than an omission. Each item is an object with keys: dayOfWeek (one of: MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY, SUNDAY; required); startHour (integer, required); startMinute (one of: 0, 15, 30, 45) - Quarter-hours only.; endHour (integer, required) - 24 means midnight at the end of the day.; endMinute (one of: 0, 15, 30, 45) - Quarter-hours only. Must be 0 when endHour is 24.; bidModifier (number or null) - Bid adjustment for this window. Null runs it at the campaign bid. (required)"""
+            schedule: The complete set of windows. Required, so clearing the schedule is always deliberate rather than an omission. Each item is an object with keys: dayOfWeek (one of: MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY, SUNDAY; required); startHour (integer, required); startMinute (one of: 0, 15, 30, 45) - Quarter-hours only.; endHour (integer, required) - 24 means midnight at the end of the day.; endMinute (one of: 0, 15, 30, 45) - Quarter-hours only. Must be 0 when endHour is 24.; bidModifier (number) - Bid adjustment for this window. Null runs it at the campaign bid. (required)"""
         client = _get_client()
         try:
             response = client.ad_campaigns.update_campaign_ad_schedule(
@@ -7515,7 +7517,7 @@ def register_generated_tools(mcp, _get_client):
                 shared_budget_id: **Google only.** Move the campaign onto this shared budget (id from GET /v1/ads/shared-budgets), or null to move it back onto a budget of its own sized by `budget`.
                 budget: Meta CBO, Google daily, or OpenAI Ads or Reddit Ads daily or lifetime campaign budget, in whole currency units. Object with keys: amount (number, required) - Budget amount in the ad account's currency; type (one of: daily, lifetime; required)
                 name: **Meta and Reddit.** Rename the campaign.
-                platform_specific_data: **Meta only.** Platform implied by the `platform` body param, same convention as POST /v1/ads/create. Object with keys: spendCap (number or null) - Campaign lifetime spend cap, in the ad account's currency (Meta `spend_cap`). Pass null to remove the cap; 0 is rejected by Meta."""
+                platform_specific_data: **Meta only.** Platform implied by the `platform` body param, same convention as POST /v1/ads/create. Object with keys: spendCap (number) - Campaign lifetime spend cap, in the ad account's currency (Meta `spend_cap`). Pass null to remove the cap; 0 is rejected by Meta."""
         client = _get_client()
         try:
             response = client.ad_campaigns.update_ad_campaign(
@@ -8336,7 +8338,7 @@ def register_generated_tools(mcp, _get_client):
         regional_regulated_categories: list[str] | None = None,
         regional_regulation_identities: dict[str, Any] | None = None,
         smart_targeting: dict[str, Any] | None = None,
-        placements: str | None = None,
+        placements: dict[str, Any] | None = None,
         start_date: str | None = None,
         end_date: str | None = None,
         targeting: dict[str, Any] | None = None,
@@ -8410,15 +8412,7 @@ def register_generated_tools(mcp, _get_client):
 
         Read both back with GET /v1/ads/ad-sets/{adSetId}?accountId={accountId}&fields=regional_regulated_categories,regional_regulation_identities.
                 smart_targeting: TikTok only (a 400 elsewhere). TikTok Smart Targeting on the ad group: `audience` is TikTok's `smart_audience_enabled`, `interestsBehaviors` its `smart_interest_behavior_enabled`. When on, TikTok may deliver beyond the selected audiences or interests. Available on Video views, Traffic, Lead generation, App install, Web conversion and Community interaction. Only the flags you send are written. An unwritten flag reads back null in `nativeSettings`, so send `false` explicitly to be able to verify it is off. Applied with TikTok's adgroup/update; read it back with GET /v1/ads/ad-sets?adSetId=...&live=true. Object with keys: audience (boolean) - TikTok smart_audience_enabled.; interestsBehaviors (boolean) - TikTok smart_interest_behavior_enabled.
-                placements: Meta only (400 elsewhere). Manual placements, with the same object and enums as `placements` on POST /v1/ads/create.
-
-        - **Object:** REPLACES the ad set's current placement set (`publisher_platforms`, every `*_positions` list and `device_platforms`). A position list you leave out is removed. An object with no non-empty list is a 400 (send `null` instead).
-        - **`null`:** removes every placement key, so Meta returns to automatic (Advantage+) placements.
-        - **Omitted:** placements are left untouched.
-
-        Meta enforces co-selection rules (e.g. a position needs its publisher platform) and its error is returned as is. Meta may also reject `null` or a narrower set when an ad's creative uses per-placement asset customization (`placementAssets`).
-
-        Cannot be combined with `targeting.placements` (400).
+                placements: Meta only (400 elsewhere). Manual placements, with the same object and enums as `placements` on POST /v1/ads/create. - **Object:** REPLACES the ad set's current placement set (`publisher_platforms`, every `*_positions` list and `device_platforms`). A position list you leave out is removed. An object with no non-empty list is a 400 (send `null` instead). - **`null`:** removes every placement key, so Meta returns to automatic (Advantage+) placements. - **Omitted:** placements are left untouched. Meta enforces co-selection rules (e.g. a position needs its publisher platform) and its error is returned as is. Meta may also reject `null` or a narrower set when an ad's creative uses per-placement asset customization (`placementAssets`). Cannot be combined with `targeting.placements` (400). Object with keys: publisherPlatforms (list of string); facebookPositions (list of string); instagramPositions (list of string); messengerPositions (list of string); audienceNetworkPositions (list of string); threadsPositions (list of string); whatsappPositions (list of string); devicePlatforms (list of string)
                 start_date: Reddit only: the ad group's new start_time, ISO 8601. A value without an offset (`YYYY-MM-DD` or `YYYY-MM-DDTHH:MM:SS`) is read in the ad account timezone.
 
         It cannot be earlier than the start of a campaign that starts in the future, nor at or after the ad group's end (400, `param: startDate`).
@@ -9033,7 +9027,7 @@ def register_generated_tools(mcp, _get_client):
             status
             budget: Object with keys: amount (number) - Minimum varies by platform: TikTok=$20, Pinterest=$5, others=$1; type (one of: daily, lifetime) - OpenAI Ads accepts both and sets the campaign's single spend cap, replacing the previous daily or lifetime cap. A daily cap cannot go back to lifetime (422).
             targeting: Targeting update. - Meta + TikTok: demographics/interests. - Google: keyword and device bid adjustment edits only. - LinkedIn: locations, B2B facets, audiences. - Pinterest / X: return 501. **Partial update** on Meta, TikTok and LinkedIn: every targeting setting you do not send is preserved. - Meta: Advantage+ audience, placements, custom audiences, exclusions, interests, languages. - TikTok: languages, interest keywords, devices, behaviours. - LinkedIn: skills, member traits, interface locales, and any facet set in Campaign Manager. A field you send replaces its platform counterpart, and an empty or null value (for example `audienceInclude: []`, `industries: []` or `gender: "all"`) clears only that field. Any location field (countries, regions, cities, zips, ...) replaces the whole included location set; an update with no location keeps the current locations. Object with keys: keywords (list of any) - Google only. The FULL desired set of positive keywords for the entire ad group. Omit to leave positives unchanged; [] removes all positives. Negatives are ...; negativeKeywords (list of any) - Google only. The FULL desired set of negative keywords for the entire ad group, independent of positives. - Omit to leave negatives unchanged; [] removes all ...; devices (list of any) - Google only. The FULL new set of device bid modifiers for the campaign. Entries are a device name alone (targeted, bid modifier reset to 1) or { device, ...; ageMin (integer); ageMax (integer); countries (list of string) - ISO 3166-1 alpha-2 codes. On Google this is the FULL new country set for the campaign (same contract as `locations`); on LinkedIn it replaces the campaign's ...; locations (any) - Google and LinkedIn. The FULL new location set for the campaign. Bare country-code array, or an object with countries/regions/cities/zips/metros key lists ...; languages (list of string) - Google only. The FULL new language set for the campaign, as Google language codes (ISO 639-1, plus variants such as `zh_CN`). An unknown code returns 400.; interests (list of objects with keys id, name) - Interest objects from /v1/ads/interests. Each must include id and name.; advantage_audience (one of: 0, 1) - Meta only. Omit to preserve the existing setting on update. 0 = disabled, 1 = enabled.
-            creative: Replace or patch the ad's creative. Meta, TikTok, and LinkedIn. **Meta**: patch-style. - Pass any subset: omitted fields are preserved from the live creative, including media (`image_hash`/`video_id` reused, no re-upload) and `url_tags`. Sending the full set (`headline`, `body`, `callToAction`, `linkUrl`, `imageUrl`) rebuilds the creative from scratch. - Partial patching reads the live `object_story_spec`, which Meta strips on SHARE / page-post / dark post creatives; those return 422 asking for the full set. A `videoUrl`/`videoId` on an image creative is a type change and also needs the full set. - Creatives with an `asset_feed_spec` (several text options, placement or language rules) take text, link, tracking and enhancement edits in place. The new creative is built from the live asset feed with the edited text, and every video, image, label and rule is kept. - On those, `body`, `headline` and `description` replace the one option of that kind. When the feed has several, send `bodies`, `headlines` or `descriptions` with one text per option, in order. `linkUrl` replaces the feed's only destination link. - Image, video and call-to-action changes on asset_feed creatives apply to the story spec (Multiple Text Options creatives). They return 422 when the feed itself holds the images, videos or call-to-action options. - The live creative's deprecated `standard_enhancements` setting (Meta subcode 3858504) is never sent back; every other enhancement setting is kept. - `existingCreativeId` repoints the ad at a creative from GET /v1/ads/creatives and ignores every other field. - Meta creatives are immutable: any change creates a new creative and repoints the ad. The old creative stays on the ad account for historical reporting. - `creativeFeatures` is Meta-only. Omitted settings are preserved from the live creative, including on full rebuilds; a supplied creativeFeatures map overrides individual existing keys. - A `creative` object with no recognised field (`promotion` alone does not count) is a 400 `missing_required_field` when it is the only update, and is ignored (no creative rebuild) next to another updatable field. **TikTok**: patch-style. Pass any subset. - `headline` is ignored (no headline slot). - `body` becomes the in-feed `ad_text`; `linkUrl` becomes `landing_page_url`; `videoUrl` triggers a fresh upload. - `description`, `videoId` and `existingCreativeId` are Meta-only and return 400. **LinkedIn**: requires new media (image via `imageUrl` or video via `videoUrl`); a text-only update returns 400. - Uploads the media, creates a new inline media creative on the same campaign, and removes the old creative. `platformAdId` and `creative.creativeId` move to the new one. - The new creative keeps the old one's state. A `DRAFT` or `PAUSED` creative is re-created `DRAFT`, because LinkedIn refuses `PAUSED` before review is `APPROVED`. - If the old creative cannot be removed, the new one is deleted and the LinkedIn error is returned. - `videoId` and `existingCreativeId` are Meta-only and return 400. Object with keys: promotion (object or null) - Not supported. Send null or omit the field, and set the Promotion on the ad in Ads Manager. Any object is rejected with 400 invalid_field_value. Meta ...; creativeFeatures (object); catalogFormat (one of: single_image, carousel_images_multi_items, carousel_images_single_item, carousel_slideshows) - Meta catalog template ads only. Rebuilds the creative with this `template_data.format_option` (same mapping as on create) and repoints the ad at the new ...; headline (string) - Meta and LinkedIn (TikTok has no headline slot); longHeadline (string) - Google Display only. Replaces the responsive display ad's long headline.; businessName (string) - Google Display only. Replaces the responsive display ad's business name.; squareImageUrl (string) - Google Display only. Uploaded as a new square (1:1) marketing image asset that replaces the current one.; body (string) - Primary text. On a Meta asset_feed creative it replaces the feed's only body option (422 when it has several: send `bodies`).; bodies (list of string) - Meta only. The primary text options of an asset_feed creative, one text per option in the order GET /v1/ads/{adId} returns them. Each replaces the option in ...; headlines (list of string) - Meta only. Same as `bodies`, for the headline options (Meta `asset_feed_spec.titles`). Cannot be sent with `headline`. Not the top-level Google `headlines`.; description (string) - Link description slot (Meta `link_data.description` / `video_data.link_description`, LinkedIn creative description).; descriptions (list of string) - Meta only. Same as `bodies`, for the description options. Cannot be sent with `description`. Not the top-level Google `descriptions`.; callToAction (string); linkUrl (string); imageUrl (string); videoUrl (string); videoId (string) - Meta only. Reuse an already-uploaded ad video (from POST /v1/ads/videos or GET /v1/ads/videos) instead of re-uploading via videoUrl.; existingCreativeId (string) - Meta only. Repoint the ad at an existing library creative (from GET /v1/ads/creatives); all other creative fields are ignored.
+            creative: Replace or patch the ad's creative. Meta, TikTok, and LinkedIn. **Meta**: patch-style. - Pass any subset: omitted fields are preserved from the live creative, including media (`image_hash`/`video_id` reused, no re-upload) and `url_tags`. Sending the full set (`headline`, `body`, `callToAction`, `linkUrl`, `imageUrl`) rebuilds the creative from scratch. - Partial patching reads the live `object_story_spec`, which Meta strips on SHARE / page-post / dark post creatives; those return 422 asking for the full set. A `videoUrl`/`videoId` on an image creative is a type change and also needs the full set. - Creatives with an `asset_feed_spec` (several text options, placement or language rules) take text, link, tracking and enhancement edits in place. The new creative is built from the live asset feed with the edited text, and every video, image, label and rule is kept. - On those, `body`, `headline` and `description` replace the one option of that kind. When the feed has several, send `bodies`, `headlines` or `descriptions` with one text per option, in order. `linkUrl` replaces the feed's only destination link. - Image, video and call-to-action changes on asset_feed creatives apply to the story spec (Multiple Text Options creatives). They return 422 when the feed itself holds the images, videos or call-to-action options. - The live creative's deprecated `standard_enhancements` setting (Meta subcode 3858504) is never sent back; every other enhancement setting is kept. - `existingCreativeId` repoints the ad at a creative from GET /v1/ads/creatives and ignores every other field. - Meta creatives are immutable: any change creates a new creative and repoints the ad. The old creative stays on the ad account for historical reporting. - `creativeFeatures` is Meta-only. Omitted settings are preserved from the live creative, including on full rebuilds; a supplied creativeFeatures map overrides individual existing keys. - A `creative` object with no recognised field (`promotion` alone does not count) is a 400 `missing_required_field` when it is the only update, and is ignored (no creative rebuild) next to another updatable field. **TikTok**: patch-style. Pass any subset. - `headline` is ignored (no headline slot). - `body` becomes the in-feed `ad_text`; `linkUrl` becomes `landing_page_url`; `videoUrl` triggers a fresh upload. - `description`, `videoId` and `existingCreativeId` are Meta-only and return 400. **LinkedIn**: requires new media (image via `imageUrl` or video via `videoUrl`); a text-only update returns 400. - Uploads the media, creates a new inline media creative on the same campaign, and removes the old creative. `platformAdId` and `creative.creativeId` move to the new one. - The new creative keeps the old one's state. A `DRAFT` or `PAUSED` creative is re-created `DRAFT`, because LinkedIn refuses `PAUSED` before review is `APPROVED`. - If the old creative cannot be removed, the new one is deleted and the LinkedIn error is returned. - `videoId` and `existingCreativeId` are Meta-only and return 400. Object with keys: promotion (object) - Not supported. Send null or omit the field, and set the Promotion on the ad in Ads Manager. Any object is rejected with 400 invalid_field_value. Meta ...; creativeFeatures (object); catalogFormat (one of: single_image, carousel_images_multi_items, carousel_images_single_item, carousel_slideshows) - Meta catalog template ads only. Rebuilds the creative with this `template_data.format_option` (same mapping as on create) and repoints the ad at the new ...; headline (string) - Meta and LinkedIn (TikTok has no headline slot); longHeadline (string) - Google Display only. Replaces the responsive display ad's long headline.; businessName (string) - Google Display only. Replaces the responsive display ad's business name.; squareImageUrl (string) - Google Display only. Uploaded as a new square (1:1) marketing image asset that replaces the current one.; body (string) - Primary text. On a Meta asset_feed creative it replaces the feed's only body option (422 when it has several: send `bodies`).; bodies (list of string) - Meta only. The primary text options of an asset_feed creative, one text per option in the order GET /v1/ads/{adId} returns them. Each replaces the option in ...; headlines (list of string) - Meta only. Same as `bodies`, for the headline options (Meta `asset_feed_spec.titles`). Cannot be sent with `headline`. Not the top-level Google `headlines`.; description (string) - Link description slot (Meta `link_data.description` / `video_data.link_description`, LinkedIn creative description).; descriptions (list of string) - Meta only. Same as `bodies`, for the description options. Cannot be sent with `description`. Not the top-level Google `descriptions`.; callToAction (string); linkUrl (string); imageUrl (string); videoUrl (string); videoId (string) - Meta only. Reuse an already-uploaded ad video (from POST /v1/ads/videos or GET /v1/ads/videos) instead of re-uploading via videoUrl.; existingCreativeId (string) - Meta only. Repoint the ad at an existing library creative (from GET /v1/ads/creatives); all other creative fields are ignored.
             name: Rename the ad. Now propagated to Meta (POST /{ad-id}); non-Meta platforms return 501."""
         client = _get_client()
         try:
@@ -10573,7 +10567,7 @@ def register_generated_tools(mcp, _get_client):
         billing_event: str | None = None,
         buying_type: Literal["AUCTION", "RESERVED"] = "AUCTION",
         rf_prediction_id: str | None = None,
-        promotion: str | None = None,
+        promotion: dict[str, Any] | None = None,
         creative_features: dict[str, Any] | None = None,
         catalog_format: Literal[
             "single_image",
@@ -12021,7 +12015,7 @@ def register_generated_tools(mcp, _get_client):
         instagram_account_id: str | None = None,
         optimize_card_order: bool | None = None,
         url_tags: str | None = None,
-        promotion: str | None = None,
+        promotion: dict[str, Any] | None = None,
         creative_features: dict[str, Any] | None = None,
         multi_advertiser: Literal["OPT_IN", "OPT_OUT"] | None = None,
         ai_disclosure: Literal["OPT_IN", "OPT_OUT"] | None = None,
@@ -13477,7 +13471,7 @@ def register_generated_tools(mcp, _get_client):
         actions: list[dict[str, Any]] | None,
         campaign_ids: list[str] | None = None,
         filters: list[dict[str, Any]] | None = None,
-        groups: str | None = None,
+        groups: list[dict[str, Any]] | None = None,
         lifecycle: dict[str, Any] | None = None,
         schedule: dict[str, Any] | None = None,
         cooldown_minutes: int = 1440,
@@ -13520,11 +13514,11 @@ def register_generated_tools(mcp, _get_client):
             level: (required)
             campaign_ids: Only check these platform campaign IDs (or their ad sets). Leave out to check the whole ad account.
             filters: Each item is an object with keys: field (one of: name, campaign_name, adset_name, goal; required) - The object's own name, its campaign's or ad set's name, or the campaign goal (objective) as the platform reports it.; op (one of: contains, not_contains, equals, not_equals, starts_with; required); value (string, required)
-            groups
+            groups: Each item is an object with keys: name (string, required) - Unique in the rule, ignoring case.; filters (list of objects with keys field, op, value, required)
             lifecycle: Object with keys: confirmChecks (integer) - Matching runs in a row before acting. Defaults to 1.; hold (object with keys all) - Keeps an open alert open after the conditions stop matching.; critical (object with keys all) - Marks an open alert critical.
             conditions: Object with keys: all (list of objects with keys metric, window, op, value, compareTo, of, required) (required)
             actions: Each item is an object with keys: type (one of: notify; required) - Send the `ad_rule.triggered` webhook, and the alert to every `send` destination.; send (list of objects with keys accountId, channelId) - Also send a short alert through accounts you connected: what matched, the values and what the rule did. Up to 5 destinations, checked when the rule is saved. ... (required)
-            schedule: Leave it out to run every 60 minutes. Object with keys: everyMinutes (one of: 15, 30, 60, 180, 360, 720, 1440) - How often the rule runs, in minutes. Null on a rule that runs at set times.; times (array or null) - Set weekly times in the ad account timezone, instead of an interval. A rule that changes ads needs a cooldown of at least the shortest gap between two times.; startsAt (string or null) - The rule runs from this time on.; endsAt (string or null) - The rule stops running after this time.; quietHours (object or null) - A daily window in the ad account timezone when the rule does not run, like `{ \"from\": \"22:00\", \"to\": \"06:00\" }`. It may wrap past midnight; the first run ...
+            schedule: Leave it out to run every 60 minutes. Object with keys: everyMinutes (one of: 15, 30, 60, 180, 360, 720, 1440) - How often the rule runs, in minutes. Null on a rule that runs at set times.; times (list of objects with keys days, at) - Set weekly times in the ad account timezone, instead of an interval. A rule that changes ads needs a cooldown of at least the shortest gap between two times.; startsAt (string) - The rule runs from this time on.; endsAt (string) - The rule stops running after this time.; quietHours (object with keys from, to) - A daily window in the ad account timezone when the rule does not run, like `{ \"from\": \"22:00\", \"to\": \"06:00\" }`. It may wrap past midnight; the first run ...
             cooldown_minutes: How long the rule leaves an object alone after acting on it.
             enabled"""
         client = _get_client()
@@ -13715,10 +13709,10 @@ def register_generated_tools(mcp, _get_client):
     def ad_rules_update_ad_rule(
         name: str | None = None,
         level: Literal["campaign", "adset", "ad"] | None = None,
-        campaign_ids: str | None = None,
+        campaign_ids: list[str] | None = None,
         filters: list[dict[str, Any]] | None = None,
-        groups: str | None = None,
-        lifecycle: str | None = None,
+        groups: list[dict[str, Any]] | None = None,
+        lifecycle: dict[str, Any] | None = None,
         conditions: dict[str, Any] | None = None,
         actions: list[dict[str, Any]] | None = None,
         schedule: dict[str, Any] | None = None,
@@ -13738,11 +13732,11 @@ def register_generated_tools(mcp, _get_client):
             level
             campaign_ids
             filters: Each item is an object with keys: field (one of: name, campaign_name, adset_name, goal; required) - The object's own name, its campaign's or ad set's name, or the campaign goal (objective) as the platform reports it.; op (one of: contains, not_contains, equals, not_equals, starts_with; required); value (string, required)
-            groups: Null removes the groups; each campaign is then judged on its own.
-            lifecycle: Null removes it; every matching run then acts and notifies again.
+            groups: Null removes the groups; each campaign is then judged on its own. Each item is an object with keys: name (string, required) - Unique in the rule, ignoring case.; filters (list of objects with keys field, op, value, required)
+            lifecycle: Null removes it; every matching run then acts and notifies again. Object with keys: confirmChecks (integer) - Matching runs in a row before acting. Defaults to 1.; hold (object with keys all) - Keeps an open alert open after the conditions stop matching.; critical (object with keys all) - Marks an open alert critical.
             conditions: Object with keys: all (list of objects with keys metric, window, op, value, compareTo, of, required)
             actions: Each item is an object with keys: type (one of: notify; required) - Send the `ad_rule.triggered` webhook, and the alert to every `send` destination.; send (list of objects with keys accountId, channelId) - Also send a short alert through accounts you connected: what matched, the values and what the rule did. Up to 5 destinations, checked when the rule is saved. ...
-            schedule: Object with keys: everyMinutes (one of: 15, 30, 60, 180, 360, 720, 1440) - How often the rule runs, in minutes. Null on a rule that runs at set times.; times (array or null) - Set weekly times in the ad account timezone, instead of an interval. A rule that changes ads needs a cooldown of at least the shortest gap between two times.; startsAt (string or null) - The rule runs from this time on.; endsAt (string or null) - The rule stops running after this time.; quietHours (object or null) - A daily window in the ad account timezone when the rule does not run, like `{ \"from\": \"22:00\", \"to\": \"06:00\" }`. It may wrap past midnight; the first run ...
+            schedule: Object with keys: everyMinutes (one of: 15, 30, 60, 180, 360, 720, 1440) - How often the rule runs, in minutes. Null on a rule that runs at set times.; times (list of objects with keys days, at) - Set weekly times in the ad account timezone, instead of an interval. A rule that changes ads needs a cooldown of at least the shortest gap between two times.; startsAt (string) - The rule runs from this time on.; endsAt (string) - The rule stops running after this time.; quietHours (object with keys from, to) - A daily window in the ad account timezone when the rule does not run, like `{ \"from\": \"22:00\", \"to\": \"06:00\" }`. It may wrap past midnight; the first run ...
             cooldown_minutes
             enabled"""
         client = _get_client()
@@ -16687,7 +16681,7 @@ def register_generated_tools(mcp, _get_client):
         subjects: dict[str, Any] | None = None,
         filter: dict[str, Any] | None = None,
         conditions: dict[str, Any] | None = None,
-        alert: str | None = None,
+        alert: dict[str, Any] | None = None,
         steps: list[dict[str, Any]] | None = None,
         limits: dict[str, Any] | None = None,
     ) -> str:
@@ -16706,7 +16700,7 @@ def register_generated_tools(mcp, _get_client):
             subjects: Object with keys: each (one of: campaign, adset, ad; required) - The objects judged one by one.; adAccounts (list of objects with keys accountId, adAccountId, required) - The ad account to check. One per ad rule, and an edit cannot move it to another.; campaignIds (list of string) - Only these platform campaigns or their ad sets and ads. Leave out to check the whole ad account.; filters (list of objects with keys field, op, value) - All must hold.; groups (list of objects with keys name, filters) - Judges campaigns together (campaign rules only): each group's numbers are summed and its rates computed on the totals, and a matching group acts on each of ...
             filter: Object with keys: field (string, required) - A fact name from the catalog.; op (one of: equals, not_equals, contains, not_contains, starts_with, ends_with, exists, not_exists, matches, greater_than, less_than, greater_or_equal, less_or_equal, before, after, has_tag, not_has_tag, is_true, is_false; required); value (string or number, required)
             conditions: Object with keys: all (list of objects with keys metric, window, op, value, compareTo, of, required)
-            alert
+            alert: Object with keys: confirmChecks (integer); hold (object with keys all); critical (object with keys all)
             steps: The steps the automation's kind takes. Each item is an object with keys: id (string); type (string, required)
             limits: Object with keys: cooldown (string) - How long an object is left alone after the rule acts on it. Whole minutes, up to `30d`.; maxChangesPerDay (integer) - Most changes across the last 24 hours. Needs an `ads.*` step.; maxChangesPerObject (integer) - Most times the rule may change one object, over its whole history. Needs an `ads.*` step."""
         client = _get_client()
@@ -17178,7 +17172,7 @@ def register_generated_tools(mcp, _get_client):
         account_id: str,
         ad_account_id: str,
         paused: bool | None = None,
-        daily_raise_limit: str | None = None,
+        daily_raise_limit: float | None = None,
     ) -> str:
         """Update one ad account's controls
 
@@ -18973,7 +18967,7 @@ def register_generated_tools(mcp, _get_client):
         purchase_info: str | None = None,
         delivery_and_shipping: str | None = None,
         business_description: str | None = None,
-        contact_info: str | None = None,
+        contact_info: dict[str, Any] | None = None,
     ) -> str:
         """Replace business information
 
@@ -18986,7 +18980,7 @@ def register_generated_tools(mcp, _get_client):
             purchase_info
             delivery_and_shipping
             business_description
-            contact_info"""
+            contact_info: Object with keys: email (string); hours_of_operation (string); address (string)"""
         client = _get_client()
         try:
             response = (
@@ -20599,7 +20593,7 @@ def register_generated_tools(mcp, _get_client):
             end: Exclusive for all-day events. (required)
             all_day
             timezone: IANA zone the event is scheduled in. Defaults to the calendar's zone on Google and the mailbox's working-hours zone on Microsoft (UTC when Outlook has none, as on personal accounts). A PATCH that moves an event without a zone keeps the zone the event already has.
-            participants: Each item is an object with keys: email (string, required); name (string or null)
+            participants: Each item is an object with keys: email (string, required); name (string)
             recurrence: RRULE lines, e.g. `RRULE:FREQ=WEEKLY;BYDAY=MO,WE;COUNT=10`. Microsoft takes one RRULE plus EXDATE lines; Zernio removes the EXDATE occurrences after saving the series.
             reminders: Object with keys: useDefault (boolean) - Use the calendar's default reminders. Ignored when `overrides` has entries.; overrides (list of objects with keys method, minutes) - Google takes up to 5 overrides, `popup` or `email`. Outlook keeps one popup reminder (the first override), and an `email` override answers 400 ...
             conferencing
@@ -20706,7 +20700,7 @@ def register_generated_tools(mcp, _get_client):
             end: Exclusive for all-day events.
             all_day
             timezone: IANA zone the event is scheduled in. Defaults to the calendar's zone on Google and the mailbox's working-hours zone on Microsoft (UTC when Outlook has none, as on personal accounts). A PATCH that moves an event without a zone keeps the zone the event already has.
-            participants: Each item is an object with keys: email (string, required); name (string or null)
+            participants: Each item is an object with keys: email (string, required); name (string)
             recurrence: RRULE lines, e.g. `RRULE:FREQ=WEEKLY;BYDAY=MO,WE;COUNT=10`. Microsoft takes one RRULE plus EXDATE lines; Zernio removes the EXDATE occurrences after saving the series.
             reminders: Object with keys: useDefault (boolean) - Use the calendar's default reminders. Ignored when `overrides` has entries.; overrides (list of objects with keys method, minutes) - Google takes up to 5 overrides, `popup` or `email`. Outlook keeps one popup reminder (the first override), and an `email` override answers 400 ...
             conferencing
@@ -21171,11 +21165,11 @@ def register_generated_tools(mcp, _get_client):
         audience: dict[str, Any] | None = None,
         follow_gate: dict[str, Any] | None = None,
         repeat_policy: dict[str, Any] | None = None,
-        dedupe_same_text_hours: str | None = None,
+        dedupe_same_text_hours: int | None = None,
         public_reply_policy: Literal["after_dm", "always"] = "after_dm",
         actions: dict[str, Any] | None = None,
         quick_replies: list[dict[str, Any]] | None = None,
-        dm_media: str | None = None,
+        dm_media: dict[str, Any] | None = None,
         is_active: bool = True,
     ) -> str:
         """Create comment-to-DM automation
@@ -21241,7 +21235,7 @@ def register_generated_tools(mcp, _get_client):
                 public_reply_policy: 'after_dm' posts commentReply only after a successful DM. 'always' posts it whatever the audience rule, dedupe or DM outcome: the moment a comment matches, or after commentReplyDelaySeconds when set (raised to dmDelaySeconds, so it never precedes the DM attempt).
                 actions: Object with keys: likeComment (boolean) - Like the comment as the account. Facebook always; Instagram only for accounts connected through Facebook Login and allowlisted for likes while Meta reviews ...; hideComment (boolean) - Hide the comment once the first DM has been attempted, so the private reply is never sent to an already hidden comment.
                 quick_replies: Opt-in quick-reply chips on the DM (up to 13). Chips do not render in Message Requests, where a first DM to a cold commenter lands, so prefer buttons for first contact. Mutually exclusive with buttons and template (400). Each item is an object with keys: title (string, required); payload (string, required) - Delivered back via the messaging webhook when tapped.; imageUrl (string)
-                dm_media
+                dm_media: Object with keys: type (one of: image, video, audio, file; required); url (string, required) - Publicly reachable http(s) URL Meta downloads the media from.
                 is_active: Create the automation paused with false. Once switched on, it answers only comments posted from that moment."""
         client = _get_client()
         try:
@@ -21328,7 +21322,7 @@ def register_generated_tools(mcp, _get_client):
         post_title: str | None = None,
         dm_message: str | None = None,
         buttons: list[dict[str, Any]] | None = None,
-        template: str | None = None,
+        template: dict[str, Any] | None = None,
         comment_reply: str | None = None,
         dm_message_variations: list[str] | None = None,
         comment_reply_variations: list[str] | None = None,
@@ -21341,11 +21335,11 @@ def register_generated_tools(mcp, _get_client):
         follow_gate: dict[str, Any] | None = None,
         is_active: bool | None = None,
         repeat_policy: dict[str, Any] | None = None,
-        dedupe_same_text_hours: str | None = None,
+        dedupe_same_text_hours: int | None = None,
         public_reply_policy: Literal["after_dm", "always"] | None = None,
         actions: dict[str, Any] | None = None,
-        quick_replies: str | None = None,
-        dm_media: str | None = None,
+        quick_replies: list[dict[str, Any]] | None = None,
+        dm_media: dict[str, Any] | None = None,
     ) -> str:
         """Update automation settings
 
@@ -21382,7 +21376,7 @@ def register_generated_tools(mcp, _get_client):
                 post_title: Post content snippet for display. Moves as a unit with platformPostId and postId (see platformPostId).
                 dm_message
                 buttons: Inline DM buttons (1-3). Pass [] to clear all buttons. Each item is an object with keys: type (one of: url, postback, phone; required); title (string, required) - Button label (20 chars max); url (string) - Target URL (required when type is url); payload (string) - Postback payload delivered via the messaging_postbacks webhook (required when type is postback); phone (string) - Phone number, e.g. +14155551234 (required when type is phone; Facebook only)
-                template: Product card sent instead of the plain dmMessage bubble. Pass null to clear it and fall back to dmMessage. Mutually exclusive with buttons, including with the buttons already stored on the automation.
+                template: Product card sent instead of the plain dmMessage bubble. Pass null to clear it and fall back to dmMessage. Mutually exclusive with buttons, including with the buttons already stored on the automation. Object with keys: type (one of: generic; required); imageAspectRatio (one of: horizontal, square) - Facebook only. How Messenger renders each element imageUrl: horizontal (1.91:1, the default) or square (1:1). Instagram has no such setting, so an Instagram ...; elements (list of objects with keys title, subtitle, imageUrl, buttons, required)
                 comment_reply: On LinkedIn, mention with `@[Name](urn:li:person:ID)` or `@[Name](urn:li:organization:ID)`, getting the URN from `GET /v1/accounts/{accountId}/linkedin-mentions`. The name must match the person's or Page's LinkedIn name exactly, or the mention renders as plain text. Profile or company URL mentions are not resolved here and are sent as plain text.
                 dm_message_variations: Alternate DM texts for random rotation (see create). Pass [] to clear.
                 comment_reply_variations: Alternate public replies for random rotation. Pass [] to clear.
@@ -21400,8 +21394,8 @@ def register_generated_tools(mcp, _get_client):
                 dedupe_same_text_hours: Skip the DM when this recipient already received identical DM text (after personalisation) from this account, from any automation, within this many hours. The skip is logged with status skipped. Send null to clear.
                 public_reply_policy: 'after_dm' posts commentReply only after a successful DM. 'always' posts it whatever the audience rule, dedupe or DM outcome: the moment a comment matches, or after commentReplyDelaySeconds when set (raised to dmDelaySeconds, so it never precedes the DM attempt).
                 actions: Object with keys: likeComment (boolean) - Like the comment as the account. Facebook always; Instagram only for accounts connected through Facebook Login and allowlisted for likes while Meta reviews ...; hideComment (boolean) - Hide the comment once the first DM has been attempted, so the private reply is never sent to an already hidden comment.
-                quick_replies: Opt-in quick-reply chips on the DM (up to 13). Chips do not render in Message Requests, where a first DM to a cold commenter lands, so prefer buttons for first contact. Mutually exclusive with buttons and template (400). Send null to clear.
-                dm_media"""
+                quick_replies: Opt-in quick-reply chips on the DM (up to 13). Chips do not render in Message Requests, where a first DM to a cold commenter lands, so prefer buttons for first contact. Mutually exclusive with buttons and template (400). Send null to clear. Each item is an object with keys: title (string, required); payload (string, required) - Delivered back via the messaging webhook when tapped.; imageUrl (string)
+                dm_media: Object with keys: type (one of: image, video, audio, file; required); url (string, required) - Publicly reachable http(s) URL Meta downloads the media from."""
         client = _get_client()
         try:
             response = client.comment_automations.update_comment_automation(
@@ -22359,7 +22353,7 @@ def register_generated_tools(mcp, _get_client):
         Args:
             order_id: Platform-native order id. (required)
             account_id: Connected store SocialAccount id. (required)
-            shipping_address: Object with keys: firstName (string or null); lastName (string or null); company (string or null); phone (string or null); line1 (string or null); line2 (string or null); city (string or null); region (string or null) - State or province code, e.g. \"CA\".; postalCode (string or null); countryCode (string, required) - ISO 3166 code, e.g. \"US\". (required)"""
+            shipping_address: Object with keys: firstName (string); lastName (string); company (string); phone (string); line1 (string); line2 (string); city (string); region (string) - State or province code, e.g. \"CA\".; postalCode (string); countryCode (string, required) - ISO 3166 code, e.g. \"US\". (required)"""
         client = _get_client()
         try:
             response = client.commerce.update_commerce_order(
@@ -24145,8 +24139,8 @@ def register_generated_tools(mcp, _get_client):
         amount: str | None = None,
         applies_on_each_item: bool | None = None,
         minimum_subtotal: str | None = None,
-        minimum_quantity: str | None = None,
-        usage_limit: str | None = None,
+        minimum_quantity: int | None = None,
+        usage_limit: int | None = None,
         once_per_customer: bool | None = None,
         starts_at: str | None = None,
         ends_at: str | None = None,
@@ -24249,8 +24243,8 @@ def register_generated_tools(mcp, _get_client):
         amount: str | None = None,
         applies_on_each_item: bool | None = None,
         minimum_subtotal: str | None = None,
-        minimum_quantity: str | None = None,
-        usage_limit: str | None = None,
+        minimum_quantity: int | None = None,
+        usage_limit: int | None = None,
         once_per_customer: bool | None = None,
         starts_at: str | None = None,
         ends_at: str | None = None,
@@ -24907,7 +24901,7 @@ def register_generated_tools(mcp, _get_client):
         Args:
             price_list_id: Platform-native id. (required)
             account_id: (required)
-            prices: Each item is an object with keys: variantId (string, required); price (string, required) - Decimal in the price list currency.; compareAtPrice (string or null) (required)"""
+            prices: Each item is an object with keys: variantId (string, required); price (string, required) - Decimal in the price list currency.; compareAtPrice (string) (required)"""
         client = _get_client()
         try:
             response = client.commerce.set_commerce_price_list_prices(
@@ -29029,7 +29023,7 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def connect_update_org_connection(
-        allowed_emails: str | None = None, admin_email: str | None = None
+        allowed_emails: list[str] | None = None, admin_email: str | None = None
     ) -> str:
         """Update an organization connection
 
@@ -31879,12 +31873,12 @@ def register_generated_tools(mcp, _get_client):
         ends_at: str | None = None,
         tracking_days: int = 30,
         hold_days: int = 10,
-        max_post_age_minutes: str | None = None,
+        max_post_age_minutes: int | None = None,
         settlement: Literal["none", "external", "treasury"] = "none",
-        branding: str | None = None,
+        branding: dict[str, Any] | None = None,
         landing_url: str | None = None,
-        code_discount_percent: str | None = None,
-        auto_payout: str | None = None,
+        code_discount_percent: int | None = None,
+        auto_payout: dict[str, Any] | None = None,
         join_approval: Literal["auto", "manual"] = "auto",
         require_draft_approval: bool = False,
         store_account_id: str | None = None,
@@ -31914,10 +31908,10 @@ def register_generated_tools(mcp, _get_client):
                 hold_days
                 max_post_age_minutes: Optional maximum age in minutes of a post when it is submitted. Null or omitted (the default) accepts any age. Posts published before the campaign started are always refused.
                 settlement
-                branding
+                branding: Object with keys: brandName (string); primaryColor (string); logoUrl (string); theme (object)
                 landing_url: The page creator tracking links open. Required unless `attribution` is `code`.
                 code_discount_percent: What each creator's discount code takes off an order. Required unless `attribution` is `link`.
-                auto_payout: Treasury campaigns only. Pays every ready creator at 15:00 UTC, daily or on Mondays, with one payout batch on your saved card, paid out 7 days later. A refused card charges nothing and we email you. Needs a money mover and a saved card.
+                auto_payout: Treasury campaigns only. Pays every ready creator at 15:00 UTC, daily or on Mondays, with one payout batch on your saved card, paid out 7 days later. A refused card charges nothing and we email you. Needs a money mover and a saved card. Object with keys: enabled (boolean, required); cadence (one of: weekly, daily; required)
                 join_approval: manual holds creators who join through the open link as `pending` until you approve them. Personal invites are never held.
                 require_draft_approval: Creators upload a draft for review before publishing, and each submitted post must name an approved draft.
                 store_account_id: A connected Shopify or WooCommerce store account. On `commission` and smart `retainer` economics its orders pay commission: required there, and fixed once such a campaign leaves draft.
@@ -32042,14 +32036,14 @@ def register_generated_tools(mcp, _get_client):
         ends_at: str | None = None,
         tracking_days: int | None = None,
         hold_days: int | None = None,
-        max_post_age_minutes: str | None = None,
+        max_post_age_minutes: int | None = None,
         settlement: Literal["none", "external", "treasury"] | None = None,
         economics: dict[str, Any] | None = None,
         caps: dict[str, Any] | None = None,
-        branding: str | None = None,
+        branding: dict[str, Any] | None = None,
         landing_url: str | None = None,
-        code_discount_percent: str | None = None,
-        auto_payout: str | None = None,
+        code_discount_percent: int | None = None,
+        auto_payout: dict[str, Any] | None = None,
         join_approval: Literal["auto", "manual"] | None = None,
         require_draft_approval: bool | None = None,
         store_account_id: str | None = None,
@@ -32077,10 +32071,10 @@ def register_generated_tools(mcp, _get_client):
                 settlement
                 economics: Object with keys: type (one of: cpm; required); metric (one of: views, engagements) - What the rate pays on. `engagements` counts the `engagementTypes` as each platform reports them, and `minViewsToEarn` then applies to engagements. Fixed once ...; engagementTypes (list of string) - With `metric: engagements`, the engagements that count. Missing means all four, and sending it on a views campaign answers 400. YouTube reports likes and ...; organicViewsOnly (boolean) - Count only organic views: views from ads the creator ran do not earn. Every campaign platform must be YouTube or X, which report ad views per post, or the ...; ratePer1kCents (integer, required); minViewsToEarn (integer, required) - The count a post must reach before it earns, in the campaign metric (views or engagements).; maxPayoutPerClipCents (integer); budgetCents (integer, required)
                 caps: Object with keys: maxParticipants (integer) - Invites and joins past this count answer 403.; maxSubmissionsPerParticipantPerDay (integer) - Posts one participant can submit to this campaign per UTC day, counting every submission whatever its status. The next submit that day answers 409 ...; maxAccountsPerParticipant (integer) - Accounts a participant can use in this campaign. Connecting a new account past it answers 400; only the first accounts connected, up to this count, can submit ...; maxXReadSpendCents (integer) - X campaigns only: what tracking X posts may cost in X reads, in cents. Unset means 5000 ($50). X bills one read per tracked post per UTC day, and you pay it ...; authenticityThreshold (number, required) - A submission whose authenticity score falls below this is flagged `low_authenticity`. It is never rejected automatically. Defaults to 40 on create.
-                branding
+                branding: Object with keys: brandName (string); primaryColor (string); logoUrl (string); theme (object)
                 landing_url: The page creator tracking links open. Required unless `attribution` is `code`.
                 code_discount_percent: What each creator's discount code takes off an order. Required unless `attribution` is `link`.
-                auto_payout: Treasury campaigns only. Pays every ready creator at 15:00 UTC, daily or on Mondays, with one payout batch on your saved card, paid out 7 days later. A refused card charges nothing and we email you. Needs a money mover and a saved card.
+                auto_payout: Treasury campaigns only. Pays every ready creator at 15:00 UTC, daily or on Mondays, with one payout batch on your saved card, paid out 7 days later. A refused card charges nothing and we email you. Needs a money mover and a saved card. Object with keys: enabled (boolean, required); cadence (one of: weekly, daily; required)
                 join_approval: manual holds creators who join through the open link as `pending` until you approve them. Personal invites are never held.
                 require_draft_approval: Creators upload a draft for review before publishing, and each submitted post must name an approved draft.
                 store_account_id: A connected Shopify or WooCommerce store account. On `commission` and smart `retainer` economics its orders pay commission: required there, and fixed once such a campaign leaves draft.
@@ -33085,7 +33079,7 @@ def register_generated_tools(mcp, _get_client):
             campaign_id: Campaign ID. (required)
             draft_id: Draft version ID. (required)
             note: What to change overall. Stored as `reviewNote`.
-            comments: Each item is an object with keys: atMs (integer or null) - Milliseconds into the video the comment is about. Null or omitted for a general comment.; body (string, required)"""
+            comments: Each item is an object with keys: atMs (integer) - Milliseconds into the video the comment is about. Null or omitted for a general comment.; body (string, required)"""
         client = _get_client()
         try:
             response = client.creator_campaigns.request_campaign_draft_revision(
@@ -35312,10 +35306,10 @@ def register_generated_tools(mcp, _get_client):
 
         Args:
             account_id: (required)
-            to: Each item is an object with keys: email (string, required); name (string or null) (required)
-            cc: Each item is an object with keys: email (string, required); name (string or null)
-            bcc: Each item is an object with keys: email (string, required); name (string or null)
-            reply_to: Each item is an object with keys: email (string, required); name (string or null)
+            to: Each item is an object with keys: email (string, required); name (string) (required)
+            cc: Each item is an object with keys: email (string, required); name (string)
+            bcc: Each item is an object with keys: email (string, required); name (string)
+            reply_to: Each item is an object with keys: email (string, required); name (string)
             from_name
             from_: Send from another address listed by `GET /v1/email/send-as`; on Outlook, declare a shared mailbox there first. An address not on the list answers 400, and Outlook refusing it at send time answers 403. Omitted, the mail leaves from the mailbox address.
             append_signature: Appends the signature of the sending address: its Zernio default first, else its Gmail signature. 400 when it has neither.
@@ -35584,10 +35578,10 @@ def register_generated_tools(mcp, _get_client):
         Args:
             message_id: (required)
             account_id: (required)
-            to: Each item is an object with keys: email (string, required); name (string or null) (required)
-            cc: Each item is an object with keys: email (string, required); name (string or null)
-            bcc: Each item is an object with keys: email (string, required); name (string or null)
-            reply_to: Each item is an object with keys: email (string, required); name (string or null)
+            to: Each item is an object with keys: email (string, required); name (string) (required)
+            cc: Each item is an object with keys: email (string, required); name (string)
+            bcc: Each item is an object with keys: email (string, required); name (string)
+            reply_to: Each item is an object with keys: email (string, required); name (string)
             from_name
             from_: Send from another address listed by `GET /v1/email/send-as`; on Outlook, declare a shared mailbox there first. An address not on the list answers 400, and Outlook refusing it at send time answers 403. Omitted, the mail leaves from the mailbox address.
             append_signature: Appends the signature of the sending address: its Zernio default first, else its Gmail signature. 400 when it has neither.
@@ -35675,10 +35669,10 @@ def register_generated_tools(mcp, _get_client):
         Args:
             message_id: (required)
             account_id: (required)
-            to: Each item is an object with keys: email (string, required); name (string or null) (required)
-            cc: Each item is an object with keys: email (string, required); name (string or null)
-            bcc: Each item is an object with keys: email (string, required); name (string or null)
-            reply_to: Each item is an object with keys: email (string, required); name (string or null)
+            to: Each item is an object with keys: email (string, required); name (string) (required)
+            cc: Each item is an object with keys: email (string, required); name (string)
+            bcc: Each item is an object with keys: email (string, required); name (string)
+            reply_to: Each item is an object with keys: email (string, required); name (string)
             from_name
             from_: Send from another address of the mailbox, as on `POST /v1/email/messages`.
             append_signature: Appends the signature of the sending address to the note, above the forwarded original: its Zernio default first, else its Gmail signature.
@@ -35790,10 +35784,10 @@ def register_generated_tools(mcp, _get_client):
 
         Args:
             account_id: (required)
-            to: Optional on a draft; needed before it is sent. Each item is an object with keys: email (string, required); name (string or null)
-            cc: Each item is an object with keys: email (string, required); name (string or null)
-            bcc: Each item is an object with keys: email (string, required); name (string or null)
-            reply_to: Each item is an object with keys: email (string, required); name (string or null)
+            to: Optional on a draft; needed before it is sent. Each item is an object with keys: email (string, required); name (string)
+            cc: Each item is an object with keys: email (string, required); name (string)
+            bcc: Each item is an object with keys: email (string, required); name (string)
+            reply_to: Each item is an object with keys: email (string, required); name (string)
             from_name
             from_: Send from another address of the mailbox, as on `POST /v1/email/messages`. Checked when the draft is saved.
             append_signature: Puts the signature of the sending address in the draft body, where the user sees it: its Zernio default first, else its Gmail signature.
@@ -35896,10 +35890,10 @@ def register_generated_tools(mcp, _get_client):
         Args:
             draft_id: (required)
             account_id: (required)
-            to: Each item is an object with keys: email (string, required); name (string or null)
-            cc: Each item is an object with keys: email (string, required); name (string or null)
-            bcc: Each item is an object with keys: email (string, required); name (string or null)
-            reply_to: Each item is an object with keys: email (string, required); name (string or null)
+            to: Each item is an object with keys: email (string, required); name (string)
+            cc: Each item is an object with keys: email (string, required); name (string)
+            bcc: Each item is an object with keys: email (string, required); name (string)
+            reply_to: Each item is an object with keys: email (string, required); name (string)
             subject
             text
             html: On a draft created with tracking, the new html is instrumented again under the same `trackingId`.
@@ -43166,7 +43160,7 @@ def register_generated_tools(mcp, _get_client):
         message: str | None = None,
         documents: list[dict[str, Any]] | None = None,
         address: dict[str, Any] | None = None,
-        entity_type: str | None = None,
+        entity_type: Literal["individual", "business"] | None = None,
         attachments: list[dict[str, Any]] | None = None,
     ) -> str:
         """Respond to the regulatory reviewer (message + corrections)
@@ -43539,7 +43533,7 @@ def register_generated_tools(mcp, _get_client):
                 metadata: Free-form key/value pairs of your own, stored on the post and returned on reads and in webhook payloads. Zernio also writes the bookkeeping keys `usageCounted`, `usageRefunded` and `hidden` into this object; do not set them, and they are stripped from webhook payloads.
                 tiktok_settings: Root-level TikTok settings applied to the TikTok platforms sent in the same request. Merged into each platform's platformSpecificData, with platform-specific settings taking precedence. Object with keys: draft (boolean) - When true, sends the post to the TikTok Creator Inbox as a draft instead of publishing immediately. The creator gets an inbox notification to complete posting ...; privacyLevel (string) - One of the values returned by the TikTok creator info API for the account. Accounts connected through the TikTok for Business app publish videos as public ...; allowComment (boolean) - Allow comments on the post; allowDuet (boolean) - Allow duets (required for video posts); allowStitch (boolean) - Allow stitches (required for video posts); commercialContentType (one of: none, brand_organic, brand_content) - Type of commercial content disclosure. Sufficient on its own: \"brand_organic\" (\"Your Brand\") implies isBrandOrganicPost and \"brand_content\" (\"Branded ...; brandPartnerPromote (boolean) - Whether the post promotes a brand partner (branded content / paid partnership). Only needed to disclose BOTH types at once (set it alongside ...; isBrandOrganicPost (boolean) - Whether the post promotes the creator's own brand (brand organic). Only needed to disclose BOTH types at once (set it alongside commercialContentType ...; contentPreviewConfirmed (boolean) - User has confirmed they previewed the content; expressConsentGiven (boolean) - User has given express consent for posting; mediaType (one of: video, photo) - Optional override. Defaults based on provided media items.; videoCoverTimestampMs (integer) - Optional for video posts. Timestamp in milliseconds to select which frame to use as thumbnail (defaults to 1000ms/1 second). Ignored when the ...; videoCoverImageUrl (string) - Optional for video posts. URL of a custom thumbnail image (JPG, PNG, or WebP, max 20MB). Any downloadable URL works: we rehost it ourselves. Overrides ...; photoCoverIndex (integer) - Optional for photo carousels. Index of image to use as cover, 0-based (defaults to 0/first image).; autoAddMusic (boolean) - When true, TikTok may add recommended music (photos only). With the brand-organic or branded-content toggle on, TikTok allows Commercial Music Library tracks ...; musicSoundInfo (object with keys musicSoundId, musicSoundVolume, musicSoundStart, musicSoundEnd) - Commercial Music Library track to attach. Accounts connected through the TikTok for Business app only: a developer-app account rejects the post at publish ...; videoOriginalSoundVolume (integer) - Volume of the video's own sound when a commercial track is attached (0 to 100). Requires musicSoundInfo. Video posts only. Omitted, TikTok keeps its API ...; videoMadeWithAi (boolean) - Set true to disclose AI-generated content. Accounts connected through the TikTok for Business app carry the disclosure on video posts only. The business photo ...; locationId (string) - Location tag to attach, as the id of a result from GET /v1/accounts/{accountId}/tiktok/locations. Requires locationName. Ignored on drafts, where TikTok ...; locationName (string) - Display name of the location tag, as returned next to its id. Required with locationId; a locationId without it is rejected at creation.; isAdsOnly (boolean) - Set true to publish the video as an \"Only show in ads\" post: it is kept off the profile and exists to be used as a Spark Ad. Accounts connected through the ...; description (string) - Optional long-form caption for photo posts (max 4000 chars). Recommended when content exceeds 90 chars, as photo titles are auto-truncated. Falls back to the ...
                 facebook_settings: Root-level Facebook settings applied to the Facebook platforms sent in the same request. Merged into each platform's platformSpecificData.facebookSettings, with platform-specific settings taking precedence. Object with keys: draft (boolean) - When true, creates the post as a draft in Facebook Publishing Tools instead of publishing immediately. Supported for feed posts (text, link, image, video) and ...; carouselCards (list of objects with keys link, name, description) - Renders the post as a multi-link carousel (organic Page post). Mutually exclusive with contentType=story|reel. - mediaItems must be provided with the same ...; carouselLink (string) - Optional top-level \"See more\" destination shown on the carousel end card. Defaults to the first card's link when omitted. Only used together with carouselCards.; textFormatPresetId (string) - Facebook-defined preset ID that renders the post as large text on a colored background (Graph `text_format_preset_id`). Supply the raw numeric ID from Meta; ...
-                recycling: Object with keys: enabled (boolean) - Set to false to disable recycling on this post; gap (integer) - Number of interval units between each repost. Required when enabling recycling.; gapFreq (one of: week, month) - Interval unit for the gap. Defaults to 'month'.; startDate (string) - When to start the recycling cycle. Defaults to the post's scheduledFor date.; expireCount (integer or null) - Stop recycling after this many copies have been created. Send null on update to clear this limit.; expireDate (string or null) - Stop recycling after this date, regardless of count. Send null on update to clear this limit.; contentVariations (list of string) - Content variations for recycled copies. Each recycle uses the next variation, in round-robin order. Recommended for X and Pinterest to avoid duplicate content ...
+                recycling: Object with keys: enabled (boolean) - Set to false to disable recycling on this post; gap (integer) - Number of interval units between each repost. Required when enabling recycling.; gapFreq (one of: week, month) - Interval unit for the gap. Defaults to 'month'.; startDate (string) - When to start the recycling cycle. Defaults to the post's scheduledFor date.; expireCount (integer) - Stop recycling after this many copies have been created. Send null on update to clear this limit.; expireDate (string) - Stop recycling after this date, regardless of count. Send null on update to clear this limit.; contentVariations (list of string) - Content variations for recycled copies. Each recycle uses the next variation, in round-robin order. Recommended for X and Pinterest to avoid duplicate content ...
                 queued_from_profile: Profile ID to schedule via queue. When provided without scheduledFor, the post is auto-assigned to the next available slot. Do not call /v1/queue/next-slot and use that time in scheduledFor, as that bypasses queue locking.
                 queue_id: Specific queue ID to use when scheduling via queue.
         Only used when queuedFromProfile is also provided.
@@ -43656,7 +43650,7 @@ def register_generated_tools(mcp, _get_client):
             queue_id: Specific queue ID to use when scheduling via queue.
             tiktok_settings: Root-level TikTok settings applied to the TikTok platforms sent in the same request. Merged into each platform's platformSpecificData, with platform-specific settings taking precedence. Returns 400 if sent without a platforms array. Object with keys: draft (boolean) - When true, sends the post to the TikTok Creator Inbox as a draft instead of publishing immediately. The creator gets an inbox notification to complete posting ...; privacyLevel (string) - One of the values returned by the TikTok creator info API for the account. Accounts connected through the TikTok for Business app publish videos as public ...; allowComment (boolean) - Allow comments on the post; allowDuet (boolean) - Allow duets (required for video posts); allowStitch (boolean) - Allow stitches (required for video posts); commercialContentType (one of: none, brand_organic, brand_content) - Type of commercial content disclosure. Sufficient on its own: \"brand_organic\" (\"Your Brand\") implies isBrandOrganicPost and \"brand_content\" (\"Branded ...; brandPartnerPromote (boolean) - Whether the post promotes a brand partner (branded content / paid partnership). Only needed to disclose BOTH types at once (set it alongside ...; isBrandOrganicPost (boolean) - Whether the post promotes the creator's own brand (brand organic). Only needed to disclose BOTH types at once (set it alongside commercialContentType ...; contentPreviewConfirmed (boolean) - User has confirmed they previewed the content; expressConsentGiven (boolean) - User has given express consent for posting; mediaType (one of: video, photo) - Optional override. Defaults based on provided media items.; videoCoverTimestampMs (integer) - Optional for video posts. Timestamp in milliseconds to select which frame to use as thumbnail (defaults to 1000ms/1 second). Ignored when the ...; videoCoverImageUrl (string) - Optional for video posts. URL of a custom thumbnail image (JPG, PNG, or WebP, max 20MB). Any downloadable URL works: we rehost it ourselves. Overrides ...; photoCoverIndex (integer) - Optional for photo carousels. Index of image to use as cover, 0-based (defaults to 0/first image).; autoAddMusic (boolean) - When true, TikTok may add recommended music (photos only). With the brand-organic or branded-content toggle on, TikTok allows Commercial Music Library tracks ...; musicSoundInfo (object with keys musicSoundId, musicSoundVolume, musicSoundStart, musicSoundEnd) - Commercial Music Library track to attach. Accounts connected through the TikTok for Business app only: a developer-app account rejects the post at publish ...; videoOriginalSoundVolume (integer) - Volume of the video's own sound when a commercial track is attached (0 to 100). Requires musicSoundInfo. Video posts only. Omitted, TikTok keeps its API ...; videoMadeWithAi (boolean) - Set true to disclose AI-generated content. Accounts connected through the TikTok for Business app carry the disclosure on video posts only. The business photo ...; locationId (string) - Location tag to attach, as the id of a result from GET /v1/accounts/{accountId}/tiktok/locations. Requires locationName. Ignored on drafts, where TikTok ...; locationName (string) - Display name of the location tag, as returned next to its id. Required with locationId; a locationId without it is rejected at creation.; isAdsOnly (boolean) - Set true to publish the video as an \"Only show in ads\" post: it is kept off the profile and exists to be used as a Spark Ad. Accounts connected through the ...; description (string) - Optional long-form caption for photo posts (max 4000 chars). Recommended when content exceeds 90 chars, as photo titles are auto-truncated. Falls back to the ...
             facebook_settings: Root-level Facebook settings applied to the Facebook platforms sent in the same request. Merged into each platform's platformSpecificData.facebookSettings, with platform-specific settings taking precedence. Returns 400 if sent without a platforms array. Object with keys: draft (boolean) - When true, creates the post as a draft in Facebook Publishing Tools instead of publishing immediately. Supported for feed posts (text, link, image, video) and ...; carouselCards (list of objects with keys link, name, description) - Renders the post as a multi-link carousel (organic Page post). Mutually exclusive with contentType=story|reel. - mediaItems must be provided with the same ...; carouselLink (string) - Optional top-level \"See more\" destination shown on the carousel end card. Defaults to the first card's link when omitted. Only used together with carouselCards.; textFormatPresetId (string) - Facebook-defined preset ID that renders the post as large text on a colored background (Graph `text_format_preset_id`). Supply the raw numeric ID from Meta; ...
-            recycling: Object with keys: enabled (boolean) - Set to false to disable recycling on this post; gap (integer) - Number of interval units between each repost. Required when enabling recycling.; gapFreq (one of: week, month) - Interval unit for the gap. Defaults to 'month'.; startDate (string) - When to start the recycling cycle. Defaults to the post's scheduledFor date.; expireCount (integer or null) - Stop recycling after this many copies have been created. Send null on update to clear this limit.; expireDate (string or null) - Stop recycling after this date, regardless of count. Send null on update to clear this limit.; contentVariations (list of string) - Content variations for recycled copies. Each recycle uses the next variation, in round-robin order. Recommended for X and Pinterest to avoid duplicate content ..."""
+            recycling: Object with keys: enabled (boolean) - Set to false to disable recycling on this post; gap (integer) - Number of interval units between each repost. Required when enabling recycling.; gapFreq (one of: week, month) - Interval unit for the gap. Defaults to 'month'.; startDate (string) - When to start the recycling cycle. Defaults to the post's scheduledFor date.; expireCount (integer) - Stop recycling after this many copies have been created. Send null on update to clear this limit.; expireDate (string) - Stop recycling after this date, regardless of count. Send null on update to clear this limit.; contentVariations (list of string) - Content variations for recycled copies. Each recycle uses the next variation, in round-robin order. Recommended for X and Pinterest to avoid duplicate content ..."""
         client = _get_client()
         try:
             response = client.posts.update_post(
@@ -48650,8 +48644,8 @@ def register_generated_tools(mcp, _get_client):
         enabled: bool | None = None,
         below_cents: int | None = None,
         to_cents: int | None = None,
-        monthly_limit_cents: str | None = None,
-        alert_below_cents: str | None = None,
+        monthly_limit_cents: int | None = None,
+        alert_below_cents: int | None = None,
     ) -> str:
         """Update auto top-up settings
 
@@ -53231,8 +53225,8 @@ def register_generated_tools(mcp, _get_client):
         sip_auth_username: str | None = None,
         sip_auth_password: str | None = None,
         recording_enabled: bool | None = None,
-        call_icon_countries: str | None = None,
-        max_call_duration_seconds: str | None = None,
+        call_icon_countries: list[str] | None = None,
+        max_call_duration_seconds: int | None = None,
         forward_caller_id: Literal["business", "caller"] | None = None,
     ) -> str:
         """Update calling config
@@ -53634,8 +53628,8 @@ def register_generated_tools(mcp, _get_client):
         sip_auth_username: str | None = None,
         sip_auth_password: str | None = None,
         recording_enabled: bool | None = None,
-        call_icon_countries: str | None = None,
-        max_call_duration_seconds: str | None = None,
+        call_icon_countries: list[str] | None = None,
+        max_call_duration_seconds: int | None = None,
         forward_caller_id: Literal["business", "caller"] | None = None,
     ) -> str:
         """Update calling config
@@ -55234,7 +55228,7 @@ def register_generated_tools(mcp, _get_client):
             name: (required)
             description
             nodes: Each item is an object with keys: id (string, required) - Stable node id referenced by edges; type (one of: trigger, send_message, wait_for_reply, condition, set_variable, delay, webhook, hubspot_upsert_contact, ai, handoff, start_call, a_b_split, set_field, enroll_sequence, add_tag, remove_tag, end; required) - Node kind. The 17 supported types break into four groups: messaging (send_message), control flow (trigger, condition, delay, wait_for_reply, a_b_split, end), ...; config (object) - Type-specific settings. Every string field supports `{{variable}}` interpolation against the run's variable bag, resolved at execution time. **trigger**: `{ ...; position (object with keys x, y) - Canvas coordinates (ignored by the executor; used by the visual builder).; label (string) - Optional display name shown on the builder canvas and inspector, falling back to the node type when absent. The nodes array is replaced wholesale on update, ...
-            edges: Each item is an object with keys: id (string, required); source (string, required) - Source node id; target (string, required) - Target node id; sourceHandle (string or null) - Selects a branch output of a multi-output node. Null (or omitted) = the node's single/default output. Known handles per node type: - **condition**: a rule's ...
+            edges: Each item is an object with keys: id (string, required); source (string, required) - Source node id; target (string, required) - Target node id; sourceHandle (string) - Selects a branch output of a multi-output node. Null (or omitted) = the node's single/default output. Known handles per node type: - **condition**: a rule's ...
             entry_node_id: The trigger node id; derived from the single trigger node if omitted"""
         client = _get_client()
         try:
@@ -55315,7 +55309,7 @@ def register_generated_tools(mcp, _get_client):
                 name
                 description
                 nodes: Each item is an object with keys: id (string, required) - Stable node id referenced by edges; type (one of: trigger, send_message, wait_for_reply, condition, set_variable, delay, webhook, hubspot_upsert_contact, ai, handoff, start_call, a_b_split, set_field, enroll_sequence, add_tag, remove_tag, end; required) - Node kind. The 17 supported types break into four groups: messaging (send_message), control flow (trigger, condition, delay, wait_for_reply, a_b_split, end), ...; config (object) - Type-specific settings. Every string field supports `{{variable}}` interpolation against the run's variable bag, resolved at execution time. **trigger**: `{ ...; position (object with keys x, y) - Canvas coordinates (ignored by the executor; used by the visual builder).; label (string) - Optional display name shown on the builder canvas and inspector, falling back to the node type when absent. The nodes array is replaced wholesale on update, ...
-                edges: Each item is an object with keys: id (string, required); source (string, required) - Source node id; target (string, required) - Target node id; sourceHandle (string or null) - Selects a branch output of a multi-output node. Null (or omitted) = the node's single/default output. Known handles per node type: - **condition**: a rule's ...
+                edges: Each item is an object with keys: id (string, required); source (string, required) - Source node id; target (string, required) - Target node id; sourceHandle (string) - Selects a branch output of a multi-output node. Null (or omitted) = the node's single/default output. Known handles per node type: - **condition**: a rule's ...
                 entry_node_id
                 account_id: Reassign the workflow to a different `SocialAccount`. Changing this triggers a graph revalidation against the new platform.
 
