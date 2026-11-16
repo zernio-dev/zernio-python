@@ -48657,7 +48657,7 @@ def register_generated_tools(mcp, _get_client):
     def treasury_get_auto_recharge() -> str:
         """Get auto top-up settings
 
-        Your balance's auto top-up rule: when the balance drops below `belowCents`, the billing owner's saved card is charged back up to `toCents`, tax added on top as for any top-up.
+        Your balance's auto top-up rule: when your balance drops below `belowCents`, we bring it back to `toCents` from the billing owner's saved card, tax added on top as for any top-up.
 
         Account credit you held when you moved to the balance pays an auto top-up first, without a card charge or invoice (see `recentCreditRecharges` on `GET /v1/balance`). The card is charged only once that credit is used up, and only while the balance is still below `belowCents`.
 
@@ -48700,13 +48700,13 @@ def register_generated_tools(mcp, _get_client):
 
         When this month's auto top-ups plus the next one would pass `monthlyLimitCents`, the card is not charged and you get one email that month. At $0, pay-per-use then answers 402 `usage_limit_reached`.
 
-        - 400: a field is out of range, `toCents` is less than $5 above `belowCents`, or, while auto top-up is on, `monthlyLimitCents` is ...
+        - 400: a field is out of range, `toCents` is not at least $5 above `belowCents`, or, while auto top-up is on, `monthlyLimitCents` ...
 
         Args:
             enabled: Turns auto top-up on or off. A rule switched off by failed charges stays off until the card is updated.
-            below_cents: Auto top-up charges the card when the balance drops below this, in cents. At least $5.
-            to_cents: Top back up to this, in cents. At least $5 above belowCents, so at least $10.
-            monthly_limit_cents: Most auto top-up may add per calendar month (UTC), before tax. At least toCents while auto top-up is on. Null for no limit.
+            below_cents: The below amount, in cents: when the balance drops below this, auto top-up brings it back to toCents. At least $5.
+            to_cents: The back-to amount, in cents. At least $5 above belowCents, so at least $10.
+            monthly_limit_cents: Most auto top-up may add per calendar month (UTC), before tax. At least the back-to amount (toCents) while auto top-up is on. Null for no limit.
             alert_below_cents: Email the billing owner once each time the balance drops below this. Null for no email."""
         client = _get_client()
         try:
