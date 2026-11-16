@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.620.1"
+  version: "1.621.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -180,6 +180,7 @@ x-documentation:
     - `account.disconnected` - Account disconnected: deactivated after its token was revoked or rejected (or the platform refused it, e.g. a Facebook Page left out of a later authorization), or flagged as needing reconnection. Not sent again while the account stays deactivated
     - `account.permissions_changed` - An account connected with `scopes` or through your own OAuth app lost a permission area (for example posting) while staying connected
     - `account.rate_limited` - A Google or Microsoft mailbox entered a sending cooldown; sends answer 429 until `account.resetsAt`
+    - `account.privacy_request` - A Shopify merchant asked to export or erase a customer's data, or the shop's data after an uninstall. Erase or export your own copy
     - `account.ads.initial_sync_completed` - Initial ads sync (discovery + 90-day backfill) completed for an ads-enabled account
     - `account.ads.sync_failed` - An ad account's ads stopped syncing (no successful sync for 24 hours, or every live ad at the retry cap). Fires once until it recovers
     - `account.ads.sync_recovered` - An ad account reported by `account.ads.sync_failed` is syncing again
@@ -728,7 +729,7 @@ tags:
       **Events:**
 
       - Posts: `post.scheduled`, `post.published`, `post.failed`, `post.partial`, `post.cancelled`, `post.recycled`, `post.platform.published`, `post.platform.failed`, `post.platform.deleted`, `post.tiktok.url_resolved`, `post.external.created`, `post.external.updated`, `post.external.deleted`, `post.tracking_completed`, `post.authenticity_changed`
-      - Accounts and analytics: `account.connected`, `account.disconnected`, `account.permissions_changed`, `account.ads.initial_sync_completed`, `account.ads.sync_failed`, `account.ads.sync_recovered`, `account.rate_limited`, `analytics.synced`
+      - Accounts and analytics: `account.connected`, `account.disconnected`, `account.permissions_changed`, `account.ads.initial_sync_completed`, `account.ads.sync_failed`, `account.ads.sync_recovered`, `account.rate_limited`, `account.privacy_request`, `analytics.synced`
       - Messages: `message.received`, `message.sent`, `message.edited`, `message.deleted`, `message.delivered`, `message.read`, `message.played`, `message.failed`, `reaction.received`, `referral.received`, `conversation.started`, `conversation.control_changed`
       - Calls: `call.received`, `call.ended`, `call.failed`, `call.permission_request`, `call.transcript_segment`, `call.recording_ready`
       - Engagement and leads: `comment.received`, `mention.received`, `review.new`, `review.updated`, `review.deleted`, `review.restored`, `lead.received`
@@ -5553,7 +5554,7 @@ components:
           type: array
           items:
             type: string
-            enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.permissions_changed, account.ads.initial_sync_completed, account.ads.sync_failed, account.ads.sync_recovered, analytics.synced, post.tracking_completed, post.authenticity_changed, message.received, conversation.started, conversation.control_changed, call.received, call.ended, call.failed, call.permission_request, call.transcript_segment, call.recording_ready, message.sent, message.edited, message.deleted, message.delivered, message.read, message.played, message.failed, reaction.received, referral.received, comment.received, mention.received, review.new, review.updated, review.deleted, review.restored, lead.received, conversion.received, ad.status_changed, ad.created, ad.updated, campaign.created, campaign.updated, ad_set.created, ad_set.updated, ad.review.approved, ad.review.rejected, ad.delivery_issue, campaign.budget.depleted, ad_account.status_changed, campaign.status_changed, ad.video.processed, ad_rule.triggered, automation.check.completed, automation.action.applied, automation.action.failed, automation.action.unknown, automation.alert.opened, automation.alert.escalated, automation.alert.resolved, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.account.quality_updated, whatsapp.account.status_updated, whatsapp.account.alert_received, whatsapp.contact.identity_changed, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, phone_number.stock_available, verification.approved, verification.failed, api.changelog.published, sms.registration.action_required, sms.registration.status_updated, branded_calling.identity.status_updated, branded_calling.identity.action_required, branded_calling.number.status_updated, rcs.agent.status_updated, commerce.product.created, commerce.product.updated, commerce.product.deleted, commerce.order.created, commerce.order.updated, commerce.order.refunded, contact.tag_added, contact.tag_removed, contact.field_changed, sequence.enrolled, sequence.exited, workflow.run.started, workflow.run.completed, workflow.run.failed, support.run.completed, support.run.failed, campaign_submission.received, campaign_submission.flagged, campaign_submission.pending_review, campaign_submission.approved, campaign_submission.rejected, creator_campaign.budget_exhausted, creator_campaign.closed, campaign_payout.payable, campaign_payout.settled, campaign_payout.failed, campaign_participant.joined, campaign_participant.suspended, campaign_participant.removed, account.rate_limited, calendar.event.created, calendar.event.updated, calendar.event.deleted, email.sent, email.opened, email.link_clicked, email.thread_replied, email.send_failed, email.bounced, email.updated, email.deleted, file.created, file.updated, file.deleted, file.picked, contact.updated, contact.deleted, balance.low, balance.empty, balance.charged, campaign_participant.pending, campaign_participant.approved, campaign_participant.denied, campaign_draft.submitted, campaign_draft.approved, campaign_draft.revision_requested, campaign_draft.rejected, campaign_sample.requested, campaign_sample.approved, campaign_sample.shipped, campaign_sample.declined, notification.sent]
+            enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.permissions_changed, account.ads.initial_sync_completed, account.ads.sync_failed, account.ads.sync_recovered, analytics.synced, post.tracking_completed, post.authenticity_changed, message.received, conversation.started, conversation.control_changed, call.received, call.ended, call.failed, call.permission_request, call.transcript_segment, call.recording_ready, message.sent, message.edited, message.deleted, message.delivered, message.read, message.played, message.failed, reaction.received, referral.received, comment.received, mention.received, review.new, review.updated, review.deleted, review.restored, lead.received, conversion.received, ad.status_changed, ad.created, ad.updated, campaign.created, campaign.updated, ad_set.created, ad_set.updated, ad.review.approved, ad.review.rejected, ad.delivery_issue, campaign.budget.depleted, ad_account.status_changed, campaign.status_changed, ad.video.processed, ad_rule.triggered, automation.check.completed, automation.action.applied, automation.action.failed, automation.action.unknown, automation.alert.opened, automation.alert.escalated, automation.alert.resolved, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.account.quality_updated, whatsapp.account.status_updated, whatsapp.account.alert_received, whatsapp.contact.identity_changed, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, phone_number.stock_available, verification.approved, verification.failed, api.changelog.published, sms.registration.action_required, sms.registration.status_updated, branded_calling.identity.status_updated, branded_calling.identity.action_required, branded_calling.number.status_updated, rcs.agent.status_updated, commerce.product.created, commerce.product.updated, commerce.product.deleted, commerce.order.created, commerce.order.updated, commerce.order.refunded, contact.tag_added, contact.tag_removed, contact.field_changed, sequence.enrolled, sequence.exited, workflow.run.started, workflow.run.completed, workflow.run.failed, support.run.completed, support.run.failed, campaign_submission.received, campaign_submission.flagged, campaign_submission.pending_review, campaign_submission.approved, campaign_submission.rejected, creator_campaign.budget_exhausted, creator_campaign.closed, campaign_payout.payable, campaign_payout.settled, campaign_payout.failed, campaign_participant.joined, campaign_participant.suspended, campaign_participant.removed, account.rate_limited, account.privacy_request, calendar.event.created, calendar.event.updated, calendar.event.deleted, email.sent, email.opened, email.link_clicked, email.thread_replied, email.send_failed, email.bounced, email.updated, email.deleted, file.created, file.updated, file.deleted, file.picked, contact.updated, contact.deleted, balance.low, balance.empty, balance.charged, campaign_participant.pending, campaign_participant.approved, campaign_participant.denied, campaign_draft.submitted, campaign_draft.approved, campaign_draft.revision_requested, campaign_draft.rejected, campaign_sample.requested, campaign_sample.approved, campaign_sample.shipped, campaign_sample.declined, notification.sent]
           description: Events subscribed to
         isActive:
           type: boolean
@@ -6124,8 +6125,8 @@ components:
               description: Human-readable reason for the disconnection
             reasonCode:
               type: string
-              enum: [auth_failed, imap_disabled, tls_error, unreachable, replaced]
-              description: 'IMAP mailboxes only: why polling stopped, or replaced when a Google or Microsoft account took over the mailbox.'
+              enum: [auth_failed, imap_disabled, tls_error, unreachable, replaced, app_uninstalled]
+              description: 'IMAP mailboxes: why polling stopped, or replaced when a Google or Microsoft account took over the mailbox. Shopify stores: app_uninstalled when the merchant uninstalled the Zernio app.'
             reconnectUrl:
               type: string
               format: uri
@@ -14844,6 +14845,56 @@ components:
           start: { type: string, example: '09:00' }
           end: { type: string, example: '17:00' }
           exdates: { type: array, items: { type: string, format: date }, description: Dates to exclude. }
+    WebhookPayloadAccountPrivacyRequest:
+      type: object
+      description: "Webhook payload for account.privacy_request: a Shopify merchant asked to export or erase a customer's data, or the shop's data 48 hours after an uninstall."
+      required: [id, event, account, privacyRequest, timestamp]
+      properties:
+        id: { type: string }
+        profiles: { $ref: '#/components/schemas/WebhookProfiles' }
+        test:
+          type: boolean
+          description: 'Always true when present: only a sample sent by POST /v1/webhooks/test with an event carries it. Real deliveries never do.'
+        event: { type: string, enum: [account.privacy_request] }
+        account:
+          type: object
+          required: [accountId, profileId, platform, username]
+          properties:
+            accountId: { type: string }
+            profileId: { type: string }
+            platform: { type: string }
+            username: { type: string }
+            displayName: { type: [string, "null"] }
+        privacyRequest:
+          type: object
+          required: [type, shopDomain, shopId, customer, orderIds, dataRequestId]
+          properties:
+            type:
+              type: string
+              enum: [customer_data_request, customer_redact, shop_redact]
+              description: |-
+                customer_data_request: the merchant asked for the data you hold about `customer`. Send it to the merchant.
+
+                customer_redact: erase the data you hold about `customer` and the orders in `orderIds`.
+
+                shop_redact: erase the data you hold about the whole shop. Sent 48 hours after the merchant uninstalled the app.
+            shopDomain: { type: string, example: sample-brand.myshopify.com }
+            shopId: { type: [string, "null"] }
+            customer:
+              type: [object, "null"]
+              description: Who the request is about. Null for shop_redact.
+              properties:
+                id: { type: [string, "null"] }
+                email: { type: [string, "null"] }
+                phone: { type: [string, "null"] }
+            orderIds:
+              type: array
+              items: { type: string }
+              description: The Shopify order ids the request covers. Empty for shop_redact.
+            dataRequestId:
+              type: [string, "null"]
+              description: "Shopify's id for a customer_data_request."
+        timestamp: { type: string, format: date-time }
     WebhookPayloadAccountRateLimited:
       type: object
       description: 'Webhook payload for account.rate_limited: a mailbox entered a sending cooldown.'
@@ -23809,6 +23860,53 @@ webhooks:
                   externalId: cus_8f3a2
             schema:
               $ref: '#/components/schemas/WebhookPayloadAccountConnected'
+      responses:
+        '200':
+          description: Webhook received successfully
+  account.privacy_request:
+    post:
+      operationId: onAccountPrivacyRequest
+      summary: Store privacy request
+      description: |
+        A Shopify merchant asked to export or erase customer data, or the shop's data after uninstalling the app. Shopify sends these to the installed app, which is Zernio's, so we pass them on to you.
+
+        ### What to do
+
+        `privacyRequest.type` says which request it is. Export or erase your own copy of the data. Zernio handles its own copy.
+
+        ### Who receives it
+
+        A customer request goes to every account connected to the shop when it arrives. `shop_redact` arrives 48 hours after the uninstall, when the account is already disconnected, and goes to the accounts that were connected to the shop.
+      tags: [Webhook Events]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              id: 00000000-0000-4000-8000-000000000000
+              event: account.privacy_request
+              timestamp: '2026-01-15T10:00:00Z'
+              account:
+                accountId: 507f1f77bcf86cd799439011
+                profileId: 507f1f77bcf86cd799439012
+                platform: shopify
+                username: sample-brand.myshopify.com
+                displayName: Sample Brand
+              privacyRequest:
+                type: customer_redact
+                shopDomain: sample-brand.myshopify.com
+                shopId: '954889'
+                customer:
+                  id: '191167'
+                  email: jane@example.com
+                  phone: '+15555550123'
+                orderIds: ['299938', '280263']
+                dataRequestId: null
+              profiles:
+                - id: 507f1f77bcf86cd799439012
+                  externalId: cus_8f3a2
+            schema:
+              $ref: '#/components/schemas/WebhookPayloadAccountPrivacyRequest'
       responses:
         '200':
           description: Webhook received successfully
@@ -55612,6 +55710,7 @@ paths:
                     - account.ads.sync_failed
                     - account.ads.sync_recovered
                     - account.rate_limited
+                    - account.privacy_request
                     - calendar.event.created
                     - calendar.event.updated
                     - calendar.event.deleted

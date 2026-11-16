@@ -51229,6 +51229,7 @@ def register_generated_tools(mcp, _get_client):
             "account.ads.sync_failed",
             "account.ads.sync_recovered",
             "account.rate_limited",
+            "account.privacy_request",
             "calendar.event.created",
             "calendar.event.updated",
             "calendar.event.deleted",
