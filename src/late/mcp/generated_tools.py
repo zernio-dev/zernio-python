@@ -49940,15 +49940,13 @@ def register_generated_tools(mcp, _get_client):
 
         The 200 response means the call is dialing. The lifecycle continues asynchronously: track it via `GET /v1/voice/calls/{id}` or the `call.*` webhooks.
 
-        Outbound calls are capped per rolling hour (429 when hit).
+        Calls are not capped by count. Each team runs at most 10 calls at once (outbound calls plus calls forwarded to a phone) and has a daily safety limit on calling spend over the last 24 hours.
+
+        Past a limit the call is refused with 429 `call_limit_reached`, and `details.limit` names it.
 
         ### Balance time limit
 
-        On balance billing a call runs only as long as the balance, plus what auto top-up can still add this month, funds at its per-minute price, minus calls already in progress. Then it ends with `hangup_cause: time_limit`. Under one minute is refused with 402.
-
-        ### Idempotency
-
-        Send an `Idempotency-Key` header to make retries safe. Same key + same body replays the original response instead of dialing (and billing) ...
+        On balance billing a call runs only as long as the balance, plus what auto top-up can still add this month, funds at its per-minute price, minus calls already in progress. Then it ends ...
 
         Args:
             to: Destination to dial, E.164 with leading +. (required)
