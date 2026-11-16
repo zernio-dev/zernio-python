@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.622.0"
+  version: "1.623.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -1263,7 +1263,7 @@ components:
       description: |
         The send was refused before reaching the provider.
 
-        - `email_send_cap_reached`: today's cap for the mailbox is spent. `details.cap` names the limit and `resetsAt`; `retryAfterSeconds` counts to midnight UTC.
+        - `email_send_cap_reached`: today's cap for the mailbox is spent. `details.cap` names the `limit`, the `baseLimit`, whether it is `doubled`, `doublesAt` (when it doubles, or null) and `resetsAt`; `retryAfterSeconds` counts to midnight UTC.
         - `rate_limited`: the mailbox is in a sending cooldown, either from a same-body burst to more than 50 recipients in an hour (`details.cap.kind: recipient_burst`) or an earlier trigger. `retryAfterSeconds` says when it lifts, and `account.rate_limited` fired when it started.
       content:
         application/json:
@@ -41872,7 +41872,10 @@ paths:
                     type: object
                     description: "Google and Microsoft only: today's outbound mail allowance for the mailbox."
                     properties:
-                      limit: { type: integer }
+                      limit: { type: integer, description: "Today's cap: the base cap, doubled after 14 days of sending with no spam signal." }
+                      baseLimit: { type: integer, description: 'The cap before doubling.' }
+                      doubled: { type: boolean }
+                      doublesAt: { type: [string, 'null'], format: date-time, description: 'When the cap doubles if the mailbox sends every day from now on and raises no spam signal. Null once doubled, with a manual limit, and on IMAP.' }
                       used: { type: integer }
                       resetsAt: { type: string, format: date-time }
                   push:
@@ -56264,13 +56267,16 @@ paths:
       description: |
         Sends from the connected mailbox and returns the stored sent copy.
 
-        The message is mirrored into the inbox (`message.sent` fires once) and counted against the mailbox's daily cap. The cap is reported in the `X-Zernio-Send-Limit`, `X-Zernio-Send-Remaining` and `X-Zernio-Send-Reset` response headers.
+        The message is mirrored into the inbox (`message.sent` fires once) and counted against the mailbox's daily cap. The cap is reported in the `X-Zernio-Send-Limit`, `X-Zernio-Send-Remaining` and `X-Zernio-Send-Reset` response headers, plus `X-Zernio-Send-Doubles-At` while the cap can still double.
 
         ### Sending limits
 
         These mailboxes are for one-to-one mail, not bulk sends. Protection on every mailbox:
 
-        - Daily cap: Microsoft 1,000; Google Workspace 500; Gmail consumer 200. Reaching it answers 429 `email_send_cap_reached` with `details.cap`.
+        - Daily cap: Microsoft 1,000; Google Workspace 500; Gmail consumer 200; IMAP 200. Reaching it answers 429 `email_send_cap_reached` with `details.cap`.
+        - The cap of a Microsoft, Google Workspace or Gmail mailbox doubles once (2,000, 1,000 and 400) after 14 days with a successful send, counted since its last spam signal and never past the provider's own limit. Days need not be consecutive.
+        - A spam signal starts the count over and returns the cap to its base. Signals: a same-body burst, a send refused over the mailbox's sending quota, a spam or blocklist bounce, or 10 hard bounces within an hour. Without one, a doubled cap stays doubled.
+        - Higher limits are available on request for established senders.
         - The same body reaching more than 50 distinct recipients within an hour pauses the mailbox with an escalating cooldown (429 `rate_limited`, `account.rate_limited` webhook).
 
         ### Scheduling
@@ -56304,6 +56310,7 @@ paths:
             X-Zernio-Send-Limit: { schema: { type: integer }, description: "Today's cap for this mailbox." }
             X-Zernio-Send-Remaining: { schema: { type: integer } }
             X-Zernio-Send-Reset: { schema: { type: string, format: date-time }, description: 'When the daily window resets (midnight UTC).' }
+            X-Zernio-Send-Doubles-At: { schema: { type: string, format: date-time }, description: "When the cap doubles if the mailbox sends every day from now on and raises no spam signal. Absent once the cap has doubled, with a manual limit, and on IMAP." }
           content:
             application/json:
               schema:
