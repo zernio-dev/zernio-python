@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.626.0"
+  version: "1.627.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -21273,6 +21273,16 @@ components:
                 properties:
                   actual: { type: [number, "null"], description: "The object's value over the window. Null when it cannot be computed." }
                   met: { type: boolean }
+        readings:
+          type: array
+          description: "On a matched object: spend, impressions and clicks over each window its conditions read, and the other search impression shares when a condition reads one. Left out where a condition already reads the value."
+          items:
+            type: object
+            required: [metric, window, actual]
+            properties:
+              metric: { type: string }
+              window: { type: string }
+              actual: { type: [number, "null"] }
     AdRuleEvaluation:
       type: object
       required: [evaluatedAt, today, timezone, timezoneAssumed, currency, matched, objects]
