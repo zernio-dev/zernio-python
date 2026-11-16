@@ -7755,7 +7755,7 @@ def register_generated_tools(mcp, _get_client):
     )
     def ad_campaigns_duplicate_ad_campaign(
         campaign_id: str,
-        platform: Literal["facebook", "instagram", "tiktok", "linkedin"],
+        platform: Literal["facebook", "instagram", "tiktok", "linkedin", "google"],
         deep_copy: bool = True,
         status_option: Literal["ACTIVE", "PAUSED", "INHERITED_FROM_SOURCE"] = "PAUSED",
         start_time: str | None = None,
@@ -7777,6 +7777,7 @@ def register_generated_tools(mcp, _get_client):
             - **Meta** copies one level at a time with Meta's `/copies` endpoint. See below.
             - **TikTok** has no native copy primitive. See below.
             - **LinkedIn** has no native copy primitive. See below.
+            - **Google** copies Performance Max campaigns in one atomic request. See below.
             - Other platforms return 501 Not Implemented.
 
             ### Meta
@@ -7784,30 +7785,30 @@ def register_generated_tools(mcp, _get_client):
             Zernio copies the campaign, then each of its ad sets (DELETED and ARCHIVED ones are skipped), then each ad of every ad set. So a campaign of any size copies: Meta refuses a single deep copy of 3 or more objects.
 
             - `statusOption` applies at every level.
-            - If any child copy fails, the partial copy is deleted and the request fails with Meta's error, so a retry starts clean.
-            - Each copied object takes a few seconds, so a large campaign takes minutes ...
+            - If any child copy fails, the partial copy is deleted and the request fails with Meta's error, so a retry starts ...
 
-            Platforms: meta, tiktok, linkedin
+            Platforms: meta, tiktok, linkedin, google
 
             Args:
                 campaign_id: Source platform campaign ID (required)
                 platform: (required)
                 deep_copy: Copy child ad sets + ads + creatives + targeting
-                status_option: ACTIVE = launch the clone immediately (spends the moment LinkedIn approves it). PAUSED = clone stays DRAFT, safe default. INHERITED_FROM_SOURCE = mirror each entity's source status per-entity. Duplicating an ACTIVE campaign this way starts a second front of spend.
+                status_option: ACTIVE = launch the clone immediately (spends the moment LinkedIn approves it). PAUSED = clone stays DRAFT, safe default. Google only accepts PAUSED. INHERITED_FROM_SOURCE = mirror each entity's source status per-entity. Duplicating an ACTIVE campaign this way starts a second front of spend.
                 start_time: Reschedule the copied hierarchy's start (ISO 8601). TikTok defaults to a start a few minutes after the copy.
 
         - Meta and TikTok: a value without an offset (`YYYY-MM-DD`, `YYYY-MM-DD HH:MM:SS` or `YYYY-MM-DDTHH:MM:SS`) is read in the ad account timezone.
         - LinkedIn: ad accounts carry no timezone, so it is read as UTC.
+        - Google: the date is used as a whole day in the customer timezone.
                 end_time: Reschedule the copied hierarchy's end, read like `startTime`; a date-only end runs to 23:59:59 local. Defaults to the source's end.
                 rename_strategy: Meta's native `rename_strategy` values:
 
         - `DEEP_RENAME`: renames the copied campaign and every copied child (ad sets, ads) with `renamePrefix` / `renameSuffix`.
         - `ONLY_TOP_LEVEL_RENAME`: renames only the copied campaign; children keep their source names.
-        - `NO_RENAME`: keeps every source name.
+        - `NO_RENAME`: keeps every source name. Google returns 400, since its campaign names are unique per account.
 
         With no rename option at all, Meta appends its own ` - Copy` suffix; LinkedIn defaults to `DEEP_RENAME` (its campaign group and campaigns are renamed). Ignored on TikTok, where `renamePrefix` / `renameSuffix` apply to every copied object.
                 rename_prefix: Text prepended to each renamed object's name.
-                rename_suffix: Text appended to each renamed object's name. On LinkedIn an omitted suffix defaults to ` (Copy)`.
+                rename_suffix: Text appended to each renamed object's name. On LinkedIn and Google an omitted suffix defaults to ` (Copy)` when no prefix is sent.
                 sync_after: Trigger ads discovery on the owning account after the copy succeeds"""
         client = _get_client()
         try:

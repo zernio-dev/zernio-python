@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.618.0"
+  version: "1.619.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -18679,6 +18679,7 @@ components:
               resourceName: { type: string }
               fieldType: { type: string, description: "Google asset role, such as HEADLINE or LOGO." }
               status: { type: string }
+              source: { type: string, description: "Who added the asset: ADVERTISER, or AUTOMATICALLY_CREATED when Google generated it. Empty when Google does not say." }
               text: { type: string }
               imageUrl: { type: string, format: uri }
               youtubeVideoId: { type: string }
@@ -81705,7 +81706,7 @@ paths:
       x-resource-group: "ads"
       operationId: duplicateAdCampaign
       tags: ["Ad Campaigns"]
-      x-platforms: ["meta", "tiktok", "linkedin"]
+      x-platforms: ["meta", "tiktok", "linkedin", "google"]
       summary: Duplicate a campaign
       description: |
         Copies a campaign with its ad sets, ads, creatives and targeting, created paused so you can review it before launch.
@@ -81717,6 +81718,7 @@ paths:
         - **Meta** copies one level at a time with Meta's `/copies` endpoint. See below.
         - **TikTok** has no native copy primitive. See below.
         - **LinkedIn** has no native copy primitive. See below.
+        - **Google** copies Performance Max campaigns in one atomic request. See below.
         - Other platforms return 501 Not Implemented.
 
         ### Meta
@@ -81742,6 +81744,21 @@ paths:
         `statusOption: INHERITED_FROM_SOURCE` is evaluated **per entity**: any Group / Campaign / Creative whose source is `ACTIVE` gets its clone activated too.
 
         Duplicating an ACTIVE campaign with `INHERITED_FROM_SOURCE` starts a second front of spend the moment the clone activates. The safe default is `PAUSED`.
+
+        ### Google
+
+        Performance Max campaigns only; any other Google campaign type returns 501 naming its channel. Zernio reads the campaign and recreates it in one atomic Google request, so a copy either exists whole or not at all.
+
+        - The copy is always created paused. `statusOption` other than `PAUSED` and `deepCopy: false` return 400.
+        - The name is `renamePrefix` + the source name + `renameSuffix`. With neither sent, the suffix defaults to ` (Copy)`. `NO_RENAME` returns 400 because Google campaign names are unique per account. Asset groups are renamed only under `DEEP_RENAME`.
+        - `startTime` and `endTime` are whole days in the customer's timezone. Without `startTime` the copy starts when created. Without `endTime` the source's end date is kept.
+        - Copied budget: a shared budget is reused, so the copy shares its spend; a daily budget is recreated.
+        - Copied bidding: a portfolio strategy, Maximize conversions with its target CPA, or Maximize conversion value with its target ROAS.
+        - Copied campaign settings: Merchant Center feed and vehicle listings, location, language, proximity and ad schedule criteria, negative keywords, negative keyword lists, sitelinks and other campaign assets, tracking template and URL parameters, geo target type and automated asset settings.
+        - Copied asset groups: every asset group with its assets, listing tree, search themes and audience signals.
+        - Assets Google created automatically are not copied; Google regenerates them.
+        - Anything else returns 422 naming each setting that cannot be copied, and nothing is created: other bidding strategies or budget types, other campaign criteria or shared set types, brand guidelines, conversion goals set on the campaign, audiences scoped to an asset group, and listing trees that are not Shopping trees.
+        - `adSetIdMap` and `adIdMap` both map each source asset group id to its copy.
 
         ### Sync
 
@@ -81772,7 +81789,7 @@ paths:
               type: object
               required: [platform]
               properties:
-                platform: { type: string, enum: [facebook, instagram, tiktok, linkedin] }
+                platform: { type: string, enum: [facebook, instagram, tiktok, linkedin, google] }
                 deepCopy: { type: boolean, default: true, description: Copy child ad sets + ads + creatives + targeting }
                 statusOption:
                   type: string
@@ -81781,10 +81798,10 @@ paths:
                   description: >
                     ACTIVE = launch the clone immediately (spends the moment
                     LinkedIn approves it). PAUSED = clone stays DRAFT, safe
-                    default. INHERITED_FROM_SOURCE = mirror each entity's
+                    default. Google only accepts PAUSED. INHERITED_FROM_SOURCE = mirror each entity's
                     source status per-entity. Duplicating an ACTIVE
                     campaign this way starts a second front of spend.
-                startTime: { type: string, format: date-time, description: "Reschedule the copied hierarchy's start (ISO 8601). TikTok defaults to a start a few minutes after the copy.\n\n- Meta and TikTok: a value without an offset (`YYYY-MM-DD`, `YYYY-MM-DD HH:MM:SS` or `YYYY-MM-DDTHH:MM:SS`) is read in the ad account timezone.\n- LinkedIn: ad accounts carry no timezone, so it is read as UTC." }
+                startTime: { type: string, format: date-time, description: "Reschedule the copied hierarchy's start (ISO 8601). TikTok defaults to a start a few minutes after the copy.\n\n- Meta and TikTok: a value without an offset (`YYYY-MM-DD`, `YYYY-MM-DD HH:MM:SS` or `YYYY-MM-DDTHH:MM:SS`) is read in the ad account timezone.\n- LinkedIn: ad accounts carry no timezone, so it is read as UTC.\n- Google: the date is used as a whole day in the customer timezone." }
                 endTime: { type: string, format: date-time, description: "Reschedule the copied hierarchy's end, read like `startTime`; a date-only end runs to 23:59:59 local. Defaults to the source's end." }
                 renameStrategy:
                   type: string
@@ -81794,11 +81811,11 @@ paths:
 
                     - `DEEP_RENAME`: renames the copied campaign and every copied child (ad sets, ads) with `renamePrefix` / `renameSuffix`.
                     - `ONLY_TOP_LEVEL_RENAME`: renames only the copied campaign; children keep their source names.
-                    - `NO_RENAME`: keeps every source name.
+                    - `NO_RENAME`: keeps every source name. Google returns 400, since its campaign names are unique per account.
 
                     With no rename option at all, Meta appends its own ` - Copy` suffix; LinkedIn defaults to `DEEP_RENAME` (its campaign group and campaigns are renamed). Ignored on TikTok, where `renamePrefix` / `renameSuffix` apply to every copied object.
                 renamePrefix: { type: string, description: "Text prepended to each renamed object's name." }
-                renameSuffix: { type: string, description: "Text appended to each renamed object's name. On LinkedIn an omitted suffix defaults to ` (Copy)`." }
+                renameSuffix: { type: string, description: "Text appended to each renamed object's name. On LinkedIn and Google an omitted suffix defaults to ` (Copy)` when no prefix is sent." }
                 syncAfter: { type: boolean, default: true, description: Trigger ads discovery on the owning account after the copy succeeds }
       responses:
         '200':
@@ -81812,11 +81829,11 @@ paths:
                   adSetIdMap:
                     type: object
                     additionalProperties: { type: string }
-                    description: "Meta only: source ad set ID to copied ad set ID. Empty when `deepCopy` is false."
+                    description: "Meta: source ad set ID to copied ad set ID. Empty when `deepCopy` is false. Google: source asset group ID to copied asset group ID."
                   adIdMap:
                     type: object
                     additionalProperties: { type: string }
-                    description: "Meta only: source ad ID to copied ad ID, across every copied ad set. Empty when `deepCopy` is false."
+                    description: "Meta: source ad ID to copied ad ID, across every copied ad set. Empty when `deepCopy` is false. Google: the same map as `adSetIdMap`, since a Performance Max asset group is its ad."
                   discovery:
                     type: string
                     enum: [triggered, skipped, failed]
@@ -81842,7 +81859,8 @@ paths:
 
             To fix `ad_account_not_selected`, add the ad account to the selection (GET /v1/connect/{platform}/ads with adAccountIds, which replaces the selection) or use a connection that has it selected.
         '404': { description: Source campaign not found }
-        '501': { description: Operation not supported on this platform }
+        '422': { description: 'Google only: the campaign has settings a copy cannot carry, listed in the message. Nothing is created.' }
+        '501': { description: 'Operation not supported on this platform, or a Google campaign that is not Performance Max' }
 
   /v1/ads/campaigns/{campaignId}/targeting:
     get:
