@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.621.0"
+  version: "1.622.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -1248,12 +1248,13 @@ components:
             type: invalid_request_error
             code: invalid_resource_state
     MailboxPreconditionFailed:
-      x-summary: "The account lacks a needed scope or admin approval: reconnect with wider scopes, or send an administrator the consent link."
+      x-summary: "The account lacks a needed scope, admin approval or Exchange mailbox: reconnect with wider scopes, send an administrator the consent link, or license the user."
       description: |
-        The connected account cannot serve this request until something outside the request changes. Two codes:
+        The connected account cannot serve this request until something outside the request changes. Three codes:
 
         - `account_scope_missing`: the account was connected without the area this endpoint needs (`details.grantedAreas`, `details.missingArea`), or Google reports the grant lacks a permission. Reconnect with a wider `scopes=`.
         - `admin_consent_required` (Microsoft): the tenant requires an administrator's approval. `details.adminConsentUrl` is the Microsoft Entra admin-consent link to hand to one; it opens in a browser with no API key and stays valid for one hour. `GET /v1/connect/microsoft/admin-consent` mints a fresh one.
+        - `mailbox_not_available` (Microsoft): the login has no Exchange Online mailbox (no Exchange license, inactive, soft-deleted or on-premises), so every mail and calendar request fails. Assign an Exchange license or connect a user that has a mailbox. `GET /v1/accounts/{accountId}/health` reports it as `mailbox.reason: no_mailbox`.
       content:
         application/json:
           schema: { $ref: '#/components/schemas/ErrorResponse' }
@@ -41878,6 +41879,14 @@ paths:
                     type: string
                     enum: [active, pending, failed, not_applicable]
                     description: 'Google and Microsoft only: state of the provider change-notification subscriptions behind `message.received` and `calendar.event.*`. `pending` means a granted area has no live subscription yet (retried every 6 hours), `failed` that renewals keep failing (reconnect the account).'
+                  mailbox:
+                    type: object
+                    description: 'Microsoft only: present while the login has no Exchange Online mailbox (no Exchange license, inactive, soft-deleted or on-premises). Mail and calendar requests then answer 412 `mailbox_not_available`; files are not affected. Absent when the mailbox works. `status` is also `warning`, with the reason in `issues`.'
+                    properties:
+                      status: { type: string, enum: [unavailable] }
+                      reason: { type: string, enum: [no_mailbox] }
+                      message: { type: string }
+                      detectedAt: { type: string, format: date-time, description: 'When Microsoft last answered that the login has no mailbox.' }
                   sentItemsSync:
                     type: string
                     enum: [push, poll]
@@ -43126,6 +43135,7 @@ paths:
             - A LinkedIn connect through an app saves the member's own profile: organization pages, and mention lookups, stay on Zernio's app.
             - The connect requests the app's `scopeAreas`. `scopes` may narrow them but not add an area the app does not enable (400).
             - If the user does not grant every requested area, the account still connects and the redirect carries `missing_permissions=<areas>` (the headless POST returns `missingPermissions`).
+            - A Microsoft login that connected with `email` or `calendar` but has no Exchange Online mailbox still connects (files work), and the redirect carries `mailboxNotice=mailbox_not_available`. Mail and calendar requests then answer 412 `mailbox_not_available`.
             - If the platform refuses a permission your app is not approved for, the redirect carries `error=oauth_app_scope_not_allowed`.
 
             The account remembers the app, and token refresh, publishing and inbox run on it. Reconnecting through another app, or without one, moves the account to that app.
