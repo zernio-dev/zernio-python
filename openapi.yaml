@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.625.0"
+  version: "1.626.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -5909,6 +5909,7 @@ components:
       properties:
         _id: { type: string }
         phoneNumber: { type: string }
+        requestedPhoneNumber: { type: string, description: 'The specific number you asked for at purchase (`phoneNumber` in the purchase body). Absent when you did not pick one. When it differs from `phoneNumber`, WhatsApp refused the picked number (it was likely registered on WhatsApp before), so a different number was issued.' }
         country: { type: string }
         numberType: { type: string, description: 'For example local, mobile, national or toll_free.' }
         status: { type: string, enum: [pending_payment, pending_regulatory, regulatory_declined, provisioning, verifying, active, suspended, releasing, released] }
