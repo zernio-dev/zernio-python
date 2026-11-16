@@ -6825,31 +6825,37 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
-            title="Pause or enable a Search keyword",
+            title="Update a Search keyword",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
         )
     )
     def ad_campaigns_update_ad_keyword(
-        keyword_id: str, status: Literal["active", "paused"]
+        keyword_id: str,
+        status: Literal["active", "paused"] | None = None,
+        cpc_bid: float | None = None,
     ) -> str:
-        """Pause or enable a Search keyword
+        """Update a Search keyword
 
-        Pauses or re-enables a single Google Search keyword.
+        Pauses, re-enables or sets the bid of a single Google Search keyword. Send `status`, `cpcBid` or both.
 
-        Changes `ad_group_criterion.status` for one keyword criterion (M.140).
-        Negative keywords have no status on Google and cannot be paused or enabled.
+        Changes `ad_group_criterion.status` (M.140) and `ad_group_criterion.cpc_bid_micros` for one keyword criterion.
+
+        `cpcBid` is in the ad account currency and takes effect only under Manual CPC bidding. A keyword with no bid of its own reads back `cpcBid: null` and uses its ad group bid.
+
+        Negative keywords have no status or bid on Google and cannot be paused, enabled or given a bid.
 
         Platforms: google
 
         Args:
             keyword_id: Zernio keyword ID (`id`), or Google's native `{adSetId}~{platformCriterionId}` (the tail of `resourceName`, e.g. 1234567890~987654321). A bare criterion id is rejected because it is only unique within its ad group. (required)
-            status: (required)"""
+            status
+            cpc_bid: Max CPC bid for this keyword, in the ad account currency. Takes effect only under Manual CPC bidding."""
         client = _get_client()
         try:
             response = client.ad_campaigns.update_ad_keyword(
-                keyword_id=keyword_id, status=status
+                keyword_id=keyword_id, status=status, cpc_bid=cpc_bid
             )
             return _format_response(response)
         except Exception as e:

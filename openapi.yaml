@@ -21350,6 +21350,7 @@ components:
         matchType: { type: string, enum: [exact, phrase, broad, unknown] }
         status: { type: string, enum: [active, paused] }
         negative: { type: boolean }
+        cpcBid: { type: [number, "null"], description: 'Max CPC bid set on this keyword, in the ad account currency. Null when the keyword uses its ad group bid. Takes effect only under Manual CPC bidding.' }
         qualityScore: { type: [integer, "null"], description: 'Deprecated, use `quality.score`. Google Quality Score, 1-10. Null when unrated.' }
         quality:
           type: object
@@ -78123,12 +78124,15 @@ paths:
       operationId: updateAdKeyword
       tags: ["Ad Campaigns"]
       x-platforms: ["google"]
-      summary: Pause or enable a Search keyword
+      summary: Update a Search keyword
       description: |
-        Pauses or re-enables a single Google Search keyword.
+        Pauses, re-enables or sets the bid of a single Google Search keyword. Send `status`, `cpcBid` or both.
 
-        Changes `ad_group_criterion.status` for one keyword criterion (M.140).
-        Negative keywords have no status on Google and cannot be paused or enabled.
+        Changes `ad_group_criterion.status` (M.140) and `ad_group_criterion.cpc_bid_micros` for one keyword criterion.
+
+        `cpcBid` is in the ad account currency and takes effect only under Manual CPC bidding. A keyword with no bid of its own reads back `cpcBid: null` and uses its ad group bid.
+
+        Negative keywords have no status or bid on Google and cannot be paused, enabled or given a bid.
       security:
         - bearerAuth: []
       parameters:
@@ -78139,9 +78143,10 @@ paths:
           application/json:
             schema:
               type: object
-              required: [status]
+              minProperties: 1
               properties:
                 status: { type: string, enum: [active, paused] }
+                cpcBid: { type: number, exclusiveMinimum: 0, description: 'Max CPC bid for this keyword, in the ad account currency. Takes effect only under Manual CPC bidding.' }
       responses:
         '403': { $ref: '#/components/responses/AdAccountNotSelected' }
         '409': { $ref: '#/components/responses/AccountConnectionRequired' }
@@ -78157,7 +78162,7 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/AccountUnavailable' }
 
-        '422': { description: 'Negative keywords have no status on Google; they cannot be paused or enabled.' }
+        '422': { description: 'Negative keywords have no status or bid on Google; they cannot be paused, enabled or given a bid.' }
     delete:
       x-resource-group: "ads"
       operationId: removeAdKeyword

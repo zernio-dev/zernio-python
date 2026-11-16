@@ -622,7 +622,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `ad_campaigns.update_ad_campaign()` | Update a campaign |
 | `ad_campaigns.update_ad_campaign_status()` | Pause or resume a campaign |
 | `ad_campaigns.update_ad_group_assets()` | Update ad-group assets |
-| `ad_campaigns.update_ad_keyword()` | Pause or enable a Search keyword |
+| `ad_campaigns.update_ad_keyword()` | Update a Search keyword |
 | `ad_campaigns.update_ad_set()` | Update an ad set |
 | `ad_campaigns.update_ad_set_status()` | Pause or resume a single ad set |
 | `ad_campaigns.update_ad_status()` | Pause or resume a single ad |
