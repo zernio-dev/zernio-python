@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.628.0"
+  version: "1.629.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -14312,6 +14312,15 @@ components:
           type: string
           enum: [standard, none]
           description: 'The mode that applies to this profile: `none` when the profile or the whole team uses zero content retention.'
+        maxOutboundCallsPerHour:
+          type: [integer, "null"]
+          description: 'Most outbound calls placed from this profile''s numbers in any rolling hour. Null means only the team limits apply.'
+        maxDailyCallSpendUsd:
+          type: [number, "null"]
+          description: 'Most billed spend, in USD, on outbound calls and calls forwarded to a phone from this profile''s numbers in any rolling 24 hours. Null means only the team limits apply.'
+        maxForwardedMinutesPerDay:
+          type: [integer, "null"]
+          description: 'Most minutes of inbound calls forwarded to a phone from this profile''s numbers in any rolling 24 hours. Null means only the team limits apply.'
         isDefault: { type: boolean }
         isOverLimit:
           type: boolean
@@ -14320,6 +14329,41 @@ components:
           type: integer
           description: 'In the profile list. Connected accounts on the profile, including ones that need reconnecting; phone and SMS number internals and posting accounts hidden by an ads connect are not counted.'
         createdAt: { type: string, format: date-time }
+    ProfileCallLimit:
+      type: object
+      required: [limit, used, remaining, window]
+      properties:
+        limit: { type: [number, "null"], description: 'The limit, or null when none is set at this level.' }
+        used: { type: number, description: 'Used in the current window, calls still in progress included.' }
+        remaining: { type: [number, "null"], description: 'What is left before the limit; null when there is no limit.' }
+        window:
+          type: string
+          enum: [concurrent, rolling_hour, rolling_24h]
+          description: '`concurrent` counts calls in progress now; the rolling windows end now.'
+    ProfileCallLimitsResponse:
+      type: object
+      required: [profileId, profile, team]
+      properties:
+        profileId: { type: string }
+        profile:
+          type: object
+          description: 'The limits set on this profile. They apply inside the team limits, never above them.'
+          properties:
+            outboundCallsPerHour: { $ref: '#/components/schemas/ProfileCallLimit' }
+            dailyCallSpendUsd: { $ref: '#/components/schemas/ProfileCallLimit' }
+            forwardedMinutesPerDay: { $ref: '#/components/schemas/ProfileCallLimit' }
+        team:
+          type: object
+          description: 'The limits of the whole team (every profile and member). Contact support to raise them.'
+          properties:
+            concurrentCalls: { $ref: '#/components/schemas/ProfileCallLimit' }
+            dailyCallSpendUsd:
+              allOf: [{ $ref: '#/components/schemas/ProfileCallLimit' }]
+              description: 'Billed spend (USD) on outbound calls and calls forwarded to a phone across the team over the rolling 24 hours, in the same unit as `maxDailyCallSpendUsd`.'
+            dailyForwardSpendUsd:
+              allOf: [{ $ref: '#/components/schemas/ProfileCallLimit' }]
+              description: 'Billed spend (USD) on calls forwarded to a phone across the team over the rolling 24 hours.'
+            forwardedMinutesPerHour: { $ref: '#/components/schemas/ProfileCallLimit' }
     EmailAddress:
       type: object
       required: [email]
@@ -40904,6 +40948,9 @@ paths:
                   type: string
                   enum: [standard, none]
                   description: 'Set `none` to create the profile with zero content retention, so nothing of its accounts is stored from the first sync. Only the team owner can, with a session or a full-access key; anyone else gets 403.'
+                maxOutboundCallsPerHour: { type: integer, minimum: 1, description: 'Caps outbound calls from this profile''s numbers per rolling hour, inside the team limits. Omit for no profile cap.' }
+                maxDailyCallSpendUsd: { type: number, exclusiveMinimum: 0, description: 'Caps billed call spend (USD) from this profile''s numbers per rolling 24 hours, inside the team limits. Omit for no profile cap.' }
+                maxForwardedMinutesPerDay: { type: integer, minimum: 1, description: 'Caps minutes forwarded to a phone from this profile''s numbers per rolling 24 hours, inside the team limits. Omit for no profile cap.' }
             example:
               name: "Marketing Team"
               description: "Profile for marketing campaigns"
@@ -40969,7 +41016,7 @@ paths:
       operationId: updateProfile
       tags: [Profiles]
       summary: Update profile
-      description: "Updates a profile's name, description, color, default timezone, externalId, default status, or zero content retention."
+      description: "Updates a profile's name, description, color, default timezone, externalId, default status, zero content retention, or call limits."
       parameters:
         - name: profileId
           in: path
@@ -40993,6 +41040,9 @@ paths:
                   type: string
                   enum: [standard, none]
                   description: 'Turns zero content retention on (`none`) or off (`standard`) for this profile only, for new data within about a minute. Only the team owner can change it. `standard` answers 409 while the whole team has it on; `none` answers 409 during a WhatsApp verification of a number of this profile.'
+                maxOutboundCallsPerHour: { type: [integer, "null"], minimum: 1, description: 'Caps outbound calls from this profile''s numbers per rolling hour, inside the team limits. Null clears it.' }
+                maxDailyCallSpendUsd: { type: [number, "null"], exclusiveMinimum: 0, description: 'Caps billed call spend (USD) from this profile''s numbers per rolling 24 hours, inside the team limits. Null clears it.' }
+                maxForwardedMinutesPerDay: { type: [integer, "null"], minimum: 1, description: 'Caps minutes forwarded to a phone from this profile''s numbers per rolling 24 hours, inside the team limits. Null clears it.' }
             example:
               name: "Marketing Team (Updated)"
               color: "#2196F3"
@@ -41046,6 +41096,45 @@ paths:
         '400': { description: Profile has active connected accounts; disconnect them first }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { description: Forbidden }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /v1/profiles/{profileId}/limits:
+    get:
+      x-resource-group: "accounts"
+      operationId: getProfileLimits
+      tags: [Profiles]
+      summary: Get profile call limits
+      description: |
+        Returns every voice call limit that applies to calls on this profile's numbers: the profile's own limits (set with `maxOutboundCallsPerHour`, `maxDailyCallSpendUsd` and `maxForwardedMinutesPerDay` on the profile) and the team limits they sit inside.
+
+        Each entry has the limit, what is used in its window and what remains. Spend entries are in billed USD, the unit `maxDailyCallSpendUsd` uses.
+
+        A null `limit` (and `remaining`) means the profile sets no limit there; only the team limits apply. Past any limit an outbound call returns 429 `call_limit_reached` and a forward to a phone goes to voicemail. A profile-scoped API key can read its own profile.
+      parameters:
+        - name: profileId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Limits and usage
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfileCallLimitsResponse'
+              example:
+                profileId: "64f0a1b2c3d4e5f6a7b8c9d0"
+                profile:
+                  outboundCallsPerHour: { limit: 100, used: 12, remaining: 88, window: rolling_hour }
+                  dailyCallSpendUsd: { limit: null, used: 3.4, remaining: null, window: rolling_24h }
+                  forwardedMinutesPerDay: { limit: null, used: 18.5, remaining: null, window: rolling_24h }
+                team:
+                  concurrentCalls: { limit: 10, used: 2, remaining: 8, window: concurrent }
+                  dailyCallSpendUsd: { limit: 100, used: 8.2, remaining: 91.8, window: rolling_24h }
+                  dailyForwardSpendUsd: { limit: 50, used: 1.2, remaining: 48.8, window: rolling_24h }
+                  forwardedMinutesPerHour: { limit: 300, used: 7, remaining: 293, window: rolling_hour }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'The API key or user cannot access this profile.' }
         '404': { $ref: '#/components/responses/NotFound' }
   /v1/accounts:
     get:
@@ -65467,6 +65556,8 @@ paths:
 
         Calls are not capped by count. Each team runs at most 10 calls at once (outbound calls plus calls forwarded to a phone) and has a daily safety limit on calling spend over the last 24 hours.
 
+        The profile of the calling number can set tighter limits of its own (`maxOutboundCallsPerHour`, `maxDailyCallSpendUsd` on the profile; see `GET /v1/profiles/{profileId}/limits`).
+
         Past a limit the call is refused with 429 `call_limit_reached`, and `details.limit` names it.
 
         ### Balance time limit
@@ -65522,7 +65613,7 @@ paths:
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '422': { description: "No voice-enabled number matches `fromNumber`, or no forward destination configured (set the number's forward or pass `forwardTo`)." }
-        '429': { description: 'A team call limit was reached (`call_limit_reached`). `details.limit` names it: `team_concurrent_calls`, `team_daily_cost`, or `outbound_paused`.' }
+        '429': { description: 'A team or profile call limit was reached (`call_limit_reached`). `details.limit` names it: `team_concurrent_calls`, `team_daily_cost`, `profile_outbound_calls_per_hour`, `profile_daily_call_spend`, or `outbound_paused`.' }
         '502': { description: Carrier-side originate failed; the call has been marked failed. }
     get:
       x-resource-group: "messages"
@@ -65846,7 +65937,7 @@ paths:
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '422': { description: "Invalid or unknown WebRTC credential, or no voice-enabled number matches `fromNumber`" }
-        '429': { description: 'A team call limit was reached (`call_limit_reached`). `details.limit` names it: `team_concurrent_calls`, `team_daily_cost`, or `outbound_paused`.' }
+        '429': { description: 'A team or profile call limit was reached (`call_limit_reached`). `details.limit` names it: `team_concurrent_calls`, `team_daily_cost`, `profile_outbound_calls_per_hour`, `profile_daily_call_spend`, or `outbound_paused`.' }
         '502': { description: Carrier-side originate failed }
 
   /v1/imessage/senders:

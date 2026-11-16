@@ -102,6 +102,9 @@ class ProfilesResource:
         timezone: str | None = None,
         external_id: str | None = None,
         content_retention: str | None = None,
+        max_outbound_calls_per_hour: int | None = None,
+        max_daily_call_spend_usd: float | None = None,
+        max_forwarded_minutes_per_day: int | None = None,
     ) -> dict[str, Any]:
         """Create profile"""
         payload = self._build_payload(
@@ -111,6 +114,9 @@ class ProfilesResource:
             timezone=timezone,
             external_id=external_id,
             content_retention=content_retention,
+            max_outbound_calls_per_hour=max_outbound_calls_per_hour,
+            max_daily_call_spend_usd=max_daily_call_spend_usd,
+            max_forwarded_minutes_per_day=max_forwarded_minutes_per_day,
         )
         headers: dict[str, str] = {}
         if idempotency_key is not None:
@@ -132,6 +138,9 @@ class ProfilesResource:
         external_id: Any | None = None,
         is_default: bool | None = None,
         content_retention: str | None = None,
+        max_outbound_calls_per_hour: Any | None = None,
+        max_daily_call_spend_usd: Any | None = None,
+        max_forwarded_minutes_per_day: Any | None = None,
     ) -> dict[str, Any]:
         """Update profile"""
         payload = self._build_payload(
@@ -142,12 +151,19 @@ class ProfilesResource:
             external_id=external_id,
             is_default=is_default,
             content_retention=content_retention,
+            max_outbound_calls_per_hour=max_outbound_calls_per_hour,
+            max_daily_call_spend_usd=max_daily_call_spend_usd,
+            max_forwarded_minutes_per_day=max_forwarded_minutes_per_day,
         )
         return self._client._put(f"/v1/profiles/{profile_id}", data=payload)
 
     def delete_profile(self, profile_id: str) -> dict[str, Any]:
         """Delete profile"""
         return self._client._delete(f"/v1/profiles/{profile_id}")
+
+    def get_profile_limits(self, profile_id: str) -> dict[str, Any]:
+        """Get profile call limits"""
+        return self._client._get(f"/v1/profiles/{profile_id}/limits")
 
     async def alist_profiles(
         self,
@@ -178,6 +194,9 @@ class ProfilesResource:
         timezone: str | None = None,
         external_id: str | None = None,
         content_retention: str | None = None,
+        max_outbound_calls_per_hour: int | None = None,
+        max_daily_call_spend_usd: float | None = None,
+        max_forwarded_minutes_per_day: int | None = None,
     ) -> dict[str, Any]:
         """Create profile (async)"""
         payload = self._build_payload(
@@ -187,6 +206,9 @@ class ProfilesResource:
             timezone=timezone,
             external_id=external_id,
             content_retention=content_retention,
+            max_outbound_calls_per_hour=max_outbound_calls_per_hour,
+            max_daily_call_spend_usd=max_daily_call_spend_usd,
+            max_forwarded_minutes_per_day=max_forwarded_minutes_per_day,
         )
         headers: dict[str, str] = {}
         if idempotency_key is not None:
@@ -208,6 +230,9 @@ class ProfilesResource:
         external_id: Any | None = None,
         is_default: bool | None = None,
         content_retention: str | None = None,
+        max_outbound_calls_per_hour: Any | None = None,
+        max_daily_call_spend_usd: Any | None = None,
+        max_forwarded_minutes_per_day: Any | None = None,
     ) -> dict[str, Any]:
         """Update profile (async)"""
         payload = self._build_payload(
@@ -218,9 +243,16 @@ class ProfilesResource:
             external_id=external_id,
             is_default=is_default,
             content_retention=content_retention,
+            max_outbound_calls_per_hour=max_outbound_calls_per_hour,
+            max_daily_call_spend_usd=max_daily_call_spend_usd,
+            max_forwarded_minutes_per_day=max_forwarded_minutes_per_day,
         )
         return await self._client._aput(f"/v1/profiles/{profile_id}", data=payload)
 
     async def adelete_profile(self, profile_id: str) -> dict[str, Any]:
         """Delete profile (async)"""
         return await self._client._adelete(f"/v1/profiles/{profile_id}")
+
+    async def aget_profile_limits(self, profile_id: str) -> dict[str, Any]:
+        """Get profile call limits (async)"""
+        return await self._client._aget(f"/v1/profiles/{profile_id}/limits")

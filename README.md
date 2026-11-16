@@ -235,6 +235,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `profiles.list_profiles()` | List profiles |
 | `profiles.create_profile()` | Create profile |
 | `profiles.get_profile()` | Get profile |
+| `profiles.get_profile_limits()` | Get profile call limits |
 | `profiles.update_profile()` | Update profile |
 | `profiles.delete_profile()` | Delete profile |
 

@@ -45036,6 +45036,9 @@ def register_generated_tools(mcp, _get_client):
         timezone: str | None = None,
         external_id: str | None = None,
         content_retention: Literal["standard", "none"] | None = None,
+        max_outbound_calls_per_hour: int | None = None,
+        max_daily_call_spend_usd: float | None = None,
+        max_forwarded_minutes_per_day: int | None = None,
     ) -> str:
         """Create profile
 
@@ -45056,7 +45059,10 @@ def register_generated_tools(mcp, _get_client):
             color
             timezone: IANA timezone new posts on this profile use when they name no `timezone`. Omit to keep UTC. An unknown name returns 400.
             external_id: Your own identifier for this profile, typically the id of the tenant or client it serves in your system (1 to 255 characters, trimmed). Unique among the profiles of the user who owns the profile: a duplicate returns 409 profile_external_id_conflict. Look a profile up by it with GET /v1/profiles?externalId=.
-            content_retention: Set `none` to create the profile with zero content retention, so nothing of its accounts is stored from the first sync. Only the team owner can, with a session or a full-access key; anyone else gets 403."""
+            content_retention: Set `none` to create the profile with zero content retention, so nothing of its accounts is stored from the first sync. Only the team owner can, with a session or a full-access key; anyone else gets 403.
+            max_outbound_calls_per_hour: Caps outbound calls from this profile's numbers per rolling hour, inside the team limits. Omit for no profile cap.
+            max_daily_call_spend_usd: Caps billed call spend (USD) from this profile's numbers per rolling 24 hours, inside the team limits. Omit for no profile cap.
+            max_forwarded_minutes_per_day: Caps minutes forwarded to a phone from this profile's numbers per rolling 24 hours, inside the team limits. Omit for no profile cap."""
         client = _get_client()
         try:
             response = client.profiles.create_profile(
@@ -45066,6 +45072,9 @@ def register_generated_tools(mcp, _get_client):
                 timezone=timezone,
                 external_id=external_id,
                 content_retention=content_retention,
+                max_outbound_calls_per_hour=max_outbound_calls_per_hour,
+                max_daily_call_spend_usd=max_daily_call_spend_usd,
+                max_forwarded_minutes_per_day=max_forwarded_minutes_per_day,
             )
             return _format_response(response)
         except Exception as e:
@@ -45110,10 +45119,13 @@ def register_generated_tools(mcp, _get_client):
         external_id: str | None = None,
         is_default: bool | None = None,
         content_retention: Literal["standard", "none"] | None = None,
+        max_outbound_calls_per_hour: int | None = None,
+        max_daily_call_spend_usd: float | None = None,
+        max_forwarded_minutes_per_day: int | None = None,
     ) -> str:
         """Update profile
 
-        Updates a profile's name, description, color, default timezone, externalId, default status, or zero content retention.
+        Updates a profile's name, description, color, default timezone, externalId, default status, zero content retention, or call limits.
 
         Args:
             profile_id: (required)
@@ -45123,7 +45135,10 @@ def register_generated_tools(mcp, _get_client):
             timezone: IANA timezone new posts on this profile use when they name no `timezone`. Set to null to go back to UTC. An unknown name returns 400.
             external_id: Your own identifier for this profile (1 to 255 characters, trimmed). Set to null to clear it. A value another profile of the same owner already holds returns 409 profile_external_id_conflict.
             is_default
-            content_retention: Turns zero content retention on (`none`) or off (`standard`) for this profile only, for new data within about a minute. Only the team owner can change it. `standard` answers 409 while the whole team has it on; `none` answers 409 during a WhatsApp verification of a number of this profile."""
+            content_retention: Turns zero content retention on (`none`) or off (`standard`) for this profile only, for new data within about a minute. Only the team owner can change it. `standard` answers 409 while the whole team has it on; `none` answers 409 during a WhatsApp verification of a number of this profile.
+            max_outbound_calls_per_hour: Caps outbound calls from this profile's numbers per rolling hour, inside the team limits. Null clears it.
+            max_daily_call_spend_usd: Caps billed call spend (USD) from this profile's numbers per rolling 24 hours, inside the team limits. Null clears it.
+            max_forwarded_minutes_per_day: Caps minutes forwarded to a phone from this profile's numbers per rolling 24 hours, inside the team limits. Null clears it."""
         client = _get_client()
         try:
             response = client.profiles.update_profile(
@@ -45135,6 +45150,9 @@ def register_generated_tools(mcp, _get_client):
                 external_id=external_id,
                 is_default=is_default,
                 content_retention=content_retention,
+                max_outbound_calls_per_hour=max_outbound_calls_per_hour,
+                max_daily_call_spend_usd=max_daily_call_spend_usd,
+                max_forwarded_minutes_per_day=max_forwarded_minutes_per_day,
             )
             return _format_response(response)
         except Exception as e:
@@ -45158,6 +45176,32 @@ def register_generated_tools(mcp, _get_client):
         client = _get_client()
         try:
             response = client.profiles.delete_profile(profile_id=profile_id)
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get profile call limits",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def profiles_get_profile_limits(profile_id: str) -> str:
+        """Get profile call limits
+
+        Returns every voice call limit that applies to calls on this profile's numbers: the profile's own limits (set with `maxOutboundCallsPerHour`, `maxDailyCallSpendUsd` and `maxForwardedMinutesPerDay` on the profile) and the team limits they sit inside.
+
+        Each entry has the limit, what is used in its window and what remains. Spend entries are in billed USD, the unit `maxDailyCallSpendUsd` uses.
+
+        A null `limit` (and `remaining`) means the profile sets no limit there; only the team limits apply. Past any limit an outbound call returns 429 `call_limit_reached` and a forward to a phone goes to voicemail. A profile-scoped API key can read its own profile.
+
+        Args:
+            profile_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.profiles.get_profile_limits(profile_id=profile_id)
             return _format_response(response)
         except Exception as e:
             raise ToolError(f"Error: {e}") from e
@@ -49942,11 +49986,13 @@ def register_generated_tools(mcp, _get_client):
 
         Calls are not capped by count. Each team runs at most 10 calls at once (outbound calls plus calls forwarded to a phone) and has a daily safety limit on calling spend over the last 24 hours.
 
+        The profile of the calling number can set tighter limits of its own (`maxOutboundCallsPerHour`, `maxDailyCallSpendUsd` on the profile; see `GET /v1/profiles/{profileId}/limits`).
+
         Past a limit the call is refused with 429 `call_limit_reached`, and `details.limit` names it.
 
         ### Balance time limit
 
-        On balance billing a call runs only as long as the balance, plus what auto top-up can still add this month, funds at its per-minute price, minus calls already in progress. Then it ends ...
+        On ...
 
         Args:
             to: Destination to dial, E.164 with leading +. (required)
