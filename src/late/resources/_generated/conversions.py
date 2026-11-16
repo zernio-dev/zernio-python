@@ -94,7 +94,7 @@ class ConversionsResource:
         test_code: str | None = None,
         consent: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
-        """Send conversion events"""
+        """Send conversion events to one destination (legacy)"""
         payload = self._build_payload(
             account_id=account_id,
             destination_id=destination_id,
@@ -922,7 +922,7 @@ class ConversionsResource:
         test_code: str | None = None,
         consent: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
-        """Send conversion events (async)"""
+        """Send conversion events to one destination (legacy) (async)"""
         payload = self._build_payload(
             account_id=account_id,
             destination_id=destination_id,

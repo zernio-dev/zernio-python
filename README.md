@@ -1088,7 +1088,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `conversions.restate_event()` | Change a stored event's value |
 | `conversions.retract_event()` | Retract a stored event |
 | `conversions.rotate_tracking_site_key()` | Rotate a tracking site's key |
-| `conversions.send_conversions()` | Send conversion events |
+| `conversions.send_conversions()` | Send conversion events to one destination (legacy) |
 | `conversions.send_events()` | Send events to every destination |
 
 ### Creator Campaigns

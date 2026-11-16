@@ -29657,7 +29657,7 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
-            title="Send conversion events",
+            title="Send conversion events to one destination (legacy)",
             readOnlyHint=False,
             destructiveHint=True,
             openWorldHint=True,
@@ -29670,9 +29670,11 @@ def register_generated_tools(mcp, _get_client):
         test_code: str | None = None,
         consent: dict[str, Any] | None = None,
     ) -> str:
-        """Send conversion events
+        """Send conversion events to one destination (legacy)
 
-            Sends conversion events, such as purchases or leads, from your server to an ad platform so it can attribute and optimize ads.
+            Legacy: use [`POST /v1/events`](/conversions/send-events) instead. It sends each event once to every saved destination, retries failures, stores the event and reports what each platform answered. This endpoint keeps working and is not being removed.
+
+            Sends conversion events, such as purchases or leads, from your server to one ad platform destination so it can attribute and optimize ads.
 
             Relays one or more events to the target ad platform's native Conversions API. The platform is inferred from the provided `accountId`. Requires the Ads add-on.
 
@@ -29684,12 +29686,7 @@ def register_generated_tools(mcp, _get_client):
             - TikTok (`tiktokads`) via the Offline Events API `/offline/batch/` (OFFLINE conversions only)
             - OpenAI Ads (`openaiads`) via its Conversions API (a separate host, `bzr.openai.com`)
             - Pinterest (`pinterestads`) via `POST /v5/ad_accounts/{id}/events`
-            - Reddit (`redditads`) via the Reddit Conversions API (`POST /api/v3/pixels/{pixelId}/conversion_events`)
-
-            ### `destinationId` per platform
-
-            - Meta: pixel (dataset) ID, e.g. `123456789012345`
-            - Google: conversion action resource name, e.g. ...
+            - Reddit ...
 
             Platforms: meta, google, tiktok, linkedin, pinterest, reddit
 
@@ -30349,7 +30346,7 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Send events to every destination
 
-        Sends conversion events once and forwards them to every ad platform destination saved for the profile (see `POST /v1/events/destinations`), or to the `destinations` given in the request. Requires the Ads add-on.
+        The recommended way to send conversions. Sends conversion events once and forwards them to every ad platform destination saved for the profile (see `POST /v1/events/destinations`), or to the `destinations` given in the request. Requires the Ads add-on.
 
         ### Forwarding
 
@@ -30363,8 +30360,7 @@ def register_generated_tools(mcp, _get_client):
 
         - Email, phone and `externalId` are stored only as SHA-256 hashes.
         - `sourceUrl` keeps only its origin, path and attribution parameters (`utm_*`, `gclid`, `fbclid`, `ttclid`, `li_fat_id`, `epik`, `rdt_cid`, `gbraid`, `wbraid`).
-        - Events sent with `testCode` are forwarded but not stored.
-        - Sending an event again with the same ...
+        - Events sent with `testCode` are forwarded but not ...
 
         Platforms: meta, google, tiktok, linkedin, pinterest, reddit
 
@@ -30931,8 +30927,8 @@ def register_generated_tools(mcp, _get_client):
 
         Returns the list of pixels (Meta), conversion actions (Google),
         conversion rules (LinkedIn), pixels (OpenAI Ads, Reddit) or ad accounts
-        (Pinterest) accessible to the connected ads account. Use the returned `id` as `destinationId` when
-        posting to `POST /v1/ads/conversions`.
+        (Pinterest) accessible to the connected ads account. Save the returned `id` as a destination with
+        `POST /v1/events/destinations` (or pass it in `destinations` on `POST /v1/events`).
 
         For Google and LinkedIn, each destination's `type` reflects the
         conversion type (PURCHASE, LEAD, SIGN_UP, etc.), and the event type is
@@ -30943,8 +30939,7 @@ def register_generated_tools(mcp, _get_client):
         ones when the connection has an ad-account scope), each with the `adAccountId` that owns
         it. Reddit pixels are created in Reddit Ads Manager, not through Zernio.
 
-        For LinkedIn, destinations are returned across every sponsored ad
-        account the connected token ...
+        For LinkedIn, destinations are returned across ...
 
         Platforms: meta, google, tiktok, linkedin, pinterest, reddit
 
