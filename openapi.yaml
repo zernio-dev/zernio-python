@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.623.0"
+  version: "1.624.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -21640,6 +21640,16 @@ components:
                 `actionSource: 'crm'` and
                 `platformData: { event_source: 'crm', lead_event_source: '<CRM name>' }`.
                 Forwarded unhashed to Meta's `user_data.lead_id`. Meta only.
+            visitorId:
+              type: string
+              maxLength: 64
+              description: |
+                The Zernio tag's visitor id, from the `_zid` cookie the tag sets on your site. Zernio adds the click ids
+                and browser ids of that visit that the event lacks, before storing and forwarding it.
+
+                Without it, Zernio finds the visit by the `email`, `phone` or `externalId` the tag saw. Ids you send
+                always win. Never sent to a platform. Read only by `POST /v1/events`, for a profile with a tracking site.
+              example: 4f9c2e1a-7b3d-4c8e-9a1f-2d6b5e8c0a73
             clickIds:
               type: object
               description: Platform click identifiers captured from the originating ad click.
