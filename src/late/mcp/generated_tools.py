@@ -14444,6 +14444,9 @@ def register_generated_tools(mcp, _get_client):
           - averageViewDuration          (ratio - weighted mean computed across days)
           - subscribersGained
           - subscribersLost
+          - likes
+          - comments
+          - shares
 
         Zernio-synthesized from daily follower snapshots (cross-platform parity):
           - followers_gained

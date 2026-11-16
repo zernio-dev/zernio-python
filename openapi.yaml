@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.615.0"
+  version: "1.616.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -31692,6 +31692,9 @@ paths:
               - averageViewDuration          (ratio - weighted mean computed across days)
               - subscribersGained
               - subscribersLost
+              - likes
+              - comments
+              - shares
 
             Zernio-synthesized from daily follower snapshots (cross-platform parity):
               - followers_gained
