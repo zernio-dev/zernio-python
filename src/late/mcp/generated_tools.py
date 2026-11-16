@@ -2758,7 +2758,7 @@ def register_generated_tools(mcp, _get_client):
 
         Reads the customer's `change_event` history, newest first. `adAccountId` is the numeric customer id.
 
-        Google keeps 30 days of it, so `since` defaults to 29 days ago and an older `since` returns 400. `until` defaults to today.
+        Google keeps 30 days of it, counted to the hour, so `since` defaults to 28 days ago on the account's clock, the oldest whole day always inside them, and an older `since` returns 400. `until` defaults to today.
 
         Each change is mapped onto the Meta row shape:
 
@@ -2775,14 +2775,14 @@ def register_generated_tools(mcp, _get_client):
 
         Pass `paging.after` back as `after` for the next page; it is null when nothing older is left.
 
-        A page never splits a change batch (the changes of one request share an `event_time`). So a page can hold fewer rows ...
+        A page never splits a change ...
 
         Platforms: meta, google
 
         Args:
             account_id: Zernio SocialAccount id (posting or ads variant) used to resolve the Meta token. (required)
             ad_account_id: Meta ad account id (act_<n>), or the Google customer id (digits only). (required)
-            since: Start of range (YYYY-MM-DD). Google: at most 29 days ago, the default.
+            since: Start of range (YYYY-MM-DD). Google: at most 28 days ago, the default.
             until: End of range (YYYY-MM-DD).
             object_id: Client-side filter to one object id (campaign, ad set / ad group or ad).
             limit: Rows per page
@@ -13578,7 +13578,7 @@ def register_generated_tools(mcp, _get_client):
 
         Hourly windows (`last_complete_hour`, `last_3h`, `today_so_far`) read campaign totals hour by hour, which Zernio syncs only for some Meta and Google ad accounts.
 
-        On an ad account without them, an hourly condition always reads as unknown and never matches. `hourlyWindows` says which case applies.
+        A rule with an hourly condition is saved only on an ad account that has them: on any other, creating or editing it returns 400. `hourlyWindows` says which case applies.
 
         Platforms: meta, google
 

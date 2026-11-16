@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.624.0"
+  version: "1.625.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -19746,6 +19746,8 @@ components:
 
             `search_impression_share`, `search_budget_lost_impression_share` and `search_rank_lost_impression_share` are Google's Search impression share and the shares lost to budget and to ad rank, in percent. Campaign rules on Google only.
 
+            Google reports a share under 10% as 9.99 and a lost share over 90% as 90.01, so a threshold under 10 on the share, or over 90 on a lost share, is refused.
+
             They are read live from Google, not in groups and not with `usual`. A campaign Google gives no value for (one not on Search) never matches.
 
             `daily_budget` is the object's synced daily budget. `budget_used` is spend over the window as a percent of that budget for each day of the window: `today` `>=` 200 means twice the budget spent.
@@ -19770,6 +19772,8 @@ components:
             `<from>_to_<to>_days_ago` is any range of full days, both ends included, such as `8_to_2_days_ago` to skip the 2 most recent days while their conversions still arrive. `from` is at least `to` and at most 90.
 
             `last_complete_hour`, `last_3h` and `today_so_far` read campaign totals hour by hour, on campaign rules for Meta and Google, and end at the latest hour whose numbers have settled, not at now. They take `spend`, `impressions`, `clicks`, `ctr`, `cpc`, `cpm` and `budget_used` (against today's daily budget), and no `top` or `bottom`.
+
+            They are saved only on an ad account the hourly sync covers (`GET /v1/ads/rules/hourly-windows`); on any other the rule is refused with a 400.
           example: last_7d
         op:
           type: string
@@ -19852,7 +19856,7 @@ components:
                     additionalProperties: false
                     properties:
                       accountId: { type: string, description: 'A connected Slack account (`GET /v1/accounts`, platform `slack`).' }
-                      channelId: { type: string, description: "The Slack channel to post in. Defaults to the channel the account was connected with; the bot joins public channels on its own." }
+                      channelId: { type: string, maxLength: 64, description: "The Slack channel to post in. Defaults to the channel the account was connected with; the bot joins public channels on its own." }
                   - type: object
                     required: [accountId, to]
                     additionalProperties: false
@@ -20000,7 +20004,7 @@ components:
             properties:
               field: { type: string, enum: [campaign_id, adset_id, ad_id] }
               op: { type: string, enum: [in, not_in] }
-              values: { type: array, minItems: 1, maxItems: 100, items: { type: string, minLength: 1 } }
+              values: { type: array, minItems: 1, maxItems: 100, items: { type: string, minLength: 1, maxLength: 64 } }
           - type: object
             title: Budget level
             required: [field, op, value]
@@ -20038,7 +20042,7 @@ components:
               field: { type: string, enum: [days_since_change] }
               change: { type: string, enum: [budget, bidding, status, goal] }
               op: { type: string, enum: ['>=', '<'] }
-              value: { type: integer, minimum: 1, maximum: 28 }
+              value: { type: integer, minimum: 1, maximum: 27 }
     AdRuleSchedule:
       type: object
       description: 'Either `everyMinutes` or `times`. Sending a schedule replaces the rule''s whole timing. Without one, a new rule runs every 60 minutes.'
@@ -20211,7 +20215,7 @@ components:
           properties:
             field: { type: string, enum: [campaign_id, adset_id, ad_id] }
             op: { type: string, enum: [in, not_in] }
-            values: { type: array, minItems: 1, maxItems: 100, items: { type: string } }
+            values: { type: array, minItems: 1, maxItems: 100, items: { type: string, maxLength: 64 } }
         - type: object
           required: [field, op, value]
           additionalProperties: false
@@ -20228,7 +20232,7 @@ components:
             field: { type: string, const: days_since_change }
             change: { type: string, enum: [budget, bidding, status, goal] }
             op: { type: string, enum: ['>=', '<'] }
-            value: { type: integer, minimum: 1, maximum: 28 }
+            value: { type: integer, minimum: 1, maximum: 27 }
         - type: object
           required: [field, op, value]
           additionalProperties: false
@@ -20264,7 +20268,7 @@ components:
             properties:
               accountId: { type: string, description: 'The ads connection, from `GET /v1/accounts`.' }
               adAccountId: { type: string, maxLength: 64, description: 'Platform ad account ID, from `GET /v1/ads/accounts`.' }
-        campaignIds: { type: array, minItems: 1, maxItems: 100, items: { type: string }, description: Only these platform campaigns or their ad sets and ads. Leave out to check the whole ad account. }
+        campaignIds: { type: array, minItems: 1, maxItems: 100, items: { type: string, maxLength: 64 }, description: Only these platform campaigns or their ad sets and ads. Leave out to check the whole ad account. }
         filters:
           type: array
           minItems: 1
@@ -20327,7 +20331,7 @@ components:
             properties:
               accountId: { type: string }
               to: { type: string, format: email, description: 'An address, sent from a connected Gmail, Outlook or IMAP mailbox.' }
-              channelId: { type: string, description: A channel of a connected Slack account. }
+              channelId: { type: string, maxLength: 64, description: A channel of a connected Slack account. }
     AutomationApprovalStep:
       type: object
       required: [type, to, expiresIn]
@@ -80055,7 +80059,7 @@ paths:
       description: |
         Hourly windows (`last_complete_hour`, `last_3h`, `today_so_far`) read campaign totals hour by hour, which Zernio syncs only for some Meta and Google ad accounts.
 
-        On an ad account without them, an hourly condition always reads as unknown and never matches. `hourlyWindows` says which case applies.
+        A rule with an hourly condition is saved only on an ad account that has them: on any other, creating or editing it returns 400. `hourlyWindows` says which case applies.
       security:
         - bearerAuth: []
       parameters:
@@ -80415,7 +80419,7 @@ paths:
                     type: array
                     items:
                       type: object
-                      required: [id, objectId, state, severity, consecutiveMatches, openedAt, lastMatchedAt, resolvedAt, resolvedReason]
+                      required: [id, objectId, state, severity, consecutiveMatches, openedAt, lastMatchedAt, lastEvaluatedAt, resolvedAt, resolvedReason]
                       properties:
                         id: { type: string }
                         objectId: { type: string, description: 'Platform campaign, ad set or ad ID.' }
@@ -80424,6 +80428,7 @@ paths:
                         consecutiveMatches: { type: integer }
                         openedAt: { type: [string, "null"], format: date-time }
                         lastMatchedAt: { type: string, format: date-time }
+                        lastEvaluatedAt: { type: string, format: date-time, description: 'When a run last evaluated the object of this alert. Older than the latest run means that run did not evaluate it.' }
                         resolvedAt: { type: [string, "null"], format: date-time }
                         resolvedReason: { type: [string, "null"], enum: [condition_cleared, action_applied, not_evaluated, automation_changed, automation_off, null] }
                   nextCursor: { type: [string, "null"] }
@@ -86673,7 +86678,7 @@ paths:
 
         Reads the customer's `change_event` history, newest first. `adAccountId` is the numeric customer id.
 
-        Google keeps 30 days of it, so `since` defaults to 29 days ago and an older `since` returns 400. `until` defaults to today.
+        Google keeps 30 days of it, counted to the hour, so `since` defaults to 28 days ago on the account's clock, the oldest whole day always inside them, and an older `since` returns 400. `until` defaults to today.
 
         Each change is mapped onto the Meta row shape:
 
@@ -86702,7 +86707,7 @@ paths:
       parameters:
         - { name: accountId, in: query, required: true, schema: { type: string }, description: "Zernio SocialAccount id (posting or ads variant) used to resolve the Meta token." }
         - { name: adAccountId, in: query, required: true, schema: { type: string }, description: "Meta ad account id (act_<n>), or the Google customer id (digits only)." }
-        - { name: since, in: query, schema: { type: string, format: date }, description: "Start of range (YYYY-MM-DD). Google: at most 29 days ago, the default." }
+        - { name: since, in: query, schema: { type: string, format: date }, description: "Start of range (YYYY-MM-DD). Google: at most 28 days ago, the default." }
         - { name: until, in: query, schema: { type: string, format: date }, description: "End of range (YYYY-MM-DD)." }
         - { name: objectId, in: query, schema: { type: string }, description: "Client-side filter to one object id (campaign, ad set / ad group or ad)." }
         - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 200, default: 50 }, description: Rows per page }
