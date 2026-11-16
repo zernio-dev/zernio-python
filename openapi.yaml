@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.619.0"
+  version: "1.620.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -1638,6 +1638,15 @@ components:
                   effective_account_limit: 2000
                   current_account_count: 2000
   schemas:
+    TrackingSitePeriodTotals:
+      type: object
+      description: 'A tracking site''s page views over a period, as approximate distinct counts.'
+      properties:
+        visits: { type: integer, description: Page views without bots. }
+        bots: { type: integer, description: Page views from bots. }
+        consented: { type: integer, description: 'Page views with ad storage consent, at most `visits`.' }
+        purchases: { type: integer, description: Purchases recorded on the site. }
+        recovered: { type: integer, description: 'Purchases with ad consent for which no browser pixel fired, so only the server reported them.' }
     SmsOptOutRequest:
       type: object
       required: [accountId, phone]
@@ -98876,6 +98885,105 @@ paths:
                         profileId: { type: string, description: The profile the site belongs to. }
                         hitsToday: { type: integer, description: Hits today. }
                         lastActiveOn: { type: [string, "null"], format: date, description: 'The last day in the past 7 with a hit. `null` when none.' }
+                        totals:
+                          type: object
+                          description: 'The site''s page views per period (`today`, `7d`, `30d`), each ending today (UTC).'
+                          properties:
+                            today: { $ref: '#/components/schemas/TrackingSitePeriodTotals' }
+                            '7d': { $ref: '#/components/schemas/TrackingSitePeriodTotals' }
+                            '30d': { $ref: '#/components/schemas/TrackingSitePeriodTotals' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /v1/events/overview/daily:
+    get:
+      x-resource-group: "ads"
+      operationId: getEventsOverviewDaily
+      tags: [Conversions]
+      summary: Get daily tracking figures
+      description: |
+        The tracking figures of a period, day by day (UTC): events stored, events sent to the ad platforms and how many they accepted, plus the period's totals in the same shape as the overview's `today`.
+
+        An event sent to a destination counts once, on the day of its first send, by its latest outcome. Without `profileId` it covers every profile you can access. Requires the Ads add-on.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: profileId
+          in: query
+          required: false
+          description: The profile to read. Omit to cover every profile you can access, summed across them.
+          schema: { type: string }
+        - name: period
+          in: query
+          required: false
+          description: 'The days to cover, each ending today (UTC): `today`, the last 7 days or the last 30 days.'
+          schema: { type: string, enum: ['today', '7d', '30d'], default: '7d' }
+      responses:
+        '200':
+          description: The period's daily figures.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  period: { type: string, enum: ['today', '7d', '30d'] }
+                  totals:
+                    type: object
+                    description: 'The period''s figures, shaped like the overview''s `today`.'
+                    properties:
+                      conversions: { type: integer, description: 'Stored events that occurred in the period, retracted ones excluded.' }
+                      value: { type: number, description: 'Value of those events in `currency`. Events in other currencies are left out.' }
+                      currency: { type: [string, "null"], description: 'The currency most of the period''s events use; `null` when none carried a value.' }
+                      sent: { type: integer, description: 'Events first sent to a destination in the period, one per event and destination.' }
+                      accepted: { type: integer, description: 'Those whose latest send the platform accepted.' }
+                      matched: { type: integer, description: 'The period''s events matched to an ad campaign.' }
+                  days:
+                    type: array
+                    description: 'Every day of the period, oldest first, zero where nothing happened.'
+                    items:
+                      type: object
+                      properties:
+                        day: { type: string, format: date }
+                        conversions: { type: integer, description: Stored events that occurred that day. }
+                        sent: { type: integer, description: 'Events first sent to a destination that day.' }
+                        accepted: { type: integer, description: 'Those the platform accepted.' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /v1/events/names:
+    get:
+      x-resource-group: "ads"
+      operationId: listEventNames
+      tags: [Conversions]
+      summary: List stored event names
+      description: |
+        The event names stored for a profile in the last 30 days, with how many events carry each, most used first.
+        It includes custom names, such as a site's own events, so you can filter `GET /v1/events` by `eventName`.
+
+        Without `profileId` it covers every profile you can access. Retracted events are left out. Requires the Ads add-on.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: profileId
+          in: query
+          required: false
+          description: The profile to read. Omit to cover every profile you can access.
+          schema: { type: string }
+      responses:
+        '200':
+          description: 'The event names, up to 200.'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  names:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        name: { type: string, description: 'Event name, such as `Purchase` or `demo_booked`.' }
+                        events: { type: integer, description: 'Events stored with this name in the last 30 days.' }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }

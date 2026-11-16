@@ -370,6 +370,23 @@ class ConversionsResource:
         )
         return self._client._get("/v1/events/overview", params=params)
 
+    def get_events_overview_daily(
+        self, *, profile_id: str | None = None, period: str | None = "7d"
+    ) -> dict[str, Any]:
+        """Get daily tracking figures"""
+        params = self._build_params(
+            profile_id=profile_id,
+            period=period,
+        )
+        return self._client._get("/v1/events/overview/daily", params=params)
+
+    def list_event_names(self, *, profile_id: str | None = None) -> dict[str, Any]:
+        """List stored event names"""
+        params = self._build_params(
+            profile_id=profile_id,
+        )
+        return self._client._get("/v1/events/names", params=params)
+
     def get_event(self, event_id: str, profile_id: str) -> dict[str, Any]:
         """Get one stored event and its deliveries"""
         params = self._build_params(
@@ -1188,6 +1205,25 @@ class ConversionsResource:
             profile_id=profile_id,
         )
         return await self._client._aget("/v1/events/overview", params=params)
+
+    async def aget_events_overview_daily(
+        self, *, profile_id: str | None = None, period: str | None = "7d"
+    ) -> dict[str, Any]:
+        """Get daily tracking figures (async)"""
+        params = self._build_params(
+            profile_id=profile_id,
+            period=period,
+        )
+        return await self._client._aget("/v1/events/overview/daily", params=params)
+
+    async def alist_event_names(
+        self, *, profile_id: str | None = None
+    ) -> dict[str, Any]:
+        """List stored event names (async)"""
+        params = self._build_params(
+            profile_id=profile_id,
+        )
+        return await self._client._aget("/v1/events/names", params=params)
 
     async def aget_event(self, event_id: str, profile_id: str) -> dict[str, Any]:
         """Get one stored event and its deliveries (async)"""

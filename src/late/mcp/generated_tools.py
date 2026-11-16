@@ -30416,6 +30416,60 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="Get daily tracking figures",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def conversions_get_events_overview_daily(
+        profile_id: str | None = None, period: Literal["today", "7d", "30d"] = "7d"
+    ) -> str:
+        """Get daily tracking figures
+
+        The tracking figures of a period, day by day (UTC): events stored, events sent to the ad platforms and how many they accepted, plus the period's totals in the same shape as the overview's `today`.
+
+        An event sent to a destination counts once, on the day of its first send, by its latest outcome. Without `profileId` it covers every profile you can access. Requires the Ads add-on.
+
+        Args:
+            profile_id: The profile to read. Omit to cover every profile you can access, summed across them.
+            period: The days to cover, each ending today (UTC): `today`, the last 7 days or the last 30 days."""
+        client = _get_client()
+        try:
+            response = client.conversions.get_events_overview_daily(
+                profile_id=profile_id, period=period
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List stored event names",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def conversions_list_event_names(profile_id: str | None = None) -> str:
+        """List stored event names
+
+        The event names stored for a profile in the last 30 days, with how many events carry each, most used first.
+        It includes custom names, such as a site's own events, so you can filter `GET /v1/events` by `eventName`.
+
+        Without `profileId` it covers every profile you can access. Retracted events are left out. Requires the Ads add-on.
+
+        Args:
+            profile_id: The profile to read. Omit to cover every profile you can access."""
+        client = _get_client()
+        try:
+            response = client.conversions.list_event_names(profile_id=profile_id)
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="Get one stored event and its deliveries",
             readOnlyHint=True,
             destructiveHint=False,

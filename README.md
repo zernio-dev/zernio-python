@@ -1046,6 +1046,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `conversions.list_conversion_destinations()` | List conversion destinations |
 | `conversions.list_custom_conversion_goals()` | List custom conversion goals |
 | `conversions.list_event_destinations()` | List event destinations |
+| `conversions.list_event_names()` | List stored event names |
 | `conversions.list_events()` | List stored events |
 | `conversions.list_forwarding_rules()` | List forwarding rules |
 | `conversions.list_tracking_sites()` | List tracking sites |
@@ -1064,6 +1065,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `conversions.get_conversions_quality()` | Get Event Match Quality |
 | `conversions.get_event()` | Get one stored event and its deliveries |
 | `conversions.get_events_overview()` | Get today's tracking overview |
+| `conversions.get_events_overview_daily()` | Get daily tracking figures |
 | `conversions.get_tracking_site()` | Get a tracking site |
 | `conversions.update_ad_conversion_destination()` | Update a conversion destination |
 | `conversions.update_ad_conversion_goals()` | Update account conversion goals |
