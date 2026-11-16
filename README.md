@@ -1048,6 +1048,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `conversions.list_event_destinations()` | List event destinations |
 | `conversions.list_events()` | List stored events |
 | `conversions.list_forwarding_rules()` | List forwarding rules |
+| `conversions.list_tracking_sites()` | List tracking sites |
 | `conversions.create_ad_conversion_destination()` | Create a conversion destination |
 | `conversions.create_ad_custom_conversion()` | Create custom conversion |
 | `conversions.create_conversion_action()` | Create conversion action |
@@ -1055,6 +1056,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `conversions.create_custom_conversion_goal()` | Create a custom conversion goal |
 | `conversions.create_event_destination()` | Add an event destination |
 | `conversions.create_forwarding_rule()` | Add a forwarding rule |
+| `conversions.create_tracking_site()` | Turn on server-side tracking for a website |
 | `conversions.get_ad_conversion_destination()` | Get a conversion destination |
 | `conversions.get_ad_conversion_metrics()` | Get attribution metrics |
 | `conversions.get_conversion_destination()` | Get a conversion destination |
@@ -1062,16 +1064,19 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `conversions.get_conversions_quality()` | Get Event Match Quality |
 | `conversions.get_event()` | Get one stored event and its deliveries |
 | `conversions.get_events_overview()` | Get today's tracking overview |
+| `conversions.get_tracking_site()` | Get a tracking site |
 | `conversions.update_ad_conversion_destination()` | Update a conversion destination |
 | `conversions.update_ad_conversion_goals()` | Update account conversion goals |
 | `conversions.update_conversion_action()` | Update a conversion action's settings |
 | `conversions.update_conversion_destination()` | Update a conversion destination |
 | `conversions.update_custom_conversion_goal()` | Update a custom conversion goal |
 | `conversions.update_forwarding_rule()` | Change a forwarding rule's API secret |
+| `conversions.update_tracking_site()` | Update a tracking site |
 | `conversions.delete_ad_conversion_destination()` | Delete a conversion destination |
 | `conversions.delete_conversion_destination()` | Delete a conversion destination |
 | `conversions.delete_event_destination()` | Remove an event destination |
 | `conversions.delete_forwarding_rule()` | Remove a forwarding rule |
+| `conversions.delete_tracking_site()` | Delete a tracking site |
 | `conversions.add_ad_conversion_associations()` | Associate campaigns |
 | `conversions.add_conversion_associations()` | Associate campaigns |
 | `conversions.adjust_conversions()` | Adjust uploaded conversions |
@@ -1080,6 +1085,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `conversions.remove_custom_conversion_goal()` | Remove a custom conversion goal |
 | `conversions.restate_event()` | Change a stored event's value |
 | `conversions.retract_event()` | Retract a stored event |
+| `conversions.rotate_tracking_site_key()` | Rotate a tracking site's key |
 | `conversions.send_conversions()` | Send conversion events |
 | `conversions.send_events()` | Send events to every destination |
 

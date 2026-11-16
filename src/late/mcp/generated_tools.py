@@ -30696,6 +30696,163 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="List tracking sites",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def conversions_list_tracking_sites(
+        profile_id: str | None = None, limit: int = 50, cursor: str | None = None
+    ) -> str:
+        """List tracking sites
+
+        The websites whose visits and conversions Zernio collects, newest first. Pass `profileId` to list one profile's sites.
+
+        Args:
+            profile_id
+            limit
+            cursor: `pagination.nextCursor` from the previous page."""
+        client = _get_client()
+        try:
+            response = client.conversions.list_tracking_sites(
+                profile_id=profile_id, limit=limit, cursor=cursor
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Turn on server-side tracking for a website",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def conversions_create_tracking_site(
+        idempotency_key: str, body: dict[str, Any]
+    ) -> str:
+        """Turn on server-side tracking for a website
+
+        Creates a tracking site. With `storeAccountId`, Zernio installs its tag on the connected Shopify, WordPress (WooCommerce), Wix or Webflow store. With only `url`, paste the returned `install.snippet` into the site.
+
+        The ad accounts you picked for each connection get a forwarding rule, so website conversions reach them at once. `checks` shows each step; `setup.status` turns `ready` when all have passed.
+
+        Args:
+            idempotency_key: A unique key per site you create, such as a UUID. A retry with the same key and body returns the same site. (required)
+            body: Full request body as documented in the API reference. (required)"""
+        client = _get_client()
+        try:
+            response = client.conversions.create_tracking_site(
+                idempotency_key=idempotency_key, body=body
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get a tracking site",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def conversions_get_tracking_site() -> str:
+        """Get a tracking site
+
+        One site, with its snippet, its custom subdomain and the latest result of each setup check."""
+        client = _get_client()
+        try:
+            response = client.conversions.get_tracking_site()
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Update a tracking site",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def conversions_update_tracking_site(
+        name: str | None = None,
+        domains: list[str] | None = None,
+        consent_mode: Literal["eu_opt_in", "opt_in", "opt_out"] | None = None,
+        custom_hostname: str | None = None,
+    ) -> str:
+        """Update a tracking site
+
+        Changes the site's name, domains, consent mode or custom subdomain. Send at least one field.
+
+        `customHostname` sets a subdomain of the site, such as `t.brand.com`; create the CNAME in `customHostname.dnsRecord`. The snippet switches to it once its status is `active`. `null` removes it.
+
+        Args:
+            name
+            domains: Hosts allowed to send events, such as `brand.com`. Events from any other origin are dropped.
+            consent_mode
+            custom_hostname: A subdomain of one of the site's domains, never the domain itself. `null` removes it."""
+        client = _get_client()
+        try:
+            response = client.conversions.update_tracking_site(
+                name=name,
+                domains=domains,
+                consent_mode=consent_mode,
+                custom_hostname=custom_hostname,
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Delete a tracking site",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def conversions_delete_tracking_site() -> str:
+        """Delete a tracking site
+
+        Stops collecting at once, removes the tag from the connected store and releases the custom subdomain. Events already stored are kept."""
+        client = _get_client()
+        try:
+            response = client.conversions.delete_tracking_site()
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Rotate a tracking site's key",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def conversions_rotate_tracking_site_key(site_id: str, idempotency_key: str) -> str:
+        """Rotate a tracking site's key
+
+        Issues a new `siteKey`. The old key keeps working for 7 days, so update the snippet on your site within that time.
+
+        Args:
+            site_id: (required)
+            idempotency_key: A unique key per rotation, such as a UUID. (required)"""
+        client = _get_client()
+        try:
+            response = client.conversions.rotate_tracking_site_key(
+                site_id=site_id, idempotency_key=idempotency_key
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="List conversion destinations",
             readOnlyHint=True,
             destructiveHint=False,

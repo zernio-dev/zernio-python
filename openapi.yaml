@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.616.0"
+  version: "1.617.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -21428,6 +21428,56 @@ components:
           type: boolean
           description: 'Only when an `apiSecret` was saved by this request. Google Analytics never confirms a Measurement Protocol API secret, so it is `false` there: the first events in GA4 Realtime prove the secret is right.'
         createdAt: { type: string, format: date-time }
+    TrackingSiteConsentMode:
+      type: string
+      enum: [eu_opt_in, opt_in, opt_out]
+      description: 'How a visitor with no consent signal is treated. `eu_opt_in` (default): no consent in the EU, UK and other countries that require it, consent elsewhere. `opt_in`: no consent anywhere. `opt_out`: consent everywhere.'
+    TrackingSite:
+      type: object
+      properties:
+        id: { type: string }
+        profileId: { type: string }
+        name: { type: string }
+        status: { type: string, enum: [active, paused, removing] }
+        install:
+          type: object
+          properties:
+            method: { type: string, enum: [shopify, wordpress, wix, webflow, snippet], description: 'How the tag is installed. `snippet` means you paste it.' }
+            storeAccountId: { type: [string, "null"] }
+            snippet: { type: string, description: 'The script tag to paste, already pointing at the custom subdomain once it is active.' }
+        storeOrders: { type: boolean, description: "True when the store's orders reach Zernio from the store itself, so website purchases are forwarded but not counted twice." }
+        siteKey: { type: string, description: 'Public key that names the site in the snippet, such as `zs_...`.' }
+        domains:
+          type: array
+          items: { type: string }
+        customHostname:
+          type: [object, "null"]
+          properties:
+            hostname: { type: string }
+            status: { type: string, enum: [pending, active, failed] }
+            dnsRecord:
+              type: object
+              properties:
+                type: { type: string, enum: [CNAME] }
+                name: { type: string, description: 'The record name relative to your domain, such as `t`.' }
+                target: { type: string }
+        consentMode: { $ref: '#/components/schemas/TrackingSiteConsentMode' }
+        checks:
+          type: array
+          description: 'One per setup step: `script` for the install, then one per ad account the site sends to, keyed by its platform and ids.'
+          items:
+            type: object
+            properties:
+              key: { type: string }
+              status: { type: string, enum: [pending, passed, failed] }
+              detail: { type: [string, "null"], description: 'What to do when the check has not passed.' }
+              checkedAt: { type: string, format: date-time }
+        setup:
+          type: object
+          properties:
+            status: { type: string, enum: [pending, ready, failed], description: '`failed` when any check failed, `ready` when all passed.' }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
     EventCorrection:
       type: object
       description: What happened to a correction at one destination the event was forwarded to.
@@ -99163,6 +99213,236 @@ paths:
                 type: object
                 properties:
                   deleted: { type: boolean }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /v1/tracking-sites:
+    get:
+      x-resource-group: ads
+      operationId: listTrackingSites
+      tags: [Conversions]
+      summary: List tracking sites
+      description: The websites whose visits and conversions Zernio collects, newest first. Pass `profileId` to list one profile's sites.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: profileId
+          in: query
+          schema: { type: string }
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 100, default: 50 }
+        - name: cursor
+          in: query
+          description: '`pagination.nextCursor` from the previous page.'
+          schema: { type: string }
+      responses:
+        '200':
+          description: One page of sites.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  sites:
+                    type: array
+                    items: { $ref: '#/components/schemas/TrackingSite' }
+                  pagination:
+                    type: object
+                    properties:
+                      nextCursor: { type: [string, "null"], description: 'Pass as `cursor` for the next page; null on the last page.' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+    post:
+      x-resource-group: ads
+      operationId: createTrackingSite
+      tags: [Conversions]
+      summary: Turn on server-side tracking for a website
+      description: >
+        Creates a tracking site. With `storeAccountId`, Zernio installs its tag on the connected Shopify, WordPress
+        (WooCommerce), Wix or Webflow store. With only `url`, paste the returned `install.snippet` into the site.
+
+
+        The ad accounts you picked for each connection get a forwarding rule, so website conversions reach them at
+        once. `checks` shows each step; `setup.status` turns `ready` when all have passed.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: true
+          description: A unique key per site you create, such as a UUID. A retry with the same key and body returns the same site.
+          schema: { type: string, maxLength: 255 }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - type: object
+                  title: Connected store
+                  required: [profileId, storeAccountId]
+                  additionalProperties: false
+                  properties:
+                    profileId: { type: string }
+                    storeAccountId: { type: string, description: 'A Shopify, WordPress, Wix or Webflow account connected to the profile.' }
+                    url: { type: string, format: uri, description: "The store's public address, when it differs from the one the store reports." }
+                - type: object
+                  title: Any website
+                  required: [profileId, url]
+                  additionalProperties: false
+                  properties:
+                    profileId: { type: string }
+                    url: { type: string, format: uri, description: 'The website, such as `https://brand.com`. A bare domain also allows its `www.` host.' }
+      responses:
+        '201':
+          description: Site created.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  site: { $ref: '#/components/schemas/TrackingSite' }
+        '400':
+          description: 'Invalid body, an unsupported store (code `store_not_supported`) or a store with no known address (code `store_url_unknown`).'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409':
+          description: 'The store already has a site (code `store_already_tracked`, with `details.siteId`) or is disconnected (code `reconnect_required`).'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+  /v1/tracking-sites/{siteId}:
+    parameters:
+      - name: siteId
+        in: path
+        required: true
+        schema: { type: string }
+    get:
+      x-resource-group: ads
+      operationId: getTrackingSite
+      tags: [Conversions]
+      summary: Get a tracking site
+      description: One site, with its snippet, its custom subdomain and the latest result of each setup check.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: The site.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  site: { $ref: '#/components/schemas/TrackingSite' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404':
+          description: 'No site with this id in your workspace (code `tracking_site_not_found`).'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+    patch:
+      x-resource-group: ads
+      operationId: updateTrackingSite
+      tags: [Conversions]
+      summary: Update a tracking site
+      description: >
+        Changes the site's name, domains, consent mode or custom subdomain. Send at least one field.
+
+
+        `customHostname` sets a subdomain of the site, such as `t.brand.com`; create the CNAME in
+        `customHostname.dnsRecord`. The snippet switches to it once its status is `active`. `null` removes it.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              minProperties: 1
+              additionalProperties: false
+              properties:
+                name: { type: string, minLength: 1, maxLength: 200 }
+                domains:
+                  type: array
+                  minItems: 1
+                  maxItems: 20
+                  items: { type: string }
+                  description: 'Hosts allowed to send events, such as `brand.com`. Events from any other origin are dropped.'
+                consentMode: { $ref: '#/components/schemas/TrackingSiteConsentMode' }
+                customHostname:
+                  type: [string, "null"]
+                  maxLength: 253
+                  description: "A subdomain of one of the site's domains, never the domain itself. `null` removes it."
+      responses:
+        '200':
+          description: The updated site.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  site: { $ref: '#/components/schemas/TrackingSite' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409':
+          description: 'Another site already uses this subdomain (code `custom_hostname_taken`).'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+        '502':
+          description: 'The subdomain could not be registered for now (code `provider_unavailable`). Try again.'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+    delete:
+      x-resource-group: ads
+      operationId: deleteTrackingSite
+      tags: [Conversions]
+      summary: Delete a tracking site
+      description: Stops collecting at once, removes the tag from the connected store and releases the custom subdomain. Events already stored are kept.
+      security:
+        - bearerAuth: []
+      responses:
+        '204':
+          description: Site deleted.
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /v1/tracking-sites/{siteId}/rotate-key:
+    post:
+      x-resource-group: ads
+      operationId: rotateTrackingSiteKey
+      tags: [Conversions]
+      summary: Rotate a tracking site's key
+      description: Issues a new `siteKey`. The old key keeps working for 7 days, so update the snippet on your site within that time.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: siteId
+          in: path
+          required: true
+          schema: { type: string }
+        - name: Idempotency-Key
+          in: header
+          required: true
+          description: A unique key per rotation, such as a UUID.
+          schema: { type: string, maxLength: 255 }
+      responses:
+        '200':
+          description: The site with its new key and snippet.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  site: { $ref: '#/components/schemas/TrackingSite' }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }

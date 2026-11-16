@@ -471,6 +471,62 @@ class ConversionsResource:
         """Remove a forwarding rule"""
         return self._client._delete(f"/v1/events/forwarding-rules/{rule_id}")
 
+    def list_tracking_sites(
+        self,
+        *,
+        profile_id: str | None = None,
+        limit: int | None = 50,
+        cursor: str | None = None,
+    ) -> dict[str, Any]:
+        """List tracking sites"""
+        params = self._build_params(
+            profile_id=profile_id,
+            limit=limit,
+            cursor=cursor,
+        )
+        return self._client._get("/v1/tracking-sites", params=params)
+
+    def create_tracking_site(
+        self, idempotency_key: str, body: dict[str, Any]
+    ) -> dict[str, Any]:
+        """Turn on server-side tracking for a website"""
+        headers = {"Idempotency-Key": idempotency_key}
+        return self._client._post("/v1/tracking-sites", data=body, headers=headers)
+
+    def get_tracking_site(self) -> dict[str, Any]:
+        """Get a tracking site"""
+        return self._client._get("/v1/tracking-sites/{siteId}")
+
+    def update_tracking_site(
+        self,
+        *,
+        name: str | None = None,
+        domains: list[str] | None = None,
+        consent_mode: Any | None = None,
+        custom_hostname: Any | None = None,
+    ) -> dict[str, Any]:
+        """Update a tracking site"""
+        payload = self._build_payload(
+            name=name,
+            domains=domains,
+            consent_mode=consent_mode,
+            custom_hostname=custom_hostname,
+        )
+        return self._client._patch("/v1/tracking-sites/{siteId}", data=payload)
+
+    def delete_tracking_site(self) -> dict[str, Any]:
+        """Delete a tracking site"""
+        return self._client._delete("/v1/tracking-sites/{siteId}")
+
+    def rotate_tracking_site_key(
+        self, site_id: str, idempotency_key: str
+    ) -> dict[str, Any]:
+        """Rotate a tracking site's key"""
+        headers = {"Idempotency-Key": idempotency_key}
+        return self._client._post(
+            f"/v1/tracking-sites/{site_id}/rotate-key", headers=headers
+        )
+
     def list_ad_conversion_destinations(self, account_id: str) -> dict[str, Any]:
         """List conversion destinations"""
         params = self._build_params(
@@ -1237,6 +1293,64 @@ class ConversionsResource:
     async def adelete_forwarding_rule(self, rule_id: str) -> dict[str, Any]:
         """Remove a forwarding rule (async)"""
         return await self._client._adelete(f"/v1/events/forwarding-rules/{rule_id}")
+
+    async def alist_tracking_sites(
+        self,
+        *,
+        profile_id: str | None = None,
+        limit: int | None = 50,
+        cursor: str | None = None,
+    ) -> dict[str, Any]:
+        """List tracking sites (async)"""
+        params = self._build_params(
+            profile_id=profile_id,
+            limit=limit,
+            cursor=cursor,
+        )
+        return await self._client._aget("/v1/tracking-sites", params=params)
+
+    async def acreate_tracking_site(
+        self, idempotency_key: str, body: dict[str, Any]
+    ) -> dict[str, Any]:
+        """Turn on server-side tracking for a website (async)"""
+        headers = {"Idempotency-Key": idempotency_key}
+        return await self._client._apost(
+            "/v1/tracking-sites", data=body, headers=headers
+        )
+
+    async def aget_tracking_site(self) -> dict[str, Any]:
+        """Get a tracking site (async)"""
+        return await self._client._aget("/v1/tracking-sites/{siteId}")
+
+    async def aupdate_tracking_site(
+        self,
+        *,
+        name: str | None = None,
+        domains: list[str] | None = None,
+        consent_mode: Any | None = None,
+        custom_hostname: Any | None = None,
+    ) -> dict[str, Any]:
+        """Update a tracking site (async)"""
+        payload = self._build_payload(
+            name=name,
+            domains=domains,
+            consent_mode=consent_mode,
+            custom_hostname=custom_hostname,
+        )
+        return await self._client._apatch("/v1/tracking-sites/{siteId}", data=payload)
+
+    async def adelete_tracking_site(self) -> dict[str, Any]:
+        """Delete a tracking site (async)"""
+        return await self._client._adelete("/v1/tracking-sites/{siteId}")
+
+    async def arotate_tracking_site_key(
+        self, site_id: str, idempotency_key: str
+    ) -> dict[str, Any]:
+        """Rotate a tracking site's key (async)"""
+        headers = {"Idempotency-Key": idempotency_key}
+        return await self._client._apost(
+            f"/v1/tracking-sites/{site_id}/rotate-key", headers=headers
+        )
 
     async def alist_ad_conversion_destinations(self, account_id: str) -> dict[str, Any]:
         """List conversion destinations (async)"""
