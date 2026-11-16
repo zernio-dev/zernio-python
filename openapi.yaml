@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.629.0"
+  version: "1.630.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -15971,12 +15971,9 @@ components:
               type: boolean
               description: 'True when the caller (profile-scoped API key or member) cannot see every profile: `groups` are filtered, `totals` sum them, `unattributed` is zero, and the top-level `days` / `totals` / `lineItems` are projected onto the visible groups with `peaks`, `callUsage` and `tax` null.'
         scope:
-          description: 'Present with `profileId` / `accountId`: echoes the group the payload was projected onto.'
+          description: 'Present with `profileId` / `externalId` / `accountId`: echoes the group the payload was projected onto. A profile scope carries both ids.'
           oneOf:
-            - type: object
-              required: [profileId]
-              properties:
-                profileId: { type: string }
+            - $ref: '#/components/schemas/UsageProfileRef'
             - type: object
               required: [accountId]
               properties:
@@ -15988,6 +15985,14 @@ components:
           required: [key]
           properties:
             key: { type: string, description: 'Profile id or account id, per `groupBy`.' }
+            profileId: { type: string, description: 'With `groupBy=profile` only: the profile id (same as `key`).' }
+            externalId: { type: [string, "null"], description: 'With `groupBy=profile` only: the externalId set on the profile, null when it has none.' }
+    UsageProfileRef:
+      type: object
+      required: [profileId, externalId]
+      properties:
+        profileId: { type: string }
+        externalId: { type: [string, "null"], description: 'The externalId set on the profile, null when it has none.' }
     UsageAttributionSlice:
       type: object
       properties:
@@ -16087,6 +16092,28 @@ components:
                 content_create: 7
                 content_create_with_url: 3
                 dm_interaction_create: 1
+        profiles:
+          type: array
+          description: 'Profile-scoped API keys and members only, without a filter: one block per profile the caller can see, shaped like `profile`.'
+          items:
+            allOf:
+              - $ref: '#/components/schemas/UsageProfileRef'
+              - type: object
+                properties:
+                  usage:
+                    type: object
+                    properties:
+                      connectedAccounts: { type: integer }
+        profile:
+          description: 'Present with `profileId` / `externalId` on `GET /v1/usage-stats`: the per-profile counters. Everything outside this block stays team-level.'
+          allOf:
+            - $ref: '#/components/schemas/UsageProfileRef'
+            - type: object
+              properties:
+                usage:
+                  type: object
+                  properties:
+                    connectedAccounts: { type: integer, description: 'Billable connected accounts on this profile, counted like the team-level figure.' }
         spend:
           type: object
           description: "Usage-based billing only. Current-period spend summary."
@@ -38157,8 +38184,13 @@ paths:
         - `peaks`, `callUsage` and `tax` are then `null` (team-level facts).
         - Projected `days` spread the group's period share over each day (usage is attributed per period, not per day).
         - `profileId` / `accountId` on their own do not select metering mode: pair them with `range`.
+        - `externalId` names the profile by the id you set on it (`POST /v1/profiles`), so you can bill a tenant without storing our profile id.
+
+        With `groupBy=profile`, each group also carries `profileId` and `externalId`.
 
         Profile-scoped API keys and members only see their profiles' groups (`attribution.restricted: true`, with `totals` summing the visible groups). Credits, 10DLC fees and Verify are always unattributed.
+
+        Since 1.630.0 a profile-scoped key or member never gets the team payload in metering mode: without `groupBy` or a filter, `days`, `totals` and `lineItems` are projected onto its visible profiles, `peaks`, `callUsage` and `tax` are `null`, and no `attribution` is returned. Full-access keys and sessions keep the team payload.
 
         ### Related endpoints
 
@@ -38218,12 +38250,17 @@ paths:
           in: query
           required: false
           schema: { type: string }
-          description: 'Metering mode (pair with `range`). Project the payload onto this profile''s attributed share. Mutually exclusive with `accountId`, and `groupBy` (if given) must be `profile`; 404 when the profile is not in your team (or outside a scoped key''s profiles).'
+          description: 'Metering mode (pair with `range`). Project the payload onto this profile''s attributed share. Mutually exclusive with `externalId` and `accountId`, and `groupBy` (if given) must be `profile`; 404 when the profile is not in your team (or outside a scoped key''s profiles).'
+        - name: externalId
+          in: query
+          required: false
+          schema: { type: string, minLength: 1, maxLength: 255 }
+          description: 'Metering mode (pair with `range`). Same as `profileId`, naming the profile by the `externalId` you set on it. Ignored without metering params. 404 when none of your visible profiles carries it; 400 when two of them do (externalId is unique per user, not per team), then filter by `profileId`.'
         - name: accountId
           in: query
           required: false
           schema: { type: string }
-          description: 'Metering mode (pair with `range`). Project the payload onto this account''s attributed share. Mutually exclusive with `profileId`, and `groupBy` (if given) must be `account`; 404 when the account is not visible to the caller.'
+          description: 'Metering mode (pair with `range`). Project the payload onto this account''s attributed share. Mutually exclusive with `profileId` and `externalId`, and `groupBy` (if given) must be `account`; 404 when the account is not visible to the caller.'
       responses:
         '200':
           x-summary: "The usage data was returned: a snapshot without metering parameters, or billed spend by product over the window with them."
@@ -38236,9 +38273,9 @@ paths:
                 oneOf:
                   - $ref: '#/components/schemas/UsageStats'
                   - $ref: '#/components/schemas/UsageMetering'
-        '400': { description: Invalid query parameter }
+        '400': { description: 'Invalid query parameter, conflicting filters (`profileId` / `externalId` / `accountId`), or an `externalId` shared by two of your profiles.' }
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '404': { $ref: '#/components/responses/NotFound' }
+        '404': { description: 'The profile (`profileId` / `externalId`) or account is not visible to the caller.' }
         '429':
           x-summary: "The billing backend is rate limiting reads: wait the seconds in `Retry-After` and retry."
           description: 'The billing backend is rate limiting reads (code `rate_limited`). Wait `Retry-After` seconds and retry. Before 1.81.0 this surfaced as a 500.'
@@ -38274,6 +38311,14 @@ paths:
         - Usage-based billing users: `usage.connectedAccounts`, `usage.xApiCallsByOperation` (per-operation X API call counts; resolve keys via `GET /v1/billing/x-pricing`), plus a `spend` block with `currentPeriodCents`, `xSpendCents`, and `xSpendLimitCents`.
 
         The legacy `usage.xApiCalls` 3-tier aggregate is still emitted for back-compat. It excludes the $0.200 URL tier and any future tiers, so new clients should consume `xApiCallsByOperation` only.
+
+        ### Per profile
+
+        `profileId` or `externalId` adds a `profile` block with the counters that are meaningful per profile (`usage.connectedAccounts`). Everything else (plan, limits, uploads, X usage, spend, payment state) stays team-level. These filters work on this path only: a bare `GET /v1/usage` ignores them.
+
+        Since 1.630.0 a profile-scoped API key or member gets a `profiles` array with one block per profile it can see (or the single `profile` block when it filters), and `usage.connectedAccounts` / `usage.profiles` count only those profiles.
+
+        Plan, billing and payment fields are unchanged. Full-access keys and sessions keep the team counts and get no `profiles` array.
       parameters:
         - name: reconcile
           in: query
@@ -38286,6 +38331,8 @@ paths:
             Omit the parameter, or pass `false`, to use the default
             first-time-only reconciliation behavior. Invalid boolean values are
             rejected.
+        - { name: profileId, in: query, required: false, schema: { type: string }, description: 'Add the `profile` block for this profile. Mutually exclusive with `externalId`. 404 when the profile is not in your team or outside a scoped key''s profiles.' }
+        - { name: externalId, in: query, required: false, schema: { type: string, minLength: 1, maxLength: 255 }, description: 'Same as `profileId`, naming the profile by the `externalId` you set on it. 404 when none of your visible profiles carries it; 400 when two of them do.' }
       responses:
         '200':
           description: Usage stats
@@ -38345,9 +38392,9 @@ paths:
                     hasAccess: true
                     isInvitedUser: false
                     autoUpgradeEnabled: false
-        '400': { description: Invalid query parameter }
+        '400': { description: 'Invalid query parameter, `profileId` together with `externalId`, or an `externalId` shared by two of your profiles.' }
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '404': { $ref: '#/components/responses/NotFound' }
+        '404': { description: 'The user, or the profile named by `profileId` / `externalId`, was not found.' }
         '429':
           x-summary: "The billing backend is rate limiting reads: wait the seconds in `Retry-After` and retry."
           description: 'The billing backend is rate limiting reads (code `rate_limited`). Wait `Retry-After` seconds and retry. Before 1.81.0 this surfaced as a 500.'
@@ -38375,8 +38422,18 @@ paths:
         `metaUSD` is the WhatsApp per-minute charge Meta bills directly to
         your WABA (display only, never billed by Zernio).
 
-        Optional `groupBy` returns a breakdown by UTC day, by your number, or
-        by channel. Defaults to the last 30 days.
+        Optional `groupBy` returns a breakdown by UTC day, by your number, by
+        channel, or by profile. Defaults to the last 30 days.
+
+        ### Per profile
+
+        A call belongs to the profile of the account (number) it was placed
+        on.
+
+        - `profileId` or `externalId` scopes every figure to one profile.
+        - `groupBy=profile` returns one group per profile carrying its `profileId` and `externalId`.
+        - Calls on numbers outside any of your profiles count in `totals` but in no group.
+        - A profile-scoped API key or member only ever sees its own profiles' calls, with or without a filter (since 1.630.0), so `totals` and every group cover those profiles only. Full-access keys and sessions see the whole team.
       security:
         - bearerAuth: []
       parameters:
@@ -38384,7 +38441,9 @@ paths:
         - { name: until, in: query, schema: { type: string, format: date-time }, description: End of the window (exclusive). Default now. }
         - { name: channel, in: query, schema: { type: string, enum: [whatsapp, pstn] } }
         - { name: number, in: query, schema: { type: string }, description: "Scope to calls involving this number (typically one of YOUR numbers). E.164, leading + optional." }
-        - { name: groupBy, in: query, schema: { type: string, enum: [day, number, channel] } }
+        - { name: groupBy, in: query, schema: { type: string, enum: [day, number, channel, profile] } }
+        - { name: profileId, in: query, schema: { type: string }, description: 'Scope to the calls of this profile. Mutually exclusive with `externalId`. 404 when the profile is not in your team or outside a scoped key''s profiles.' }
+        - { name: externalId, in: query, schema: { type: string, minLength: 1, maxLength: 255 }, description: 'Same as `profileId`, naming the profile by the `externalId` you set on it. 404 when none of your visible profiles carries it; 400 when two of them do.' }
       responses:
         '200':
           description: Usage totals (+ breakdown when groupBy is set).
@@ -38395,7 +38454,10 @@ paths:
                 properties:
                   since: { type: string, format: date-time }
                   until: { type: string, format: date-time }
-                  groupBy: { type: [string, "null"], enum: [day, number, channel, null] }
+                  groupBy: { type: [string, "null"], enum: [day, number, channel, profile, null] }
+                  profile:
+                    $ref: '#/components/schemas/UsageProfileRef'
+                    description: 'Present with `profileId` / `externalId`: the profile the figures are scoped to.'
                   totals:
                     type: object
                     properties:
@@ -38412,7 +38474,9 @@ paths:
                     items:
                       type: object
                       properties:
-                        key: { type: string, description: "The group key: a `YYYY-MM-DD` UTC day, one of your numbers, or a channel." }
+                        key: { type: string, description: "The group key: a `YYYY-MM-DD` UTC day, one of your numbers, a channel, or a profile id." }
+                        profileId: { type: string, description: 'With `groupBy=profile` only: the profile id (same as `key`).' }
+                        externalId: { type: [string, "null"], description: 'With `groupBy=profile` only: the externalId set on the profile, null when it has none.' }
                         calls: { type: integer }
                         answered: { type: integer }
                         minutes: { type: number }
@@ -38420,8 +38484,9 @@ paths:
                         metaUSD: { type: number }
                         brandedCalls: { type: integer }
                         brandedCallUSD: { type: number }
-        '400': { description: since must be before until }
+        '400': { description: 'since must be before until, `profileId` together with `externalId`, or an `externalId` shared by two of your profiles.' }
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: 'The profile named by `profileId` / `externalId` is not visible to the caller.' }
 
   /v1/usage/sms:
     get:
@@ -38437,13 +38502,24 @@ paths:
         Volumes only, deliberately: SMS cost is carrier-rated asynchronously
         and billed to your invoice, so per-message cost is not available here.
         Calling usage (GET /v1/usage/calls) does include billable cost.
+
+        ### Per profile
+
+        A message belongs to the profile of the SMS number it went through.
+
+        - `profileId` or `externalId` scopes the counts to one profile. Combined with `number`, only that number's messages on that profile count.
+        - `groupBy=profile` returns one group per profile carrying its `profileId` and `externalId`.
+        - Alphanumeric sender IDs sit on no profile, so their messages count in `totals` but in no group.
+        - A profile-scoped API key or member only ever sees its own profiles' messages, with or without a filter (since 1.630.0). Full-access keys and sessions see every number.
       security:
         - bearerAuth: []
       parameters:
         - { name: since, in: query, schema: { type: string, format: date-time }, description: Start of the window (inclusive). Default 30 days before `until`. }
         - { name: until, in: query, schema: { type: string, format: date-time }, description: End of the window (exclusive). Default now. }
         - { name: number, in: query, schema: { type: string }, description: "Scope to one of YOUR SMS-enabled numbers (E.164, leading + optional)." }
-        - { name: groupBy, in: query, schema: { type: string, enum: [day, number] } }
+        - { name: groupBy, in: query, schema: { type: string, enum: [day, number, profile] } }
+        - { name: profileId, in: query, schema: { type: string }, description: 'Scope to the messages of this profile. Mutually exclusive with `externalId`. 404 when the profile is not in your team or outside a scoped key''s profiles.' }
+        - { name: externalId, in: query, schema: { type: string, minLength: 1, maxLength: 255 }, description: 'Same as `profileId`, naming the profile by the `externalId` you set on it. 404 when none of your visible profiles carries it; 400 when two of them do.' }
       responses:
         '200':
           description: Volume totals (+ breakdown when groupBy is set).
@@ -38454,7 +38530,10 @@ paths:
                 properties:
                   since: { type: string, format: date-time }
                   until: { type: string, format: date-time }
-                  groupBy: { type: [string, "null"], enum: [day, number, null] }
+                  groupBy: { type: [string, "null"], enum: [day, number, profile, null] }
+                  profile:
+                    $ref: '#/components/schemas/UsageProfileRef'
+                    description: 'Present with `profileId` / `externalId`: the profile the counts are scoped to.'
                   totals:
                     type: object
                     properties:
@@ -38467,13 +38546,15 @@ paths:
                     items:
                       type: object
                       properties:
-                        key: { type: string, description: "A `YYYY-MM-DD` UTC day or one of your numbers." }
+                        key: { type: string, description: "A `YYYY-MM-DD` UTC day, one of your numbers, or a profile id." }
+                        profileId: { type: string, description: 'With `groupBy=profile` only: the profile id (same as `key`).' }
+                        externalId: { type: [string, "null"], description: 'With `groupBy=profile` only: the externalId set on the profile, null when it has none.' }
                         sent: { type: integer }
                         received: { type: integer }
                         total: { type: integer }
-        '400': { description: since must be before until }
+        '400': { description: 'since must be before until, `profileId` together with `externalId`, or an `externalId` shared by two of your profiles.' }
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '404': { description: "`number` doesn't match any of your SMS-enabled numbers" }
+        '404': { description: "`number` doesn't match any of your SMS-enabled numbers, or the profile named by `profileId` / `externalId` is not visible to the caller." }
 
   /v1/posts:
     get:
@@ -65625,6 +65706,13 @@ paths:
         pagination: pass the returned `nextCursor` as `before` for the next
         page. For a history that also includes WhatsApp calls, use
         `GET /v1/calls`.
+
+        `profileId` or `externalId` lists one profile's calls: a call belongs
+        to the profile of the account (number) it was placed on.
+
+        A profile-scoped API key or member only ever lists its own profiles'
+        calls, with or without a filter (since 1.630.0). Full-access keys and
+        sessions list the whole team's.
       security:
         - bearerAuth: []
       parameters:
@@ -65633,6 +65721,8 @@ paths:
         - { name: number, in: query, schema: { type: string }, description: "Exact filter: calls involving this number (typically one of your DIDs). E.164, leading + optional." }
         - { name: before, in: query, schema: { type: string, format: date-time } }
         - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 200, default: 50 } }
+        - { name: profileId, in: query, schema: { type: string }, description: 'Only calls of this profile. Mutually exclusive with `externalId`. 404 when the profile is not in your team or outside a scoped key''s profiles.' }
+        - { name: externalId, in: query, schema: { type: string, minLength: 1, maxLength: 255 }, description: 'Same as `profileId`, naming the profile by the `externalId` you set on it. 404 when none of your visible profiles carries it; 400 when two of them do.' }
       responses:
         '200':
           description: Calls, newest first
@@ -65646,7 +65736,9 @@ paths:
                     items:
                       $ref: '#/components/schemas/CallRecord'
                   nextCursor: { type: [string, "null"], format: date-time }
+        '400': { description: 'Invalid query parameter, `profileId` together with `externalId`, or an `externalId` shared by two of your profiles.' }
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { description: 'The profile named by `profileId` / `externalId` is not visible to the caller.' }
 
   /v1/voice/calls/{id}:
     get:

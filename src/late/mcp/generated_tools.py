@@ -49472,6 +49472,7 @@ def register_generated_tools(mcp, _get_client):
         granularity: Literal["day", "month", "total"] = "day",
         group_by: Literal["profile", "account"] | None = None,
         profile_id: str | None = None,
+        external_id: str | None = None,
         account_id: str | None = None,
     ) -> str:
         """Usage snapshot (default) or billed-spend metering (with params)
@@ -49508,8 +49509,9 @@ def register_generated_tools(mcp, _get_client):
         `month` (one row per calendar month, dated to the 1st), or `total`
         (no series, read `totals`). Does not affect `totals`.
                 group_by: Metering mode. Adds `attribution`: the window's spend split per profile or per account (keys are ids; resolve names via `GET /v1/profiles` / `GET /v1/accounts`).
-                profile_id: Metering mode (pair with `range`). Project the payload onto this profile's attributed share. Mutually exclusive with `accountId`, and `groupBy` (if given) must be `profile`; 404 when the profile is not in your team (or outside a scoped key's profiles).
-                account_id: Metering mode (pair with `range`). Project the payload onto this account's attributed share. Mutually exclusive with `profileId`, and `groupBy` (if given) must be `account`; 404 when the account is not visible to the caller."""
+                profile_id: Metering mode (pair with `range`). Project the payload onto this profile's attributed share. Mutually exclusive with `externalId` and `accountId`, and `groupBy` (if given) must be `profile`; 404 when the profile is not in your team (or outside a scoped key's profiles).
+                external_id: Metering mode (pair with `range`). Same as `profileId`, naming the profile by the `externalId` you set on it. Ignored without metering params. 404 when none of your visible profiles carries it; 400 when two of them do (externalId is unique per user, not per team), then filter by `profileId`.
+                account_id: Metering mode (pair with `range`). Project the payload onto this account's attributed share. Mutually exclusive with `profileId` and `externalId`, and `groupBy` (if given) must be `account`; 404 when the account is not visible to the caller."""
         client = _get_client()
         try:
             response = client.usage.get_usage(
@@ -49520,6 +49522,7 @@ def register_generated_tools(mcp, _get_client):
                 granularity=granularity,
                 group_by=group_by,
                 profile_id=profile_id,
+                external_id=external_id,
                 account_id=account_id,
             )
             return _format_response(response)
@@ -49534,7 +49537,11 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=False,
         )
     )
-    def usage_get_usage_stats(reconcile: bool | None = None) -> str:
+    def usage_get_usage_stats(
+        reconcile: bool | None = None,
+        profile_id: str | None = None,
+        external_id: str | None = None,
+    ) -> str:
         """Get plan and usage snapshot (plan, limits, payment status)
 
             The plan / quota / payment-status snapshot: current plan name, billing period, plan limits, usage counts, and access state.
@@ -49560,10 +49567,14 @@ def register_generated_tools(mcp, _get_client):
         reconciliation pass even when cached plan data looks complete.
         Omit the parameter, or pass `false`, to use the default
         first-time-only reconciliation behavior. Invalid boolean values are
-        rejected."""
+        rejected.
+                profile_id: Add the `profile` block for this profile. Mutually exclusive with `externalId`. 404 when the profile is not in your team or outside a scoped key's profiles.
+                external_id: Same as `profileId`, naming the profile by the `externalId` you set on it. 404 when none of your visible profiles carries it; 400 when two of them do."""
         client = _get_client()
         try:
-            response = client.usage.get_usage_stats(reconcile=reconcile)
+            response = client.usage.get_usage_stats(
+                reconcile=reconcile, profile_id=profile_id, external_id=external_id
+            )
             return _format_response(response)
         except Exception as e:
             raise ToolError(f"Error: {e}") from e
@@ -49581,7 +49592,9 @@ def register_generated_tools(mcp, _get_client):
         until: str | None = None,
         channel: Literal["whatsapp", "pstn"] | None = None,
         number: str | None = None,
-        group_by: Literal["day", "number", "channel"] | None = None,
+        group_by: Literal["day", "number", "channel", "profile"] | None = None,
+        profile_id: str | None = None,
+        external_id: str | None = None,
     ) -> str:
         """Calling usage and cost
 
@@ -49595,15 +49608,27 @@ def register_generated_tools(mcp, _get_client):
         `metaUSD` is the WhatsApp per-minute charge Meta bills directly to
         your WABA (display only, never billed by Zernio).
 
-        Optional `groupBy` returns a breakdown by UTC day, by your number, or
-        by channel. Defaults to the last 30 days.
+        Optional `groupBy` returns a breakdown by UTC day, by your number, by
+        channel, or by profile. Defaults to the last 30 days.
+
+        ### Per profile
+
+        A call belongs to the profile of the account (number) it was placed
+        on.
+
+        - `profileId` or `externalId` scopes every figure to one profile.
+        - `groupBy=profile` returns one group per profile carrying its `profileId` and `externalId`.
+        - Calls on numbers outside any of your profiles count in `totals` but in no group.
+        - A profile-scoped API key or member only ever sees its own ...
 
         Args:
             since: Start of the window (inclusive). Default 30 days before `until`.
             until: End of the window (exclusive). Default now.
             channel
             number: Scope to calls involving this number (typically one of YOUR numbers). E.164, leading + optional.
-            group_by"""
+            group_by
+            profile_id: Scope to the calls of this profile. Mutually exclusive with `externalId`. 404 when the profile is not in your team or outside a scoped key's profiles.
+            external_id: Same as `profileId`, naming the profile by the `externalId` you set on it. 404 when none of your visible profiles carries it; 400 when two of them do."""
         client = _get_client()
         try:
             response = client.usage.get_calls_usage(
@@ -49612,6 +49637,8 @@ def register_generated_tools(mcp, _get_client):
                 channel=channel,
                 number=number,
                 group_by=group_by,
+                profile_id=profile_id,
+                external_id=external_id,
             )
             return _format_response(response)
         except Exception as e:
@@ -49629,7 +49656,9 @@ def register_generated_tools(mcp, _get_client):
         since: str | None = None,
         until: str | None = None,
         number: str | None = None,
-        group_by: Literal["day", "number"] | None = None,
+        group_by: Literal["day", "number", "profile"] | None = None,
+        profile_id: str | None = None,
+        external_id: str | None = None,
     ) -> str:
         """SMS usage (volumes)
 
@@ -49641,15 +49670,31 @@ def register_generated_tools(mcp, _get_client):
         and billed to your invoice, so per-message cost is not available here.
         Calling usage (GET /v1/usage/calls) does include billable cost.
 
+        ### Per profile
+
+        A message belongs to the profile of the SMS number it went through.
+
+        - `profileId` or `externalId` scopes the counts to one profile. Combined with `number`, only that number's messages on that profile count.
+        - `groupBy=profile` returns one group per profile carrying its `profileId` and `externalId`.
+        - Alphanumeric sender IDs sit on no profile, so their messages count in `totals` but in no group.
+        - A profile-scoped API key or member only ever sees its own profiles' messages, with or without a filter (since 1.630.0). Full-access keys and sessions see every number.
+
         Args:
             since: Start of the window (inclusive). Default 30 days before `until`.
             until: End of the window (exclusive). Default now.
             number: Scope to one of YOUR SMS-enabled numbers (E.164, leading + optional).
-            group_by"""
+            group_by
+            profile_id: Scope to the messages of this profile. Mutually exclusive with `externalId`. 404 when the profile is not in your team or outside a scoped key's profiles.
+            external_id: Same as `profileId`, naming the profile by the `externalId` you set on it. 404 when none of your visible profiles carries it; 400 when two of them do."""
         client = _get_client()
         try:
             response = client.usage.get_sms_usage(
-                since=since, until=until, number=number, group_by=group_by
+                since=since,
+                until=until,
+                number=number,
+                group_by=group_by,
+                profile_id=profile_id,
+                external_id=external_id,
             )
             return _format_response(response)
         except Exception as e:
@@ -50037,6 +50082,8 @@ def register_generated_tools(mcp, _get_client):
         number: str | None = None,
         before: str | None = None,
         limit: int = 50,
+        profile_id: str | None = None,
+        external_id: str | None = None,
     ) -> str:
         """List phone calls
 
@@ -50045,12 +50092,21 @@ def register_generated_tools(mcp, _get_client):
         page. For a history that also includes WhatsApp calls, use
         `GET /v1/calls`.
 
+        `profileId` or `externalId` lists one profile's calls: a call belongs
+        to the profile of the account (number) it was placed on.
+
+        A profile-scoped API key or member only ever lists its own profiles'
+        calls, with or without a filter (since 1.630.0). Full-access keys and
+        sessions list the whole team's.
+
         Args:
             status
             direction
             number: Exact filter: calls involving this number (typically one of your DIDs). E.164, leading + optional.
             before
-            limit"""
+            limit
+            profile_id: Only calls of this profile. Mutually exclusive with `externalId`. 404 when the profile is not in your team or outside a scoped key's profiles.
+            external_id: Same as `profileId`, naming the profile by the `externalId` you set on it. 404 when none of your visible profiles carries it; 400 when two of them do."""
         client = _get_client()
         try:
             response = client.voice.list_voice_calls(
@@ -50059,6 +50115,8 @@ def register_generated_tools(mcp, _get_client):
                 number=number,
                 before=before,
                 limit=limit,
+                profile_id=profile_id,
+                external_id=external_id,
             )
             return _format_response(response)
         except Exception as e:

@@ -93,6 +93,7 @@ class UsageResource:
         granularity: str | None = "day",
         group_by: str | None = None,
         profile_id: str | None = None,
+        external_id: str | None = None,
         account_id: str | None = None,
     ) -> dict[str, Any]:
         """Usage snapshot (default) or billed-spend metering (with params)"""
@@ -104,14 +105,23 @@ class UsageResource:
             granularity=granularity,
             group_by=group_by,
             profile_id=profile_id,
+            external_id=external_id,
             account_id=account_id,
         )
         return self._client._get("/v1/usage", params=params)
 
-    def get_usage_stats(self, *, reconcile: bool | None = None) -> dict[str, Any]:
+    def get_usage_stats(
+        self,
+        *,
+        reconcile: bool | None = None,
+        profile_id: str | None = None,
+        external_id: str | None = None,
+    ) -> dict[str, Any]:
         """Get plan and usage snapshot (plan, limits, payment status)"""
         params = self._build_params(
             reconcile=reconcile,
+            profile_id=profile_id,
+            external_id=external_id,
         )
         return self._client._get("/v1/usage-stats", params=params)
 
@@ -123,6 +133,8 @@ class UsageResource:
         channel: str | None = None,
         number: str | None = None,
         group_by: str | None = None,
+        profile_id: str | None = None,
+        external_id: str | None = None,
     ) -> dict[str, Any]:
         """Calling usage and cost"""
         params = self._build_params(
@@ -131,6 +143,8 @@ class UsageResource:
             channel=channel,
             number=number,
             group_by=group_by,
+            profile_id=profile_id,
+            external_id=external_id,
         )
         return self._client._get("/v1/usage/calls", params=params)
 
@@ -141,6 +155,8 @@ class UsageResource:
         until: datetime | str | None = None,
         number: str | None = None,
         group_by: str | None = None,
+        profile_id: str | None = None,
+        external_id: str | None = None,
     ) -> dict[str, Any]:
         """SMS usage (volumes)"""
         params = self._build_params(
@@ -148,6 +164,8 @@ class UsageResource:
             until=until,
             number=number,
             group_by=group_by,
+            profile_id=profile_id,
+            external_id=external_id,
         )
         return self._client._get("/v1/usage/sms", params=params)
 
@@ -169,6 +187,7 @@ class UsageResource:
         granularity: str | None = "day",
         group_by: str | None = None,
         profile_id: str | None = None,
+        external_id: str | None = None,
         account_id: str | None = None,
     ) -> dict[str, Any]:
         """Usage snapshot (default) or billed-spend metering (with params) (async)"""
@@ -180,16 +199,23 @@ class UsageResource:
             granularity=granularity,
             group_by=group_by,
             profile_id=profile_id,
+            external_id=external_id,
             account_id=account_id,
         )
         return await self._client._aget("/v1/usage", params=params)
 
     async def aget_usage_stats(
-        self, *, reconcile: bool | None = None
+        self,
+        *,
+        reconcile: bool | None = None,
+        profile_id: str | None = None,
+        external_id: str | None = None,
     ) -> dict[str, Any]:
         """Get plan and usage snapshot (plan, limits, payment status) (async)"""
         params = self._build_params(
             reconcile=reconcile,
+            profile_id=profile_id,
+            external_id=external_id,
         )
         return await self._client._aget("/v1/usage-stats", params=params)
 
@@ -201,6 +227,8 @@ class UsageResource:
         channel: str | None = None,
         number: str | None = None,
         group_by: str | None = None,
+        profile_id: str | None = None,
+        external_id: str | None = None,
     ) -> dict[str, Any]:
         """Calling usage and cost (async)"""
         params = self._build_params(
@@ -209,6 +237,8 @@ class UsageResource:
             channel=channel,
             number=number,
             group_by=group_by,
+            profile_id=profile_id,
+            external_id=external_id,
         )
         return await self._client._aget("/v1/usage/calls", params=params)
 
@@ -219,6 +249,8 @@ class UsageResource:
         until: datetime | str | None = None,
         number: str | None = None,
         group_by: str | None = None,
+        profile_id: str | None = None,
+        external_id: str | None = None,
     ) -> dict[str, Any]:
         """SMS usage (volumes) (async)"""
         params = self._build_params(
@@ -226,5 +258,7 @@ class UsageResource:
             until=until,
             number=number,
             group_by=group_by,
+            profile_id=profile_id,
+            external_id=external_id,
         )
         return await self._client._aget("/v1/usage/sms", params=params)

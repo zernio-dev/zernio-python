@@ -116,6 +116,8 @@ class VoiceResource:
         number: str | None = None,
         before: datetime | str | None = None,
         limit: int | None = 50,
+        profile_id: str | None = None,
+        external_id: str | None = None,
     ) -> dict[str, Any]:
         """List phone calls"""
         params = self._build_params(
@@ -124,6 +126,8 @@ class VoiceResource:
             number=number,
             before=before,
             limit=limit,
+            profile_id=profile_id,
+            external_id=external_id,
         )
         return self._client._get("/v1/voice/calls", params=params)
 
@@ -332,6 +336,8 @@ class VoiceResource:
         number: str | None = None,
         before: datetime | str | None = None,
         limit: int | None = 50,
+        profile_id: str | None = None,
+        external_id: str | None = None,
     ) -> dict[str, Any]:
         """List phone calls (async)"""
         params = self._build_params(
@@ -340,6 +346,8 @@ class VoiceResource:
             number=number,
             before=before,
             limit=limit,
+            profile_id=profile_id,
+            external_id=external_id,
         )
         return await self._client._aget("/v1/voice/calls", params=params)
 
