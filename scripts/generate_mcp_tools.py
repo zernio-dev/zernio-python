@@ -148,11 +148,12 @@ def _resolve_schema(schema: dict[str, Any], spec: dict[str, Any] | None) -> dict
     Handles three composite forms commonly used in our OpenAPI spec:
 
       - `{"$ref": "..."}`        -> look up the target schema.
+      - `{"type": [X, "null"]}`  -> type X (OpenAPI 3.1 nullable).
       - `{"allOf": [{...}, ...]}` -> return the first branch with a concrete
         `type` (we mostly see single-element allOf as a "ref + description"
         pattern, but this generalises safely).
-      - `{"oneOf"|"anyOf": [...]}` -> if every branch resolves to the same
-        scalar/object/array `type`, return that branch; otherwise leave the
+      - `{"oneOf"|"anyOf": [...]}` -> if every non-null branch resolves to the
+        same scalar/object/array `type`, return that branch; otherwise leave the
         schema alone so the caller falls back to `str`. A deliberately
         over-broad type is worse than no type for the LLM.
 
@@ -165,6 +166,11 @@ def _resolve_schema(schema: dict[str, Any], spec: dict[str, Any] | None) -> dict
     if "$ref" in schema:
         return _resolve_schema(_resolve_ref(schema["$ref"], spec), spec)
 
+    if isinstance(schema.get("type"), list):
+        non_null = [t for t in schema["type"] if t != "null"]
+        if len(non_null) == 1:
+            return {**schema, "type": non_null[0]}
+
     if "allOf" in schema and isinstance(schema["allOf"], list):
         for branch in schema["allOf"]:
             resolved = _resolve_schema(branch, spec)
@@ -176,6 +182,9 @@ def _resolve_schema(schema: dict[str, Any], spec: dict[str, Any] | None) -> dict
             resolved_branches = [_resolve_schema(b, spec) for b in schema[combinator]]
             types = {b.get("type") for b in resolved_branches if isinstance(b, dict)}
             types.discard(None)
+            # `oneOf: [X, {type: null}]` is how the spec marks "send null to
+            # clear": type the param as X (None already means "omit").
+            types.discard("null")
             if len(types) == 1:
                 only = types.pop()
                 for b in resolved_branches:
