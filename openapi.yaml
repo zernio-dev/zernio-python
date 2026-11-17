@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.634.0"
+  version: "1.635.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -21464,12 +21464,13 @@ components:
             - `paused`: the run did not happen: the team used its free automation runs with no payment method on file (see `error`).
             - `no_match`: nothing matched.
             - `failed`: the metrics could not be read, every action failed, or the webhook of a notify-only rule could not be sent (see `error`).
-        objectsEvaluated: { type: integer }
+        objectsEvaluated: { type: integer, description: 'Objects the rule judged. 0 means its campaigns and filters matched nothing that is running.' }
         actedObjectIds: { type: array, items: { type: string } }
         evaluation:
           type: [object, "null"]
-          description: The matched objects with their condition values, and what each action did.
+          description: The matched objects with their condition values, and what each action did. Null on a run that matched nothing, unless some objects could not be read.
           properties:
+            unreadObjects: { type: integer, description: 'On a run that matched nothing: how many objects had a condition whose value could not be read, so they could not match. A campaign with under 3 of the 4 previous weeks of data has no `usual` yet.' }
             rule:
               type: object
               description: The rule as it was when this run happened, so its actions stay readable after the rule is renamed or deleted. Absent on runs recorded before October 2026.
