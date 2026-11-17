@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.630.4"
+  version: "1.631.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -64458,6 +64458,15 @@ paths:
         '400': { description: accountId is required or WABA ID not found }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { description: WhatsApp account not found }
+        '429':
+          description: 'Meta is rate-limiting this WhatsApp Business Account (#80008), even though Meta itself answers HTTP 400. Retry after the `Retry-After` delay.'
+          headers:
+            Retry-After:
+              description: 'Seconds until Meta accepts template reads for this account again.'
+              schema: { type: integer }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
     post:
       x-resource-group: "accounts"
       operationId: createWhatsAppTemplate
