@@ -39,10 +39,11 @@ from typing import TYPE_CHECKING, Any
 
 import httpx
 from fastmcp import FastMCP
-from fastmcp.server.dependencies import get_access_token
+from fastmcp.server.dependencies import get_access_token, get_http_request
 from fastmcp.server.transforms.search import BM25SearchTransform
 from fastmcp.server.transforms.search.base import serialize_tools_for_output_markdown
-from mcp.types import ToolAnnotations
+from mcp.shared.exceptions import McpError
+from mcp.types import INVALID_PARAMS, ErrorData, ToolAnnotations
 
 from late import Late, MediaType, PostStatus
 from late.client.exceptions import LateAPIError, LateError, LateRateLimitError
@@ -146,6 +147,25 @@ _PINNED_TOOLS = [
 _SEARCH_TOOL = "search_tools"
 _CALL_TOOL = "call_tool"
 _MAX_TOOL_SUGGESTIONS = 3
+# `?tools=` on the server URL replaces the default listing: `all` lists every
+# tool, a comma-separated list of names lists exactly those. For integrators
+# that run their own tool discovery and need full definitions from tools/list.
+_TOOLS_QUERY_PARAM = "tools"
+_ALL_TOOLS = "all"
+# tools/list page size. The default listing fits on one page; `?tools=all` is
+# paginated, and clients follow nextCursor.
+_TOOLS_PAGE_SIZE = 100
+
+
+def _requested_tools() -> list[str] | None:
+    """Tool names from the request's `?tools=`, or None when absent or not HTTP."""
+    try:
+        request = get_http_request()
+    except RuntimeError:
+        return None
+    raw = request.query_params.get(_TOOLS_QUERY_PARAM, "")
+    names = [name.strip() for name in raw.split(",") if name.strip()]
+    return list(dict.fromkeys(names)) or None
 
 
 class _AnnotatedBM25SearchTransform(BM25SearchTransform):
@@ -220,6 +240,19 @@ class _AnnotatedBM25SearchTransform(BM25SearchTransform):
             self._visible_tools = await super()._get_visible_tools(ctx)
         return self._visible_tools
 
+    async def transform_tools(self, tools: Sequence[Tool]) -> Sequence[Tool]:
+        requested = _requested_tools()
+        if requested is None:
+            return await super().transform_tools(tools)
+        if requested == [_ALL_TOOLS]:
+            return tools
+        by_name = {t.name: t for t in tools}
+        unknown = [name for name in requested if name not in by_name]
+        if unknown:
+            message = _unknown_tools_message(unknown, list(by_name))
+            raise McpError(ErrorData(code=INVALID_PARAMS, message=message))
+        return [by_name[name] for name in requested]
+
     async def _search(self, tools: Sequence[Tool], query: str) -> Sequence[Tool]:
         if tools is not self._indexed_tools:
             return await super()._search(tools, query)
@@ -252,6 +285,25 @@ def _names_sharing_words(guess: str, names: Sequence[str]) -> list[str]:
         (n for n, count in shared.items() if count >= 2), key=lambda n: -shared[n]
     )
     return ranked[:_MAX_TOOL_SUGGESTIONS]
+
+
+def _unknown_tools_message(unknown: Sequence[str], names: Sequence[str]) -> str:
+    parts = []
+    for name in unknown:
+        # Spelling leads: a configured name that stopped matching is usually a
+        # typo or a rename, not a guess from intent.
+        closest = list(
+            dict.fromkeys(
+                difflib.get_close_matches(name, names, n=_MAX_TOOL_SUGGESTIONS)
+                + _names_sharing_words(name, names)
+            )
+        )[:_MAX_TOOL_SUGGESTIONS]
+        hint = f" (closest: {', '.join(closest)})" if closest else ""
+        parts.append(f"{name}{hint}")
+    return (
+        f"Unknown tools in ?{_TOOLS_QUERY_PARAM}=: {'; '.join(parts)}. "
+        f"Use ?{_TOOLS_QUERY_PARAM}={_ALL_TOOLS} to list every tool."
+    )
 
 
 _search_transform = _AnnotatedBM25SearchTransform(
@@ -316,6 +368,7 @@ details.
     # Collapse the ~383 generated tools behind search_tools/call_tool; the
     # pinned ergonomic tools remain always-visible.
     transforms=[_search_transform],
+    list_page_size=_TOOLS_PAGE_SIZE,
 )
 
 mcp.add_middleware(
