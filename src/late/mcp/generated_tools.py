@@ -48663,7 +48663,7 @@ def register_generated_tools(mcp, _get_client):
 
         The first read gives the default rule, sized from your last 30 days of pay-per-use: below about a week of spend (at least $5), back up by about two more weeks (at least $20).
 
-        - 409 `balance_billing_required`: the account is not on the prepaid balance.
+        - 409 `balance_billing_required`: the account is not on the prepaid balance, nor moved onto it at a date still ahead. An account moved onto it can read and change its rule before that date; nothing is charged until it.
 
         A profile-scoped key answers 403."""
         client = _get_client()
