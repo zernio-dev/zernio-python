@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.630.3"
+  version: "1.630.4"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -44833,7 +44833,7 @@ paths:
         - { name: redirect_url, in: query, schema: { type: string, format: uri }, description: 'Where the page sends the user afterwards, with status, accountId, platform and email (or status=error and error).' }
         - { name: email, in: query, schema: { type: string, format: email }, description: 'Prefills the address and skips the first screen.' }
         - { name: name, in: query, schema: { type: string }, description: 'Display name for sent mail; the page asks for it when absent.' }
-        - { name: reconnectAccountId, in: query, schema: { type: string }, description: 'Opens the reconnect variant for an IMAP account: only the new password is asked for, and the accountId stays the same.' }
+        - { name: reconnectAccountId, in: query, schema: { type: string }, description: "An IMAP, Google or Microsoft account on this profile to reconnect; its accountId stays the same. IMAP asks only for the new password. Google and Microsoft open that provider's sign-in with the address as the hint and the held areas asked again. Other platforms answer 400, unknown ids 404." }
       responses:
         '200':
           description: The hosted page URL

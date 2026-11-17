@@ -26386,7 +26386,7 @@ def register_generated_tools(mcp, _get_client):
             redirect_url: Where the page sends the user afterwards, with status, accountId, platform and email (or status=error and error).
             email: Prefills the address and skips the first screen.
             name: Display name for sent mail; the page asks for it when absent.
-            reconnect_account_id: Opens the reconnect variant for an IMAP account: only the new password is asked for, and the accountId stays the same."""
+            reconnect_account_id: An IMAP, Google or Microsoft account on this profile to reconnect; its accountId stays the same. IMAP asks only for the new password. Google and Microsoft open that provider's sign-in with the address as the hint and the held areas asked again. Other platforms answer 400, unknown ids 404."""
         client = _get_client()
         try:
             response = client.connect.get_email_connect_url(
