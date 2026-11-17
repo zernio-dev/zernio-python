@@ -27086,13 +27086,9 @@ def register_generated_tools(mcp, _get_client):
 
         The redirect carries a `pendingDataToken` instead of the full payload. The response includes the corresponding selection array (e.g. `boards` for Pinterest).
 
-        WhatsApp, Facebook and other platforms pass selection state directly via URL query params on the redirect (`profileId`, `tempToken`, `step`), and no pending record is created. So this endpoint will return 404 for those flows. Use the platform-specific selection endpoint instead (e.g. `/v1/connect/whatsapp/select-phone-number`).
+        For LinkedIn, add `pendingDataOnly=true` to your `redirect_url` to keep `tempToken`, `userProfile` and `organizations` out of the redirect: it then carries only `pendingDataToken`, and this endpoint returns `tempToken`, `refreshToken`, `userProfile` and `organizations` for POST /v1/connect/linkedin/select-organization. Other platforms ignore it.
 
-        ### Token lifetime
-
-        Reading the token does not consume it, so this fetch is repeatable until the token expires 1 hour after issuance.
-
-        Completing the platform selection ...
+        WhatsApp, Facebook and other platforms pass selection state directly via URL query params on the redirect (`profileId`, `tempToken`, `step`), and no pending ...
 
         Args:
             token: The pending data token from the OAuth redirect URL (pendingDataToken parameter) (required)"""
