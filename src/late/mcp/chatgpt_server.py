@@ -27,6 +27,7 @@ from late.client.base import _retry_after_seconds
 from late.mcp.auth import build_auth_provider, forget_rejected_token
 from late.mcp.middleware import WellFormedOutputMiddleware, WellFormedOutputTransform
 from late.mcp.middleware.rate_limit import wait_hint
+from late.mcp.media_items import media_item
 from late.mcp.user_agent import mcp_user_agent
 
 API_BASE = (
@@ -47,7 +48,6 @@ _DAY_NAMES = [
     "Saturday",
     "Sunday",
 ]
-_VIDEO_EXT = (".mp4", ".mov", ".avi", ".webm", ".m4v")
 # Everything this surface can do fits these four; ChatGPT asks the user to
 # grant every scope the discovery document advertises.
 CHATGPT_SCOPES = ["posts:read", "posts:write", "accounts:read", "analytics:read"]
@@ -449,19 +449,7 @@ async def _usernames(posts: list[dict[str, Any]]) -> dict[str, str]:
 
 
 def _media_items(media_urls: list[str] | None) -> list[dict[str, str]]:
-    items = []
-    for url in media_urls or []:
-        lower = url.lower().split("?")[0]
-        if lower.endswith(_VIDEO_EXT):
-            media_type = "video"
-        elif lower.endswith(".gif"):
-            media_type = "gif"
-        elif lower.endswith(".pdf"):
-            media_type = "document"
-        else:
-            media_type = "image"
-        items.append({"type": media_type, "url": url})
-    return items
+    return [media_item(url) for url in media_urls or []]
 
 
 def _schedule_fields(scheduled_for: str, tz: str | None) -> dict[str, str]:
