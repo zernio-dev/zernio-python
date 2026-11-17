@@ -48475,9 +48475,14 @@ paths:
       parameters:
         - name: tempToken
           in: query
-          required: true
+          required: false
           schema: { type: string }
-          description: The temporary LinkedIn access token from the OAuth redirect
+          description: "The temporary LinkedIn access token from the OAuth redirect. Required unless sent in the X-Temp-Token header."
+        - name: X-Temp-Token
+          in: header
+          required: false
+          schema: { type: string }
+          description: "The OAuth user token, in place of the tempToken query parameter. Prefer it: a query string is written to request logs along the way."
         - name: orgIds
           in: query
           required: true

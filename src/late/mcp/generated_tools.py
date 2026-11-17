@@ -27111,13 +27111,15 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=False,
         )
     )
-    def connect_list_linked_in_organizations(temp_token: str, org_ids: str) -> str:
+    def connect_list_linked_in_organizations(
+        org_ids: str, temp_token: str | None = None
+    ) -> str:
         """List LinkedIn orgs
 
         Fetch full LinkedIn organization details (logos, vanity names, websites) for custom UI. No authentication required, only the tempToken from OAuth.
 
         Args:
-            temp_token: The temporary LinkedIn access token from the OAuth redirect (required)
+            temp_token: The temporary LinkedIn access token from the OAuth redirect. Required unless sent in the X-Temp-Token header.
             org_ids: Comma-separated list of organization IDs to fetch details for (max 100) (required)"""
         client = _get_client()
         try:

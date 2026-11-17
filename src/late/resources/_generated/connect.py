@@ -616,14 +616,23 @@ class ConnectResource:
         return self._client._get("/v1/connect/pending-data", params=params)
 
     def list_linked_in_organizations(
-        self, temp_token: str, org_ids: str
+        self,
+        org_ids: str,
+        *,
+        temp_token: str | None = None,
+        x_temp_token: str | None = None,
     ) -> dict[str, Any]:
         """List LinkedIn orgs"""
         params = self._build_params(
             temp_token=temp_token,
             org_ids=org_ids,
         )
-        return self._client._get("/v1/connect/linkedin/organizations", params=params)
+        headers: dict[str, str] = {}
+        if x_temp_token is not None:
+            headers["X-Temp-Token"] = x_temp_token
+        return self._client._get(
+            "/v1/connect/linkedin/organizations", params=params, headers=headers
+        )
 
     def select_linked_in_organization(
         self,
@@ -1997,15 +2006,22 @@ class ConnectResource:
         return await self._client._aget("/v1/connect/pending-data", params=params)
 
     async def alist_linked_in_organizations(
-        self, temp_token: str, org_ids: str
+        self,
+        org_ids: str,
+        *,
+        temp_token: str | None = None,
+        x_temp_token: str | None = None,
     ) -> dict[str, Any]:
         """List LinkedIn orgs (async)"""
         params = self._build_params(
             temp_token=temp_token,
             org_ids=org_ids,
         )
+        headers: dict[str, str] = {}
+        if x_temp_token is not None:
+            headers["X-Temp-Token"] = x_temp_token
         return await self._client._aget(
-            "/v1/connect/linkedin/organizations", params=params
+            "/v1/connect/linkedin/organizations", params=params, headers=headers
         )
 
     async def aselect_linked_in_organization(
