@@ -14,5 +14,5 @@ def media_item(url: str) -> dict[str, str]:
         return {"type": "document", "url": url}
     if path.endswith(_IMAGE_EXT):
         return {"type": "image", "url": url}
-    # Unknown extension (e.g. a Drive link): omit type so the API infers it from the fetched file.
+    # Unknown extension (e.g. a Drive link): omit type so the API infers it (Drive links are rehosted first).
     return {"url": url}
