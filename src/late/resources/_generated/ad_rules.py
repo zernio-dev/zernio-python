@@ -211,6 +211,23 @@ class AdRulesResource:
         """Preview an ad rule"""
         return self._client._post(f"/v1/ads/rules/{rule_id}/preview")
 
+    def list_ad_account_rule_alerts(
+        self,
+        account_id: str,
+        ad_account_id: str,
+        *,
+        limit: int | None = 50,
+        cursor: str | None = None,
+    ) -> dict[str, Any]:
+        """List an ad account's open alerts"""
+        params = self._build_params(
+            account_id=account_id,
+            ad_account_id=ad_account_id,
+            limit=limit,
+            cursor=cursor,
+        )
+        return self._client._get("/v1/ads/rules/alerts", params=params)
+
     def list_ad_rule_alerts(
         self,
         rule_id: str,
@@ -372,6 +389,23 @@ class AdRulesResource:
     async def apreview_ad_rule(self, rule_id: str) -> dict[str, Any]:
         """Preview an ad rule (async)"""
         return await self._client._apost(f"/v1/ads/rules/{rule_id}/preview")
+
+    async def alist_ad_account_rule_alerts(
+        self,
+        account_id: str,
+        ad_account_id: str,
+        *,
+        limit: int | None = 50,
+        cursor: str | None = None,
+    ) -> dict[str, Any]:
+        """List an ad account's open alerts (async)"""
+        params = self._build_params(
+            account_id=account_id,
+            ad_account_id=ad_account_id,
+            limit=limit,
+            cursor=cursor,
+        )
+        return await self._client._aget("/v1/ads/rules/alerts", params=params)
 
     async def alist_ad_rule_alerts(
         self,

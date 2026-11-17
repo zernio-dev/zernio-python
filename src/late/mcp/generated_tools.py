@@ -13494,12 +13494,17 @@ def register_generated_tools(mcp, _get_client):
         - `pause`
         - `activate`
         - `adjust_budget`
+        - `adjust_bid`
+        - `adjust_target`
+        - `reallocate_budget`
+        - `duplicate`
+        - `edit_name`
 
         A keyword rule can notify and pause; a search term rule only notifies.
 
         ### Cooldown
 
-        After acting on an object, the rule leaves that object alone for `cooldownMinutes`. A rule that pauses, activates or adjusts budgets needs a cooldown at ...
+        After acting on an object, the rule leaves that object alone for ...
 
         Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit
 
@@ -13619,8 +13624,11 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """List every change ad rules made
 
-        The permanent record of what your rules did: one entry per pause, reactivation or budget change (including skipped and failed attempts), newest first, across all rules of the profiles the key can reach.
-        Entries stay after a rule is renamed or deleted; `ruleName` is the rule's name when it acted.
+        What your rules did over the last 31 days, newest first, across all rules of the profiles the key can reach.
+
+        There is one entry per change a rule made or tried: pause, reactivation, budget, bid or target change, copy or name tag. Skipped and failed attempts are included.
+
+        Entries stay for those 31 days after a rule is renamed or deleted; `ruleName` is the rule's name when it acted.
 
         Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit
 
@@ -13803,6 +13811,41 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="List an ad account's open alerts",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def ad_rules_list_ad_account_rule_alerts(
+        account_id: str, ad_account_id: str, limit: int = 50, cursor: str | None = None
+    ) -> str:
+        """List an ad account's open alerts
+
+        The open alerts of every rule of one ad account, newest first, in one call: each alert names its rule in `ruleId`.
+        Only `open` alerts are listed. For one rule's pending and resolved alerts, use `GET /v1/ads/rules/{ruleId}/alerts`.
+
+        Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit
+
+        Args:
+            account_id: The connected ads account the rules run on. (required)
+            ad_account_id: The platform ad account ID. (required)
+            limit
+            cursor: `nextCursor` from the previous page."""
+        client = _get_client()
+        try:
+            response = client.ad_rules.list_ad_account_rule_alerts(
+                account_id=account_id,
+                ad_account_id=ad_account_id,
+                limit=limit,
+                cursor=cursor,
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="List a rule's alerts",
             readOnlyHint=True,
             destructiveHint=False,
@@ -13847,7 +13890,7 @@ def register_generated_tools(mcp, _get_client):
         """List an ad rule's runs
 
         Lists a rule's scheduled runs, newest first: what each run evaluated, matched and did.
-        Runs that changed something (or tried to) are kept permanently, also after the rule is deleted; runs that changed nothing are dropped after about 31 days.
+        A run that matched nothing or did not happen (`no_match`, `paused`) is kept 7 days, any other run 31 days.
         For every change across all rules, use `GET /v1/ads/rules/activity`.
 
         Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit
@@ -16495,7 +16538,7 @@ def register_generated_tools(mcp, _get_client):
 
         Creates an automation. Its shape picks the kind:
 
-        - **Ad rule**: a `schedule` over campaigns, ad sets or ads, with metric `conditions` and ad `steps`. It stays paused unless `status` is `active`; preview it first with `POST /v1/automations/preview`.
+        - **Ad rule**: a `schedule` over campaigns, ad sets, ads, Google keywords or Google search terms, with metric `conditions` and ad `steps`. It stays paused unless `status` is `active`; preview it first with `POST /v1/automations/preview`.
         - **Event**: a Zernio event in `trigger.type`, such as `post.failed`, with notify steps. It is on unless `status` is `paused`.
         - **Scheduled**: a `schedule` over a profile's posts, with notify steps and an optional boost. It is on unless `status` is `paused`.
 
@@ -16699,7 +16742,7 @@ def register_generated_tools(mcp, _get_client):
             conditions: Object with keys: all (list of objects with keys metric, window, op, value, compareTo, of, required)
             alert: Object with keys: confirmChecks (integer); hold (object with keys all); critical (object with keys all)
             steps: The steps the automation's kind takes. Each item is an object with keys: id (string); type (string, required)
-            limits: Object with keys: cooldown (string) - How long an object is left alone after the rule acts on it. Whole minutes, up to `30d`.; maxChangesPerDay (integer) - Most changes across the last 24 hours. Needs an `ads.*` step.; maxChangesPerObject (integer) - Most times the rule may change one object, over its whole history. Needs an `ads.*` step."""
+            limits: Object with keys: cooldown (string) - How long an object is left alone after the rule acts on it. Whole minutes, up to `30d`.; maxChangesPerDay (integer) - Most changes across the last 24 hours. Needs an `ads.*` step.; maxChangesPerObject (integer) - Most times the rule may change one object, counted over the last 400 days. Needs an `ads.*` step."""
         client = _get_client()
         try:
             response = client.automations.update_automation(

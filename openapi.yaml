@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.641.0"
+  version: "1.642.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -229,7 +229,7 @@ x-documentation:
     - `ad_account.status_changed` - An ad account Zernio already tracked became `active`, `restricted`, `disabled` or `closed` (Meta, Google, TikTok, X)
     - `campaign.status_changed` - The sync saw a campaign Zernio already tracked change its platform status (Google `primary_status`, Meta `effective_status`) or, on Google, the reasons behind it. Values are the platform's own
     - `ad.video.processed` - Meta finished processing a video uploaded with `POST /v1/ads/videos` and `async: true`. `video.status` is `ready` (usable as `video.id`) or `error`
-    - `ad_rule.triggered` - A scheduled ad rule run found campaigns, ad sets or ads meeting every condition, once per object per cooldown. `objects` lists the objects acted on
+    - `ad_rule.triggered` - A scheduled ad rule run found campaigns, ad sets, ads, Google keywords or Google search terms meeting every condition, once per object per cooldown. `objects` lists the objects acted on
     - `automation.check.completed` - One scheduled check of an automation finished (ad rules today): its outcome, how many objects it read and how many actions it took
     - `automation.action.applied`, `automation.action.failed`, `automation.action.unknown` - One change an automation made or tried, with the value before and the value it sets (`previous`, `target`). Refusals arrive as `failed` with status `skipped`; `unknown` means the platform did not answer and the next check reads the result back
     - `automation.alert.opened`, `automation.alert.escalated`, `automation.alert.resolved` - An alert episode of an automation with a lifecycle: confirmed and acted on, turned critical, or ended (`reason` says why)
@@ -606,7 +606,7 @@ tags:
       auto-creates contacts.
   - name: Ad Rules
     description: |
-      Rules that check campaigns or ad sets on a schedule and pause, reactivate, rebudget or notify
+      Rules that check campaigns, ad sets, ads, Google keywords or Google search terms on a schedule and pause, reactivate, rebudget or notify
       when their metrics cross a threshold. Requires the Ads add-on.
   - name: Automations
     description: |
@@ -10828,7 +10828,7 @@ components:
       description: |
         Webhook payload for the `ad_rule.triggered` event.
 
-        Fires when a scheduled run of a rule with a `notify` action finds campaigns, ad sets or ads that meet every condition of the rule.
+        Fires when a scheduled run of a rule with a `notify` action finds campaigns, ad sets, ads, Google keywords or Google search terms that meet every condition of the rule.
 
         Each object is announced at most once per rule cooldown, so `objects` lists only the objects the run acted on, never the ones still in cooldown. A run where every matching object is still in cooldown sends nothing.
 
@@ -10866,12 +10866,12 @@ components:
             currency: { type: [string, "null"], description: "ISO 4217 currency of the ad account, which money metrics (`spend`, `cpc`, `cpm`, `cpa`) and condition values are in. Null when unknown." }
         objects:
           type: array
-          description: The campaigns, ad sets or ads this run acted on, at the rule's `level`, including those whose action failed. Objects still in cooldown are left out.
+          description: "The objects this run acted on, at the rule's `level` (campaigns, ad sets, ads, keywords or search terms), including those whose action failed. Objects still in cooldown are left out."
           items:
             type: object
             required: [platformId, name, platformCampaignId, conditions, actions]
             properties:
-              platformId: { type: string, description: Platform-native ID of the campaign or ad set. }
+              platformId: { type: string, description: 'Platform-native ID of the campaign, ad set or ad. A keyword is `{adGroupId}~{criterionId}`, a search term `{campaignId}~{term}`.' }
               name: { type: string, description: Name on the platform. Falls back to `platformId` when the platform reports none. }
               platformCampaignId: { type: [string, "null"], description: "Platform-native ID of the campaign the object belongs to (on a campaign-level rule, the campaign's own ID). Null when unknown." }
               conditions:
@@ -19806,12 +19806,12 @@ components:
       description: |
         Whether the rule checks campaigns, ad sets, single ads, Google keywords or Google search terms. Each one is evaluated on its own.
 
-        `keyword` and `search_term` read Google Search, on Google Ads accounts only. A keyword's id is `<adGroupId>~<criterionId>`, as `PATCH /v1/ads/keywords/{keywordId}` takes it. A search term is one per ad group, its id `<adGroupId>~<term>`.
+        `keyword` and `search_term` read Google Search, on Google Ads accounts only. A keyword's id is `<adGroupId>~<criterionId>`, as `PATCH /v1/ads/keywords/{keywordId}` takes it. A search term is judged once per campaign, summed across the ad groups it showed in, its id `<campaignId>~<term>`.
 
         - They read a daily history Zernio fetches from Google. A day keeps its 50,000 rows that spent most.
         - Every daily window works, `today` included: today is refreshed at most once an hour.
-        - A new rule's first runs load its days a few at a time, and fail until all are in.
-        - A keyword rule judges every serving keyword, one with no traffic at zero. Paused keywords are not judged.
+        - The history starts loading when the rule is saved, about 10 days a minute. A run or a preview before it is complete does not evaluate: the run fails and the preview returns 409 `history_loading`.
+        - A keyword rule judges every serving keyword, one with no traffic at zero. Zernio syncs the keywords Google has not removed; paused keywords are not judged.
         - Google lists only search terms that showed at least once, so a search term rule takes `impressions` with `>` or `>=`, never `<` or `<=`.
 
         They take `spend`, `impressions`, `clicks`, `conversions`, `ctr`, `cpc`, `cpm`, `cpa` and `roas` over whole days, no `usual`, `of`, `top` or `bottom`, and `compareTo` only as `campaign`. A keyword rule can `notify` or `pause`; a search term rule only notifies.
@@ -19953,13 +19953,13 @@ components:
         - type: object
           required: [type]
           properties:
-            type: { type: string, enum: [pause], description: 'Pause the campaign, ad set or ad.' }
+            type: { type: string, enum: [pause], description: 'Pause the campaign, ad set, ad or Google keyword.' }
             maxChangesPerDay: { type: integer, minimum: 1, maximum: 100, description: 'At most this many objects changed in any 24 hours, across runs. Matches over the limit are skipped with `daily_limit_reached` and tried again later.' }
             maxChangesPerObject: { type: integer, minimum: 1, maximum: 100, description: 'At most this many changes to one object by this rule, counted over the last 400 days. An object at the limit is left alone like one in cooldown.' }
         - type: object
           required: [type]
           properties:
-            type: { type: string, enum: [activate], description: 'Reactivate a campaign, ad set or ad a rule paused, once `cooldownMinutes` has passed since the pause. Objects you paused yourself are left alone unless `includeManuallyPaused` is true.' }
+            type: { type: string, enum: [activate], description: 'Reactivate a campaign, ad set or ad a rule paused, once `cooldownMinutes` has passed since the pause. A rule on set times (`schedule.times`) does not wait: it restarts only what a rule on set times paused. Objects you paused yourself are left alone unless `includeManuallyPaused` is true.' }
             includeManuallyPaused: { type: boolean, description: 'Also reactivate paused objects that no rule paused, as soon as they match.' }
             maxChangesPerDay: { type: integer, minimum: 1, maximum: 100, description: 'At most this many objects changed in any 24 hours, across runs. Matches over the limit are skipped with `daily_limit_reached` and tried again later.' }
             maxChangesPerObject: { type: integer, minimum: 1, maximum: 100, description: 'At most this many changes to one object by this rule, counted over the last 400 days. An object at the limit is left alone like one in cooldown.' }
@@ -20060,7 +20060,9 @@ components:
 
         The conditions are judged once per group, and a matching group acts on each of its campaigns, each with its own cooldown and daily cap. Paused campaigns count toward a group's totals; only the ones the rule may act on are changed.
 
-        A group with no filters holds every campaign the rule checks: the whole ad account. A campaign in several groups is acted on once per run, by the first matching group. Reach and frequency cannot be added up across campaigns, so a rule with groups cannot use them.
+        A group with no filters holds every campaign the rule checks: the whole ad account. A campaign in several groups is acted on once per run, by the first matching group.
+
+        Reach, frequency and the Google impression shares cannot be added up across campaigns, so a rule with groups cannot use them. It cannot use hourly windows either.
 
         A campaign with no results sent for the window adds its spend and no results to its group. A result sent as a rate (kind `percent` or `ratio`, no formula) reads as unknown for a group; define it as a formula over counts.
       items:
@@ -20420,7 +20422,7 @@ components:
           description: |
             Judges campaigns together (campaign rules only): each group's numbers are summed and its rates computed on the totals, and a matching group acts on each of its campaigns.
 
-            A group with no filters holds every campaign the rule checks. `reach` and `frequency` cannot be used with groups.
+            A group with no filters holds every campaign the rule checks. `reach`, `frequency`, the Google impression shares and hourly windows cannot be used with groups.
           items:
             type: object
             required: [name, filters]
@@ -20496,7 +20498,7 @@ components:
         - type: object
           required: [type]
           additionalProperties: false
-          description: Turns objects back on once their cooldown has passed.
+          description: 'Turns objects back on once their cooldown has passed. A rule on set `times` does not wait: it restarts only what a rule on set times paused.'
           properties:
             id: { type: string, const: activate }
             type: { type: string, const: ads.activate }
@@ -20618,7 +20620,7 @@ components:
       properties:
         cooldown: { type: string, pattern: '^[0-9]{1,5}(m|h|d)$', default: 1d, example: 3d, description: 'How long an object is left alone after the rule acts on it. Whole minutes, up to `30d`.' }
         maxChangesPerDay: { type: integer, minimum: 1, maximum: 100, description: 'Most changes across the last 24 hours. Needs an `ads.*` step.' }
-        maxChangesPerObject: { type: integer, minimum: 1, maximum: 100, description: 'Most times the rule may change one object, over its whole history. Needs an `ads.*` step.' }
+        maxChangesPerObject: { type: integer, minimum: 1, maximum: 100, description: 'Most times the rule may change one object, counted over the last 400 days. Needs an `ads.*` step.' }
     AutomationEventLimits:
       type: object
       additionalProperties: false
@@ -20688,7 +20690,7 @@ components:
       description: |
         An automation of one of three kinds, told apart by its shape:
 
-        - **Ad rule**: a `schedule` trigger over campaigns, ad sets or ads, with metric `conditions` and ad `steps`.
+        - **Ad rule**: a `schedule` trigger over campaigns, ad sets, ads, Google keywords or Google search terms, with metric `conditions` and ad `steps`.
         - **Event**: a Zernio event in `trigger.type`, narrowed by `trigger.filter`, with notify steps, or none to only record each matching event as a check.
         - **Scheduled**: a `schedule` trigger over `subjects.each: post`, narrowed by `filter`, with notify and boost steps.
       oneOf:
@@ -21395,7 +21397,7 @@ components:
       type: object
       required: [id, name, campaignId, matched, conditions]
       properties:
-        id: { type: string, description: 'Platform ID of the campaign, ad set or ad. A keyword is `{adGroupId}~{criterionId}`, a search term `{adGroupId}~{term}`.' }
+        id: { type: string, description: 'Platform ID of the campaign, ad set or ad. A keyword is `{adGroupId}~{criterionId}`, a search term `{campaignId}~{term}`.' }
         name: { type: string, description: "The object's name: the keyword text or the search term." }
         campaignId: { type: [string, "null"] }
         campaignName: { type: [string, "null"], description: Absent on runs recorded before November 2026. }
@@ -21434,7 +21436,7 @@ components:
         matched: { type: integer, description: How many objects meet every condition. }
         objects:
           type: array
-          description: Every delivering campaign or ad set in scope (for an `activate` rule, the rule-paused ones it may reactivate).
+          description: 'Every delivering campaign, ad set or ad in scope, or every serving keyword and listed search term (for an `activate` rule, the rule-paused objects it may reactivate).'
           items: { $ref: '#/components/schemas/AdRuleObjectEvaluation' }
         groups:
           type: [array, "null"]
@@ -21534,8 +21536,8 @@ components:
         platform: { type: string }
         accountId: { type: string, description: The ads connection the rule runs on. }
         adAccountId: { type: string }
-        level: { type: string, enum: [campaign, adset] }
-        objectId: { type: string, description: Platform ID of the campaign or ad set. }
+        level: { type: string, enum: [campaign, adset, ad, keyword, search_term] }
+        objectId: { type: string, description: 'Platform ID of the campaign, ad set or ad. A keyword is `{adGroupId}~{criterionId}`.' }
         objectName: { type: [string, "null"], description: Its name when the rule acted. }
         type: { type: string, enum: [pause, activate, adjust_budget, adjust_bid, adjust_target, reallocate_budget, duplicate, edit_name] }
         status: { type: string, enum: [done, skipped, failed] }
@@ -27670,7 +27672,7 @@ webhooks:
       operationId: onAdRuleTriggered
       summary: Ad rule triggered event
       description: |
-        A scheduled run of an ad rule with a `notify` action found campaigns or ad sets meeting every condition.
+        A scheduled run of an ad rule with a `notify` action found campaigns, ad sets, ads, Google keywords or Google search terms meeting every condition.
 
         ### When it fires
 
@@ -78695,7 +78697,7 @@ paths:
       description: |
         Creates an automation. Its shape picks the kind:
 
-        - **Ad rule**: a `schedule` over campaigns, ad sets or ads, with metric `conditions` and ad `steps`. It stays paused unless `status` is `active`; preview it first with `POST /v1/automations/preview`.
+        - **Ad rule**: a `schedule` over campaigns, ad sets, ads, Google keywords or Google search terms, with metric `conditions` and ad `steps`. It stays paused unless `status` is `active`; preview it first with `POST /v1/automations/preview`.
         - **Event**: a Zernio event in `trigger.type`, such as `post.failed`, with notify steps. It is on unless `status` is `paused`.
         - **Scheduled**: a `schedule` over a profile's posts, with notify steps and an optional boost. It is on unless `status` is `paused`.
 
@@ -78942,6 +78944,11 @@ paths:
         '400': { $ref: '#/components/responses/AutomationInvalid' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { $ref: '#/components/responses/AutomationsAdsRequired' }
+        '409':
+          description: 'A keyword or search term rule is still loading its daily history from Google (`history_loading`). Loading starts when the rule is saved and a 30-day window takes about two minutes. The message says how many days are loaded. Try again shortly.'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
   /v1/automations/{automationId}:
     parameters:
       - name: automationId
@@ -79144,6 +79151,11 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { $ref: '#/components/responses/AutomationsAdsRequired' }
         '404': { $ref: '#/components/responses/NotFound' }
+        '409':
+          description: 'A keyword or search term rule is still loading its daily history from Google (`history_loading`). Loading starts when the rule is saved and a 30-day window takes about two minutes. The message says how many days are loaded. Try again shortly.'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
   /v1/automations/templates:
     get:
       x-resource-group: ads
@@ -80255,16 +80267,23 @@ paths:
         - `pause`
         - `activate`
         - `adjust_budget`
+        - `adjust_bid`
+        - `adjust_target`
+        - `reallocate_budget`
+        - `duplicate`
+        - `edit_name`
 
         A keyword rule can notify and pause; a search term rule only notifies.
 
         ### Cooldown
 
-        After acting on an object, the rule leaves that object alone for `cooldownMinutes`. A rule that pauses, activates or adjusts budgets needs a cooldown at least as long as its schedule.
+        After acting on an object, the rule leaves that object alone for `cooldownMinutes`. A rule that changes ads (any action but `notify`) needs a cooldown at least as long as its schedule.
 
         ### How `activate` works
 
-        `activate` only reactivates objects a rule paused, never ones you paused yourself, and only once the cooldown has passed since that pause.
+        `activate` only reactivates objects a rule paused, never ones you paused yourself (unless `includeManuallyPaused` is true), and only once the cooldown has passed since that pause.
+
+        A rule on set times (`schedule.times`) does not wait for the cooldown: it restarts only what a rule on set times paused, such as a morning restart after a night pause.
 
         If you reactivate and pause such an object yourself between two runs of a rule, Zernio cannot tell your pause from the rule's, and an `activate` rule may reactivate it.
       security:
@@ -80408,8 +80427,11 @@ paths:
       x-platforms: [meta, google, tiktok, linkedin, pinterest, x, reddit]
       summary: List every change ad rules made
       description: |
-        The permanent record of what your rules did: one entry per pause, reactivation or budget change (including skipped and failed attempts), newest first, across all rules of the profiles the key can reach.
-        Entries stay after a rule is renamed or deleted; `ruleName` is the rule's name when it acted.
+        What your rules did over the last 31 days, newest first, across all rules of the profiles the key can reach.
+
+        There is one entry per change a rule made or tried: pause, reactivation, budget, bid or target change, copy or name tag. Skipped and failed attempts are included.
+
+        Entries stay for those 31 days after a rule is renamed or deleted; `ruleName` is the rule's name when it acted.
       security:
         - bearerAuth: []
       parameters:
@@ -80695,10 +80717,71 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
         '409':
-          description: 'A keyword or search term rule is still loading its daily history from Google, a few days per run (`history_loading`). The message says how many days are in. Try again later.'
+          description: 'A keyword or search term rule is still loading its daily history from Google (`history_loading`). Loading starts when the rule is saved and a 30-day window takes about two minutes. The message says how many days are loaded. Try again shortly.'
           content:
             application/json:
               schema: { $ref: '#/components/schemas/ErrorResponse' }
+  /v1/ads/rules/alerts:
+    get:
+      x-resource-group: ads
+      operationId: listAdAccountRuleAlerts
+      tags: [Ad Rules]
+      x-platforms: [meta, google, tiktok, linkedin, pinterest, x, reddit]
+      summary: List an ad account's open alerts
+      description: |
+        The open alerts of every rule of one ad account, newest first, in one call: each alert names its rule in `ruleId`.
+        Only `open` alerts are listed. For one rule's pending and resolved alerts, use `GET /v1/ads/rules/{ruleId}/alerts`.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: accountId
+          in: query
+          required: true
+          description: The connected ads account the rules run on.
+          schema: { type: string }
+        - name: adAccountId
+          in: query
+          required: true
+          description: The platform ad account ID.
+          schema: { type: string }
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 100, default: 50 }
+        - name: cursor
+          in: query
+          description: '`nextCursor` from the previous page.'
+          schema: { type: string }
+      responses:
+        '200':
+          description: Open alerts, newest first
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [alerts, nextCursor]
+                properties:
+                  alerts:
+                    type: array
+                    items:
+                      type: object
+                      required: [ruleId, id, objectId, state, severity, consecutiveMatches, openedAt, lastMatchedAt, lastEvaluatedAt, resolvedAt, resolvedReason]
+                      properties:
+                        ruleId: { type: string, description: 'The rule the alert belongs to.' }
+                        id: { type: string }
+                        objectId: { type: string, description: 'Platform campaign, ad set or ad ID, or the id of the keyword or search term.' }
+                        state: { type: string, enum: [open] }
+                        severity: { type: [string, "null"], enum: [warning, critical, null] }
+                        consecutiveMatches: { type: integer }
+                        openedAt: { type: [string, "null"], format: date-time }
+                        lastMatchedAt: { type: string, format: date-time }
+                        lastEvaluatedAt: { type: string, format: date-time, description: 'When a run last evaluated the object of this alert. Older than the latest run of its rule means that run did not evaluate it.' }
+                        resolvedAt: { type: [string, "null"], format: date-time, description: "Always null here: only open alerts are listed." }
+                        resolvedReason: { type: [string, "null"], description: "Always null here: only open alerts are listed." }
+                  nextCursor: { type: [string, "null"] }
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
   /v1/ads/rules/{ruleId}/alerts:
     get:
       x-resource-group: ads
@@ -80741,7 +80824,7 @@ paths:
                       required: [id, objectId, state, severity, consecutiveMatches, openedAt, lastMatchedAt, lastEvaluatedAt, resolvedAt, resolvedReason]
                       properties:
                         id: { type: string }
-                        objectId: { type: string, description: 'Platform campaign, ad set or ad ID.' }
+                        objectId: { type: string, description: 'Platform campaign, ad set or ad ID, or the id of the keyword or search term.' }
                         state: { type: string, enum: [pending, open, resolved] }
                         severity: { type: [string, "null"], enum: [warning, critical, null] }
                         consecutiveMatches: { type: integer }
@@ -80770,7 +80853,7 @@ paths:
       summary: List an ad rule's runs
       description: |
         Lists a rule's scheduled runs, newest first: what each run evaluated, matched and did.
-        Runs that changed something (or tried to) are kept permanently, also after the rule is deleted; runs that changed nothing are dropped after about 31 days.
+        A run that matched nothing or did not happen (`no_match`, `paused`) is kept 7 days, any other run 31 days.
         For every change across all rules, use `GET /v1/ads/rules/activity`.
       security:
         - bearerAuth: []

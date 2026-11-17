@@ -700,6 +700,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 ### Ad Rules
 | Method | Description |
 |--------|-------------|
+| `ad_rules.list_ad_account_rule_alerts()` | List an ad account's open alerts |
 | `ad_rules.list_ad_rule_activity()` | List every change ad rules made |
 | `ad_rules.list_ad_rule_alerts()` | List a rule's alerts |
 | `ad_rules.list_ad_rule_runs()` | List an ad rule's runs |
