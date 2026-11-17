@@ -63,6 +63,12 @@ class TestUserAgent:
         client = BaseClient(api_key=api_key)
         assert client._headers["User-Agent"] == f"late-python-sdk/{self._installed_version()}"
 
+    def test_user_agent_puts_the_integration_ahead_of_the_sdk(self, api_key: str) -> None:
+        client = BaseClient(api_key=api_key, user_agent="my-app/1.2")
+        assert client._headers["User-Agent"] == (
+            f"my-app/1.2 late-python-sdk/{self._installed_version()}"
+        )
+
     def test_resolve_sdk_version_falls_back_when_no_distribution_installed(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:

@@ -141,6 +141,7 @@ class Zernio(BaseClient):
         max_retries: int = 3,
         publish_timeout: float = 300.0,
         transport: httpx.BaseTransport | None = None,
+        user_agent: str | None = None,
     ) -> None:
         """
         Initialize the Zernio client.
@@ -157,6 +158,8 @@ class Zernio(BaseClient):
             transport: Sync httpx transport shared across requests and clients,
                        so connections and TLS sessions are reused. The caller
                        owns it and closes it (default: a new connection per request)
+            user_agent: Product token of the integration built on the SDK, sent
+                        ahead of the SDK's own in the User-Agent header
 
         Raises:
             ValueError: If no API key is provided and neither ZERNIO_API_KEY
@@ -177,6 +180,7 @@ class Zernio(BaseClient):
             max_retries=max_retries,
             publish_timeout=publish_timeout,
             transport=transport,
+            user_agent=user_agent,
         )
 
         # --- auto-registered resources (do not edit) ---

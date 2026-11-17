@@ -24,6 +24,7 @@ from mcp.types import TextContent, ToolAnnotations
 from pydantic import BaseModel, Field
 
 from late.mcp.auth import build_auth_provider, forget_rejected_token
+from late.mcp.user_agent import mcp_user_agent
 
 API_BASE = (
     os.getenv("ZERNIO_BASE_URL")
@@ -232,7 +233,11 @@ async def _api(
     method: str, path: str, *, params: dict[str, Any] | None = None, json: Any = None
 ) -> Any:
     bearer = _bearer()
-    headers = {"Authorization": f"Bearer {bearer}", "Accept": "application/json"}
+    headers = {
+        "Authorization": f"Bearer {bearer}",
+        "Accept": "application/json",
+        "User-Agent": mcp_user_agent(),
+    }
     async with httpx.AsyncClient(base_url=API_BASE, timeout=_TIMEOUT) as client:
         response = await client.request(
             method, path, params=params, json=json, headers=headers

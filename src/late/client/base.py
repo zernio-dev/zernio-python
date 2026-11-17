@@ -120,6 +120,7 @@ class BaseClient:
         max_retries: int = DEFAULT_MAX_RETRIES,
         publish_timeout: float = DEFAULT_PUBLISH_TIMEOUT,
         transport: httpx.BaseTransport | None = None,
+        user_agent: str | None = None,
     ) -> None:
         """
         Initialize the base client.
@@ -139,6 +140,9 @@ class BaseClient:
                        connections and TLS sessions are reused. The caller owns
                        it: the client never closes it. Default: a new
                        connection per request.
+            user_agent: Product token of the integration built on the SDK,
+                        sent ahead of the SDK's own in the User-Agent header
+                        (e.g. "my-app/1.2" sends "my-app/1.2 late-python-sdk/<ver>")
         """
         if not api_key:
             raise ValueError("API key is required")
@@ -155,7 +159,9 @@ class BaseClient:
             "Authorization": f"Bearer {api_key}",
             "Content-Type": "application/json",
             "Accept": "application/json",
-            "User-Agent": f"late-python-sdk/{self.SDK_VERSION}",
+            "User-Agent": " ".join(
+                filter(None, [user_agent, f"late-python-sdk/{self.SDK_VERSION}"])
+            ),
         }
 
     def _resolve_timeout(
