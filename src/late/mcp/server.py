@@ -49,13 +49,16 @@ from late import Late, MediaType, PostStatus
 from late.client.exceptions import LateAPIError, LateError, LateRateLimitError
 
 from .auth import build_auth_provider, forget_rejected_token
-from .feedback_source import FEEDBACK_TOOL, FeedbackSourceMiddleware
 from .idempotency import same_arguments_key
+from .middleware import (
+    FEEDBACK_TOOL,
+    FeedbackSourceMiddleware,
+    ToolGuidanceMiddleware,
+    WellFormedOutputMiddleware,
+)
 from .resources import register_resources
 from .tool_definitions import TOOL_DEFINITIONS
-from .tool_guidance import ToolGuidanceMiddleware
 from .user_agent import mcp_user_agent
-from .well_formed_output import WellFormedOutputMiddleware
 
 if TYPE_CHECKING:
     from collections.abc import Sequence

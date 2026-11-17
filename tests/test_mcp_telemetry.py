@@ -19,9 +19,9 @@ from sentry_sdk.transport import Transport
 
 from late.client.exceptions import LateAPIError
 from late.mcp import telemetry, user_agent
+from late.mcp.middleware import ToolTelemetryMiddleware, tool_telemetry
 from late.mcp.telemetry import (
     ServerErrorAccessLogFilter,
-    ToolTelemetryMiddleware,
     init_sentry,
     quiet_routine_logs,
 )
@@ -273,7 +273,7 @@ async def test_a_tool_behind_call_tool_is_one_sentry_transaction(sentry_events) 
 async def test_a_direct_call_is_tagged_direct_with_its_caller(
     sentry_events, monkeypatch
 ) -> None:
-    monkeypatch.setattr(telemetry, "_caller_key", lambda: "a1b2c3d4e5f6")
+    monkeypatch.setattr(tool_telemetry, "_caller_key", lambda: "a1b2c3d4e5f6")
 
     async with Client(_server()) as client:
         await client.call_tool("fine", {})
@@ -293,7 +293,7 @@ async def test_a_call_records_whether_its_request_waited_on_token_verification(
         scopes=[],
         claims={"resolved_by": "upstream", "waited_ms": 312},
     )
-    monkeypatch.setattr(telemetry, "get_access_token", lambda: token)
+    monkeypatch.setattr(tool_telemetry, "get_access_token", lambda: token)
 
     async with Client(_server()) as client:
         await client.call_tool("fine", {})
@@ -471,7 +471,7 @@ async def test_a_call_logs_the_user_and_the_full_user_agent_of_its_caller(
         scopes=[],
         claims={"resolved_by": "cache", "waited_ms": 0, "user_id": "u" * 24},
     )
-    monkeypatch.setattr(telemetry, "get_access_token", lambda: token)
+    monkeypatch.setattr(tool_telemetry, "get_access_token", lambda: token)
     monkeypatch.setattr(
         user_agent, "get_http_headers", lambda: {"user-agent": "Cursor/1.7.0 (linux)"}
     )
@@ -505,7 +505,7 @@ async def test_sentry_names_the_user_on_the_transaction_and_its_errors_only(
         scopes=[],
         claims={"resolved_by": "upstream", "waited_ms": 0, "user_id": "u" * 24},
     )
-    monkeypatch.setattr(telemetry, "get_access_token", lambda: token)
+    monkeypatch.setattr(tool_telemetry, "get_access_token", lambda: token)
 
     async with Client(_server()) as client:
         await client.call_tool("bug", {}, raise_on_error=False)

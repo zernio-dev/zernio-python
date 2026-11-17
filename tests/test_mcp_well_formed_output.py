@@ -8,8 +8,8 @@ import pytest
 import respx
 from fastmcp import Client
 
+from late.mcp.middleware.well_formed_output import well_formed
 from late.mcp.server import mcp
-from late.mcp.well_formed_output import well_formed
 
 HALF_EMOJI_BODY = b'{"messages":[{"text":"Great launch \\ud83d"}]}'
 

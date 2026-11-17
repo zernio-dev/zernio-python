@@ -10,9 +10,9 @@ import respx
 from fastmcp import Client, FastMCP
 
 from late.mcp import response_format
+from late.mcp.middleware import ToolTelemetryMiddleware
 from late.mcp.response_format import MAX_RESULT_CHARS, fit_to_size, format_payload
 from late.mcp.server import mcp
-from late.mcp.telemetry import ToolTelemetryMiddleware
 
 API = "https://api.test.com"
 

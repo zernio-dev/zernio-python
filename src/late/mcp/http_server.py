@@ -48,6 +48,7 @@ from late.mcp.constants import (
     SERVICE_VERSION,
     TRANSPORT_TYPE,
 )
+from late.mcp.middleware import ToolTelemetryMiddleware
 from late.mcp.non_blocking_logging import (
     LogPump,
     drain_before_exit,
@@ -56,7 +57,6 @@ from late.mcp.non_blocking_logging import (
 )
 from late.mcp.server import mcp
 from late.mcp.telemetry import (
-    ToolTelemetryMiddleware,
     init_sentry,
     log_tool_calls_to_stdout,
     quiet_routine_logs,
