@@ -668,6 +668,8 @@ class AccountsResource:
         log_messages: bool | None = None,
         create_as: str | None = None,
         log_delivery_status: bool | None = None,
+        use_opportunities_in_results: bool | None = None,
+        report_opportunities_to_ads: bool | None = None,
     ) -> dict[str, Any]:
         """Update Salesforce account settings"""
         payload = self._build_payload(
@@ -675,6 +677,8 @@ class AccountsResource:
             log_messages=log_messages,
             create_as=create_as,
             log_delivery_status=log_delivery_status,
+            use_opportunities_in_results=use_opportunities_in_results,
+            report_opportunities_to_ads=report_opportunities_to_ads,
         )
         return self._client._patch(
             f"/v1/accounts/{account_id}/salesforce-settings", data=payload
@@ -1333,6 +1337,8 @@ class AccountsResource:
         log_messages: bool | None = None,
         create_as: str | None = None,
         log_delivery_status: bool | None = None,
+        use_opportunities_in_results: bool | None = None,
+        report_opportunities_to_ads: bool | None = None,
     ) -> dict[str, Any]:
         """Update Salesforce account settings (async)"""
         payload = self._build_payload(
@@ -1340,6 +1346,8 @@ class AccountsResource:
             log_messages=log_messages,
             create_as=create_as,
             log_delivery_status=log_delivery_status,
+            use_opportunities_in_results=use_opportunities_in_results,
+            report_opportunities_to_ads=report_opportunities_to_ads,
         )
         return await self._client._apatch(
             f"/v1/accounts/{account_id}/salesforce-settings", data=payload

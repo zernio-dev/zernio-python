@@ -2375,10 +2375,12 @@ def register_generated_tools(mcp, _get_client):
         log_messages: bool | None = None,
         create_as: Literal["lead", "contact"] | None = None,
         log_delivery_status: bool | None = None,
+        use_opportunities_in_results: bool | None = None,
+        report_opportunities_to_ads: bool | None = None,
     ) -> str:
         """Update Salesforce account settings
 
-        Turn person creation, conversation logging or delivery marks on or off for a connected Salesforce org, or choose whether new people become Leads or Contacts. Send at least one field; omitted fields keep their value. Settings survive reconnecting the same org.
+        Turn person creation, conversation logging, delivery marks or closed-won Opportunities (in ad results, to ad platforms) on or off for a connected Salesforce org, or choose whether new people become Leads or Contacts. Send at least one field; omitted fields keep their value. Settings survive reconnecting the same org.
 
         Platforms: salesforce
 
@@ -2387,7 +2389,9 @@ def register_generated_tools(mcp, _get_client):
             sync_contacts: Create a Lead or Contact for an inbox contact that matches nobody by phone (any phone field) or email. A match is linked as it is and never updated.
             log_messages: Log inbound and outbound inbox messages as one conversation Task per person, channel and day.
             create_as: What a person new to Salesforce is created as. Leads get Company `[not provided]`.
-            log_delivery_status: Mark sent messages in the transcript as delivered, read or failed."""
+            log_delivery_status: Mark sent messages in the transcript as delivered, read or failed.
+            use_opportunities_in_results: Count closed-won Opportunities as sales on the ad campaign named by their Primary Campaign Source, in campaign results and ad rules. Turning it on also fills in the Opportunities won in the last 90 days. Lost or reopened Opportunities stop counting.
+            report_opportunities_to_ads: Send each newly closed-won Opportunity once as a Purchase event (source `salesforce`, event id `salesforce_opp_{orgId}_{opportunityId}`) to the profile's event destinations, with the email and phone of its primary contact role, else the first Contact of its Account. Opportunities won before it was turned on are not sent."""
         client = _get_client()
         try:
             response = client.accounts.update_salesforce_settings(
@@ -2396,6 +2400,8 @@ def register_generated_tools(mcp, _get_client):
                 log_messages=log_messages,
                 create_as=create_as,
                 log_delivery_status=log_delivery_status,
+                use_opportunities_in_results=use_opportunities_in_results,
+                report_opportunities_to_ads=report_opportunities_to_ads,
             )
             return _format_response(response)
         except Exception as e:
@@ -30560,6 +30566,7 @@ def register_generated_tools(mcp, _get_client):
             "woocommerce",
             "stripe",
             "web",
+            "salesforce",
         ]
         | None = None,
         platform: str | None = None,
@@ -30576,7 +30583,7 @@ def register_generated_tools(mcp, _get_client):
 
         Paginate with `cursor`: pass the `nextCursor` of the previous page until it comes back `null`.
 
-        Platforms: meta, google, tiktok, linkedin, pinterest, reddit, openai, applovinads, googleanalytics, stripe
+        Platforms: meta, google, tiktok, linkedin, pinterest, reddit, openai, applovinads, googleanalytics, stripe, hubspot, salesforce
 
         Args:
             profile_id: The profile to list. Omit to cover every profile you can access.
@@ -30953,6 +30960,7 @@ def register_generated_tools(mcp, _get_client):
                 "woocommerce",
                 "stripe",
                 "web",
+                "salesforce",
             ]
         ]
         | None = None,
@@ -30963,6 +30971,8 @@ def register_generated_tools(mcp, _get_client):
         Saves where a profile's events go: every event sent to `POST /v1/events` for that profile is then forwarded to this destination.
 
         Pick `destinationId` from `GET /v1/ads/conversions/destinations`. Set `eventNames` to forward only those events, such as only `Purchase`; leave it out to forward every event.
+
+        Platforms: meta, google, tiktok, linkedin, pinterest, reddit, openai, applovinads, googleanalytics, hubspot, salesforce
 
         Args:
             profile_id: (required)
@@ -55669,13 +55679,15 @@ def register_generated_tools(mcp, _get_client):
 
         Create a branching conversation workflow (draft) from a node/edge graph. Created in `draft` status; activate it to start matching inbound messages. The graph is validated structurally; completeness (a trigger node + reachable entry) is required at activation.
 
+        Platforms: hubspot, salesforce
+
         Args:
             profile_id: (required)
             account_id: (required)
             platform
             name: (required)
             description
-            nodes: Each item is an object with keys: id (string, required) - Stable node id referenced by edges; type (one of: trigger, send_message, wait_for_reply, condition, set_variable, delay, webhook, hubspot_upsert_contact, ai, handoff, start_call, a_b_split, set_field, enroll_sequence, add_tag, remove_tag, end; required) - Node kind. The 17 supported types break into four groups: messaging (send_message), control flow (trigger, condition, delay, wait_for_reply, a_b_split, end), ...; config (object) - Type-specific settings. Every string field supports `{{variable}}` interpolation against the run's variable bag, resolved at execution time. **trigger**: `{ ...; position (object with keys x, y) - Canvas coordinates (ignored by the executor; used by the visual builder).; label (string) - Optional display name shown on the builder canvas and inspector, falling back to the node type when absent. The nodes array is replaced wholesale on update, ...
+            nodes: Each item is an object with keys: id (string, required) - Stable node id referenced by edges; type (one of: trigger, send_message, wait_for_reply, condition, set_variable, delay, webhook, hubspot_upsert_contact, salesforce_upsert_contact, ai, handoff, start_call, a_b_split, set_field, enroll_sequence, add_tag, remove_tag, end; required) - Node kind. The 18 supported types break into four groups: messaging (send_message), control flow (trigger, condition, delay, wait_for_reply, a_b_split, end), ...; config (object) - Type-specific settings. Every string field supports `{{variable}}` interpolation against the run's variable bag, resolved at execution time. **trigger**: `{ ...; position (object with keys x, y) - Canvas coordinates (ignored by the executor; used by the visual builder).; label (string) - Optional display name shown on the builder canvas and inspector, falling back to the node type when absent. The nodes array is replaced wholesale on update, ...
             edges: Each item is an object with keys: id (string, required); source (string, required) - Source node id; target (string, required) - Target node id; sourceHandle (string) - Selects a branch output of a multi-output node. Null (or omitted) = the node's single/default output. Known handles per node type: - **condition**: a rule's ...
             entry_node_id: The trigger node id; derived from the single trigger node if omitted"""
         client = _get_client()
@@ -55752,11 +55764,13 @@ def register_generated_tools(mcp, _get_client):
 
             Account swaps re-validate the graph against the new platform. For example, moving from WhatsApp to Facebook surfaces a `start_call` node as an error instead of silently saving an unrunnable graph.
 
+            Platforms: hubspot, salesforce
+
             Args:
                 workflow_id: (required)
                 name
                 description
-                nodes: Each item is an object with keys: id (string, required) - Stable node id referenced by edges; type (one of: trigger, send_message, wait_for_reply, condition, set_variable, delay, webhook, hubspot_upsert_contact, ai, handoff, start_call, a_b_split, set_field, enroll_sequence, add_tag, remove_tag, end; required) - Node kind. The 17 supported types break into four groups: messaging (send_message), control flow (trigger, condition, delay, wait_for_reply, a_b_split, end), ...; config (object) - Type-specific settings. Every string field supports `{{variable}}` interpolation against the run's variable bag, resolved at execution time. **trigger**: `{ ...; position (object with keys x, y) - Canvas coordinates (ignored by the executor; used by the visual builder).; label (string) - Optional display name shown on the builder canvas and inspector, falling back to the node type when absent. The nodes array is replaced wholesale on update, ...
+                nodes: Each item is an object with keys: id (string, required) - Stable node id referenced by edges; type (one of: trigger, send_message, wait_for_reply, condition, set_variable, delay, webhook, hubspot_upsert_contact, salesforce_upsert_contact, ai, handoff, start_call, a_b_split, set_field, enroll_sequence, add_tag, remove_tag, end; required) - Node kind. The 18 supported types break into four groups: messaging (send_message), control flow (trigger, condition, delay, wait_for_reply, a_b_split, end), ...; config (object) - Type-specific settings. Every string field supports `{{variable}}` interpolation against the run's variable bag, resolved at execution time. **trigger**: `{ ...; position (object with keys x, y) - Canvas coordinates (ignored by the executor; used by the visual builder).; label (string) - Optional display name shown on the builder canvas and inspector, falling back to the node type when absent. The nodes array is replaced wholesale on update, ...
                 edges: Each item is an object with keys: id (string, required); source (string, required) - Source node id; target (string, required) - Target node id; sourceHandle (string) - Selects a branch output of a multi-output node. Null (or omitted) = the node's single/default output. Known handles per node type: - **condition**: a rule's ...
                 entry_node_id
                 account_id: Reassign the workflow to a different `SocialAccount`. Changing this triggers a graph revalidation against the new platform.
