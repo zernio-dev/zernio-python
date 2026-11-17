@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.648.0"
+  version: "1.649.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -40515,6 +40515,7 @@ paths:
   /v1/posts/{postId}/unpublish:
     post:
       x-resource-group: "publishing"
+      x-platforms: [facebook, youtube, linkedin, twitter, threads, googlebusiness, pinterest, reddit, telegram, bluesky, discord, slack]
       operationId: unpublishPost
       tags: [Posts]
       summary: Unpublish post
@@ -40589,6 +40590,7 @@ paths:
   /v1/posts/{postId}/pin:
     post:
       x-resource-group: "publishing"
+      x-platforms: [facebook]
       operationId: pinPost
       tags: [Posts]
       summary: Pin post
@@ -40651,6 +40653,7 @@ paths:
   /v1/posts/{postId}/unpin:
     post:
       x-resource-group: "publishing"
+      x-platforms: [facebook]
       operationId: unpinPost
       tags: [Posts]
       summary: Unpin post
@@ -40713,6 +40716,7 @@ paths:
   /v1/posts/{postId}/edit:
     post:
       x-resource-group: "publishing"
+      x-platforms: [twitter, discord, facebook, reddit, linkedin, telegram, pinterest, googlebusiness, youtube, slack]
       operationId: editPost
       tags: [Posts]
       summary: Edit published post
@@ -40860,6 +40864,7 @@ paths:
   /v1/posts/{postId}/update-metadata:
     post:
       x-resource-group: "publishing"
+      x-platforms: [youtube, facebook]
       operationId: updatePostMetadata
       tags: [Posts]
       summary: Update post metadata
@@ -43464,6 +43469,7 @@ paths:
   /v1/connect/{platform}:
     get:
       x-resource-group: "accounts"
+      x-platforms: [facebook, instagram, linkedin, twitter, tiktok, youtube, threads, reddit, pinterest, bluesky, googlebusiness, telegram, snapchat, discord, slack, whatsapp, google, microsoft]
       operationId: getConnectUrl
       tags: [Connect]
       summary: Get OAuth connect URL
@@ -43858,6 +43864,7 @@ paths:
           description: Profile not found
     post:
       x-resource-group: "accounts"
+      x-platforms: [instagram, twitter, threads, linkedin, youtube, tiktok, reddit, pinterest, google, microsoft]
       operationId: handleOAuthCallback
       tags: [Connect]
       summary: Complete OAuth callback
@@ -45096,6 +45103,7 @@ paths:
 
   /v1/connect/email:
     get:
+      x-platforms: [google, microsoft, imap]
       operationId: getEmailConnectUrl
       tags: [Connect]
       summary: Get a hosted link to connect any mailbox
@@ -49384,6 +49392,74 @@ paths:
         '402': { $ref: '#/components/responses/PaymentRequired' }
         '403':
           description: Ads add-on required.
+
+  /v1/connect/applovin-ads/credentials:
+    post:
+      x-resource-group: "accounts"
+      operationId: connectAppLovinAdsCredentials
+      tags: [Connect]
+      summary: Connect an AppLovin Axon account
+      description: |
+        Connect AppLovin Axon with the Conversion API key and Event Key from the Keys page of Axon Ads Manager.
+
+        Zernio checks both keys with Axon before saving them. The account then receives the conversion events you forward to it (`POST /v1/events`, forwarding rules), and its Event Key works as a site tag on tracking sites.
+
+        Requires the Ads add-on.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [apiKey, eventKey, profileId]
+              properties:
+                apiKey:
+                  type: string
+                  description: Conversion API key from the Keys page of Axon Ads Manager.
+                eventKey:
+                  type: string
+                  description: 'Event Key from the Keys page of Axon Ads Manager: 8 to 128 letters, digits, dots, dashes or underscores.'
+                name:
+                  type: string
+                  maxLength: 100
+                  description: Optional display name for the account.
+                profileId:
+                  type: string
+                  description: Your Zernio profile ID
+                state:
+                  type: string
+                  description: Optional state passthrough for the connect flow.
+                redirect_url:
+                  type: string
+                  description: 'Optional URL to redirect to after a successful connection, echoed back as redirectUrl.'
+            example:
+              apiKey: "axon-conversion-api-key"
+              eventKey: "abc123def456"
+              profileId: "6507a1b2c3d4e5f6a7b8c9d0"
+      responses:
+        '200':
+          description: AppLovin Axon connected
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  accountId: { type: string }
+                  eventKey: { type: string }
+                  accountName: { type: string }
+                  redirectUrl: { type: string }
+              example:
+                accountId: "6507a1b2c3d4e5f6a7b8c9d0"
+                eventKey: "abc123def456"
+                accountName: "Axon abc123"
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401':
+          description: "Unauthorized, or Axon did not accept the Conversion API key and Event Key (code invalid_credentials)."
+        '402': { $ref: '#/components/responses/PaymentRequired' }
+        '403':
+          description: Ads add-on required.
+        '502':
+          description: Axon could not confirm the keys right now, so nothing was saved (code platform_api_error). Retry in a minute.
 
   /v1/connect/whop-ads/credentials:
     post:
@@ -58770,6 +58846,7 @@ paths:
   /v1/org-connections:
     get:
       x-resource-group: "accounts"
+      x-platforms: [google, microsoft]
       operationId: listOrgConnections
       tags: [Connect]
       summary: List organization connections
@@ -58793,6 +58870,7 @@ paths:
       - { name: orgConnectionId, in: path, required: true, schema: { type: string } }
     get:
       x-resource-group: "accounts"
+      x-platforms: [google, microsoft]
       operationId: getOrgConnection
       tags: [Connect]
       summary: Get an organization connection
@@ -58811,6 +58889,7 @@ paths:
         '404': { $ref: '#/components/responses/NotFound' }
     patch:
       x-resource-group: "accounts"
+      x-platforms: [google, microsoft]
       operationId: updateOrgConnection
       tags: [Connect]
       summary: Update an organization connection
@@ -58842,6 +58921,7 @@ paths:
         '404': { $ref: '#/components/responses/NotFound' }
     delete:
       x-resource-group: "accounts"
+      x-platforms: [google, microsoft]
       operationId: deleteOrgConnection
       tags: [Connect]
       summary: Delete an organization connection
@@ -58868,6 +58948,7 @@ paths:
   /v1/org-connections/{orgConnectionId}/verify:
     post:
       x-resource-group: "accounts"
+      x-platforms: [google, microsoft]
       operationId: verifyOrgConnection
       tags: [Connect]
       summary: Verify an organization connection
@@ -58903,6 +58984,7 @@ paths:
   /v1/org-connections/{orgConnectionId}/users:
     get:
       x-resource-group: "accounts"
+      x-platforms: [google, microsoft]
       operationId: listOrgConnectionUsers
       tags: [Connect]
       summary: List an organization's users
@@ -58939,6 +59021,7 @@ paths:
   /v1/org-connections/{orgConnectionId}/mailboxes:
     post:
       x-resource-group: "accounts"
+      x-platforms: [google, microsoft]
       operationId: addOrgConnectionMailbox
       tags: [Connect]
       summary: Add a mailbox from an organization connection
@@ -59159,6 +59242,7 @@ paths:
           description: Inbox addon required
     post:
       x-resource-group: "messages"
+      x-platforms: [twitter, bluesky, reddit, whatsapp, sms, slack, imessage, google, microsoft, imap]
       operationId: createInboxConversation
       summary: Create conversation
       description: |
@@ -61051,6 +61135,7 @@ paths:
   /v1/inbox/conversations/{conversationId}/messages/{messageId}:
     patch:
       x-resource-group: "messages"
+      x-platforms: [telegram, imessage]
       operationId: editInboxMessage
       summary: Edit message
       description: |
@@ -61116,6 +61201,7 @@ paths:
           description: Inbox addon required
     delete:
       x-resource-group: "messages"
+      x-platforms: [telegram, twitter, bluesky, reddit, imessage]
       operationId: deleteInboxMessage
       summary: Delete message
       description: |
@@ -61165,6 +61251,7 @@ paths:
   /v1/inbox/conversations/{conversationId}/typing:
     post:
       x-resource-group: "messages"
+      x-platforms: [facebook, instagram, telegram, whatsapp, imessage]
       operationId: sendTypingIndicator
       summary: Send typing indicator
       description: |
@@ -61220,6 +61307,7 @@ paths:
   /v1/inbox/conversations/{conversationId}/thread-control:
     post:
       x-resource-group: "messages"
+      x-platforms: [whatsapp, facebook, instagram]
       operationId: setConversationThreadControl
       summary: Change who answers a conversation (handover)
       description: |
@@ -61316,6 +61404,7 @@ paths:
   /v1/inbox/conversations/{conversationId}/accept:
     post:
       x-resource-group: "messages"
+      x-platforms: [facebook, instagram]
       operationId: acceptConversationRequest
       summary: Accept a message request
       description: |
@@ -61380,6 +61469,7 @@ paths:
   /v1/inbox/labels:
     get:
       x-resource-group: messages
+      x-platforms: [facebook]
       operationId: listInboxLabels
       summary: List the Page's conversation labels
       description: >-
@@ -61423,6 +61513,7 @@ paths:
           description: No Facebook Page is selected on this account (linked_account_required); reconnect it and select the Page
     post:
       x-resource-group: messages
+      x-platforms: [facebook]
       operationId: createInboxLabel
       summary: Create a conversation label
       description: >-
@@ -61473,6 +61564,7 @@ paths:
   /v1/inbox/labels/{labelId}:
     delete:
       x-resource-group: messages
+      x-platforms: [facebook]
       operationId: deleteInboxLabel
       summary: Delete a conversation label
       description: >-
@@ -61518,6 +61610,7 @@ paths:
   /v1/inbox/conversations/{conversationId}/labels:
     get:
       x-resource-group: messages
+      x-platforms: [facebook]
       operationId: listConversationLabels
       summary: List the labels on a conversation
       description: >-
@@ -61566,6 +61659,7 @@ paths:
           description: No Facebook Page is selected on this account (linked_account_required); reconnect it and select the Page
     post:
       x-resource-group: messages
+      x-platforms: [facebook]
       operationId: addConversationLabel
       summary: Add a label to a conversation
       description: >-
@@ -61619,6 +61713,7 @@ paths:
   /v1/inbox/conversations/{conversationId}/labels/{labelId}:
     delete:
       x-resource-group: messages
+      x-platforms: [facebook]
       operationId: removeConversationLabel
       summary: Remove a label from a conversation
       description: >-
@@ -61726,6 +61821,7 @@ paths:
   /v1/inbox/conversations/{conversationId}/messages/{messageId}/reactions:
     post:
       x-resource-group: "messages"
+      x-platforms: [telegram, whatsapp, instagram, facebook, slack, imessage]
       operationId: addMessageReaction
       summary: Add reaction
       description: |
@@ -61783,6 +61879,7 @@ paths:
           description: 'Account, conversation or message not found (message_not_found when messageId does not resolve to a message in this conversation)'
     delete:
       x-resource-group: "messages"
+      x-platforms: [telegram, whatsapp, instagram, facebook, slack, imessage]
       operationId: removeMessageReaction
       summary: Remove reaction
       description: |
@@ -63107,6 +63204,7 @@ paths:
   /v1/inbox/comments/{postId}/{commentId}:
     patch:
       x-resource-group: "engagement"
+      x-platforms: [reddit]
       operationId: editInboxComment
       summary: Edit comment
       description: |
@@ -63167,6 +63265,7 @@ paths:
   /v1/inbox/comments/{postId}/{commentId}/moderation:
     post:
       x-resource-group: "engagement"
+      x-platforms: [youtube]
       operationId: setCommentModeration
       summary: Set comment moderation status
       description: |
@@ -63236,6 +63335,7 @@ paths:
   /v1/inbox/comments/{postId}/{commentId}/hide:
     post:
       x-resource-group: "engagement"
+      x-platforms: [facebook, instagram, threads, twitter, tiktok]
       operationId: hideInboxComment
       summary: Hide comment
       description: |
@@ -63286,6 +63386,7 @@ paths:
           description: Inbox addon required
     delete:
       x-resource-group: "engagement"
+      x-platforms: [facebook, instagram, threads, twitter, tiktok]
       operationId: unhideInboxComment
       summary: Unhide comment
       description: |
@@ -63328,6 +63429,7 @@ paths:
   /v1/inbox/comments/{postId}/{commentId}/pin:
     post:
       x-resource-group: "engagement"
+      x-platforms: [tiktok]
       operationId: pinInboxComment
       summary: Pin comment
       description: |
@@ -63371,6 +63473,7 @@ paths:
           description: Inbox addon required
     delete:
       x-resource-group: "engagement"
+      x-platforms: [tiktok]
       operationId: unpinInboxComment
       summary: Unpin comment
       description: |
@@ -63411,6 +63514,7 @@ paths:
   /v1/inbox/comments/{postId}/{commentId}/like:
     post:
       x-resource-group: "engagement"
+      x-platforms: [facebook, twitter, bluesky, reddit, linkedin, instagram]
       operationId: likeInboxComment
       summary: Like comment
       description: |
@@ -63485,6 +63589,7 @@ paths:
           description: 'LinkedIn only: the account already holds a reaction on this target, either of a different type or one LinkedIn does not let this account read (code invalid_resource_state); remove it before creating another.'
     delete:
       x-resource-group: "engagement"
+      x-platforms: [facebook, twitter, bluesky, reddit, linkedin, instagram]
       operationId: unlikeInboxComment
       summary: Unlike comment
       description: |
@@ -63532,6 +63637,7 @@ paths:
   /v1/inbox/posts/{postId}/like:
     post:
       x-resource-group: "messages"
+      x-platforms: [linkedin, twitter, facebook, youtube, bluesky, instagram]
       operationId: likePost
       summary: Like post
       description: |
@@ -63613,6 +63719,7 @@ paths:
           description: 'LinkedIn only: the account already holds a reaction on this target, either of a different type or one LinkedIn does not let this account read (code invalid_resource_state); remove it before creating another.'
     delete:
       x-resource-group: "messages"
+      x-platforms: [linkedin, twitter, facebook, youtube, bluesky, instagram]
       operationId: unlikePost
       summary: Unlike post
       description: |
@@ -63662,6 +63769,7 @@ paths:
   /v1/inbox/comments/{postId}/{commentId}/private-reply:
     post:
       x-resource-group: "messages"
+      x-platforms: [instagram, facebook]
       operationId: sendPrivateReplyToComment
       summary: Send private reply
       description: |
@@ -64466,6 +64574,7 @@ paths:
   /v1/inbox/mentions/reply:
     post:
       x-resource-group: "engagement"
+      x-platforms: [instagram]
       operationId: replyToMention
       summary: Reply to a mention
       description: |
@@ -64746,6 +64855,7 @@ paths:
               schema: { $ref: '#/components/schemas/ErrorResponse' }
     delete:
       x-resource-group: "engagement"
+      x-platforms: [googlebusiness]
       operationId: deleteInboxReviewReply
       summary: Delete review reply
       description: Delete a reply to a review (Google Business Profile only). Requires accountId in request body.
@@ -75915,6 +76025,7 @@ paths:
   /v1/broadcasts:
     get:
       x-resource-group: "messages"
+      x-platforms: [instagram, facebook, telegram, twitter, bluesky, reddit, whatsapp, sms, slack, imessage, line]
       operationId: listBroadcasts
       summary: List broadcasts
       description: Returns broadcasts with delivery stats. Filter by status, platform, or profile.
@@ -75967,6 +76078,7 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
     post:
       x-resource-group: "messages"
+      x-platforms: [instagram, facebook, telegram, twitter, bluesky, reddit, whatsapp, sms, slack, imessage, line]
       operationId: createBroadcast
       summary: Create broadcast draft
       description: Create a broadcast in draft status. Add recipients and then send or schedule it.
@@ -76046,6 +76158,7 @@ paths:
   /v1/broadcasts/{broadcastId}:
     get:
       x-resource-group: "messages"
+      x-platforms: [instagram, facebook, telegram, twitter, bluesky, reddit, whatsapp, sms, slack, imessage, line]
       operationId: getBroadcast
       summary: Get broadcast details
       description: Returns a broadcast with its full configuration and delivery stats.
@@ -76087,6 +76200,7 @@ paths:
         '404': { $ref: '#/components/responses/NotFound' }
     patch:
       x-resource-group: "messages"
+      x-platforms: [instagram, facebook, telegram, twitter, bluesky, reddit, whatsapp, sms, slack, imessage, line]
       operationId: updateBroadcast
       summary: Update broadcast
       description: Update a broadcast's name, message, template, or segment filters. Only draft broadcasts can be updated.
@@ -76146,6 +76260,7 @@ paths:
         '404': { $ref: '#/components/responses/NotFound' }
     delete:
       x-resource-group: "messages"
+      x-platforms: [instagram, facebook, telegram, twitter, bluesky, reddit, whatsapp, sms, slack, imessage, line]
       operationId: deleteBroadcast
       summary: Delete broadcast
       description: Permanently delete a broadcast. Only drafts can be deleted.
@@ -76160,6 +76275,7 @@ paths:
   /v1/broadcasts/{broadcastId}/send:
     post:
       x-resource-group: "messages"
+      x-platforms: [instagram, facebook, telegram, twitter, bluesky, reddit, whatsapp, sms, slack, imessage, line]
       operationId: sendBroadcast
       summary: Send broadcast now
       description: Immediately start sending a draft broadcast to its recipients.
@@ -76186,6 +76302,7 @@ paths:
   /v1/broadcasts/{broadcastId}/schedule:
     post:
       x-resource-group: "messages"
+      x-platforms: [instagram, facebook, telegram, twitter, bluesky, reddit, whatsapp, sms, slack, imessage, line]
       operationId: scheduleBroadcast
       summary: Schedule broadcast for later
       description: 'Schedule a draft broadcast, or move the date of an already scheduled one, to a future date and time.'
@@ -76223,6 +76340,7 @@ paths:
   /v1/broadcasts/{broadcastId}/cancel:
     post:
       x-resource-group: "messages"
+      x-platforms: [instagram, facebook, telegram, twitter, bluesky, reddit, whatsapp, sms, slack, imessage, line]
       operationId: cancelBroadcast
       summary: Cancel broadcast
       description: Cancel a scheduled or in-progress broadcast. Already-sent messages are not affected.
@@ -76250,6 +76368,7 @@ paths:
   /v1/broadcasts/{broadcastId}/recipients:
     get:
       x-resource-group: "messages"
+      x-platforms: [instagram, facebook, telegram, twitter, bluesky, reddit, whatsapp, sms, slack, imessage, line]
       operationId: listBroadcastRecipients
       summary: List broadcast recipients
       description: Returns recipients for a broadcast with individual delivery status. Filter by status.
@@ -76309,6 +76428,7 @@ paths:
         '404': { $ref: '#/components/responses/NotFound' }
     post:
       x-resource-group: "messages"
+      x-platforms: [instagram, facebook, telegram, twitter, bluesky, reddit, whatsapp, sms, slack, imessage, line]
       operationId: addBroadcastRecipients
       summary: Add recipients to a broadcast
       description: Add recipients by contact IDs, raw phone numbers, or from the broadcast's segment filters.
@@ -77104,6 +77224,7 @@ paths:
   /v1/sequences:
     get:
       x-resource-group: "messages"
+      x-platforms: [instagram, facebook, telegram, twitter, bluesky, reddit, whatsapp, slack, imessage, line, wechat]
       operationId: listSequences
       summary: List sequences
       description: Returns sequences with enrollment stats. Filter by status, platform, or profile.
@@ -77153,6 +77274,7 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
     post:
       x-resource-group: "messages"
+      x-platforms: [instagram, facebook, telegram, twitter, bluesky, reddit, whatsapp, slack, imessage, line, wechat]
       operationId: createSequence
       summary: Create sequence
       description: Create a multi-step messaging sequence. Each step has a delay and a message or WhatsApp template.
@@ -77219,6 +77341,7 @@ paths:
   /v1/sequences/{sequenceId}:
     get:
       x-resource-group: "messages"
+      x-platforms: [instagram, facebook, telegram, twitter, bluesky, reddit, whatsapp, slack, imessage, line, wechat]
       operationId: getSequence
       summary: Get sequence with steps
       description: Returns a sequence with all its steps and enrollment stats.
@@ -77264,6 +77387,7 @@ paths:
         '404': { $ref: '#/components/responses/NotFound' }
     patch:
       x-resource-group: "messages"
+      x-platforms: [instagram, facebook, telegram, twitter, bluesky, reddit, whatsapp, slack, imessage, line, wechat]
       operationId: updateSequence
       summary: Update sequence
       description: Update a sequence's name, steps, or exit conditions. Steps can only be modified while the sequence is draft or paused.
@@ -77330,6 +77454,7 @@ paths:
         '404': { $ref: '#/components/responses/NotFound' }
     delete:
       x-resource-group: "messages"
+      x-platforms: [instagram, facebook, telegram, twitter, bluesky, reddit, whatsapp, slack, imessage, line, wechat]
       operationId: deleteSequence
       summary: Delete sequence
       description: Permanently delete a sequence. Active enrollments are stopped.
@@ -77345,6 +77470,7 @@ paths:
   /v1/sequences/{sequenceId}/activate:
     post:
       x-resource-group: "messages"
+      x-platforms: [instagram, facebook, telegram, twitter, bluesky, reddit, whatsapp, slack, imessage, line, wechat]
       operationId: activateSequence
       summary: Activate sequence
       description: Start a draft or paused sequence. The sequence must have at least one step.
@@ -77372,6 +77498,7 @@ paths:
   /v1/sequences/{sequenceId}/pause:
     post:
       x-resource-group: "messages"
+      x-platforms: [instagram, facebook, telegram, twitter, bluesky, reddit, whatsapp, slack, imessage, line, wechat]
       operationId: pauseSequence
       summary: Pause sequence
       description: Pause an active sequence. Enrolled contacts stop receiving messages until the sequence is reactivated.
@@ -77399,6 +77526,7 @@ paths:
   /v1/sequences/{sequenceId}/enroll:
     post:
       x-resource-group: "messages"
+      x-platforms: [instagram, facebook, telegram, twitter, bluesky, reddit, whatsapp, slack, imessage, line, wechat]
       operationId: enrollContacts
       summary: Enroll contacts in a sequence
       description: Enroll one or more contacts into a sequence. Contacts already enrolled are skipped.
@@ -77443,6 +77571,7 @@ paths:
   /v1/sequences/{sequenceId}/enroll/{contactId}:
     delete:
       x-resource-group: "messages"
+      x-platforms: [instagram, facebook, telegram, twitter, bluesky, reddit, whatsapp, slack, imessage, line, wechat]
       operationId: unenrollContact
       summary: Unenroll contact
       description: Remove a contact from a sequence. No further messages will be sent to this contact.
@@ -77459,6 +77588,7 @@ paths:
   /v1/sequences/{sequenceId}/enrollments:
     get:
       x-resource-group: "messages"
+      x-platforms: [instagram, facebook, telegram, twitter, bluesky, reddit, whatsapp, slack, imessage, line, wechat]
       operationId: listSequenceEnrollments
       summary: List enrollments for a sequence
       description: Returns enrolled contacts with their progress, status, and next scheduled step.
@@ -99410,6 +99540,7 @@ paths:
   /v1/events:
     get:
       x-resource-group: "ads"
+      x-platforms: [meta, google, tiktok, linkedin, pinterest, reddit, openai, applovinads, googleanalytics, stripe]
       operationId: listEvents
       tags: [Conversions]
       summary: List stored events
@@ -99499,7 +99630,7 @@ paths:
       x-resource-group: "ads"
       operationId: sendEvents
       tags: [Conversions]
-      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "reddit"]
+      x-platforms: [meta, google, tiktok, linkedin, pinterest, reddit, openai, applovinads, googleanalytics]
       summary: Send events to every destination
       description: |
         The recommended way to send conversions. Sends conversion events once and forwards them to every ad platform destination saved for the profile (see `POST /v1/events/destinations`), or to the `destinations` given in the request. Requires the Ads add-on.

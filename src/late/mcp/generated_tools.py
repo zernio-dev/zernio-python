@@ -18519,6 +18519,8 @@ def register_generated_tools(mcp, _get_client):
 
         Returns broadcasts with delivery stats. Filter by status, platform, or profile.
 
+        Platforms: instagram, facebook, telegram, twitter, bluesky, reddit, whatsapp, sms, slack, imessage, line
+
         Args:
             profile_id: Filter by profile. Omit to list across all profiles
             status
@@ -18572,6 +18574,8 @@ def register_generated_tools(mcp, _get_client):
 
         Create a broadcast in draft status. Add recipients and then send or schedule it.
 
+        Platforms: instagram, facebook, telegram, twitter, bluesky, reddit, whatsapp, sms, slack, imessage, line
+
         Args:
             profile_id: (required)
             account_id: (required)
@@ -18610,6 +18614,8 @@ def register_generated_tools(mcp, _get_client):
 
         Returns a broadcast with its full configuration and delivery stats.
 
+        Platforms: instagram, facebook, telegram, twitter, bluesky, reddit, whatsapp, sms, slack, imessage, line
+
         Args:
             broadcast_id: (required)"""
         client = _get_client()
@@ -18638,6 +18644,8 @@ def register_generated_tools(mcp, _get_client):
         """Update broadcast
 
         Update a broadcast's name, message, template, or segment filters. Only draft broadcasts can be updated.
+
+        Platforms: instagram, facebook, telegram, twitter, bluesky, reddit, whatsapp, sms, slack, imessage, line
 
         Args:
             broadcast_id: (required)
@@ -18673,6 +18681,8 @@ def register_generated_tools(mcp, _get_client):
 
         Permanently delete a broadcast. Only drafts can be deleted.
 
+        Platforms: instagram, facebook, telegram, twitter, bluesky, reddit, whatsapp, sms, slack, imessage, line
+
         Args:
             broadcast_id: (required)"""
         client = _get_client()
@@ -18695,6 +18705,8 @@ def register_generated_tools(mcp, _get_client):
 
         Immediately start sending a draft broadcast to its recipients.
 
+        Platforms: instagram, facebook, telegram, twitter, bluesky, reddit, whatsapp, sms, slack, imessage, line
+
         Args:
             broadcast_id: (required)"""
         client = _get_client()
@@ -18716,6 +18728,8 @@ def register_generated_tools(mcp, _get_client):
         """Schedule broadcast for later
 
         Schedule a draft broadcast, or move the date of an already scheduled one, to a future date and time.
+
+        Platforms: instagram, facebook, telegram, twitter, bluesky, reddit, whatsapp, sms, slack, imessage, line
 
         Args:
             broadcast_id: (required)
@@ -18741,6 +18755,8 @@ def register_generated_tools(mcp, _get_client):
         """Cancel broadcast
 
         Cancel a scheduled or in-progress broadcast. Already-sent messages are not affected.
+
+        Platforms: instagram, facebook, telegram, twitter, bluesky, reddit, whatsapp, sms, slack, imessage, line
 
         Args:
             broadcast_id: (required)"""
@@ -18768,6 +18784,8 @@ def register_generated_tools(mcp, _get_client):
         """List broadcast recipients
 
         Returns recipients for a broadcast with individual delivery status. Filter by status.
+
+        Platforms: instagram, facebook, telegram, twitter, bluesky, reddit, whatsapp, sms, slack, imessage, line
 
         Args:
             broadcast_id: (required)
@@ -18800,6 +18818,8 @@ def register_generated_tools(mcp, _get_client):
         """Add recipients to a broadcast
 
         Add recipients by contact IDs, raw phone numbers, or from the broadcast's segment filters.
+
+        Platforms: instagram, facebook, telegram, twitter, bluesky, reddit, whatsapp, sms, slack, imessage, line
 
         Args:
             broadcast_id: (required)
@@ -21890,6 +21910,8 @@ def register_generated_tools(mcp, _get_client):
         title, and a link post has no editable body. To edit a published post's body, use
         `POST /v1/posts/{postId}/edit`.
 
+        Platforms: reddit
+
         Args:
             post_id: (required)
             comment_id: (required)
@@ -21938,6 +21960,8 @@ def register_generated_tools(mcp, _get_client):
         This is distinct from `POST /v1/inbox/comments/{postId}/{commentId}/hide`, which
         covers Facebook, Instagram, Threads, and X and does not apply to YouTube.
 
+        Platforms: youtube
+
         Args:
             post_id: (required)
             comment_id: (required)
@@ -21980,6 +22004,8 @@ def register_generated_tools(mcp, _get_client):
 
         On Threads only top-level replies can be hidden, and hiding one also hides its nested replies.
 
+        Platforms: facebook, instagram, threads, twitter, tiktok
+
         Args:
             post_id: (required)
             comment_id: (required)
@@ -22008,6 +22034,8 @@ def register_generated_tools(mcp, _get_client):
 
         Unhide a previously hidden comment. Supported by Facebook, Instagram, Threads, X, and
         TikTok (accounts connected through the TikTok for Business app).
+
+        Platforms: facebook, instagram, threads, twitter, tiktok
 
         Args:
             post_id: (required)
@@ -22038,6 +22066,8 @@ def register_generated_tools(mcp, _get_client):
         Pin a top-level comment to the top of a post's comment section. TikTok accounts
         connected through the TikTok for Business app only; every other platform returns 400.
 
+        Platforms: tiktok
+
         Args:
             post_id: (required)
             comment_id: (required)
@@ -22066,6 +22096,8 @@ def register_generated_tools(mcp, _get_client):
 
         Unpin a previously pinned comment. TikTok accounts connected through the TikTok for
         Business app only.
+
+        Platforms: tiktok
 
         Args:
             post_id: (required)
@@ -22116,6 +22148,8 @@ def register_generated_tools(mcp, _get_client):
 
         Instagram ...
 
+        Platforms: facebook, twitter, bluesky, reddit, linkedin, instagram
+
         Args:
             post_id: (required)
             comment_id: (required)
@@ -22152,6 +22186,8 @@ def register_generated_tools(mcp, _get_client):
         Reddit, LinkedIn, and Instagram in limited release. For Bluesky, the likeUri query
         parameter is required. Instagram has the same limited release, Facebook Login,
         `instagram_manage_engagement` and burst-limit constraints as liking.
+
+        Platforms: facebook, twitter, bluesky, reddit, linkedin, instagram
 
         Args:
             post_id: (required)
@@ -22207,6 +22243,8 @@ def register_generated_tools(mcp, _get_client):
 
         LinkedIn requires the `w_member_social_feed` / `w_organization_social_feed` scopes, which are not ...
 
+        Platforms: linkedin, twitter, facebook, youtube, bluesky, instagram
+
         Args:
             post_id: Zernio post ID or the platform's native post ID (required)
             account_id: The account acting as the liker (required)
@@ -22245,6 +22283,8 @@ def register_generated_tools(mcp, _get_client):
         - Instagram: has the same limited release, Facebook Login, `instagram_manage_engagement` and burst-limit constraints as liking.
         - Bluesky: `likeUri` (returned when the post was liked) is required.
         - Reddit: uses `POST /v1/accounts/{accountId}/reddit-vote` with `direction: 0`.
+
+        Platforms: linkedin, twitter, facebook, youtube, bluesky, instagram
 
         Args:
             post_id: Zernio post ID or the platform's native post ID (required)
@@ -22295,6 +22335,8 @@ def register_generated_tools(mcp, _get_client):
         The refusal is uneven: most accounts do not get it, and an affected account gets it on many of its non-followers. Only that account's own past refusals show whether it is affected.
 
         The failed call still consumes the comment's single private reply. On an affected account, send plain text to reach ...
+
+        Platforms: instagram, facebook
 
         Args:
             post_id: The media/post ID (Instagram media ID or Facebook post ID) (required)
@@ -25487,6 +25529,8 @@ def register_generated_tools(mcp, _get_client):
 
             On a legacy plan limited to N profiles, a new account is refused with 403 `platform_account_limit` once N accounts of ...
 
+            Platforms: facebook, instagram, linkedin, twitter, tiktok, youtube, threads, reddit, pinterest, bluesky, googlebusiness, telegram, snapchat, discord, slack, whatsapp, google, microsoft
+
             Args:
                 platform: Social media platform to connect. `snapchat` is a closed beta with no public release date: it returns 403 `PLATFORM_BETA_RESTRICTED` until the account is approved. (required)
                 profile_id: Your Zernio profile ID (get from /v1/profiles). For WhatsApp, a Zernio-provisioned number can only be connected on the profile it was provisioned to; connecting from any other profile is rejected with a 409. (required)
@@ -25793,6 +25837,8 @@ def register_generated_tools(mcp, _get_client):
             Exchange the OAuth authorization code for tokens and connect the account to the specified profile.
 
             Facebook, Google Business Profile, Snapchat and WhatsApp are not accepted here: their account identity is a destination chosen after OAuth, which this single-shot exchange cannot do. Connect them through the redirect flow from `GET /v1/connect/{platform}`, or, for WhatsApp Embedded Signup, through `POST /v1/connect/whatsapp/embedded-signup`.
+
+            Platforms: instagram, twitter, threads, linkedin, youtube, tiktok, reddit, pinterest, google, microsoft
 
             Args:
                 platform: Social platform to complete the connect for. Discord, Slack and Telegram are absent because they are
@@ -26544,6 +26590,8 @@ def register_generated_tools(mcp, _get_client):
         """Get a hosted link to connect any mailbox
 
         One link for any address. The page asks for the email first, sends Gmail, Google Workspace, Outlook.com and Microsoft 365 (found by domain or MX) to their OAuth connect, and every other mailbox to IMAP with the provider's app-password steps. Valid for one hour.
+
+        Platforms: google, microsoft, imap
 
         Args:
             profile_id: (required)
@@ -27575,6 +27623,51 @@ def register_generated_tools(mcp, _get_client):
                 state=state,
                 redirect_url=redirect_url,
                 redirect_uri=redirect_uri,
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Connect an AppLovin Axon account",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def connect_app_lovin_ads_credentials(
+        api_key: str,
+        event_key: str,
+        profile_id: str,
+        name: str | None = None,
+        state: str | None = None,
+        redirect_url: str | None = None,
+    ) -> str:
+        """Connect an AppLovin Axon account
+
+        Connect AppLovin Axon with the Conversion API key and Event Key from the Keys page of Axon Ads Manager.
+
+        Zernio checks both keys with Axon before saving them. The account then receives the conversion events you forward to it (`POST /v1/events`, forwarding rules), and its Event Key works as a site tag on tracking sites.
+
+        Requires the Ads add-on.
+
+        Args:
+            api_key: Conversion API key from the Keys page of Axon Ads Manager. (required)
+            event_key: Event Key from the Keys page of Axon Ads Manager: 8 to 128 letters, digits, dots, dashes or underscores. (required)
+            name: Optional display name for the account.
+            profile_id: Your Zernio profile ID (required)
+            state: Optional state passthrough for the connect flow.
+            redirect_url: Optional URL to redirect to after a successful connection, echoed back as redirectUrl."""
+        client = _get_client()
+        try:
+            response = client.connect.connect_app_lovin_ads_credentials(
+                api_key=api_key,
+                event_key=event_key,
+                name=name,
+                profile_id=profile_id,
+                state=state,
+                redirect_url=redirect_url,
             )
             return _format_response(response)
         except Exception as e:
@@ -29154,6 +29247,8 @@ def register_generated_tools(mcp, _get_client):
 
         The Google Workspace and Microsoft 365 organization connections, newest first. Pass `profileId` to list one profile; omit it to list every profile the API key can access (a profile-restricted key or team member only sees its own profiles).
 
+        Platforms: google, microsoft
+
         Args:
             profile_id: Limit the list to one profile. Omit to list across every accessible profile."""
         client = _get_client()
@@ -29174,7 +29269,9 @@ def register_generated_tools(mcp, _get_client):
     def connect_get_org_connection() -> str:
         """Get an organization connection
 
-        One organization connection with its status and setup instructions."""
+        One organization connection with its status and setup instructions.
+
+        Platforms: google, microsoft"""
         client = _get_client()
         try:
             response = client.connect.get_org_connection()
@@ -29198,6 +29295,8 @@ def register_generated_tools(mcp, _get_client):
         Changes the allowlist or the Google directory admin.
 
         Mailboxes already added that a narrowed allowlist excludes answer `401` `reconnect_required` until it includes them again.
+
+        Platforms: google, microsoft
 
         Args:
             allowed_emails
@@ -29224,7 +29323,9 @@ def register_generated_tools(mcp, _get_client):
 
         Deletes the connection. Mailboxes added from it stay on the profile and answer `401` `reconnect_required` until you disconnect them or connect them another way.
 
-        `mailboxAccountIds` lists them."""
+        `mailboxAccountIds` lists them.
+
+        Platforms: google, microsoft"""
         client = _get_client()
         try:
             response = client.connect.delete_org_connection()
@@ -29250,6 +29351,8 @@ def register_generated_tools(mcp, _get_client):
         Google: the domain's TXT record and a token for `email` with every delegated scope. Microsoft: a tenant token carrying every application permission the areas need.
 
         `409` `org_grant_incomplete` says what is still missing.
+
+        Platforms: google, microsoft
 
         Args:
             org_connection_id: (required)
@@ -29280,6 +29383,8 @@ def register_generated_tools(mcp, _get_client):
 
         Google needs `adminEmail` on the connection and the directory scope delegated.
 
+        Platforms: google, microsoft
+
         Args:
             org_connection_id: (required)
             cursor"""
@@ -29308,6 +29413,8 @@ def register_generated_tools(mcp, _get_client):
         Adds one mailbox from an active organization connection, with no sign-in from its user. It becomes a `google` or `microsoft` account on the connection's profile and works with every email, calendar, files and contacts endpoint.
 
         `201` for a new account, `200` when the address was already on the profile and now runs on the organization grant. `account.connected` fires.
+
+        Platforms: google, microsoft
 
         Args:
             org_connection_id: (required)
@@ -30464,6 +30571,8 @@ def register_generated_tools(mcp, _get_client):
 
         Paginate with `cursor`: pass the `nextCursor` of the previous page until it comes back `null`.
 
+        Platforms: meta, google, tiktok, linkedin, pinterest, reddit, openai, applovinads, googleanalytics, stripe
+
         Args:
             profile_id: The profile to list. Omit to cover every profile you can access.
             limit
@@ -30525,7 +30634,7 @@ def register_generated_tools(mcp, _get_client):
         - `sourceUrl` keeps only its origin, path and attribution parameters (`utm_*`, `gclid`, `fbclid`, `ttclid`, `li_fat_id`, `epik`, `rdt_cid`, `gbraid`, `wbraid`).
         - Events sent with `testCode` are forwarded but not ...
 
-        Platforms: meta, google, tiktok, linkedin, pinterest, reddit
+        Platforms: meta, google, tiktok, linkedin, pinterest, reddit, openai, applovinads, googleanalytics
 
         Args:
             profile_id: Profile the events belong to. Its saved destinations receive the events. (required)
@@ -39550,6 +39659,8 @@ def register_generated_tools(mcp, _get_client):
         `GET /v1/inbox/mentions` returns Instagram mentions with the `mediaId` and `commentId`
         to pass here.
 
+        Platforms: instagram
+
         Args:
             account_id: The Instagram account ID (required)
             media_id: The ID of the media the account was mentioned in (required)
@@ -39696,6 +39807,8 @@ def register_generated_tools(mcp, _get_client):
             ### iMessage
 
             Pass the recipient as participantId: a phone number in international format (+15551234567) or an ...
+
+            Platforms: twitter, bluesky, reddit, whatsapp, sms, slack, imessage, google, microsoft, imap
 
             Args:
                 account_id: The account ID to send from (required)
@@ -40174,6 +40287,8 @@ def register_generated_tools(mcp, _get_client):
         - 'iMessage: text only, within 15 minutes of sending (Apple''s limit; 409 `edit_window_expired` after that). Group messages included. The stored message keeps its edit history.'
         - All others: returns 400
 
+        Platforms: telegram, imessage
+
         Args:
             conversation_id: The conversation ID (required)
             message_id: The platform message ID to edit (iMessage also accepts the Zernio message id) (required)
@@ -40214,6 +40329,8 @@ def register_generated_tools(mcp, _get_client):
         - Reddit: delete from sender's view only
         - iMessage: unsend (the bubble disappears for the recipient) within 2 minutes of sending (Apple's limit; 409 `unsend_window_expired` after that). Own outbound messages only.
         - Facebook, Instagram, WhatsApp: not supported (returns 400)
+
+        Platforms: telegram, twitter, bluesky, reddit, imessage
 
         Args:
             conversation_id: The conversation ID (required)
@@ -40258,6 +40375,8 @@ def register_generated_tools(mcp, _get_client):
 
         `success` reports whether a typing indicator was actually sent to the platform (`false` on unsupported platforms or when the platform call failed).
 
+        Platforms: facebook, instagram, telegram, whatsapp, imessage
+
         Args:
             conversation_id: The conversation ID (required)
             account_id: Account ID (required)"""
@@ -40297,6 +40416,8 @@ def register_generated_tools(mcp, _get_client):
         - `pass`: transfer control to the number's configured escalation partner, or to the agent with `target: ai_agent`. Meta's Cloud API currently rejects it (\"Pass action is not supported\", verified 2026-09-08); use `release` to hand a thread back to the agent.
 
         **Facebook and ...
+
+        Platforms: whatsapp, facebook, instagram
 
         Args:
             conversation_id: The conversation ID (required)
@@ -40340,6 +40461,8 @@ def register_generated_tools(mcp, _get_client):
 
         Supports the `Idempotency-Key` header.
 
+        Platforms: facebook, instagram
+
         Args:
             conversation_id: The `id` of the request item from the requests folder. (required)
             account_id: Facebook or Instagram social account ID (required)
@@ -40366,6 +40489,8 @@ def register_generated_tools(mcp, _get_client):
 
         Facebook Messenger only. Lists the custom labels defined on the Page (Graph `/{page-id}/custom_labels`). Other platforms answer 400 `platform_not_supported`.
 
+        Platforms: facebook
+
         Args:
             account_id: Facebook social account ID (required)"""
         client = _get_client()
@@ -40387,6 +40512,8 @@ def register_generated_tools(mcp, _get_client):
         """Create a conversation label
 
         Facebook Messenger only. Creates a custom label on the Page (Graph `POST /{page-id}/custom_labels`). Other platforms answer 400 `platform_not_supported`.
+
+        Platforms: facebook
 
         Args:
             account_id: Facebook social account ID (required)
@@ -40413,6 +40540,8 @@ def register_generated_tools(mcp, _get_client):
 
         Facebook Messenger only. Deletes a custom label from the Page (Graph `DELETE /{label-id}`), which also removes it from every conversation. The id must be one of the Page's custom labels, otherwise 404 `resource_not_found`. Other platforms answer 400 `platform_not_supported`.
 
+        Platforms: facebook
+
         Args:
             label_id: Meta label id (required)
             account_id: Facebook social account ID (required)"""
@@ -40437,6 +40566,8 @@ def register_generated_tools(mcp, _get_client):
         """List the labels on a conversation
 
         Facebook Messenger only. Lists the Page's custom labels applied to the person in this conversation (Graph `/{psid}/custom_labels`). Other platforms answer 400 `platform_not_supported`.
+
+        Platforms: facebook
 
         Args:
             conversation_id: Conversation ID (Zernio id or Meta platform conversation id) (required)
@@ -40464,6 +40595,8 @@ def register_generated_tools(mcp, _get_client):
         """Add a label to a conversation
 
         Facebook Messenger only. Applies one of the Page's custom labels to the person in this conversation (Graph `POST /{label-id}/label?user={psid}`). The id must be one of the Page's custom labels, otherwise 404 `resource_not_found`. Other platforms answer 400 `platform_not_supported`.
+
+        Platforms: facebook
 
         Args:
             conversation_id: Conversation ID (Zernio id or Meta platform conversation id) (required)
@@ -40494,6 +40627,8 @@ def register_generated_tools(mcp, _get_client):
         """Remove a label from a conversation
 
         Facebook Messenger only. Removes one of the Page's custom labels from the person in this conversation (Graph `DELETE /{label-id}/label?user={psid}`). The label itself stays on the Page. The id must be one of the Page's custom labels, otherwise 404 `resource_not_found`. Other platforms answer 400 `platform_not_supported`.
+
+        Platforms: facebook
 
         Args:
             conversation_id: Conversation ID (Zernio id or Meta platform conversation id) (required)
@@ -40574,6 +40709,8 @@ def register_generated_tools(mcp, _get_client):
         - iMessage: the six Apple tapbacks (❤️ 👍 👎 😂 ‼️ ❓) render natively; any other emoji is sent as a custom emoji tapback (iOS 18+ recipients)
         - All others: returns 400 (not supported)
 
+        Platforms: telegram, whatsapp, instagram, facebook, slack, imessage
+
         Args:
             conversation_id: The conversation ID (required)
             message_id: The platform message ID (as returned by GET /messages) or the Zernio message ID (as returned by the reaction webhook) (required)
@@ -40614,6 +40751,8 @@ def register_generated_tools(mcp, _get_client):
         - Slack: removes the reaction we previously sent on that message
         - iMessage: retracts your existing tapback or emoji reaction on the message (400 when you have none)
         - All others: returns 400 (not supported)
+
+        Platforms: telegram, whatsapp, instagram, facebook, slack, imessage
 
         Args:
             conversation_id: The conversation ID (required)
@@ -43995,6 +44134,8 @@ def register_generated_tools(mcp, _get_client):
         Deletes a published post from the specified platform. The post record in Zernio is kept but its status is updated to cancelled.
         Not supported on Instagram, TikTok, or Snapchat. Threaded posts delete all items. YouTube deletion is permanent.
 
+        Platforms: facebook, youtube, linkedin, twitter, threads, googlebusiness, pinterest, reddit, telegram, bluesky, discord, slack
+
         Args:
             post_id: (required)
             platform: The platform to delete the post from (required)
@@ -44023,6 +44164,8 @@ def register_generated_tools(mcp, _get_client):
 
         Pins a published Facebook Page post to the top of its Page. Only Facebook posts can be pinned; any other platform answers 400 `platform_not_supported`. Works for posts on Pages connected through Facebook Login.
 
+        Platforms: facebook
+
         Args:
             post_id: (required)
             platform: Must be `facebook`. Any other value answers 400 `platform_not_supported`. (required)
@@ -44050,6 +44193,8 @@ def register_generated_tools(mcp, _get_client):
         """Unpin post
 
         Unpins a published Facebook Page post from the top of its Page. Only Facebook posts can be unpinned; any other platform answers 400 `platform_not_supported`.
+
+        Platforms: facebook
 
         Args:
             post_id: (required)
@@ -44114,6 +44259,8 @@ def register_generated_tools(mcp, _get_client):
         - Media cannot be swapped, only the message text
         - ...
 
+        Platforms: twitter, discord, facebook, reddit, linkedin, telegram, pinterest, googlebusiness, youtube, slack
+
         Args:
             post_id: (required)
             platform: The platform to edit the post on. (required)
@@ -44170,6 +44317,8 @@ def register_generated_tools(mcp, _get_client):
 
             1. Post-based (video published through Zernio): pass the Zernio postId in the URL and platform in the body.
             2. Direct video ID (YouTube only, video uploaded outside Zernio): use _ as the postId, and pass videoId + accountId + platform in the body. The accountId is the Zernio account ID for the connected YouTube channel.
+
+            Platforms: youtube, facebook
 
             Args:
                 post_id: Zernio post ID, or "_" when using direct video ID mode (required)
@@ -46417,6 +46566,8 @@ def register_generated_tools(mcp, _get_client):
 
         Delete a reply to a review (Google Business Profile only). Requires accountId in request body.
 
+        Platforms: googlebusiness
+
         Args:
             review_id: (required)
             account_id: (required)"""
@@ -46448,6 +46599,8 @@ def register_generated_tools(mcp, _get_client):
         """List sequences
 
         Returns sequences with enrollment stats. Filter by status, platform, or profile.
+
+        Platforms: instagram, facebook, telegram, twitter, bluesky, reddit, whatsapp, slack, imessage, line, wechat
 
         Args:
             profile_id: Filter by profile. Omit to list across all profiles
@@ -46497,6 +46650,8 @@ def register_generated_tools(mcp, _get_client):
 
         Create a multi-step messaging sequence. Each step has a delay and a message or WhatsApp template.
 
+        Platforms: instagram, facebook, telegram, twitter, bluesky, reddit, whatsapp, slack, imessage, line, wechat
+
         Args:
             profile_id: (required)
             account_id: (required)
@@ -46535,6 +46690,8 @@ def register_generated_tools(mcp, _get_client):
 
         Returns a sequence with all its steps and enrollment stats.
 
+        Platforms: instagram, facebook, telegram, twitter, bluesky, reddit, whatsapp, slack, imessage, line, wechat
+
         Args:
             sequence_id: (required)"""
         client = _get_client()
@@ -46563,6 +46720,8 @@ def register_generated_tools(mcp, _get_client):
         """Update sequence
 
         Update a sequence's name, steps, or exit conditions. Steps can only be modified while the sequence is draft or paused.
+
+        Platforms: instagram, facebook, telegram, twitter, bluesky, reddit, whatsapp, slack, imessage, line, wechat
 
         Args:
             sequence_id: (required)
@@ -46598,6 +46757,8 @@ def register_generated_tools(mcp, _get_client):
 
         Permanently delete a sequence. Active enrollments are stopped.
 
+        Platforms: instagram, facebook, telegram, twitter, bluesky, reddit, whatsapp, slack, imessage, line, wechat
+
         Args:
             sequence_id: (required)"""
         client = _get_client()
@@ -46620,6 +46781,8 @@ def register_generated_tools(mcp, _get_client):
 
         Start a draft or paused sequence. The sequence must have at least one step.
 
+        Platforms: instagram, facebook, telegram, twitter, bluesky, reddit, whatsapp, slack, imessage, line, wechat
+
         Args:
             sequence_id: (required)"""
         client = _get_client()
@@ -46641,6 +46804,8 @@ def register_generated_tools(mcp, _get_client):
         """Pause sequence
 
         Pause an active sequence. Enrolled contacts stop receiving messages until the sequence is reactivated.
+
+        Platforms: instagram, facebook, telegram, twitter, bluesky, reddit, whatsapp, slack, imessage, line, wechat
 
         Args:
             sequence_id: (required)"""
@@ -46667,6 +46832,8 @@ def register_generated_tools(mcp, _get_client):
         """Enroll contacts in a sequence
 
         Enroll one or more contacts into a sequence. Contacts already enrolled are skipped.
+
+        Platforms: instagram, facebook, telegram, twitter, bluesky, reddit, whatsapp, slack, imessage, line, wechat
 
         Args:
             sequence_id: (required)
@@ -46695,6 +46862,8 @@ def register_generated_tools(mcp, _get_client):
         """Unenroll contact
 
         Remove a contact from a sequence. No further messages will be sent to this contact.
+
+        Platforms: instagram, facebook, telegram, twitter, bluesky, reddit, whatsapp, slack, imessage, line, wechat
 
         Args:
             sequence_id: (required)
@@ -46725,6 +46894,8 @@ def register_generated_tools(mcp, _get_client):
         """List enrollments for a sequence
 
         Returns enrolled contacts with their progress, status, and next scheduled step.
+
+        Platforms: instagram, facebook, telegram, twitter, bluesky, reddit, whatsapp, slack, imessage, line, wechat
 
         Args:
             sequence_id: (required)

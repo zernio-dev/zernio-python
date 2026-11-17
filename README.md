@@ -426,6 +426,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `connect.complete_whats_app_phone_selection()` | Complete number selection |
 | `connect.configure_tik_tok_ads_brand_identity()` | Set TikTok brand identity |
 | `connect.connect_ads()` | Connect ads for a platform |
+| `connect.connect_app_lovin_ads_credentials()` | Connect an AppLovin Axon account |
 | `connect.connect_bluesky_credentials()` | Connect Bluesky account |
 | `connect.connect_discord_channel()` | Connect a Discord channel |
 | `connect.connect_line_credentials()` | Connect LINE Official Account |

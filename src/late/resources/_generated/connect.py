@@ -796,6 +796,27 @@ class ConnectResource:
         )
         return self._client._post("/v1/connect/openai-ads/credentials", data=payload)
 
+    def connect_app_lovin_ads_credentials(
+        self,
+        api_key: str,
+        event_key: str,
+        profile_id: str,
+        *,
+        name: str | None = None,
+        state: str | None = None,
+        redirect_url: str | None = None,
+    ) -> dict[str, Any]:
+        """Connect an AppLovin Axon account"""
+        payload = self._build_payload(
+            api_key=api_key,
+            event_key=event_key,
+            name=name,
+            profile_id=profile_id,
+            state=state,
+            redirect_url=redirect_url,
+        )
+        return self._client._post("/v1/connect/applovin-ads/credentials", data=payload)
+
     def connect_whop_ads_credentials(
         self,
         api_key: str,
@@ -2219,6 +2240,29 @@ class ConnectResource:
         )
         return await self._client._apost(
             "/v1/connect/openai-ads/credentials", data=payload
+        )
+
+    async def aconnect_app_lovin_ads_credentials(
+        self,
+        api_key: str,
+        event_key: str,
+        profile_id: str,
+        *,
+        name: str | None = None,
+        state: str | None = None,
+        redirect_url: str | None = None,
+    ) -> dict[str, Any]:
+        """Connect an AppLovin Axon account (async)"""
+        payload = self._build_payload(
+            api_key=api_key,
+            event_key=event_key,
+            name=name,
+            profile_id=profile_id,
+            state=state,
+            redirect_url=redirect_url,
+        )
+        return await self._client._apost(
+            "/v1/connect/applovin-ads/credentials", data=payload
         )
 
     async def aconnect_whop_ads_credentials(
