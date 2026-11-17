@@ -49,11 +49,15 @@ from late import Late, MediaType, PostStatus
 from late.client.exceptions import LateAPIError, LateError, LateRateLimitError
 
 from .auth import build_auth_provider, forget_rejected_token
-from .feedback_source import FEEDBACK_TOOL, FeedbackSourceMiddleware
 from .idempotency import same_arguments_key
+from .middleware import (
+    FEEDBACK_TOOL,
+    FeedbackSourceMiddleware,
+    ToolGuidanceMiddleware,
+    WellFormedOutputMiddleware,
+)
 from .resources import register_resources
 from .tool_definitions import TOOL_DEFINITIONS
-from .tool_guidance import ToolGuidanceMiddleware
 from .user_agent import mcp_user_agent
 
 if TYPE_CHECKING:
@@ -372,6 +376,7 @@ details.
     list_page_size=_TOOLS_PAGE_SIZE,
 )
 
+mcp.add_middleware(WellFormedOutputMiddleware())
 mcp.add_middleware(
     ToolGuidanceMiddleware(
         search_tool=_SEARCH_TOOL,

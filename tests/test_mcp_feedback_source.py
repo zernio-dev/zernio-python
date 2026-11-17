@@ -1,7 +1,7 @@
 import pytest
 from fastmcp import Client
 
-from late.mcp import feedback_source
+from late.mcp.middleware import feedback_source
 from late.mcp.server import mcp
 from late.resources._generated.feedback import FeedbackResource
 
