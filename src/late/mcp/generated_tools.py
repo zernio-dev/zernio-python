@@ -2302,6 +2302,7 @@ def register_generated_tools(mcp, _get_client):
         sync_contacts: bool | None = None,
         log_messages: bool | None = None,
         log_delivery_status: bool | None = None,
+        contact_defaults: dict[str, Any] | None = None,
         report_deals: bool | None = None,
         use_deals_as_results: bool | None = None,
     ) -> str:
@@ -2314,6 +2315,7 @@ def register_generated_tools(mcp, _get_client):
             sync_contacts: Create a HubSpot contact for an inbox contact that matches none by email or phone. A match is linked as it is and never updated.
             log_messages: Log inbound and outbound inbox messages on the contact's HubSpot timeline.
             log_delivery_status: Add the delivery status of each outgoing WhatsApp, SMS or RCS message to its timeline entry and update it as the message is delivered, read or fails. A failure shows the reason and its code. Only applies while `logMessages` is on.
+            contact_defaults: Values for contact properties your portal requires on create, keyed by HubSpot internal name (lowercase letters, digits, underscores), for example `{"lifecyclestage": "lead"}`. Replaces the whole map; send `{}` to clear it. Clears `syncIssue` until the next contact create tells whether the portal accepts them.
             report_deals: Send each deal that becomes closed won as a Purchase to the profile's event destinations, about once an hour. Requires the portal to have granted `crm.objects.deals.read`; otherwise 400. Deals closed before it was turned on are not sent.
             use_deals_as_results: Count each closed-won deal as a sale with its amount on the ad campaign that brought its contact, in `GET /v1/ads/campaign-results` and ad rules. Requires `crm.objects.deals.read`; otherwise 400. Turning it on fills in the deals of the last 90 days, never sent to the ad platforms."""
         client = _get_client()
@@ -2323,6 +2325,7 @@ def register_generated_tools(mcp, _get_client):
                 sync_contacts=sync_contacts,
                 log_messages=log_messages,
                 log_delivery_status=log_delivery_status,
+                contact_defaults=contact_defaults,
                 report_deals=report_deals,
                 use_deals_as_results=use_deals_as_results,
             )

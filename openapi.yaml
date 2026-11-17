@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.645.0"
+  version: "1.646.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -15417,6 +15417,8 @@ components:
         - syncContacts
         - logMessages
         - logDeliveryStatus
+        - contactDefaults
+        - syncIssue
         - reportDeals
         - useDealsAsResults
       properties:
@@ -15448,6 +15450,35 @@ components:
           description: >-
             Whether Zernio keeps the delivery status (sent, delivered, read, played, failed) of logged outgoing messages
             up to date on their HubSpot timeline entries. Only applies while `logMessages` is on. Defaults to `true`.
+        contactDefaults:
+          type: object
+          additionalProperties:
+            type: string
+          description: >-
+            Values Zernio sets on contacts it creates, keyed by HubSpot internal property name, for properties the portal
+            requires on create (for example `lifecyclestage: lead`). The contact's own name, email and phone win. Empty
+            object when none.
+        syncIssue:
+          type: [object, "null"]
+          description: >-
+            Set while the portal refuses to create contacts because it requires properties Zernio does not fill. People
+            already in HubSpot are still matched and their messages logged. Cleared by the next created contact or a
+            change to `contactDefaults`. The account's health shows it too.
+          required: [code, properties, message, at]
+          properties:
+            code:
+              type: string
+              enum: [REQUIRED_CONTACT_PROPERTIES]
+            properties:
+              type: array
+              items:
+                type: string
+              description: The required contact properties HubSpot named.
+            message:
+              type: string
+            at:
+              type: string
+              format: date-time
         reportDeals:
           type: boolean
           description: Whether Zernio sends closed-won deals as Purchase events to the profile's event destinations.
@@ -53896,6 +53927,18 @@ paths:
                     Add the delivery status of each outgoing WhatsApp, SMS or RCS message to its timeline entry and update
                     it as the message is delivered, read or fails. A failure shows the reason and its code. Only applies
                     while `logMessages` is on.
+                contactDefaults:
+                  type: object
+                  maxProperties: 20
+                  additionalProperties:
+                    type: string
+                    minLength: 1
+                    maxLength: 500
+                  description: >-
+                    Values for contact properties your portal requires on create, keyed by HubSpot internal name
+                    (lowercase letters, digits, underscores), for example `{"lifecyclestage": "lead"}`. Replaces the whole
+                    map; send `{}` to clear it. Clears `syncIssue` until the next contact create tells whether the portal
+                    accepts them.
                 reportDeals:
                   type: boolean
                   description: >-
