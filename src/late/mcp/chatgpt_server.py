@@ -236,7 +236,7 @@ async def _api(
     headers = {
         "Authorization": f"Bearer {bearer}",
         "Accept": "application/json",
-        "User-Agent": mcp_user_agent("chatgpt"),
+        "User-Agent": mcp_user_agent(),
     }
     async with httpx.AsyncClient(base_url=API_BASE, timeout=_TIMEOUT) as client:
         response = await client.request(

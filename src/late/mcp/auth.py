@@ -26,6 +26,7 @@ from late.mcp.constants import (
     OAUTH_SCOPES,
     SERVICE_NAME,
 )
+from late.mcp.user_agent import mcp_user_agent
 
 # Origin allowlist for DNS-rebinding protection (MCP spec / Anthropic Connectors
 # Directory requirement). Matched as exact host or subdomain suffix. Extend at
@@ -187,7 +188,10 @@ async def verify_late_api_key(
     try:
         response = await client.get(
             _VERIFY_URL,
-            headers={"Authorization": f"Bearer {api_key}"},
+            headers={
+                "Authorization": f"Bearer {api_key}",
+                "User-Agent": mcp_user_agent(),
+            },
             timeout=_VERIFY_TIMEOUT,
         )
     except Exception as exc:

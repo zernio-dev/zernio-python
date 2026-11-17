@@ -490,7 +490,7 @@ def _get_client() -> Late:
         base_url=base_url,
         max_retries=_UPSTREAM_MAX_ATTEMPTS,
         transport=_api_transport(),
-        user_agent=mcp_user_agent("mcp" if token is not None else "stdio"),
+        user_agent=mcp_user_agent(),
     )
 
 
@@ -1265,7 +1265,9 @@ def _get_docs_content() -> str:
 
     # Fetch fresh content
     try:
-        response = httpx.get(_DOCS_URL, timeout=30.0)
+        response = httpx.get(
+            _DOCS_URL, headers={"User-Agent": mcp_user_agent()}, timeout=30.0
+        )
         response.raise_for_status()
         content = response.text
         _docs_cache[cache_key] = (content, datetime.now())
