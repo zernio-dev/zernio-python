@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.638.1"
+  version: "1.639.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -49393,9 +49393,19 @@ paths:
           description: The Zernio profile ID from the headless redirect
         - name: tempToken
           in: query
-          required: true
+          required: false
           schema: { type: string }
-          description: The temporary access token from the headless redirect
+          description: "The temporary access token from the headless redirect. Required unless sent in the X-Temp-Token header."
+        - name: X-Temp-Token
+          in: header
+          required: false
+          schema: { type: string }
+          description: "The OAuth user token, in place of the tempToken query parameter. Prefer it: a query string is written to request logs along the way."
+        - name: connectFlow
+          in: query
+          required: false
+          schema: { type: string, pattern: '^[a-f0-9]{32}$' }
+          description: "Set by the Zernio-hosted picker, whose user token stays in an httpOnly cookie. Integrators send tempToken instead."
         - name: X-Connect-Token
           in: header
           required: false
@@ -49434,7 +49444,7 @@ paths:
                     wabaId: "317766992490131"
                     wabaName: "Bioface WABA"
         '400':
-          description: Missing profileId or tempToken
+          description: "Missing profileId, or none of tempToken, the X-Temp-Token header or connectFlow"
           content:
             application/json:
               schema: { $ref: '#/components/schemas/ErrorResponse' }
@@ -49459,18 +49469,24 @@ paths:
           required: false
           schema: { type: string }
           description: Alternative auth for API users' end customers
+        - name: X-Temp-Token
+          in: header
+          required: false
+          schema: { type: string }
+          description: "The OAuth user token, in place of the tempToken query parameter. Prefer it: a query string is written to request logs along the way."
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
-              required: [profileId, phoneNumberId, wabaId, tempToken]
+              required: [profileId, phoneNumberId, wabaId]
               properties:
                 profileId: { type: string, description: The Zernio profile ID }
                 phoneNumberId: { type: string, description: The selected phone number ID (from listWhatsAppPhoneNumbers) }
                 wabaId: { type: string, description: The WABA ID containing the selected phone }
-                tempToken: { type: string, description: The temporary access token from the headless redirect }
+                tempToken: { type: string, description: "The temporary access token from the headless redirect. Required unless sent in the X-Temp-Token header." }
+                connectFlow: { type: string, pattern: '^[a-f0-9]{32}$', description: "Set by the Zernio-hosted picker, whose user token stays in an httpOnly cookie. Integrators send tempToken instead." }
                 userProfile:
                   type: object
                   description: Optional user profile data (passthrough)
@@ -49511,7 +49527,7 @@ paths:
                   isActive: true
                   selectedPhoneNumber: "+55 83 8793-2039"
         '400':
-          description: Missing required fields (profileId, phoneNumberId, wabaId, or tempToken)
+          description: "Missing required fields (profileId, phoneNumberId, wabaId), or none of tempToken, the X-Temp-Token header or connectFlow"
           content:
             application/json:
               schema: { $ref: '#/components/schemas/ErrorResponse' }

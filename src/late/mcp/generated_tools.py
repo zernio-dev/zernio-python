@@ -27522,7 +27522,9 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=False,
         )
     )
-    def connect_list_whats_app_phone_numbers(profile_id: str, temp_token: str) -> str:
+    def connect_list_whats_app_phone_numbers(
+        profile_id: str, temp_token: str | None = None, connect_flow: str | None = None
+    ) -> str:
         """List numbers for selection
 
         Fetch the WhatsApp phone numbers available across the user's WhatsApp Business Accounts (WABAs) after a headless OAuth flow.
@@ -27535,11 +27537,12 @@ def register_generated_tools(mcp, _get_client):
 
         Args:
             profile_id: The Zernio profile ID from the headless redirect (required)
-            temp_token: The temporary access token from the headless redirect (required)"""
+            temp_token: The temporary access token from the headless redirect. Required unless sent in the X-Temp-Token header.
+            connect_flow: Set by the Zernio-hosted picker, whose user token stays in an httpOnly cookie. Integrators send tempToken instead."""
         client = _get_client()
         try:
             response = client.connect.list_whats_app_phone_numbers(
-                profile_id=profile_id, temp_token=temp_token
+                profile_id=profile_id, temp_token=temp_token, connect_flow=connect_flow
             )
             return _format_response(response)
         except Exception as e:
@@ -27557,7 +27560,8 @@ def register_generated_tools(mcp, _get_client):
         profile_id: str,
         phone_number_id: str,
         waba_id: str,
-        temp_token: str,
+        temp_token: str | None = None,
+        connect_flow: str | None = None,
         user_profile: dict[str, Any] | None = None,
         redirect_url: str | None = None,
     ) -> str:
@@ -27569,7 +27573,8 @@ def register_generated_tools(mcp, _get_client):
             profile_id: The Zernio profile ID (required)
             phone_number_id: The selected phone number ID (from listWhatsAppPhoneNumbers) (required)
             waba_id: The WABA ID containing the selected phone (required)
-            temp_token: The temporary access token from the headless redirect (required)
+            temp_token: The temporary access token from the headless redirect. Required unless sent in the X-Temp-Token header.
+            connect_flow: Set by the Zernio-hosted picker, whose user token stays in an httpOnly cookie. Integrators send tempToken instead.
             user_profile: Optional user profile data (passthrough)
             redirect_url: Optional URL to receive the post-connection redirect target"""
         client = _get_client()
@@ -27579,6 +27584,7 @@ def register_generated_tools(mcp, _get_client):
                 phone_number_id=phone_number_id,
                 waba_id=waba_id,
                 temp_token=temp_token,
+                connect_flow=connect_flow,
                 user_profile=user_profile,
                 redirect_url=redirect_url,
             )
