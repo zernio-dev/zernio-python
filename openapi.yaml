@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.636.0"
+  version: "1.637.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -80665,6 +80665,11 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
         '404':
           $ref: '#/components/responses/NotFound'
+        '409':
+          description: 'A keyword or search term rule is still loading its daily history from Google, a few days per run (`history_loading`). The message says how many days are in. Try again later.'
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
   /v1/ads/rules/{ruleId}/alerts:
     get:
       x-resource-group: ads
