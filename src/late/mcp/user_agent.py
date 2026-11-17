@@ -3,15 +3,20 @@ from fastmcp.server.dependencies import get_http_headers, get_http_request
 from late.mcp.constants import ENDPOINT_CHATGPT
 
 _CLIENT_NAME_MAX = 64
+_USER_AGENT_MAX = 200
 # The client name lands inside an RFC 9110 comment: these would close it early
 # or split it into a second field.
 _COMMENT_DELIMITERS = str.maketrans("", "", "();")
 
 
+def calling_user_agent() -> str:
+    """The MCP client's User-Agent ("Cursor/1.7.0 (linux)"), capped, or "" off HTTP."""
+    return get_http_headers().get("user-agent", "").strip()[:_USER_AGENT_MAX]
+
+
 def calling_client() -> str:
     """Product name of the MCP client's User-Agent ("Claude-User"), or "" off HTTP."""
-    user_agent = get_http_headers().get("user-agent", "")
-    return user_agent.split("/", 1)[0].strip()[:_CLIENT_NAME_MAX]
+    return calling_user_agent().split("/", 1)[0].strip()[:_CLIENT_NAME_MAX]
 
 
 def _surface() -> str:

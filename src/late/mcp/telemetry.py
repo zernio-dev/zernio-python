@@ -23,7 +23,7 @@ from late.mcp.auth import token_cache_key
 from late.mcp.axiom_sink import axiom_handler_from_env
 from late.mcp.constants import SERVICE_VERSION
 from late.mcp.response_format import format_stats
-from late.mcp.user_agent import calling_client
+from late.mcp.user_agent import calling_client, calling_user_agent
 
 _TOOL_TRANSACTION_OP = "mcp.tool"
 _REJECTED_RESULT_PREFIX = "❌"
@@ -143,7 +143,10 @@ def _auth_fields() -> dict[str, Any]:
     claims = token.claims if token else {}
     if "resolved_by" not in claims:
         return {}
-    return {"auth": claims["resolved_by"], "auth_wait_ms": claims.get("waited_ms", 0)}
+    fields = {"auth": claims["resolved_by"], "auth_wait_ms": claims.get("waited_ms", 0)}
+    if claims.get("user_id"):
+        fields["user_id"] = claims["user_id"]
+    return fields
 
 
 def _request_fields(arguments: dict[str, Any] | None) -> dict[str, Any]:
@@ -222,13 +225,19 @@ class ToolTelemetryMiddleware(Middleware):
         caller = _caller_key()
         request = _request_fields(context.message.arguments)
         auth = _auth_fields()
+        user_agent = calling_user_agent()
         fields: dict[str, Any] = {"outcome": "ok"}
         stats: dict[str, Any] = {}
         stats_token = format_stats.set(stats)
         started = time.perf_counter()
-        with sentry_sdk.start_transaction(
-            op=_TOOL_TRANSACTION_OP, name=f"tools/call {tool}"
-        ) as transaction:
+        with (
+            sentry_sdk.new_scope() as scope,
+            sentry_sdk.start_transaction(
+                op=_TOOL_TRANSACTION_OP, name=f"tools/call {tool}"
+            ) as transaction,
+        ):
+            if auth.get("user_id"):
+                scope.set_user({"id": auth["user_id"]})
             transaction.set_tag("mcp.tool", tool)
             transaction.set_tag("mcp.surface", self._surface)
             transaction.set_tag("mcp.via", via)
@@ -284,6 +293,7 @@ class ToolTelemetryMiddleware(Middleware):
                                     (time.perf_counter() - started) * 1000
                                 ),
                                 "caller": caller,
+                                **({"user_agent": user_agent} if user_agent else {}),
                                 **request,
                                 **auth,
                                 **fields,

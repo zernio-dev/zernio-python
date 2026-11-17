@@ -13,9 +13,11 @@ from late.mcp.auth import ZernioTokenVerifier
 @pytest.fixture(autouse=True)
 def _clear_verification_cache():
     auth._VERIFIED_AT.clear()
+    auth._USER_ID_BY_TOKEN.clear()
     auth._IN_FLIGHT.clear()
     yield
     auth._VERIFIED_AT.clear()
+    auth._USER_ID_BY_TOKEN.clear()
     auth._IN_FLIGHT.clear()
 
 
@@ -127,3 +129,55 @@ def test_a_successful_tool_call_keeps_the_cached_token():
     )
 
     assert auth.token_cache_key("sk_live") in auth._VERIFIED_AT
+
+
+def _verifier_answering(response: httpx.Response) -> ZernioTokenVerifier:
+    client = httpx.AsyncClient(transport=httpx.MockTransport(lambda _r: response))
+    return ZernioTokenVerifier(client=client)
+
+
+async def test_a_grant_names_the_user_the_verify_answer_returned():
+    verifier = _verifier_answering(httpx.Response(200, json={"userId": "u" * 24}))
+
+    granted = await verifier.verify_token("sk_live")
+
+    assert granted is not None
+    assert granted.claims["user_id"] == "u" * 24
+
+
+async def test_a_grant_served_from_cache_still_names_the_user():
+    verifier = _verifier_answering(httpx.Response(200, json={"userId": "u" * 24}))
+    await verifier.verify_token("sk_live")
+
+    cached = await verifier.verify_token("sk_live")
+
+    assert cached is not None
+    assert cached.claims["resolved_by"] == "cache"
+    assert cached.claims["user_id"] == "u" * 24
+
+
+@pytest.mark.parametrize(
+    "response",
+    [
+        httpx.Response(200, text="<html>not json</html>"),
+        httpx.Response(200, json={"valid": True}),
+        httpx.Response(402, json={"userId": "u" * 24}),
+    ],
+)
+async def test_a_valid_token_without_a_readable_user_id_is_granted_without_one(
+    response,
+):
+    verifier = _verifier_answering(response)
+
+    granted = await verifier.verify_token("sk_live")
+
+    assert granted is not None
+    assert "user_id" not in granted.claims
+
+
+async def test_a_rejected_token_forgets_its_user_id():
+    auth._remember_user_id(auth.token_cache_key("sk_revoked"), "u" * 24)
+
+    auth.forget_rejected_token("sk_revoked")
+
+    assert auth.token_cache_key("sk_revoked") not in auth._USER_ID_BY_TOKEN
