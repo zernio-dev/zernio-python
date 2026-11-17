@@ -311,12 +311,32 @@ def _unknown_tools_message(unknown: Sequence[str], names: Sequence[str]) -> str:
     )
 
 
+_DESCRIPTION_HEADING = re.compile(r"^[ \t]*#{1,6}[ \t]+(.+?)[ \t#]*$", re.MULTILINE)
+
+
+def _serialize_search_results(tools: Sequence[Tool]) -> str:
+    """Markdown search results where `### <name>` only ever starts a tool.
+
+    Descriptions carry their own headings ("### Platform support", "### Email threads"); in the flat result
+    text a client splitting on headings read those as tools and pinned the next tool's parameters on the wrong
+    name (a Grok client saw messages_create_inbox_conversation's participant_id under
+    messages_send_inbox_message, 2026-11-17). Demoting them to bold keeps the text and removes the ambiguity.
+    """
+    demoted = [
+        tool.model_copy(update={"description": _DESCRIPTION_HEADING.sub(r"**\1**", tool.description)})
+        if tool.description
+        else tool
+        for tool in tools
+    ]
+    return serialize_tools_for_output_markdown(demoted)
+
+
 _search_transform = _AnnotatedBM25SearchTransform(
     always_visible=_PINNED_TOOLS,
     max_results=8,
     search_tool_name=_SEARCH_TOOL,
     call_tool_name=_CALL_TOOL,
-    search_result_serializer=serialize_tools_for_output_markdown,
+    search_result_serializer=_serialize_search_results,
 )
 
 
