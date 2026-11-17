@@ -54,6 +54,7 @@ from .idempotency import same_arguments_key
 from .resources import register_resources
 from .tool_definitions import TOOL_DEFINITIONS
 from .tool_guidance import ToolGuidanceMiddleware
+from .user_agent import mcp_user_agent
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -489,6 +490,7 @@ def _get_client() -> Late:
         base_url=base_url,
         max_retries=_UPSTREAM_MAX_ATTEMPTS,
         transport=_api_transport(),
+        user_agent=mcp_user_agent("mcp" if token is not None else "stdio"),
     )
 
 

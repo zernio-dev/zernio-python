@@ -12,7 +12,7 @@ from typing import Any
 import sentry_sdk
 from fastmcp.exceptions import FastMCPError, NotFoundError, ToolError
 from fastmcp.server.auth import AccessToken
-from fastmcp.server.dependencies import get_access_token, get_http_headers
+from fastmcp.server.dependencies import get_access_token
 from fastmcp.server.middleware import CallNext, Middleware, MiddlewareContext
 from mcp.types import CallToolRequestParams, TextContent
 from sentry_sdk.integrations.logging import ignore_logger
@@ -23,6 +23,7 @@ from late.mcp.auth import token_cache_key
 from late.mcp.axiom_sink import axiom_handler_from_env
 from late.mcp.constants import SERVICE_VERSION
 from late.mcp.response_format import format_stats
+from late.mcp.user_agent import calling_client
 
 _TOOL_TRANSACTION_OP = "mcp.tool"
 _REJECTED_RESULT_PREFIX = "❌"
@@ -150,9 +151,9 @@ def _request_fields(arguments: dict[str, Any] | None) -> dict[str, Any]:
     limit = (arguments or {}).get("limit")
     if isinstance(limit, int):
         fields["limit"] = limit
-    client = get_http_headers().get("user-agent", "").split("/", 1)[0].strip()
+    client = calling_client()
     if client:
-        fields["client"] = client[:64]
+        fields["client"] = client
     return fields
 
 
