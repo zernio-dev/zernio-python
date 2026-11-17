@@ -2280,6 +2280,8 @@ def register_generated_tools(mcp, _get_client):
 
         Read a connected HubSpot portal and what Zernio syncs to it.
 
+        Platforms: hubspot
+
         Args:
             account_id: (required)"""
         client = _get_client()
@@ -2309,6 +2311,8 @@ def register_generated_tools(mcp, _get_client):
         """Update HubSpot account settings
 
         Turn contact sync, message logging or deal reporting on or off for a connected HubSpot portal. Send at least one field; omitted fields keep their value. Settings survive reconnecting the same portal.
+
+        Platforms: hubspot
 
         Args:
             account_id: (required)
@@ -2346,6 +2350,8 @@ def register_generated_tools(mcp, _get_client):
 
         Read a connected Salesforce org and what Zernio syncs to it.
 
+        Platforms: salesforce
+
         Args:
             account_id: (required)"""
         client = _get_client()
@@ -2373,6 +2379,8 @@ def register_generated_tools(mcp, _get_client):
         """Update Salesforce account settings
 
         Turn person creation, conversation logging or delivery marks on or off for a connected Salesforce org, or choose whether new people become Leads or Contacts. Send at least one field; omitted fields keep their value. Settings survive reconnecting the same org.
+
+        Platforms: salesforce
 
         Args:
             account_id: (required)
@@ -26257,6 +26265,8 @@ def register_generated_tools(mcp, _get_client):
 
         Requested scopes: `oauth`, `crm.objects.contacts.read`, `crm.objects.contacts.write`.
 
+        Platforms: hubspot
+
         Args:
             profile_id: Your Zernio profile ID (get from /v1/profiles). (required)
             redirect_url: Custom redirect after connection. Must be an absolute http(s) URL or custom app scheme such as `myapp://callback`; relative and unsafe URLs return 400."""
@@ -26297,6 +26307,8 @@ def register_generated_tools(mcp, _get_client):
         3. Zernio redirects to `redirect_url` (or the dashboard when omitted).
 
         On success the redirect carries `connected=salesforce`, ...
+
+        Platforms: salesforce
 
         Args:
             profile_id: Your Zernio profile ID (get from /v1/profiles). (required)

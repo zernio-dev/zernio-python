@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.647.0"
+  version: "1.647.1"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -44662,6 +44662,7 @@ paths:
       operationId: getHubSpotConnectUrl
       tags:
         - Connect
+      x-platforms: [hubspot]
       summary: Get HubSpot OAuth connect URL
       description: |
         Initiates OAuth for a HubSpot portal. HubSpot is a connect-only CRM platform: the connected account does not post, read analytics or run ads.
@@ -44732,6 +44733,7 @@ paths:
       operationId: getSalesforceConnectUrl
       tags:
         - Connect
+      x-platforms: [salesforce]
       summary: Get Salesforce OAuth connect URL
       description: |
         Initiates OAuth (authorization code with PKCE) for a Salesforce org. Salesforce is a connect-only CRM platform: inbox contacts are matched to Contacts and Leads, and each day of conversation is logged as a Task.
@@ -53867,6 +53869,7 @@ paths:
       operationId: getHubSpotSettings
       tags:
         - Accounts
+      x-platforms: [hubspot]
       summary: Get HubSpot account settings
       description: Read a connected HubSpot portal and what Zernio syncs to it.
       parameters:
@@ -53896,6 +53899,7 @@ paths:
       operationId: updateHubSpotSettings
       tags:
         - Accounts
+      x-platforms: [hubspot]
       summary: Update HubSpot account settings
       description: >-
         Turn contact sync, message logging or deal reporting on or off for a connected HubSpot portal. Send at
@@ -53975,6 +53979,7 @@ paths:
       operationId: getSalesforceSettings
       tags:
         - Accounts
+      x-platforms: [salesforce]
       summary: Get Salesforce account settings
       description: Read a connected Salesforce org and what Zernio syncs to it.
       parameters:
@@ -54004,6 +54009,7 @@ paths:
       operationId: updateSalesforceSettings
       tags:
         - Accounts
+      x-platforms: [salesforce]
       summary: Update Salesforce account settings
       description: >-
         Turn person creation, conversation logging or delivery marks on or off for a connected Salesforce org, or
