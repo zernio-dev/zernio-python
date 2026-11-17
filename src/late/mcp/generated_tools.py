@@ -11413,6 +11413,8 @@ def register_generated_tools(mcp, _get_client):
         - **Reddit Ads:** flat field, applied to the new ad group. LOWEST_COST_WITHOUT_CAP or omitted = automatic bidding (BIDLESS). LOWEST_COST_WITH_BID_CAP + `bidAmount` = MANUAL_BIDDING with that bid. COST_CAP + `bidAmount` = MAXIMIZE_VOLUME with that cap. Any other strategy returns 422 before anything is created.
         - **Google:** not deprecated (this flat field is Google's only shape), applied to the campaign this call creates. LOWEST_COST_WITHOUT_CAP = Maximize Conversions. COST_CAP + bidAmount = Target CPA. LOWEST_COST_WITH_MIN_ROAS + roasAverageFloor = Target ROAS.
         - **Google, continued:** LOWEST_COST_WITH_BID_CAP + bidAmount = Maximize Clicks with a CPC ceiling. portfolioBidStrategyId attaches a portfolio strategy instead. Omitted, the campaign falls back to a goal-based default.
+        - **TikTok:** flat field, applied to the new ad group. LOWEST_COST_WITHOUT_CAP or omitted = automatic bidding (`BID_TYPE_NO_BID`). LOWEST_COST_WITH_BID_CAP or COST_CAP + `bidAmount` = `BID_TYPE_CUSTOM` with `bid_price` set to that amount. On goal `video_views` with a custom bid, `bid_display_mode` is sent as `CPV` automatically.
+        - **TikTok, Smart+:** `smartPlus` accepts only LOWEST_COST_WITHOUT_CAP or no `bidStrategy`; any other strategy returns 400.
                 bid_amount: Deprecated: send it inside `platformSpecificData` instead (Meta today; TikTok's nested shape is planned). The flat field keeps working during the deprecation window; sending both shapes returns a 400.
 
         Bid cap in WHOLE currency units (USD: 5 = $5.00; JPY: 100 = ¥100). Required when `bidStrategy` is `LOWEST_COST_WITH_BID_CAP` or `COST_CAP`.
