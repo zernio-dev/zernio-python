@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.631.0"
+  version: "1.632.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -51527,6 +51527,7 @@ paths:
                             shares: { type: integer }
                             follows: { type: integer }
                             profileVisits: { type: integer }
+                            linkClicks: { type: integer, description: 'Taps on links in the story (the link sticker). Facebook Login accounts only; always 0 for Instagram Login accounts. Taps on other stickers (mentions, hashtags, locations) are not reported by Meta.' }
                             lastUpdated: { type: [string, "null"], format: date-time }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
@@ -52083,7 +52084,7 @@ paths:
                         required:
                           [views, reach, replies, shares, navigation, tapsForward,
                            tapsBack, exits, swipesForward, profileVisits, follows,
-                           reposts, totalInteractions]
+                           reposts, totalInteractions, linkClicks]
                         properties:
                           views: { type: integer, description: "Total story plays. Replaces deprecated 'impressions' for media created after 2024-07-02." }
                           reach: { type: integer, description: Unique accounts that saw the story. }
@@ -52098,6 +52099,7 @@ paths:
                           follows: { type: integer }
                           reposts: { type: integer }
                           totalInteractions: { type: integer }
+                          linkClicks: { type: integer, description: 'Taps on links in the story (the link sticker). Facebook Login accounts only; always 0 for Instagram Login accounts. Taps on other stickers (mentions, hashtags, locations) are not reported by Meta.' }
         '400': { description: Invalid request. }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/AccountUnavailable' }
