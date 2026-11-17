@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.639.0"
+  version: "1.640.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -21681,6 +21681,14 @@ components:
                 type: { type: string, enum: [CNAME] }
                 name: { type: string, description: 'The record name relative to your domain, such as `t`.' }
                 target: { type: string }
+        proxy:
+          type: [object, "null"]
+          description: "The path your server forwards to the collector, so the tag runs from the site's own domain. Null when it has none."
+          properties:
+            path: { type: string, description: 'Such as `/zt`: the snippet loads `https://<first domain>/zt/z.js`.' }
+            secret:
+              type: [string, "null"]
+              description: "Signs the visitor's IP and country your proxy forwards. Only on reading or updating one site."
         consentMode: { $ref: '#/components/schemas/TrackingSiteConsentMode' }
         checks:
           type: array
@@ -99935,11 +99943,15 @@ paths:
       tags: [Conversions]
       summary: Update a tracking site
       description: >
-        Changes the site's name, domains, consent mode or custom subdomain. Send at least one field.
+        Changes the site's name, domains, consent mode, custom subdomain or own-domain path. Send at least one field.
 
 
         `customHostname` sets a subdomain of the site, such as `t.brand.com`; create the CNAME in
         `customHostname.dnsRecord`. The snippet switches to it once its status is `active`. `null` removes it.
+
+
+        `proxyPath` serves the tag from a path of the site itself, such as `brand.com/zt`, through a proxy on your
+        server. The response's `proxy.secret` signs what the proxy forwards. `null` removes it.
       security:
         - bearerAuth: []
       requestBody:
@@ -99963,6 +99975,10 @@ paths:
                   type: [string, "null"]
                   maxLength: 253
                   description: "A subdomain of one of the site's domains, never the domain itself. `null` removes it."
+                proxyPath:
+                  type: [string, "null"]
+                  pattern: '^/[A-Za-z0-9_-]{1,32}$'
+                  description: "The path your server forwards to the collector, such as `/zt`. `null` removes it."
       responses:
         '200':
           description: The updated site.

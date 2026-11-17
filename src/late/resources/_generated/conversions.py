@@ -521,6 +521,7 @@ class ConversionsResource:
         domains: list[str] | None = None,
         consent_mode: Any | None = None,
         custom_hostname: Any | None = None,
+        proxy_path: Any | None = None,
     ) -> dict[str, Any]:
         """Update a tracking site"""
         payload = self._build_payload(
@@ -528,6 +529,7 @@ class ConversionsResource:
             domains=domains,
             consent_mode=consent_mode,
             custom_hostname=custom_hostname,
+            proxy_path=proxy_path,
         )
         return self._client._patch("/v1/tracking-sites/{siteId}", data=payload)
 
@@ -1365,6 +1367,7 @@ class ConversionsResource:
         domains: list[str] | None = None,
         consent_mode: Any | None = None,
         custom_hostname: Any | None = None,
+        proxy_path: Any | None = None,
     ) -> dict[str, Any]:
         """Update a tracking site (async)"""
         payload = self._build_payload(
@@ -1372,6 +1375,7 @@ class ConversionsResource:
             domains=domains,
             consent_mode=consent_mode,
             custom_hostname=custom_hostname,
+            proxy_path=proxy_path,
         )
         return await self._client._apatch("/v1/tracking-sites/{siteId}", data=payload)
 

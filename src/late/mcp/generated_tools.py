@@ -30840,18 +30840,22 @@ def register_generated_tools(mcp, _get_client):
         domains: list[str] | None = None,
         consent_mode: Literal["eu_opt_in", "opt_in", "opt_out"] | None = None,
         custom_hostname: str | None = None,
+        proxy_path: str | None = None,
     ) -> str:
         """Update a tracking site
 
-        Changes the site's name, domains, consent mode or custom subdomain. Send at least one field.
+        Changes the site's name, domains, consent mode, custom subdomain or own-domain path. Send at least one field.
 
         `customHostname` sets a subdomain of the site, such as `t.brand.com`; create the CNAME in `customHostname.dnsRecord`. The snippet switches to it once its status is `active`. `null` removes it.
+
+        `proxyPath` serves the tag from a path of the site itself, such as `brand.com/zt`, through a proxy on your server. The response's `proxy.secret` signs what the proxy forwards. `null` removes it.
 
         Args:
             name
             domains: Hosts allowed to send events, such as `brand.com`. Events from any other origin are dropped.
             consent_mode
-            custom_hostname: A subdomain of one of the site's domains, never the domain itself. `null` removes it."""
+            custom_hostname: A subdomain of one of the site's domains, never the domain itself. `null` removes it.
+            proxy_path: The path your server forwards to the collector, such as `/zt`. `null` removes it."""
         client = _get_client()
         try:
             response = client.conversions.update_tracking_site(
@@ -30859,6 +30863,7 @@ def register_generated_tools(mcp, _get_client):
                 domains=domains,
                 consent_mode=consent_mode,
                 custom_hostname=custom_hostname,
+                proxy_path=proxy_path,
             )
             return _format_response(response)
         except Exception as e:
