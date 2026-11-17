@@ -25493,6 +25493,7 @@ def register_generated_tools(mcp, _get_client):
         purpose: Literal["notifications"] | None = None,
         expected_platform_user_id: str | None = None,
         expected_username: str | None = None,
+        expected_phone_number: str | None = None,
         force_reauth: bool = False,
         allow_no_location: bool = False,
         redirect_url: str | None = None,
@@ -25567,6 +25568,9 @@ def register_generated_tools(mcp, _get_client):
                 expected_username: Only connect if the authorized account's handle is this one (case-insensitive, a leading @ is ignored). Otherwise the flow ends with `error=account_mismatch` and `error_message` naming the handle that was authorized, and nothing is written.
 
         Same coverage and transport as expectedPlatformUserId; when both are sent, both must match. Use this on a first connection, where you hold the handle the user typed but no Zernio id yet.
+                expected_phone_number: WhatsApp with `signup=hosted` only; ignored on other flows. The number (E.164) the user must connect. If they pick a different number in Meta's popup, the hosted page ends with a 409 `NUMBER_MISMATCH` naming the number they picked, and nothing is saved.
+
+        Use it to reconnect a known number safely. For a number bought from Zernio, the hosted page already expects that number and this value is ignored.
                 force_reauth: Instagram Login only (the default loginMethod); ignored elsewhere. Makes Instagram show its login page and ask for the credentials of the account to connect, even when another Instagram account is logged in on the device or app. Also hides the Facebook login option on that page.
 
         Use it when the person connecting manages several Instagram accounts on one phone: otherwise Instagram logs in, and converts to a professional account, whichever account is active, before any consent screen. Pair it with expectedUsername to also refuse a wrong account at the end.
@@ -25786,6 +25790,7 @@ def register_generated_tools(mcp, _get_client):
                 purpose=purpose,
                 expected_platform_user_id=expected_platform_user_id,
                 expected_username=expected_username,
+                expected_phone_number=expected_phone_number,
                 force_reauth=force_reauth,
                 allow_no_location=allow_no_location,
                 redirect_url=redirect_url,
