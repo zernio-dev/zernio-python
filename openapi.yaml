@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.647.1"
+  version: "1.648.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -1714,7 +1714,7 @@ components:
           items: { type: object, properties: { id: { type: string, enum: [enable_imap] }, text: { type: string }, url: { type: string, format: uri } } }
         reconnectCause: { type: [string, "null"] }
         reason: { type: [string, "null"] }
-        unsupportedReason: { type: [string, "null"], enum: [proton_requires_bridge, null] }
+        unsupportedReason: { type: [string, "null"], enum: [proton_requires_bridge, forwarding_only, null], description: 'proton_requires_bridge: Proton Mail only works through its local bridge. forwarding_only: the domain forwards mail (Cloudflare Email Routing) and stores none, so connect the mailbox it forwards to.' }
         appPasswordFallback:
           type: object
           description: 'Google only: Gmail over IMAP with an app password, for accounts whose admin blocks Google sign-in for other apps.'
