@@ -18,7 +18,7 @@ from fastmcp.server.transforms.search import BM25SearchTransform
 from sentry_sdk.transport import Transport
 
 from late.client.exceptions import LateAPIError
-from late.mcp import telemetry
+from late.mcp import telemetry, user_agent
 from late.mcp.telemetry import (
     ServerErrorAccessLogFilter,
     ToolTelemetryMiddleware,
@@ -459,3 +459,59 @@ def test_access_lines_survive_only_for_server_errors(status_code, kept) -> None:
     )
 
     assert ServerErrorAccessLogFilter().filter(record) is kept
+
+
+async def test_a_call_logs_the_user_and_the_full_user_agent_of_its_caller(
+    caplog, monkeypatch
+) -> None:
+    caplog.set_level(logging.INFO, logger="late.mcp.tools")
+    token = AccessToken(
+        token="sk_live",
+        client_id="zernio",
+        scopes=[],
+        claims={"resolved_by": "cache", "waited_ms": 0, "user_id": "u" * 24},
+    )
+    monkeypatch.setattr(telemetry, "get_access_token", lambda: token)
+    monkeypatch.setattr(
+        user_agent, "get_http_headers", lambda: {"user-agent": "Cursor/1.7.0 (linux)"}
+    )
+
+    async with Client(_server()) as client:
+        await client.call_tool("fine", {})
+
+    [line] = _logged(caplog)
+    assert line["user_id"] == "u" * 24
+    assert line["user_agent"] == "Cursor/1.7.0 (linux)"
+    assert line["client"] == "Cursor"
+
+
+async def test_a_call_without_a_known_user_logs_no_user_id(caplog) -> None:
+    caplog.set_level(logging.INFO, logger="late.mcp.tools")
+
+    async with Client(_server()) as client:
+        await client.call_tool("fine", {})
+
+    [line] = _logged(caplog)
+    assert "user_id" not in line
+    assert "user_agent" not in line
+
+
+async def test_sentry_names_the_user_on_the_transaction_and_its_errors_only(
+    sentry_events, monkeypatch
+) -> None:
+    token = AccessToken(
+        token="sk_live",
+        client_id="zernio",
+        scopes=[],
+        claims={"resolved_by": "upstream", "waited_ms": 0, "user_id": "u" * 24},
+    )
+    monkeypatch.setattr(telemetry, "get_access_token", lambda: token)
+
+    async with Client(_server()) as client:
+        await client.call_tool("bug", {}, raise_on_error=False)
+
+    [transaction] = sentry_events.payloads("transaction")
+    [error] = sentry_events.payloads("event")
+    assert transaction["user"]["id"] == "u" * 24
+    assert error["user"]["id"] == "u" * 24
+    assert sentry_sdk.get_isolation_scope()._user is None

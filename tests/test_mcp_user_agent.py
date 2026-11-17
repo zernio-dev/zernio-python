@@ -124,3 +124,9 @@ def test_docs_fetch_sends_the_mcp_user_agent(monkeypatch):
     server._get_docs_content()
 
     assert route.calls.last.request.headers["User-Agent"] == "zernio-mcp (mcp; Cursor)"
+
+
+def test_the_full_calling_user_agent_is_capped(monkeypatch):
+    _incoming(monkeypatch, "/mcp", "Agent/1.0 " + "x" * 500)
+
+    assert user_agent.calling_user_agent() == ("Agent/1.0 " + "x" * 500)[:200]

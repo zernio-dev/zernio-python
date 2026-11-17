@@ -93,6 +93,9 @@ _VERIFY_TIMEOUT = 10.0
 _VERIFIED_AT: OrderedDict[str, float] = OrderedDict()
 _VERIFIED_CACHE_LOCK = threading.Lock()
 _VERIFIED_CACHE_MAX = 10_000
+# sha256(token) -> the Zernio user id the verify answer named, so a grant served
+# from cache still says whose token it is.
+_USER_ID_BY_TOKEN: OrderedDict[str, str] = OrderedDict()
 _FRESH_TTL_SECONDS = 600.0
 _VERIFY_KEEPALIVE_SECONDS = 60.0
 _IN_FLIGHT: dict[str, "asyncio.Task[Verification]"] = {}
@@ -159,6 +162,24 @@ def _touch(token_key: str) -> None:
 def _forget(token_key: str) -> None:
     with _VERIFIED_CACHE_LOCK:
         _VERIFIED_AT.pop(token_key, None)
+        _USER_ID_BY_TOKEN.pop(token_key, None)
+
+
+def _remember_user_id(token_key: str, user_id: str) -> None:
+    with _VERIFIED_CACHE_LOCK:
+        _USER_ID_BY_TOKEN[token_key] = user_id
+        _USER_ID_BY_TOKEN.move_to_end(token_key)
+        while len(_USER_ID_BY_TOKEN) > _VERIFIED_CACHE_MAX:
+            _USER_ID_BY_TOKEN.popitem(last=False)
+
+
+def _user_id_in(response: httpx.Response) -> str | None:
+    try:
+        body = response.json()
+    except ValueError:
+        return None
+    user_id = body.get("userId") if isinstance(body, dict) else None
+    return user_id if isinstance(user_id, str) and user_id else None
 
 
 def forget_rejected_token(token: str) -> None:
@@ -205,6 +226,9 @@ async def verify_late_api_key(
             await client.aclose()
 
     verdict = _classify(response.status_code)
+    user_id = _user_id_in(response) if response.status_code == 200 else None
+    if user_id:
+        _remember_user_id(token_cache_key(api_key), user_id)
     if verdict is Verification.UNKNOWN:
         logger.warning(
             "Zernio token verification inconclusive: HTTP %s",
@@ -283,11 +307,18 @@ class ZernioTokenVerifier(TokenVerifier):
     def _grant(
         self, token: str, *, resolved_by: str, waited_ms: int = 0
     ) -> AccessToken:
+        claims: dict[str, str | int] = {
+            "resolved_by": resolved_by,
+            "waited_ms": waited_ms,
+        }
+        user_id = _USER_ID_BY_TOKEN.get(token_cache_key(token))
+        if user_id:
+            claims["user_id"] = user_id
         return AccessToken(
             token=token,
             client_id="zernio",
             scopes=list(OAUTH_SCOPES),
-            claims={"resolved_by": resolved_by, "waited_ms": waited_ms},
+            claims=claims,
         )
 
 
