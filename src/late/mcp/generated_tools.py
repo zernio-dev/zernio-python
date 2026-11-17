@@ -13466,7 +13466,7 @@ def register_generated_tools(mcp, _get_client):
         name: str,
         account_id: str,
         ad_account_id: str,
-        level: Literal["campaign", "adset", "ad"],
+        level: Literal["campaign", "adset", "ad", "keyword", "search_term"],
         conditions: dict[str, Any] | None,
         actions: list[dict[str, Any]] | None,
         campaign_ids: list[str] | None = None,
@@ -13479,13 +13479,13 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Create an ad rule
 
-        Creates a rule that checks the campaigns or ad sets of one ad account on a schedule and acts on each one that meets every condition.
+        Creates a rule that checks the campaigns, ad sets, ads, keywords or search terms of one ad account on a schedule and acts on each one that meets every condition.
 
-        Rules support Meta, Google, TikTok, LinkedIn, Pinterest, X and Reddit ads connections. Use `POST /v1/ads/rules/{ruleId}/preview` to see what a rule would match before enabling it.
+        Rules support Meta, Google, TikTok, LinkedIn, Pinterest, X and Reddit ads connections. Keyword and search term rules are Google only. Use `POST /v1/ads/rules/{ruleId}/preview` to see what a rule would match before enabling it.
 
         ### Evaluation
 
-        Each campaign or ad set is evaluated on its own, over the ad account's calendar days, from the metrics Zernio syncs.
+        Each object is evaluated on its own, over the ad account's calendar days. Campaigns, ad sets and ads read the metrics Zernio syncs; keywords and search terms are summed from the daily history Zernio keeps of them.
 
         ### Actions
 
@@ -13495,15 +13495,11 @@ def register_generated_tools(mcp, _get_client):
         - `activate`
         - `adjust_budget`
 
+        A keyword rule can notify and pause; a search term rule only notifies.
+
         ### Cooldown
 
-        After acting on an object, the rule leaves that object alone for `cooldownMinutes`. A rule that pauses, activates or adjusts budgets needs a cooldown at least as long as its schedule.
-
-        ### How `activate` works
-
-        `activate` only reactivates objects a rule paused, never ones you paused yourself, and only once the cooldown has passed since that pause.
-
-        If you reactivate and pause such an object ...
+        After acting on an object, the rule leaves that object alone for `cooldownMinutes`. A rule that pauses, activates or adjusts budgets needs a cooldown at ...
 
         Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit
 
@@ -13512,7 +13508,7 @@ def register_generated_tools(mcp, _get_client):
             account_id: The ads connection (account ID from `GET /v1/accounts`). (required)
             ad_account_id: Platform ad account ID, from `GET /v1/ads/accounts`. (required)
             level: (required)
-            campaign_ids: Only check these platform campaign IDs (or their ad sets). Leave out to check the whole ad account.
+            campaign_ids: Only check these platform campaign IDs (or what sits in them). Leave out to check the whole ad account.
             filters: Each item is an object with keys: field (one of: name, campaign_name, adset_name, goal; required) - The object's own name, its campaign's or ad set's name, or the campaign goal (objective) as the platform reports it.; op (one of: contains, not_contains, equals, not_equals, starts_with; required); value (string, required)
             groups: Each item is an object with keys: name (string, required) - Unique in the rule, ignoring case.; filters (list of objects with keys field, op, value, required)
             lifecycle: Object with keys: confirmChecks (integer) - Matching runs in a row before acting. Defaults to 1.; hold (object with keys all) - Keeps an open alert open after the conditions stop matching.; critical (object with keys all) - Marks an open alert critical.
@@ -13708,7 +13704,8 @@ def register_generated_tools(mcp, _get_client):
     )
     def ad_rules_update_ad_rule(
         name: str | None = None,
-        level: Literal["campaign", "adset", "ad"] | None = None,
+        level: Literal["campaign", "adset", "ad", "keyword", "search_term"]
+        | None = None,
         campaign_ids: list[str] | None = None,
         filters: list[dict[str, Any]] | None = None,
         groups: list[dict[str, Any]] | None = None,
@@ -16697,7 +16694,7 @@ def register_generated_tools(mcp, _get_client):
             name
             status
             trigger: Object with keys: type (string, required); every (one of: 15m, 30m, 1h, 3h, 6h, 12h, 1d) - Run every interval. Send this or `times`, not both.; times (list of objects with keys days, at) - Set weekly times. Send this or `every`, not both.; startsAt (string) - Runs from this time on.; endsAt (string) - Stops running after this time. Must be after `startsAt`.; quietHours (object with keys from, to) - A daily window with no checks. It may wrap past midnight, such as `22:00` to `06:00`.
-            subjects: Object with keys: each (one of: campaign, adset, ad; required) - The objects judged one by one.; adAccounts (list of objects with keys accountId, adAccountId, required) - The ad account to check. One per ad rule, and an edit cannot move it to another.; campaignIds (list of string) - Only these platform campaigns or their ad sets and ads. Leave out to check the whole ad account.; filters (list of objects with keys field, op, value) - All must hold.; groups (list of objects with keys name, filters) - Judges campaigns together (campaign rules only): each group's numbers are summed and its rates computed on the totals, and a matching group acts on each of ...
+            subjects: Object with keys: each (one of: campaign, adset, ad, keyword, search_term; required) - The objects judged one by one.; adAccounts (list of objects with keys accountId, adAccountId, required) - The ad account to check. One per ad rule, and an edit cannot move it to another.; campaignIds (list of string) - Only these platform campaigns or their ad sets and ads. Leave out to check the whole ad account.; filters (list of objects with keys field, op, value) - All must hold.; groups (list of objects with keys name, filters) - Judges campaigns together (campaign rules only): each group's numbers are summed and its rates computed on the totals, and a matching group acts on each of ...
             filter: Object with keys: field (string, required) - A fact name from the catalog.; op (one of: equals, not_equals, contains, not_contains, starts_with, ends_with, exists, not_exists, matches, greater_than, less_than, greater_or_equal, less_or_equal, before, after, has_tag, not_has_tag, is_true, is_false; required); value (string or number, required)
             conditions: Object with keys: all (list of objects with keys metric, window, op, value, compareTo, of, required)
             alert: Object with keys: confirmChecks (integer); hold (object with keys all); critical (object with keys all)

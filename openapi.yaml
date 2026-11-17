@@ -10851,7 +10851,7 @@ components:
           properties:
             id: { type: string, description: Zernio ad rule ID. }
             name: { type: string }
-            level: { type: string, enum: [campaign, adset, ad], description: 'Whether the rule evaluates campaigns, ad sets or ads.' }
+            level: { type: string, enum: [campaign, adset, ad, keyword, search_term], description: 'Whether the rule evaluates campaigns, ad sets, ads, Google keywords or Google search terms.' }
             platformAdAccountId: { type: string, description: Platform-native ad account ID the rule watches. }
         run:
           type: object
@@ -19801,8 +19801,19 @@ components:
         builtIn: { type: boolean, description: 'One of the formulas every team has (`cac_percent`, `cost_per_sale`, `cost_per_qualified_lead`, `lead_to_sale`, `qualified_rate`). Setting the same key replaces it for your team.' }
     AdRuleLevel:
       type: string
-      enum: [campaign, adset, ad]
-      description: Whether the rule checks campaigns, ad sets or single ads. Each one is evaluated on its own.
+      enum: [campaign, adset, ad, keyword, search_term]
+      description: |
+        Whether the rule checks campaigns, ad sets, single ads, Google keywords or Google search terms. Each one is evaluated on its own.
+
+        `keyword` and `search_term` read Google Search, on Google Ads accounts only. A keyword's id is `<adGroupId>~<criterionId>`, as `PATCH /v1/ads/keywords/{keywordId}` takes it. A search term is one per ad group, its id `<adGroupId>~<term>`.
+
+        - They read a daily history Zernio fetches from Google. A day keeps its 50,000 rows that spent most.
+        - Every daily window works, `today` included: today is refreshed at most once an hour.
+        - A new rule's first runs load its days a few at a time, and fail until all are in.
+        - Paused keywords are not judged.
+        - Google lists only what showed at least once, so `impressions` takes `>` or `>=`, never `<` or `<=`.
+
+        They take `spend`, `impressions`, `clicks`, `conversions`, `ctr`, `cpc`, `cpm`, `cpa` and `roas` over whole days, no `usual`, `of`, `top` or `bottom`, and `compareTo` only as `campaign`. A keyword rule can `notify` or `pause`; a search term rule only notifies.
     AdRuleCondition:
       type: object
       required: [metric, window, op, value]
@@ -19873,6 +19884,8 @@ components:
             On an hourly window, `compareTo` is `usual` or `usual_deviation`, or for `ctr`, `cpc` and `cpm` a window of full days ending by yesterday and starting at most 35 days ago, read from the same hourly totals.
 
             For example, `cpc` over `last_complete_hour` `>=` 5 against `last_30d` means the last hour's clicks cost 5 times their 30-day price.
+
+            `campaign`, on `keyword` and `search_term` rules only, divides by the object's campaign over the same window, from the synced campaign totals. `cpc` `>=` 5 against `campaign` means a click costs 5 times the campaign's average; `spend` `>=` 0.2 means a fifth of the campaign's spend.
           example: previous_period
         of:
           type: string
@@ -20059,7 +20072,10 @@ components:
     AdRuleFilters:
       type: array
       maxItems: 10
-      description: 'Narrows the objects the rule checks. Every filter must hold. A campaign rule reads `name`, `campaign_id`, `goal`, `days_live`, `days_since_change`, `budget_level` and `channel_type`; an ad set rule all but `days_since_change`, plus `campaign_name` and `adset_id`; an ad rule also `adset_name` and `ad_id`.'
+      description: |
+        Narrows the objects the rule checks. Every filter must hold. A campaign rule reads `name`, `campaign_id`, `goal`, `days_live`, `days_since_change`, `budget_level` and `channel_type`; an ad set rule all but `days_since_change`, plus `campaign_name` and `adset_id`; an ad rule also `adset_name` and `ad_id`.
+
+        A keyword rule reads `name` (the keyword text), `campaign_name`, `adset_name`, `campaign_id`, `adset_id` and `match_type`. A search term rule reads those (`name` is the term) plus `search_term_status` and `blocked_by_negative`.
       items:
         oneOf:
           - type: object
@@ -20116,6 +20132,30 @@ components:
               change: { type: string, enum: [budget, bidding, status, goal] }
               op: { type: string, enum: ['>=', '<'] }
               value: { type: integer, minimum: 1, maximum: 27 }
+          - type: object
+            title: Match type
+            required: [field, op, values]
+            description: 'Picks (`in`) or leaves out (`not_in`) keywords by match type, or search terms by the match type of the keyword that matched them. Keyword and search term rules only.'
+            properties:
+              field: { type: string, enum: [match_type] }
+              op: { type: string, enum: [in, not_in] }
+              values: { type: array, minItems: 1, maxItems: 3, items: { type: string, enum: [EXACT, PHRASE, BROAD] } }
+          - type: object
+            title: Search term status
+            required: [field, op, values]
+            description: 'Picks (`in`) or leaves out (`not_in`) search terms by Google''s status: added as a keyword, excluded as a negative, both, or neither. Search term rules only.'
+            properties:
+              field: { type: string, enum: [search_term_status] }
+              op: { type: string, enum: [in, not_in] }
+              values: { type: array, minItems: 1, maxItems: 4, items: { type: string, enum: [ADDED, EXCLUDED, ADDED_EXCLUDED, NONE] } }
+          - type: object
+            title: Blocked by a negative
+            required: [field, op, value]
+            description: 'Whether a negative keyword of the account now stops the search term: on its ad group, its campaign, or a shared list applied to its campaign. `false` leaves out terms you already excluded. Search term rules only.'
+            properties:
+              field: { type: string, enum: [blocked_by_negative] }
+              op: { type: string, enum: [equals] }
+              value: { type: boolean }
     AdRuleSchedule:
       type: object
       description: 'Either `everyMinutes` or `times`. Sending a schedule replaces the rule''s whole timing. Without one, a new rule runs every 60 minutes.'
@@ -20322,13 +20362,37 @@ components:
             field: { type: string, const: channel_type }
             op: { type: string, enum: [in, not_in] }
             values: { type: array, minItems: 1, maxItems: 12, items: { type: string, enum: [SEARCH, DISPLAY, SHOPPING, HOTEL, VIDEO, MULTI_CHANNEL, LOCAL, SMART, PERFORMANCE_MAX, LOCAL_SERVICES, TRAVEL, DEMAND_GEN] } }
+        - type: object
+          required: [field, op, values]
+          additionalProperties: false
+          description: 'Picks or leaves out keywords by match type, or search terms by the match type of the keyword that matched them. Keyword and search term subjects only.'
+          properties:
+            field: { type: string, const: match_type }
+            op: { type: string, enum: [in, not_in] }
+            values: { type: array, minItems: 1, maxItems: 3, items: { type: string, enum: [EXACT, PHRASE, BROAD] } }
+        - type: object
+          required: [field, op, values]
+          additionalProperties: false
+          description: 'Picks or leaves out search terms by Google''s status: added as a keyword, excluded as a negative, both, or neither. Search term subjects only.'
+          properties:
+            field: { type: string, const: search_term_status }
+            op: { type: string, enum: [in, not_in] }
+            values: { type: array, minItems: 1, maxItems: 4, items: { type: string, enum: [ADDED, EXCLUDED, ADDED_EXCLUDED, NONE] } }
+        - type: object
+          required: [field, op, value]
+          additionalProperties: false
+          description: 'Whether a negative keyword on the ad group, the campaign or a shared list applied to it now stops the search term. Search term subjects only.'
+          properties:
+            field: { type: string, const: blocked_by_negative }
+            op: { type: string, const: equals }
+            value: { type: boolean }
     AutomationSubjects:
       type: object
       required: [each, adAccounts]
       description: What an ad rule checks, and where.
       additionalProperties: false
       properties:
-        each: { type: string, enum: [campaign, adset, ad], description: The objects judged one by one. }
+        each: { type: string, enum: [campaign, adset, ad, keyword, search_term], description: The objects judged one by one. }
         adAccounts:
           type: array
           minItems: 1
@@ -20827,7 +20891,7 @@ components:
             automationId: { type: string }
             automationName: { type: string }
             checkId: { type: string }
-            subject: { type: object, properties: { kind: { type: string, enum: [campaign, adset, ad] }, id: { type: string }, name: { type: [string, 'null'] } } }
+            subject: { type: object, properties: { kind: { type: string, enum: [campaign, adset, ad, keyword, search_term] }, id: { type: string }, name: { type: [string, 'null'] } } }
             platform: { type: string }
             adAccount: { type: object, properties: { accountId: { type: string }, adAccountId: { type: string } } }
             currency: { type: [string, 'null'] }
@@ -20868,7 +20932,7 @@ components:
               subject:
                 type: object
                 properties:
-                  kind: { type: string, enum: [campaign, adset, ad] }
+                  kind: { type: string, enum: [campaign, adset, ad, keyword, search_term] }
                   id: { type: string, description: Platform ID. }
                   name: { type: string }
                   campaignId: { type: [string, 'null'] }
@@ -21173,7 +21237,7 @@ components:
           type: object
           required: [kind, id, name]
           properties:
-            kind: { type: string, enum: [campaign, adset, ad] }
+            kind: { type: string, enum: [campaign, adset, ad, keyword, search_term] }
             id: { type: string }
             name: { type: [string, 'null'] }
         type:
@@ -21282,7 +21346,7 @@ components:
                 type: object
                 required: [kind, id, name, campaignId]
                 properties:
-                  kind: { type: string, enum: [campaign, adset, ad] }
+                  kind: { type: string, enum: [campaign, adset, ad, keyword, search_term] }
                   id: { type: string }
                   name: { type: string }
                   campaignId: { type: [string, 'null'] }
@@ -21330,9 +21394,10 @@ components:
       type: object
       required: [id, name, campaignId, matched, conditions]
       properties:
-        id: { type: string, description: Platform ID of the campaign or ad set. }
-        name: { type: string }
+        id: { type: string, description: 'Platform ID of the campaign, ad set or ad. A keyword is `{adGroupId}~{criterionId}`, a search term `{adGroupId}~{term}`.' }
+        name: { type: string, description: "The object's name: the keyword text or the search term." }
         campaignId: { type: [string, "null"] }
+        campaignName: { type: [string, "null"], description: Absent on runs recorded before November 2026. }
         matched: { type: boolean, description: True when every condition holds. }
         group: { type: string, description: "For a rule with groups: the group this campaign was judged in. `matched` and `conditions` are the group's." }
         conditions:
@@ -21414,7 +21479,7 @@ components:
                 accountId: { type: string }
                 platform: { type: string }
                 platformAdAccountId: { type: string }
-                level: { type: string, enum: [campaign, adset] }
+                level: { type: string, enum: [campaign, adset, ad, keyword, search_term] }
             today: { type: string, format: date }
             timezone: { type: string }
             timezoneAssumed: { type: boolean }
@@ -21422,7 +21487,9 @@ components:
             hourlyThrough: { type: [string, "null"], format: date-time, description: "Where the run's hourly windows ended. Absent on runs recorded before November 2026." }
             matched:
               type: array
+              description: The matched objects, at most 200. `matchedTotal` has the full count.
               items: { $ref: '#/components/schemas/AdRuleObjectEvaluation' }
+            matchedTotal: { type: integer, description: 'How many objects matched, including those past the 200 recorded. Absent on runs recorded before November 2026.' }
             actions:
               type: array
               items:
@@ -78714,7 +78781,7 @@ paths:
                     items:
                       type: object
                       properties:
-                        each: { type: string, enum: [campaign, adset, ad] }
+                        each: { type: string, enum: [campaign, adset, ad, keyword, search_term] }
                         platforms: { type: array, items: { type: string } }
                         metrics: { type: array, items: { type: object, properties: { metric: { type: string }, platforms: { type: array, items: { type: string } } } } }
                         steps: { type: array, items: { type: object, properties: { type: { type: string }, platforms: { type: array, items: { type: string } } } } }
@@ -80138,13 +80205,13 @@ paths:
       x-platforms: [meta, google, tiktok, linkedin, pinterest, x, reddit]
       summary: Create an ad rule
       description: |
-        Creates a rule that checks the campaigns or ad sets of one ad account on a schedule and acts on each one that meets every condition.
+        Creates a rule that checks the campaigns, ad sets, ads, keywords or search terms of one ad account on a schedule and acts on each one that meets every condition.
 
-        Rules support Meta, Google, TikTok, LinkedIn, Pinterest, X and Reddit ads connections. Use `POST /v1/ads/rules/{ruleId}/preview` to see what a rule would match before enabling it.
+        Rules support Meta, Google, TikTok, LinkedIn, Pinterest, X and Reddit ads connections. Keyword and search term rules are Google only. Use `POST /v1/ads/rules/{ruleId}/preview` to see what a rule would match before enabling it.
 
         ### Evaluation
 
-        Each campaign or ad set is evaluated on its own, over the ad account's calendar days, from the metrics Zernio syncs.
+        Each object is evaluated on its own, over the ad account's calendar days. Campaigns, ad sets and ads read the metrics Zernio syncs; keywords and search terms are summed from the daily history Zernio keeps of them.
 
         ### Actions
 
@@ -80153,6 +80220,8 @@ paths:
         - `pause`
         - `activate`
         - `adjust_budget`
+
+        A keyword rule can notify and pause; a search term rule only notifies.
 
         ### Cooldown
 
@@ -80182,7 +80251,7 @@ paths:
                   minItems: 1
                   maxItems: 100
                   items: { type: string }
-                  description: Only check these platform campaign IDs (or their ad sets). Leave out to check the whole ad account.
+                  description: Only check these platform campaign IDs (or what sits in them). Leave out to check the whole ad account.
                 filters: { $ref: '#/components/schemas/AdRuleFilters' }
                 groups: { $ref: '#/components/schemas/AdRuleGroups' }
                 lifecycle: { $ref: '#/components/schemas/AdRuleLifecycle' }
