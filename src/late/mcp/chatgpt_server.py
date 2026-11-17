@@ -25,6 +25,7 @@ from pydantic import BaseModel, Field
 
 from late.mcp.auth import build_auth_provider, forget_rejected_token
 from late.mcp.user_agent import mcp_user_agent
+from late.mcp.well_formed_output import WellFormedOutputMiddleware
 
 API_BASE = (
     os.getenv("ZERNIO_BASE_URL")
@@ -530,6 +531,7 @@ chatgpt_mcp = FastMCP(
     website_url="https://zernio.com",
     auth=build_auth_provider(scopes=CHATGPT_SCOPES),
 )
+chatgpt_mcp.add_middleware(WellFormedOutputMiddleware())
 
 
 @chatgpt_mcp.tool(

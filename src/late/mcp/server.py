@@ -55,6 +55,7 @@ from .resources import register_resources
 from .tool_definitions import TOOL_DEFINITIONS
 from .tool_guidance import ToolGuidanceMiddleware
 from .user_agent import mcp_user_agent
+from .well_formed_output import WellFormedOutputMiddleware
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -372,6 +373,7 @@ details.
     list_page_size=_TOOLS_PAGE_SIZE,
 )
 
+mcp.add_middleware(WellFormedOutputMiddleware())
 mcp.add_middleware(
     ToolGuidanceMiddleware(
         search_tool=_SEARCH_TOOL,
