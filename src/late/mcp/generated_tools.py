@@ -29523,6 +29523,8 @@ def register_generated_tools(mcp, _get_client):
             "whatsapp",
             "slack",
             "sms",
+            "rcs",
+            "tiktok",
             "line",
             "wechat",
         ]
@@ -29592,6 +29594,8 @@ def register_generated_tools(mcp, _get_client):
             "whatsapp",
             "slack",
             "sms",
+            "rcs",
+            "tiktok",
             "line",
             "wechat",
         ]
