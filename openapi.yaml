@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.632.0"
+  version: "1.633.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -20714,7 +20714,7 @@ components:
         id: { type: string }
         automationId: { type: string }
         checkedAt: { type: string, format: date-time }
-        outcome: { type: string, enum: [triggered, cooldown, no_match, failed] }
+        outcome: { type: string, enum: [triggered, cooldown, daily_limit, no_match, failed, paused] }
         evaluated: { type: integer, description: Objects judged. }
         subjects:
           type: array
@@ -21388,12 +21388,14 @@ components:
         ranAt: { type: string, format: date-time }
         outcome:
           type: string
-          enum: [triggered, cooldown, no_match, failed]
+          enum: [triggered, cooldown, daily_limit, no_match, failed, paused]
           description: |
             Result of the rule run:
 
             - `triggered`: the rule acted on at least one object (`error` is set if the webhook could not be sent afterwards).
             - `cooldown`: objects matched but all were in cooldown.
+            - `daily_limit`: objects matched but the rule had used its `maxChangesPerDay`.
+            - `paused`: the run did not happen: the team used its free automation runs with no payment method on file (see `error`).
             - `no_match`: nothing matched.
             - `failed`: the metrics could not be read, every action failed, or the webhook of a notify-only rule could not be sent (see `error`).
         objectsEvaluated: { type: integer }
