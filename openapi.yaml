@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.643.0"
+  version: "1.644.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -15416,6 +15416,7 @@ components:
         - scopes
         - syncContacts
         - logMessages
+        - logDeliveryStatus
         - reportDeals
         - useDealsAsResults
       properties:
@@ -15442,6 +15443,11 @@ components:
         logMessages:
           type: boolean
           description: Whether Zernio logs inbox messages on HubSpot contact timelines.
+        logDeliveryStatus:
+          type: boolean
+          description: >-
+            Whether Zernio keeps the delivery status (sent, delivered, read, played, failed) of logged outgoing messages
+            up to date on their HubSpot timeline entries. Only applies while `logMessages` is on. Defaults to `true`.
         reportDeals:
           type: boolean
           description: Whether Zernio sends closed-won deals as Purchase events to the profile's event destinations.
@@ -53735,6 +53741,12 @@ paths:
                 logMessages:
                   type: boolean
                   description: Log inbound and outbound inbox messages on the contact's HubSpot timeline.
+                logDeliveryStatus:
+                  type: boolean
+                  description: >-
+                    Add the delivery status of each outgoing WhatsApp, SMS or RCS message to its timeline entry and update
+                    it as the message is delivered, read or fails. A failure shows the reason and its code. Only applies
+                    while `logMessages` is on.
                 reportDeals:
                   type: boolean
                   description: >-

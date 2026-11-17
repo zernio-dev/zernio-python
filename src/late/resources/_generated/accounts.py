@@ -638,6 +638,7 @@ class AccountsResource:
         *,
         sync_contacts: bool | None = None,
         log_messages: bool | None = None,
+        log_delivery_status: bool | None = None,
         report_deals: bool | None = None,
         use_deals_as_results: bool | None = None,
     ) -> dict[str, Any]:
@@ -645,6 +646,7 @@ class AccountsResource:
         payload = self._build_payload(
             sync_contacts=sync_contacts,
             log_messages=log_messages,
+            log_delivery_status=log_delivery_status,
             report_deals=report_deals,
             use_deals_as_results=use_deals_as_results,
         )
@@ -1273,6 +1275,7 @@ class AccountsResource:
         *,
         sync_contacts: bool | None = None,
         log_messages: bool | None = None,
+        log_delivery_status: bool | None = None,
         report_deals: bool | None = None,
         use_deals_as_results: bool | None = None,
     ) -> dict[str, Any]:
@@ -1280,6 +1283,7 @@ class AccountsResource:
         payload = self._build_payload(
             sync_contacts=sync_contacts,
             log_messages=log_messages,
+            log_delivery_status=log_delivery_status,
             report_deals=report_deals,
             use_deals_as_results=use_deals_as_results,
         )
