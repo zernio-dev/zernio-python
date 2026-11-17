@@ -654,6 +654,30 @@ class AccountsResource:
             f"/v1/accounts/{account_id}/hubspot-settings", data=payload
         )
 
+    def get_salesforce_settings(self, account_id: str) -> dict[str, Any]:
+        """Get Salesforce account settings"""
+        return self._client._get(f"/v1/accounts/{account_id}/salesforce-settings")
+
+    def update_salesforce_settings(
+        self,
+        account_id: str,
+        *,
+        sync_contacts: bool | None = None,
+        log_messages: bool | None = None,
+        create_as: str | None = None,
+        log_delivery_status: bool | None = None,
+    ) -> dict[str, Any]:
+        """Update Salesforce account settings"""
+        payload = self._build_payload(
+            sync_contacts=sync_contacts,
+            log_messages=log_messages,
+            create_as=create_as,
+            log_delivery_status=log_delivery_status,
+        )
+        return self._client._patch(
+            f"/v1/accounts/{account_id}/salesforce-settings", data=payload
+        )
+
     def get_stripe_settings(self, account_id: str) -> dict[str, Any]:
         """Get Stripe account settings"""
         return self._client._get(f"/v1/accounts/{account_id}/stripe-settings")
@@ -1289,6 +1313,32 @@ class AccountsResource:
         )
         return await self._client._apatch(
             f"/v1/accounts/{account_id}/hubspot-settings", data=payload
+        )
+
+    async def aget_salesforce_settings(self, account_id: str) -> dict[str, Any]:
+        """Get Salesforce account settings (async)"""
+        return await self._client._aget(
+            f"/v1/accounts/{account_id}/salesforce-settings"
+        )
+
+    async def aupdate_salesforce_settings(
+        self,
+        account_id: str,
+        *,
+        sync_contacts: bool | None = None,
+        log_messages: bool | None = None,
+        create_as: str | None = None,
+        log_delivery_status: bool | None = None,
+    ) -> dict[str, Any]:
+        """Update Salesforce account settings (async)"""
+        payload = self._build_payload(
+            sync_contacts=sync_contacts,
+            log_messages=log_messages,
+            create_as=create_as,
+            log_delivery_status=log_delivery_status,
+        )
+        return await self._client._apatch(
+            f"/v1/accounts/{account_id}/salesforce-settings", data=payload
         )
 
     async def aget_stripe_settings(self, account_id: str) -> dict[str, Any]:

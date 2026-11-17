@@ -212,12 +212,14 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `accounts.get_hub_spot_settings()` | Get HubSpot account settings |
 | `accounts.get_instagram_follow_status()` | Check whether an Instagram user follows the account |
 | `accounts.get_linked_in_mentions()` | Resolve LinkedIn mention |
+| `accounts.get_salesforce_settings()` | Get Salesforce account settings |
 | `accounts.get_slack_settings()` | Get Slack account settings |
 | `accounts.get_stripe_settings()` | Get Stripe account settings |
 | `accounts.get_tik_tok_creator_info()` | Get TikTok creator info |
 | `accounts.update_account()` | Update account |
 | `accounts.update_bluesky_settings()` | Update Bluesky account settings |
 | `accounts.update_hub_spot_settings()` | Update HubSpot account settings |
+| `accounts.update_salesforce_settings()` | Update Salesforce account settings |
 | `accounts.update_slack_settings()` | Update Slack account settings |
 | `accounts.update_stripe_settings()` | Update Stripe account settings |
 | `accounts.delete_account()` | Disconnect account |
@@ -394,6 +396,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `connect.get_pinterest_boards()` | List Pinterest boards |
 | `connect.get_reddit_flairs()` | List subreddit flairs |
 | `connect.get_reddit_subreddits()` | List Reddit subreddits |
+| `connect.get_salesforce_connect_url()` | Get Salesforce OAuth connect URL |
 | `connect.get_shopify_connect_url()` | Get Shopify OAuth connect URL |
 | `connect.get_stripe_connect_url()` | Get Stripe connect URL |
 | `connect.get_subreddit_rules()` | Get subreddit rules |

@@ -280,6 +280,21 @@ class ConnectResource:
         )
         return self._client._get("/v1/connect/hubspot", params=params)
 
+    def get_salesforce_connect_url(
+        self,
+        profile_id: str,
+        *,
+        environment: str | None = "production",
+        redirect_url: str | None = None,
+    ) -> dict[str, Any]:
+        """Get Salesforce OAuth connect URL"""
+        params = self._build_params(
+            profile_id=profile_id,
+            environment=environment,
+            redirect_url=redirect_url,
+        )
+        return self._client._get("/v1/connect/salesforce", params=params)
+
     def get_stripe_connect_url(
         self,
         profile_id: str,
@@ -1673,6 +1688,21 @@ class ConnectResource:
             redirect_url=redirect_url,
         )
         return await self._client._aget("/v1/connect/hubspot", params=params)
+
+    async def aget_salesforce_connect_url(
+        self,
+        profile_id: str,
+        *,
+        environment: str | None = "production",
+        redirect_url: str | None = None,
+    ) -> dict[str, Any]:
+        """Get Salesforce OAuth connect URL (async)"""
+        params = self._build_params(
+            profile_id=profile_id,
+            environment=environment,
+            redirect_url=redirect_url,
+        )
+        return await self._client._aget("/v1/connect/salesforce", params=params)
 
     async def aget_stripe_connect_url(
         self,

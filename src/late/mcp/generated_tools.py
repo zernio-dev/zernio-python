@@ -807,7 +807,7 @@ def register_generated_tools(mcp, _get_client):
                 platform: Filter accounts by platform (e.g. "instagram", "twitter").
                 status: Filter accounts by connection status. `connected` returns healthy accounts; `disconnected` returns accounts that need reconnection (per the same reconnection check surfaced in the dashboard). Omit to return accounts in any status. When combined with page/limit, pagination totals reflect the filtered result set.
                 search: Case-insensitive match on the account username, display name or platform user id. A 24-character hexadecimal value is read as an account id and matches only that exact account. Combine with page/limit to paginate the matches.
-                category: Only accounts of this kind. ads = ad accounts (Meta, Google, LinkedIn, Pinterest, TikTok, X, OpenAI, Reddit, Microsoft), communication = WhatsApp, Telegram, Discord, Slack, iMessage, LINE and WeChat, blogs = Shopify and WordPress, crm = HubSpot, analytics = Google Analytics, social = every other platform.
+                category: Only accounts of this kind. ads = ad accounts (Meta, Google, LinkedIn, Pinterest, TikTok, X, OpenAI, Reddit, Microsoft), communication = WhatsApp, Telegram, Discord, Slack, iMessage, LINE and WeChat, blogs = Shopify and WordPress, crm = HubSpot and Salesforce, analytics = Google Analytics, social = every other platform.
                 sort: Sort an offset-paginated listing (page and limit) by account name, platform, profile name, status (accounts needing a reconnect first when ascending) or connection date. Ties keep the default order: platform, then newest first.
                 order: Direction for `sort`.
                 include_over_limit: When true, includes accounts from over-limit profiles.
@@ -2325,6 +2325,66 @@ def register_generated_tools(mcp, _get_client):
                 log_delivery_status=log_delivery_status,
                 report_deals=report_deals,
                 use_deals_as_results=use_deals_as_results,
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get Salesforce account settings",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def accounts_get_salesforce_settings(account_id: str) -> str:
+        """Get Salesforce account settings
+
+        Read a connected Salesforce org and what Zernio syncs to it.
+
+        Args:
+            account_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.accounts.get_salesforce_settings(account_id=account_id)
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Update Salesforce account settings",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def accounts_update_salesforce_settings(
+        account_id: str,
+        sync_contacts: bool | None = None,
+        log_messages: bool | None = None,
+        create_as: Literal["lead", "contact"] | None = None,
+        log_delivery_status: bool | None = None,
+    ) -> str:
+        """Update Salesforce account settings
+
+        Turn person creation, conversation logging or delivery marks on or off for a connected Salesforce org, or choose whether new people become Leads or Contacts. Send at least one field; omitted fields keep their value. Settings survive reconnecting the same org.
+
+        Args:
+            account_id: (required)
+            sync_contacts: Create a Lead or Contact for an inbox contact that matches nobody by phone (any phone field) or email. A match is linked as it is and never updated.
+            log_messages: Log inbound and outbound inbox messages as one conversation Task per person, channel and day.
+            create_as: What a person new to Salesforce is created as. Leads get Company `[not provided]`.
+            log_delivery_status: Mark sent messages in the transcript as delivered, read or failed."""
+        client = _get_client()
+        try:
+            response = client.accounts.update_salesforce_settings(
+                account_id=account_id,
+                sync_contacts=sync_contacts,
+                log_messages=log_messages,
+                create_as=create_as,
+                log_delivery_status=log_delivery_status,
             )
             return _format_response(response)
         except Exception as e:
@@ -26199,6 +26259,50 @@ def register_generated_tools(mcp, _get_client):
         try:
             response = client.connect.get_hub_spot_connect_url(
                 profile_id=profile_id, redirect_url=redirect_url
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get Salesforce OAuth connect URL",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def connect_get_salesforce_connect_url(
+        profile_id: str,
+        environment: Literal["production", "sandbox"] = "production",
+        redirect_url: str | None = None,
+    ) -> str:
+        """Get Salesforce OAuth connect URL
+
+        Initiates OAuth (authorization code with PKCE) for a Salesforce org. Salesforce is a connect-only CRM platform: inbox contacts are matched to Contacts and Leads, and each day of conversation is logged as a Task.
+
+        The org must have the Zernio Salesforce package installed first: it carries the app Salesforce authorizes. Production orgs install it from `https://login.salesforce.com/packaging/installPackage.apexp?p0=04tfj000000llzZAAQ`, sandboxes from the same path on `test.salesforce.com`. Without it the redirect carries `error=salesforce_package_not_installed`.
+
+        One Salesforce org can be connected per profile. Connecting a different org to a profile that already has one redirects with `error=salesforce_profile_has_org`.
+
+        ### Flow
+
+        1. Redirect the user to `authUrl`.
+        2. After authorization, Salesforce returns the browser to Zernio's internal callback.
+        3. Zernio redirects to `redirect_url` (or the dashboard when omitted).
+
+        On success the redirect carries `connected=salesforce`, ...
+
+        Args:
+            profile_id: Your Zernio profile ID (get from /v1/profiles). (required)
+            environment: Sign in at login.salesforce.com (`production`, also Developer Edition orgs) or test.salesforce.com (`sandbox`).
+            redirect_url: Custom redirect after connection. Must be an absolute http(s) URL or custom app scheme such as `myapp://callback`; relative and unsafe URLs return 400."""
+        client = _get_client()
+        try:
+            response = client.connect.get_salesforce_connect_url(
+                profile_id=profile_id,
+                environment=environment,
+                redirect_url=redirect_url,
             )
             return _format_response(response)
         except Exception as e:

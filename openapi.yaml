@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.644.0"
+  version: "1.645.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -15454,6 +15454,76 @@ components:
         useDealsAsResults:
           type: boolean
           description: Whether closed-won deals count as sales on the ad campaign that brought their contact, in campaign results and ad rules.
+    SalesforceSettings:
+      type: object
+      required:
+        - _id
+        - platform
+        - orgId
+        - orgName
+        - environment
+        - instanceUrl
+        - installedBy
+        - syncContacts
+        - logMessages
+        - createAs
+        - logDeliveryStatus
+        - syncIssue
+      properties:
+        _id:
+          type: string
+          description: Zernio account ID of the Salesforce connection.
+        platform:
+          type: string
+          enum: [salesforce]
+        orgId:
+          type: string
+          description: 18-character Salesforce organization ID.
+        orgName:
+          type: [string, "null"]
+          description: The org's name, when the connected user can read it.
+        environment:
+          type: string
+          enum: [production, sandbox]
+          description: Whether the org was connected through login.salesforce.com or test.salesforce.com.
+        instanceUrl:
+          type: string
+          format: uri
+          description: The org's API host, for example `https://acme.my.salesforce.com`.
+        installedBy:
+          type: [string, "null"]
+          description: Email or username of the Salesforce user who connected the org.
+        syncContacts:
+          type: boolean
+          description: Whether Zernio creates a Lead or Contact (per `createAs`) for an inbox contact that matches nobody by phone or email.
+        logMessages:
+          type: boolean
+          description: >-
+            Whether Zernio logs inbox messages. Each person, channel and UTC day gets one completed Task (subject
+            `WhatsApp conversation · 2026-11-17`) whose Description holds the transcript; a day past 32,000
+            characters continues in a Task marked "(part 2)".
+        createAs:
+          type: string
+          enum: [lead, contact]
+          description: What a person new to Salesforce is created as.
+        logDeliveryStatus:
+          type: boolean
+          description: Whether sent messages in the transcript are marked delivered, read or failed.
+        syncIssue:
+          type: [object, "null"]
+          description: >-
+            Set while the org refuses Zernio's writes for a reason only its admin can fix (field-level security,
+            a validation rule, a duplicate rule); cleared by the next accepted write. The account's health shows it too.
+          required: [code, message, at]
+          properties:
+            code:
+              type: string
+              description: The Salesforce error code, such as `FIELD_CUSTOM_VALIDATION_EXCEPTION`.
+            message:
+              type: string
+            at:
+              type: string
+              format: date-time
     GoogleAnalyticsReport:
       type: object
       description: >-
@@ -15556,7 +15626,7 @@ components:
         _id: { type: string }
         platform:
           type: string
-          enum: [tiktok, instagram, facebook, youtube, linkedin, twitter, threads, pinterest, reddit, bluesky, googlebusiness, telegram, snapchat, discord, slack, whatsapp, shopify, wordpress, wix, linkedinads, metaads, pinterestads, tiktokads, xads, googleads, openaiads, redditads, sms, phone, rcs, whopads, applovinads, google, microsoft, imap, hubspot, webflow, googleanalytics, imessage, tiktokshop, microsoftads, line, wechat, googletagmanager, stripe]
+          enum: [tiktok, instagram, facebook, youtube, linkedin, twitter, threads, pinterest, reddit, bluesky, googlebusiness, telegram, snapchat, discord, slack, whatsapp, shopify, wordpress, wix, linkedinads, metaads, pinterestads, tiktokads, xads, googleads, openaiads, redditads, sms, phone, rcs, whopads, applovinads, google, microsoft, imap, hubspot, salesforce, webflow, googleanalytics, imessage, tiktokshop, microsoftads, line, wechat, googletagmanager, stripe]
         profileId:
           oneOf:
             - type: string
@@ -41351,7 +41421,7 @@ paths:
           schema:
             type: string
             enum: [social, ads, communication, blogs, crm, analytics]
-          description: 'Only accounts of this kind. ads = ad accounts (Meta, Google, LinkedIn, Pinterest, TikTok, X, OpenAI, Reddit, Microsoft), communication = WhatsApp, Telegram, Discord, Slack, iMessage, LINE and WeChat, blogs = Shopify and WordPress, crm = HubSpot, analytics = Google Analytics, social = every other platform.'
+          description: 'Only accounts of this kind. ads = ad accounts (Meta, Google, LinkedIn, Pinterest, TikTok, X, OpenAI, Reddit, Microsoft), communication = WhatsApp, Telegram, Discord, Slack, iMessage, LINE and WeChat, blogs = Shopify and WordPress, crm = HubSpot and Salesforce, analytics = Google Analytics, social = every other platform.'
         - name: sort
           in: query
           schema:
@@ -44625,6 +44695,85 @@ paths:
           description: Profile not found or access denied.
         '503':
           description: HubSpot OAuth is not configured.
+  /v1/connect/salesforce:
+    get:
+      x-resource-group: accounts
+      operationId: getSalesforceConnectUrl
+      tags:
+        - Connect
+      summary: Get Salesforce OAuth connect URL
+      description: |
+        Initiates OAuth (authorization code with PKCE) for a Salesforce org. Salesforce is a connect-only CRM platform: inbox contacts are matched to Contacts and Leads, and each day of conversation is logged as a Task.
+
+        The org must have the Zernio Salesforce package installed first: it carries the app Salesforce authorizes. Production orgs install it from `https://login.salesforce.com/packaging/installPackage.apexp?p0=04tfj000000llzZAAQ`, sandboxes from the same path on `test.salesforce.com`. Without it the redirect carries `error=salesforce_package_not_installed`.
+
+        One Salesforce org can be connected per profile. Connecting a different org to a profile that already has one redirects with `error=salesforce_profile_has_org`.
+
+        ### Flow
+
+        1. Redirect the user to `authUrl`.
+        2. After authorization, Salesforce returns the browser to Zernio's internal callback.
+        3. Zernio redirects to `redirect_url` (or the dashboard when omitted).
+
+        On success the redirect carries `connected=salesforce`, `profileId`, `accountId` and `username`. On failure it carries `error`, `platform=salesforce` and `error_message`.
+
+        Reconnecting the same org and profile updates the stored connection in place and keeps its settings.
+
+        Requested scopes: `api`, `refresh_token`, `id`.
+      security:
+        - bearerAuth: []
+        - connectToken: []
+      parameters:
+        - name: profileId
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Your Zernio profile ID (get from /v1/profiles).
+        - name: environment
+          in: query
+          schema:
+            type: string
+            enum: [production, sandbox]
+            default: production
+          description: Sign in at login.salesforce.com (`production`, also Developer Edition orgs) or test.salesforce.com (`sandbox`).
+        - name: redirect_url
+          in: query
+          schema:
+            type: string
+          description: >-
+            Custom redirect after connection. Must be an absolute http(s) URL or custom app scheme such as
+            `myapp://callback`; relative and unsafe URLs return 400.
+      responses:
+        '200':
+          description: OAuth authorization URL and authenticated state
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - authUrl
+                  - state
+                properties:
+                  authUrl:
+                    type: string
+                    format: uri
+                    description: Salesforce URL to open in the user agent.
+                  state:
+                    type: string
+                    description: Authenticated, expiring OAuth state handled by the callback.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '402':
+          $ref: '#/components/responses/PaymentRequired'
+        '403':
+          description: API key does not have access to this profile, or the key is read-only.
+        '404':
+          description: Profile not found or access denied.
+        '503':
+          description: Salesforce OAuth is not configured.
   /v1/connect/stripe:
     get:
       x-resource-group: accounts
@@ -53771,6 +53920,92 @@ paths:
                     type: string
                   account:
                     $ref: '#/components/schemas/HubSpotSettings'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: Account not found
+  /v1/accounts/{accountId}/salesforce-settings:
+    get:
+      x-resource-group: accounts
+      operationId: getSalesforceSettings
+      tags:
+        - Accounts
+      summary: Get Salesforce account settings
+      description: Read a connected Salesforce org and what Zernio syncs to it.
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Salesforce settings
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  account:
+                    $ref: '#/components/schemas/SalesforceSettings'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: Account not found
+    patch:
+      x-resource-group: accounts
+      operationId: updateSalesforceSettings
+      tags:
+        - Accounts
+      summary: Update Salesforce account settings
+      description: >-
+        Turn person creation, conversation logging or delivery marks on or off for a connected Salesforce org, or
+        choose whether new people become Leads or Contacts. Send at least one field; omitted fields keep their value.
+        Settings survive reconnecting the same org.
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                syncContacts:
+                  type: boolean
+                  description: >-
+                    Create a Lead or Contact for an inbox contact that matches nobody by phone (any phone field) or
+                    email. A match is linked as it is and never updated.
+                logMessages:
+                  type: boolean
+                  description: Log inbound and outbound inbox messages as one conversation Task per person, channel and day.
+                createAs:
+                  type: string
+                  enum: [lead, contact]
+                  description: What a person new to Salesforce is created as. Leads get Company `[not provided]`.
+                logDeliveryStatus:
+                  type: boolean
+                  description: Mark sent messages in the transcript as delivered, read or failed.
+      responses:
+        '200':
+          description: Updated settings
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  account:
+                    $ref: '#/components/schemas/SalesforceSettings'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
