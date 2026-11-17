@@ -152,9 +152,10 @@ _MAX_TOOL_SUGGESTIONS = 3
 # that run their own tool discovery and need full definitions from tools/list.
 _TOOLS_QUERY_PARAM = "tools"
 _ALL_TOOLS = "all"
-# tools/list page size. The default listing fits on one page; `?tools=all` is
-# paginated, and clients follow nextCursor.
-_TOOLS_PAGE_SIZE = 100
+# tools/list page size, as Atlassian's hosted MCP pages its full listing. The
+# default listing fits on one page; `?tools=all` is paginated, and clients
+# follow nextCursor.
+_TOOLS_PAGE_SIZE = 50
 
 
 def _requested_tools() -> list[str] | None:
