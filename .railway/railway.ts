@@ -21,6 +21,8 @@ const VARIABLES: Record<string, string[]> = {
     "SENTRY_DSN",
     "SENTRY_TRACES_SAMPLE_RATE",
     "WEB_CONCURRENCY",
+    // Turns on the MCP App (src/late/mcp/apps): interactive views in Claude and ChatGPT.
+    "ZERNIO_MCP_APPS",
   ],
   "zernio-mcp-dev": ["MCP_PUBLIC_URL", "PORT", "SENTRY_DSN"],
   dev: ["MCP_PUBLIC_URL", "PORT"],

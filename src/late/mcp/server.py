@@ -48,6 +48,7 @@ from mcp.types import INVALID_PARAMS, ToolAnnotations
 from late import Late, PostStatus
 from late.client.exceptions import LateAPIError, LateError, LateRateLimitError
 
+from .apps import APP_TOOLS, apps_enabled, register_apps
 from .auth import build_auth_provider, forget_rejected_token
 from .idempotency import same_arguments_key
 from .media_items import media_item
@@ -150,6 +151,8 @@ _PINNED_TOOLS = [
     "mentions_list_inbox_mentions",
     # Report bugs and missing features to Zernio
     FEEDBACK_TOOL,
+    # MCP Apps display tools, while the ZERNIO_MCP_APPS trial is on
+    *(APP_TOOLS if apps_enabled() else []),
 ]
 
 _SEARCH_TOOL = "search_tools"
@@ -803,8 +806,8 @@ def profiles_delete(profile_id: str) -> str:
 # ============================================================================
 
 
-def _platform_errors(post: Any) -> list[str]:
-    """One "Error (platform): message" line per platform that did not publish.
+def _failed_targets(post: Any) -> list[tuple[str | None, str]]:
+    """(platform, error message) for each platform that did not publish.
 
     A post holds one entry in post.platforms[] per target platform, and each
     entry tracks its own status and errorMessage. The API never populates
@@ -829,8 +832,16 @@ def _platform_errors(post: Any) -> list[str]:
             continue
         message = (target.errorMessage or "").strip()
         if message:
-            errors.append(f"Error ({target.platform or '?'}): {message}")
+            errors.append((target.platform, message))
     return errors
+
+
+def _platform_errors(post: Any) -> list[str]:
+    """One "Error (platform): message" line per platform that did not publish."""
+    return [
+        f"Error ({platform or '?'}): {message}"
+        for platform, message in _failed_targets(post)
+    ]
 
 
 @tool_def("posts_list")
@@ -929,7 +940,6 @@ def posts_create(
     if title:
         params["title"] = title
 
-    # Add media items if provided
     if media_urls:
         urls = [u.strip() for u in media_urls.split(",") if u.strip()]
         media_items = [media_item(url) for url in urls]
@@ -1448,6 +1458,9 @@ try:
 except ImportError:
     # generated_tools.py not yet created - run scripts/generate_mcp_tools.py
     pass
+
+if apps_enabled():
+    register_apps(mcp)
 
 
 # ============================================================================
