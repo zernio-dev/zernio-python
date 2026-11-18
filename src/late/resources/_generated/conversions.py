@@ -427,13 +427,22 @@ class ConversionsResource:
         return self._client._get("/v1/events/overview", params=params)
 
     def get_events_overview_daily(
-        self, *, profile_id: str | None = None, period: str | None = "7d"
+        self,
+        *,
+        profile_id: str | None = None,
+        period: str | None = "7d",
+        event_name: str | None = None,
+        sources: str | None = None,
+        platform: str | None = None,
     ) -> dict[str, Any]:
         """Get daily tracking figures"""
         params = self._build_query(
             {
                 "profileId": profile_id,
                 "period": period,
+                "eventName": event_name,
+                "sources": sources,
+                "platform": platform,
             }
         )
         return self._client._get("/v1/events/overview/daily", params=params)
@@ -1360,13 +1369,22 @@ class ConversionsResource:
         return await self._client._aget("/v1/events/overview", params=params)
 
     async def aget_events_overview_daily(
-        self, *, profile_id: str | None = None, period: str | None = "7d"
+        self,
+        *,
+        profile_id: str | None = None,
+        period: str | None = "7d",
+        event_name: str | None = None,
+        sources: str | None = None,
+        platform: str | None = None,
     ) -> dict[str, Any]:
         """Get daily tracking figures (async)"""
         params = self._build_query(
             {
                 "profileId": profile_id,
                 "period": period,
+                "eventName": event_name,
+                "sources": sources,
+                "platform": platform,
             }
         )
         return await self._client._aget("/v1/events/overview/daily", params=params)

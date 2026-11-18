@@ -31127,21 +31127,32 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def conversions_get_events_overview_daily(
-        profile_id: str | None = None, period: Literal["today", "7d", "30d"] = "7d"
+        profile_id: str | None = None,
+        period: Literal["today", "7d", "30d", "90d"] = "7d",
+        event_name: str | None = None,
+        sources: str | None = None,
+        platform: str | None = None,
     ) -> str:
         """Get daily tracking figures
 
-        The tracking figures of a period, day by day (UTC): events stored, events sent to the ad platforms and how many they accepted, plus the period's totals in the same shape as the overview's `today`.
+        The tracking figures of a period, day by day (UTC): events stored per event name, events sent to each ad platform and how many it accepted, the period's totals in the same shape as the overview's `today`, and how many website conversions each platform's browser pixel missed.
 
-        An event sent to a destination counts once, on the day of its first send, by its latest outcome. Without `profileId` it covers every profile you can access. Requires the Ads add-on.
+        An event sent to a destination counts once, on the day of its first send, by its latest outcome. Without `profileId` it covers every profile you can access. `eventName`, `sources` and `platform` narrow every figure. Requires the Ads add-on.
 
         Args:
             profile_id: The profile to read. Omit to cover every profile you can access, summed across them.
-            period: The days to cover, each ending today (UTC): `today`, the last 7 days or the last 30 days."""
+            period: The days to cover, each ending today (UTC): `today`, the last 7, 30 or 90 days.
+            event_name: Only events of this name, such as `Purchase`.
+            sources: Comma-separated sources (`web`, `shopify`, `stripe`, `api`...). Only events from them.
+            platform: Only sends to this platform (`metaads`, `googleads`...), and only the events sent to it."""
         client = _get_client()
         try:
             response = client.conversions.get_events_overview_daily(
-                profile_id=profile_id, period=period
+                profile_id=profile_id,
+                period=period,
+                event_name=event_name,
+                sources=sources,
+                platform=platform,
             )
             return _format_response(response)
         except Exception as e:
