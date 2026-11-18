@@ -6,6 +6,7 @@ from typing import Any
 
 import sentry_sdk
 from fastmcp.exceptions import FastMCPError, NotFoundError, ToolError
+from pydantic import ValidationError as PydanticValidationError
 from sentry_sdk.integrations.logging import ignore_logger
 from sentry_sdk.integrations.mcp import MCPIntegration
 
@@ -70,6 +71,9 @@ class ServerErrorAccessLogFilter(logging.Filter):
 
 
 def _argument_errors_without_input(detail: Any) -> str:
+    # FastMCP 4 logs its own input-free summary: {"error_count", "error_types"}.
+    if isinstance(detail, dict) and isinstance(detail.get("error_types"), list):
+        return ", ".join(str(error_type) for error_type in detail["error_types"])
     if not isinstance(detail, list):
         return "details omitted"
     return ", ".join(
@@ -88,6 +92,15 @@ class ToolFailureLogFilter(logging.Filter):
         if not message.startswith(_TOOL_ERROR_LOG_PREFIX):
             return True
         exc = record.exc_info[1] if record.exc_info else None
+        # FastMCP 4 re-raises a tool body's pydantic error from its own wrapper.
+        rejection = exc if isinstance(exc, PydanticValidationError) else getattr(exc, "__cause__", None)
+        if isinstance(rejection, PydanticValidationError):
+            # An SDK model rejecting an API response: its traceback would log
+            # the response values, so keep only where and why it failed.
+            errors = rejection.errors(include_url=False, include_context=False, include_input=False)
+            record.msg, record.args = "%s: %s", (message, _argument_errors_without_input(errors))
+            record.exc_info = None
+            return True
         return isinstance(exc, Exception) and not is_expected_failure(exc)
 
 

@@ -1,3 +1,4 @@
+import inspect
 from pathlib import Path
 
 import pytest
@@ -37,8 +38,10 @@ async def test_resolving_synthetic_tools_builds_no_new_functions_per_request():
 async def test_listing_and_resolving_serve_the_same_synthetic_tools():
     listed = {t.name: t for t in await mcp.list_tools()}
 
-    assert listed["search_tools"].fn is (await mcp.get_tool("search_tools")).fn
-    assert listed["call_tool"].fn is (await mcp.get_tool("call_tool")).fn
+    for name in ("search_tools", "call_tool"):
+        served = (await mcp.get_tool(name)).fn
+        assert inspect.unwrap(served) is listed[name].fn
+        assert (await mcp.get_tool(name)).fn is served
 
 
 @pytest.mark.parametrize("dockerfile", ["Dockerfile", "Dockerfile.docker"])

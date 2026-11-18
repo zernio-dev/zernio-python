@@ -3,13 +3,22 @@
 API text cut by UTF-16 index can end in half of an emoji (a lone surrogate).
 `json` keeps it as-is, and the streamable HTTP writer then fails to encode the
 response, so the client never receives it while the call looks successful.
+FastMCP 4 serializes a tool's return value inside the tool, before middleware
+runs, and fails the call on it: WellFormedOutputTransform repairs the value
+first, WellFormedOutputMiddleware repairs error messages and other results.
 """
 
+import functools
+import inspect
+from collections.abc import Callable
 from typing import Any
 
 from fastmcp.exceptions import ToolError
 from fastmcp.server.middleware import CallNext, Middleware, MiddlewareContext
-from fastmcp.tools.tool import ToolResult
+from fastmcp.server.transforms import GetToolNext, Transform
+from fastmcp.tools import Tool, ToolResult
+from fastmcp.tools.function_tool import FunctionTool
+from fastmcp.utilities.versions import VersionSpec
 from mcp.types import CallToolRequestParams
 
 
@@ -68,3 +77,43 @@ class WellFormedOutputMiddleware(Middleware):
         if isinstance(result, ToolResult):
             return _well_formed_result(result)
         return result
+
+
+def _returning_well_formed(fn: Callable[..., Any]) -> Callable[..., Any]:
+    if inspect.iscoroutinefunction(fn):
+
+        @functools.wraps(fn)
+        async def async_wrapper(*args: Any, **kwargs: Any) -> Any:
+            return _well_formed_value(await fn(*args, **kwargs))
+
+        return async_wrapper
+
+    @functools.wraps(fn)
+    def wrapper(*args: Any, **kwargs: Any) -> Any:
+        return _well_formed_value(fn(*args, **kwargs))
+
+    return wrapper
+
+
+class WellFormedOutputTransform(Transform):
+    """Serves each function tool with a body whose return value is well formed.
+
+    Only the tool that runs is wrapped; listings and schemas are untouched.
+    """
+
+    def __init__(self) -> None:
+        super().__init__()
+        # One wrapped copy per tool name, kept while FastMCP serves the same tool.
+        self._served: dict[str, tuple[FunctionTool, FunctionTool]] = {}
+
+    async def get_tool(
+        self, name: str, call_next: GetToolNext, *, version: VersionSpec | None = None
+    ) -> Tool | None:
+        tool = await call_next(name, version=version)
+        if not isinstance(tool, FunctionTool):
+            return tool
+        served = self._served.get(tool.name)
+        if served is None or served[0] is not tool:
+            wrapped = tool.model_copy(update={"fn": _returning_well_formed(tool.fn)})
+            served = self._served[tool.name] = (tool, wrapped)
+        return served[1]

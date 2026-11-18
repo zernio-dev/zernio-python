@@ -116,17 +116,17 @@ async def test_every_tool_is_fully_annotated_for_review():
     for tool in tools:
         hints = tool.annotations
         assert hints is not None, tool.name
-        assert isinstance(hints.readOnlyHint, bool), tool.name
-        assert isinstance(hints.destructiveHint, bool), tool.name
-        assert isinstance(hints.openWorldHint, bool), tool.name
+        assert isinstance(hints.read_only_hint, bool), tool.name
+        assert isinstance(hints.destructive_hint, bool), tool.name
+        assert isinstance(hints.open_world_hint, bool), tool.name
         assert tool.meta and tool.meta["securitySchemes"][0]["type"] == "oauth2", (
             tool.name
         )
-        assert tool.outputSchema, tool.name
+        assert tool.output_schema, tool.name
         assert tool.description and tool.description.startswith("Use this"), tool.name
     by_name = {t.name: t for t in tools}
     assert by_name["get_profile"].meta["openai/profile"] is True
-    read_only = {n for n, t in by_name.items() if t.annotations.readOnlyHint}
+    read_only = {n for n, t in by_name.items() if t.annotations.read_only_hint}
     assert read_only == {
         "get_profile",
         "list_social_accounts",
@@ -137,10 +137,10 @@ async def test_every_tool_is_fully_annotated_for_review():
         "get_account_analytics",
         "get_best_time_to_post",
     }
-    public_writes = {n for n, t in by_name.items() if t.annotations.openWorldHint}
+    public_writes = {n for n, t in by_name.items() if t.annotations.open_world_hint}
     assert public_writes == {"schedule_post", "publish_post_now", "retry_failed_post"}
-    assert by_name["schedule_post"].annotations.destructiveHint is False
-    assert by_name["publish_post_now"].annotations.destructiveHint is True
+    assert by_name["schedule_post"].annotations.destructive_hint is False
+    assert by_name["publish_post_now"].annotations.destructive_hint is True
 
 
 @respx.mock

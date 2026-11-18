@@ -39,11 +39,11 @@ from typing import TYPE_CHECKING, Any
 
 import httpx
 from fastmcp import FastMCP
+from fastmcp.exceptions import McpError
 from fastmcp.server.dependencies import get_access_token, get_http_request
 from fastmcp.server.transforms.search import BM25SearchTransform
 from fastmcp.server.transforms.search.base import serialize_tools_for_output_markdown
-from mcp.shared.exceptions import McpError
-from mcp.types import INVALID_PARAMS, ErrorData, ToolAnnotations
+from mcp.types import INVALID_PARAMS, ToolAnnotations
 
 from late import Late, MediaType, PostStatus
 from late.client.exceptions import LateAPIError, LateError, LateRateLimitError
@@ -55,6 +55,7 @@ from .middleware import (
     FeedbackSourceMiddleware,
     ToolGuidanceMiddleware,
     WellFormedOutputMiddleware,
+    WellFormedOutputTransform,
 )
 from .resources import register_resources
 from .tool_definitions import TOOL_DEFINITIONS
@@ -177,7 +178,7 @@ class _AnnotatedBM25SearchTransform(BM25SearchTransform):
     """BM25SearchTransform whose synthetic tools carry ToolAnnotations.
 
     fastmcp builds search_tools/call_tool without annotations (still true in
-    4.0.0b1). Clients that gate approval on hints treat an unannotated tool as
+    4.2.1). Clients that gate approval on hints treat an unannotated tool as
     needing confirmation, so codex-cli auto-denies both in non-interactive
     `codex exec` runs and reports "user cancelled MCP tool call".
 
@@ -255,13 +256,20 @@ class _AnnotatedBM25SearchTransform(BM25SearchTransform):
         unknown = [name for name in requested if name not in by_name]
         if unknown:
             message = _unknown_tools_message(unknown, list(by_name))
-            raise McpError(ErrorData(code=INVALID_PARAMS, message=message))
+            raise McpError(code=INVALID_PARAMS, message=message)
         return [by_name[name] for name in requested]
+
+    # The catalog last passed to FastMCP's _search, whose index is still current.
+    _indexed_tools: Sequence[Tool] = ()
 
     async def _search(self, tools: Sequence[Tool], query: str) -> Sequence[Tool]:
         if tools is not self._indexed_tools:
-            return await super()._search(tools, query)
-        return [tools[i] for i in self._index.query(query, self._max_results)]
+            results = await super()._search(tools, query)
+            self._indexed_tools = tools
+            self._indexed_by_name = {t.name: t for t in tools}
+            return results
+        indices = self._index.query(query, self._max_results)
+        return [self._indexed_by_name[self._indexed_names[i]] for i in indices]
 
     async def closest_tools(self, name: str, ctx: Context | None) -> list[str]:
         """Real tool names nearest a mistyped or guessed one, pinned tools included."""
@@ -392,7 +400,7 @@ details.
     auth=build_auth_provider(),
     # Collapse the ~383 generated tools behind search_tools/call_tool; the
     # pinned ergonomic tools remain always-visible.
-    transforms=[_search_transform],
+    transforms=[_search_transform, WellFormedOutputTransform()],
     list_page_size=_TOOLS_PAGE_SIZE,
 )
 

@@ -46,7 +46,8 @@ classifiers = [
 
 dependencies = [
     "httpx>=0.27.0",
-    "pydantic>=2.0.0",
+    # EmailStr fields in the generated models need email-validator.
+    "pydantic[email]>=2.0.0",
 ]
 
 [project.optional-dependencies]
@@ -59,13 +60,14 @@ anthropic = [
 all = [
     "openai>=1.0.0",
     "anthropic>=0.40.0",
-    "mcp>=1.8.0",
+    "mcp>=2.3.0",
 ]
 mcp = [
-    "fastmcp>=3.1.0",
-    "mcp>=1.8.0",
+    # FastMCP 4 needs Python 3.11+; on 3.10 the MCP server is unavailable.
+    "fastmcp>=4.2.1; python_version >= '3.11'",
+    "mcp>=2.3.0",
     "sentry-sdk>=2.43.0",
-    "starlette>=0.42.0",
+    "starlette>=1.0.1",
     "uvicorn[standard]>=0.32.0",
 ]
 dev = [
@@ -74,7 +76,7 @@ dev = [
     "pytest-cov>=6.0.0",
     "respx>=0.21.0",
     # Needed so tests can import late.mcp.generated_tools (formatter regression test).
-    "mcp>=1.8.0",
+    "mcp>=2.3.0",
     "ruff>=0.8.0",
     "mypy>=1.13.0",
     "datamodel-code-generator>=0.26.0",

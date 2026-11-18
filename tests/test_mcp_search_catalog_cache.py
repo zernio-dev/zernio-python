@@ -18,7 +18,7 @@ QUERIES = [
 
 @pytest.fixture
 def transform(monkeypatch):
-    (transform,) = mcp.transforms
+    transform, _ = mcp.transforms
     monkeypatch.setattr(transform, "_visible_tools", None, raising=False)
     monkeypatch.setattr(transform, "_indexed_tools", ())
     monkeypatch.setattr(transform, "_last_hash", "")

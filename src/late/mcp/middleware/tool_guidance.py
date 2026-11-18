@@ -32,11 +32,17 @@ class ToolGuidanceMiddleware(Middleware):
         try:
             return await call_next(context)
         except NotFoundError as exc:
-            if not str(exc).startswith("Unknown tool"):
+            if not _is_unknown_tool(exc):
                 raise
             # A ToolError reaches the model as a tool result; FastMCP re-wraps a
             # NotFoundError and would drop the suggestions.
-            raise ToolError(await self._unknown_tool_message(context)) from None
+            raise ToolError(await self._unknown_tool_message(context.message.name, context)) from None
+        except ToolError as exc:
+            # call_tool checks the name itself and wraps its NotFoundError.
+            guess = (context.message.arguments or {}).get("name")
+            if context.message.name != self._call_tool or not _is_unknown_tool(exc.__cause__):
+                raise
+            raise ToolError(await self._unknown_tool_message(guess, context)) from None
 
     def _run_proxied_search_directly(
         self, context: MiddlewareContext[CallToolRequestParams]
@@ -54,12 +60,15 @@ class ToolGuidanceMiddleware(Middleware):
         return context.copy(message=search)
 
     async def _unknown_tool_message(
-        self, context: MiddlewareContext[CallToolRequestParams]
+        self, name: str, context: MiddlewareContext[CallToolRequestParams]
     ) -> str:
-        name = context.message.name
         closest = await self._closest_tools(name, context.fastmcp_context)
         hint = f" Closest tools: {', '.join(closest)}." if closest else ""
         return (
             f"Unknown tool {name!r}.{hint} Never guess tool names: call {self._search_tool} "
             f"with what you want to do, then {self._call_tool} with the exact name it returns."
         )
+
+
+def _is_unknown_tool(exc: BaseException | None) -> bool:
+    return isinstance(exc, NotFoundError) and str(exc).startswith("Unknown tool")
