@@ -280,6 +280,11 @@ class ConnectResource:
         *,
         redirect_url: str | None = None,
         reconnect_account_id: str | None = None,
+        welcome: bool | None = None,
+        brand_name: str | None = None,
+        logo_url: str | None = None,
+        primary_color: str | None = None,
+        welcome_theme: str | None = None,
     ) -> dict[str, Any]:
         """Get Google Analytics OAuth connect URL"""
         params = self._build_query(
@@ -287,6 +292,11 @@ class ConnectResource:
                 "profileId": profile_id,
                 "redirect_url": redirect_url,
                 "reconnectAccountId": reconnect_account_id,
+                "welcome": welcome,
+                "brandName": brand_name,
+                "logoUrl": logo_url,
+                "primaryColor": primary_color,
+                "welcomeTheme": welcome_theme,
             }
         )
         return self._client._get("/v1/connect/googleanalytics", params=params)
@@ -324,6 +334,11 @@ class ConnectResource:
         *,
         redirect_url: str | None = None,
         reconnect_account_id: str | None = None,
+        welcome: bool | None = None,
+        brand_name: str | None = None,
+        logo_url: str | None = None,
+        primary_color: str | None = None,
+        welcome_theme: str | None = None,
     ) -> dict[str, Any]:
         """Get Google Search Console OAuth connect URL"""
         params = self._build_query(
@@ -331,6 +346,11 @@ class ConnectResource:
                 "profileId": profile_id,
                 "redirect_url": redirect_url,
                 "reconnectAccountId": reconnect_account_id,
+                "welcome": welcome,
+                "brandName": brand_name,
+                "logoUrl": logo_url,
+                "primaryColor": primary_color,
+                "welcomeTheme": welcome_theme,
             }
         )
         return self._client._get("/v1/connect/googlesearchconsole", params=params)
@@ -1919,6 +1939,11 @@ class ConnectResource:
         *,
         redirect_url: str | None = None,
         reconnect_account_id: str | None = None,
+        welcome: bool | None = None,
+        brand_name: str | None = None,
+        logo_url: str | None = None,
+        primary_color: str | None = None,
+        welcome_theme: str | None = None,
     ) -> dict[str, Any]:
         """Get Google Analytics OAuth connect URL (async)"""
         params = self._build_query(
@@ -1926,6 +1951,11 @@ class ConnectResource:
                 "profileId": profile_id,
                 "redirect_url": redirect_url,
                 "reconnectAccountId": reconnect_account_id,
+                "welcome": welcome,
+                "brandName": brand_name,
+                "logoUrl": logo_url,
+                "primaryColor": primary_color,
+                "welcomeTheme": welcome_theme,
             }
         )
         return await self._client._aget("/v1/connect/googleanalytics", params=params)
@@ -1963,6 +1993,11 @@ class ConnectResource:
         *,
         redirect_url: str | None = None,
         reconnect_account_id: str | None = None,
+        welcome: bool | None = None,
+        brand_name: str | None = None,
+        logo_url: str | None = None,
+        primary_color: str | None = None,
+        welcome_theme: str | None = None,
     ) -> dict[str, Any]:
         """Get Google Search Console OAuth connect URL (async)"""
         params = self._build_query(
@@ -1970,6 +2005,11 @@ class ConnectResource:
                 "profileId": profile_id,
                 "redirect_url": redirect_url,
                 "reconnectAccountId": reconnect_account_id,
+                "welcome": welcome,
+                "brandName": brand_name,
+                "logoUrl": logo_url,
+                "primaryColor": primary_color,
+                "welcomeTheme": welcome_theme,
             }
         )
         return await self._client._aget(

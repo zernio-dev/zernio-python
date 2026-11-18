@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.658.0"
+  version: "1.659.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -45102,6 +45102,31 @@ paths:
           description: >-
             Zernio account ID of the Google Analytics account being reconnected. Picking a different property
             then fails instead of adding a second account.
+        - name: welcome
+          in: query
+          schema: { type: boolean }
+          description: |
+            When `true`, `authUrl` opens on the Zernio-hosted welcome screen with your brand, as on GET /v1/connect/{platform}, naming Google Analytics.
+
+            - With no `redirect_url`, the flow ends on the branded result page instead of the Zernio dashboard.
+            - When left out, the screen shows if the workspace saved it as on by default (`PUT /v1/connect/welcome-screen`). Pass `false` to skip it.
+            - Cannot be combined with `headless=true` in `redirect_url` (400 `INVALID_FIELD_VALUE`).
+        - name: brandName
+          in: query
+          schema: { type: string, minLength: 1, maxLength: 60 }
+          description: 'Welcome screen only: your product name in its heading. Same rules as on GET /v1/connect/{platform}.'
+        - name: logoUrl
+          in: query
+          schema: { type: string, format: uri, maxLength: 2048 }
+          description: 'Welcome screen only: https URL of your square logo. Rejected with 400 `INVALID_FIELD_VALUE` when the welcome screen is not shown.'
+        - name: primaryColor
+          in: query
+          schema: { type: string, pattern: '^#[0-9a-fA-F]{6}$' }
+          description: 'Welcome screen only: hex colour (`#RRGGBB`) of its button.'
+        - name: welcomeTheme
+          in: query
+          schema: { type: string, maxLength: 4000 }
+          description: 'Welcome screen only: a URL-encoded JSON object restyling and rewording the welcome screen and the result page, with the keys documented on GET /v1/connect/{platform}. Rejected when the welcome screen is not shown.'
       responses:
         '200':
           description: OAuth authorization URL and authenticated state
@@ -45299,6 +45324,31 @@ paths:
           description: >-
             Zernio account ID of the Google Search Console account being reconnected. Picking a different site
             then fails instead of adding a second account.
+        - name: welcome
+          in: query
+          schema: { type: boolean }
+          description: |
+            When `true`, `authUrl` opens on the Zernio-hosted welcome screen with your brand, as on GET /v1/connect/{platform}, naming Google Search Console.
+
+            - With no `redirect_url`, the flow ends on the branded result page instead of the Zernio dashboard.
+            - When left out, the screen shows if the workspace saved it as on by default (`PUT /v1/connect/welcome-screen`). Pass `false` to skip it.
+            - Cannot be combined with `headless=true` in `redirect_url` (400 `INVALID_FIELD_VALUE`).
+        - name: brandName
+          in: query
+          schema: { type: string, minLength: 1, maxLength: 60 }
+          description: 'Welcome screen only: your product name in its heading. Same rules as on GET /v1/connect/{platform}.'
+        - name: logoUrl
+          in: query
+          schema: { type: string, format: uri, maxLength: 2048 }
+          description: 'Welcome screen only: https URL of your square logo. Rejected with 400 `INVALID_FIELD_VALUE` when the welcome screen is not shown.'
+        - name: primaryColor
+          in: query
+          schema: { type: string, pattern: '^#[0-9a-fA-F]{6}$' }
+          description: 'Welcome screen only: hex colour (`#RRGGBB`) of its button.'
+        - name: welcomeTheme
+          in: query
+          schema: { type: string, maxLength: 4000 }
+          description: 'Welcome screen only: a URL-encoded JSON object restyling and rewording the welcome screen and the result page, with the keys documented on GET /v1/connect/{platform}. Rejected when the welcome screen is not shown.'
       responses:
         '200':
           description: OAuth authorization URL and authenticated state

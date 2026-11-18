@@ -26366,38 +26366,57 @@ def register_generated_tools(mcp, _get_client):
         profile_id: str,
         redirect_url: str | None = None,
         reconnect_account_id: str | None = None,
+        welcome: bool | None = None,
+        brand_name: str | None = None,
+        logo_url: str | None = None,
+        primary_color: str | None = None,
+        welcome_theme: str | None = None,
     ) -> str:
         """Get Google Analytics OAuth connect URL
 
-        Starts OAuth for Google Analytics (GA4). Each connected GA4 property becomes its own account with platform `googleanalytics`; it reads reports and does not post.
+            Starts OAuth for Google Analytics (GA4). Each connected GA4 property becomes its own account with platform `googleanalytics`; it reads reports and does not post.
 
-        Requested scope: `https://www.googleapis.com/auth/analytics.readonly`.
+            Requested scope: `https://www.googleapis.com/auth/analytics.readonly`.
 
-        ### Flow
+            ### Flow
 
-        Redirect the user to `authUrl`.
+            Redirect the user to `authUrl`.
 
-        - **One readable property:** Zernio connects it and redirects to `redirect_url` (or the dashboard) with `connected=googleanalytics`, `profileId`, `accountId` and `username` (the property name).
-        - **Several properties:** the user first picks one on a Zernio-hosted page, which then redirects the same way.
+            - **One readable property:** Zernio connects it and redirects to `redirect_url` (or the dashboard) with `connected=googleanalytics`, `profileId`, `accountId` and `username` (the property name).
+            - **Several properties:** the user first picks one on a Zernio-hosted page, which then redirects the same way.
 
-        ### Your own property picker
+            ### Your own property picker
 
-        Add `headless=true` to `redirect_url`. Zernio then redirects there with `step=select_property`, `profileId`, `platform=googleanalytics` and a `pendingDataToken` for `GET /v1/connect/googleanalytics/properties` and `POST /v1/connect/googleanalytics/select-property`.
+            Add `headless=true` to `redirect_url`. Zernio then redirects there with `step=select_property`, `profileId`, `platform=googleanalytics` and a `pendingDataToken` for `GET /v1/connect/googleanalytics/properties` and `POST /v1/connect/googleanalytics/select-property`.
 
-        ### Errors
+            ### Errors
 
-        On failure the redirect carries `error`, `platform=googleanalytics` and `error_message`. Errors include: ...
+            On failure the redirect carries `error`, `platform=googleanalytics` and `error_message`. Errors include: ...
 
-        Args:
-            profile_id: Your Zernio profile ID (get from /v1/profiles). (required)
-            redirect_url: Custom redirect after connection. Must be an absolute http(s) URL or custom app scheme such as `myapp://callback`; relative and unsafe URLs return 400.
-            reconnect_account_id: Zernio account ID of the Google Analytics account being reconnected. Picking a different property then fails instead of adding a second account."""
+            Args:
+                profile_id: Your Zernio profile ID (get from /v1/profiles). (required)
+                redirect_url: Custom redirect after connection. Must be an absolute http(s) URL or custom app scheme such as `myapp://callback`; relative and unsafe URLs return 400.
+                reconnect_account_id: Zernio account ID of the Google Analytics account being reconnected. Picking a different property then fails instead of adding a second account.
+                welcome: When `true`, `authUrl` opens on the Zernio-hosted welcome screen with your brand, as on GET /v1/connect/{platform}, naming Google Analytics.
+
+        - With no `redirect_url`, the flow ends on the branded result page instead of the Zernio dashboard.
+        - When left out, the screen shows if the workspace saved it as on by default (`PUT /v1/connect/welcome-screen`). Pass `false` to skip it.
+        - Cannot be combined with `headless=true` in `redirect_url` (400 `INVALID_FIELD_VALUE`).
+                brand_name: Welcome screen only: your product name in its heading. Same rules as on GET /v1/connect/{platform}.
+                logo_url: Welcome screen only: https URL of your square logo. Rejected with 400 `INVALID_FIELD_VALUE` when the welcome screen is not shown.
+                primary_color: Welcome screen only: hex colour (`#RRGGBB`) of its button.
+                welcome_theme: Welcome screen only: a URL-encoded JSON object restyling and rewording the welcome screen and the result page, with the keys documented on GET /v1/connect/{platform}. Rejected when the welcome screen is not shown."""
         client = _get_client()
         try:
             response = client.connect.get_google_analytics_connect_url(
                 profile_id=profile_id,
                 redirect_url=redirect_url,
                 reconnect_account_id=reconnect_account_id,
+                welcome=welcome,
+                brand_name=brand_name,
+                logo_url=logo_url,
+                primary_color=primary_color,
+                welcome_theme=welcome_theme,
             )
             return _format_response(response)
         except Exception as e:
@@ -26486,40 +26505,59 @@ def register_generated_tools(mcp, _get_client):
         profile_id: str,
         redirect_url: str | None = None,
         reconnect_account_id: str | None = None,
+        welcome: bool | None = None,
+        brand_name: str | None = None,
+        logo_url: str | None = None,
+        primary_color: str | None = None,
+        welcome_theme: str | None = None,
     ) -> str:
         """Get Google Search Console OAuth connect URL
 
-        Starts OAuth for Google Search Console. Each connected site becomes its own account with platform `googlesearchconsole`; it reads Google Search data and does not post.
+            Starts OAuth for Google Search Console. Each connected site becomes its own account with platform `googlesearchconsole`; it reads Google Search data and does not post.
 
-        Requested scope: `https://www.googleapis.com/auth/webmasters.readonly`.
+            Requested scope: `https://www.googleapis.com/auth/webmasters.readonly`.
 
-        ### Flow
+            ### Flow
 
-        Redirect the user to `authUrl`.
+            Redirect the user to `authUrl`.
 
-        - **One verified site:** Zernio connects it and redirects to `redirect_url` (or the dashboard) with `connected=googlesearchconsole`, `profileId`, `accountId` and `username` (the site, such as `acme.com`).
-        - **Several sites:** the user first picks one on a Zernio-hosted page, which then redirects the same way.
+            - **One verified site:** Zernio connects it and redirects to `redirect_url` (or the dashboard) with `connected=googlesearchconsole`, `profileId`, `accountId` and `username` (the site, such as `acme.com`).
+            - **Several sites:** the user first picks one on a Zernio-hosted page, which then redirects the same way.
 
-        ### Your own site picker
+            ### Your own site picker
 
-        Add `headless=true` to `redirect_url`. Zernio then redirects there with `step=select_site`, `profileId`, `platform=googlesearchconsole` and a `pendingDataToken` for `GET /v1/connect/googlesearchconsole/sites` and `POST /v1/connect/googlesearchconsole/select-site`.
+            Add `headless=true` to `redirect_url`. Zernio then redirects there with `step=select_site`, `profileId`, `platform=googlesearchconsole` and a `pendingDataToken` for `GET /v1/connect/googlesearchconsole/sites` and `POST /v1/connect/googlesearchconsole/select-site`.
 
-        ### Errors
+            ### Errors
 
-        On failure the redirect carries `error`, `platform=googlesearchconsole` and `error_message`. ...
+            On failure the redirect carries `error`, `platform=googlesearchconsole` and `error_message`. ...
 
-        Platforms: googlesearchconsole
+            Platforms: googlesearchconsole
 
-        Args:
-            profile_id: Your Zernio profile ID (get from /v1/profiles). (required)
-            redirect_url: Custom redirect after connection. Must be an absolute http(s) URL or custom app scheme such as `myapp://callback`; relative and unsafe URLs return 400.
-            reconnect_account_id: Zernio account ID of the Google Search Console account being reconnected. Picking a different site then fails instead of adding a second account."""
+            Args:
+                profile_id: Your Zernio profile ID (get from /v1/profiles). (required)
+                redirect_url: Custom redirect after connection. Must be an absolute http(s) URL or custom app scheme such as `myapp://callback`; relative and unsafe URLs return 400.
+                reconnect_account_id: Zernio account ID of the Google Search Console account being reconnected. Picking a different site then fails instead of adding a second account.
+                welcome: When `true`, `authUrl` opens on the Zernio-hosted welcome screen with your brand, as on GET /v1/connect/{platform}, naming Google Search Console.
+
+        - With no `redirect_url`, the flow ends on the branded result page instead of the Zernio dashboard.
+        - When left out, the screen shows if the workspace saved it as on by default (`PUT /v1/connect/welcome-screen`). Pass `false` to skip it.
+        - Cannot be combined with `headless=true` in `redirect_url` (400 `INVALID_FIELD_VALUE`).
+                brand_name: Welcome screen only: your product name in its heading. Same rules as on GET /v1/connect/{platform}.
+                logo_url: Welcome screen only: https URL of your square logo. Rejected with 400 `INVALID_FIELD_VALUE` when the welcome screen is not shown.
+                primary_color: Welcome screen only: hex colour (`#RRGGBB`) of its button.
+                welcome_theme: Welcome screen only: a URL-encoded JSON object restyling and rewording the welcome screen and the result page, with the keys documented on GET /v1/connect/{platform}. Rejected when the welcome screen is not shown."""
         client = _get_client()
         try:
             response = client.connect.get_google_search_console_connect_url(
                 profile_id=profile_id,
                 redirect_url=redirect_url,
                 reconnect_account_id=reconnect_account_id,
+                welcome=welcome,
+                brand_name=brand_name,
+                logo_url=logo_url,
+                primary_color=primary_color,
+                welcome_theme=welcome_theme,
             )
             return _format_response(response)
         except Exception as e:
