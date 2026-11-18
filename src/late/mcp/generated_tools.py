@@ -44682,7 +44682,7 @@ def register_generated_tools(mcp, _get_client):
                 date_from: Alias of fromDate, kept for existing callers
                 date_to: Alias of toDate, kept for existing callers
                 include_hidden
-                search: Search posts by text content.
+                search: Search posts by text content. Not available with `source=external` (400).
                 tags: Comma-separated tags (at most 20). Returns only posts carrying every listed tag, matched exactly and case-sensitively against the tags set when the post was created. An empty value means no tag filter. `tag` is accepted as an alias.
                 sort_by: Sort order for results.
                 account_id: Filter posts to those published via a specific account (24-char hex ObjectId)."""

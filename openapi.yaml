@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.666.1"
+  version: "1.666.2"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -39431,7 +39431,7 @@ paths:
         - name: search
           in: query
           schema: { type: string }
-          description: Search posts by text content.
+          description: Search posts by text content. Not available with `source=external` (400).
         - name: tags
           in: query
           schema: { type: string, example: 'job,engineering' }
