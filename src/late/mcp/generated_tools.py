@@ -15851,14 +15851,24 @@ def register_generated_tools(mcp, _get_client):
         to_date: str | None = None,
         dimensions: list[
             Literal[
-                "date", "hour", "query", "page", "country", "device", "searchAppearance"
+                "date",
+                "hour",
+                "query",
+                "page",
+                "country",
+                "device",
+                "searchAppearance",
+                "brandedClassification",
             ]
         ]
         | None = None,
-        type: Literal["web", "image", "video", "news", "discover", "googleNews"]
+        type: Literal[
+            "web", "image", "video", "news", "discover", "googleNews", "webMultimodal"
+        ]
         | None = None,
         dimension_filter_groups: list[dict[str, Any]] | None = None,
-        aggregation_type: Literal["auto", "byPage", "byProperty"] | None = None,
+        aggregation_type: Literal["auto", "byPage", "byProperty", "byNewsShowcasePanel"]
+        | None = None,
         row_limit: int | None = None,
         start_row: int | None = None,
         data_state: Literal["final", "all", "hourly_all"] | None = None,
@@ -15867,7 +15877,11 @@ def register_generated_tools(mcp, _get_client):
 
         Clicks, impressions, CTR and average position from Google Search for a connected Search Console site, through Google's `searchAnalytics.query`.
 
-        Group by any of `date`, `hour`, `query`, `page`, `country`, `device` and `searchAppearance`, and filter with Google's own filter groups. With no dimensions you get one row with the site's totals.
+        Group by any of `date`, `hour`, `query`, `page`, `country`, `device`, `searchAppearance` and `brandedClassification`, and filter with Google's own filter groups. With no dimensions you get one row with the site's totals.
+
+        ### Branded queries
+
+        `brandedClassification` splits searches into `BRANDED` and `NON_BRANDED`. Google has it from February 21, 2026, and only for sites with enough search volume. As a filter it takes `equals` only and cannot be combined with a `query` filter.
 
         ### Dates
 
@@ -15875,7 +15889,7 @@ def register_generated_tools(mcp, _get_client):
 
         ### Caching and quota
 
-        Identical requests on the same site are cached for 10 minutes. Google limits each site to 1,200 queries a minute; past it the request returns 429.
+        Identical requests on the same site are cached for 10 ...
 
         Platforms: googlesearchconsole
 
@@ -15884,9 +15898,9 @@ def register_generated_tools(mcp, _get_client):
             from_date
             to_date
             dimensions
-            type: Which Google surface to read. Defaults to `web`.
-            dimension_filter_groups: Each item is an object with keys: groupType (one of: and); filters (list of objects with keys dimension, operator, expression, required)
-            aggregation_type
+            type: Which Google surface to read. Defaults to `web`. `webMultimodal` is Google Lens, Circle to Search and image uploads.
+            dimension_filter_groups: Each item is an object with keys: groupType (one of: and); filters (list of objects with keys dimension, operator, expression); filterLists (list of objects with keys dimension, expressions) - Matches a row whose value is any of the expressions. A dimension goes in filters or in filterLists, not both.
+            aggregation_type: byNewsShowcasePanel needs a NEWS_SHOWCASE searchAppearance filter and type discover or googleNews.
             row_limit: Defaults to 1000.
             start_row: Row offset for paging past `rowLimit`.
             data_state: `final` (default) leaves out the last two or three days; `all` includes them while Google is still filling them in; `hourly_all` is required with the `hour` dimension."""

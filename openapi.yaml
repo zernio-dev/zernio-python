@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.654.0"
+  version: "1.655.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -36755,7 +36755,11 @@ paths:
       description: |
         Clicks, impressions, CTR and average position from Google Search for a connected Search Console site, through Google's `searchAnalytics.query`.
 
-        Group by any of `date`, `hour`, `query`, `page`, `country`, `device` and `searchAppearance`, and filter with Google's own filter groups. With no dimensions you get one row with the site's totals.
+        Group by any of `date`, `hour`, `query`, `page`, `country`, `device`, `searchAppearance` and `brandedClassification`, and filter with Google's own filter groups. With no dimensions you get one row with the site's totals.
+
+        ### Branded queries
+
+        `brandedClassification` splits searches into `BRANDED` and `NON_BRANDED`. Google has it from February 21, 2026, and only for sites with enough search volume. As a filter it takes `equals` only and cannot be combined with a `query` filter.
 
         ### Dates
 
@@ -36780,17 +36784,17 @@ paths:
                 toDate: { type: string, format: date, example: '2026-10-31' }
                 dimensions:
                   type: array
-                  items: { type: string, enum: [date, hour, query, page, country, device, searchAppearance] }
+                  items: { type: string, enum: [date, hour, query, page, country, device, searchAppearance, brandedClassification] }
                 type:
                   type: string
-                  enum: [web, image, video, news, discover, googleNews]
-                  description: Which Google surface to read. Defaults to `web`.
+                  enum: [web, image, video, news, discover, googleNews, webMultimodal]
+                  description: 'Which Google surface to read. Defaults to `web`. `webMultimodal` is Google Lens, Circle to Search and image uploads.'
                 dimensionFilterGroups:
                   type: array
                   maxItems: 5
                   items:
                     type: object
-                    required: [filters]
+                    description: Needs filters, filterLists or both. Every group must match.
                     properties:
                       groupType: { type: string, enum: [and] }
                       filters:
@@ -36799,10 +36803,21 @@ paths:
                           type: object
                           required: [dimension, expression]
                           properties:
-                            dimension: { type: string, enum: [query, page, country, device, searchAppearance], description: Narrow dates with startDate and endDate instead. }
+                            dimension: { type: string, enum: [query, page, country, device, searchAppearance, brandedClassification], description: Narrow dates with fromDate and toDate instead. }
                             operator: { type: string, enum: [equals, notEquals, contains, notContains, includingRegex, excludingRegex], description: Defaults to `equals`. }
-                            expression: { type: string, description: 'The value to match. Countries are ISO 3166-1 alpha-3 codes (`usa`), devices `DESKTOP`, `MOBILE` or `TABLET`.' }
-                aggregationType: { type: string, enum: [auto, byPage, byProperty] }
+                            expression: { type: string, description: 'The value to match. Countries are ISO 3166-1 alpha-3 codes (`usa`), devices `DESKTOP`, `MOBILE` or `TABLET`, brandedClassification `BRANDED` or `NON_BRANDED`.' }
+                      filterLists:
+                        type: array
+                        maxItems: 2
+                        description: 'Matches a row whose value is any of the expressions. A dimension goes in filters or in filterLists, not both.'
+                        items:
+                          type: object
+                          additionalProperties: false
+                          required: [dimension, expressions]
+                          properties:
+                            dimension: { type: string, enum: [country, device] }
+                            expressions: { type: array, minItems: 1, items: { type: string }, example: [usa, gbr, can] }
+                aggregationType: { type: string, enum: [auto, byPage, byProperty, byNewsShowcasePanel], description: 'byNewsShowcasePanel needs a NEWS_SHOWCASE searchAppearance filter and type discover or googleNews.' }
                 rowLimit: { type: integer, minimum: 1, maximum: 25000, description: Defaults to 1000. }
                 startRow: { type: integer, minimum: 0, description: Row offset for paging past `rowLimit`. }
                 dataState: { type: string, enum: [final, all, hourly_all], description: '`final` (default) leaves out the last two or three days; `all` includes them while Google is still filling them in; `hourly_all` is required with the `hour` dimension.' }
@@ -36843,6 +36858,8 @@ paths:
                       fromDate: { type: string, format: date }
                       toDate: { type: string, format: date }
                       aggregationType: { type: [string, "null"], example: byProperty }
+                      firstIncompleteDate: { type: [string, "null"], format: date, description: 'From this Pacific day on the numbers can still change. Sent with dataState all when grouped by date.' }
+                      firstIncompleteHour: { type: [string, "null"], description: 'The same for hours, with dataState hourly_all when grouped by hour.' }
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
