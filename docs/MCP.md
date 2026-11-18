@@ -106,6 +106,6 @@ An unknown name in `?tools=` makes `tools/list` fail with the closest real names
 
 ## Remote Access (HTTP)
 
-The remote MCP server speaks **Streamable HTTP** (`POST /mcp`) — the modern single-endpoint transport supported by all current MCP clients. It survives idle timeouts on proxies and bridges like `mcp-remote`. The legacy SSE transport (`GET /sse`) is kept for backward compatibility.
+The remote MCP server speaks **Streamable HTTP** (`POST /mcp`) — the modern single-endpoint transport supported by all current MCP clients. It survives idle timeouts on proxies and bridges like `mcp-remote`. The legacy SSE transport is retired: `GET /sse` answers 410 with the `/mcp` URL, and `/sse` serves Streamable HTTP for clients that saved the old URL.
 
 For deployment and client setup, see the [HTTP Deployment Guide](HTTP_DEPLOYMENT.md).
