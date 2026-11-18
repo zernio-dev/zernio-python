@@ -113,12 +113,12 @@ class CreatorPortalResource:
             "/public/creator-campaigns/recover-link", data=payload
         )
 
-    def get_creator_portal(self) -> dict[str, Any]:
+    def get_creator_portal(self, token: str) -> dict[str, Any]:
         """Read a creator invite or participant page"""
-        return self._client._get("/public/creator-campaigns/{token}")
+        return self._client._get(f"/public/creator-campaigns/{token}")
 
     def join_creator_campaign(
-        self, *, display_name: str | None = None, email: str | None = None
+        self, token: str, *, display_name: str | None = None, email: str | None = None
     ) -> dict[str, Any]:
         """Join a campaign"""
         payload = self._build_body(
@@ -127,10 +127,10 @@ class CreatorPortalResource:
                 "email": email,
             }
         )
-        return self._client._post("/public/creator-campaigns/{token}", data=payload)
+        return self._client._post(f"/public/creator-campaigns/{token}", data=payload)
 
     def start_creator_connect(
-        self, platform: str, *, window_url: str | None = None
+        self, token: str, platform: str, *, window_url: str | None = None
     ) -> dict[str, Any]:
         """Start connecting a creator account"""
         payload = self._build_body(
@@ -140,11 +140,11 @@ class CreatorPortalResource:
             }
         )
         return self._client._post(
-            "/public/creator-campaigns/{token}/connect", data=payload
+            f"/public/creator-campaigns/{token}/connect", data=payload
         )
 
     def submit_creator_post(
-        self, url: str, *, draft_id: str | None = None
+        self, token: str, url: str, *, draft_id: str | None = None
     ) -> dict[str, Any]:
         """Submit a post"""
         payload = self._build_body(
@@ -154,11 +154,11 @@ class CreatorPortalResource:
             }
         )
         return self._client._post(
-            "/public/creator-campaigns/{token}/submissions", data=payload
+            f"/public/creator-campaigns/{token}/submissions", data=payload
         )
 
     def presign_creator_draft_upload(
-        self, filename: str, content_type: str, *, size: int | None = None
+        self, token: str, filename: str, content_type: str, *, size: int | None = None
     ) -> dict[str, Any]:
         """Get an upload URL for a draft"""
         payload = self._build_body(
@@ -169,11 +169,12 @@ class CreatorPortalResource:
             }
         )
         return self._client._post(
-            "/public/creator-campaigns/{token}/drafts/upload", data=payload
+            f"/public/creator-campaigns/{token}/drafts/upload", data=payload
         )
 
     def submit_creator_draft(
         self,
+        token: str,
         media_url: str,
         media_type: str,
         *,
@@ -190,11 +191,12 @@ class CreatorPortalResource:
             }
         )
         return self._client._post(
-            "/public/creator-campaigns/{token}/drafts", data=payload
+            f"/public/creator-campaigns/{token}/drafts", data=payload
         )
 
     def request_creator_sample(
         self,
+        token: str,
         product_id: str,
         shipping_address: Any,
         *,
@@ -211,16 +213,18 @@ class CreatorPortalResource:
             }
         )
         return self._client._post(
-            "/public/creator-campaigns/{token}/samples", data=payload
+            f"/public/creator-campaigns/{token}/samples", data=payload
         )
 
-    def remove_creator_account(self) -> dict[str, Any]:
+    def remove_creator_account(self, token: str, account_id: str) -> dict[str, Any]:
         """Remove a connected account"""
         return self._client._delete(
-            "/public/creator-campaigns/{token}/accounts/{accountId}"
+            f"/public/creator-campaigns/{token}/accounts/{account_id}"
         )
 
-    def set_creator_spark_code(self, spark_auth_code: Any) -> dict[str, Any]:
+    def set_creator_spark_code(
+        self, token: str, submission_id: str, spark_auth_code: Any
+    ) -> dict[str, Any]:
         """Set a post's Spark code"""
         payload = self._build_body(
             {
@@ -228,12 +232,12 @@ class CreatorPortalResource:
             }
         )
         return self._client._put(
-            "/public/creator-campaigns/{token}/submissions/{submissionId}/spark-code",
+            f"/public/creator-campaigns/{token}/submissions/{submission_id}/spark-code",
             data=payload,
         )
 
     def get_creator_payouts(
-        self, *, limit: int | None = 50, skip: int | None = 0
+        self, token: str, *, limit: int | None = 50, skip: int | None = 0
     ) -> dict[str, Any]:
         """List a creator's earnings history"""
         params = self._build_query(
@@ -243,11 +247,11 @@ class CreatorPortalResource:
             }
         )
         return self._client._get(
-            "/public/creator-campaigns/{token}/payouts", params=params
+            f"/public/creator-campaigns/{token}/payouts", params=params
         )
 
     def start_creator_payouts(
-        self, action: str, *, country: str | None = None
+        self, token: str, action: str, *, country: str | None = None
     ) -> dict[str, Any]:
         """Start payout onboarding"""
         payload = self._build_body(
@@ -257,17 +261,19 @@ class CreatorPortalResource:
             }
         )
         return self._client._post(
-            "/public/creator-campaigns/{token}/payouts", data=payload
+            f"/public/creator-campaigns/{token}/payouts", data=payload
         )
 
-    def create_creator_payout_login(self) -> dict[str, Any]:
+    def create_creator_payout_login(self, token: str) -> dict[str, Any]:
         """Open the creator's Stripe dashboard"""
-        return self._client._post("/public/creator-campaigns/{token}/payout-login")
+        return self._client._post(f"/public/creator-campaigns/{token}/payout-login")
 
-    def get_creator_payout_statement(self) -> dict[str, Any]:
+    def get_creator_payout_statement(
+        self, token: str, transfer_id: str
+    ) -> dict[str, Any]:
         """Download a payout statement"""
         return self._client._get(
-            "/public/creator-campaigns/{token}/payouts/{transferId}/statement"
+            f"/public/creator-campaigns/{token}/payouts/{transfer_id}/statement"
         )
 
     async def arecover_creator_portal_links(
@@ -284,12 +290,12 @@ class CreatorPortalResource:
             "/public/creator-campaigns/recover-link", data=payload
         )
 
-    async def aget_creator_portal(self) -> dict[str, Any]:
+    async def aget_creator_portal(self, token: str) -> dict[str, Any]:
         """Read a creator invite or participant page (async)"""
-        return await self._client._aget("/public/creator-campaigns/{token}")
+        return await self._client._aget(f"/public/creator-campaigns/{token}")
 
     async def ajoin_creator_campaign(
-        self, *, display_name: str | None = None, email: str | None = None
+        self, token: str, *, display_name: str | None = None, email: str | None = None
     ) -> dict[str, Any]:
         """Join a campaign (async)"""
         payload = self._build_body(
@@ -299,11 +305,11 @@ class CreatorPortalResource:
             }
         )
         return await self._client._apost(
-            "/public/creator-campaigns/{token}", data=payload
+            f"/public/creator-campaigns/{token}", data=payload
         )
 
     async def astart_creator_connect(
-        self, platform: str, *, window_url: str | None = None
+        self, token: str, platform: str, *, window_url: str | None = None
     ) -> dict[str, Any]:
         """Start connecting a creator account (async)"""
         payload = self._build_body(
@@ -313,11 +319,11 @@ class CreatorPortalResource:
             }
         )
         return await self._client._apost(
-            "/public/creator-campaigns/{token}/connect", data=payload
+            f"/public/creator-campaigns/{token}/connect", data=payload
         )
 
     async def asubmit_creator_post(
-        self, url: str, *, draft_id: str | None = None
+        self, token: str, url: str, *, draft_id: str | None = None
     ) -> dict[str, Any]:
         """Submit a post (async)"""
         payload = self._build_body(
@@ -327,11 +333,11 @@ class CreatorPortalResource:
             }
         )
         return await self._client._apost(
-            "/public/creator-campaigns/{token}/submissions", data=payload
+            f"/public/creator-campaigns/{token}/submissions", data=payload
         )
 
     async def apresign_creator_draft_upload(
-        self, filename: str, content_type: str, *, size: int | None = None
+        self, token: str, filename: str, content_type: str, *, size: int | None = None
     ) -> dict[str, Any]:
         """Get an upload URL for a draft (async)"""
         payload = self._build_body(
@@ -342,11 +348,12 @@ class CreatorPortalResource:
             }
         )
         return await self._client._apost(
-            "/public/creator-campaigns/{token}/drafts/upload", data=payload
+            f"/public/creator-campaigns/{token}/drafts/upload", data=payload
         )
 
     async def asubmit_creator_draft(
         self,
+        token: str,
         media_url: str,
         media_type: str,
         *,
@@ -363,11 +370,12 @@ class CreatorPortalResource:
             }
         )
         return await self._client._apost(
-            "/public/creator-campaigns/{token}/drafts", data=payload
+            f"/public/creator-campaigns/{token}/drafts", data=payload
         )
 
     async def arequest_creator_sample(
         self,
+        token: str,
         product_id: str,
         shipping_address: Any,
         *,
@@ -384,16 +392,20 @@ class CreatorPortalResource:
             }
         )
         return await self._client._apost(
-            "/public/creator-campaigns/{token}/samples", data=payload
+            f"/public/creator-campaigns/{token}/samples", data=payload
         )
 
-    async def aremove_creator_account(self) -> dict[str, Any]:
+    async def aremove_creator_account(
+        self, token: str, account_id: str
+    ) -> dict[str, Any]:
         """Remove a connected account (async)"""
         return await self._client._adelete(
-            "/public/creator-campaigns/{token}/accounts/{accountId}"
+            f"/public/creator-campaigns/{token}/accounts/{account_id}"
         )
 
-    async def aset_creator_spark_code(self, spark_auth_code: Any) -> dict[str, Any]:
+    async def aset_creator_spark_code(
+        self, token: str, submission_id: str, spark_auth_code: Any
+    ) -> dict[str, Any]:
         """Set a post's Spark code (async)"""
         payload = self._build_body(
             {
@@ -401,12 +413,12 @@ class CreatorPortalResource:
             }
         )
         return await self._client._aput(
-            "/public/creator-campaigns/{token}/submissions/{submissionId}/spark-code",
+            f"/public/creator-campaigns/{token}/submissions/{submission_id}/spark-code",
             data=payload,
         )
 
     async def aget_creator_payouts(
-        self, *, limit: int | None = 50, skip: int | None = 0
+        self, token: str, *, limit: int | None = 50, skip: int | None = 0
     ) -> dict[str, Any]:
         """List a creator's earnings history (async)"""
         params = self._build_query(
@@ -416,11 +428,11 @@ class CreatorPortalResource:
             }
         )
         return await self._client._aget(
-            "/public/creator-campaigns/{token}/payouts", params=params
+            f"/public/creator-campaigns/{token}/payouts", params=params
         )
 
     async def astart_creator_payouts(
-        self, action: str, *, country: str | None = None
+        self, token: str, action: str, *, country: str | None = None
     ) -> dict[str, Any]:
         """Start payout onboarding (async)"""
         payload = self._build_body(
@@ -430,17 +442,19 @@ class CreatorPortalResource:
             }
         )
         return await self._client._apost(
-            "/public/creator-campaigns/{token}/payouts", data=payload
+            f"/public/creator-campaigns/{token}/payouts", data=payload
         )
 
-    async def acreate_creator_payout_login(self) -> dict[str, Any]:
+    async def acreate_creator_payout_login(self, token: str) -> dict[str, Any]:
         """Open the creator's Stripe dashboard (async)"""
         return await self._client._apost(
-            "/public/creator-campaigns/{token}/payout-login"
+            f"/public/creator-campaigns/{token}/payout-login"
         )
 
-    async def aget_creator_payout_statement(self) -> dict[str, Any]:
+    async def aget_creator_payout_statement(
+        self, token: str, transfer_id: str
+    ) -> dict[str, Any]:
         """Download a payout statement (async)"""
         return await self._client._aget(
-            "/public/creator-campaigns/{token}/payouts/{transferId}/statement"
+            f"/public/creator-campaigns/{token}/payouts/{transfer_id}/statement"
         )
