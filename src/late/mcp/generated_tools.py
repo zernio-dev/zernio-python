@@ -31126,6 +31126,7 @@ def register_generated_tools(mcp, _get_client):
             "stripe",
             "web",
             "salesforce",
+            "postback",
         ]
         | None = None,
         platform: str | None = None,
@@ -31592,6 +31593,7 @@ def register_generated_tools(mcp, _get_client):
                 "stripe",
                 "web",
                 "salesforce",
+                "postback",
             ]
         ]
         | None = None,
