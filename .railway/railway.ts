@@ -5,12 +5,11 @@
 import { defineRailway, github, preserve, project, service } from "railway/iac";
 
 // GitHub source per environment, as connected today. Omitting it disconnects
-// the repo, and pushes stop deploying. dev tracks whichever branch is under test.
+// the repo, and pushes stop deploying. dev deploys develop unless a branch is
+// under test.
 const SOURCES: Record<string, ReturnType<typeof github>> = {
   production: github("zernio-dev/zernio-python", { branch: "develop" }),
-  dev: github("zernio-dev/zernio-python", {
-    branch: "chore/railway-eu-replicas",
-  }),
+  dev: github("zernio-dev/zernio-python", { branch: "develop" }),
   "zernio-mcp-dev": github("zernio-dev/zernio-mcp", { checkSuites: true }),
 };
 
