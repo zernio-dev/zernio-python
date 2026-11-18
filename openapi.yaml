@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.667.0"
+  version: "1.671.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -82775,6 +82775,7 @@ paths:
       parameters:
         - { name: fromDate, in: query, required: true, schema: { type: string, format: date } }
         - { name: toDate, in: query, required: true, schema: { type: string, format: date }, description: 'Inclusive. At most 400 days after `fromDate`.' }
+        - { name: model, in: query, schema: { type: string, enum: [last_click, first_touch, last_non_direct, linear, position_based, time_decay], default: last_click }, description: 'Attribution model your stored sales and leads count under. `last_click` (default) counts each event whole for the campaign it matched. The others split it across the campaigns of its earlier touches, so counts and revenue can be fractional. Uploads read the same under every model.' }
         - { name: campaignIds, in: query, schema: { type: string }, description: 'Comma-separated platform campaign ids, at most 500. Omit for all campaigns.' }
         - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 500, default: 100 }, description: Campaigns per page. }
         - { name: cursor, in: query, schema: { type: string }, description: '`nextCursor` from the previous page.' }
@@ -82785,10 +82786,11 @@ paths:
             application/json:
               schema:
                 type: object
-                required: [fromDate, toDate, campaigns, nextCursor]
+                required: [fromDate, toDate, model, campaigns, nextCursor]
                 properties:
                   fromDate: { type: string, format: date }
                   toDate: { type: string, format: date }
+                  model: { type: string, description: 'The attribution model the results are counted under.' }
                   campaigns:
                     type: array
                     items:
@@ -82868,6 +82870,7 @@ paths:
       parameters:
         - { name: fromDate, in: query, required: true, schema: { type: string, format: date } }
         - { name: toDate, in: query, required: true, schema: { type: string, format: date }, description: 'Inclusive. At most 400 days after `fromDate`.' }
+        - { name: model, in: query, schema: { type: string, enum: [last_click, first_touch, last_non_direct, linear, position_based, time_decay], default: last_click }, description: 'Attribution model your stored sales and leads count under. `last_click` (default) counts each event whole for the campaign it matched. The others split it across the campaigns of its earlier touches, so counts and revenue can be fractional. Uploads read the same under every model.' }
         - { name: adAccountIds, in: query, schema: { type: string }, description: 'Comma-separated platform ad account ids, at most 100. Omit for every ad account your key can see.' }
       responses:
         '200':
@@ -82876,10 +82879,11 @@ paths:
             application/json:
               schema:
                 type: object
-                required: [fromDate, toDate, totals]
+                required: [fromDate, toDate, model, totals]
                 properties:
                   fromDate: { type: string, format: date }
                   toDate: { type: string, format: date }
+                  model: { type: string, description: 'The attribution model the results are counted under.' }
                   totals: { type: object, additionalProperties: { type: number }, example: { qualified_leads: 140, sales: 23, revenue: 41200 } }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }

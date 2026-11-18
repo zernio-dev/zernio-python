@@ -6133,6 +6133,14 @@ def register_generated_tools(mcp, _get_client):
     def ad_campaign_results_list_campaign_results(
         from_date: str,
         to_date: str,
+        model: Literal[
+            "last_click",
+            "first_touch",
+            "last_non_direct",
+            "linear",
+            "position_based",
+            "time_decay",
+        ] = "last_click",
         campaign_ids: str | None = None,
         limit: int = 100,
         cursor: str | None = None,
@@ -6150,6 +6158,7 @@ def register_generated_tools(mcp, _get_client):
         Args:
             from_date: (required)
             to_date: Inclusive. At most 400 days after `fromDate`. (required)
+            model: Attribution model your stored sales and leads count under. `last_click` (default) counts each event whole for the campaign it matched. The others split it across the campaigns of its earlier touches, so counts and revenue can be fractional. Uploads read the same under every model.
             campaign_ids: Comma-separated platform campaign ids, at most 500. Omit for all campaigns.
             limit: Campaigns per page.
             cursor: `nextCursor` from the previous page."""
@@ -6158,6 +6167,7 @@ def register_generated_tools(mcp, _get_client):
             response = client.ad_campaign_results.list_campaign_results(
                 from_date=from_date,
                 to_date=to_date,
+                model=model,
                 campaign_ids=campaign_ids,
                 limit=limit,
                 cursor=cursor,
@@ -6205,7 +6215,17 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def ad_campaign_results_get_campaign_results_totals(
-        from_date: str, to_date: str, ad_account_ids: str | None = None
+        from_date: str,
+        to_date: str,
+        model: Literal[
+            "last_click",
+            "first_touch",
+            "last_non_direct",
+            "linear",
+            "position_based",
+            "time_decay",
+        ] = "last_click",
+        ad_account_ids: str | None = None,
     ) -> str:
         """Get your results totals
 
@@ -6220,11 +6240,15 @@ def register_generated_tools(mcp, _get_client):
         Args:
             from_date: (required)
             to_date: Inclusive. At most 400 days after `fromDate`. (required)
+            model: Attribution model your stored sales and leads count under. `last_click` (default) counts each event whole for the campaign it matched. The others split it across the campaigns of its earlier touches, so counts and revenue can be fractional. Uploads read the same under every model.
             ad_account_ids: Comma-separated platform ad account ids, at most 100. Omit for every ad account your key can see."""
         client = _get_client()
         try:
             response = client.ad_campaign_results.get_campaign_results_totals(
-                from_date=from_date, to_date=to_date, ad_account_ids=ad_account_ids
+                from_date=from_date,
+                to_date=to_date,
+                model=model,
+                ad_account_ids=ad_account_ids,
             )
             return _format_response(response)
         except Exception as e:

@@ -120,6 +120,7 @@ class AdCampaignResultsResource:
         from_date: str,
         to_date: str,
         *,
+        model: str | None = "last_click",
         campaign_ids: str | None = None,
         limit: int | None = 100,
         cursor: str | None = None,
@@ -129,6 +130,7 @@ class AdCampaignResultsResource:
             {
                 "fromDate": from_date,
                 "toDate": to_date,
+                "model": model,
                 "campaignIds": campaign_ids,
                 "limit": limit,
                 "cursor": cursor,
@@ -141,13 +143,19 @@ class AdCampaignResultsResource:
         return self._client._get(f"/v1/ads/campaign-results/uploads/{upload_id}")
 
     def get_campaign_results_totals(
-        self, from_date: str, to_date: str, *, ad_account_ids: str | None = None
+        self,
+        from_date: str,
+        to_date: str,
+        *,
+        model: str | None = "last_click",
+        ad_account_ids: str | None = None,
     ) -> dict[str, Any]:
         """Get your results totals"""
         params = self._build_query(
             {
                 "fromDate": from_date,
                 "toDate": to_date,
+                "model": model,
                 "adAccountIds": ad_account_ids,
             }
         )
@@ -213,6 +221,7 @@ class AdCampaignResultsResource:
         from_date: str,
         to_date: str,
         *,
+        model: str | None = "last_click",
         campaign_ids: str | None = None,
         limit: int | None = 100,
         cursor: str | None = None,
@@ -222,6 +231,7 @@ class AdCampaignResultsResource:
             {
                 "fromDate": from_date,
                 "toDate": to_date,
+                "model": model,
                 "campaignIds": campaign_ids,
                 "limit": limit,
                 "cursor": cursor,
@@ -234,13 +244,19 @@ class AdCampaignResultsResource:
         return await self._client._aget(f"/v1/ads/campaign-results/uploads/{upload_id}")
 
     async def aget_campaign_results_totals(
-        self, from_date: str, to_date: str, *, ad_account_ids: str | None = None
+        self,
+        from_date: str,
+        to_date: str,
+        *,
+        model: str | None = "last_click",
+        ad_account_ids: str | None = None,
     ) -> dict[str, Any]:
         """Get your results totals (async)"""
         params = self._build_query(
             {
                 "fromDate": from_date,
                 "toDate": to_date,
+                "model": model,
                 "adAccountIds": ad_account_ids,
             }
         )
