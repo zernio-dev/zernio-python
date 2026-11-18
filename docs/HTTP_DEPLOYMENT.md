@@ -4,7 +4,7 @@
 
 The Zernio MCP server can be deployed over HTTP, allowing remote access from any MCP client. Each user provides their own Zernio API key when connecting.
 
-The server's primary transport is **Streamable HTTP** (`POST /mcp`), the modern MCP transport supported by all current clients. Each request/response is self-contained (with optional chunked streaming), so it survives proxies and bridges that drop idle connections. The legacy SSE transport (`GET /sse` + `POST /messages/`) is kept for backward compatibility.
+The server's primary transport is **Streamable HTTP** (`POST /mcp`), the modern MCP transport supported by all current clients. Each request/response is self-contained (with optional chunked streaming), so it survives proxies and bridges that drop idle connections. The legacy SSE transport (`GET /sse` + `POST /messages/`) is retired and answers 410 with the `/mcp` URL. `/sse` still serves Streamable HTTP, so clients that saved the old URL and speak Streamable HTTP there keep working.
 
 ## Quick Start
 
@@ -70,7 +70,7 @@ Optional variables:
 - `SENTRY_DSN` — sends one transaction per tool call (`tools/call <tool>`) and unexpected errors to Sentry. Unset, nothing is sent.
 - `SENTRY_TRACES_SAMPLE_RATE` (default: 1.0) — share of tool calls traced in Sentry.
 - `AXIOM_TOKEN` and `AXIOM_DATASET` — with both set, every `mcp_tool_call` line below is also sent to that Axiom dataset, in batches every 5 s from a background thread, with `release` (commit), `environment` and `worker` (process id) added. Unset, nothing is sent. The token needs ingest permission on that dataset only. A failed batch is dropped and logged, never retried, and never slows a tool call; when more than 20,000 lines wait, new ones are dropped and counted in an `mcp_axiom_dropped` event.
-- `WEB_CONCURRENCY` (default: 1) — number of server processes. One process uses one CPU core at most. Above 1, `/health` returns 503 until every process is up, and legacy `/sse` breaks: its `/messages` POSTs can reach a process that does not hold the stream.
+- `WEB_CONCURRENCY` (default: 1) — number of server processes. One process uses one CPU core at most. Above 1, `/health` returns 503 until every process is up.
 
 ## Logging
 
@@ -146,7 +146,7 @@ The server is an OAuth 2.0 **resource server** (FastMCP's resource-server model)
 - No shared credentials or server-wide API keys
 - Browser requests are checked against an Origin allowlist for DNS-rebinding protection (extend with `MCP_ALLOWED_ORIGINS`)
 - Health check, server info, and OAuth discovery endpoints are public (no auth required)
-- The MCP and legacy SSE endpoints require authentication
+- The MCP endpoints (`/mcp`, `/sse`, `/chatgpt`) require authentication
 
 ## Get Your Zernio API Key
 

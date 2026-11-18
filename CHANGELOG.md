@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Removed
+- **The hosted MCP server's legacy SSE transport (`GET /sse` + `POST /messages/`).** It kept each session in one worker's memory, so with 4 workers 72% of `POST /messages/` reached a worker without the session and got a 404: the transport was already failing for the clients still on it. Connect with Streamable HTTP at `https://mcp.zernio.com/mcp` (Claude Code: `claude mcp add --transport http zernio https://mcp.zernio.com/mcp`). The `/sse` URL now serves Streamable HTTP, so clients that saved it and try Streamable HTTP there first, Claude.ai among them, keep working with nothing to change. A legacy SSE handshake on `GET /sse` and any request to `/messages/` get a 410 whose body names the `/mcp` URL.
+
 ### Changed
 - **The MCP server runs on FastMCP 4 and MCP SDK 2.** The `mcp` extra now needs Python 3.11 or later, as FastMCP 4 does: on Python 3.10 it installs without FastMCP and the MCP server cannot run. The SDK itself still supports 3.10. Behavior FastMCP 4 changed is kept: guessed tool names sent through `call_tool` get the closest tools again, a result holding half an emoji is repaired instead of failing the call, and a pydantic error inside a tool logs where and why it failed, never the response values. The protected-resource metadata override is gone, since MCP SDK 2 renders the issuer without a trailing slash.
 
