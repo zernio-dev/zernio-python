@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.653.1"
+  version: "1.654.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -15942,7 +15942,7 @@ components:
         _id: { type: string }
         platform:
           type: string
-          enum: [tiktok, instagram, facebook, youtube, linkedin, twitter, threads, pinterest, reddit, bluesky, googlebusiness, telegram, snapchat, discord, slack, whatsapp, shopify, wordpress, wix, linkedinads, metaads, pinterestads, tiktokads, xads, googleads, openaiads, redditads, sms, phone, rcs, whopads, applovinads, google, microsoft, imap, hubspot, salesforce, webflow, googleanalytics, imessage, tiktokshop, microsoftads, line, wechat, googletagmanager, stripe]
+          enum: [tiktok, instagram, facebook, youtube, linkedin, twitter, threads, pinterest, reddit, bluesky, googlebusiness, telegram, snapchat, discord, slack, whatsapp, shopify, wordpress, wix, linkedinads, metaads, pinterestads, tiktokads, xads, googleads, openaiads, redditads, sms, phone, rcs, whopads, applovinads, google, microsoft, imap, hubspot, salesforce, webflow, googleanalytics, imessage, tiktokshop, microsoftads, line, wechat, googletagmanager, stripe, googlesearchconsole]
         profileId:
           oneOf:
             - type: string
@@ -36745,6 +36745,243 @@ paths:
           $ref: '#/components/responses/NotFound'
         '429':
           $ref: '#/components/responses/RateLimited'
+  /v1/analytics/googlesearchconsole/search-analytics:
+    post:
+      x-resource-group: "analytics"
+      operationId: queryGoogleSearchConsoleSearchAnalytics
+      tags: [Analytics]
+      x-platforms: [googlesearchconsole]
+      summary: Query Google Search Console search analytics
+      description: |
+        Clicks, impressions, CTR and average position from Google Search for a connected Search Console site, through Google's `searchAnalytics.query`.
+
+        Group by any of `date`, `hour`, `query`, `page`, `country`, `device` and `searchAppearance`, and filter with Google's own filter groups. With no dimensions you get one row with the site's totals.
+
+        ### Dates
+
+        Dates are `YYYY-MM-DD` in Pacific time. `toDate` defaults to yesterday and `fromDate` to 27 days before `toDate`, the window every report takes. Unknown fields answer 400. Google keeps 16 months, and the last two or three days are still filling in unless you pass `dataState: all`.
+
+        ### Caching and quota
+
+        Identical requests on the same site are cached for 10 minutes. Google limits each site to 1,200 queries a minute; past it the request returns 429.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [accountId]
+              properties:
+                accountId: { type: string, description: Zernio account ID of the Google Search Console connection. }
+                fromDate: { type: string, format: date, example: '2026-10-01' }
+                toDate: { type: string, format: date, example: '2026-10-31' }
+                dimensions:
+                  type: array
+                  items: { type: string, enum: [date, hour, query, page, country, device, searchAppearance] }
+                type:
+                  type: string
+                  enum: [web, image, video, news, discover, googleNews]
+                  description: Which Google surface to read. Defaults to `web`.
+                dimensionFilterGroups:
+                  type: array
+                  maxItems: 5
+                  items:
+                    type: object
+                    required: [filters]
+                    properties:
+                      groupType: { type: string, enum: [and] }
+                      filters:
+                        type: array
+                        items:
+                          type: object
+                          required: [dimension, expression]
+                          properties:
+                            dimension: { type: string, enum: [query, page, country, device, searchAppearance], description: Narrow dates with startDate and endDate instead. }
+                            operator: { type: string, enum: [equals, notEquals, contains, notContains, includingRegex, excludingRegex], description: Defaults to `equals`. }
+                            expression: { type: string, description: 'The value to match. Countries are ISO 3166-1 alpha-3 codes (`usa`), devices `DESKTOP`, `MOBILE` or `TABLET`.' }
+                aggregationType: { type: string, enum: [auto, byPage, byProperty] }
+                rowLimit: { type: integer, minimum: 1, maximum: 25000, description: Defaults to 1000. }
+                startRow: { type: integer, minimum: 0, description: Row offset for paging past `rowLimit`. }
+                dataState: { type: string, enum: [final, all, hourly_all], description: '`final` (default) leaves out the last two or three days; `all` includes them while Google is still filling them in; `hourly_all` is required with the `hour` dimension.' }
+            example:
+              accountId: 6650f1c2a1b2c3d4e5f60789
+              fromDate: '2026-10-01'
+              toDate: '2026-10-31'
+              dimensions: [query]
+              rowLimit: 50
+      responses:
+        '200':
+          description: Rows from Google, ordered by clicks
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        keys: { type: array, items: { type: string }, description: 'One value per requested dimension in the same order. Absent when no dimensions were requested.', example: [social media api] }
+                        clicks: { type: number, example: 412 }
+                        impressions: { type: number, example: 9875 }
+                        ctr: { type: number, description: 'Clicks divided by impressions, from 0 to 1.', example: 0.0417 }
+                        position: { type: number, description: 'Average position in results (1 is the top).', example: 6.3 }
+                  pagination:
+                    type: object
+                    properties:
+                      hasMore: { type: boolean, description: 'True when the page is full, so Google may hold more rows. Google does not say for sure.' }
+                      nextStartRow: { type: [integer, "null"], description: 'The startRow for the next page, or null when hasMore is false.' }
+                  meta:
+                    type: object
+                    properties:
+                      accountId: { type: string }
+                      siteUrl: { type: string, example: 'sc-domain:acme.com' }
+                      fromDate: { type: string, format: date }
+                      toDate: { type: string, format: date }
+                      aggregationType: { type: [string, "null"], example: byProperty }
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          x-summary: "The Google account that connected the site lost access or revoked Zernio: reconnect Google Search Console."
+          description: The Google account that connected the site lost access to it in Search Console, or revoked Zernio. Reconnect Google Search Console.
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '502':
+          x-summary: "Google could not be reached or failed: retry shortly."
+          description: Google could not be reached, or failed while answering. Nothing was changed; retry shortly.
+  /v1/analytics/googlesearchconsole/sitemaps:
+    get:
+      x-resource-group: "analytics"
+      operationId: listGoogleSearchConsoleSitemaps
+      tags: [Analytics]
+      x-platforms: [googlesearchconsole]
+      summary: List Google Search Console sitemaps
+      description: |
+        The sitemaps submitted for a connected Search Console site, with when Google last read them, their errors and warnings and how many URLs each holds. Cached for 10 minutes.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: accountId
+          in: query
+          required: true
+          schema: { type: string }
+          description: Zernio account ID of the Google Search Console connection.
+      responses:
+        '200':
+          description: Sitemaps as Google reports them
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  meta:
+                    type: object
+                    properties:
+                      accountId: { type: string }
+                      siteUrl: { type: string }
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        path: { type: string, example: 'https://acme.com/sitemap.xml' }
+                        lastSubmitted: { type: string, format: date-time }
+                        lastDownloaded: { type: string, format: date-time }
+                        isPending: { type: boolean }
+                        isSitemapsIndex: { type: boolean }
+                        type: { type: string, example: sitemap }
+                        warnings: { type: string, description: 'Count as a string, as Google sends it.' }
+                        errors: { type: string, description: 'Count as a string, as Google sends it.' }
+                        contents:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              type: { type: string, example: web }
+                              submitted: { type: string, example: '1250' }
+                              indexed: { type: string }
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          x-summary: "The Google account that connected the site lost access or revoked Zernio: reconnect Google Search Console."
+          description: The Google account that connected the site lost access to it in Search Console, or revoked Zernio. Reconnect Google Search Console.
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '502':
+          x-summary: "Google could not be reached or failed: retry shortly."
+          description: Google could not be reached, or failed while answering. Nothing was changed; retry shortly.
+  /v1/analytics/googlesearchconsole/url-inspection:
+    post:
+      x-resource-group: "analytics"
+      operationId: inspectGoogleSearchConsoleUrl
+      tags: [Analytics]
+      x-platforms: [googlesearchconsole]
+      summary: Inspect a URL in Google Search Console
+      description: |
+        Google's index status for one URL of a connected site: whether it is indexed, its canonical, last crawl, robots and fetch state, mobile usability and rich results. Returns Google's `inspectionResult` as is.
+
+        The URL must belong to the connected site (any host under a Domain property, or starting with the URL prefix); any other URL returns 400 before Google is called. Google allows 2,000 inspections a day and 600 a minute per site; results are cached for one hour.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [accountId, inspectionUrl]
+              properties:
+                accountId: { type: string, description: Zernio account ID of the Google Search Console connection. }
+                inspectionUrl: { type: string, format: uri, example: 'https://acme.com/pricing' }
+                languageCode: { type: string, description: 'Language of the issue messages (BCP-47, for example `en-US`). Defaults to English.' }
+      responses:
+        '200':
+          description: Google's inspection result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      inspectionUrl: { type: string }
+                      result:
+                        type: object
+                        additionalProperties: true
+                        description: 'Google''s `inspectionResult`: `inspectionResultLink`, `indexStatusResult` (verdict, coverageState, lastCrawlTime, googleCanonical…), `mobileUsabilityResult`, `richResultsResult` and `ampResult`, each present when Google has it.'
+                  meta:
+                    type: object
+                    properties:
+                      accountId: { type: string }
+                      siteUrl: { type: string }
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          x-summary: "The Google account that connected the site lost access or revoked Zernio: reconnect Google Search Console."
+          description: The Google account that connected the site lost access to it in Search Console, or revoked Zernio. Reconnect Google Search Console.
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '502':
+          x-summary: "Google could not be reached or failed: retry shortly."
+          description: Google could not be reached, or failed while answering. Nothing was changed; retry shortly.
   /v1/analytics/tracking:
     post:
       x-resource-group: "analytics"
@@ -41744,7 +41981,7 @@ paths:
           schema:
             type: string
             enum: [social, ads, communication, blogs, crm, analytics]
-          description: 'Only accounts of this kind. ads = ad accounts (Meta, Google, LinkedIn, Pinterest, TikTok, X, OpenAI, Reddit, Microsoft), communication = WhatsApp, Telegram, Discord, Slack, iMessage, LINE and WeChat, blogs = Shopify and WordPress, crm = HubSpot and Salesforce, analytics = Google Analytics, social = every other platform.'
+          description: 'Only accounts of this kind. ads = ad accounts (Meta, Google, LinkedIn, Pinterest, TikTok, X, OpenAI, Reddit, Microsoft), communication = WhatsApp, Telegram, Discord, Slack, iMessage, LINE and WeChat, blogs = Shopify and WordPress, crm = HubSpot and Salesforce, analytics = Google Analytics, Search Console, Stripe, Tag Manager and Axon, social = every other platform.'
         - name: sort
           in: query
           schema:
@@ -42182,7 +42419,7 @@ paths:
           description: Filter by platform
           schema:
             type: string
-            enum: [facebook, instagram, linkedin, twitter, tiktok, youtube, threads, pinterest, reddit, bluesky, googlebusiness, telegram, snapchat, discord, slack, whatsapp, shopify, wordpress, wix, linkedinads, metaads, pinterestads, tiktokads, xads, googleads, openaiads, redditads, microsoftads, whopads, applovinads, hubspot, webflow, googleanalytics, line, wechat, googletagmanager]
+            enum: [facebook, instagram, linkedin, twitter, tiktok, youtube, threads, pinterest, reddit, bluesky, googlebusiness, telegram, snapchat, discord, slack, whatsapp, shopify, wordpress, wix, linkedinads, metaads, pinterestads, tiktokads, xads, googleads, openaiads, redditads, microsoftads, whopads, applovinads, hubspot, webflow, googleanalytics, line, wechat, googletagmanager, googlesearchconsole]
         - name: status
           in: query
           description: Filter by health status
@@ -44953,6 +45190,203 @@ paths:
                     properties:
                       accountId: { type: string }
                       platform: { type: string, example: googleanalytics }
+                      username: { type: string }
+                      displayName: { type: string }
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403': { description: 'The connect token was issued for a different profile or platform (INSUFFICIENT_PERMISSIONS).' }
+        '404':
+          x-summary: "The pending sign-in expired or was already used: start the connect again."
+          description: The pending sign-in expired or was already used. Start the connect again.
+        '500':
+          x-summary: "Saving failed on the Google or Zernio side: the `pendingDataToken` stays usable, so retry."
+          description: Google or Zernio failed while saving. The pendingDataToken stays usable; retry.
+  /v1/connect/googlesearchconsole:
+    get:
+      x-resource-group: accounts
+      operationId: getGoogleSearchConsoleConnectUrl
+      tags:
+        - Connect
+      x-platforms: [googlesearchconsole]
+      summary: Get Google Search Console OAuth connect URL
+      description: |
+        Starts OAuth for Google Search Console. Each connected site becomes its own account with platform `googlesearchconsole`; it reads Google Search data and does not post.
+
+        Requested scope: `https://www.googleapis.com/auth/webmasters.readonly`.
+
+        ### Flow
+
+        Redirect the user to `authUrl`.
+
+        - **One verified site:** Zernio connects it and redirects to `redirect_url` (or the dashboard) with `connected=googlesearchconsole`, `profileId`, `accountId` and `username` (the site, such as `acme.com`).
+        - **Several sites:** the user first picks one on a Zernio-hosted page, which then redirects the same way.
+
+        ### Your own site picker
+
+        Add `headless=true` to `redirect_url`. Zernio then redirects there with `step=select_site`, `profileId`, `platform=googlesearchconsole` and a `pendingDataToken` for `GET /v1/connect/googlesearchconsole/sites` and `POST /v1/connect/googlesearchconsole/select-site`.
+
+        ### Errors
+
+        On failure the redirect carries `error`, `platform=googlesearchconsole` and `error_message`. Errors include:
+
+        - `googlesearchconsole_scope_missing`: the user unticked Search Console access.
+        - `googlesearchconsole_no_sites`: the Google account has no verified Search Console site.
+        - `googlesearchconsole_no_refresh_token`: Google returned no refresh token; connect again.
+      security:
+        - bearerAuth: []
+        - connectToken: []
+      parameters:
+        - name: profileId
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Your Zernio profile ID (get from /v1/profiles).
+        - name: redirect_url
+          in: query
+          schema:
+            type: string
+          description: >-
+            Custom redirect after connection. Must be an absolute http(s) URL or custom app scheme such as
+            `myapp://callback`; relative and unsafe URLs return 400.
+        - name: reconnectAccountId
+          in: query
+          schema:
+            type: string
+          description: >-
+            Zernio account ID of the Google Search Console account being reconnected. Picking a different site
+            then fails instead of adding a second account.
+      responses:
+        '200':
+          description: OAuth authorization URL and authenticated state
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - authUrl
+                  - state
+                properties:
+                  authUrl:
+                    type: string
+                    format: uri
+                    description: Google URL to open in the user agent.
+                  state:
+                    type: string
+                    description: Authenticated, expiring OAuth state handled by the callback.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '402':
+          $ref: '#/components/responses/PaymentRequired'
+        '403':
+          description: API key does not have access to this profile, or the key is read-only.
+        '404':
+          description: Profile not found or access denied.
+        '503':
+          description: Google Search Console OAuth is not configured.
+  /v1/connect/googlesearchconsole/sites:
+    get:
+      x-resource-group: accounts
+      operationId: listGoogleSearchConsoleSites
+      tags:
+        - Connect
+      x-platforms: [googlesearchconsole]
+      summary: List Search Console sites for a pending connect
+      description: |
+        For headless flows: lists the verified Search Console sites of a pending connect, so you can show your own picker.
+
+        ### Flow
+
+        1. The connect started with `redirect_url=...?headless=true`, and the Google account has several verified sites.
+        2. Zernio redirects to your `redirect_url` with `step=select_site`, `profileId`, `platform=googlesearchconsole` and a `pendingDataToken`.
+        3. Call this to list the sites and show your own picker.
+        4. Call `POST /v1/connect/googlesearchconsole/select-site`.
+
+        ### Token
+
+        - Listing does not consume the token.
+        - A headless token passes through your own URLs, so it is honored only together with your API key (or connect token) for the same profile.
+        - It expires after one hour.
+      security:
+        - bearerAuth: []
+        - connectToken: []
+      parameters:
+        - name: pendingDataToken
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Token from the headless redirect.
+      responses:
+        '200':
+          description: Sites the Google account can read
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  sites:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        siteUrl: { type: string, description: '`sc-domain:` plus the domain for a Domain property, the full URL prefix otherwise.', example: 'sc-domain:acme.com' }
+                        permissionLevel: { type: string, enum: [siteOwner, siteFullUser, siteRestrictedUser] }
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403': { description: 'The connect token was issued for a different profile or platform (INSUFFICIENT_PERMISSIONS).' }
+        '404':
+          x-summary: "The pending sign-in expired or was already used: start the connect again."
+          description: The pending sign-in expired or was already used. Start the connect again.
+  /v1/connect/googlesearchconsole/select-site:
+    post:
+      x-resource-group: accounts
+      operationId: selectGoogleSearchConsoleSite
+      tags:
+        - Connect
+      x-platforms: [googlesearchconsole]
+      summary: Connect the chosen Search Console site
+      description: |
+        For headless flows. Connects the site the user picked as a `googlesearchconsole` account and returns where to send the user next.
+
+        - On success: your `redirect_url` with `connected=googlesearchconsole`, `profileId`, `accountId` and `username`.
+        - When the connect was refused (for example a billing block): an `error`.
+
+        Consumes the `pendingDataToken`; a refused or failed attempt leaves it usable for a retry.
+
+        Send your API key (or connect token) for the same profile with a headless token.
+      security:
+        - bearerAuth: []
+        - connectToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [pendingDataToken, siteUrl]
+              properties:
+                pendingDataToken: { type: string, description: Token from the headless redirect. }
+                siteUrl: { type: string, description: 'A siteUrl from the sites list.', example: 'sc-domain:acme.com' }
+      responses:
+        '200':
+          description: The site is connected, or the connect was refused with a reason in redirect_url
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  redirect_url: { type: string, description: Where to send the user next. }
+                  account:
+                    type: [object, "null"]
+                    description: The connected account, or null when the connect was refused.
+                    properties:
+                      accountId: { type: string }
+                      platform: { type: string, example: googlesearchconsole }
                       username: { type: string }
                       displayName: { type: string }
         '400':

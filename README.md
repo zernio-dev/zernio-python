@@ -246,6 +246,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 |--------|-------------|
 | `analytics.list_facebook_tagged_posts()` | List the posts a Facebook Page is tagged in |
 | `analytics.list_facebook_visitor_posts()` | List visitor posts on a Facebook Page |
+| `analytics.list_google_search_console_sitemaps()` | List Google Search Console sitemaps |
 | `analytics.list_post_authenticity()` | List authenticity scores |
 | `analytics.list_tracking_windows()` | List tracking windows |
 | `analytics.get_analytics()` | Get post analytics |
@@ -283,7 +284,9 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `analytics.get_you_tube_demographics()` | Get YouTube demographics |
 | `analytics.get_you_tube_video_retention()` | Get YouTube video retention curve |
 | `analytics.cancel_tracking_window()` | Cancel a tracking window |
+| `analytics.inspect_google_search_console_url()` | Inspect a URL in Google Search Console |
 | `analytics.open_tracking_window()` | Open a tracking window |
+| `analytics.query_google_search_console_search_analytics()` | Query Google Search Console search analytics |
 | `analytics.run_google_analytics_realtime_report()` | Run a Google Analytics (GA4) realtime report |
 | `analytics.run_google_analytics_report()` | Run a Google Analytics (GA4) report |
 | `analytics.sync_external_posts()` | Sync an external post |
@@ -364,6 +367,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `connect.list_google_analytics_properties()` | List Google Analytics properties for a pending connect |
 | `connect.list_google_business_categories()` | List Google Business Profile categories |
 | `connect.list_google_business_locations()` | List Google Business Profile locations |
+| `connect.list_google_search_console_sites()` | List Search Console sites for a pending connect |
 | `connect.list_instagram_pages()` | List Pages with a linked Instagram account |
 | `connect.list_linked_in_organizations()` | List LinkedIn orgs |
 | `connect.list_o_auth_apps()` | List your OAuth apps |
@@ -387,6 +391,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `connect.get_facebook_pages()` | List Facebook pages |
 | `connect.get_gmb_locations()` | List Google Business Profile locations |
 | `connect.get_google_analytics_connect_url()` | Get Google Analytics OAuth connect URL |
+| `connect.get_google_search_console_connect_url()` | Get Google Search Console OAuth connect URL |
 | `connect.get_hub_spot_connect_url()` | Get HubSpot OAuth connect URL |
 | `connect.get_linked_in_organizations()` | List LinkedIn orgs |
 | `connect.get_o_auth_app()` | Get an OAuth app |
@@ -446,6 +451,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `connect.select_facebook_page()` | Select Facebook page |
 | `connect.select_google_analytics_property()` | Connect the chosen Google Analytics property |
 | `connect.select_google_business_location()` | Select Google Business Profile location |
+| `connect.select_google_search_console_site()` | Connect the chosen Search Console site |
 | `connect.select_instagram_account()` | Select the Page whose Instagram account to connect |
 | `connect.select_linked_in_organization()` | Select LinkedIn org |
 | `connect.select_pinterest_board()` | Select Pinterest board |

@@ -318,6 +318,48 @@ class ConnectResource:
             "/v1/connect/googleanalytics/select-property", data=payload
         )
 
+    def get_google_search_console_connect_url(
+        self,
+        profile_id: str,
+        *,
+        redirect_url: str | None = None,
+        reconnect_account_id: str | None = None,
+    ) -> dict[str, Any]:
+        """Get Google Search Console OAuth connect URL"""
+        params = self._build_query(
+            {
+                "profileId": profile_id,
+                "redirect_url": redirect_url,
+                "reconnectAccountId": reconnect_account_id,
+            }
+        )
+        return self._client._get("/v1/connect/googlesearchconsole", params=params)
+
+    def list_google_search_console_sites(
+        self, pending_data_token: str
+    ) -> dict[str, Any]:
+        """List Search Console sites for a pending connect"""
+        params = self._build_query(
+            {
+                "pendingDataToken": pending_data_token,
+            }
+        )
+        return self._client._get("/v1/connect/googlesearchconsole/sites", params=params)
+
+    def select_google_search_console_site(
+        self, pending_data_token: str, site_url: str
+    ) -> dict[str, Any]:
+        """Connect the chosen Search Console site"""
+        payload = self._build_body(
+            {
+                "pendingDataToken": pending_data_token,
+                "siteUrl": site_url,
+            }
+        )
+        return self._client._post(
+            "/v1/connect/googlesearchconsole/select-site", data=payload
+        )
+
     def get_hub_spot_connect_url(
         self, profile_id: str, *, redirect_url: str | None = None
     ) -> dict[str, Any]:
@@ -1906,6 +1948,52 @@ class ConnectResource:
         )
         return await self._client._apost(
             "/v1/connect/googleanalytics/select-property", data=payload
+        )
+
+    async def aget_google_search_console_connect_url(
+        self,
+        profile_id: str,
+        *,
+        redirect_url: str | None = None,
+        reconnect_account_id: str | None = None,
+    ) -> dict[str, Any]:
+        """Get Google Search Console OAuth connect URL (async)"""
+        params = self._build_query(
+            {
+                "profileId": profile_id,
+                "redirect_url": redirect_url,
+                "reconnectAccountId": reconnect_account_id,
+            }
+        )
+        return await self._client._aget(
+            "/v1/connect/googlesearchconsole", params=params
+        )
+
+    async def alist_google_search_console_sites(
+        self, pending_data_token: str
+    ) -> dict[str, Any]:
+        """List Search Console sites for a pending connect (async)"""
+        params = self._build_query(
+            {
+                "pendingDataToken": pending_data_token,
+            }
+        )
+        return await self._client._aget(
+            "/v1/connect/googlesearchconsole/sites", params=params
+        )
+
+    async def aselect_google_search_console_site(
+        self, pending_data_token: str, site_url: str
+    ) -> dict[str, Any]:
+        """Connect the chosen Search Console site (async)"""
+        payload = self._build_body(
+            {
+                "pendingDataToken": pending_data_token,
+                "siteUrl": site_url,
+            }
+        )
+        return await self._client._apost(
+            "/v1/connect/googlesearchconsole/select-site", data=payload
         )
 
     async def aget_hub_spot_connect_url(

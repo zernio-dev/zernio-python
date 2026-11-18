@@ -691,6 +691,65 @@ class AnalyticsResource:
             "/v1/analytics/googleanalytics/metadata", params=params
         )
 
+    def query_google_search_console_search_analytics(
+        self,
+        account_id: str,
+        *,
+        from_date: str | None = None,
+        to_date: str | None = None,
+        dimensions: list[str] | None = None,
+        type: str | None = None,
+        dimension_filter_groups: list[dict[str, Any]] | None = None,
+        aggregation_type: str | None = None,
+        row_limit: int | None = None,
+        start_row: int | None = None,
+        data_state: str | None = None,
+    ) -> dict[str, Any]:
+        """Query Google Search Console search analytics"""
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "fromDate": from_date,
+                "toDate": to_date,
+                "dimensions": dimensions,
+                "type": type,
+                "dimensionFilterGroups": dimension_filter_groups,
+                "aggregationType": aggregation_type,
+                "rowLimit": row_limit,
+                "startRow": start_row,
+                "dataState": data_state,
+            }
+        )
+        return self._client._post(
+            "/v1/analytics/googlesearchconsole/search-analytics", data=payload
+        )
+
+    def list_google_search_console_sitemaps(self, account_id: str) -> dict[str, Any]:
+        """List Google Search Console sitemaps"""
+        params = self._build_query(
+            {
+                "accountId": account_id,
+            }
+        )
+        return self._client._get(
+            "/v1/analytics/googlesearchconsole/sitemaps", params=params
+        )
+
+    def inspect_google_search_console_url(
+        self, account_id: str, inspection_url: str, *, language_code: str | None = None
+    ) -> dict[str, Any]:
+        """Inspect a URL in Google Search Console"""
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "inspectionUrl": inspection_url,
+                "languageCode": language_code,
+            }
+        )
+        return self._client._post(
+            "/v1/analytics/googlesearchconsole/url-inspection", data=payload
+        )
+
     def open_tracking_window(
         self,
         *,
@@ -1556,6 +1615,67 @@ class AnalyticsResource:
         )
         return await self._client._aget(
             "/v1/analytics/googleanalytics/metadata", params=params
+        )
+
+    async def aquery_google_search_console_search_analytics(
+        self,
+        account_id: str,
+        *,
+        from_date: str | None = None,
+        to_date: str | None = None,
+        dimensions: list[str] | None = None,
+        type: str | None = None,
+        dimension_filter_groups: list[dict[str, Any]] | None = None,
+        aggregation_type: str | None = None,
+        row_limit: int | None = None,
+        start_row: int | None = None,
+        data_state: str | None = None,
+    ) -> dict[str, Any]:
+        """Query Google Search Console search analytics (async)"""
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "fromDate": from_date,
+                "toDate": to_date,
+                "dimensions": dimensions,
+                "type": type,
+                "dimensionFilterGroups": dimension_filter_groups,
+                "aggregationType": aggregation_type,
+                "rowLimit": row_limit,
+                "startRow": start_row,
+                "dataState": data_state,
+            }
+        )
+        return await self._client._apost(
+            "/v1/analytics/googlesearchconsole/search-analytics", data=payload
+        )
+
+    async def alist_google_search_console_sitemaps(
+        self, account_id: str
+    ) -> dict[str, Any]:
+        """List Google Search Console sitemaps (async)"""
+        params = self._build_query(
+            {
+                "accountId": account_id,
+            }
+        )
+        return await self._client._aget(
+            "/v1/analytics/googlesearchconsole/sitemaps", params=params
+        )
+
+    async def ainspect_google_search_console_url(
+        self, account_id: str, inspection_url: str, *, language_code: str | None = None
+    ) -> dict[str, Any]:
+        """Inspect a URL in Google Search Console (async)"""
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "inspectionUrl": inspection_url,
+                "languageCode": language_code,
+            }
+        )
+        return await self._client._apost(
+            "/v1/analytics/googlesearchconsole/url-inspection", data=payload
         )
 
     async def aopen_tracking_window(

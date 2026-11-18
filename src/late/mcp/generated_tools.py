@@ -807,7 +807,7 @@ def register_generated_tools(mcp, _get_client):
                 platform: Filter accounts by platform (e.g. "instagram", "twitter").
                 status: Filter accounts by connection status. `connected` returns healthy accounts; `disconnected` returns accounts that need reconnection (per the same reconnection check surfaced in the dashboard). Omit to return accounts in any status. When combined with page/limit, pagination totals reflect the filtered result set.
                 search: Case-insensitive match on the account username, display name or platform user id. A 24-character hexadecimal value is read as an account id and matches only that exact account. Combine with page/limit to paginate the matches.
-                category: Only accounts of this kind. ads = ad accounts (Meta, Google, LinkedIn, Pinterest, TikTok, X, OpenAI, Reddit, Microsoft), communication = WhatsApp, Telegram, Discord, Slack, iMessage, LINE and WeChat, blogs = Shopify and WordPress, crm = HubSpot and Salesforce, analytics = Google Analytics, social = every other platform.
+                category: Only accounts of this kind. ads = ad accounts (Meta, Google, LinkedIn, Pinterest, TikTok, X, OpenAI, Reddit, Microsoft), communication = WhatsApp, Telegram, Discord, Slack, iMessage, LINE and WeChat, blogs = Shopify and WordPress, crm = HubSpot and Salesforce, analytics = Google Analytics, Search Console, Stripe, Tag Manager and Axon, social = every other platform.
                 sort: Sort an offset-paginated listing (page and limit) by account name, platform, profile name, status (accounts needing a reconnect first when ascending) or connection date. Ties keep the default order: platform, then newest first.
                 order: Direction for `sort`.
                 include_over_limit: When true, includes accounts from over-limit profiles.
@@ -1088,6 +1088,7 @@ def register_generated_tools(mcp, _get_client):
             "line",
             "wechat",
             "googletagmanager",
+            "googlesearchconsole",
         ]
         | None = None,
         status: Literal["healthy", "warning", "error"] | None = None,
@@ -15820,6 +15821,137 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="Query Google Search Console search analytics",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def analytics_query_google_search_console_search_analytics(
+        account_id: str,
+        from_date: str | None = None,
+        to_date: str | None = None,
+        dimensions: list[
+            Literal[
+                "date", "hour", "query", "page", "country", "device", "searchAppearance"
+            ]
+        ]
+        | None = None,
+        type: Literal["web", "image", "video", "news", "discover", "googleNews"]
+        | None = None,
+        dimension_filter_groups: list[dict[str, Any]] | None = None,
+        aggregation_type: Literal["auto", "byPage", "byProperty"] | None = None,
+        row_limit: int | None = None,
+        start_row: int | None = None,
+        data_state: Literal["final", "all", "hourly_all"] | None = None,
+    ) -> str:
+        """Query Google Search Console search analytics
+
+        Clicks, impressions, CTR and average position from Google Search for a connected Search Console site, through Google's `searchAnalytics.query`.
+
+        Group by any of `date`, `hour`, `query`, `page`, `country`, `device` and `searchAppearance`, and filter with Google's own filter groups. With no dimensions you get one row with the site's totals.
+
+        ### Dates
+
+        Dates are `YYYY-MM-DD` in Pacific time. `toDate` defaults to yesterday and `fromDate` to 27 days before `toDate`, the window every report takes. Unknown fields answer 400. Google keeps 16 months, and the last two or three days are still filling in unless you pass `dataState: all`.
+
+        ### Caching and quota
+
+        Identical requests on the same site are cached for 10 minutes. Google limits each site to 1,200 queries a minute; past it the request returns 429.
+
+        Platforms: googlesearchconsole
+
+        Args:
+            account_id: Zernio account ID of the Google Search Console connection. (required)
+            from_date
+            to_date
+            dimensions
+            type: Which Google surface to read. Defaults to `web`.
+            dimension_filter_groups: Each item is an object with keys: groupType (one of: and); filters (list of objects with keys dimension, operator, expression, required)
+            aggregation_type
+            row_limit: Defaults to 1000.
+            start_row: Row offset for paging past `rowLimit`.
+            data_state: `final` (default) leaves out the last two or three days; `all` includes them while Google is still filling them in; `hourly_all` is required with the `hour` dimension."""
+        client = _get_client()
+        try:
+            response = client.analytics.query_google_search_console_search_analytics(
+                account_id=account_id,
+                from_date=from_date,
+                to_date=to_date,
+                dimensions=dimensions,
+                type=type,
+                dimension_filter_groups=dimension_filter_groups,
+                aggregation_type=aggregation_type,
+                row_limit=row_limit,
+                start_row=start_row,
+                data_state=data_state,
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List Google Search Console sitemaps",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def analytics_list_google_search_console_sitemaps(account_id: str) -> str:
+        """List Google Search Console sitemaps
+
+        The sitemaps submitted for a connected Search Console site, with when Google last read them, their errors and warnings and how many URLs each holds. Cached for 10 minutes.
+
+        Platforms: googlesearchconsole
+
+        Args:
+            account_id: Zernio account ID of the Google Search Console connection. (required)"""
+        client = _get_client()
+        try:
+            response = client.analytics.list_google_search_console_sitemaps(
+                account_id=account_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Inspect a URL in Google Search Console",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def analytics_inspect_google_search_console_url(
+        account_id: str, inspection_url: str, language_code: str | None = None
+    ) -> str:
+        """Inspect a URL in Google Search Console
+
+        Google's index status for one URL of a connected site: whether it is indexed, its canonical, last crawl, robots and fetch state, mobile usability and rich results. Returns Google's `inspectionResult` as is.
+
+        The URL must belong to the connected site (any host under a Domain property, or starting with the URL prefix); any other URL returns 400 before Google is called. Google allows 2,000 inspections a day and 600 a minute per site; results are cached for one hour.
+
+        Platforms: googlesearchconsole
+
+        Args:
+            account_id: Zernio account ID of the Google Search Console connection. (required)
+            inspection_url: (required)
+            language_code: Language of the issue messages (BCP-47, for example `en-US`). Defaults to English."""
+        client = _get_client()
+        try:
+            response = client.analytics.inspect_google_search_console_url(
+                account_id=account_id,
+                inspection_url=inspection_url,
+                language_code=language_code,
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="Open a tracking window",
             readOnlyHint=False,
             destructiveHint=True,
@@ -26296,6 +26428,132 @@ def register_generated_tools(mcp, _get_client):
         try:
             response = client.connect.select_google_analytics_property(
                 pending_data_token=pending_data_token, property_id=property_id
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get Google Search Console OAuth connect URL",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def connect_get_google_search_console_connect_url(
+        profile_id: str,
+        redirect_url: str | None = None,
+        reconnect_account_id: str | None = None,
+    ) -> str:
+        """Get Google Search Console OAuth connect URL
+
+        Starts OAuth for Google Search Console. Each connected site becomes its own account with platform `googlesearchconsole`; it reads Google Search data and does not post.
+
+        Requested scope: `https://www.googleapis.com/auth/webmasters.readonly`.
+
+        ### Flow
+
+        Redirect the user to `authUrl`.
+
+        - **One verified site:** Zernio connects it and redirects to `redirect_url` (or the dashboard) with `connected=googlesearchconsole`, `profileId`, `accountId` and `username` (the site, such as `acme.com`).
+        - **Several sites:** the user first picks one on a Zernio-hosted page, which then redirects the same way.
+
+        ### Your own site picker
+
+        Add `headless=true` to `redirect_url`. Zernio then redirects there with `step=select_site`, `profileId`, `platform=googlesearchconsole` and a `pendingDataToken` for `GET /v1/connect/googlesearchconsole/sites` and `POST /v1/connect/googlesearchconsole/select-site`.
+
+        ### Errors
+
+        On failure the redirect carries `error`, `platform=googlesearchconsole` and `error_message`. ...
+
+        Platforms: googlesearchconsole
+
+        Args:
+            profile_id: Your Zernio profile ID (get from /v1/profiles). (required)
+            redirect_url: Custom redirect after connection. Must be an absolute http(s) URL or custom app scheme such as `myapp://callback`; relative and unsafe URLs return 400.
+            reconnect_account_id: Zernio account ID of the Google Search Console account being reconnected. Picking a different site then fails instead of adding a second account."""
+        client = _get_client()
+        try:
+            response = client.connect.get_google_search_console_connect_url(
+                profile_id=profile_id,
+                redirect_url=redirect_url,
+                reconnect_account_id=reconnect_account_id,
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List Search Console sites for a pending connect",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def connect_list_google_search_console_sites(pending_data_token: str) -> str:
+        """List Search Console sites for a pending connect
+
+        For headless flows: lists the verified Search Console sites of a pending connect, so you can show your own picker.
+
+        ### Flow
+
+        1. The connect started with `redirect_url=...?headless=true`, and the Google account has several verified sites.
+        2. Zernio redirects to your `redirect_url` with `step=select_site`, `profileId`, `platform=googlesearchconsole` and a `pendingDataToken`.
+        3. Call this to list the sites and show your own picker.
+        4. Call `POST /v1/connect/googlesearchconsole/select-site`.
+
+        ### Token
+
+        - Listing does not consume the token.
+        - A headless token passes through your own URLs, so it is honored only together with your API key (or connect token) for the same profile.
+        - It expires after one hour.
+
+        Platforms: googlesearchconsole
+
+        Args:
+            pending_data_token: Token from the headless redirect. (required)"""
+        client = _get_client()
+        try:
+            response = client.connect.list_google_search_console_sites(
+                pending_data_token=pending_data_token
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Connect the chosen Search Console site",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def connect_select_google_search_console_site(
+        pending_data_token: str, site_url: str
+    ) -> str:
+        """Connect the chosen Search Console site
+
+        For headless flows. Connects the site the user picked as a `googlesearchconsole` account and returns where to send the user next.
+
+        - On success: your `redirect_url` with `connected=googlesearchconsole`, `profileId`, `accountId` and `username`.
+        - When the connect was refused (for example a billing block): an `error`.
+
+        Consumes the `pendingDataToken`; a refused or failed attempt leaves it usable for a retry.
+
+        Send your API key (or connect token) for the same profile with a headless token.
+
+        Platforms: googlesearchconsole
+
+        Args:
+            pending_data_token: Token from the headless redirect. (required)
+            site_url: A siteUrl from the sites list. (required)"""
+        client = _get_client()
+        try:
+            response = client.connect.select_google_search_console_site(
+                pending_data_token=pending_data_token, site_url=site_url
             )
             return _format_response(response)
         except Exception as e:
