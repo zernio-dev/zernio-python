@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Zernio ads alerts</title>
+<style>/*ZERNIO_CSS*/
+.alert { padding: 10px 0; align-items: flex-start; }
+.alert:first-child { padding-top: 0; }
+.alert:last-child { padding-bottom: 0; }
+.alert .dot { margin-top: 7px; }
+.alert .title { font-weight: 500; }
+.alert .message { font-size: 13px; color: var(--z-text-2); -webkit-line-clamp: 2; overflow-wrap: anywhere; }
+.alert .buttons { display: flex; gap: 6px; margin-top: 6px; }
+.link { padding: 0; border: 0; background: none; color: var(--z-accent); font-size: 12px; cursor: pointer; }
+</style>
+</head>
+<body>
+<main id="app" class="card" aria-live="polite">
+  <div class="skeleton" aria-busy="true" aria-label="Loading ads alerts"><i style="width:30%"></i><i></i><i style="width:80%"></i><i></i></div>
+</main>
+<script>/*ZERNIO_RUNTIME*/</script>
+<script>
+(function () {
+  var Z = window.Zernio, el = Z.el;
+  var app = document.getElementById("app");
+  var SHOWN = 8;
+  var DOT = { error: "bad", warning: "warn", info: "" };
+  var alerts = [];
+  var counts = {};
+  // alert id -> "busy" | "dismissed" | error text
+  var dismissed = {};
+
+  function fixUrl(alert) {
+    var url = alert.fix && alert.fix.url;
+    if (!url) return null;
+    // connection_lost points at a Zernio dashboard path.
+    return url.charAt(0) === "/" ? "https://zernio.com" + url : url;
+  }
+
+  function dismiss(alert) {
+    dismissed[alert.id] = "busy";
+    render();
+    Z.callTool("ui_dismiss_ads_alert", { alert_id: alert.id }).then(function (result) {
+      dismissed[alert.id] = result.isError ? Z.text(result) : "dismissed";
+      if (!result.isError) Z.tellModel("From the Zernio ads alerts card the user dismissed alert " + alert.id + " (" + alert.title + ") for 30 days.").catch(function () {});
+    }, function (err) {
+      dismissed[alert.id] = err.message;
+    }).then(render);
+  }
+
+  function ask(alert) {
+    var entity = alert.entity && alert.entity.name ? " on " + alert.entity.level + " \"" + alert.entity.name + "\"" : "";
+    Z.sendMessage("Help me fix this " + Z.platformName(alert.platform) + " ads alert" + entity + ": " + alert.title + ". " + (alert.message || "") + " (alert id " + alert.id + ")").catch(function () {});
+  }
+
+  function row(alert) {
+    var state = dismissed[alert.id];
+    var url = fixUrl(alert);
+    var entity = alert.entity && alert.entity.name;
+    return el("div", { class: "row alert" },
+      el("span", { class: "dot " + (DOT[alert.severity] || "") }),
+      el("div", { class: "grow" },
+        el("div", { class: "title", text: alert.title }),
+        el("div", { class: "small", text: [Z.platformName(alert.platform), entity].filter(Boolean).join(" · ") }),
+        alert.message ? el("div", { class: "message clamp", text: alert.message }) : null,
+        state && state !== "busy" && state !== "dismissed" ? el("div", { class: "small", style: "color: var(--z-danger)", text: state }) : null,
+        el("div", { class: "buttons" },
+          url ? el("button", { class: "btn small", onclick: function () { Z.openLink(url); } }, (alert.fix && alert.fix.label) || "Fix") : null,
+          el("button", { class: "btn small", disabled: state === "busy", onclick: function () { dismiss(alert); } }, state === "busy" ? "Dismissing…" : "Dismiss"),
+          el("button", { class: "link", onclick: function () { ask(alert); } }, "Ask Claude"))));
+  }
+
+  function render() {
+    var open = alerts.filter(function (a) { return dismissed[a.id] !== "dismissed"; });
+    var header = el("p", { class: "eyebrow" }, el("span", { class: "mark" }), "Ads alerts · " + open.length);
+    if (!open.length) {
+      app.replaceChildren(header, el("div", { class: "row" }, el("span", { class: "dot ok" }), "Nothing needs attention in your ads."));
+      return;
+    }
+    var hidden = open.length - SHOWN;
+    app.replaceChildren(
+      header,
+      el("div", { class: "row small", style: "gap: 14px; margin-bottom: 8px" },
+        el("span", { class: "row" }, el("span", { class: "dot bad" }), (counts.error || 0) + " errors"),
+        el("span", { class: "row" }, el("span", { class: "dot warn" }), (counts.warning || 0) + " warnings")),
+      el("div", { class: "divided" }, open.slice(0, SHOWN).map(row)),
+      hidden > 0 ? el("div", { class: "small", style: "margin-top: 8px", text: hidden + " more not shown" }) : null);
+  }
+
+  Z.on("result", function (result) {
+    var data = Z.data(result);
+    if (result.isError || !data || !Array.isArray(data.alerts)) {
+      app.replaceChildren(el("div", { class: "notice bad", text: Z.text(result) || "Could not load ads alerts." }));
+      return;
+    }
+    alerts = data.alerts;
+    counts = data.counts || {};
+    render();
+  });
+  Z.connect({ name: "ads alerts" });
+})();
+</script>
+</body>
+</html>

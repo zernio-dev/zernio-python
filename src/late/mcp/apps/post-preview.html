@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Zernio post preview</title>
+<style>/*ZERNIO_CSS*/
+.body { white-space: pre-wrap; overflow-wrap: anywhere; }
+.body.clamp { -webkit-line-clamp: 8; }
+.link { padding: 0; border: 0; background: none; color: var(--z-accent); font-size: 12px; cursor: pointer; }
+.media { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.media > * {
+  aspect-ratio: 1; width: 100%; object-fit: cover;
+  border: 1px solid var(--z-border-subtle); border-radius: var(--z-radius);
+  display: flex; align-items: center; justify-content: center;
+  font: 500 11px var(--z-mono); color: var(--z-text-3); text-transform: uppercase; background: var(--z-surface);
+}
+.issues { margin: 0; padding-left: 16px; }
+</style>
+</head>
+<body>
+<main id="app" class="card" aria-live="polite">
+  <div class="skeleton" aria-busy="true" aria-label="Loading preview"><i style="width:30%"></i><i></i><i></i><i style="width:70%"></i></div>
+</main>
+<script>/*ZERNIO_RUNTIME*/</script>
+<script>
+(function () {
+  var Z = window.Zernio, el = Z.el;
+  var app = document.getElementById("app");
+  var state = { data: null, expanded: false, busy: null, outcome: null };
+
+  function show(nodes) {
+    app.replaceChildren.apply(app, [].concat(nodes));
+  }
+
+  function chips(targets) {
+    return el("div", { class: "row wrap" }, targets.map(function (t) {
+      return el("span", { class: "chip", title: t.error || "" },
+        el("span", { class: "dot " + (t.error ? "bad" : "brand") }),
+        Z.platformName(t.platform),
+        t.handle ? el("span", { class: "small", text: "@" + t.handle }) : null);
+    }));
+  }
+
+  function media(items) {
+    if (!items.length) return null;
+    var shown = items.slice(0, 4);
+    return el("div", { class: "media" }, shown.map(function (m, i) {
+      var more = i === 3 && items.length > 4 ? "+" + (items.length - 3) : null;
+      if (m.type === "image" && !more) {
+        var img = el("img", { src: m.url, alt: m.altText || "Attached image " + (i + 1), loading: "lazy" });
+        img.addEventListener("error", function () { img.replaceWith(el("div", { text: "image" })); });
+        return img;
+      }
+      return el("div", { text: more || m.type });
+    }));
+  }
+
+  function issues(validation, targets) {
+    var errors = (validation && validation.errors) || [];
+    var warnings = (validation && validation.warnings) || [];
+    var unresolved = targets.filter(function (t) { return t.error; });
+    var out = [];
+    if (unresolved.length || errors.length) {
+      out.push(el("div", { class: "notice bad" },
+        el("ul", { class: "issues" },
+          unresolved.map(function (t) { return el("li", { text: Z.platformName(t.platform) + ": " + t.error }); }),
+          errors.map(function (e) { return el("li", { text: (e.platform ? Z.platformName(e.platform) + ": " : "") + e.error }); }))));
+    }
+    if (warnings.length) {
+      out.push(el("div", { class: "notice warn" },
+        el("ul", { class: "issues" }, warnings.map(function (w) {
+          return el("li", { text: (w.platform ? Z.platformName(w.platform) + ": " : "") + w.warning });
+        }))));
+    }
+    return out;
+  }
+
+  function submit(mode) {
+    var d = state.data;
+    var args = Object.assign({}, d.request, mode === "publish" ? { publish_now: true } : { is_draft: true });
+    state.busy = mode;
+    render();
+    Z.callTool("posts_cross_post", args).then(function (result) {
+      var text = Z.text(result);
+      // posts_cross_post reports account problems as text starting with ❌.
+      var ok = !result.isError && text.trim().indexOf("❌") !== 0;
+      state.outcome = { ok: ok, text: text };
+      var did = mode === "publish" ? "published" : "saved as a draft";
+      Z.tellModel((ok ? "From the Zernio preview card, the user " + did + " the previewed post. " : "Submitting the previewed post from the Zernio preview card failed. ") + text).catch(function () {});
+    }, function (err) {
+      state.outcome = { ok: false, text: err.message };
+    }).then(function () {
+      state.busy = null;
+      render();
+    });
+  }
+
+  function render() {
+    var d = state.data;
+    var post = d.post || {};
+    var targets = post.targets || [];
+    var content = post.content || "";
+    var length = Array.from(content).length;
+    var long = length > 420 || content.split("\n").length > 8;
+    var blocked = targets.some(function (t) { return t.error; }) || (d.validation && d.validation.valid === false);
+
+    var meta = [length + " characters"];
+    if (post.media && post.media.length) meta.push(post.media.length + " media");
+
+    var footer;
+    if (state.outcome) {
+      footer = [
+        el("div", { class: "notice " + (state.outcome.ok ? "ok" : "bad"), text: state.outcome.text }),
+        state.outcome.ok ? el("div", { class: "actions" },
+          el("button", { class: "btn", onclick: function () { Z.openLink("https://zernio.com/dashboard"); } }, "Open in Zernio")) : null,
+      ];
+    } else {
+      footer = el("div", { class: "actions" },
+        el("button", { class: "btn primary", disabled: blocked || !!state.busy, onclick: function () { submit("publish"); } },
+          state.busy === "publish" ? "Publishing…" : "Publish now"),
+        el("button", { class: "btn", disabled: !!state.busy, onclick: function () { submit("draft"); } },
+          state.busy === "draft" ? "Saving…" : "Save as draft"));
+    }
+
+    show([
+      el("p", { class: "eyebrow" }, el("span", { class: "mark" }), "Post preview · " + targets.length + (targets.length === 1 ? " platform" : " platforms")),
+      el("div", { class: "stack" },
+        chips(targets),
+        el("div", { class: "body" + (long && !state.expanded ? " clamp" : ""), text: content }),
+        long ? el("button", { class: "link", onclick: function () { state.expanded = !state.expanded; render(); } }, state.expanded ? "Show less" : "Show more") : null,
+        media(post.media || []),
+        el("div", { class: "small num", text: meta.join(" · ") }),
+        issues(d.validation, targets)),
+      footer,
+    ]);
+  }
+
+  Z.on("result", function (result) {
+    state.data = Z.data(result);
+    if (result.isError || !state.data || !state.data.post) {
+      show(el("div", { class: "notice bad", text: Z.text(result) || "The preview could not be built." }));
+      return;
+    }
+    render();
+  });
+  Z.on("cancelled", function () {
+    show(el("div", { class: "notice", text: "Preview cancelled." }));
+  });
+  Z.connect({ name: "post preview" });
+})();
+</script>
+</body>
+</html>

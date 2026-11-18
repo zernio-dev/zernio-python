@@ -1,0 +1,110 @@
+/* Zernio MCP App styles. Structure (text, borders, surfaces, fonts) reads the
+   host's MCP Apps tokens so a view sits natively in Claude or ChatGPT; each
+   fallback is the zernio.com value. Zernio's identity lives in the accent,
+   the square 4px corners and the mono uppercase labels. */
+:root {
+  color-scheme: light dark;
+  --z-accent: #eb3514;
+  --z-accent-hover: #cd2c0e;
+  --z-accent-subtle: light-dark(#fce9e5, #261614);
+  --z-on-accent: #fff;
+  --z-text: var(--color-text-primary, light-dark(#1a1a1a, #fafafa));
+  --z-text-2: var(--color-text-secondary, light-dark(#525252, #d4d4d4));
+  --z-text-3: var(--color-text-tertiary, light-dark(#6b6b6b, #a3a3a3));
+  --z-border: var(--color-border-primary, light-dark(#e4e4e4, #202022));
+  --z-border-subtle: var(--color-border-secondary, light-dark(#f2f2f2, #1b1b1d));
+  --z-surface: var(--color-background-secondary, light-dark(#faf9f7, #141416));
+  --z-success: var(--color-text-success, light-dark(#15803d, #4ade80));
+  --z-warning: var(--color-text-warning, light-dark(#b45309, #fbbf24));
+  --z-danger: var(--color-text-danger, light-dark(#c0260f, #f87171));
+  --z-radius: 4px;
+  --z-font: var(--font-sans, "Geist", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif);
+  --z-mono: var(--font-mono, "Geist Mono", Menlo, Consolas, monospace);
+  --z-tap: 32px;
+}
+:root[data-theme="light"] { color-scheme: light; }
+:root[data-theme="dark"] { color-scheme: dark; }
+:root[data-touch] { --z-tap: 44px; }
+
+* { box-sizing: border-box; }
+html, body { margin: 0; background: transparent; }
+body {
+  padding: calc(12px + var(--safe-top, 0px)) calc(12px + var(--safe-right, 0px))
+    calc(12px + var(--safe-bottom, 0px)) calc(12px + var(--safe-left, 0px));
+  font: 14px/1.45 var(--z-font);
+  color: var(--z-text);
+  -webkit-font-smoothing: antialiased;
+}
+button { font: inherit; }
+:focus-visible { outline: 2px solid var(--z-accent); outline-offset: 2px; }
+
+.eyebrow {
+  display: flex; align-items: center; gap: 6px;
+  margin: 0 0 8px;
+  font: 500 11px/1 var(--z-mono);
+  letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--z-text-3);
+}
+.eyebrow .mark { width: 8px; height: 8px; border-radius: 2px; background: var(--z-accent); }
+h1 { margin: 0 0 4px; font-size: 16px; font-weight: 600; line-height: 1.3; }
+.muted { color: var(--z-text-2); }
+.small { font-size: 12px; color: var(--z-text-3); }
+
+.card {
+  border: 1px solid var(--z-border);
+  border-radius: var(--z-radius);
+  padding: 12px;
+}
+.row { display: flex; align-items: center; gap: 8px; }
+.wrap { flex-wrap: wrap; }
+.grow { flex: 1; min-width: 0; }
+.stack > * + * { margin-top: 10px; }
+.divided > * + * { border-top: 1px solid var(--z-border-subtle); }
+
+.chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  height: 24px; padding: 0 8px;
+  border: 1px solid var(--z-border); border-radius: var(--z-radius);
+  font-size: 12px; color: var(--z-text-2); white-space: nowrap;
+}
+.dot { width: 6px; height: 6px; border-radius: 50%; background: var(--z-text-3); flex: none; }
+.dot.ok { background: var(--z-success); }
+.dot.warn { background: var(--z-warning); }
+.dot.bad { background: var(--z-danger); }
+.dot.brand { background: var(--z-accent); }
+
+.actions { display: flex; gap: 8px; margin-top: 12px; }
+.btn {
+  min-height: var(--z-tap); padding: 0 14px;
+  border: 1px solid var(--z-border); border-radius: var(--z-radius);
+  background: transparent; color: var(--z-text);
+  font-size: 13px; font-weight: 500; cursor: pointer;
+}
+.btn:hover { background: var(--z-surface); }
+.btn.primary { background: var(--z-accent); border-color: var(--z-accent); color: var(--z-on-accent); }
+.btn.primary:hover { background: var(--z-accent-hover); border-color: var(--z-accent-hover); }
+.btn.small { min-height: 28px; padding: 0 10px; font-size: 12px; }
+:root[data-touch] .btn.small { min-height: 44px; }
+.btn[disabled] { opacity: 0.5; cursor: default; }
+
+.notice {
+  padding: 8px 10px; border-radius: var(--z-radius);
+  border-left: 2px solid var(--z-text-3);
+  background: var(--z-surface); font-size: 13px;
+}
+.notice.ok { border-left-color: var(--z-success); }
+.notice.warn { border-left-color: var(--z-warning); }
+.notice.bad { border-left-color: var(--z-danger); }
+
+.num { font-variant-numeric: tabular-nums; }
+.clamp { display: -webkit-box; -webkit-box-orient: vertical; overflow: hidden; }
+
+.skeleton { display: grid; gap: 8px; }
+.skeleton i {
+  display: block; height: 12px; border-radius: 2px;
+  background: linear-gradient(90deg, var(--z-border-subtle), var(--z-border), var(--z-border-subtle));
+  background-size: 200% 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+}
+@keyframes shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+@media (prefers-reduced-motion: reduce) { .skeleton i { animation: none; } }

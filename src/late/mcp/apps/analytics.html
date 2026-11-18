@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Zernio analytics</title>
+<style>/*ZERNIO_CSS*/
+.tiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+@media (max-width: 420px) { .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.tile {
+  padding: 8px 10px; text-align: left; cursor: pointer;
+  border: 1px solid var(--z-border); border-radius: var(--z-radius);
+  background: transparent; color: var(--z-text);
+}
+.tile:hover { background: var(--z-surface); }
+.tile[aria-pressed="true"] { border-color: var(--z-accent); box-shadow: inset 0 -2px 0 var(--z-accent); }
+.tile .label { font: 500 10px/1.2 var(--z-mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--z-text-3); }
+.tile .value { margin-top: 4px; font-size: 18px; font-weight: 600; }
+.chart { display: block; width: 100%; height: 96px; touch-action: none; }
+:root[data-display-mode="fullscreen"] .chart { height: 260px; }
+.readout { min-height: 18px; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th { font: 500 10px var(--z-mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--z-text-3); text-align: right; padding: 6px 0; }
+th:first-child, td:first-child { text-align: left; }
+td { padding: 6px 0; border-top: 1px solid var(--z-border-subtle); text-align: right; }
+</style>
+</head>
+<body>
+<main id="app" aria-live="polite">
+  <div class="skeleton" aria-busy="true" aria-label="Loading analytics"><i style="width:30%"></i><i style="height:48px"></i><i style="height:96px"></i></div>
+</main>
+<script>/*ZERNIO_RUNTIME*/</script>
+<script>
+(function () {
+  var Z = window.Zernio, el = Z.el;
+  var SVG = "http://www.w3.org/2000/svg";
+  var app = document.getElementById("app");
+  var data = null;
+  var metric = "impressions";
+  var hover = null;
+
+  var METRICS = [
+    { key: "impressions", label: "Impressions" },
+    { key: "engagement", label: "Engagement" },
+    { key: "views", label: "Views" },
+    { key: "postCount", label: "Posts" },
+  ];
+
+  function engagement(m) {
+    return (m.likes || 0) + (m.comments || 0) + (m.shares || 0) + (m.saves || 0);
+  }
+
+  function dayValue(day, key) {
+    var m = day.metrics || {};
+    if (key === "postCount") return day.postCount || 0;
+    if (key === "engagement") return engagement(m);
+    return m[key] || 0;
+  }
+
+  function total(key) {
+    var totals = data.totals || {};
+    if (totals[key] != null) return totals[key];
+    if (key === "engagement" && totals.likes != null) return engagement(totals);
+    return (data.dailyData || []).reduce(function (sum, day) { return sum + dayValue(day, key); }, 0);
+  }
+
+  function svg(tag, attrs) {
+    var node = document.createElementNS(SVG, tag);
+    Object.keys(attrs).forEach(function (k) { node.setAttribute(k, attrs[k]); });
+    return node;
+  }
+
+  function chart(days) {
+    var w = 600, h = 100;
+    var values = days.map(function (d) { return dayValue(d, metric); });
+    var max = Math.max.apply(null, values.concat([1]));
+    var step = days.length > 1 ? w / (days.length - 1) : 0;
+    var points = values.map(function (v, i) { return [i * step, h - 4 - (v / max) * (h - 8)]; });
+    var line = points.map(function (p, i) { return (i ? "L" : "M") + p[0].toFixed(1) + " " + p[1].toFixed(1); }).join("");
+
+    var root = svg("svg", { class: "chart", viewBox: "0 0 " + w + " " + h, preserveAspectRatio: "none", role: "img",
+      "aria-label": METRICS.filter(function (m) { return m.key === metric; })[0].label + " per day" });
+    root.appendChild(svg("path", { d: line + "L" + w + " " + h + "L0 " + h + "Z", fill: "var(--z-accent)", "fill-opacity": "0.08" }));
+    root.appendChild(svg("path", { d: line, fill: "none", stroke: "var(--z-accent)", "stroke-width": "1.5", "vector-effect": "non-scaling-stroke" }));
+    if (hover != null && points[hover]) {
+      root.appendChild(svg("line", { x1: points[hover][0], x2: points[hover][0], y1: 0, y2: h, stroke: "var(--z-border)", "vector-effect": "non-scaling-stroke" }));
+    }
+    root.addEventListener("pointermove", function (event) {
+      var box = root.getBoundingClientRect();
+      var index = Math.round(((event.clientX - box.left) / box.width) * (days.length - 1));
+      if (index !== hover) { hover = Math.max(0, Math.min(days.length - 1, index)); render(); }
+    });
+    root.addEventListener("pointerleave", function () { hover = null; render(); });
+    return root;
+  }
+
+  function breakdown() {
+    var rows = (data.platformBreakdown || []).slice().sort(function (a, b) { return (b.impressions || 0) - (a.impressions || 0); });
+    if (!rows.length) return null;
+    return el("table", null,
+      el("thead", null, el("tr", null, ["Platform", "Posts", "Impressions", "Engagement", "Views"].map(function (h) { return el("th", { text: h }); }))),
+      el("tbody", null, rows.map(function (r) {
+        return el("tr", null,
+          el("td", { text: Z.platformName(r.platform) }),
+          el("td", { class: "num", text: Z.compact(r.postCount) }),
+          el("td", { class: "num", text: Z.compact(r.impressions) }),
+          el("td", { class: "num", text: Z.compact(engagement(r)) }),
+          el("td", { class: "num", text: Z.compact(r.views) }));
+      })));
+  }
+
+  function render() {
+    var days = (data.dailyData || []).slice().sort(function (a, b) { return a.date < b.date ? -1 : 1; });
+    var context = Z.context();
+    var fullscreen = context.displayMode === "fullscreen";
+    var canExpand = (context.availableDisplayModes || []).indexOf("fullscreen") !== -1;
+    var range = days.length ? Z.date(days[0].date, { month: "short", day: "numeric", timeZone: "UTC" }) + " – " +
+      Z.date(days[days.length - 1].date, { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" }) : "No posts in range";
+    var label = METRICS.filter(function (m) { return m.key === metric; })[0].label;
+    var readout = hover != null && days[hover]
+      ? Z.date(days[hover].date, { weekday: "short", month: "short", day: "numeric", timeZone: "UTC" }) + " · " + Z.compact(dayValue(days[hover], metric)) + " " + label.toLowerCase()
+      : label + " per day";
+
+    app.replaceChildren(
+      el("p", { class: "eyebrow" }, el("span", { class: "mark" }), "Analytics · " + range),
+      el("div", { class: "tiles", role: "group", "aria-label": "Metric" }, METRICS.map(function (m) {
+        return el("button", { class: "tile", "aria-pressed": String(m.key === metric), onclick: function () { metric = m.key; render(); } },
+          el("div", { class: "label", text: m.label }),
+          el("div", { class: "value num", text: Z.compact(total(m.key)) }));
+      })),
+      el("div", { class: "small readout num", style: "margin: 10px 0 4px", text: readout }),
+      days.length ? chart(days) : null,
+      fullscreen ? el("div", { style: "margin-top: 16px" }, breakdown()) : null,
+      canExpand || fullscreen ? el("div", { class: "actions" },
+        el("button", { class: "btn", onclick: function () { Z.requestDisplayMode(fullscreen ? "inline" : "fullscreen").catch(function () {}); } },
+          fullscreen ? "Back to chat" : "Platform breakdown")) : null);
+  }
+
+  Z.on("result", function (result) {
+    data = Z.data(result);
+    if (result.isError || !data || !Array.isArray(data.dailyData)) {
+      app.replaceChildren(el("div", { class: "notice bad", text: Z.text(result) || "Could not load analytics." }));
+      data = null;
+      return;
+    }
+    render();
+  });
+  Z.on("context", function () { if (data) render(); });
+  Z.connect({ name: "analytics", displayModes: ["inline", "fullscreen"] });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Zernio automation approvals</title>
+<style>/*ZERNIO_CSS*/
+.request + .request { margin-top: 10px; }
+.change { padding: 6px 0; align-items: baseline; font-size: 13px; }
+.change .what { font: 500 10px var(--z-mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--z-text-3); min-width: 88px; }
+.change .name { overflow-wrap: anywhere; }
+</style>
+</head>
+<body>
+<main id="app" aria-live="polite">
+  <div class="skeleton" aria-busy="true" aria-label="Loading approvals"><i style="width:30%"></i><i></i><i></i><i style="width:60%"></i></div>
+</main>
+<script>/*ZERNIO_RUNTIME*/</script>
+<script>
+(function () {
+  var Z = window.Zernio, el = Z.el;
+  var app = document.getElementById("app");
+  var automationId = "";
+  var approvals = [];
+  // approval id -> "approve" | "reject" while the call runs, or an error text
+  var busy = {};
+
+  var TYPES = {
+    "ads.pause": "Pause", "ads.activate": "Activate", "ads.set_budget": "Budget",
+    "ads.duplicate": "Duplicate", "ads.edit_name": "Rename", "ads.set_bid": "Bid",
+    "ads.set_target": "Target", "ads.reallocate_budget": "Reallocate",
+  };
+
+  function value(v) {
+    if (!v) return "";
+    var key = Object.keys(v)[0];
+    return key === undefined ? "" : String(v[key]);
+  }
+
+  function describe(change) {
+    var from = value(change.previous), to = value(change.target);
+    var subject = change.subject || {};
+    return el("div", { class: "row change" },
+      el("span", { class: "what", text: TYPES[change.type] || change.type }),
+      el("span", { class: "grow name" },
+        (subject.name || subject.id) + " ",
+        el("span", { class: "small", text: subject.kind }),
+        from || to ? el("span", { class: "num muted", text: "  " + from + " → " + to }) : null),
+      change.status && change.status !== "pending" ? el("span", { class: "small", text: change.status }) : null);
+  }
+
+  function decide(approval, decision) {
+    busy[approval.id] = decision;
+    render();
+    Z.callTool("ui_decide_automation_approval", { automation_id: automationId, approval_id: approval.id, decision: decision }).then(function (result) {
+      var data = Z.data(result);
+      if (result.isError || !data || !data.approval) {
+        busy[approval.id] = Z.text(result) || "The decision did not go through.";
+        return;
+      }
+      delete busy[approval.id];
+      approvals = approvals.map(function (a) { return a.id === approval.id ? data.approval : a; });
+      Z.tellModel("From the Zernio approvals card the user " + (decision === "approve" ? "approved" : "rejected") + " automation request " + approval.id + " (automation " + automationId + "). It is now " + data.approval.status + ".").catch(function () {});
+    }, function (err) {
+      busy[approval.id] = err.message;
+    }).then(render);
+  }
+
+  function card(approval) {
+    var state = busy[approval.id];
+    var running = state === "approve" || state === "reject";
+    var pending = approval.status === "pending";
+    var dot = { pending: "brand", approved: "ok", rejected: "bad" }[approval.status] || "";
+    return el("div", { class: "card request" },
+      el("div", { class: "row small", style: "margin-bottom: 6px" },
+        el("span", { class: "dot " + dot }),
+        el("span", { class: "grow", text: approval.status.charAt(0).toUpperCase() + approval.status.slice(1) + " · " +
+          (approval.changes || []).length + " change(s)" }),
+        el("span", { text: pending ? "Expires " + Z.date(approval.expiresAt, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) : (approval.decidedBy ? approval.decidedBy.email : "") })),
+      el("div", { class: "divided" }, (approval.changes || []).map(describe)),
+      state && !running ? el("div", { class: "notice bad", style: "margin-top: 8px", text: state }) : null,
+      pending && approval.canDecide ? el("div", { class: "actions" },
+        el("button", { class: "btn primary", disabled: running, onclick: function () { decide(approval, "approve"); } }, state === "approve" ? "Approving…" : "Approve"),
+        el("button", { class: "btn", disabled: running, onclick: function () { decide(approval, "reject"); } }, state === "reject" ? "Rejecting…" : "Reject")) : null,
+      pending && !approval.canDecide ? el("div", { class: "small", style: "margin-top: 8px", text: "Only " + (approval.to || []).join(", ") + " can decide this." }) : null);
+  }
+
+  function render() {
+    var header = el("p", { class: "eyebrow" }, el("span", { class: "mark" }), "Automation approvals · " + approvals.length);
+    app.replaceChildren(header, approvals.length
+      ? el("div", null, approvals.map(card))
+      : el("div", { class: "card row" }, el("span", { class: "dot ok" }), "Nothing is waiting for approval."));
+  }
+
+  Z.on("result", function (result) {
+    var data = Z.data(result);
+    if (result.isError || !data || !Array.isArray(data.approvals)) {
+      app.replaceChildren(el("div", { class: "notice bad", text: Z.text(result) || "Could not load approvals." }));
+      return;
+    }
+    automationId = data.automationId;
+    approvals = data.approvals;
+    render();
+  });
+  Z.connect({ name: "automation approvals" });
+})();
+</script>
+</body>
+</html>

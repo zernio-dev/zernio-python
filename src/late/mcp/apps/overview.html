@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Zernio</title>
+<style>/*ZERNIO_CSS*/
+.areas { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; margin-top: 12px; }
+.area { padding: 8px 10px; border: 1px solid var(--z-border-subtle); border-radius: var(--z-radius); }
+.area b { display: block; font-size: 13px; font-weight: 600; }
+</style>
+</head>
+<body>
+<main class="card">
+  <p class="eyebrow"><span class="mark"></span>Zernio</p>
+  <h1>Social media API for agents</h1>
+  <p class="muted">Publish, schedule and analyze across 16 platforms, with a unified inbox and ads on 7 networks.</p>
+  <div class="areas">
+    <div class="area"><b>Publish</b><span class="small">Post or schedule to many accounts at once</span></div>
+    <div class="area"><b>Inbox</b><span class="small">DMs and comments in one place</span></div>
+    <div class="area"><b>Analytics</b><span class="small">Daily metrics across platforms</span></div>
+    <div class="area"><b>Ads</b><span class="small">Campaigns on 7 ad networks</span></div>
+  </div>
+  <div class="actions">
+    <button class="btn primary" id="dashboard">Open dashboard</button>
+    <button class="btn" id="docs">Docs</button>
+  </div>
+</main>
+<script>/*ZERNIO_RUNTIME*/</script>
+<script>
+(function () {
+  var Z = window.Zernio;
+  document.getElementById("dashboard").addEventListener("click", function () { Z.openLink("https://zernio.com/dashboard"); });
+  document.getElementById("docs").addEventListener("click", function () { Z.openLink("https://docs.zernio.com"); });
+  Z.connect({ name: "overview" });
+})();
+</script>
+</body>
+</html>
