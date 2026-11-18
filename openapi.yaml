@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.673.0"
+  version: "1.668.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -15967,7 +15967,7 @@ components:
         _id: { type: string }
         platform:
           type: string
-          enum: [tiktok, instagram, facebook, youtube, linkedin, twitter, threads, pinterest, reddit, bluesky, googlebusiness, telegram, snapchat, discord, slack, whatsapp, shopify, wordpress, wix, linkedinads, metaads, pinterestads, tiktokads, xads, googleads, openaiads, redditads, sms, phone, rcs, whopads, applovinads, google, microsoft, imap, hubspot, salesforce, webflow, googleanalytics, imessage, tiktokshop, microsoftads, line, wechat, googletagmanager, stripe, googlesearchconsole]
+          enum: [tiktok, instagram, facebook, youtube, linkedin, twitter, threads, pinterest, reddit, bluesky, googlebusiness, telegram, snapchat, discord, slack, whatsapp, shopify, wordpress, wix, linkedinads, metaads, pinterestads, tiktokads, xads, googleads, openaiads, redditads, sms, phone, rcs, whopads, applovinads, snapchatads, google, microsoft, imap, hubspot, salesforce, webflow, googleanalytics, imessage, tiktokshop, microsoftads, line, wechat, googletagmanager, stripe, googlesearchconsole]
         profileId:
           oneOf:
             - type: string
@@ -22274,6 +22274,8 @@ components:
                 axwrt: { type: string, description: "Axon Pixel browser id (the `_axwrt` cookie). Sent to Axon as `user_data.axwrt`, not hashed." }
                 twclid: { type: string, description: "X click ID (the `twclid` URL param X adds to ad clicks). Sent to X as a `twclid` identifier, not hashed." }
                 msclkid: { type: string, description: "Microsoft Advertising click ID (the `msclkid` URL param Microsoft adds to ad clicks). Sent to Microsoft as `MicrosoftClickId`, not hashed." }
+                sccid: { type: string, description: "Snapchat click ID (the `ScCid` URL param Snap adds to ad clicks). Sent to Snapchat as `sc_click_id`, not hashed." }
+                scid: { type: string, description: "Snap Pixel browser id (the `_scid` cookie). Sent to Snapchat as `sc_cookie1`, not hashed." }
         items:
           type: array
           description: Item-level detail for ecommerce events.
@@ -42475,7 +42477,7 @@ paths:
           description: Filter by platform
           schema:
             type: string
-            enum: [facebook, instagram, linkedin, twitter, tiktok, youtube, threads, pinterest, reddit, bluesky, googlebusiness, telegram, snapchat, discord, slack, whatsapp, shopify, wordpress, wix, linkedinads, metaads, pinterestads, tiktokads, xads, googleads, openaiads, redditads, microsoftads, whopads, applovinads, hubspot, webflow, googleanalytics, line, wechat, googletagmanager, googlesearchconsole]
+            enum: [facebook, instagram, linkedin, twitter, tiktok, youtube, threads, pinterest, reddit, bluesky, googlebusiness, telegram, snapchat, discord, slack, whatsapp, shopify, wordpress, wix, linkedinads, metaads, pinterestads, tiktokads, xads, googleads, openaiads, redditads, microsoftads, whopads, applovinads, snapchatads, hubspot, webflow, googleanalytics, line, wechat, googletagmanager, googlesearchconsole]
         - name: status
           in: query
           description: Filter by health status
@@ -50302,6 +50304,74 @@ paths:
           description: Ads add-on required.
         '502':
           description: Axon could not confirm the keys right now, so nothing was saved (code platform_api_error). Retry in a minute.
+
+  /v1/connect/snapchat-ads/credentials:
+    post:
+      x-resource-group: "accounts"
+      operationId: connectSnapchatAdsCredentials
+      tags: [Connect]
+      summary: Connect a Snapchat Ads pixel
+      description: |
+        Connect a Snap Pixel with its Pixel ID and a Conversions API token generated in Snapchat Ads Manager (Business Details, Conversions API Tokens, visible to Organization Admins).
+
+        Zernio checks the token against the pixel on Snap's validate endpoint before saving it. The account then receives the conversion events you forward to it (`POST /v1/events`, forwarding rules). Connecting the same pixel again replaces its token.
+
+        Requires the Ads add-on.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [accessToken, pixelId, profileId]
+              properties:
+                accessToken:
+                  type: string
+                  description: Conversions API token from the organization that owns the pixel.
+                pixelId:
+                  type: string
+                  description: 'Snap Pixel ID from Events Manager, a UUID.'
+                name:
+                  type: string
+                  maxLength: 100
+                  description: Optional display name for the account.
+                profileId:
+                  type: string
+                  description: Your Zernio profile ID
+                state:
+                  type: string
+                  description: Optional state passthrough for the connect flow.
+                redirect_url:
+                  type: string
+                  description: 'Optional URL to redirect to after a successful connection, echoed back as redirectUrl.'
+            example:
+              accessToken: "snap-conversions-api-token"
+              pixelId: "1a2b3c4d-5e6f-4a8b-9c0d-1e2f3a4b5c6d"
+              profileId: "6507a1b2c3d4e5f6a7b8c9d0"
+      responses:
+        '200':
+          description: Snapchat Ads pixel connected
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  accountId: { type: string }
+                  pixelId: { type: string }
+                  accountName: { type: string }
+                  redirectUrl: { type: string }
+              example:
+                accountId: "6507a1b2c3d4e5f6a7b8c9d0"
+                pixelId: "1a2b3c4d-5e6f-4a8b-9c0d-1e2f3a4b5c6d"
+                accountName: "Snap Pixel 4b5c6d"
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401':
+          description: "Unauthorized, or Snapchat did not accept the Conversions API token for this pixel (code invalid_credentials)."
+        '402': { $ref: '#/components/responses/PaymentRequired' }
+        '403':
+          description: Ads add-on required.
+        '502':
+          description: Snapchat could not confirm the token right now, so nothing was saved (code platform_api_error). Retry in a minute.
 
   /v1/connect/whop-ads/credentials:
     post:
@@ -100129,6 +100199,7 @@ paths:
         - Reddit (`redditads`) via the Reddit Conversions API (`POST /api/v3/pixels/{pixelId}/conversion_events`)
         - Microsoft Advertising (`microsoftads`) via offline conversion uploads (`ApplyOfflineConversions`)
         - X Ads (`xads`) via the X Conversion API (`POST /12/measurement/conversions/{pixelId}`)
+        - Snapchat (`snapchatads`) via the Snapchat Conversions API (`POST https://tr.snapchat.com/v3/{pixelId}/events`)
 
         ### `destinationId` per platform
 
@@ -100141,6 +100212,7 @@ paths:
         - Reddit: pixel id, e.g. `a2_abc123`, as returned by `GET /v1/ads/conversions/destinations` (any other shape returns 400)
         - Microsoft Advertising: offline conversion goal, e.g. `accounts/123456789/conversionGoals/987654`. Each event needs `clickIds.msclkid`, an `email` or a `phone`; the goal decides the event type.
         - X Ads: X Pixel event id, e.g. `tw-rbhhj-rcfms`. Each event needs `clickIds.twclid`, an `email`, a `phone`, or `ipAddress` plus `userAgent`; the event decides the type and `eventId` is sent as `conversion_id`.
+        - Snapchat: the connection's Snap Pixel ID, e.g. `1a2b3c4d-5e6f-4a8b-9c0d-1e2f3a4b5c6d`. Each event needs an `email`, a `phone`, or `ipAddress` plus `userAgent`; website events also need `sourceUrl`. With `testCode`, events go to Snap's validate endpoint and are not recorded.
 
         Callers can list valid destinations via `GET /v1/ads/conversions/destinations`.
 
@@ -100983,7 +101055,7 @@ paths:
   /v1/events:
     get:
       x-resource-group: "ads"
-      x-platforms: [meta, google, tiktok, linkedin, microsoft, x, pinterest, reddit, openai, applovinads, googleanalytics, stripe, hubspot, salesforce]
+      x-platforms: [meta, google, tiktok, linkedin, microsoft, x, pinterest, reddit, openai, applovinads, snapchatads, googleanalytics, stripe, hubspot, salesforce]
       operationId: listEvents
       tags: [Conversions]
       summary: List stored events
@@ -101073,7 +101145,7 @@ paths:
       x-resource-group: "ads"
       operationId: sendEvents
       tags: [Conversions]
-      x-platforms: [meta, google, tiktok, linkedin, microsoft, x, pinterest, reddit, openai, applovinads, googleanalytics]
+      x-platforms: [meta, google, tiktok, linkedin, microsoft, x, pinterest, reddit, openai, applovinads, snapchatads, googleanalytics]
       summary: Send events to every destination
       description: |
         The recommended way to send conversions. Sends conversion events once and forwards them to every ad platform destination saved for the profile (see `POST /v1/events/destinations`), or to the `destinations` given in the request. Requires the Ads add-on.
@@ -101806,7 +101878,7 @@ paths:
     post:
       x-resource-group: "ads"
       operationId: createForwardingRule
-      x-platforms: [meta, google, tiktok, linkedin, microsoft, x, pinterest, reddit, openai, applovinads, googleanalytics, hubspot, salesforce]
+      x-platforms: [meta, google, tiktok, linkedin, microsoft, x, pinterest, reddit, openai, applovinads, snapchatads, googleanalytics, hubspot, salesforce]
       tags: [Conversions]
       summary: Add a forwarding rule
       description: |
@@ -102314,7 +102386,8 @@ paths:
                             numeric conversion rule ID. OpenAI Ads: pixel wire
                             id. Reddit: pixel id (`a2_...`). Microsoft
                             Advertising: `accounts/{id}/conversionGoals/{id}`.
-                            X Ads: pixel event id (`tw-...`).
+                            X Ads: pixel event id (`tw-...`). Snapchat:
+                            Snap Pixel ID (a UUID).
                         name: { type: string }
                         type:
                           type: string
@@ -103054,7 +103127,8 @@ paths:
                             numeric conversion rule ID. OpenAI Ads: pixel wire
                             id. Reddit: pixel id (`a2_...`). Microsoft
                             Advertising: `accounts/{id}/conversionGoals/{id}`.
-                            X Ads: pixel event id (`tw-...`).
+                            X Ads: pixel event id (`tw-...`). Snapchat:
+                            Snap Pixel ID (a UUID).
                         name: { type: string }
                         type:
                           type: string

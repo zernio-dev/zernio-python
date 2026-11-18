@@ -992,6 +992,29 @@ class ConnectResource:
         )
         return self._client._post("/v1/connect/applovin-ads/credentials", data=payload)
 
+    def connect_snapchat_ads_credentials(
+        self,
+        access_token: str,
+        pixel_id: str,
+        profile_id: str,
+        *,
+        name: str | None = None,
+        state: str | None = None,
+        redirect_url: str | None = None,
+    ) -> dict[str, Any]:
+        """Connect a Snapchat Ads pixel"""
+        payload = self._build_body(
+            {
+                "accessToken": access_token,
+                "pixelId": pixel_id,
+                "name": name,
+                "profileId": profile_id,
+                "state": state,
+                "redirect_url": redirect_url,
+            }
+        )
+        return self._client._post("/v1/connect/snapchat-ads/credentials", data=payload)
+
     def connect_whop_ads_credentials(
         self,
         api_key: str,
@@ -2669,6 +2692,31 @@ class ConnectResource:
         )
         return await self._client._apost(
             "/v1/connect/applovin-ads/credentials", data=payload
+        )
+
+    async def aconnect_snapchat_ads_credentials(
+        self,
+        access_token: str,
+        pixel_id: str,
+        profile_id: str,
+        *,
+        name: str | None = None,
+        state: str | None = None,
+        redirect_url: str | None = None,
+    ) -> dict[str, Any]:
+        """Connect a Snapchat Ads pixel (async)"""
+        payload = self._build_body(
+            {
+                "accessToken": access_token,
+                "pixelId": pixel_id,
+                "name": name,
+                "profileId": profile_id,
+                "state": state,
+                "redirect_url": redirect_url,
+            }
+        )
+        return await self._client._apost(
+            "/v1/connect/snapchat-ads/credentials", data=payload
         )
 
     async def aconnect_whop_ads_credentials(
