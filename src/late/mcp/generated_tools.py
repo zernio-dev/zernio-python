@@ -34277,6 +34277,449 @@ def register_generated_tools(mcp, _get_client):
         except Exception as e:
             raise ToolError(f"Error: {e}") from e
 
+    # CRM
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Search CRM contacts",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def crm_search_crm_contacts(
+        account_id: str,
+        q: str | None = None,
+        email: str | None = None,
+        phone: str | None = None,
+        properties: str | None = None,
+        include_raw: bool = False,
+        limit: int = 25,
+        cursor: str | None = None,
+    ) -> str:
+        """Search CRM contacts
+
+        Find people in the connected CRM by free text, email or phone. Send exactly one of `q`, `email` or `phone`.
+
+        HubSpot searches contacts. Salesforce searches Contacts and Leads that are not converted (`objectType` tells which), newest change first.
+
+        - `email` is an exact match.
+        - `phone` takes an international number and matches it however the CRM stored it (\"+44 7911 123456\", \"07911 123456\").
+        - `q` searches names, emails, phones and company. On Salesforce, `q` and `phone` use the search index, so a record saved in the last few minutes may not show yet; `email` never lags.
+
+        Platforms: hubspot, salesforce
+
+        Args:
+            account_id: The connected HubSpot or Salesforce account (`GET /v1/accounts?platform=hubspot` or `salesforce`). (required)
+            q: Free text, at least 2 characters.
+            email
+            phone: International number with its country code, for example `+14155550100`.
+            properties: Comma-separated native field names to return in `properties` (at most 50), for example `lifecyclestage,hs_lead_status` or `LeadSource,Industry__c`.
+            include_raw: Also return the CRM's own record as `raw`.
+            limit
+            cursor: The `nextCursor` of the previous page, unchanged."""
+        client = _get_client()
+        try:
+            response = client.crm.search_crm_contacts(
+                account_id=account_id,
+                q=q,
+                email=email,
+                phone=phone,
+                properties=properties,
+                include_raw=include_raw,
+                limit=limit,
+                cursor=cursor,
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Create a CRM contact",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def crm_create_crm_contact(
+        account_id: str,
+        first_name: str | None = None,
+        last_name: str | None = None,
+        email: str | None = None,
+        phone: str | None = None,
+        company: str | None = None,
+        owner_id: str | None = None,
+        properties: dict[str, Any] | None = None,
+        create_as: Literal["lead", "contact"] | None = None,
+    ) -> str:
+        """Create a CRM contact
+
+        Create a person in the connected CRM. HubSpot creates a contact. Salesforce creates a Lead or a Contact: `createAs`, else the connection's `createAs` setting (default `lead`).
+
+        Salesforce requires `lastName` on both, and `company` on a Lead (`[not provided]` when you send none). A Contact takes its company from its Account: set `properties.AccountId` instead.
+
+        Anything the CRM refuses (a required field, a validation rule, a duplicate rule) comes back as 422 or 409 with the CRM's own errors in `details.errors`.
+
+        Platforms: hubspot, salesforce
+
+        Args:
+            account_id: The connected HubSpot or Salesforce account (`GET /v1/accounts?platform=hubspot` or `salesforce`). (required)
+            first_name
+            last_name
+            email
+            phone
+            company
+            owner_id: An id from `GET /v1/crm/{accountId}/owners`.
+            properties
+            create_as: Salesforce only. Defaults to the connection's `createAs` setting. Ignored on HubSpot."""
+        client = _get_client()
+        try:
+            response = client.crm.create_crm_contact(
+                account_id=account_id,
+                first_name=first_name,
+                last_name=last_name,
+                email=email,
+                phone=phone,
+                company=company,
+                owner_id=owner_id,
+                properties=properties,
+                create_as=create_as,
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get a CRM contact",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def crm_get_crm_contact(
+        account_id: str,
+        contact_id: str,
+        properties: str | None = None,
+        include_raw: bool = False,
+    ) -> str:
+        """Get a CRM contact
+
+        Read one person from the connected CRM. On Salesforce the id can be a Contact (`003...`) or a Lead (`00Q...`).
+
+        Platforms: hubspot, salesforce
+
+        Args:
+            account_id: The connected HubSpot or Salesforce account (`GET /v1/accounts?platform=hubspot` or `salesforce`). (required)
+            contact_id: The CRM's own id. HubSpot contact id, or Salesforce Contact (`003...`) or Lead (`00Q...`) id. (required)
+            properties: Comma-separated native field names to return in `properties` (at most 50), for example `lifecyclestage,hs_lead_status` or `LeadSource,Industry__c`.
+            include_raw: Also return the CRM's own record as `raw`."""
+        client = _get_client()
+        try:
+            response = client.crm.get_crm_contact(
+                account_id=account_id,
+                contact_id=contact_id,
+                properties=properties,
+                include_raw=include_raw,
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Update a CRM contact",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def crm_update_crm_contact(
+        account_id: str,
+        contact_id: str,
+        first_name: str | None = None,
+        last_name: str | None = None,
+        email: str | None = None,
+        phone: str | None = None,
+        company: str | None = None,
+        owner_id: str | None = None,
+        properties: dict[str, Any] | None = None,
+    ) -> str:
+        """Update a CRM contact
+
+        Change fields on a person in the connected CRM. Send only what changes; `null` clears a field. Native fields go in `properties`.
+
+        On Salesforce, `company` applies to Leads only (400 on a Contact).
+
+        Platforms: hubspot, salesforce
+
+        Args:
+            account_id: The connected HubSpot or Salesforce account (`GET /v1/accounts?platform=hubspot` or `salesforce`). (required)
+            contact_id: The CRM's own id. HubSpot contact id, or Salesforce Contact (`003...`) or Lead (`00Q...`) id. (required)
+            first_name
+            last_name
+            email
+            phone
+            company
+            owner_id: An id from `GET /v1/crm/{accountId}/owners`.
+            properties"""
+        client = _get_client()
+        try:
+            response = client.crm.update_crm_contact(
+                account_id=account_id,
+                contact_id=contact_id,
+                first_name=first_name,
+                last_name=last_name,
+                email=email,
+                phone=phone,
+                company=company,
+                owner_id=owner_id,
+                properties=properties,
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Log a CRM activity",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def crm_create_crm_activity(
+        account_id: str,
+        contact_id: str,
+        body: str,
+        subject: str | None = None,
+        channel: Literal[
+            "whatsapp",
+            "sms",
+            "email",
+            "call",
+            "meeting",
+            "instagram",
+            "messenger",
+            "telegram",
+            "other",
+        ] = "other",
+        direction: Literal["inbound", "outbound"] | None = None,
+        occurred_at: str | None = None,
+    ) -> str:
+        """Log a CRM activity
+
+        Log something that happened with a person on their CRM record.
+
+        - HubSpot: a Communication on the contact's timeline for `channel` `whatsapp` or `sms`, otherwise a Note. The subject and direction lead the text.
+        - Salesforce: a completed Task on the Contact or Lead (`WhoId`), dated `occurredAt`, with `body` as its comments. `channel: call` logs a call.
+
+        To log inbox conversations automatically instead, turn on `logMessages` in the CRM settings.
+
+        Platforms: hubspot, salesforce
+
+        Args:
+            account_id: The connected HubSpot or Salesforce account (`GET /v1/accounts?platform=hubspot` or `salesforce`). (required)
+            contact_id: The CRM's own id. HubSpot contact id, or Salesforce Contact (`003...`) or Lead (`00Q...`) id. (required)
+            body: The text to log. (required)
+            subject: Salesforce Task subject (default `<Channel> activity (<direction>)`); on HubSpot, the bold first line.
+            channel
+            direction
+            occurred_at: When it happened. Defaults to now."""
+        client = _get_client()
+        try:
+            response = client.crm.create_crm_activity(
+                account_id=account_id,
+                contact_id=contact_id,
+                body=body,
+                subject=subject,
+                channel=channel,
+                direction=direction,
+                occurred_at=occurred_at,
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List CRM deals",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def crm_list_crm_deals(
+        account_id: str,
+        stage: str | None = None,
+        updated_since: str | None = None,
+        properties: str | None = None,
+        include_raw: bool = False,
+        limit: int = 25,
+        cursor: str | None = None,
+    ) -> str:
+        """List CRM deals
+
+        List deals (HubSpot) or Opportunities (Salesforce), most recently changed first.
+
+        HubSpot needs the portal to have granted `crm.objects.deals.read`; otherwise 403 `crm_scope_missing`.
+
+        Platforms: hubspot, salesforce
+
+        Args:
+            account_id: The connected HubSpot or Salesforce account (`GET /v1/accounts?platform=hubspot` or `salesforce`). (required)
+            stage: Only deals in this stage. HubSpot takes the stage's internal id (`closedwon`, `appointmentscheduled`); Salesforce the `StageName` (`Closed Won`).
+            updated_since: Only deals changed at or after this time.
+            properties: Comma-separated native field names to return in `properties` (at most 50), for example `lifecyclestage,hs_lead_status` or `LeadSource,Industry__c`.
+            include_raw: Also return the CRM's own record as `raw`.
+            limit
+            cursor: The `nextCursor` of the previous page, unchanged."""
+        client = _get_client()
+        try:
+            response = client.crm.list_crm_deals(
+                account_id=account_id,
+                stage=stage,
+                updated_since=updated_since,
+                properties=properties,
+                include_raw=include_raw,
+                limit=limit,
+                cursor=cursor,
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get a CRM deal",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def crm_get_crm_deal(
+        account_id: str,
+        deal_id: str,
+        properties: str | None = None,
+        include_raw: bool = False,
+    ) -> str:
+        """Get a CRM deal
+
+        Read one deal (HubSpot) or Opportunity (Salesforce) with its contacts.
+
+        Platforms: hubspot, salesforce
+
+        Args:
+            account_id: The connected HubSpot or Salesforce account (`GET /v1/accounts?platform=hubspot` or `salesforce`). (required)
+            deal_id: HubSpot deal id or Salesforce Opportunity id (`006...`). (required)
+            properties: Comma-separated native field names to return in `properties` (at most 50), for example `lifecyclestage,hs_lead_status` or `LeadSource,Industry__c`.
+            include_raw: Also return the CRM's own record as `raw`."""
+        client = _get_client()
+        try:
+            response = client.crm.get_crm_deal(
+                account_id=account_id,
+                deal_id=deal_id,
+                properties=properties,
+                include_raw=include_raw,
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Update a CRM deal",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def crm_update_crm_deal(
+        account_id: str,
+        deal_id: str,
+        name: str | None = None,
+        stage: str | None = None,
+        amount: float | None = None,
+        currency: str | None = None,
+        close_date: str | None = None,
+        owner_id: str | None = None,
+        properties: dict[str, Any] | None = None,
+    ) -> str:
+        """Update a CRM deal
+
+        Move a deal to another stage, or change its amount, close date, owner or native fields. Send only what changes.
+
+        HubSpot needs `crm.objects.deals.write`, an optional scope portals approve when they connect; without it, 403 `crm_scope_missing` asks to reconnect HubSpot. `currency` only works on multi-currency HubSpot portals and Salesforce orgs.
+
+        Platforms: hubspot, salesforce
+
+        Args:
+            account_id: The connected HubSpot or Salesforce account (`GET /v1/accounts?platform=hubspot` or `salesforce`). (required)
+            deal_id: HubSpot deal id or Salesforce Opportunity id (`006...`). (required)
+            name
+            stage: HubSpot stage id or Salesforce `StageName`.
+            amount
+            currency: ISO 4217 code. Multi-currency portals and orgs only.
+            close_date
+            owner_id: An id from `GET /v1/crm/{accountId}/owners`.
+            properties"""
+        client = _get_client()
+        try:
+            response = client.crm.update_crm_deal(
+                account_id=account_id,
+                deal_id=deal_id,
+                name=name,
+                stage=stage,
+                amount=amount,
+                currency=currency,
+                close_date=close_date,
+                owner_id=owner_id,
+                properties=properties,
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List CRM owners",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def crm_list_crm_owners(
+        account_id: str,
+        include_raw: bool = False,
+        limit: int = 25,
+        cursor: str | None = None,
+    ) -> str:
+        """List CRM owners
+
+        List the users records can be assigned to: HubSpot owners, or active standard Salesforce users. Use an `id` as `ownerId` on contacts and deals.
+
+        HubSpot needs `crm.objects.owners.read`, an optional scope portals approve when they connect; without it, 403 `crm_scope_missing` asks to reconnect HubSpot.
+
+        Platforms: hubspot, salesforce
+
+        Args:
+            account_id: The connected HubSpot or Salesforce account (`GET /v1/accounts?platform=hubspot` or `salesforce`). (required)
+            include_raw: Also return the CRM's own record as `raw`.
+            limit
+            cursor: The `nextCursor` of the previous page, unchanged."""
+        client = _get_client()
+        try:
+            response = client.crm.list_crm_owners(
+                account_id=account_id,
+                include_raw=include_raw,
+                limit=limit,
+                cursor=cursor,
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
     # CUSTOM_FIELDS
 
     @mcp.tool(

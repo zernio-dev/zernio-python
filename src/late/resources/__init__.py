@@ -36,6 +36,7 @@ from ._generated.content_retention import ContentRetentionResource
 from ._generated.conversions import ConversionsResource
 from ._generated.creator_campaigns import CreatorCampaignsResource
 from ._generated.creator_portal import CreatorPortalResource
+from ._generated.crm import CrmResource
 from ._generated.custom_fields import CustomFieldsResource
 from ._generated.discord import DiscordResource
 from ._generated.email import EmailResource
@@ -123,6 +124,7 @@ __all__ = [
     "ConversionsResource",
     "CreatorCampaignsResource",
     "CreatorPortalResource",
+    "CrmResource",
     "CustomFieldsResource",
     "DiscordResource",
     "EmailResource",

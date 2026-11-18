@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.651.0"
+  version: "1.652.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -578,6 +578,21 @@ tags:
     description: |
       Cross-platform contact management (CRM). Contacts are unified identities linked to platform-specific
       channels (phone, IGSID, etc.). Created automatically when messages arrive, or manually via API.
+  - name: CRM
+    description: |
+      One API over the connected CRM: search, read, create and update people, log activities, list and update deals, and list owners. The same requests and objects work for HubSpot and Salesforce; each operation lists its platforms in `x-platforms`.
+
+      Pick the CRM with `accountId`, the connected HubSpot or Salesforce account. Every operation belongs to the `contacts` resource group.
+
+      **Conventions:**
+
+      - Objects carry `id` (the CRM's own), `objectType` (`contact`, `lead`, `deal`, `opportunity`), the unified fields, `url` (opens the record in the CRM) and `properties` (the native fields you ask for with `properties=`). `includeRaw=true` adds the CRM's own record as `raw`.
+      - Writes take unified fields plus up to 50 native fields in `properties`. `null` clears a field.
+      - Lists return `{ <resource>, nextCursor }` with an opaque cursor.
+      - Refusals keep the CRM's own errors in `details.errors`: 422 `crm_validation_failed`, 409 `crm_duplicate_record`, 404 `crm_record_not_found`, 403 `crm_access_denied`. A scope the connection did not grant answers 403 `crm_scope_missing`: reconnect the CRM and approve it.
+      - Calls share each connection's API budget with the conversation sync: 429 `rate_limited` carries `Retry-After`.
+
+      Nothing is stored in Zernio: every call reads or writes the CRM.
   - name: Custom Fields
     description: |
       Custom field definitions for contacts. Define fields (text, number, date, boolean, select) that can be
@@ -920,6 +935,43 @@ components:
         and platform and are accepted only by connection-flow endpoints that
         explicitly list this security scheme.
   parameters:
+    CrmAccountId:
+      name: accountId
+      in: path
+      required: true
+      schema: { type: string }
+      description: The connected HubSpot or Salesforce account (`GET /v1/accounts?platform=hubspot` or `salesforce`).
+    CrmContactId:
+      name: contactId
+      in: path
+      required: true
+      schema: { type: string, pattern: '^[A-Za-z0-9]{1,40}$' }
+      description: The CRM's own id. HubSpot contact id, or Salesforce Contact (`003...`) or Lead (`00Q...`) id.
+    CrmDealId:
+      name: dealId
+      in: path
+      required: true
+      schema: { type: string, pattern: '^[A-Za-z0-9]{1,40}$' }
+      description: HubSpot deal id or Salesforce Opportunity id (`006...`).
+    CrmProperties:
+      name: properties
+      in: query
+      schema: { type: string }
+      description: Comma-separated native field names to return in `properties` (at most 50), for example `lifecyclestage,hs_lead_status` or `LeadSource,Industry__c`.
+    CrmIncludeRaw:
+      name: includeRaw
+      in: query
+      schema: { type: boolean, default: false }
+      description: Also return the CRM's own record as `raw`.
+    CrmLimit:
+      name: limit
+      in: query
+      schema: { type: integer, minimum: 1, maximum: 100, default: 25 }
+    CrmCursor:
+      name: cursor
+      in: query
+      schema: { type: string }
+      description: The `nextCursor` of the previous page, unchanged.
     CreatorPortalToken:
       name: token
       in: path
@@ -1042,6 +1094,81 @@ components:
       description: Recommended delay before retrying, in seconds.
       schema: { type: integer, example: 60 }
   responses:
+    CrmForbidden:
+      x-summary: "The CRM refused: reconnect it to grant a missing scope (`crm_scope_missing`), or fix the connected user's access (`crm_access_denied`)."
+      description: |-
+        `crm_scope_missing`: the connection did not grant a scope this call needs (`details.scope`), typically a HubSpot optional scope added after the portal connected. Reconnect the CRM and approve it; the account id stays the same.
+
+        `crm_access_denied`: the CRM refused the connected user (Salesforce field-level security or sharing, a HubSpot permission). `details.errors` holds the CRM's own errors.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorResponse' }
+          example:
+            error: 'This HubSpot connection did not grant crm.objects.deals.write. Reconnect HubSpot and approve it on the consent screen.'
+            type: permission_error
+            code: crm_scope_missing
+            platform: hubspot
+            details:
+              scope: crm.objects.deals.write
+              action: reconnect
+    CrmNotFound:
+      x-summary: "The CRM account or record was not found: check the accountId and the record id."
+      description: '`account_not_found`: the accountId is not a CRM account you can access. `crm_record_not_found`: the CRM has no record with this id (deleted, merged, or another object type).'
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorResponse' }
+          example:
+            error: 'Salesforce has no Contact or Lead with this id.'
+            type: not_found
+            code: crm_record_not_found
+            platform: salesforce
+    CrmConflict:
+      x-summary: "The CRM already has this person (`crm_duplicate_record`), or the account needs reconnecting (`account_disconnected`)."
+      description: |-
+        `crm_duplicate_record`: the CRM refused a duplicate (HubSpot: the email belongs to another contact; Salesforce: a duplicate rule). `details.existingId` is the existing record when the CRM names it.
+
+        `account_disconnected`: the CRM account needs reconnecting; see AccountDisconnected.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorResponse' }
+          example:
+            error: 'Contact already exists. Existing ID: 151'
+            type: invalid_request_error
+            code: crm_duplicate_record
+            platform: hubspot
+            details:
+              existingId: '151'
+    CrmValidationFailed:
+      x-summary: "The CRM refused the values: fix the fields named in `details.errors` and retry."
+      description: 'The CRM refused the values: a validation rule, a required field, a bad picklist value or an unknown field. Code `crm_validation_failed`; `details.errors` lists the CRM''s own errors, each with `code`, `message` and the `fields` at fault when the CRM names them.'
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorResponse' }
+          example:
+            error: 'Required fields are missing: [LastName]'
+            type: invalid_request_error
+            code: crm_validation_failed
+            platform: salesforce
+            details:
+              errors:
+                - code: REQUIRED_FIELD_MISSING
+                  message: 'Required fields are missing: [LastName]'
+                  fields: [LastName]
+    CrmRateLimited:
+      x-summary: "The CRM connection's API budget is spent for now: wait for Retry-After seconds, then retry."
+      description: 'Zernio paces every connection inside its CRM limits (HubSpot per portal, Salesforce per org, shared with the conversation sync). Code `rate_limited`; wait for `Retry-After` seconds.'
+      headers:
+        Retry-After:
+          schema: { type: integer, example: 10 }
+          description: Seconds to wait before retrying.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorResponse' }
+          example:
+            error: 'HubSpot API budget for this connection is spent for now. Retry after 10 seconds.'
+            type: rate_limit_error
+            code: rate_limited
+            platform: hubspot
     CreatorPortalLinkNotFound:
       x-summary: "The link token is malformed, unknown or expired: ask the creator for a fresh link."
       description: 'The token is malformed, unknown or expired. Every case answers the same, so a link can never be probed.'
@@ -1640,6 +1767,141 @@ components:
                   effective_account_limit: 2000
                   current_account_count: 2000
   schemas:
+    CrmNativeProperties:
+      type: object
+      maxProperties: 50
+      description: Native fields by internal name (HubSpot `lifecyclestage`, Salesforce `LeadSource` or `Industry__c`). A unified field of the same request wins over its native twin. `null` clears a field.
+      additionalProperties:
+        type: [string, number, boolean, 'null']
+    CrmContactInput:
+      type: object
+      minProperties: 1
+      description: 'Unified fields, mapped to HubSpot `firstname`, `lastname`, `email`, `phone`, `company`, `hubspot_owner_id` and Salesforce `FirstName`, `LastName`, `Email`, `Phone`, `Company` (Leads), `OwnerId`.'
+      properties:
+        firstName: { type: [string, 'null'], maxLength: 80 }
+        lastName: { type: [string, 'null'], maxLength: 80 }
+        email: { type: [string, 'null'], format: email }
+        phone: { type: [string, 'null'], maxLength: 40 }
+        company: { type: [string, 'null'], maxLength: 255 }
+        ownerId:
+          type: [string, 'null']
+          description: An id from `GET /v1/crm/{accountId}/owners`.
+        properties:
+          $ref: '#/components/schemas/CrmNativeProperties'
+    CrmContact:
+      type: object
+      description: A person in the connected CRM, in the same shape for HubSpot and Salesforce.
+      required: [id, objectType, firstName, lastName, email, phone, company, ownerId, createdAt, updatedAt, url, properties]
+      properties:
+        id:
+          type: string
+          description: The CRM's own id.
+        objectType:
+          type: string
+          enum: [contact, lead]
+          description: '`lead` only on Salesforce.'
+        firstName: { type: [string, 'null'] }
+        lastName: { type: [string, 'null'] }
+        email: { type: [string, 'null'] }
+        phone:
+          type: [string, 'null']
+          description: The phone, else the mobile phone, as stored in the CRM.
+        company:
+          type: [string, 'null']
+          description: HubSpot `company`; Salesforce Lead `Company` or Contact Account name.
+        ownerId: { type: [string, 'null'] }
+        createdAt: { type: [string, 'null'], format: date-time }
+        updatedAt: { type: [string, 'null'], format: date-time }
+        url:
+          type: string
+          format: uri
+          description: Opens the record in the CRM.
+        properties:
+          type: object
+          additionalProperties: true
+          description: The native fields asked for with `properties`, by name.
+        raw:
+          type: object
+          additionalProperties: true
+          description: The CRM's own record, only with `includeRaw=true`.
+    CrmActivity:
+      type: object
+      required: [id, objectType, contactId, channel, direction, subject, body, occurredAt, url]
+      properties:
+        id: { type: string }
+        objectType:
+          type: string
+          enum: [note, communication, task]
+          description: HubSpot `note` or `communication` (WhatsApp, SMS); Salesforce `task`.
+        contactId: { type: string }
+        channel:
+          type: string
+          enum: [whatsapp, sms, email, call, meeting, instagram, messenger, telegram, other]
+        direction: { type: [string, 'null'], enum: [inbound, outbound, null] }
+        subject: { type: [string, 'null'] }
+        body: { type: string }
+        occurredAt: { type: string, format: date-time }
+        url:
+          type: string
+          format: uri
+          description: The Salesforce Task, or the HubSpot contact whose timeline shows it.
+    CrmDeal:
+      type: object
+      description: A HubSpot deal or a Salesforce Opportunity.
+      required: [id, objectType, name, stage, amount, currency, closeDate, ownerId, contactIds, createdAt, updatedAt, url, properties]
+      properties:
+        id: { type: string }
+        objectType: { type: string, enum: [deal, opportunity] }
+        name: { type: [string, 'null'] }
+        stage:
+          type: [string, 'null']
+          description: HubSpot stage id (`closedwon`) or Salesforce `StageName` (`Closed Won`).
+        amount: { type: [number, 'null'] }
+        currency:
+          type: [string, 'null']
+          description: ISO 4217. HubSpot sets it on multi-currency portals only. Salesforce gives the Opportunity's currency on multi-currency orgs, else the org currency read from its Currency Locale.
+        closeDate: { type: [string, 'null'], format: date }
+        ownerId: { type: [string, 'null'] }
+        contactIds:
+          type: array
+          items: { type: string }
+          description: Associated HubSpot contacts, or the Opportunity's contact roles (primary first).
+        createdAt: { type: [string, 'null'], format: date-time }
+        updatedAt: { type: [string, 'null'], format: date-time }
+        url: { type: string, format: uri }
+        properties:
+          type: object
+          additionalProperties: true
+        raw:
+          type: object
+          additionalProperties: true
+      example:
+        id: '359143490267'
+        objectType: deal
+        name: Annual plan
+        stage: closedwon
+        amount: 4800
+        currency: EUR
+        closeDate: '2026-11-30'
+        ownerId: '101585432'
+        contactIds: ['573544018630']
+        createdAt: '2026-10-28T11:12:15.494Z'
+        updatedAt: '2026-11-17T09:30:00.000Z'
+        url: https://app.hubspot.com/contacts/247749302/record/0-3/359143490267
+        properties: {}
+    CrmOwner:
+      type: object
+      required: [id, firstName, lastName, name, email, active]
+      properties:
+        id: { type: string }
+        firstName: { type: [string, 'null'] }
+        lastName: { type: [string, 'null'] }
+        name: { type: [string, 'null'] }
+        email: { type: [string, 'null'] }
+        active: { type: boolean }
+        raw:
+          type: object
+          additionalProperties: true
     TrackingSitePeriodTotals:
       type: object
       description: 'A tracking site''s page views over a period, as approximate distinct counts.'
@@ -54183,6 +54445,519 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           description: Account not found
+  /v1/crm/{accountId}/contacts/search:
+    get:
+      x-resource-group: contacts
+      operationId: searchCrmContacts
+      tags:
+        - CRM
+      x-platforms: [hubspot, salesforce]
+      summary: Search CRM contacts
+      description: |-
+        Find people in the connected CRM by free text, email or phone. Send exactly one of `q`, `email` or `phone`.
+
+        HubSpot searches contacts. Salesforce searches Contacts and Leads that are not converted (`objectType` tells which), newest change first.
+
+        - `email` is an exact match.
+        - `phone` takes an international number and matches it however the CRM stored it ("+44 7911 123456", "07911 123456").
+        - `q` searches names, emails, phones and company. On Salesforce, `q` and `phone` use the search index, so a record saved in the last few minutes may not show yet; `email` never lags.
+      parameters:
+        - $ref: '#/components/parameters/CrmAccountId'
+        - name: q
+          in: query
+          description: Free text, at least 2 characters.
+          schema: { type: string, minLength: 2, maxLength: 200 }
+        - name: email
+          in: query
+          schema: { type: string, format: email }
+        - name: phone
+          in: query
+          description: International number with its country code, for example `+14155550100`.
+          schema: { type: string }
+        - $ref: '#/components/parameters/CrmProperties'
+        - $ref: '#/components/parameters/CrmIncludeRaw'
+        - $ref: '#/components/parameters/CrmLimit'
+        - $ref: '#/components/parameters/CrmCursor'
+      responses:
+        '200':
+          description: Matching contacts, one page.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [contacts, nextCursor]
+                properties:
+                  contacts:
+                    type: array
+                    items: { $ref: '#/components/schemas/CrmContact' }
+                  nextCursor:
+                    type: [string, 'null']
+                    description: Pass back as `cursor` for the next page; null on the last page.
+              example:
+                contacts:
+                  - id: 00Q5g00000AbCdEFGH
+                    objectType: lead
+                    firstName: Maria
+                    lastName: Garcia
+                    email: maria@example.com
+                    phone: '+34 600 123 456'
+                    company: Acme
+                    ownerId: 0055g00000XyZaBCDE
+                    createdAt: '2026-11-02T09:14:00.000Z'
+                    updatedAt: '2026-11-15T17:40:00.000Z'
+                    url: https://acme.my.salesforce.com/lightning/r/Lead/00Q5g00000AbCdEFGH/view
+                    properties: {}
+                nextCursor: null
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/CrmForbidden'
+        '404':
+          $ref: '#/components/responses/CrmNotFound'
+        '409':
+          $ref: '#/components/responses/AccountDisconnected'
+        '429':
+          $ref: '#/components/responses/CrmRateLimited'
+        '502':
+          $ref: '#/components/responses/UpstreamFailure'
+  /v1/crm/{accountId}/contacts:
+    post:
+      x-resource-group: contacts
+      operationId: createCrmContact
+      tags:
+        - CRM
+      x-platforms: [hubspot, salesforce]
+      summary: Create a CRM contact
+      description: |-
+        Create a person in the connected CRM. HubSpot creates a contact. Salesforce creates a Lead or a Contact: `createAs`, else the connection's `createAs` setting (default `lead`).
+
+        Salesforce requires `lastName` on both, and `company` on a Lead (`[not provided]` when you send none). A Contact takes its company from its Account: set `properties.AccountId` instead.
+
+        Anything the CRM refuses (a required field, a validation rule, a duplicate rule) comes back as 422 or 409 with the CRM's own errors in `details.errors`.
+      parameters:
+        - $ref: '#/components/parameters/CrmAccountId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/CrmContactInput'
+                - type: object
+                  properties:
+                    createAs:
+                      type: string
+                      enum: [lead, contact]
+                      description: Salesforce only. Defaults to the connection's `createAs` setting. Ignored on HubSpot.
+            example:
+              firstName: Maria
+              lastName: Garcia
+              email: maria@example.com
+              phone: '+34600123456'
+              createAs: lead
+              properties:
+                LeadSource: WhatsApp
+      responses:
+        '201':
+          description: The created contact, read back from the CRM.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [contact]
+                properties:
+                  contact: { $ref: '#/components/schemas/CrmContact' }
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/CrmForbidden'
+        '404':
+          $ref: '#/components/responses/CrmNotFound'
+        '409':
+          $ref: '#/components/responses/CrmConflict'
+        '422':
+          $ref: '#/components/responses/CrmValidationFailed'
+        '429':
+          $ref: '#/components/responses/CrmRateLimited'
+        '502':
+          $ref: '#/components/responses/UpstreamFailure'
+  /v1/crm/{accountId}/contacts/{contactId}:
+    get:
+      x-resource-group: contacts
+      operationId: getCrmContact
+      tags:
+        - CRM
+      x-platforms: [hubspot, salesforce]
+      summary: Get a CRM contact
+      description: Read one person from the connected CRM. On Salesforce the id can be a Contact (`003...`) or a Lead (`00Q...`).
+      parameters:
+        - $ref: '#/components/parameters/CrmAccountId'
+        - $ref: '#/components/parameters/CrmContactId'
+        - $ref: '#/components/parameters/CrmProperties'
+        - $ref: '#/components/parameters/CrmIncludeRaw'
+      responses:
+        '200':
+          description: The contact.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [contact]
+                properties:
+                  contact: { $ref: '#/components/schemas/CrmContact' }
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/CrmForbidden'
+        '404':
+          $ref: '#/components/responses/CrmNotFound'
+        '409':
+          $ref: '#/components/responses/AccountDisconnected'
+        '429':
+          $ref: '#/components/responses/CrmRateLimited'
+        '502':
+          $ref: '#/components/responses/UpstreamFailure'
+    patch:
+      x-resource-group: contacts
+      operationId: updateCrmContact
+      tags:
+        - CRM
+      x-platforms: [hubspot, salesforce]
+      summary: Update a CRM contact
+      description: |-
+        Change fields on a person in the connected CRM. Send only what changes; `null` clears a field. Native fields go in `properties`.
+
+        On Salesforce, `company` applies to Leads only (400 on a Contact).
+      parameters:
+        - $ref: '#/components/parameters/CrmAccountId'
+        - $ref: '#/components/parameters/CrmContactId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CrmContactInput' }
+            example:
+              phone: '+34600123456'
+              properties:
+                hs_lead_status: IN_PROGRESS
+      responses:
+        '200':
+          description: The updated contact, read back from the CRM.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [contact]
+                properties:
+                  contact: { $ref: '#/components/schemas/CrmContact' }
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/CrmForbidden'
+        '404':
+          $ref: '#/components/responses/CrmNotFound'
+        '409':
+          $ref: '#/components/responses/CrmConflict'
+        '422':
+          $ref: '#/components/responses/CrmValidationFailed'
+        '429':
+          $ref: '#/components/responses/CrmRateLimited'
+        '502':
+          $ref: '#/components/responses/UpstreamFailure'
+  /v1/crm/{accountId}/contacts/{contactId}/activities:
+    post:
+      x-resource-group: contacts
+      operationId: createCrmActivity
+      tags:
+        - CRM
+      x-platforms: [hubspot, salesforce]
+      summary: Log a CRM activity
+      description: |-
+        Log something that happened with a person on their CRM record.
+
+        - HubSpot: a Communication on the contact's timeline for `channel` `whatsapp` or `sms`, otherwise a Note. The subject and direction lead the text.
+        - Salesforce: a completed Task on the Contact or Lead (`WhoId`), dated `occurredAt`, with `body` as its comments. `channel: call` logs a call.
+
+        To log inbox conversations automatically instead, turn on `logMessages` in the CRM settings.
+      parameters:
+        - $ref: '#/components/parameters/CrmAccountId'
+        - $ref: '#/components/parameters/CrmContactId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [body]
+              properties:
+                body:
+                  type: string
+                  minLength: 1
+                  maxLength: 30000
+                  description: The text to log.
+                subject:
+                  type: string
+                  maxLength: 255
+                  description: Salesforce Task subject (default `<Channel> activity (<direction>)`); on HubSpot, the bold first line.
+                channel:
+                  type: string
+                  enum: [whatsapp, sms, email, call, meeting, instagram, messenger, telegram, other]
+                  default: other
+                direction:
+                  type: string
+                  enum: [inbound, outbound]
+                occurredAt:
+                  type: string
+                  format: date-time
+                  description: When it happened. Defaults to now.
+            example:
+              body: 'Asked for the premium plan price. Sent the brochure.'
+              channel: whatsapp
+              direction: inbound
+              occurredAt: '2026-11-17T09:30:00Z'
+      responses:
+        '201':
+          description: The logged activity.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [activity]
+                properties:
+                  activity: { $ref: '#/components/schemas/CrmActivity' }
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/CrmForbidden'
+        '404':
+          $ref: '#/components/responses/CrmNotFound'
+        '409':
+          $ref: '#/components/responses/AccountDisconnected'
+        '422':
+          $ref: '#/components/responses/CrmValidationFailed'
+        '429':
+          $ref: '#/components/responses/CrmRateLimited'
+        '502':
+          $ref: '#/components/responses/UpstreamFailure'
+  /v1/crm/{accountId}/deals:
+    get:
+      x-resource-group: contacts
+      operationId: listCrmDeals
+      tags:
+        - CRM
+      x-platforms: [hubspot, salesforce]
+      summary: List CRM deals
+      description: |-
+        List deals (HubSpot) or Opportunities (Salesforce), most recently changed first.
+
+        HubSpot needs the portal to have granted `crm.objects.deals.read`; otherwise 403 `crm_scope_missing`.
+      parameters:
+        - $ref: '#/components/parameters/CrmAccountId'
+        - name: stage
+          in: query
+          description: Only deals in this stage. HubSpot takes the stage's internal id (`closedwon`, `appointmentscheduled`); Salesforce the `StageName` (`Closed Won`).
+          schema: { type: string, maxLength: 100 }
+        - name: updatedSince
+          in: query
+          description: Only deals changed at or after this time.
+          schema: { type: string, format: date-time }
+        - $ref: '#/components/parameters/CrmProperties'
+        - $ref: '#/components/parameters/CrmIncludeRaw'
+        - $ref: '#/components/parameters/CrmLimit'
+        - $ref: '#/components/parameters/CrmCursor'
+      responses:
+        '200':
+          description: One page of deals.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [deals, nextCursor]
+                properties:
+                  deals:
+                    type: array
+                    items: { $ref: '#/components/schemas/CrmDeal' }
+                  nextCursor:
+                    type: [string, 'null']
+                    description: Pass back as `cursor` for the next page; null on the last page.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/CrmForbidden'
+        '404':
+          $ref: '#/components/responses/CrmNotFound'
+        '409':
+          $ref: '#/components/responses/AccountDisconnected'
+        '429':
+          $ref: '#/components/responses/CrmRateLimited'
+        '502':
+          $ref: '#/components/responses/UpstreamFailure'
+  /v1/crm/{accountId}/deals/{dealId}:
+    get:
+      x-resource-group: contacts
+      operationId: getCrmDeal
+      tags:
+        - CRM
+      x-platforms: [hubspot, salesforce]
+      summary: Get a CRM deal
+      description: Read one deal (HubSpot) or Opportunity (Salesforce) with its contacts.
+      parameters:
+        - $ref: '#/components/parameters/CrmAccountId'
+        - $ref: '#/components/parameters/CrmDealId'
+        - $ref: '#/components/parameters/CrmProperties'
+        - $ref: '#/components/parameters/CrmIncludeRaw'
+      responses:
+        '200':
+          description: The deal.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [deal]
+                properties:
+                  deal: { $ref: '#/components/schemas/CrmDeal' }
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/CrmForbidden'
+        '404':
+          $ref: '#/components/responses/CrmNotFound'
+        '409':
+          $ref: '#/components/responses/AccountDisconnected'
+        '429':
+          $ref: '#/components/responses/CrmRateLimited'
+        '502':
+          $ref: '#/components/responses/UpstreamFailure'
+    patch:
+      x-resource-group: contacts
+      operationId: updateCrmDeal
+      tags:
+        - CRM
+      x-platforms: [hubspot, salesforce]
+      summary: Update a CRM deal
+      description: |-
+        Move a deal to another stage, or change its amount, close date, owner or native fields. Send only what changes.
+
+        HubSpot needs `crm.objects.deals.write`, an optional scope portals approve when they connect; without it, 403 `crm_scope_missing` asks to reconnect HubSpot. `currency` only works on multi-currency HubSpot portals and Salesforce orgs.
+      parameters:
+        - $ref: '#/components/parameters/CrmAccountId'
+        - $ref: '#/components/parameters/CrmDealId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              minProperties: 1
+              properties:
+                name: { type: string, maxLength: 120 }
+                stage:
+                  type: string
+                  maxLength: 100
+                  description: HubSpot stage id or Salesforce `StageName`.
+                amount: { type: [number, 'null'] }
+                currency:
+                  type: string
+                  pattern: '^[A-Z]{3}$'
+                  description: ISO 4217 code. Multi-currency portals and orgs only.
+                closeDate:
+                  type: [string, 'null']
+                  format: date
+                ownerId:
+                  type: string
+                  description: An id from `GET /v1/crm/{accountId}/owners`.
+                properties:
+                  $ref: '#/components/schemas/CrmNativeProperties'
+            example:
+              stage: closedwon
+              amount: 4800
+              closeDate: '2026-11-30'
+      responses:
+        '200':
+          description: The updated deal, read back from the CRM.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [deal]
+                properties:
+                  deal: { $ref: '#/components/schemas/CrmDeal' }
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/CrmForbidden'
+        '404':
+          $ref: '#/components/responses/CrmNotFound'
+        '409':
+          $ref: '#/components/responses/AccountDisconnected'
+        '422':
+          $ref: '#/components/responses/CrmValidationFailed'
+        '429':
+          $ref: '#/components/responses/CrmRateLimited'
+        '502':
+          $ref: '#/components/responses/UpstreamFailure'
+  /v1/crm/{accountId}/owners:
+    get:
+      x-resource-group: contacts
+      operationId: listCrmOwners
+      tags:
+        - CRM
+      x-platforms: [hubspot, salesforce]
+      summary: List CRM owners
+      description: |-
+        List the users records can be assigned to: HubSpot owners, or active standard Salesforce users. Use an `id` as `ownerId` on contacts and deals.
+
+        HubSpot needs `crm.objects.owners.read`, an optional scope portals approve when they connect; without it, 403 `crm_scope_missing` asks to reconnect HubSpot.
+      parameters:
+        - $ref: '#/components/parameters/CrmAccountId'
+        - $ref: '#/components/parameters/CrmIncludeRaw'
+        - $ref: '#/components/parameters/CrmLimit'
+        - $ref: '#/components/parameters/CrmCursor'
+      responses:
+        '200':
+          description: One page of owners.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [owners, nextCursor]
+                properties:
+                  owners:
+                    type: array
+                    items: { $ref: '#/components/schemas/CrmOwner' }
+                  nextCursor:
+                    type: [string, 'null']
+                    description: Pass back as `cursor` for the next page; null on the last page.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/CrmForbidden'
+        '404':
+          $ref: '#/components/responses/CrmNotFound'
+        '409':
+          $ref: '#/components/responses/AccountDisconnected'
+        '429':
+          $ref: '#/components/responses/CrmRateLimited'
+        '502':
+          $ref: '#/components/responses/UpstreamFailure'
   /v1/accounts/{accountId}/stripe-settings:
     get:
       x-resource-group: accounts

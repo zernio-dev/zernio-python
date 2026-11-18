@@ -1163,6 +1163,19 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `creator_portal.submit_creator_draft()` | Submit a draft for review |
 | `creator_portal.submit_creator_post()` | Submit a post |
 
+### CRM
+| Method | Description |
+|--------|-------------|
+| `crm.list_crm_deals()` | List CRM deals |
+| `crm.list_crm_owners()` | List CRM owners |
+| `crm.create_crm_activity()` | Log a CRM activity |
+| `crm.create_crm_contact()` | Create a CRM contact |
+| `crm.get_crm_contact()` | Get a CRM contact |
+| `crm.get_crm_deal()` | Get a CRM deal |
+| `crm.update_crm_contact()` | Update a CRM contact |
+| `crm.update_crm_deal()` | Update a CRM deal |
+| `crm.search_crm_contacts()` | Search CRM contacts |
+
 ### Custom Fields
 | Method | Description |
 |--------|-------------|

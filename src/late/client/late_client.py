@@ -46,6 +46,7 @@ from ..resources import (
     ConversionsResource,
     CreatorCampaignsResource,
     CreatorPortalResource,
+    CrmResource,
     CustomFieldsResource,
     DiscordResource,
     EmailResource,
@@ -217,6 +218,7 @@ class Zernio(BaseClient):
         self.conversions = ConversionsResource(self)
         self.creator_campaigns = CreatorCampaignsResource(self)
         self.creator_portal = CreatorPortalResource(self)
+        self.crm = CrmResource(self)
         self.custom_fields = CustomFieldsResource(self)
         self.discord = DiscordResource(self)
         self.email = EmailResource(self)
