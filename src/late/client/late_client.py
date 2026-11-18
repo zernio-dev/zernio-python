@@ -80,6 +80,7 @@ from ..resources import (
     SmsResource,
     SupportAssistantResource,
     ToolsResource,
+    TrackingLinksResource,
     TrackingTagsResource,
     TreasuryResource,
     TwitterEngagementResource,
@@ -252,6 +253,7 @@ class Zernio(BaseClient):
         self.sms = SmsResource(self)
         self.support_assistant = SupportAssistantResource(self)
         self.tools = ToolsResource(self)
+        self.tracking_links = TrackingLinksResource(self)
         self.tracking_tags = TrackingTagsResource(self)
         self.treasury = TreasuryResource(self)
         self.twitter_engagement = TwitterEngagementResource(self)

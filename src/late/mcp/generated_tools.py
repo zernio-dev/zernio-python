@@ -48859,6 +48859,187 @@ def register_generated_tools(mcp, _get_client):
         except Exception as e:
             raise ToolError(f"Error: {e}") from e
 
+    # TRACKING_LINKS
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="List tracking links",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def tracking_links_list_tracking_links(
+        profile_id: str | None = None,
+        site_id: str | None = None,
+        limit: int = 50,
+        cursor: str | None = None,
+    ) -> str:
+        """List tracking links
+
+        The tracking links of your workspace in creation order. Pass `profileId` or `siteId` to list one profile's or one site's links.
+
+        Args:
+            profile_id
+            site_id
+            limit
+            cursor: `pagination.nextCursor` from the previous page."""
+        client = _get_client()
+        try:
+            response = client.tracking_links.list_tracking_links(
+                profile_id=profile_id, site_id=site_id, limit=limit, cursor=cursor
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Create a tracking link",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def tracking_links_create_tracking_link(
+        idempotency_key: str,
+        site_id: str,
+        name: str,
+        destinations: list[dict[str, Any]] | None,
+        campaign: dict[str, Any] | None = None,
+    ) -> str:
+        """Create a tracking link
+
+        Creates a short link on a tracking site. Each click goes to one of `destinations`, picked by weight, so the link also split-tests landing pages. Put `url` in your ads and give `postbackUrl` to the network that reports conversions server to server.
+
+        Args:
+            idempotency_key: A unique key per link you create, such as a UUID. A retry with the same key and body returns the same link. (required)
+            site_id: The tracking site the link belongs to. The link takes its profile. (required)
+            name: (required)
+            destinations: Each item is an object with keys: url (string, required) - An https landing page.; weight (integer, required) - This page's share of clicks, relative to the other destinations' weights. (required)
+            campaign: Object with keys: platform (string) - The ad platform, such as `metaads` or `googleads`.; campaignId (string) - The platform's campaign id.; utmCampaign (string) - The `utm_campaign` value the campaign uses."""
+        client = _get_client()
+        try:
+            response = client.tracking_links.create_tracking_link(
+                idempotency_key=idempotency_key,
+                site_id=site_id,
+                name=name,
+                destinations=destinations,
+                campaign=campaign,
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get a tracking link",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def tracking_links_get_tracking_link(link_id: str) -> str:
+        """Get a tracking link
+
+        One link, with its URL and postback URL.
+
+        Args:
+            link_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.tracking_links.get_tracking_link(link_id=link_id)
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Update a tracking link",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def tracking_links_update_tracking_link(
+        link_id: str,
+        name: str | None = None,
+        destinations: list[dict[str, Any]] | None = None,
+        campaign: dict[str, Any] | None = None,
+        status: Literal["active", "paused"] | None = None,
+    ) -> str:
+        """Update a tracking link
+
+        Changes the link's name, destinations, campaign hints or status. Send at least one field. `status: paused` turns the link off until it is set back to `active`. `campaign: null` removes the hints. The code and URL never change.
+
+        Args:
+            link_id: (required)
+            name
+            destinations: Each item is an object with keys: url (string, required) - An https landing page.; weight (integer, required) - This page's share of clicks, relative to the other destinations' weights.
+            campaign: Object with keys: platform (string) - The ad platform, such as `metaads` or `googleads`.; campaignId (string) - The platform's campaign id.; utmCampaign (string) - The `utm_campaign` value the campaign uses.
+            status"""
+        client = _get_client()
+        try:
+            response = client.tracking_links.update_tracking_link(
+                link_id=link_id,
+                name=name,
+                destinations=destinations,
+                campaign=campaign,
+                status=status,
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Delete a tracking link",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def tracking_links_delete_tracking_link(link_id: str) -> str:
+        """Delete a tracking link
+
+        The link and its postback URL stop working at once. Conversions already stored are kept.
+
+        Args:
+            link_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.tracking_links.delete_tracking_link(link_id=link_id)
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Rotate a tracking link's postback URL",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def tracking_links_rotate_tracking_link_postback_token(
+        link_id: str, idempotency_key: str
+    ) -> str:
+        """Rotate a tracking link's postback URL
+
+        Issues a new `postbackUrl`. The old one stops working at once, so update it at the network right after.
+
+        Args:
+            link_id: (required)
+            idempotency_key: A unique key per rotation, such as a UUID. (required)"""
+        client = _get_client()
+        try:
+            response = client.tracking_links.rotate_tracking_link_postback_token(
+                link_id=link_id, idempotency_key=idempotency_key
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
     # TRACKING_TAGS
 
     @mcp.tool(
