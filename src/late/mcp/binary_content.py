@@ -14,7 +14,7 @@ import logging
 from typing import TYPE_CHECKING
 
 from fastmcp.exceptions import ToolError
-from fastmcp.tools.tool import ToolResult
+from fastmcp.tools import ToolResult
 from mcp.types import ImageContent, TextContent
 
 from .response_format import MAX_RESULT_CHARS

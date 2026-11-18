@@ -193,7 +193,7 @@ async def test_image_is_returned_as_image_content() -> None:
     assert isinstance(note, TextContent)
     assert note.text == f"Downloaded receipt.jpg (image/jpeg, {len(JPEG)} bytes)."
     assert isinstance(image, ImageContent)
-    assert image.mimeType == "image/jpeg"
+    assert image.mime_type == "image/jpeg"
     assert base64.b64decode(image.data) == JPEG
     assert result.structured_content == {"result": note.text}
 

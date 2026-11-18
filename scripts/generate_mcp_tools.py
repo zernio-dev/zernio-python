@@ -849,7 +849,7 @@ def main() -> int:
         "from .response_format import format_payload",
         "",
         "if TYPE_CHECKING:",
-        "    from fastmcp.tools.tool import ToolResult",
+        "    from fastmcp.tools import ToolResult",
         "",
         "",
         "def _decode_base64(value: str) -> bytes:",

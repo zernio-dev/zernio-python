@@ -19,12 +19,12 @@ import httpx
 from fastmcp import FastMCP
 from fastmcp.exceptions import ToolError
 from fastmcp.server.dependencies import get_access_token
-from fastmcp.tools.tool import ToolResult
+from fastmcp.tools import ToolResult
 from mcp.types import TextContent, ToolAnnotations
 from pydantic import BaseModel, Field
 
 from late.mcp.auth import build_auth_provider, forget_rejected_token
-from late.mcp.middleware import WellFormedOutputMiddleware
+from late.mcp.middleware import WellFormedOutputMiddleware, WellFormedOutputTransform
 from late.mcp.user_agent import mcp_user_agent
 
 API_BASE = (
@@ -532,6 +532,7 @@ chatgpt_mcp = FastMCP(
     auth=build_auth_provider(scopes=CHATGPT_SCOPES),
 )
 chatgpt_mcp.add_middleware(WellFormedOutputMiddleware())
+chatgpt_mcp.add_transform(WellFormedOutputTransform())
 
 
 @chatgpt_mcp.tool(

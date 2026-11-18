@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- **The MCP server runs on FastMCP 4 and MCP SDK 2.** The `mcp` extra now needs Python 3.11 or later, as FastMCP 4 does: on Python 3.10 it installs without FastMCP and the MCP server cannot run. The SDK itself still supports 3.10. Behavior FastMCP 4 changed is kept: guessed tool names sent through `call_tool` get the closest tools again, a result holding half an emoji is repaired instead of failing the call, and a pydantic error inside a tool logs where and why it failed, never the response values. The protected-resource metadata override is gone, since MCP SDK 2 renders the issuer without a trailing slash.
+
+### Fixed
+- **`pip install zernio-sdk` without extras could not import the models.** `EmailStr` fields need `email-validator`, which only arrived through FastMCP. The SDK now depends on `pydantic[email]`.
+
 ### Added
 - **`transport=` on `Late` / `Zernio`.** Pass an `httpx.BaseTransport` to reuse connections and TLS sessions across requests and clients. The caller owns it; the client never closes it. Without it nothing changes: a new connection per request.
 - **Tool call telemetry on the hosted MCP server.** One JSON log line per tool call (tool, latency, outcome, hashed caller), and with `SENTRY_DSN` one Sentry transaction per tool call. `/health` reports the deployed commit.

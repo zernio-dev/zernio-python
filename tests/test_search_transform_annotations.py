@@ -15,7 +15,7 @@ from late.mcp.server import mcp
 
 
 async def _synthetic_tools():
-    (transform,) = mcp.transforms
+    transform, _ = mcp.transforms
     return {t.name: t for t in await transform.transform_tools([])}
 
 
@@ -23,9 +23,9 @@ async def test_search_tools_is_annotated_read_only():
     annotations = (await _synthetic_tools())["search_tools"].annotations
 
     assert annotations is not None
-    assert annotations.readOnlyHint is True
-    assert annotations.destructiveHint is False
-    assert annotations.openWorldHint is False
+    assert annotations.read_only_hint is True
+    assert annotations.destructive_hint is False
+    assert annotations.open_world_hint is False
 
 
 async def test_call_tool_is_annotated_destructive():
@@ -34,6 +34,6 @@ async def test_call_tool_is_annotated_destructive():
     annotations = (await _synthetic_tools())["call_tool"].annotations
 
     assert annotations is not None
-    assert annotations.readOnlyHint is False
-    assert annotations.destructiveHint is True
-    assert annotations.openWorldHint is True
+    assert annotations.read_only_hint is False
+    assert annotations.destructive_hint is True
+    assert annotations.open_world_hint is True

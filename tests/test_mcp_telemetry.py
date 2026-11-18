@@ -423,7 +423,7 @@ async def test_invalid_arguments_name_the_field_but_never_log_its_value(
 
     [record] = quieted_fastmcp_logs.records
     assert record.getMessage() == (
-        "Invalid arguments for tool 'takes_a_number': count: int_parsing"
+        "Invalid arguments for tool 'takes_a_number': int_parsing"
     )
 
 
@@ -442,6 +442,8 @@ async def test_an_sdk_model_that_rejects_a_response_stays_in_the_logs(
 
     [record] = quieted_fastmcp_logs.records
     assert "accounts: list_type" in record.getMessage()
+    assert "nope" not in record.getMessage()
+    assert record.exc_info is None
 
 
 @pytest.mark.usefixtures("quieted_fastmcp_logs")

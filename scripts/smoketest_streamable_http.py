@@ -22,29 +22,23 @@ from contextlib import contextmanager
 import httpx
 import uvicorn
 
-# --- Stub auth BEFORE importing the server modules so the patched function
-# is what gets bound into the routes module. ---
+# --- Stub token verification BEFORE the server starts: ZernioTokenVerifier
+# looks verify_late_api_key up on the module at call time. ---
 import late.mcp.auth as auth_module
 
-_ORIG_VERIFY = auth_module.verify_late_api_key
 
-
-async def _always_valid(api_key: str) -> bool:  # noqa: D401 - stub
-    """Stub: accept any non-empty key. Bypasses the network call to zernio.com."""
-    return bool(api_key)
+async def _always_valid(api_key: str, *, client=None) -> auth_module.Verification:
+    """Stub: accept any key. Bypasses the network call to zernio.com."""
+    return auth_module.Verification.VALID
 
 
 auth_module.verify_late_api_key = _always_valid
-# Also patch the already-imported reference inside routes (it imports by name).
-import late.mcp.routes as routes_module  # noqa: E402
 
-routes_module.verify_late_api_key = _always_valid
-
+import httpx2  # noqa: E402
 from mcp import ClientSession  # noqa: E402
-from mcp.client.streamable_http import streamablehttp_client  # noqa: E402
+from mcp.client.streamable_http import streamable_http_client  # noqa: E402
 
-from late.mcp.http_server import create_app  # noqa: E402
-from late.mcp.server import _get_client, mcp  # noqa: E402
+from late.mcp.http_server import build_app  # noqa: E402
 
 PORT = 8766
 BASE = f"http://127.0.0.1:{PORT}"
@@ -54,7 +48,7 @@ FAKE_KEY = "test_key_smoke"
 @contextmanager
 def run_server() -> Iterator[None]:
     """Start uvicorn in a daemon thread; yield once it's accepting connections."""
-    app = create_app(mcp._mcp_server, debug=False)
+    app = build_app()
     config = uvicorn.Config(app, host="127.0.0.1", port=PORT, log_level="warning")
     server = uvicorn.Server(config)
 
@@ -84,53 +78,56 @@ async def run_streamable_http_checks() -> None:
     headers = {"Authorization": f"Bearer {FAKE_KEY}"}
     url = f"{BASE}/mcp"
 
-    print(f"[client] connecting to {url} via streamablehttp_client")
-    async with streamablehttp_client(url, headers=headers) as (read, write, _get_session_id):
-        async with ClientSession(read, write) as session:
-            print("[client] initialize()")
-            init = await session.initialize()
-            assert init.serverInfo.name == "Zernio", init.serverInfo
-            print(f"[ok]    initialize -> serverInfo.name={init.serverInfo.name!r}")
+    print(f"[client] connecting to {url} via streamable_http_client")
+    async with (
+        httpx2.AsyncClient(headers=headers) as http_client,
+        streamable_http_client(url, http_client=http_client) as (read, write),
+        ClientSession(read, write) as session,
+    ):
+        print("[client] initialize()")
+        init = await session.initialize()
+        assert init.server_info.name == "Zernio", init.server_info
+        print(f"[ok]    initialize -> serverInfo.name={init.server_info.name!r}")
 
-            print("[client] list_tools()")
-            tools = await session.list_tools()
-            names = [t.name for t in tools.tools]
-            assert names, "expected non-empty tool list"
-            assert any(n.startswith("posts_") for n in names), names
-            print(f"[ok]    list_tools -> {len(names)} tools (sample: {names[:5]})")
+        print("[client] list_tools()")
+        tools = await session.list_tools()
+        names = [t.name for t in tools.tools]
+        assert names, "expected non-empty tool list"
+        assert any(n.startswith("posts_") for n in names), names
+        print(f"[ok]    list_tools -> {len(names)} tools (sample: {names[:5]})")
 
-            # fastmcp builds the synthetic search/call tools without
-            # annotations; clients that gate approval on hints then auto-deny
-            # them (codex-cli in non-interactive runs). Assert over the wire,
-            # not just in-process, so a serialization regression is caught too.
-            by_name = {t.name: t for t in tools.tools}
-            for synthetic in ("search_tools", "call_tool"):
-                assert synthetic in by_name, f"{synthetic} missing from tools/list"
-                assert by_name[synthetic].annotations is not None, (
-                    f"{synthetic} has no annotations - approval-gating clients will deny it"
-                )
-            assert by_name["search_tools"].annotations.readOnlyHint is True
-            assert by_name["call_tool"].annotations.destructiveHint is True
-            print("[ok]    synthetic search/call tools carry annotations")
-
-            # The real ContextVar test: invoke a tool and observe the error.
-            # - If plumbing is BROKEN: tool errors with "API key is required"
-            #   (the ValueError raised by _get_client when ContextVar is unset).
-            # - If plumbing WORKS: the key reaches the Late client, which then
-            #   makes a real call to zernio.com that fails with 401/auth error
-            #   because our fake key isn't real. Either of those proves the
-            #   key is being propagated through anyio's task group context.
-            print("[client] call_tool('accounts_list') to verify API-key propagation")
-            result = await session.call_tool("accounts_list", {})
-            text_content = " ".join(getattr(c, "text", "") for c in result.content)
-            print(f"[debug] tool response (truncated): {text_content[:200]!r}")
-
-            broken_marker = "Zernio API key is required"
-            assert broken_marker not in text_content, (
-                f"ContextVar propagation FAILED — tool could not see the API key.\n"
-                f"Full response: {text_content}"
+        # fastmcp builds the synthetic search/call tools without
+        # annotations; clients that gate approval on hints then auto-deny
+        # them (codex-cli in non-interactive runs). Assert over the wire,
+        # not just in-process, so a serialization regression is caught too.
+        by_name = {t.name: t for t in tools.tools}
+        for synthetic in ("search_tools", "call_tool"):
+            assert synthetic in by_name, f"{synthetic} missing from tools/list"
+            assert by_name[synthetic].annotations is not None, (
+                f"{synthetic} has no annotations - approval-gating clients will deny it"
             )
-            print("[ok]    API key reached the tool (no 'API key required' error)")
+        assert by_name["search_tools"].annotations.read_only_hint is True
+        assert by_name["call_tool"].annotations.destructive_hint is True
+        print("[ok]    synthetic search/call tools carry annotations")
+
+        # The real ContextVar test: invoke a tool and observe the error.
+        # - If plumbing is BROKEN: tool errors with "API key is required"
+        #   (the ValueError raised by _get_client when ContextVar is unset).
+        # - If plumbing WORKS: the key reaches the Late client, which then
+        #   makes a real call to zernio.com that fails with 401/auth error
+        #   because our fake key isn't real. Either of those proves the
+        #   key is being propagated through anyio's task group context.
+        print("[client] call_tool('accounts_list') to verify API-key propagation")
+        result = await session.call_tool("accounts_list", {})
+        text_content = " ".join(getattr(c, "text", "") for c in result.content)
+        print(f"[debug] tool response (truncated): {text_content[:200]!r}")
+
+        broken_marker = "Zernio API key is required"
+        assert broken_marker not in text_content, (
+            f"ContextVar propagation FAILED — tool could not see the API key.\n"
+            f"Full response: {text_content}"
+        )
+        print("[ok]    API key reached the tool (no 'API key required' error)")
 
 
 def check_no_redirect() -> None:
@@ -146,7 +143,7 @@ def check_no_redirect() -> None:
         follow_redirects=False,
     )
     assert r.status_code == 401, f"expected 401, got {r.status_code}: {r.text}"
-    assert "Missing API key" in r.text, r.text
+    assert "resource_metadata" in r.headers.get("www-authenticate", ""), r.headers
     print(f"[ok]    no-auth -> 401 (no 307 redirect)")
 
 

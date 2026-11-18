@@ -55,7 +55,7 @@ async def test_call_tool_still_refuses_to_call_itself():
 
 async def test_the_instructions_explain_how_to_find_tools():
     async with Client(mcp) as client:
-        instructions = client.initialize_result.instructions
+        instructions = client.instructions
 
     assert "FINDING TOOLS" in instructions
     assert "Never guess tool names" in instructions

@@ -15,7 +15,7 @@ async def _call(name: str, arguments: dict) -> bool:
 async def test_feedback_is_listed_up_front_and_explained_in_the_instructions():
     async with Client(mcp) as client:
         listed = {t.name for t in await client.list_tools()}
-        instructions = client.initialize_result.instructions
+        instructions = client.instructions
 
     assert "feedback_submit_feedback" in listed
     assert "feedback_submit_feedback" in instructions
