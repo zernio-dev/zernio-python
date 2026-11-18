@@ -417,6 +417,25 @@ class ConversionsResource:
             headers["Idempotency-Key"] = idempotency_key
         return self._client._post("/v1/events", data=payload, headers=headers)
 
+    def get_conversion_paths(
+        self,
+        from_date: str,
+        to_date: str,
+        *,
+        profile_id: str | None = None,
+        limit: int | None = 10,
+    ) -> dict[str, Any]:
+        """List the touch paths that lead to conversions"""
+        params = self._build_query(
+            {
+                "profileId": profile_id,
+                "fromDate": from_date,
+                "toDate": to_date,
+                "limit": limit,
+            }
+        )
+        return self._client._get("/v1/events/paths", params=params)
+
     def get_events_overview(self, *, profile_id: str | None = None) -> dict[str, Any]:
         """Get today's tracking overview"""
         params = self._build_query(
@@ -1356,6 +1375,25 @@ class ConversionsResource:
         if idempotency_key is not None:
             headers["Idempotency-Key"] = idempotency_key
         return await self._client._apost("/v1/events", data=payload, headers=headers)
+
+    async def aget_conversion_paths(
+        self,
+        from_date: str,
+        to_date: str,
+        *,
+        profile_id: str | None = None,
+        limit: int | None = 10,
+    ) -> dict[str, Any]:
+        """List the touch paths that lead to conversions (async)"""
+        params = self._build_query(
+            {
+                "profileId": profile_id,
+                "fromDate": from_date,
+                "toDate": to_date,
+                "limit": limit,
+            }
+        )
+        return await self._client._aget("/v1/events/paths", params=params)
 
     async def aget_events_overview(
         self, *, profile_id: str | None = None

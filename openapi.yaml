@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.666.2"
+  version: "1.667.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -101194,6 +101194,46 @@ paths:
         '404': { $ref: '#/components/responses/NotFound' }
         '409': { $ref: '#/components/responses/IdempotencyKeyInFlight' }
         '422': { $ref: '#/components/responses/IdempotencyKeyReused' }
+  /v1/events/paths:
+    get:
+      x-resource-group: "ads"
+      operationId: getConversionPaths
+      tags: [Conversions]
+      summary: List the touch paths that lead to conversions
+      description: |
+        The most frequent sequences of touches people made before a conversion (sale, lead or another counted event) whose time falls in the range: ad clicks, tagged visits, search, referrals and earlier lead forms, oldest first.
+
+        Only conversions with more than one touch have a path. Without `profileId` it covers every profile you can access. Requires the Ads add-on.
+      security:
+        - bearerAuth: []
+      parameters:
+        - { name: profileId, in: query, required: false, schema: { type: string }, description: 'The profile to read. Omit for every profile you can access.' }
+        - { name: fromDate, in: query, required: true, schema: { type: string, format: date } }
+        - { name: toDate, in: query, required: true, schema: { type: string, format: date }, description: 'Inclusive. At most 400 days after `fromDate`.' }
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 50, default: 10 } }
+      responses:
+        '200':
+          description: The paths, most frequent first.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [fromDate, toDate, paths]
+                properties:
+                  fromDate: { type: string, format: date }
+                  toDate: { type: string, format: date }
+                  paths:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        steps: { type: array, items: { type: string }, description: 'Each touch as its kind, or `kind:platform` when it named a campaign.', example: ['ad_click:facebook', 'organic_search', 'lead_form:facebook'] }
+                        conversions: { type: integer }
+                        sales: { type: integer, description: 'How many were purchases.' }
+                        revenue: { type: number, description: 'The value of the purchases, as sent.' }
+                        avgDays: { type: number, description: 'Average days from the first touch to the conversion.' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
   /v1/events/overview:
     get:
       x-resource-group: "ads"

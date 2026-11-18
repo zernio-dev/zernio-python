@@ -31102,6 +31102,37 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="List the touch paths that lead to conversions",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def conversions_get_conversion_paths(
+        from_date: str, to_date: str, profile_id: str | None = None, limit: int = 10
+    ) -> str:
+        """List the touch paths that lead to conversions
+
+        The most frequent sequences of touches people made before a conversion (sale, lead or another counted event) whose time falls in the range: ad clicks, tagged visits, search, referrals and earlier lead forms, oldest first.
+
+        Only conversions with more than one touch have a path. Without `profileId` it covers every profile you can access. Requires the Ads add-on.
+
+        Args:
+            profile_id: The profile to read. Omit for every profile you can access.
+            from_date: (required)
+            to_date: Inclusive. At most 400 days after `fromDate`. (required)
+            limit"""
+        client = _get_client()
+        try:
+            response = client.conversions.get_conversion_paths(
+                profile_id=profile_id, from_date=from_date, to_date=to_date, limit=limit
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="Get today's tracking overview",
             readOnlyHint=True,
             destructiveHint=False,
