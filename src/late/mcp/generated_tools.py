@@ -7,13 +7,19 @@ DO NOT EDIT - Run `python scripts/generate_mcp_tools.py` to regenerate.
 from __future__ import annotations
 
 import base64
-from typing import Any, Literal
+from typing import TYPE_CHECKING, Any, Literal
 
 from fastmcp.exceptions import ToolError
 from mcp.types import ToolAnnotations
 
+from late.client.binary_response import BinaryResponse
+
+from .binary_content import binary_tool_result
 from .idempotency import same_arguments_key
 from .response_format import format_payload
+
+if TYPE_CHECKING:
+    from fastmcp.tools.tool import ToolResult
 
 
 def _decode_base64(value: str) -> bytes:
@@ -39,10 +45,13 @@ def _enum_str(value: Any) -> str:
     return str(value)
 
 
-def _format_response(response: Any) -> str:
+def _format_response(response: Any) -> str | ToolResult:
     """Format SDK response for MCP output."""
     if response is None:
         return "Success"
+    if isinstance(response, BinaryResponse):
+        # A file the API streamed as raw bytes (media, attachment, receipt).
+        return binary_tool_result(response)
     if hasattr(response, "__dict__"):
         # Handle response objects
         if hasattr(response, "posts") and response.posts:

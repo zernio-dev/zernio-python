@@ -207,11 +207,20 @@ async def test_expected_failures_open_no_sentry_issue(sentry_events) -> None:
         raise ToolError("Post not found")
 
     @server.tool
+    def rewrapped_tool_error() -> str:
+        # How a generated tool refuses a file too large to return.
+        try:
+            raise ToolError("clip.mp4 is larger than the 10 MB")
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @server.tool
     def takes_a_number(value: int) -> int:
         return value
 
     async with Client(server) as client:
         await client.call_tool("bare_tool_error", {}, raise_on_error=False)
+        await client.call_tool("rewrapped_tool_error", {}, raise_on_error=False)
         await client.call_tool(
             "takes_a_number", {"value": "nope"}, raise_on_error=False
         )
