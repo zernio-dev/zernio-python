@@ -44,6 +44,8 @@ curl -H "Authorization: Bearer your_zernio_api_key" \
 3. Railway builds the `Dockerfile` and deploys
 4. No environment variables needed! (users provide their own API keys)
 
+The image is built in stages: dependencies are installed from a `uv export` of the lockfile, so the version bump each spec regeneration makes in `uv.lock` does not reinstall them, and the project goes in as a non-editable package with bytecode compiled at build time. The runtime image holds Python and the virtualenv only (no uv, no `src`) and runs as the non-root `app` user. `.dockerignore` is an allowlist: a file the build needs must be added there. `Dockerfile.docker` is the same image with a uv cache mount, for plain Docker builds; keep the two in step. CI builds both and checks the image starts, answers `/health` and `/mcp`, and stops on SIGTERM.
+
 ### Deploy configuration
 
 The service's deploy settings live in [`.railway/railway.ts`](../.railway/railway.ts) (Railway [Infrastructure as Code](https://docs.railway.com/infrastructure-as-code)). It replaces `railway.toml`, which Railway stops reading on 2026-12-01. It sets the Dockerfile build, the `/health` check (100 s timeout), restart on failure (3 retries), one replica in `us-west2`, the GitHub repo and branch each environment deploys from, and the `mcp.zernio.com` domain in production. It sets no start command, so the `Dockerfile` `CMD` starts the server; do not add one. Variables are declared with `preserve()`, so their values stay managed in Railway.

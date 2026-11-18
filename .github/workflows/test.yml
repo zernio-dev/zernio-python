@@ -64,3 +64,44 @@ jobs:
         with:
           name: dist
           path: dist/
+
+  # The image Railway deploys: build it from the Dockerfile and check it starts
+  # as a non-root user and answers health and MCP requests.
+  docker:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    strategy:
+      matrix:
+        dockerfile: [Dockerfile, Dockerfile.docker]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build image
+        run: docker build -f ${{ matrix.dockerfile }} -t zernio-mcp .
+
+      - name: Runs as a non-root user
+        run: test "$(docker run --rm zernio-mcp id -u)" != "0"
+
+      - name: Starts and serves MCP
+        run: |
+          docker run -d --name mcp -p 8080:8080 -e PORT=8080 zernio-mcp
+          for _ in $(seq 1 60); do
+            curl -sf http://localhost:8080/health && break
+            sleep 1
+          done
+          curl -sf http://localhost:8080/health
+          # Unauthenticated initialize gets the OAuth challenge, not an error.
+          test "$(curl -s -o /dev/null -w '%{http_code}' -X POST http://localhost:8080/mcp \
+            -H 'Accept: application/json, text/event-stream' -H 'Content-Type: application/json' \
+            -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"ci","version":"1"}}}')" = "401"
+
+      - name: Stops on SIGTERM
+        run: |
+          docker stop --timeout 30 mcp
+          test "$(docker inspect -f '{{.State.ExitCode}}' mcp)" = "0"
+
+      - name: Server logs
+        if: always()
+        run: docker logs mcp || true
