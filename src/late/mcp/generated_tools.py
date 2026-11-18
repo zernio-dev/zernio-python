@@ -21440,6 +21440,7 @@ def register_generated_tools(mcp, _get_client):
         impact: Literal["none", "additive", "action_required"] | None = None,
         platform: str | None = None,
         before: str | None = None,
+        cursor: str | None = None,
         limit: int = 20,
     ) -> str:
         """List API changelog entries
@@ -21459,11 +21460,17 @@ def register_generated_tools(mcp, _get_client):
             impact: Only entries with this impact. `action_required` lists the changes an integration may need to act on.
             platform: Only entries tagged with this platform or area slug (see `platforms` on the entry). One slug per request.
             before: Only entries published strictly before this instant. Pass the previous page's `nextCursor`.
+            cursor: Same as `before`, for clients that send `nextCursor` back as `cursor`. `before` wins when both are set.
             limit"""
         client = _get_client()
         try:
             response = client.changelog.list_changelog(
-                type=type, impact=impact, platform=platform, before=before, limit=limit
+                type=type,
+                impact=impact,
+                platform=platform,
+                before=before,
+                cursor=cursor,
+                limit=limit,
             )
             return _format_response(response)
         except Exception as e:

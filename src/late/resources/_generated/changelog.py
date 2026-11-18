@@ -108,6 +108,7 @@ class ChangelogResource:
         impact: str | None = None,
         platform: str | None = None,
         before: datetime | str | None = None,
+        cursor: datetime | str | None = None,
         limit: int | None = 20,
     ) -> dict[str, Any]:
         """List API changelog entries"""
@@ -117,6 +118,7 @@ class ChangelogResource:
                 "impact": impact,
                 "platform": platform,
                 "before": before,
+                "cursor": cursor,
                 "limit": limit,
             }
         )
@@ -129,6 +131,7 @@ class ChangelogResource:
         impact: str | None = None,
         platform: str | None = None,
         before: datetime | str | None = None,
+        cursor: datetime | str | None = None,
         limit: int | None = 20,
     ) -> dict[str, Any]:
         """List API changelog entries (async)"""
@@ -138,6 +141,7 @@ class ChangelogResource:
                 "impact": impact,
                 "platform": platform,
                 "before": before,
+                "cursor": cursor,
                 "limit": limit,
             }
         )

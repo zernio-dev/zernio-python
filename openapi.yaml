@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.665.0"
+  version: "1.666.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -111938,6 +111938,11 @@ paths:
           required: false
           schema: { type: string, format: date-time }
           description: Only entries published strictly before this instant. Pass the previous page's `nextCursor`.
+        - name: cursor
+          in: query
+          required: false
+          schema: { type: string, format: date-time }
+          description: Same as `before`, for clients that send `nextCursor` back as `cursor`. `before` wins when both are set.
         - name: limit
           in: query
           required: false
