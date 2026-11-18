@@ -25576,6 +25576,14 @@ def register_generated_tools(mcp, _get_client):
         Same coverage and transport as expectedPlatformUserId; when both are sent, both must match. Use this on a first connection, where you hold the handle the user typed but no Zernio id yet.
                 expected_phone_number: WhatsApp with `signup=hosted` only; ignored on other flows. The number (E.164) the user must connect. If they pick a different number in Meta's popup, the hosted page ends with a 409 `NUMBER_MISMATCH` naming the number they picked, and nothing is saved.
 
+        The full international number is compared, country code included. A number that differs only in its country code, or shares only its last digits, is a mismatch.
+
+        The only spellings treated as the same number are national re-spellings of one line, such as a Brazilian mobile with or without its ninth digit, or a Mexican mobile with or without the `1` after `+52`.
+
+        The pin is held server-side on the connect token, not in the hosted page URL, so removing it from the URL does not lift it.
+
+        It is also enforced on late completions: when the browser closes before the signup finishes, Zernio only connects the number in the background if it matches.
+
         Use it to reconnect a known number safely. For a number bought from Zernio, the hosted page already expects that number and this value is ignored.
                 force_reauth: Instagram Login only (the default loginMethod); ignored elsewhere. Makes Instagram show its login page and ask for the credentials of the account to connect, even when another Instagram account is logged in on the device or app. Also hides the Facebook login option on that page.
 
@@ -27897,7 +27905,7 @@ def register_generated_tools(mcp, _get_client):
                 waba_id: WhatsApp Business Account id, when the SDK reported one
                 phone_number_id
                 is_coexistence: Number is also live in the WhatsApp Business app
-                expected_phone_number: Rejects the connect when Meta returns a different number
+                expected_phone_number: Rejects the connect when Meta returns a different number (full international number). With a connect token minted with a pinned number, the pinned number applies instead.
                 redirect_url: Hosted signup page only. When present, the response also carries `redirectUrl`, the URL the user should land on, with the outcome mapped exactly like the redirect flow (success params, or `error` and `platform` with the same values).
 
         Must be an absolute http(s) URL or a custom app scheme. The legacy spelling `redirectUrl` remains accepted as an alias.
