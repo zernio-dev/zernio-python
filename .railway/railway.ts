@@ -5,9 +5,12 @@
 import { defineRailway, github, preserve, project, service } from "railway/iac";
 
 // GitHub source per environment, as connected today. Omitting it disconnects
-// the repo, and pushes stop deploying. dev has no repo connected.
+// the repo, and pushes stop deploying. dev tracks whichever branch is under test.
 const SOURCES: Record<string, ReturnType<typeof github>> = {
   production: github("zernio-dev/zernio-python", { branch: "develop" }),
+  dev: github("zernio-dev/zernio-python", {
+    branch: "chore/railway-eu-replicas",
+  }),
   "zernio-mcp-dev": github("zernio-dev/zernio-mcp", { checkSuites: true }),
 };
 
@@ -25,7 +28,7 @@ const VARIABLES: Record<string, string[]> = {
     "ZERNIO_MCP_APPS",
   ],
   "zernio-mcp-dev": ["MCP_PUBLIC_URL", "PORT", "SENTRY_DSN"],
-  dev: ["MCP_PUBLIC_URL", "PORT"],
+  dev: ["MCP_PUBLIC_URL", "PORT", "ZERNIO_MCP_APPS"],
 };
 
 export default defineRailway((ctx) => {
@@ -50,8 +53,15 @@ export default defineRailway((ctx) => {
     // setting it here shows as a change on every plan).
     deploy: {
       restartPolicyMaxRetries: 3,
+      // EU West (Amsterdam), next to the Zernio API. Streamable HTTP runs
+      // stateless, so replicas need no sticky sessions. Railway merges region
+      // maps, so a region we leave must be set to null (0 is rejected); the
+      // `replicas` shorthand cannot express that.
+      multiRegionConfig: {
+        "europe-west4": { numReplicas: environment === "production" ? 2 : 1 },
+        "us-west2": null,
+      },
     },
-    replicas: { "us-west2": 1 },
     domains:
       environment === "production"
         ? [{ domain: "mcp.zernio.com", port: 8080 }]
