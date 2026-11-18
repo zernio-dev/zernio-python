@@ -23,8 +23,10 @@ from fastmcp.tools import ToolResult
 from mcp.types import TextContent, ToolAnnotations
 from pydantic import BaseModel, Field
 
+from late.client.base import _retry_after_seconds
 from late.mcp.auth import build_auth_provider, forget_rejected_token
 from late.mcp.middleware import WellFormedOutputMiddleware, WellFormedOutputTransform
+from late.mcp.middleware.rate_limit import wait_hint
 from late.mcp.user_agent import mcp_user_agent
 
 API_BASE = (
@@ -215,11 +217,16 @@ def _bearer() -> str:
     raise ToolError("Sign in to Zernio to use this tool.")
 
 
-def _error_message(response: httpx.Response) -> str:
+def _json_object(response: httpx.Response) -> dict[str, Any]:
     try:
         body = response.json()
     except ValueError:
-        body = {}
+        return {}
+    return body if isinstance(body, dict) else {}
+
+
+def _error_message(response: httpx.Response) -> str:
+    body = _json_object(response)
     error = body.get("error") if isinstance(body, dict) else None
     if isinstance(error, dict):
         message = error.get("message") or error.get("code")
@@ -245,6 +252,15 @@ async def _api(
         )
     if response.status_code == 401:
         forget_rejected_token(bearer)
+    if response.status_code == 429:
+        body = _json_object(response)
+        details = body.get("details")
+        hint = wait_hint(
+            _retry_after_seconds(response.headers.get("Retry-After")),
+            platform=body.get("platform"),
+            resets_at=details.get("resetsAt") if isinstance(details, dict) else None,
+        )
+        raise ToolError(f"{_error_message(response).rstrip('.')}. {hint}")
     if response.status_code >= 400:
         raise ToolError(_error_message(response))
     return response.json() if response.content else {}

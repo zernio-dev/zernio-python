@@ -8,6 +8,8 @@ import re
 import time
 import uuid
 from contextlib import asynccontextmanager, contextmanager
+from datetime import datetime, timezone
+from email.utils import parsedate_to_datetime
 from importlib.metadata import PackageNotFoundError, version
 from typing import TYPE_CHECKING, Any
 
@@ -52,6 +54,23 @@ def _parse_error_body(response: httpx.Response) -> dict[str, Any]:
     except ValueError:
         return {}
     return data if isinstance(data, dict) else {}
+
+
+def _retry_after_seconds(value: str | None) -> float | None:
+    """Seconds from a Retry-After header: delay-seconds or an HTTP-date."""
+    if not value:
+        return None
+    try:
+        return max(0.0, float(value))
+    except ValueError:
+        pass
+    try:
+        when = parsedate_to_datetime(value)
+    except (TypeError, ValueError):
+        return None
+    if when.tzinfo is None:
+        when = when.replace(tzinfo=timezone.utc)
+    return max(0.0, (when - datetime.now(timezone.utc)).total_seconds())
 
 
 def _with_request_id(headers: dict[str, str] | None) -> dict[str, str]:
@@ -243,11 +262,14 @@ class BaseClient:
             )
 
         if response.status_code == 429:
+            error_data = _parse_error_body(response)
             raise LateRateLimitError(
-                "Rate limit exceeded",
+                error_data.get("error") or "Rate limit exceeded",
                 reset_time=self._rate_limiter.reset_time,
                 limit=self._rate_limiter.limit,
                 remaining=self._rate_limiter.remaining,
+                retry_after=_retry_after_seconds(response.headers.get("Retry-After")),
+                details=error_data,
             )
 
         if response.status_code >= 400:
