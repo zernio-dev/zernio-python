@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.675.0"
+  version: "1.676.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -1983,6 +1983,10 @@ components:
           type: array
           description: 'What to switch on at the provider first, such as IMAP access on GMX or Yandex.'
           items: { type: object, properties: { id: { type: string, enum: [enable_imap] }, text: { type: string }, url: { type: string, format: uri } } }
+        hostReplacements:
+          type: array
+          description: 'Server names discovery swapped for the name the server certificate is issued for, as on shared hosting where mail.<domain> has no certificate of its own. Present on the imap route.'
+          items: { type: object, properties: { server: { type: string, enum: [imap, smtp] }, from: { type: string, example: mail.example.com }, to: { type: string, example: example-com.mailhost.example.net } } }
         reconnectCause: { type: [string, "null"] }
         reason: { type: [string, "null"] }
         unsupportedReason:
@@ -3264,15 +3268,14 @@ components:
               value: { type: string }
         zernioTag:
           type: boolean
-          default: false
           description: |
-            POST /v1/ads/create on Meta and Google only. Opt-in: set `true` and the ad carries `zrn=<platform ad id>` on its landing URL, so orders and events tied to the landing URL map back to the ad.
+            POST /v1/ads/create on Meta and Google only. Set `true` and the ad carries `zrn=<platform ad id>` on its landing URL, so orders and events tied to the landing URL map back to the ad. Omitted: follows your team's Tag new ads setting (`PUT /v1/ads/campaign-results/tag-new-ads`, off by default).
 
             - **Meta:** `{ key: zrn, value: '{{ad.id}}' }` is appended after your `urlTags`, which are sent unchanged; a `zrn` key you send yourself is kept. Skipped for lead forms, call ads, `existingCreativeId` and app promotion.
             - **Google (Display and Search):** the ad's `final_url_suffix` is set to `zrn={creative}` only when the ad inherits no suffix from its ad group, campaign or account. Otherwise the ad is left untouched (your suffix keeps applying) and attribution uses the click's `gclid`.
             - If the inherited suffix cannot be read or Google rejects the tag, the ad is created untagged.
 
-            Existing ads are never changed. Omitted or `false` creates the ad with no Zernio tag.
+            Existing ads are never changed. `false` creates the ad with no Zernio tag, whatever the setting.
     MetaLeadForm:
       type: object
       description: |
@@ -83064,6 +83067,61 @@ paths:
                 required: [eventNames]
                 properties:
                   eventNames: { type: array, items: { type: string } }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+  /v1/ads/campaign-results/tag-new-ads:
+    get:
+      x-resource-group: ads
+      operationId: getTagNewAds
+      tags: ["Ad Campaign Results"]
+      x-platforms: ["meta", "google"]
+      summary: Get the Tag new ads setting
+      description: |
+        Whether new Meta and Google ads created through Zernio carry the Zernio ad tag (`zrn=<platform ad id>` on the landing URL) when the create request does not set `tracking.zernioTag`. Off until you turn it on.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: The setting.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [enabled]
+                properties:
+                  enabled: { type: boolean, example: false }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+    put:
+      x-resource-group: ads
+      operationId: setTagNewAds
+      tags: ["Ad Campaign Results"]
+      x-platforms: ["meta", "google"]
+      summary: Turn Tag new ads on or off
+      description: |
+        With `enabled: true`, every new Meta and Google ad created through `POST /v1/ads/create` carries `zrn=<platform ad id>` on its landing URL, so the conversions it brings are tied to its campaign. A request that sets `tracking.zernioTag` keeps its own choice.
+
+        The same rules as `tracking.zernioTag` apply: lead forms, call ads, existing creatives and app promotion are skipped, and a Google ad is tagged only when it inherits no final URL suffix. Existing ads are never changed.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [enabled]
+              properties:
+                enabled: { type: boolean, example: true }
+      responses:
+        '200':
+          description: The setting now in force.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [enabled]
+                properties:
+                  enabled: { type: boolean }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
   /v1/ads/campaign-results/metrics:

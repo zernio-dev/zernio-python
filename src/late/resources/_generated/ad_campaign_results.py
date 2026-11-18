@@ -174,6 +174,19 @@ class AdCampaignResultsResource:
         )
         return self._client._put("/v1/ads/campaign-results/events", data=payload)
 
+    def get_tag_new_ads(self) -> dict[str, Any]:
+        """Get the Tag new ads setting"""
+        return self._client._get("/v1/ads/campaign-results/tag-new-ads")
+
+    def set_tag_new_ads(self, enabled: bool) -> dict[str, Any]:
+        """Turn Tag new ads on or off"""
+        payload = self._build_body(
+            {
+                "enabled": enabled,
+            }
+        )
+        return self._client._put("/v1/ads/campaign-results/tag-new-ads", data=payload)
+
     def list_campaign_result_metrics(self) -> dict[str, Any]:
         """List your result metrics"""
         return self._client._get("/v1/ads/campaign-results/metrics")
@@ -276,6 +289,21 @@ class AdCampaignResultsResource:
             }
         )
         return await self._client._aput("/v1/ads/campaign-results/events", data=payload)
+
+    async def aget_tag_new_ads(self) -> dict[str, Any]:
+        """Get the Tag new ads setting (async)"""
+        return await self._client._aget("/v1/ads/campaign-results/tag-new-ads")
+
+    async def aset_tag_new_ads(self, enabled: bool) -> dict[str, Any]:
+        """Turn Tag new ads on or off (async)"""
+        payload = self._build_body(
+            {
+                "enabled": enabled,
+            }
+        )
+        return await self._client._aput(
+            "/v1/ads/campaign-results/tag-new-ads", data=payload
+        )
 
     async def alist_campaign_result_metrics(self) -> dict[str, Any]:
         """List your result metrics (async)"""

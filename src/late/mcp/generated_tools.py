@@ -6310,6 +6310,53 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="Get the Tag new ads setting",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def ad_campaign_results_get_tag_new_ads() -> str:
+        """Get the Tag new ads setting
+
+        Whether new Meta and Google ads created through Zernio carry the Zernio ad tag (`zrn=<platform ad id>` on the landing URL) when the create request does not set `tracking.zernioTag`. Off until you turn it on.
+
+        Platforms: meta, google"""
+        client = _get_client()
+        try:
+            response = client.ad_campaign_results.get_tag_new_ads()
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Turn Tag new ads on or off",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def ad_campaign_results_set_tag_new_ads(enabled: bool) -> str:
+        """Turn Tag new ads on or off
+
+        With `enabled: true`, every new Meta and Google ad created through `POST /v1/ads/create` carries `zrn=<platform ad id>` on its landing URL, so the conversions it brings are tied to its campaign. A request that sets `tracking.zernioTag` keeps its own choice.
+
+        The same rules as `tracking.zernioTag` apply: lead forms, call ads, existing creatives and app promotion are skipped, and a Google ad is tagged only when it inherits no final URL suffix. Existing ads are never changed.
+
+        Platforms: meta, google
+
+        Args:
+            enabled: (required)"""
+        client = _get_client()
+        try:
+            response = client.ad_campaign_results.set_tag_new_ads(enabled=enabled)
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="List your result metrics",
             readOnlyHint=True,
             destructiveHint=False,
@@ -11064,7 +11111,7 @@ def register_generated_tools(mcp, _get_client):
         - Demand Gen names its ad group with `demandGen.adGroupName`, and Performance Max with `assetGroup.name`.
         - For per-ad names on the multi-creative shape, set `name` on each `creatives[]` entry.
                 ad_name: Meta only. Exact ad name, overriding the default `name`. On the multi-creative shape it names every ad, numbered `#1`, `#2`... when there are several, unless a `creatives[]` entry sets its own `name`.
-                tracking: Object with keys: pixelId (string) - Meta Pixel ID to attach for offsite-conversion measurement, or the Reddit pixel of the new ad group.; urlTags (list of objects with keys key, value) - Click-URL params. - Meta: stored on the creative as `url_tags` and returned by GET /v1/ads/{adId}/tracking-tags. Dynamic macros ({{ad.id}}, {{campaign.id}}, ...; zernioTag (boolean) - POST /v1/ads/create on Meta and Google only. Opt-in: set `true` and the ad carries `zrn=<platform ad id>` on its landing URL, so orders and events tied to the ...
+                tracking: Object with keys: pixelId (string) - Meta Pixel ID to attach for offsite-conversion measurement, or the Reddit pixel of the new ad group.; urlTags (list of objects with keys key, value) - Click-URL params. - Meta: stored on the creative as `url_tags` and returned by GET /v1/ads/{adId}/tracking-tags. Dynamic macros ({{ad.id}}, {{campaign.id}}, ...; zernioTag (boolean) - POST /v1/ads/create on Meta and Google only. Set `true` and the ad carries `zrn=<platform ad id>` on its landing URL, so orders and events tied to the landing ...
                 goal: The ad's goal. Available goals vary by platform. When omitted, it is inferred from the ad (see `appliedDefaults.goal` in the response); the attach shape inherits it from the ad set.
 
         **Meta**
@@ -42135,7 +42182,7 @@ def register_generated_tools(mcp, _get_client):
 
         `false` never sends it again: the request fails with 502 and `details.unconfirmedWrite`, so you can check the parent yourself. One object found by name is still reused.
                 creative_features: Meta enhancement settings for single or attached ads, and defaults for creatives[]. An item replaces the entire map, including with an empty object.
-                tracking: Object with keys: pixelId (string) - Meta Pixel ID to attach for offsite-conversion measurement, or the Reddit pixel of the new ad group.; urlTags (list of objects with keys key, value) - Click-URL params. - Meta: stored on the creative as `url_tags` and returned by GET /v1/ads/{adId}/tracking-tags. Dynamic macros ({{ad.id}}, {{campaign.id}}, ...; zernioTag (boolean) - POST /v1/ads/create on Meta and Google only. Opt-in: set `true` and the ad carries `zrn=<platform ad id>` on its landing URL, so orders and events tied to the ...
+                tracking: Object with keys: pixelId (string) - Meta Pixel ID to attach for offsite-conversion measurement, or the Reddit pixel of the new ad group.; urlTags (list of objects with keys key, value) - Click-URL params. - Meta: stored on the creative as `url_tags` and returned by GET /v1/ads/{adId}/tracking-tags. Dynamic macros ({{ad.id}}, {{campaign.id}}, ...; zernioTag (boolean) - POST /v1/ads/create on Meta and Google only. Set `true` and the ad carries `zrn=<platform ad id>` on its landing URL, so orders and events tied to the landing ...
                 account_id: Facebook or Instagram SocialAccount ID. (required)
                 ad_account_id: Meta ad account ID, e.g. `act_123456789`. (required)
                 name: Ad display name. Used to derive campaign / ad set names.
@@ -42662,7 +42709,7 @@ def register_generated_tools(mcp, _get_client):
 
         `false` never sends it again: the request fails with 502 and `details.unconfirmedWrite`, so you can check the parent yourself. One object found by name is still reused.
                 creative_features: Meta enhancement settings for single or attached ads, and defaults for creatives[]. An item replaces the entire map, including with an empty object.
-                tracking: Object with keys: pixelId (string) - Meta Pixel ID to attach for offsite-conversion measurement, or the Reddit pixel of the new ad group.; urlTags (list of objects with keys key, value) - Click-URL params. - Meta: stored on the creative as `url_tags` and returned by GET /v1/ads/{adId}/tracking-tags. Dynamic macros ({{ad.id}}, {{campaign.id}}, ...; zernioTag (boolean) - POST /v1/ads/create on Meta and Google only. Opt-in: set `true` and the ad carries `zrn=<platform ad id>` on its landing URL, so orders and events tied to the ...
+                tracking: Object with keys: pixelId (string) - Meta Pixel ID to attach for offsite-conversion measurement, or the Reddit pixel of the new ad group.; urlTags (list of objects with keys key, value) - Click-URL params. - Meta: stored on the creative as `url_tags` and returned by GET /v1/ads/{adId}/tracking-tags. Dynamic macros ({{ad.id}}, {{campaign.id}}, ...; zernioTag (boolean) - POST /v1/ads/create on Meta and Google only. Set `true` and the ad carries `zrn=<platform ad id>` on its landing URL, so orders and events tied to the landing ...
                 account_id: Facebook or Instagram SocialAccount ID. (required)
                 ad_account_id: Meta ad account ID, e.g. `act_123456789`. (required)
                 name: Ad display name. Used to derive campaign / ad set names.
@@ -43162,7 +43209,7 @@ def register_generated_tools(mcp, _get_client):
 
         `false` never sends it again: the request fails with 502 and `details.unconfirmedWrite`, so you can check the parent yourself. One object found by name is still reused.
                 creative_features: Meta enhancement settings for single or attached ads, and defaults for creatives[]. An item replaces the entire map, including with an empty object.
-                tracking: Object with keys: pixelId (string) - Meta Pixel ID to attach for offsite-conversion measurement, or the Reddit pixel of the new ad group.; urlTags (list of objects with keys key, value) - Click-URL params. - Meta: stored on the creative as `url_tags` and returned by GET /v1/ads/{adId}/tracking-tags. Dynamic macros ({{ad.id}}, {{campaign.id}}, ...; zernioTag (boolean) - POST /v1/ads/create on Meta and Google only. Opt-in: set `true` and the ad carries `zrn=<platform ad id>` on its landing URL, so orders and events tied to the ...
+                tracking: Object with keys: pixelId (string) - Meta Pixel ID to attach for offsite-conversion measurement, or the Reddit pixel of the new ad group.; urlTags (list of objects with keys key, value) - Click-URL params. - Meta: stored on the creative as `url_tags` and returned by GET /v1/ads/{adId}/tracking-tags. Dynamic macros ({{ad.id}}, {{campaign.id}}, ...; zernioTag (boolean) - POST /v1/ads/create on Meta and Google only. Set `true` and the ad carries `zrn=<platform ad id>` on its landing URL, so orders and events tied to the landing ...
                 account_id: Facebook or Instagram SocialAccount ID. (required)
                 ad_account_id: Meta ad account ID, e.g. `act_123456789`. (required)
                 name: Ad display name. Used to derive campaign / ad set names.
