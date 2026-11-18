@@ -82896,7 +82896,7 @@ paths:
       parameters:
         - { name: fromDate, in: query, required: true, schema: { type: string, format: date } }
         - { name: toDate, in: query, required: true, schema: { type: string, format: date }, description: 'Inclusive. At most 400 days after `fromDate`.' }
-        - { name: model, in: query, schema: { type: string, enum: [last_click, first_touch, last_non_direct, linear, position_based, time_decay], default: last_click }, description: 'Attribution model your stored sales and leads count under. `last_click` (default) counts each event whole for the campaign it matched. The others split it across the campaigns of its earlier touches, so counts and revenue can be fractional. Uploads read the same under every model.' }
+        - { name: model, in: query, schema: { type: string, enum: [last_click, first_touch, last_non_direct, linear, position_based, time_decay, w_shaped], default: last_click }, description: 'Attribution model your stored sales and leads count under. `last_click` (default) counts each event whole for the campaign it matched. The others split it across the campaigns of its earlier touches, so counts and revenue can be fractional. Uploads read the same under every model.' }
         - { name: campaignIds, in: query, schema: { type: string }, description: 'Comma-separated platform campaign ids, at most 500. Omit for all campaigns.' }
         - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 500, default: 100 }, description: Campaigns per page. }
         - { name: cursor, in: query, schema: { type: string }, description: '`nextCursor` from the previous page.' }
@@ -82991,7 +82991,7 @@ paths:
       parameters:
         - { name: fromDate, in: query, required: true, schema: { type: string, format: date } }
         - { name: toDate, in: query, required: true, schema: { type: string, format: date }, description: 'Inclusive. At most 400 days after `fromDate`.' }
-        - { name: model, in: query, schema: { type: string, enum: [last_click, first_touch, last_non_direct, linear, position_based, time_decay], default: last_click }, description: 'Attribution model your stored sales and leads count under. `last_click` (default) counts each event whole for the campaign it matched. The others split it across the campaigns of its earlier touches, so counts and revenue can be fractional. Uploads read the same under every model.' }
+        - { name: model, in: query, schema: { type: string, enum: [last_click, first_touch, last_non_direct, linear, position_based, time_decay, w_shaped], default: last_click }, description: 'Attribution model your stored sales and leads count under. `last_click` (default) counts each event whole for the campaign it matched. The others split it across the campaigns of its earlier touches, so counts and revenue can be fractional. Uploads read the same under every model.' }
         - { name: adAccountIds, in: query, schema: { type: string }, description: 'Comma-separated platform ad account ids, at most 100. Omit for every ad account your key can see.' }
       responses:
         '200':
@@ -85829,7 +85829,7 @@ paths:
         - { name: dailyLevel, in: query, schema: { type: string, enum: [campaign, adset, ad], default: campaign }, description: "Which tree levels get the `daily[]` series when `timeIncrement=1`. Ignored when `timeIncrement` is unset.\n\n- `campaign` (default): on campaign nodes only. The common per-campaign-trend case, and the smallest payload.\n- `adset`: on ad sets too.\n- `ad`: on every ad in `ads[]` as well. Heaviest (a long range × up to 100 ads per ad set); scope with `campaignId` to keep responses small." }
         - { name: compare, in: query, schema: { type: string, enum: [previous] }, description: "Set to `previous` to also read the period of the same length that ends the day before `fromDate`. Every campaign, ad set and ad gains `previousMetrics` (same fields as `metrics`) and the response gains `previousRange`, so a table can show the change against the previous period in one call." }
         - { name: results, in: query, schema: { type: boolean }, description: "Set to `true` to add your own results (see [Campaign results](/guides/campaign-results)): every campaign gains `results`, the values you sent for the range plus each formula they allow, and the response gains `resultMetrics` to label them." }
-        - { name: model, in: query, schema: { type: string, enum: [last_click, first_touch, last_non_direct, linear, position_based, time_decay], default: last_click }, description: 'With `results=true`: the attribution model your stored sales and leads count under in `results`. Uploaded values are the same under every model.' }
+        - { name: model, in: query, schema: { type: string, enum: [last_click, first_touch, last_non_direct, linear, position_based, time_decay, w_shaped], default: last_click }, description: 'With `results=true`: the attribution model your stored sales and leads count under in `results`. Uploaded values are the same under every model.' }
         - { name: depth, in: query, schema: { type: string, enum: [campaign, adset, ad], default: ad }, description: "How deep the tree goes. Metrics always roll up over every ad, whatever the depth.\n\n- `ad` (default): campaigns, their ad sets and each ad set's ads.\n- `adset`: campaigns and ad sets; every `ads[]` is empty and `adCount` still counts the ads.\n- `campaign`: campaigns only; every `adSets[]` is empty and `adSetCount` / `adCount` still count them." }
       responses:
         '200':
@@ -101771,7 +101771,7 @@ paths:
                         sentAt: { type: string, format: date-time }
                   touches:
                     type: array
-                    description: 'The touches of the person before the event that its credit is split across, oldest first: website visits from somewhere (an ad click, search, a tagged link) and earlier lead forms or sales. Empty when the event counts whole for its own campaign under every model.'
+                    description: 'The touches the event is split across, oldest first: website visits (an ad click, search, a tagged link), the first and latest visits HubSpot recorded for a deal, and earlier lead forms or sales. Empty when the event counts whole for its own campaign.'
                     items:
                       type: object
                       properties:
@@ -101780,7 +101780,7 @@ paths:
                         platform: { type: [string, "null"] }
                         adAccountId: { type: [string, "null"] }
                         campaignId: { type: [string, "null"], description: 'The campaign the touch resolved to; null for a touch that named none (search, referral).' }
-                        credit: { type: object, additionalProperties: { type: number }, description: 'The share of the event (0 to 1) this touch gets per model: first_touch, last_non_direct, linear, position_based, time_decay.', example: { linear: 0.5, first_touch: 1, time_decay: 0.35 } }
+                        credit: { type: object, additionalProperties: { type: number }, description: 'The share of the event (0 to 1) this touch gets per model: first_touch, last_non_direct, linear, position_based, time_decay, w_shaped.', example: { linear: 0.5, first_touch: 1, time_decay: 0.35 } }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
     patch:

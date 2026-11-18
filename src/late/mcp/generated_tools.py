@@ -6141,6 +6141,7 @@ def register_generated_tools(mcp, _get_client):
             "linear",
             "position_based",
             "time_decay",
+            "w_shaped",
         ] = "last_click",
         campaign_ids: str | None = None,
         limit: int = 100,
@@ -6225,6 +6226,7 @@ def register_generated_tools(mcp, _get_client):
             "linear",
             "position_based",
             "time_decay",
+            "w_shaped",
         ] = "last_click",
         ad_account_ids: str | None = None,
     ) -> str:
@@ -8886,6 +8888,7 @@ def register_generated_tools(mcp, _get_client):
             "linear",
             "position_based",
             "time_decay",
+            "w_shaped",
         ] = "last_click",
         depth: Literal["campaign", "adset", "ad"] = "campaign",
     ) -> str:
