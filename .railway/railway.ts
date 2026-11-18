@@ -5,10 +5,16 @@
 import { defineRailway, github, preserve, project, service } from "railway/iac";
 
 // GitHub source per environment, as connected today. Omitting it disconnects
-// the repo, and pushes stop deploying. dev has no repo connected.
+// the repo, and pushes stop deploying. dev tracks the MCP Apps trial branch.
 const SOURCES: Record<string, ReturnType<typeof github>> = {
   production: github("zernio-dev/zernio-python", { branch: "develop" }),
   "zernio-mcp-dev": github("zernio-dev/zernio-mcp", { checkSuites: true }),
+  dev: github("zernio-dev/zernio-python", { branch: "feat/mcp-apps" }),
+};
+
+// Values set here rather than kept from Railway.
+const SET_VARIABLES: Record<string, Record<string, string>> = {
+  dev: { ZERNIO_MCP_APPS: "1" },
 };
 
 // Variables stay managed in Railway; preserve() keeps the current values.
@@ -28,9 +34,12 @@ const VARIABLES: Record<string, string[]> = {
 
 export default defineRailway((ctx) => {
   const environment = ctx.environment ?? "";
-  const env = Object.fromEntries(
-    (VARIABLES[environment] ?? []).map((name) => [name, preserve()]),
-  );
+  const env = {
+    ...Object.fromEntries(
+      (VARIABLES[environment] ?? []).map((name) => [name, preserve()]),
+    ),
+    ...SET_VARIABLES[environment],
+  };
 
   // The service instance itself is set to Railpack with no health check, so
   // the builder, Dockerfile path and health check must be explicit here.
