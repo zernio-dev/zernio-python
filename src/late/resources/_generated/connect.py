@@ -21,13 +21,16 @@ class ConnectResource:
     def __init__(self, client: BaseClient) -> None:
         self._client = client
 
-    def _build_params(self, **kwargs: Any) -> dict[str, Any]:
-        """Build query parameters, filtering None and empty-string values.
+    def _build_query(self, fields: dict[str, Any]) -> dict[str, Any]:
+        """Build query parameters keyed by their wire names, as given.
 
-        Empty strings are filtered because MCP tool wrappers pass ``""`` as the
-        default for optional string args, and the API rejects empty query
-        values (e.g. ``platform=``) with a 400. Filtering here keeps both direct
-        SDK callers and MCP tool callers safe.
+        Generated methods pass the parameter names exactly as the OpenAPI
+        spec declares them, so no casing rule is applied here.
+
+        None and empty strings are filtered because MCP tool wrappers pass
+        ``""`` as the default for optional string args, and the API rejects
+        empty query values (e.g. ``platform=``) with a 400. Filtering here
+        keeps both direct SDK callers and MCP tool callers safe.
 
         Enum members are unwrapped to their value: httpx serializes params
         via str(), which yields "ClassName.MEMBER" for Enum members, so
@@ -36,42 +39,65 @@ class ConnectResource:
         """
         from enum import Enum
 
-        def to_camel(s: str) -> str:
-            parts = s.split("_")
-            return parts[0] + "".join(p.title() for p in parts[1:])
-
         result: dict[str, Any] = {}
-        for k, v in kwargs.items():
+        for k, v in fields.items():
             if isinstance(v, Enum):
                 v = v.value
             if v is None or v == "":
                 continue
-            result[to_camel(k)] = v
+            result[k] = v
         return result
 
-    def _build_payload(self, **kwargs: Any) -> dict[str, Any]:
-        """Build request payload, filtering None values. Enum members are
-        unwrapped to their value so JSON bodies carry e.g. "failed" rather
-        than a raw Enum member (plain Enum members are not JSON-serializable).
+    def _build_body(self, fields: dict[str, Any]) -> dict[str, Any]:
+        """Build a JSON request body keyed by its wire names, as given.
+
+        Generated methods pass the property names exactly as the request
+        body schema declares them: most are camelCase, but some routes read
+        snake_case (``ice_breakers``, ``message_send_ttl_seconds``), so no
+        casing rule is applied here. None values are dropped, Enum members
+        are unwrapped to their value (e.g. "failed") and datetimes are sent
+        as ISO 8601 strings.
         """
         from datetime import datetime
         from enum import Enum
 
-        def to_camel(s: str) -> str:
-            parts = s.split("_")
-            return parts[0] + "".join(p.title() for p in parts[1:])
-
         result: dict[str, Any] = {}
-        for k, v in kwargs.items():
+        for k, v in fields.items():
             if isinstance(v, Enum):
                 v = v.value
             if v is None:
                 continue
             if isinstance(v, datetime):
-                result[to_camel(k)] = v.isoformat()
+                result[k] = v.isoformat()
             else:
-                result[to_camel(k)] = v
+                result[k] = v
         return result
+
+    def _build_params(self, **kwargs: Any) -> dict[str, Any]:
+        """Build query parameters from snake_case kwargs, camelCasing each key.
+
+        For hand-written resource methods, whose endpoints take camelCase
+        names. Generated methods use _build_query with the spec's names.
+        """
+
+        def to_camel(s: str) -> str:
+            parts = s.split("_")
+            return parts[0] + "".join(p.title() for p in parts[1:])
+
+        return self._build_query({to_camel(k): v for k, v in kwargs.items()})
+
+    def _build_payload(self, **kwargs: Any) -> dict[str, Any]:
+        """Build a request body from snake_case kwargs, camelCasing each key.
+
+        For hand-written resource methods, whose endpoints take camelCase
+        names. Generated methods use _build_body with the spec's names.
+        """
+
+        def to_camel(s: str) -> str:
+            parts = s.split("_")
+            return parts[0] + "".join(p.title() for p in parts[1:])
+
+        return self._build_body({to_camel(k): v for k, v in kwargs.items()})
 
     def create_platform_invite(
         self,
@@ -83,12 +109,14 @@ class ConnectResource:
         expires_in_days: int | None = 7,
     ) -> dict[str, Any]:
         """Create a connect link"""
-        payload = self._build_payload(
-            profile_id=profile_id,
-            platform=platform,
-            account_id=account_id,
-            login_method=login_method,
-            expires_in_days=expires_in_days,
+        payload = self._build_body(
+            {
+                "profileId": profile_id,
+                "platform": platform,
+                "accountId": account_id,
+                "loginMethod": login_method,
+                "expiresInDays": expires_in_days,
+            }
         )
         return self._client._post("/v1/platform-invites", data=payload)
 
@@ -121,30 +149,32 @@ class ConnectResource:
         handoff: bool | None = False,
     ) -> dict[str, Any]:
         """Get OAuth connect URL"""
-        params = self._build_params(
-            profile_id=profile_id,
-            reconnect_account_id=reconnect_account_id,
-            oauth_app_id=oauth_app_id,
-            purpose=purpose,
-            expected_platform_user_id=expected_platform_user_id,
-            expected_username=expected_username,
-            expected_phone_number=expected_phone_number,
-            force_reauth=force_reauth,
-            allow_no_location=allow_no_location,
-            redirect_url=redirect_url,
-            scopes=scopes,
-            login_hint=login_hint,
-            headless=headless,
-            login_method=login_method,
-            onboarding=onboarding,
-            signup=signup,
-            brand_name=brand_name,
-            primary_color=primary_color,
-            welcome=welcome,
-            welcome_theme=welcome_theme,
-            logo_url=logo_url,
-            language=language,
-            handoff=handoff,
+        params = self._build_query(
+            {
+                "profileId": profile_id,
+                "reconnectAccountId": reconnect_account_id,
+                "oauthAppId": oauth_app_id,
+                "purpose": purpose,
+                "expectedPlatformUserId": expected_platform_user_id,
+                "expectedUsername": expected_username,
+                "expectedPhoneNumber": expected_phone_number,
+                "forceReauth": force_reauth,
+                "allowNoLocation": allow_no_location,
+                "redirect_url": redirect_url,
+                "scopes": scopes,
+                "loginHint": login_hint,
+                "headless": headless,
+                "loginMethod": login_method,
+                "onboarding": onboarding,
+                "signup": signup,
+                "brandName": brand_name,
+                "primaryColor": primary_color,
+                "welcome": welcome,
+                "welcomeTheme": welcome_theme,
+                "logoUrl": logo_url,
+                "language": language,
+                "handoff": handoff,
+            }
         )
         return self._client._get(f"/v1/connect/{platform}", params=params)
 
@@ -152,10 +182,12 @@ class ConnectResource:
         self, platform: str, code: str, state: str, profile_id: str
     ) -> dict[str, Any]:
         """Complete OAuth callback"""
-        payload = self._build_payload(
-            code=code,
-            state=state,
-            profile_id=profile_id,
+        payload = self._build_body(
+            {
+                "code": code,
+                "state": state,
+                "profileId": profile_id,
+            }
         )
         return self._client._post(f"/v1/connect/{platform}", data=payload)
 
@@ -181,23 +213,25 @@ class ConnectResource:
         welcome_theme: str | None = None,
     ) -> dict[str, Any]:
         """Connect ads for a platform"""
-        params = self._build_params(
-            identity_provider=identity_provider,
-            login_mode=login_mode,
-            permission_level=permission_level,
-            page_id=page_id,
-            profile_id=profile_id,
-            account_id=account_id,
-            redirect_url=redirect_url,
-            headless=headless,
-            force=force,
-            ad_account_id=ad_account_id,
-            ad_account_ids=ad_account_ids,
-            welcome=welcome,
-            brand_name=brand_name,
-            logo_url=logo_url,
-            primary_color=primary_color,
-            welcome_theme=welcome_theme,
+        params = self._build_query(
+            {
+                "identityProvider": identity_provider,
+                "loginMode": login_mode,
+                "permissionLevel": permission_level,
+                "pageId": page_id,
+                "profileId": profile_id,
+                "accountId": account_id,
+                "redirect_url": redirect_url,
+                "headless": headless,
+                "force": force,
+                "adAccountId": ad_account_id,
+                "adAccountIds": ad_account_ids,
+                "welcome": welcome,
+                "brandName": brand_name,
+                "logoUrl": logo_url,
+                "primaryColor": primary_color,
+                "welcomeTheme": welcome_theme,
+            }
         )
         return self._client._get(f"/v1/connect/{platform}/ads", params=params)
 
@@ -205,10 +239,12 @@ class ConnectResource:
         self, state: str, *, code: str | None = None, error: str | None = None
     ) -> dict[str, Any]:
         """Complete Meta business login"""
-        params = self._build_params(
-            state=state,
-            code=code,
-            error=error,
+        params = self._build_query(
+            {
+                "state": state,
+                "code": code,
+                "error": error,
+            }
         )
         return self._client._get("/v1/connect/meta-ads/callback", params=params)
 
@@ -216,10 +252,12 @@ class ConnectResource:
         self, profile_id: str, shop: str, *, redirect_url: str | None = None
     ) -> dict[str, Any]:
         """Get Shopify OAuth connect URL"""
-        params = self._build_params(
-            profile_id=profile_id,
-            shop=shop,
-            redirect_url=redirect_url,
+        params = self._build_query(
+            {
+                "profileId": profile_id,
+                "shop": shop,
+                "redirect_url": redirect_url,
+            }
         )
         return self._client._get("/v1/connect/shopify", params=params)
 
@@ -227,10 +265,12 @@ class ConnectResource:
         self, profile_id: str, shop: str, access_token: str
     ) -> dict[str, Any]:
         """Connect a Shopify store with a custom-app Admin token"""
-        payload = self._build_payload(
-            profile_id=profile_id,
-            shop=shop,
-            access_token=access_token,
+        payload = self._build_body(
+            {
+                "profileId": profile_id,
+                "shop": shop,
+                "accessToken": access_token,
+            }
         )
         return self._client._post("/v1/connect/shopify/token", data=payload)
 
@@ -242,10 +282,12 @@ class ConnectResource:
         reconnect_account_id: str | None = None,
     ) -> dict[str, Any]:
         """Get Google Analytics OAuth connect URL"""
-        params = self._build_params(
-            profile_id=profile_id,
-            redirect_url=redirect_url,
-            reconnect_account_id=reconnect_account_id,
+        params = self._build_query(
+            {
+                "profileId": profile_id,
+                "redirect_url": redirect_url,
+                "reconnectAccountId": reconnect_account_id,
+            }
         )
         return self._client._get("/v1/connect/googleanalytics", params=params)
 
@@ -253,8 +295,10 @@ class ConnectResource:
         self, pending_data_token: str
     ) -> dict[str, Any]:
         """List Google Analytics properties for a pending connect"""
-        params = self._build_params(
-            pending_data_token=pending_data_token,
+        params = self._build_query(
+            {
+                "pendingDataToken": pending_data_token,
+            }
         )
         return self._client._get(
             "/v1/connect/googleanalytics/properties", params=params
@@ -264,9 +308,11 @@ class ConnectResource:
         self, pending_data_token: str, property_id: str
     ) -> dict[str, Any]:
         """Connect the chosen Google Analytics property"""
-        payload = self._build_payload(
-            pending_data_token=pending_data_token,
-            property_id=property_id,
+        payload = self._build_body(
+            {
+                "pendingDataToken": pending_data_token,
+                "propertyId": property_id,
+            }
         )
         return self._client._post(
             "/v1/connect/googleanalytics/select-property", data=payload
@@ -276,9 +322,11 @@ class ConnectResource:
         self, profile_id: str, *, redirect_url: str | None = None
     ) -> dict[str, Any]:
         """Get HubSpot OAuth connect URL"""
-        params = self._build_params(
-            profile_id=profile_id,
-            redirect_url=redirect_url,
+        params = self._build_query(
+            {
+                "profileId": profile_id,
+                "redirect_url": redirect_url,
+            }
         )
         return self._client._get("/v1/connect/hubspot", params=params)
 
@@ -290,10 +338,12 @@ class ConnectResource:
         redirect_url: str | None = None,
     ) -> dict[str, Any]:
         """Get Salesforce OAuth connect URL"""
-        params = self._build_params(
-            profile_id=profile_id,
-            environment=environment,
-            redirect_url=redirect_url,
+        params = self._build_query(
+            {
+                "profileId": profile_id,
+                "environment": environment,
+                "redirect_url": redirect_url,
+            }
         )
         return self._client._get("/v1/connect/salesforce", params=params)
 
@@ -305,10 +355,12 @@ class ConnectResource:
         reconnect_account_id: str | None = None,
     ) -> dict[str, Any]:
         """Get Stripe connect URL"""
-        params = self._build_params(
-            profile_id=profile_id,
-            redirect_url=redirect_url,
-            reconnect_account_id=reconnect_account_id,
+        params = self._build_query(
+            {
+                "profileId": profile_id,
+                "redirect_url": redirect_url,
+                "reconnectAccountId": reconnect_account_id,
+            }
         )
         return self._client._get("/v1/connect/stripe", params=params)
 
@@ -316,9 +368,11 @@ class ConnectResource:
         self, profile_id: str, *, redirect_url: str | None = None
     ) -> dict[str, Any]:
         """Get WordPress.com OAuth connect URL"""
-        params = self._build_params(
-            profile_id=profile_id,
-            redirect_url=redirect_url,
+        params = self._build_query(
+            {
+                "profileId": profile_id,
+                "redirect_url": redirect_url,
+            }
         )
         return self._client._get("/v1/connect/wordpress", params=params)
 
@@ -326,9 +380,11 @@ class ConnectResource:
         self, profile_id: str, *, redirect_url: str | None = None
     ) -> dict[str, Any]:
         """Get Wix site install URL"""
-        params = self._build_params(
-            profile_id=profile_id,
-            redirect_url=redirect_url,
+        params = self._build_query(
+            {
+                "profileId": profile_id,
+                "redirect_url": redirect_url,
+            }
         )
         return self._client._get("/v1/connect/wix", params=params)
 
@@ -336,9 +392,11 @@ class ConnectResource:
         self, profile_id: str, *, redirect_url: str | None = None
     ) -> dict[str, Any]:
         """Get Webflow OAuth URL"""
-        params = self._build_params(
-            profile_id=profile_id,
-            redirect_url=redirect_url,
+        params = self._build_query(
+            {
+                "profileId": profile_id,
+                "redirect_url": redirect_url,
+            }
         )
         return self._client._get("/v1/connect/webflow", params=params)
 
@@ -346,9 +404,11 @@ class ConnectResource:
         self, profile_id: str, site_token: str
     ) -> dict[str, Any]:
         """Connect Webflow with a site API token"""
-        payload = self._build_payload(
-            profile_id=profile_id,
-            site_token=site_token,
+        payload = self._build_body(
+            {
+                "profileId": profile_id,
+                "siteToken": site_token,
+            }
         )
         return self._client._post("/v1/connect/webflow/token", data=payload)
 
@@ -362,12 +422,14 @@ class ConnectResource:
         reconnect_account_id: str | None = None,
     ) -> dict[str, Any]:
         """Get a hosted link to connect any mailbox"""
-        params = self._build_params(
-            profile_id=profile_id,
-            redirect_url=redirect_url,
-            email=email,
-            name=name,
-            reconnect_account_id=reconnect_account_id,
+        params = self._build_query(
+            {
+                "profileId": profile_id,
+                "redirect_url": redirect_url,
+                "email": email,
+                "name": name,
+                "reconnectAccountId": reconnect_account_id,
+            }
         )
         return self._client._get("/v1/connect/email", params=params)
 
@@ -375,11 +437,13 @@ class ConnectResource:
         self, profile_id: str, site_url: str, username: str, application_password: str
     ) -> dict[str, Any]:
         """Connect self-hosted WordPress with an application password"""
-        payload = self._build_payload(
-            profile_id=profile_id,
-            site_url=site_url,
-            username=username,
-            application_password=application_password,
+        payload = self._build_body(
+            {
+                "profileId": profile_id,
+                "siteUrl": site_url,
+                "username": username,
+                "applicationPassword": application_password,
+            }
         )
         return self._client._post("/v1/connect/wordpress/token", data=payload)
 
@@ -387,10 +451,12 @@ class ConnectResource:
         self, account_id: str, display_name: str, image_url: str
     ) -> dict[str, Any]:
         """Set TikTok brand identity"""
-        payload = self._build_payload(
-            account_id=account_id,
-            display_name=display_name,
-            image_url=image_url,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "displayName": display_name,
+                "imageUrl": image_url,
+            }
         )
         return self._client._patch("/v1/connect/tiktok-ads", data=payload)
 
@@ -404,11 +470,13 @@ class ConnectResource:
         selection_token: str | None = None,
     ) -> dict[str, Any]:
         """List Facebook pages"""
-        params = self._build_params(
-            profile_id=profile_id,
-            temp_token=temp_token,
-            connect_flow=connect_flow,
-            selection_token=selection_token,
+        params = self._build_query(
+            {
+                "profileId": profile_id,
+                "tempToken": temp_token,
+                "connectFlow": connect_flow,
+                "selectionToken": selection_token,
+            }
         )
         headers: dict[str, str] = {}
         if x_temp_token is not None:
@@ -430,10 +498,12 @@ class ConnectResource:
         connect_flow: str | None = None,
     ) -> dict[str, Any]:
         """List Pages with a linked Instagram account"""
-        params = self._build_params(
-            profile_id=profile_id,
-            temp_token=temp_token,
-            connect_flow=connect_flow,
+        params = self._build_query(
+            {
+                "profileId": profile_id,
+                "tempToken": temp_token,
+                "connectFlow": connect_flow,
+            }
         )
         headers: dict[str, str] = {}
         if x_temp_token is not None:
@@ -454,14 +524,16 @@ class ConnectResource:
         redirect_url: str | None = None,
     ) -> dict[str, Any]:
         """Select the Page whose Instagram account to connect"""
-        payload = self._build_payload(
-            profile_id=profile_id,
-            page_id=page_id,
-            page_ids=page_ids,
-            temp_token=temp_token,
-            connect_flow=connect_flow,
-            scopes=scopes,
-            redirect_url=redirect_url,
+        payload = self._build_body(
+            {
+                "profileId": profile_id,
+                "pageId": page_id,
+                "pageIds": page_ids,
+                "tempToken": temp_token,
+                "connectFlow": connect_flow,
+                "scopes": scopes,
+                "redirect_url": redirect_url,
+            }
         )
         return self._client._post("/v1/connect/instagram/select-account", data=payload)
 
@@ -475,12 +547,14 @@ class ConnectResource:
         filter: str | None = None,
     ) -> dict[str, Any]:
         """List Google Business Profile locations"""
-        params = self._build_params(
-            profile_id=profile_id,
-            pending_data_token=pending_data_token,
-            temp_token=temp_token,
-            search=search,
-            filter=filter,
+        params = self._build_query(
+            {
+                "profileId": profile_id,
+                "pendingDataToken": pending_data_token,
+                "tempToken": temp_token,
+                "search": search,
+                "filter": filter,
+            }
         )
         return self._client._get("/v1/connect/googlebusiness/locations", params=params)
 
@@ -496,14 +570,16 @@ class ConnectResource:
         redirect_url: str | None = None,
     ) -> dict[str, Any]:
         """Select Google Business Profile location"""
-        payload = self._build_payload(
-            profile_id=profile_id,
-            location_id=location_id,
-            locations=locations,
-            account_id=account_id,
-            google_account_id=google_account_id,
-            pending_data_token=pending_data_token,
-            redirect_url=redirect_url,
+        payload = self._build_body(
+            {
+                "profileId": profile_id,
+                "locationId": location_id,
+                "locations": locations,
+                "accountId": account_id,
+                "googleAccountId": google_account_id,
+                "pendingDataToken": pending_data_token,
+                "redirect_url": redirect_url,
+            }
         )
         return self._client._post(
             "/v1/connect/googlebusiness/select-location", data=payload
@@ -519,11 +595,13 @@ class ConnectResource:
         page_token: str | None = None,
     ) -> dict[str, Any]:
         """List Google Business Profile categories"""
-        params = self._build_params(
-            region_code=region_code,
-            language_code=language_code,
-            query=query,
-            page_token=page_token,
+        params = self._build_query(
+            {
+                "regionCode": region_code,
+                "languageCode": language_code,
+                "query": query,
+                "pageToken": page_token,
+            }
         )
         return self._client._get(
             f"/v1/accounts/{account_id}/gmb-categories", params=params
@@ -546,11 +624,13 @@ class ConnectResource:
         theme: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Save the welcome screen"""
-        payload = self._build_payload(
-            show_by_default=show_by_default,
-            brand_name=brand_name,
-            logo_url=logo_url,
-            theme=theme,
+        payload = self._build_body(
+            {
+                "showByDefault": show_by_default,
+                "brandName": brand_name,
+                "logoUrl": logo_url,
+                "theme": theme,
+            }
         )
         return self._client._put("/v1/connect/welcome-screen", data=payload)
 
@@ -558,9 +638,11 @@ class ConnectResource:
         self, *, limit: int | None = 50, cursor: str | None = None
     ) -> dict[str, Any]:
         """List your OAuth apps"""
-        params = self._build_params(
-            limit=limit,
-            cursor=cursor,
+        params = self._build_query(
+            {
+                "limit": limit,
+                "cursor": cursor,
+            }
         )
         return self._client._get("/v1/connect/oauth-apps", params=params)
 
@@ -577,15 +659,17 @@ class ConnectResource:
         scope_areas: list[str] | None = None,
     ) -> dict[str, Any]:
         """Add an OAuth app"""
-        payload = self._build_payload(
-            platform=platform,
-            label=label,
-            client_id=client_id,
-            client_secret=client_secret,
-            meta_app_id=meta_app_id,
-            meta_app_secret=meta_app_secret,
-            slack_signing_secret=slack_signing_secret,
-            scope_areas=scope_areas,
+        payload = self._build_body(
+            {
+                "platform": platform,
+                "label": label,
+                "clientId": client_id,
+                "clientSecret": client_secret,
+                "metaAppId": meta_app_id,
+                "metaAppSecret": meta_app_secret,
+                "slackSigningSecret": slack_signing_secret,
+                "scopeAreas": scope_areas,
+            }
         )
         return self._client._post("/v1/connect/oauth-apps", data=payload)
 
@@ -605,13 +689,15 @@ class ConnectResource:
         scope_areas: list[str] | None = None,
     ) -> dict[str, Any]:
         """Update an OAuth app"""
-        payload = self._build_payload(
-            label=label,
-            client_secret=client_secret,
-            meta_app_id=meta_app_id,
-            meta_app_secret=meta_app_secret,
-            slack_signing_secret=slack_signing_secret,
-            scope_areas=scope_areas,
+        payload = self._build_body(
+            {
+                "label": label,
+                "clientSecret": client_secret,
+                "metaAppId": meta_app_id,
+                "metaAppSecret": meta_app_secret,
+                "slackSigningSecret": slack_signing_secret,
+                "scopeAreas": scope_areas,
+            }
         )
         return self._client._patch(f"/v1/connect/oauth-apps/{app_id}", data=payload)
 
@@ -619,8 +705,10 @@ class ConnectResource:
         self, app_id: str, *, confirm: bool | None = False
     ) -> dict[str, Any]:
         """Remove an OAuth app"""
-        params = self._build_params(
-            confirm=confirm,
+        params = self._build_query(
+            {
+                "confirm": confirm,
+            }
         )
         return self._client._delete(f"/v1/connect/oauth-apps/{app_id}", params=params)
 
@@ -630,8 +718,10 @@ class ConnectResource:
 
     def get_pending_o_auth_data(self, token: str) -> dict[str, Any]:
         """Get pending OAuth data"""
-        params = self._build_params(
-            token=token,
+        params = self._build_query(
+            {
+                "token": token,
+            }
         )
         return self._client._get("/v1/connect/pending-data", params=params)
 
@@ -643,9 +733,11 @@ class ConnectResource:
         x_temp_token: str | None = None,
     ) -> dict[str, Any]:
         """List LinkedIn orgs"""
-        params = self._build_params(
-            temp_token=temp_token,
-            org_ids=org_ids,
+        params = self._build_query(
+            {
+                "tempToken": temp_token,
+                "orgIds": org_ids,
+            }
         )
         headers: dict[str, str] = {}
         if x_temp_token is not None:
@@ -666,14 +758,16 @@ class ConnectResource:
         redirect_url: str | None = None,
     ) -> dict[str, Any]:
         """Select LinkedIn org"""
-        payload = self._build_payload(
-            profile_id=profile_id,
-            temp_token=temp_token,
-            user_profile=user_profile,
-            account_type=account_type,
-            selections=selections,
-            selected_organization=selected_organization,
-            redirect_url=redirect_url,
+        payload = self._build_body(
+            {
+                "profileId": profile_id,
+                "tempToken": temp_token,
+                "userProfile": user_profile,
+                "accountType": account_type,
+                "selections": selections,
+                "selectedOrganization": selected_organization,
+                "redirect_url": redirect_url,
+            }
         )
         return self._client._post(
             "/v1/connect/linkedin/select-organization", data=payload
@@ -683,9 +777,11 @@ class ConnectResource:
         self, x_connect_token: str, profile_id: str, temp_token: str
     ) -> dict[str, Any]:
         """List Pinterest boards"""
-        params = self._build_params(
-            profile_id=profile_id,
-            temp_token=temp_token,
+        params = self._build_query(
+            {
+                "profileId": profile_id,
+                "tempToken": temp_token,
+            }
         )
         headers = {"X-Connect-Token": x_connect_token}
         return self._client._get(
@@ -706,16 +802,18 @@ class ConnectResource:
         oauth_app_id: str | None = None,
     ) -> dict[str, Any]:
         """Select Pinterest board"""
-        payload = self._build_payload(
-            profile_id=profile_id,
-            board_id=board_id,
-            board_name=board_name,
-            temp_token=temp_token,
-            user_profile=user_profile,
-            refresh_token=refresh_token,
-            expires_in=expires_in,
-            redirect_url=redirect_url,
-            oauth_app_id=oauth_app_id,
+        payload = self._build_body(
+            {
+                "profileId": profile_id,
+                "boardId": board_id,
+                "boardName": board_name,
+                "tempToken": temp_token,
+                "userProfile": user_profile,
+                "refreshToken": refresh_token,
+                "expiresIn": expires_in,
+                "redirect_url": redirect_url,
+                "oauthAppId": oauth_app_id,
+            }
         )
         return self._client._post("/v1/connect/pinterest/select-board", data=payload)
 
@@ -723,9 +821,11 @@ class ConnectResource:
         self, x_connect_token: str, profile_id: str, temp_token: str
     ) -> dict[str, Any]:
         """List Snapchat profiles"""
-        params = self._build_params(
-            profile_id=profile_id,
-            temp_token=temp_token,
+        params = self._build_query(
+            {
+                "profileId": profile_id,
+                "tempToken": temp_token,
+            }
         )
         headers = {"X-Connect-Token": x_connect_token}
         return self._client._get(
@@ -746,15 +846,17 @@ class ConnectResource:
         oauth_app_id: str | None = None,
     ) -> dict[str, Any]:
         """Select Snapchat profile"""
-        payload = self._build_payload(
-            profile_id=profile_id,
-            selected_public_profile=selected_public_profile,
-            temp_token=temp_token,
-            user_profile=user_profile,
-            refresh_token=refresh_token,
-            expires_in=expires_in,
-            redirect_url=redirect_url,
-            oauth_app_id=oauth_app_id,
+        payload = self._build_body(
+            {
+                "profileId": profile_id,
+                "selectedPublicProfile": selected_public_profile,
+                "tempToken": temp_token,
+                "userProfile": user_profile,
+                "refreshToken": refresh_token,
+                "expiresIn": expires_in,
+                "redirect_url": redirect_url,
+                "oauthAppId": oauth_app_id,
+            }
         )
         headers: dict[str, str] = {}
         if x_connect_token is not None:
@@ -773,12 +875,14 @@ class ConnectResource:
         redirect_uri: str | None = None,
     ) -> dict[str, Any]:
         """Connect Bluesky account"""
-        payload = self._build_payload(
-            identifier=identifier,
-            app_password=app_password,
-            state=state,
-            redirect_url=redirect_url,
-            redirect_uri=redirect_uri,
+        payload = self._build_body(
+            {
+                "identifier": identifier,
+                "appPassword": app_password,
+                "state": state,
+                "redirect_url": redirect_url,
+                "redirectUri": redirect_uri,
+            }
         )
         return self._client._post("/v1/connect/bluesky/credentials", data=payload)
 
@@ -792,12 +896,14 @@ class ConnectResource:
         redirect_uri: str | None = None,
     ) -> dict[str, Any]:
         """Connect an OpenAI Ads account"""
-        payload = self._build_payload(
-            api_key=api_key,
-            profile_id=profile_id,
-            state=state,
-            redirect_url=redirect_url,
-            redirect_uri=redirect_uri,
+        payload = self._build_body(
+            {
+                "apiKey": api_key,
+                "profileId": profile_id,
+                "state": state,
+                "redirect_url": redirect_url,
+                "redirectUri": redirect_uri,
+            }
         )
         return self._client._post("/v1/connect/openai-ads/credentials", data=payload)
 
@@ -812,13 +918,15 @@ class ConnectResource:
         redirect_url: str | None = None,
     ) -> dict[str, Any]:
         """Connect an AppLovin Axon account"""
-        payload = self._build_payload(
-            api_key=api_key,
-            event_key=event_key,
-            name=name,
-            profile_id=profile_id,
-            state=state,
-            redirect_url=redirect_url,
+        payload = self._build_body(
+            {
+                "apiKey": api_key,
+                "eventKey": event_key,
+                "name": name,
+                "profileId": profile_id,
+                "state": state,
+                "redirect_url": redirect_url,
+            }
         )
         return self._client._post("/v1/connect/applovin-ads/credentials", data=payload)
 
@@ -831,11 +939,13 @@ class ConnectResource:
         redirect_url: str | None = None,
     ) -> dict[str, Any]:
         """Connect a Whop account"""
-        payload = self._build_payload(
-            api_key=api_key,
-            profile_id=profile_id,
-            state=state,
-            redirect_url=redirect_url,
+        payload = self._build_body(
+            {
+                "apiKey": api_key,
+                "profileId": profile_id,
+                "state": state,
+                "redirect_url": redirect_url,
+            }
         )
         return self._client._post("/v1/connect/whop-ads/credentials", data=payload)
 
@@ -850,13 +960,15 @@ class ConnectResource:
         oauth_app_id: str | None = None,
     ) -> dict[str, Any]:
         """Connect WhatsApp via credentials"""
-        payload = self._build_payload(
-            profile_id=profile_id,
-            access_token=access_token,
-            waba_id=waba_id,
-            phone_number_id=phone_number_id,
-            pin=pin,
-            oauth_app_id=oauth_app_id,
+        payload = self._build_body(
+            {
+                "profileId": profile_id,
+                "accessToken": access_token,
+                "wabaId": waba_id,
+                "phoneNumberId": phone_number_id,
+                "pin": pin,
+                "oauthAppId": oauth_app_id,
+            }
         )
         return self._client._post("/v1/connect/whatsapp/credentials", data=payload)
 
@@ -870,10 +982,12 @@ class ConnectResource:
         x_connect_token: str | None = None,
     ) -> dict[str, Any]:
         """List numbers for selection"""
-        params = self._build_params(
-            profile_id=profile_id,
-            temp_token=temp_token,
-            connect_flow=connect_flow,
+        params = self._build_query(
+            {
+                "profileId": profile_id,
+                "tempToken": temp_token,
+                "connectFlow": connect_flow,
+            }
         )
         headers: dict[str, str] = {}
         if x_temp_token is not None:
@@ -898,14 +1012,16 @@ class ConnectResource:
         redirect_url: str | None = None,
     ) -> dict[str, Any]:
         """Complete number selection"""
-        payload = self._build_payload(
-            profile_id=profile_id,
-            phone_number_id=phone_number_id,
-            waba_id=waba_id,
-            temp_token=temp_token,
-            connect_flow=connect_flow,
-            user_profile=user_profile,
-            redirect_url=redirect_url,
+        payload = self._build_body(
+            {
+                "profileId": profile_id,
+                "phoneNumberId": phone_number_id,
+                "wabaId": waba_id,
+                "tempToken": temp_token,
+                "connectFlow": connect_flow,
+                "userProfile": user_profile,
+                "redirect_url": redirect_url,
+            }
         )
         headers: dict[str, str] = {}
         if x_connect_token is not None:
@@ -930,15 +1046,17 @@ class ConnectResource:
         echo_connect_token: bool | None = None,
     ) -> dict[str, Any]:
         """Connect WhatsApp from Embedded Signup"""
-        payload = self._build_payload(
-            code=code,
-            profile_id=profile_id,
-            waba_id=waba_id,
-            phone_number_id=phone_number_id,
-            is_coexistence=is_coexistence,
-            expected_phone_number=expected_phone_number,
-            redirect_url=redirect_url,
-            echo_connect_token=echo_connect_token,
+        payload = self._build_body(
+            {
+                "code": code,
+                "profileId": profile_id,
+                "wabaId": waba_id,
+                "phoneNumberId": phone_number_id,
+                "isCoexistence": is_coexistence,
+                "expectedPhoneNumber": expected_phone_number,
+                "redirect_url": redirect_url,
+                "echoConnectToken": echo_connect_token,
+            }
         )
         headers: dict[str, str] = {}
         if x_connect_token is not None:
@@ -966,12 +1084,14 @@ class ConnectResource:
         redirect_url: str | None = None,
     ) -> dict[str, Any]:
         """Connect a Discord channel"""
-        payload = self._build_payload(
-            guild_id=guild_id,
-            channel_id=channel_id,
-            channel_ids=channel_ids,
-            profile_id=profile_id,
-            redirect_url=redirect_url,
+        payload = self._build_body(
+            {
+                "guildId": guild_id,
+                "channelId": channel_id,
+                "channelIds": channel_ids,
+                "profileId": profile_id,
+                "redirect_url": redirect_url,
+            }
         )
         return self._client._post("/v1/connect/discord", data=payload)
 
@@ -986,13 +1106,15 @@ class ConnectResource:
         purpose: str | None = None,
     ) -> dict[str, Any]:
         """List Slack channels for the channel picker"""
-        params = self._build_params(
-            profile_id=profile_id,
-            pending_data_token=pending_data_token,
-            account_id=account_id,
-            redirect_url=redirect_url,
-            scopes=scopes,
-            purpose=purpose,
+        params = self._build_query(
+            {
+                "profileId": profile_id,
+                "pendingDataToken": pending_data_token,
+                "accountId": account_id,
+                "redirect_url": redirect_url,
+                "scopes": scopes,
+                "purpose": purpose,
+            }
         )
         return self._client._get("/v1/connect/slack", params=params)
 
@@ -1007,13 +1129,15 @@ class ConnectResource:
         account_id: str | None = None,
     ) -> dict[str, Any]:
         """Connect a Slack channel"""
-        payload = self._build_payload(
-            profile_id=profile_id,
-            channel_id=channel_id,
-            channel_ids=channel_ids,
-            redirect_url=redirect_url,
-            pending_data_token=pending_data_token,
-            account_id=account_id,
+        payload = self._build_body(
+            {
+                "profileId": profile_id,
+                "channelId": channel_id,
+                "channelIds": channel_ids,
+                "redirect_url": redirect_url,
+                "pendingDataToken": pending_data_token,
+                "accountId": account_id,
+            }
         )
         return self._client._post("/v1/connect/slack", data=payload)
 
@@ -1026,11 +1150,13 @@ class ConnectResource:
         redirect_url: str | None = None,
     ) -> dict[str, Any]:
         """Connect LINE Official Account"""
-        payload = self._build_payload(
-            channel_id=channel_id,
-            channel_secret=channel_secret,
-            state=state,
-            redirect_url=redirect_url,
+        payload = self._build_body(
+            {
+                "channelId": channel_id,
+                "channelSecret": channel_secret,
+                "state": state,
+                "redirect_url": redirect_url,
+            }
         )
         return self._client._post("/v1/connect/line/credentials", data=payload)
 
@@ -1044,12 +1170,14 @@ class ConnectResource:
         redirect_url: str | None = None,
     ) -> dict[str, Any]:
         """Connect WeChat Official Account"""
-        payload = self._build_payload(
-            app_id=app_id,
-            app_secret=app_secret,
-            state=state,
-            display_name=display_name,
-            redirect_url=redirect_url,
+        payload = self._build_body(
+            {
+                "appId": app_id,
+                "appSecret": app_secret,
+                "state": state,
+                "displayName": display_name,
+                "redirect_url": redirect_url,
+            }
         )
         return self._client._post("/v1/connect/wechat/credentials", data=payload)
 
@@ -1061,9 +1189,11 @@ class ConnectResource:
         self, profile_id: str, *, purpose: str | None = None
     ) -> dict[str, Any]:
         """Generate Telegram code"""
-        params = self._build_params(
-            profile_id=profile_id,
-            purpose=purpose,
+        params = self._build_query(
+            {
+                "profileId": profile_id,
+                "purpose": purpose,
+            }
         )
         return self._client._get("/v1/connect/telegram", params=params)
 
@@ -1071,17 +1201,21 @@ class ConnectResource:
         self, chat_id: str, profile_id: str, *, purpose: str | None = None
     ) -> dict[str, Any]:
         """Connect Telegram directly"""
-        payload = self._build_payload(
-            chat_id=chat_id,
-            profile_id=profile_id,
-            purpose=purpose,
+        payload = self._build_body(
+            {
+                "chatId": chat_id,
+                "profileId": profile_id,
+                "purpose": purpose,
+            }
         )
         return self._client._post("/v1/connect/telegram", data=payload)
 
     def complete_telegram_connect(self, code: str) -> dict[str, Any]:
         """Check Telegram status"""
-        params = self._build_params(
-            code=code,
+        params = self._build_query(
+            {
+                "code": code,
+            }
         )
         return self._client._patch("/v1/connect/telegram", params=params)
 
@@ -1097,8 +1231,10 @@ class ConnectResource:
         self, account_id: str, *, refresh: bool | None = None
     ) -> dict[str, Any]:
         """List Facebook pages"""
-        params = self._build_params(
-            refresh=refresh,
+        params = self._build_query(
+            {
+                "refresh": refresh,
+            }
         )
         return self._client._get(
             f"/v1/accounts/{account_id}/facebook-page", params=params
@@ -1108,8 +1244,10 @@ class ConnectResource:
         self, account_id: str, selected_page_id: str
     ) -> dict[str, Any]:
         """Update Facebook page"""
-        payload = self._build_payload(
-            selected_page_id=selected_page_id,
+        payload = self._build_body(
+            {
+                "selectedPageId": selected_page_id,
+            }
         )
         return self._client._put(
             f"/v1/accounts/{account_id}/facebook-page", data=payload
@@ -1127,9 +1265,11 @@ class ConnectResource:
         selected_organization: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Switch LinkedIn account type"""
-        payload = self._build_payload(
-            account_type=account_type,
-            selected_organization=selected_organization,
+        payload = self._build_body(
+            {
+                "accountType": account_type,
+                "selectedOrganization": selected_organization,
+            }
         )
         return self._client._put(
             f"/v1/accounts/{account_id}/linkedin-organization", data=payload
@@ -1147,9 +1287,11 @@ class ConnectResource:
         default_board_name: str | None = None,
     ) -> dict[str, Any]:
         """Set default Pinterest board"""
-        payload = self._build_payload(
-            default_board_id=default_board_id,
-            default_board_name=default_board_name,
+        payload = self._build_body(
+            {
+                "defaultBoardId": default_board_id,
+                "defaultBoardName": default_board_name,
+            }
         )
         return self._client._put(
             f"/v1/accounts/{account_id}/pinterest-boards", data=payload
@@ -1164,10 +1306,12 @@ class ConnectResource:
         privacy: str | None = "PUBLIC",
     ) -> dict[str, Any]:
         """Create Pinterest board"""
-        payload = self._build_payload(
-            name=name,
-            description=description,
-            privacy=privacy,
+        payload = self._build_body(
+            {
+                "name": name,
+                "description": description,
+                "privacy": privacy,
+            }
         )
         return self._client._post(
             f"/v1/accounts/{account_id}/pinterest-boards", data=payload
@@ -1183,11 +1327,13 @@ class ConnectResource:
         refresh: bool | None = False,
     ) -> dict[str, Any]:
         """Get a YouTube video transcript"""
-        params = self._build_params(
-            video_id=video_id,
-            language=language,
-            format=format,
-            refresh=refresh,
+        params = self._build_query(
+            {
+                "videoId": video_id,
+                "language": language,
+                "format": format,
+                "refresh": refresh,
+            }
         )
         return self._client._get(
             f"/v1/accounts/{account_id}/youtube-captions", params=params
@@ -1206,10 +1352,12 @@ class ConnectResource:
         privacy: str | None = "private",
     ) -> dict[str, Any]:
         """Create YouTube playlist"""
-        payload = self._build_payload(
-            title=title,
-            description=description,
-            privacy=privacy,
+        payload = self._build_body(
+            {
+                "title": title,
+                "description": description,
+                "privacy": privacy,
+            }
         )
         return self._client._post(
             f"/v1/accounts/{account_id}/youtube-playlists", data=payload
@@ -1223,9 +1371,11 @@ class ConnectResource:
         default_playlist_name: str | None = None,
     ) -> dict[str, Any]:
         """Set default YouTube playlist"""
-        payload = self._build_payload(
-            default_playlist_id=default_playlist_id,
-            default_playlist_name=default_playlist_name,
+        payload = self._build_body(
+            {
+                "defaultPlaylistId": default_playlist_id,
+                "defaultPlaylistName": default_playlist_name,
+            }
         )
         return self._client._put(
             f"/v1/accounts/{account_id}/youtube-playlists", data=payload
@@ -1240,10 +1390,12 @@ class ConnectResource:
         limit: int | None = 100,
     ) -> dict[str, Any]:
         """List Google Business Profile locations"""
-        params = self._build_params(
-            search=search,
-            filter=filter,
-            limit=limit,
+        params = self._build_query(
+            {
+                "search": search,
+                "filter": filter,
+                "limit": limit,
+            }
         )
         return self._client._get(
             f"/v1/accounts/{account_id}/gmb-locations", params=params
@@ -1257,9 +1409,11 @@ class ConnectResource:
         google_account_id: str | None = None,
     ) -> dict[str, Any]:
         """Update Google Business Profile location"""
-        payload = self._build_payload(
-            selected_location_id=selected_location_id,
-            google_account_id=google_account_id,
+        payload = self._build_body(
+            {
+                "selectedLocationId": selected_location_id,
+                "googleAccountId": google_account_id,
+            }
         )
         return self._client._put(
             f"/v1/accounts/{account_id}/gmb-locations", data=payload
@@ -1283,18 +1437,20 @@ class ConnectResource:
         validate_only: bool | None = None,
     ) -> dict[str, Any]:
         """Create Google Business Profile location"""
-        payload = self._build_payload(
-            title=title,
-            language_code=language_code,
-            primary_category=primary_category,
-            additional_categories=additional_categories,
-            storefront_address=storefront_address,
-            service_area=service_area,
-            phone=phone,
-            website_uri=website_uri,
-            description=description,
-            regular_hours=regular_hours,
-            validate_only=validate_only,
+        payload = self._build_body(
+            {
+                "title": title,
+                "languageCode": language_code,
+                "primaryCategory": primary_category,
+                "additionalCategories": additional_categories,
+                "storefrontAddress": storefront_address,
+                "serviceArea": service_area,
+                "phone": phone,
+                "websiteUri": website_uri,
+                "description": description,
+                "regularHours": regular_hours,
+                "validateOnly": validate_only,
+            }
         )
         headers: dict[str, str] = {}
         if idempotency_key is not None:
@@ -1312,10 +1468,12 @@ class ConnectResource:
         page_size: int | None = None,
     ) -> dict[str, Any]:
         """Search existing Google listings"""
-        payload = self._build_payload(
-            query=query,
-            location=location,
-            page_size=page_size,
+        payload = self._build_body(
+            {
+                "query": query,
+                "location": location,
+                "pageSize": page_size,
+            }
         )
         return self._client._post(
             f"/v1/accounts/{account_id}/gmb-locations/search", data=payload
@@ -1330,10 +1488,12 @@ class ConnectResource:
         google_account_id: str | None = None,
     ) -> dict[str, Any]:
         """Assign Google Business Profile location to another profile"""
-        payload = self._build_payload(
-            profile_id=profile_id,
-            selected_location_id=selected_location_id,
-            google_account_id=google_account_id,
+        payload = self._build_body(
+            {
+                "profileId": profile_id,
+                "selectedLocationId": selected_location_id,
+                "googleAccountId": google_account_id,
+            }
         )
         return self._client._post(
             f"/v1/accounts/{account_id}/gmb-locations/assign", data=payload
@@ -1347,8 +1507,10 @@ class ConnectResource:
         self, account_id: str, default_subreddit: str
     ) -> dict[str, Any]:
         """Set default subreddit"""
-        payload = self._build_payload(
-            default_subreddit=default_subreddit,
+        payload = self._build_body(
+            {
+                "defaultSubreddit": default_subreddit,
+            }
         )
         return self._client._put(
             f"/v1/accounts/{account_id}/reddit-subreddits", data=payload
@@ -1364,9 +1526,11 @@ class ConnectResource:
         self, account_id: str, thing_id: str, direction: int
     ) -> dict[str, Any]:
         """Vote on a Reddit post or comment"""
-        payload = self._build_payload(
-            thing_id=thing_id,
-            direction=direction,
+        payload = self._build_body(
+            {
+                "thingId": thing_id,
+                "direction": direction,
+            }
         )
         return self._client._post(
             f"/v1/accounts/{account_id}/reddit-vote", data=payload
@@ -1374,8 +1538,10 @@ class ConnectResource:
 
     def get_reddit_flairs(self, account_id: str, subreddit: str) -> dict[str, Any]:
         """List subreddit flairs"""
-        params = self._build_params(
-            subreddit=subreddit,
+        params = self._build_query(
+            {
+                "subreddit": subreddit,
+            }
         )
         return self._client._get(
             f"/v1/accounts/{account_id}/reddit-flairs", params=params
@@ -1391,11 +1557,13 @@ class ConnectResource:
         text: str | None = None,
     ) -> dict[str, Any]:
         """Set Reddit post flair"""
-        payload = self._build_payload(
-            subreddit=subreddit,
-            post_id=post_id,
-            flair_template_id=flair_template_id,
-            text=text,
+        payload = self._build_body(
+            {
+                "subreddit": subreddit,
+                "postId": post_id,
+                "flairTemplateId": flair_template_id,
+                "text": text,
+            }
         )
         return self._client._post(
             f"/v1/accounts/{account_id}/reddit-flairs", data=payload
@@ -1405,9 +1573,11 @@ class ConnectResource:
         self, account_id: str, *, redirect_url: str | None = None
     ) -> dict[str, Any]:
         """Admin-consent link for a Microsoft tenant"""
-        params = self._build_params(
-            account_id=account_id,
-            redirect_url=redirect_url,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "redirectUrl": redirect_url,
+            }
         )
         return self._client._get("/v1/connect/microsoft/admin-consent", params=params)
 
@@ -1421,12 +1591,14 @@ class ConnectResource:
         allowed_emails: list[str] | None = None,
     ) -> dict[str, Any]:
         """Start a Google Workspace organization connection"""
-        payload = self._build_payload(
-            profile_id=profile_id,
-            domain=domain,
-            scopes=scopes,
-            admin_email=admin_email,
-            allowed_emails=allowed_emails,
+        payload = self._build_body(
+            {
+                "profileId": profile_id,
+                "domain": domain,
+                "scopes": scopes,
+                "adminEmail": admin_email,
+                "allowedEmails": allowed_emails,
+            }
         )
         return self._client._post("/v1/connect/google/org", data=payload)
 
@@ -1439,18 +1611,22 @@ class ConnectResource:
         redirect_url: str | None = None,
     ) -> dict[str, Any]:
         """Start a Microsoft 365 organization connection"""
-        payload = self._build_payload(
-            profile_id=profile_id,
-            scopes=scopes,
-            allowed_emails=allowed_emails,
-            redirect_url=redirect_url,
+        payload = self._build_body(
+            {
+                "profileId": profile_id,
+                "scopes": scopes,
+                "allowedEmails": allowed_emails,
+                "redirectUrl": redirect_url,
+            }
         )
         return self._client._post("/v1/connect/microsoft/org", data=payload)
 
     def list_org_connections(self, *, profile_id: str | None = None) -> dict[str, Any]:
         """List organization connections"""
-        params = self._build_params(
-            profile_id=profile_id,
+        params = self._build_query(
+            {
+                "profileId": profile_id,
+            }
         )
         return self._client._get("/v1/org-connections", params=params)
 
@@ -1466,9 +1642,11 @@ class ConnectResource:
         admin_email: Any | None = None,
     ) -> dict[str, Any]:
         """Update an organization connection"""
-        payload = self._build_payload(
-            allowed_emails=allowed_emails,
-            admin_email=admin_email,
+        payload = self._build_body(
+            {
+                "allowedEmails": allowed_emails,
+                "adminEmail": admin_email,
+            }
         )
         return self._client._patch(
             f"/v1/org-connections/{org_connection_id}", data=payload
@@ -1482,8 +1660,10 @@ class ConnectResource:
         self, org_connection_id: str, *, email: str | None = None
     ) -> dict[str, Any]:
         """Verify an organization connection"""
-        payload = self._build_payload(
-            email=email,
+        payload = self._build_body(
+            {
+                "email": email,
+            }
         )
         return self._client._post(
             f"/v1/org-connections/{org_connection_id}/verify", data=payload
@@ -1493,8 +1673,10 @@ class ConnectResource:
         self, org_connection_id: str, *, cursor: str | None = None
     ) -> dict[str, Any]:
         """List an organization's users"""
-        params = self._build_params(
-            cursor=cursor,
+        params = self._build_query(
+            {
+                "cursor": cursor,
+            }
         )
         return self._client._get(
             f"/v1/org-connections/{org_connection_id}/users", params=params
@@ -1504,9 +1686,11 @@ class ConnectResource:
         self, org_connection_id: str, email: str, *, name: str | None = None
     ) -> dict[str, Any]:
         """Add a mailbox from an organization connection"""
-        payload = self._build_payload(
-            email=email,
-            name=name,
+        payload = self._build_body(
+            {
+                "email": email,
+                "name": name,
+            }
         )
         return self._client._post(
             f"/v1/org-connections/{org_connection_id}/mailboxes", data=payload
@@ -1522,12 +1706,14 @@ class ConnectResource:
         expires_in_days: int | None = 7,
     ) -> dict[str, Any]:
         """Create a connect link (async)"""
-        payload = self._build_payload(
-            profile_id=profile_id,
-            platform=platform,
-            account_id=account_id,
-            login_method=login_method,
-            expires_in_days=expires_in_days,
+        payload = self._build_body(
+            {
+                "profileId": profile_id,
+                "platform": platform,
+                "accountId": account_id,
+                "loginMethod": login_method,
+                "expiresInDays": expires_in_days,
+            }
         )
         return await self._client._apost("/v1/platform-invites", data=payload)
 
@@ -1560,30 +1746,32 @@ class ConnectResource:
         handoff: bool | None = False,
     ) -> dict[str, Any]:
         """Get OAuth connect URL (async)"""
-        params = self._build_params(
-            profile_id=profile_id,
-            reconnect_account_id=reconnect_account_id,
-            oauth_app_id=oauth_app_id,
-            purpose=purpose,
-            expected_platform_user_id=expected_platform_user_id,
-            expected_username=expected_username,
-            expected_phone_number=expected_phone_number,
-            force_reauth=force_reauth,
-            allow_no_location=allow_no_location,
-            redirect_url=redirect_url,
-            scopes=scopes,
-            login_hint=login_hint,
-            headless=headless,
-            login_method=login_method,
-            onboarding=onboarding,
-            signup=signup,
-            brand_name=brand_name,
-            primary_color=primary_color,
-            welcome=welcome,
-            welcome_theme=welcome_theme,
-            logo_url=logo_url,
-            language=language,
-            handoff=handoff,
+        params = self._build_query(
+            {
+                "profileId": profile_id,
+                "reconnectAccountId": reconnect_account_id,
+                "oauthAppId": oauth_app_id,
+                "purpose": purpose,
+                "expectedPlatformUserId": expected_platform_user_id,
+                "expectedUsername": expected_username,
+                "expectedPhoneNumber": expected_phone_number,
+                "forceReauth": force_reauth,
+                "allowNoLocation": allow_no_location,
+                "redirect_url": redirect_url,
+                "scopes": scopes,
+                "loginHint": login_hint,
+                "headless": headless,
+                "loginMethod": login_method,
+                "onboarding": onboarding,
+                "signup": signup,
+                "brandName": brand_name,
+                "primaryColor": primary_color,
+                "welcome": welcome,
+                "welcomeTheme": welcome_theme,
+                "logoUrl": logo_url,
+                "language": language,
+                "handoff": handoff,
+            }
         )
         return await self._client._aget(f"/v1/connect/{platform}", params=params)
 
@@ -1591,10 +1779,12 @@ class ConnectResource:
         self, platform: str, code: str, state: str, profile_id: str
     ) -> dict[str, Any]:
         """Complete OAuth callback (async)"""
-        payload = self._build_payload(
-            code=code,
-            state=state,
-            profile_id=profile_id,
+        payload = self._build_body(
+            {
+                "code": code,
+                "state": state,
+                "profileId": profile_id,
+            }
         )
         return await self._client._apost(f"/v1/connect/{platform}", data=payload)
 
@@ -1620,23 +1810,25 @@ class ConnectResource:
         welcome_theme: str | None = None,
     ) -> dict[str, Any]:
         """Connect ads for a platform (async)"""
-        params = self._build_params(
-            identity_provider=identity_provider,
-            login_mode=login_mode,
-            permission_level=permission_level,
-            page_id=page_id,
-            profile_id=profile_id,
-            account_id=account_id,
-            redirect_url=redirect_url,
-            headless=headless,
-            force=force,
-            ad_account_id=ad_account_id,
-            ad_account_ids=ad_account_ids,
-            welcome=welcome,
-            brand_name=brand_name,
-            logo_url=logo_url,
-            primary_color=primary_color,
-            welcome_theme=welcome_theme,
+        params = self._build_query(
+            {
+                "identityProvider": identity_provider,
+                "loginMode": login_mode,
+                "permissionLevel": permission_level,
+                "pageId": page_id,
+                "profileId": profile_id,
+                "accountId": account_id,
+                "redirect_url": redirect_url,
+                "headless": headless,
+                "force": force,
+                "adAccountId": ad_account_id,
+                "adAccountIds": ad_account_ids,
+                "welcome": welcome,
+                "brandName": brand_name,
+                "logoUrl": logo_url,
+                "primaryColor": primary_color,
+                "welcomeTheme": welcome_theme,
+            }
         )
         return await self._client._aget(f"/v1/connect/{platform}/ads", params=params)
 
@@ -1644,10 +1836,12 @@ class ConnectResource:
         self, state: str, *, code: str | None = None, error: str | None = None
     ) -> dict[str, Any]:
         """Complete Meta business login (async)"""
-        params = self._build_params(
-            state=state,
-            code=code,
-            error=error,
+        params = self._build_query(
+            {
+                "state": state,
+                "code": code,
+                "error": error,
+            }
         )
         return await self._client._aget("/v1/connect/meta-ads/callback", params=params)
 
@@ -1655,10 +1849,12 @@ class ConnectResource:
         self, profile_id: str, shop: str, *, redirect_url: str | None = None
     ) -> dict[str, Any]:
         """Get Shopify OAuth connect URL (async)"""
-        params = self._build_params(
-            profile_id=profile_id,
-            shop=shop,
-            redirect_url=redirect_url,
+        params = self._build_query(
+            {
+                "profileId": profile_id,
+                "shop": shop,
+                "redirect_url": redirect_url,
+            }
         )
         return await self._client._aget("/v1/connect/shopify", params=params)
 
@@ -1666,10 +1862,12 @@ class ConnectResource:
         self, profile_id: str, shop: str, access_token: str
     ) -> dict[str, Any]:
         """Connect a Shopify store with a custom-app Admin token (async)"""
-        payload = self._build_payload(
-            profile_id=profile_id,
-            shop=shop,
-            access_token=access_token,
+        payload = self._build_body(
+            {
+                "profileId": profile_id,
+                "shop": shop,
+                "accessToken": access_token,
+            }
         )
         return await self._client._apost("/v1/connect/shopify/token", data=payload)
 
@@ -1681,10 +1879,12 @@ class ConnectResource:
         reconnect_account_id: str | None = None,
     ) -> dict[str, Any]:
         """Get Google Analytics OAuth connect URL (async)"""
-        params = self._build_params(
-            profile_id=profile_id,
-            redirect_url=redirect_url,
-            reconnect_account_id=reconnect_account_id,
+        params = self._build_query(
+            {
+                "profileId": profile_id,
+                "redirect_url": redirect_url,
+                "reconnectAccountId": reconnect_account_id,
+            }
         )
         return await self._client._aget("/v1/connect/googleanalytics", params=params)
 
@@ -1692,8 +1892,10 @@ class ConnectResource:
         self, pending_data_token: str
     ) -> dict[str, Any]:
         """List Google Analytics properties for a pending connect (async)"""
-        params = self._build_params(
-            pending_data_token=pending_data_token,
+        params = self._build_query(
+            {
+                "pendingDataToken": pending_data_token,
+            }
         )
         return await self._client._aget(
             "/v1/connect/googleanalytics/properties", params=params
@@ -1703,9 +1905,11 @@ class ConnectResource:
         self, pending_data_token: str, property_id: str
     ) -> dict[str, Any]:
         """Connect the chosen Google Analytics property (async)"""
-        payload = self._build_payload(
-            pending_data_token=pending_data_token,
-            property_id=property_id,
+        payload = self._build_body(
+            {
+                "pendingDataToken": pending_data_token,
+                "propertyId": property_id,
+            }
         )
         return await self._client._apost(
             "/v1/connect/googleanalytics/select-property", data=payload
@@ -1715,9 +1919,11 @@ class ConnectResource:
         self, profile_id: str, *, redirect_url: str | None = None
     ) -> dict[str, Any]:
         """Get HubSpot OAuth connect URL (async)"""
-        params = self._build_params(
-            profile_id=profile_id,
-            redirect_url=redirect_url,
+        params = self._build_query(
+            {
+                "profileId": profile_id,
+                "redirect_url": redirect_url,
+            }
         )
         return await self._client._aget("/v1/connect/hubspot", params=params)
 
@@ -1729,10 +1935,12 @@ class ConnectResource:
         redirect_url: str | None = None,
     ) -> dict[str, Any]:
         """Get Salesforce OAuth connect URL (async)"""
-        params = self._build_params(
-            profile_id=profile_id,
-            environment=environment,
-            redirect_url=redirect_url,
+        params = self._build_query(
+            {
+                "profileId": profile_id,
+                "environment": environment,
+                "redirect_url": redirect_url,
+            }
         )
         return await self._client._aget("/v1/connect/salesforce", params=params)
 
@@ -1744,10 +1952,12 @@ class ConnectResource:
         reconnect_account_id: str | None = None,
     ) -> dict[str, Any]:
         """Get Stripe connect URL (async)"""
-        params = self._build_params(
-            profile_id=profile_id,
-            redirect_url=redirect_url,
-            reconnect_account_id=reconnect_account_id,
+        params = self._build_query(
+            {
+                "profileId": profile_id,
+                "redirect_url": redirect_url,
+                "reconnectAccountId": reconnect_account_id,
+            }
         )
         return await self._client._aget("/v1/connect/stripe", params=params)
 
@@ -1755,9 +1965,11 @@ class ConnectResource:
         self, profile_id: str, *, redirect_url: str | None = None
     ) -> dict[str, Any]:
         """Get WordPress.com OAuth connect URL (async)"""
-        params = self._build_params(
-            profile_id=profile_id,
-            redirect_url=redirect_url,
+        params = self._build_query(
+            {
+                "profileId": profile_id,
+                "redirect_url": redirect_url,
+            }
         )
         return await self._client._aget("/v1/connect/wordpress", params=params)
 
@@ -1765,9 +1977,11 @@ class ConnectResource:
         self, profile_id: str, *, redirect_url: str | None = None
     ) -> dict[str, Any]:
         """Get Wix site install URL (async)"""
-        params = self._build_params(
-            profile_id=profile_id,
-            redirect_url=redirect_url,
+        params = self._build_query(
+            {
+                "profileId": profile_id,
+                "redirect_url": redirect_url,
+            }
         )
         return await self._client._aget("/v1/connect/wix", params=params)
 
@@ -1775,9 +1989,11 @@ class ConnectResource:
         self, profile_id: str, *, redirect_url: str | None = None
     ) -> dict[str, Any]:
         """Get Webflow OAuth URL (async)"""
-        params = self._build_params(
-            profile_id=profile_id,
-            redirect_url=redirect_url,
+        params = self._build_query(
+            {
+                "profileId": profile_id,
+                "redirect_url": redirect_url,
+            }
         )
         return await self._client._aget("/v1/connect/webflow", params=params)
 
@@ -1785,9 +2001,11 @@ class ConnectResource:
         self, profile_id: str, site_token: str
     ) -> dict[str, Any]:
         """Connect Webflow with a site API token (async)"""
-        payload = self._build_payload(
-            profile_id=profile_id,
-            site_token=site_token,
+        payload = self._build_body(
+            {
+                "profileId": profile_id,
+                "siteToken": site_token,
+            }
         )
         return await self._client._apost("/v1/connect/webflow/token", data=payload)
 
@@ -1801,12 +2019,14 @@ class ConnectResource:
         reconnect_account_id: str | None = None,
     ) -> dict[str, Any]:
         """Get a hosted link to connect any mailbox (async)"""
-        params = self._build_params(
-            profile_id=profile_id,
-            redirect_url=redirect_url,
-            email=email,
-            name=name,
-            reconnect_account_id=reconnect_account_id,
+        params = self._build_query(
+            {
+                "profileId": profile_id,
+                "redirect_url": redirect_url,
+                "email": email,
+                "name": name,
+                "reconnectAccountId": reconnect_account_id,
+            }
         )
         return await self._client._aget("/v1/connect/email", params=params)
 
@@ -1814,11 +2034,13 @@ class ConnectResource:
         self, profile_id: str, site_url: str, username: str, application_password: str
     ) -> dict[str, Any]:
         """Connect self-hosted WordPress with an application password (async)"""
-        payload = self._build_payload(
-            profile_id=profile_id,
-            site_url=site_url,
-            username=username,
-            application_password=application_password,
+        payload = self._build_body(
+            {
+                "profileId": profile_id,
+                "siteUrl": site_url,
+                "username": username,
+                "applicationPassword": application_password,
+            }
         )
         return await self._client._apost("/v1/connect/wordpress/token", data=payload)
 
@@ -1826,10 +2048,12 @@ class ConnectResource:
         self, account_id: str, display_name: str, image_url: str
     ) -> dict[str, Any]:
         """Set TikTok brand identity (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            display_name=display_name,
-            image_url=image_url,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "displayName": display_name,
+                "imageUrl": image_url,
+            }
         )
         return await self._client._apatch("/v1/connect/tiktok-ads", data=payload)
 
@@ -1843,11 +2067,13 @@ class ConnectResource:
         selection_token: str | None = None,
     ) -> dict[str, Any]:
         """List Facebook pages (async)"""
-        params = self._build_params(
-            profile_id=profile_id,
-            temp_token=temp_token,
-            connect_flow=connect_flow,
-            selection_token=selection_token,
+        params = self._build_query(
+            {
+                "profileId": profile_id,
+                "tempToken": temp_token,
+                "connectFlow": connect_flow,
+                "selectionToken": selection_token,
+            }
         )
         headers: dict[str, str] = {}
         if x_temp_token is not None:
@@ -1869,10 +2095,12 @@ class ConnectResource:
         connect_flow: str | None = None,
     ) -> dict[str, Any]:
         """List Pages with a linked Instagram account (async)"""
-        params = self._build_params(
-            profile_id=profile_id,
-            temp_token=temp_token,
-            connect_flow=connect_flow,
+        params = self._build_query(
+            {
+                "profileId": profile_id,
+                "tempToken": temp_token,
+                "connectFlow": connect_flow,
+            }
         )
         headers: dict[str, str] = {}
         if x_temp_token is not None:
@@ -1893,14 +2121,16 @@ class ConnectResource:
         redirect_url: str | None = None,
     ) -> dict[str, Any]:
         """Select the Page whose Instagram account to connect (async)"""
-        payload = self._build_payload(
-            profile_id=profile_id,
-            page_id=page_id,
-            page_ids=page_ids,
-            temp_token=temp_token,
-            connect_flow=connect_flow,
-            scopes=scopes,
-            redirect_url=redirect_url,
+        payload = self._build_body(
+            {
+                "profileId": profile_id,
+                "pageId": page_id,
+                "pageIds": page_ids,
+                "tempToken": temp_token,
+                "connectFlow": connect_flow,
+                "scopes": scopes,
+                "redirect_url": redirect_url,
+            }
         )
         return await self._client._apost(
             "/v1/connect/instagram/select-account", data=payload
@@ -1916,12 +2146,14 @@ class ConnectResource:
         filter: str | None = None,
     ) -> dict[str, Any]:
         """List Google Business Profile locations (async)"""
-        params = self._build_params(
-            profile_id=profile_id,
-            pending_data_token=pending_data_token,
-            temp_token=temp_token,
-            search=search,
-            filter=filter,
+        params = self._build_query(
+            {
+                "profileId": profile_id,
+                "pendingDataToken": pending_data_token,
+                "tempToken": temp_token,
+                "search": search,
+                "filter": filter,
+            }
         )
         return await self._client._aget(
             "/v1/connect/googlebusiness/locations", params=params
@@ -1939,14 +2171,16 @@ class ConnectResource:
         redirect_url: str | None = None,
     ) -> dict[str, Any]:
         """Select Google Business Profile location (async)"""
-        payload = self._build_payload(
-            profile_id=profile_id,
-            location_id=location_id,
-            locations=locations,
-            account_id=account_id,
-            google_account_id=google_account_id,
-            pending_data_token=pending_data_token,
-            redirect_url=redirect_url,
+        payload = self._build_body(
+            {
+                "profileId": profile_id,
+                "locationId": location_id,
+                "locations": locations,
+                "accountId": account_id,
+                "googleAccountId": google_account_id,
+                "pendingDataToken": pending_data_token,
+                "redirect_url": redirect_url,
+            }
         )
         return await self._client._apost(
             "/v1/connect/googlebusiness/select-location", data=payload
@@ -1962,11 +2196,13 @@ class ConnectResource:
         page_token: str | None = None,
     ) -> dict[str, Any]:
         """List Google Business Profile categories (async)"""
-        params = self._build_params(
-            region_code=region_code,
-            language_code=language_code,
-            query=query,
-            page_token=page_token,
+        params = self._build_query(
+            {
+                "regionCode": region_code,
+                "languageCode": language_code,
+                "query": query,
+                "pageToken": page_token,
+            }
         )
         return await self._client._aget(
             f"/v1/accounts/{account_id}/gmb-categories", params=params
@@ -1989,11 +2225,13 @@ class ConnectResource:
         theme: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Save the welcome screen (async)"""
-        payload = self._build_payload(
-            show_by_default=show_by_default,
-            brand_name=brand_name,
-            logo_url=logo_url,
-            theme=theme,
+        payload = self._build_body(
+            {
+                "showByDefault": show_by_default,
+                "brandName": brand_name,
+                "logoUrl": logo_url,
+                "theme": theme,
+            }
         )
         return await self._client._aput("/v1/connect/welcome-screen", data=payload)
 
@@ -2001,9 +2239,11 @@ class ConnectResource:
         self, *, limit: int | None = 50, cursor: str | None = None
     ) -> dict[str, Any]:
         """List your OAuth apps (async)"""
-        params = self._build_params(
-            limit=limit,
-            cursor=cursor,
+        params = self._build_query(
+            {
+                "limit": limit,
+                "cursor": cursor,
+            }
         )
         return await self._client._aget("/v1/connect/oauth-apps", params=params)
 
@@ -2020,15 +2260,17 @@ class ConnectResource:
         scope_areas: list[str] | None = None,
     ) -> dict[str, Any]:
         """Add an OAuth app (async)"""
-        payload = self._build_payload(
-            platform=platform,
-            label=label,
-            client_id=client_id,
-            client_secret=client_secret,
-            meta_app_id=meta_app_id,
-            meta_app_secret=meta_app_secret,
-            slack_signing_secret=slack_signing_secret,
-            scope_areas=scope_areas,
+        payload = self._build_body(
+            {
+                "platform": platform,
+                "label": label,
+                "clientId": client_id,
+                "clientSecret": client_secret,
+                "metaAppId": meta_app_id,
+                "metaAppSecret": meta_app_secret,
+                "slackSigningSecret": slack_signing_secret,
+                "scopeAreas": scope_areas,
+            }
         )
         return await self._client._apost("/v1/connect/oauth-apps", data=payload)
 
@@ -2048,13 +2290,15 @@ class ConnectResource:
         scope_areas: list[str] | None = None,
     ) -> dict[str, Any]:
         """Update an OAuth app (async)"""
-        payload = self._build_payload(
-            label=label,
-            client_secret=client_secret,
-            meta_app_id=meta_app_id,
-            meta_app_secret=meta_app_secret,
-            slack_signing_secret=slack_signing_secret,
-            scope_areas=scope_areas,
+        payload = self._build_body(
+            {
+                "label": label,
+                "clientSecret": client_secret,
+                "metaAppId": meta_app_id,
+                "metaAppSecret": meta_app_secret,
+                "slackSigningSecret": slack_signing_secret,
+                "scopeAreas": scope_areas,
+            }
         )
         return await self._client._apatch(
             f"/v1/connect/oauth-apps/{app_id}", data=payload
@@ -2064,8 +2308,10 @@ class ConnectResource:
         self, app_id: str, *, confirm: bool | None = False
     ) -> dict[str, Any]:
         """Remove an OAuth app (async)"""
-        params = self._build_params(
-            confirm=confirm,
+        params = self._build_query(
+            {
+                "confirm": confirm,
+            }
         )
         return await self._client._adelete(
             f"/v1/connect/oauth-apps/{app_id}", params=params
@@ -2077,8 +2323,10 @@ class ConnectResource:
 
     async def aget_pending_o_auth_data(self, token: str) -> dict[str, Any]:
         """Get pending OAuth data (async)"""
-        params = self._build_params(
-            token=token,
+        params = self._build_query(
+            {
+                "token": token,
+            }
         )
         return await self._client._aget("/v1/connect/pending-data", params=params)
 
@@ -2090,9 +2338,11 @@ class ConnectResource:
         x_temp_token: str | None = None,
     ) -> dict[str, Any]:
         """List LinkedIn orgs (async)"""
-        params = self._build_params(
-            temp_token=temp_token,
-            org_ids=org_ids,
+        params = self._build_query(
+            {
+                "tempToken": temp_token,
+                "orgIds": org_ids,
+            }
         )
         headers: dict[str, str] = {}
         if x_temp_token is not None:
@@ -2113,14 +2363,16 @@ class ConnectResource:
         redirect_url: str | None = None,
     ) -> dict[str, Any]:
         """Select LinkedIn org (async)"""
-        payload = self._build_payload(
-            profile_id=profile_id,
-            temp_token=temp_token,
-            user_profile=user_profile,
-            account_type=account_type,
-            selections=selections,
-            selected_organization=selected_organization,
-            redirect_url=redirect_url,
+        payload = self._build_body(
+            {
+                "profileId": profile_id,
+                "tempToken": temp_token,
+                "userProfile": user_profile,
+                "accountType": account_type,
+                "selections": selections,
+                "selectedOrganization": selected_organization,
+                "redirect_url": redirect_url,
+            }
         )
         return await self._client._apost(
             "/v1/connect/linkedin/select-organization", data=payload
@@ -2130,9 +2382,11 @@ class ConnectResource:
         self, x_connect_token: str, profile_id: str, temp_token: str
     ) -> dict[str, Any]:
         """List Pinterest boards (async)"""
-        params = self._build_params(
-            profile_id=profile_id,
-            temp_token=temp_token,
+        params = self._build_query(
+            {
+                "profileId": profile_id,
+                "tempToken": temp_token,
+            }
         )
         headers = {"X-Connect-Token": x_connect_token}
         return await self._client._aget(
@@ -2153,16 +2407,18 @@ class ConnectResource:
         oauth_app_id: str | None = None,
     ) -> dict[str, Any]:
         """Select Pinterest board (async)"""
-        payload = self._build_payload(
-            profile_id=profile_id,
-            board_id=board_id,
-            board_name=board_name,
-            temp_token=temp_token,
-            user_profile=user_profile,
-            refresh_token=refresh_token,
-            expires_in=expires_in,
-            redirect_url=redirect_url,
-            oauth_app_id=oauth_app_id,
+        payload = self._build_body(
+            {
+                "profileId": profile_id,
+                "boardId": board_id,
+                "boardName": board_name,
+                "tempToken": temp_token,
+                "userProfile": user_profile,
+                "refreshToken": refresh_token,
+                "expiresIn": expires_in,
+                "redirect_url": redirect_url,
+                "oauthAppId": oauth_app_id,
+            }
         )
         return await self._client._apost(
             "/v1/connect/pinterest/select-board", data=payload
@@ -2172,9 +2428,11 @@ class ConnectResource:
         self, x_connect_token: str, profile_id: str, temp_token: str
     ) -> dict[str, Any]:
         """List Snapchat profiles (async)"""
-        params = self._build_params(
-            profile_id=profile_id,
-            temp_token=temp_token,
+        params = self._build_query(
+            {
+                "profileId": profile_id,
+                "tempToken": temp_token,
+            }
         )
         headers = {"X-Connect-Token": x_connect_token}
         return await self._client._aget(
@@ -2195,15 +2453,17 @@ class ConnectResource:
         oauth_app_id: str | None = None,
     ) -> dict[str, Any]:
         """Select Snapchat profile (async)"""
-        payload = self._build_payload(
-            profile_id=profile_id,
-            selected_public_profile=selected_public_profile,
-            temp_token=temp_token,
-            user_profile=user_profile,
-            refresh_token=refresh_token,
-            expires_in=expires_in,
-            redirect_url=redirect_url,
-            oauth_app_id=oauth_app_id,
+        payload = self._build_body(
+            {
+                "profileId": profile_id,
+                "selectedPublicProfile": selected_public_profile,
+                "tempToken": temp_token,
+                "userProfile": user_profile,
+                "refreshToken": refresh_token,
+                "expiresIn": expires_in,
+                "redirect_url": redirect_url,
+                "oauthAppId": oauth_app_id,
+            }
         )
         headers: dict[str, str] = {}
         if x_connect_token is not None:
@@ -2222,12 +2482,14 @@ class ConnectResource:
         redirect_uri: str | None = None,
     ) -> dict[str, Any]:
         """Connect Bluesky account (async)"""
-        payload = self._build_payload(
-            identifier=identifier,
-            app_password=app_password,
-            state=state,
-            redirect_url=redirect_url,
-            redirect_uri=redirect_uri,
+        payload = self._build_body(
+            {
+                "identifier": identifier,
+                "appPassword": app_password,
+                "state": state,
+                "redirect_url": redirect_url,
+                "redirectUri": redirect_uri,
+            }
         )
         return await self._client._apost(
             "/v1/connect/bluesky/credentials", data=payload
@@ -2243,12 +2505,14 @@ class ConnectResource:
         redirect_uri: str | None = None,
     ) -> dict[str, Any]:
         """Connect an OpenAI Ads account (async)"""
-        payload = self._build_payload(
-            api_key=api_key,
-            profile_id=profile_id,
-            state=state,
-            redirect_url=redirect_url,
-            redirect_uri=redirect_uri,
+        payload = self._build_body(
+            {
+                "apiKey": api_key,
+                "profileId": profile_id,
+                "state": state,
+                "redirect_url": redirect_url,
+                "redirectUri": redirect_uri,
+            }
         )
         return await self._client._apost(
             "/v1/connect/openai-ads/credentials", data=payload
@@ -2265,13 +2529,15 @@ class ConnectResource:
         redirect_url: str | None = None,
     ) -> dict[str, Any]:
         """Connect an AppLovin Axon account (async)"""
-        payload = self._build_payload(
-            api_key=api_key,
-            event_key=event_key,
-            name=name,
-            profile_id=profile_id,
-            state=state,
-            redirect_url=redirect_url,
+        payload = self._build_body(
+            {
+                "apiKey": api_key,
+                "eventKey": event_key,
+                "name": name,
+                "profileId": profile_id,
+                "state": state,
+                "redirect_url": redirect_url,
+            }
         )
         return await self._client._apost(
             "/v1/connect/applovin-ads/credentials", data=payload
@@ -2286,11 +2552,13 @@ class ConnectResource:
         redirect_url: str | None = None,
     ) -> dict[str, Any]:
         """Connect a Whop account (async)"""
-        payload = self._build_payload(
-            api_key=api_key,
-            profile_id=profile_id,
-            state=state,
-            redirect_url=redirect_url,
+        payload = self._build_body(
+            {
+                "apiKey": api_key,
+                "profileId": profile_id,
+                "state": state,
+                "redirect_url": redirect_url,
+            }
         )
         return await self._client._apost(
             "/v1/connect/whop-ads/credentials", data=payload
@@ -2307,13 +2575,15 @@ class ConnectResource:
         oauth_app_id: str | None = None,
     ) -> dict[str, Any]:
         """Connect WhatsApp via credentials (async)"""
-        payload = self._build_payload(
-            profile_id=profile_id,
-            access_token=access_token,
-            waba_id=waba_id,
-            phone_number_id=phone_number_id,
-            pin=pin,
-            oauth_app_id=oauth_app_id,
+        payload = self._build_body(
+            {
+                "profileId": profile_id,
+                "accessToken": access_token,
+                "wabaId": waba_id,
+                "phoneNumberId": phone_number_id,
+                "pin": pin,
+                "oauthAppId": oauth_app_id,
+            }
         )
         return await self._client._apost(
             "/v1/connect/whatsapp/credentials", data=payload
@@ -2329,10 +2599,12 @@ class ConnectResource:
         x_connect_token: str | None = None,
     ) -> dict[str, Any]:
         """List numbers for selection (async)"""
-        params = self._build_params(
-            profile_id=profile_id,
-            temp_token=temp_token,
-            connect_flow=connect_flow,
+        params = self._build_query(
+            {
+                "profileId": profile_id,
+                "tempToken": temp_token,
+                "connectFlow": connect_flow,
+            }
         )
         headers: dict[str, str] = {}
         if x_temp_token is not None:
@@ -2357,14 +2629,16 @@ class ConnectResource:
         redirect_url: str | None = None,
     ) -> dict[str, Any]:
         """Complete number selection (async)"""
-        payload = self._build_payload(
-            profile_id=profile_id,
-            phone_number_id=phone_number_id,
-            waba_id=waba_id,
-            temp_token=temp_token,
-            connect_flow=connect_flow,
-            user_profile=user_profile,
-            redirect_url=redirect_url,
+        payload = self._build_body(
+            {
+                "profileId": profile_id,
+                "phoneNumberId": phone_number_id,
+                "wabaId": waba_id,
+                "tempToken": temp_token,
+                "connectFlow": connect_flow,
+                "userProfile": user_profile,
+                "redirect_url": redirect_url,
+            }
         )
         headers: dict[str, str] = {}
         if x_connect_token is not None:
@@ -2389,15 +2663,17 @@ class ConnectResource:
         echo_connect_token: bool | None = None,
     ) -> dict[str, Any]:
         """Connect WhatsApp from Embedded Signup (async)"""
-        payload = self._build_payload(
-            code=code,
-            profile_id=profile_id,
-            waba_id=waba_id,
-            phone_number_id=phone_number_id,
-            is_coexistence=is_coexistence,
-            expected_phone_number=expected_phone_number,
-            redirect_url=redirect_url,
-            echo_connect_token=echo_connect_token,
+        payload = self._build_body(
+            {
+                "code": code,
+                "profileId": profile_id,
+                "wabaId": waba_id,
+                "phoneNumberId": phone_number_id,
+                "isCoexistence": is_coexistence,
+                "expectedPhoneNumber": expected_phone_number,
+                "redirect_url": redirect_url,
+                "echoConnectToken": echo_connect_token,
+            }
         )
         headers: dict[str, str] = {}
         if x_connect_token is not None:
@@ -2427,12 +2703,14 @@ class ConnectResource:
         redirect_url: str | None = None,
     ) -> dict[str, Any]:
         """Connect a Discord channel (async)"""
-        payload = self._build_payload(
-            guild_id=guild_id,
-            channel_id=channel_id,
-            channel_ids=channel_ids,
-            profile_id=profile_id,
-            redirect_url=redirect_url,
+        payload = self._build_body(
+            {
+                "guildId": guild_id,
+                "channelId": channel_id,
+                "channelIds": channel_ids,
+                "profileId": profile_id,
+                "redirect_url": redirect_url,
+            }
         )
         return await self._client._apost("/v1/connect/discord", data=payload)
 
@@ -2447,13 +2725,15 @@ class ConnectResource:
         purpose: str | None = None,
     ) -> dict[str, Any]:
         """List Slack channels for the channel picker (async)"""
-        params = self._build_params(
-            profile_id=profile_id,
-            pending_data_token=pending_data_token,
-            account_id=account_id,
-            redirect_url=redirect_url,
-            scopes=scopes,
-            purpose=purpose,
+        params = self._build_query(
+            {
+                "profileId": profile_id,
+                "pendingDataToken": pending_data_token,
+                "accountId": account_id,
+                "redirect_url": redirect_url,
+                "scopes": scopes,
+                "purpose": purpose,
+            }
         )
         return await self._client._aget("/v1/connect/slack", params=params)
 
@@ -2468,13 +2748,15 @@ class ConnectResource:
         account_id: str | None = None,
     ) -> dict[str, Any]:
         """Connect a Slack channel (async)"""
-        payload = self._build_payload(
-            profile_id=profile_id,
-            channel_id=channel_id,
-            channel_ids=channel_ids,
-            redirect_url=redirect_url,
-            pending_data_token=pending_data_token,
-            account_id=account_id,
+        payload = self._build_body(
+            {
+                "profileId": profile_id,
+                "channelId": channel_id,
+                "channelIds": channel_ids,
+                "redirect_url": redirect_url,
+                "pendingDataToken": pending_data_token,
+                "accountId": account_id,
+            }
         )
         return await self._client._apost("/v1/connect/slack", data=payload)
 
@@ -2487,11 +2769,13 @@ class ConnectResource:
         redirect_url: str | None = None,
     ) -> dict[str, Any]:
         """Connect LINE Official Account (async)"""
-        payload = self._build_payload(
-            channel_id=channel_id,
-            channel_secret=channel_secret,
-            state=state,
-            redirect_url=redirect_url,
+        payload = self._build_body(
+            {
+                "channelId": channel_id,
+                "channelSecret": channel_secret,
+                "state": state,
+                "redirect_url": redirect_url,
+            }
         )
         return await self._client._apost("/v1/connect/line/credentials", data=payload)
 
@@ -2505,12 +2789,14 @@ class ConnectResource:
         redirect_url: str | None = None,
     ) -> dict[str, Any]:
         """Connect WeChat Official Account (async)"""
-        payload = self._build_payload(
-            app_id=app_id,
-            app_secret=app_secret,
-            state=state,
-            display_name=display_name,
-            redirect_url=redirect_url,
+        payload = self._build_body(
+            {
+                "appId": app_id,
+                "appSecret": app_secret,
+                "state": state,
+                "displayName": display_name,
+                "redirect_url": redirect_url,
+            }
         )
         return await self._client._apost("/v1/connect/wechat/credentials", data=payload)
 
@@ -2522,9 +2808,11 @@ class ConnectResource:
         self, profile_id: str, *, purpose: str | None = None
     ) -> dict[str, Any]:
         """Generate Telegram code (async)"""
-        params = self._build_params(
-            profile_id=profile_id,
-            purpose=purpose,
+        params = self._build_query(
+            {
+                "profileId": profile_id,
+                "purpose": purpose,
+            }
         )
         return await self._client._aget("/v1/connect/telegram", params=params)
 
@@ -2532,17 +2820,21 @@ class ConnectResource:
         self, chat_id: str, profile_id: str, *, purpose: str | None = None
     ) -> dict[str, Any]:
         """Connect Telegram directly (async)"""
-        payload = self._build_payload(
-            chat_id=chat_id,
-            profile_id=profile_id,
-            purpose=purpose,
+        payload = self._build_body(
+            {
+                "chatId": chat_id,
+                "profileId": profile_id,
+                "purpose": purpose,
+            }
         )
         return await self._client._apost("/v1/connect/telegram", data=payload)
 
     async def acomplete_telegram_connect(self, code: str) -> dict[str, Any]:
         """Check Telegram status (async)"""
-        params = self._build_params(
-            code=code,
+        params = self._build_query(
+            {
+                "code": code,
+            }
         )
         return await self._client._apatch("/v1/connect/telegram", params=params)
 
@@ -2564,8 +2856,10 @@ class ConnectResource:
         self, account_id: str, *, refresh: bool | None = None
     ) -> dict[str, Any]:
         """List Facebook pages (async)"""
-        params = self._build_params(
-            refresh=refresh,
+        params = self._build_query(
+            {
+                "refresh": refresh,
+            }
         )
         return await self._client._aget(
             f"/v1/accounts/{account_id}/facebook-page", params=params
@@ -2575,8 +2869,10 @@ class ConnectResource:
         self, account_id: str, selected_page_id: str
     ) -> dict[str, Any]:
         """Update Facebook page (async)"""
-        payload = self._build_payload(
-            selected_page_id=selected_page_id,
+        payload = self._build_body(
+            {
+                "selectedPageId": selected_page_id,
+            }
         )
         return await self._client._aput(
             f"/v1/accounts/{account_id}/facebook-page", data=payload
@@ -2596,9 +2892,11 @@ class ConnectResource:
         selected_organization: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Switch LinkedIn account type (async)"""
-        payload = self._build_payload(
-            account_type=account_type,
-            selected_organization=selected_organization,
+        payload = self._build_body(
+            {
+                "accountType": account_type,
+                "selectedOrganization": selected_organization,
+            }
         )
         return await self._client._aput(
             f"/v1/accounts/{account_id}/linkedin-organization", data=payload
@@ -2616,9 +2914,11 @@ class ConnectResource:
         default_board_name: str | None = None,
     ) -> dict[str, Any]:
         """Set default Pinterest board (async)"""
-        payload = self._build_payload(
-            default_board_id=default_board_id,
-            default_board_name=default_board_name,
+        payload = self._build_body(
+            {
+                "defaultBoardId": default_board_id,
+                "defaultBoardName": default_board_name,
+            }
         )
         return await self._client._aput(
             f"/v1/accounts/{account_id}/pinterest-boards", data=payload
@@ -2633,10 +2933,12 @@ class ConnectResource:
         privacy: str | None = "PUBLIC",
     ) -> dict[str, Any]:
         """Create Pinterest board (async)"""
-        payload = self._build_payload(
-            name=name,
-            description=description,
-            privacy=privacy,
+        payload = self._build_body(
+            {
+                "name": name,
+                "description": description,
+                "privacy": privacy,
+            }
         )
         return await self._client._apost(
             f"/v1/accounts/{account_id}/pinterest-boards", data=payload
@@ -2652,11 +2954,13 @@ class ConnectResource:
         refresh: bool | None = False,
     ) -> dict[str, Any]:
         """Get a YouTube video transcript (async)"""
-        params = self._build_params(
-            video_id=video_id,
-            language=language,
-            format=format,
-            refresh=refresh,
+        params = self._build_query(
+            {
+                "videoId": video_id,
+                "language": language,
+                "format": format,
+                "refresh": refresh,
+            }
         )
         return await self._client._aget(
             f"/v1/accounts/{account_id}/youtube-captions", params=params
@@ -2675,10 +2979,12 @@ class ConnectResource:
         privacy: str | None = "private",
     ) -> dict[str, Any]:
         """Create YouTube playlist (async)"""
-        payload = self._build_payload(
-            title=title,
-            description=description,
-            privacy=privacy,
+        payload = self._build_body(
+            {
+                "title": title,
+                "description": description,
+                "privacy": privacy,
+            }
         )
         return await self._client._apost(
             f"/v1/accounts/{account_id}/youtube-playlists", data=payload
@@ -2692,9 +2998,11 @@ class ConnectResource:
         default_playlist_name: str | None = None,
     ) -> dict[str, Any]:
         """Set default YouTube playlist (async)"""
-        payload = self._build_payload(
-            default_playlist_id=default_playlist_id,
-            default_playlist_name=default_playlist_name,
+        payload = self._build_body(
+            {
+                "defaultPlaylistId": default_playlist_id,
+                "defaultPlaylistName": default_playlist_name,
+            }
         )
         return await self._client._aput(
             f"/v1/accounts/{account_id}/youtube-playlists", data=payload
@@ -2709,10 +3017,12 @@ class ConnectResource:
         limit: int | None = 100,
     ) -> dict[str, Any]:
         """List Google Business Profile locations (async)"""
-        params = self._build_params(
-            search=search,
-            filter=filter,
-            limit=limit,
+        params = self._build_query(
+            {
+                "search": search,
+                "filter": filter,
+                "limit": limit,
+            }
         )
         return await self._client._aget(
             f"/v1/accounts/{account_id}/gmb-locations", params=params
@@ -2726,9 +3036,11 @@ class ConnectResource:
         google_account_id: str | None = None,
     ) -> dict[str, Any]:
         """Update Google Business Profile location (async)"""
-        payload = self._build_payload(
-            selected_location_id=selected_location_id,
-            google_account_id=google_account_id,
+        payload = self._build_body(
+            {
+                "selectedLocationId": selected_location_id,
+                "googleAccountId": google_account_id,
+            }
         )
         return await self._client._aput(
             f"/v1/accounts/{account_id}/gmb-locations", data=payload
@@ -2752,18 +3064,20 @@ class ConnectResource:
         validate_only: bool | None = None,
     ) -> dict[str, Any]:
         """Create Google Business Profile location (async)"""
-        payload = self._build_payload(
-            title=title,
-            language_code=language_code,
-            primary_category=primary_category,
-            additional_categories=additional_categories,
-            storefront_address=storefront_address,
-            service_area=service_area,
-            phone=phone,
-            website_uri=website_uri,
-            description=description,
-            regular_hours=regular_hours,
-            validate_only=validate_only,
+        payload = self._build_body(
+            {
+                "title": title,
+                "languageCode": language_code,
+                "primaryCategory": primary_category,
+                "additionalCategories": additional_categories,
+                "storefrontAddress": storefront_address,
+                "serviceArea": service_area,
+                "phone": phone,
+                "websiteUri": website_uri,
+                "description": description,
+                "regularHours": regular_hours,
+                "validateOnly": validate_only,
+            }
         )
         headers: dict[str, str] = {}
         if idempotency_key is not None:
@@ -2781,10 +3095,12 @@ class ConnectResource:
         page_size: int | None = None,
     ) -> dict[str, Any]:
         """Search existing Google listings (async)"""
-        payload = self._build_payload(
-            query=query,
-            location=location,
-            page_size=page_size,
+        payload = self._build_body(
+            {
+                "query": query,
+                "location": location,
+                "pageSize": page_size,
+            }
         )
         return await self._client._apost(
             f"/v1/accounts/{account_id}/gmb-locations/search", data=payload
@@ -2799,10 +3115,12 @@ class ConnectResource:
         google_account_id: str | None = None,
     ) -> dict[str, Any]:
         """Assign Google Business Profile location to another profile (async)"""
-        payload = self._build_payload(
-            profile_id=profile_id,
-            selected_location_id=selected_location_id,
-            google_account_id=google_account_id,
+        payload = self._build_body(
+            {
+                "profileId": profile_id,
+                "selectedLocationId": selected_location_id,
+                "googleAccountId": google_account_id,
+            }
         )
         return await self._client._apost(
             f"/v1/accounts/{account_id}/gmb-locations/assign", data=payload
@@ -2816,8 +3134,10 @@ class ConnectResource:
         self, account_id: str, default_subreddit: str
     ) -> dict[str, Any]:
         """Set default subreddit (async)"""
-        payload = self._build_payload(
-            default_subreddit=default_subreddit,
+        payload = self._build_body(
+            {
+                "defaultSubreddit": default_subreddit,
+            }
         )
         return await self._client._aput(
             f"/v1/accounts/{account_id}/reddit-subreddits", data=payload
@@ -2835,9 +3155,11 @@ class ConnectResource:
         self, account_id: str, thing_id: str, direction: int
     ) -> dict[str, Any]:
         """Vote on a Reddit post or comment (async)"""
-        payload = self._build_payload(
-            thing_id=thing_id,
-            direction=direction,
+        payload = self._build_body(
+            {
+                "thingId": thing_id,
+                "direction": direction,
+            }
         )
         return await self._client._apost(
             f"/v1/accounts/{account_id}/reddit-vote", data=payload
@@ -2847,8 +3169,10 @@ class ConnectResource:
         self, account_id: str, subreddit: str
     ) -> dict[str, Any]:
         """List subreddit flairs (async)"""
-        params = self._build_params(
-            subreddit=subreddit,
+        params = self._build_query(
+            {
+                "subreddit": subreddit,
+            }
         )
         return await self._client._aget(
             f"/v1/accounts/{account_id}/reddit-flairs", params=params
@@ -2864,11 +3188,13 @@ class ConnectResource:
         text: str | None = None,
     ) -> dict[str, Any]:
         """Set Reddit post flair (async)"""
-        payload = self._build_payload(
-            subreddit=subreddit,
-            post_id=post_id,
-            flair_template_id=flair_template_id,
-            text=text,
+        payload = self._build_body(
+            {
+                "subreddit": subreddit,
+                "postId": post_id,
+                "flairTemplateId": flair_template_id,
+                "text": text,
+            }
         )
         return await self._client._apost(
             f"/v1/accounts/{account_id}/reddit-flairs", data=payload
@@ -2878,9 +3204,11 @@ class ConnectResource:
         self, account_id: str, *, redirect_url: str | None = None
     ) -> dict[str, Any]:
         """Admin-consent link for a Microsoft tenant (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            redirect_url=redirect_url,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "redirectUrl": redirect_url,
+            }
         )
         return await self._client._aget(
             "/v1/connect/microsoft/admin-consent", params=params
@@ -2896,12 +3224,14 @@ class ConnectResource:
         allowed_emails: list[str] | None = None,
     ) -> dict[str, Any]:
         """Start a Google Workspace organization connection (async)"""
-        payload = self._build_payload(
-            profile_id=profile_id,
-            domain=domain,
-            scopes=scopes,
-            admin_email=admin_email,
-            allowed_emails=allowed_emails,
+        payload = self._build_body(
+            {
+                "profileId": profile_id,
+                "domain": domain,
+                "scopes": scopes,
+                "adminEmail": admin_email,
+                "allowedEmails": allowed_emails,
+            }
         )
         return await self._client._apost("/v1/connect/google/org", data=payload)
 
@@ -2914,11 +3244,13 @@ class ConnectResource:
         redirect_url: str | None = None,
     ) -> dict[str, Any]:
         """Start a Microsoft 365 organization connection (async)"""
-        payload = self._build_payload(
-            profile_id=profile_id,
-            scopes=scopes,
-            allowed_emails=allowed_emails,
-            redirect_url=redirect_url,
+        payload = self._build_body(
+            {
+                "profileId": profile_id,
+                "scopes": scopes,
+                "allowedEmails": allowed_emails,
+                "redirectUrl": redirect_url,
+            }
         )
         return await self._client._apost("/v1/connect/microsoft/org", data=payload)
 
@@ -2926,8 +3258,10 @@ class ConnectResource:
         self, *, profile_id: str | None = None
     ) -> dict[str, Any]:
         """List organization connections (async)"""
-        params = self._build_params(
-            profile_id=profile_id,
+        params = self._build_query(
+            {
+                "profileId": profile_id,
+            }
         )
         return await self._client._aget("/v1/org-connections", params=params)
 
@@ -2943,9 +3277,11 @@ class ConnectResource:
         admin_email: Any | None = None,
     ) -> dict[str, Any]:
         """Update an organization connection (async)"""
-        payload = self._build_payload(
-            allowed_emails=allowed_emails,
-            admin_email=admin_email,
+        payload = self._build_body(
+            {
+                "allowedEmails": allowed_emails,
+                "adminEmail": admin_email,
+            }
         )
         return await self._client._apatch(
             f"/v1/org-connections/{org_connection_id}", data=payload
@@ -2959,8 +3295,10 @@ class ConnectResource:
         self, org_connection_id: str, *, email: str | None = None
     ) -> dict[str, Any]:
         """Verify an organization connection (async)"""
-        payload = self._build_payload(
-            email=email,
+        payload = self._build_body(
+            {
+                "email": email,
+            }
         )
         return await self._client._apost(
             f"/v1/org-connections/{org_connection_id}/verify", data=payload
@@ -2970,8 +3308,10 @@ class ConnectResource:
         self, org_connection_id: str, *, cursor: str | None = None
     ) -> dict[str, Any]:
         """List an organization's users (async)"""
-        params = self._build_params(
-            cursor=cursor,
+        params = self._build_query(
+            {
+                "cursor": cursor,
+            }
         )
         return await self._client._aget(
             f"/v1/org-connections/{org_connection_id}/users", params=params
@@ -2981,9 +3321,11 @@ class ConnectResource:
         self, org_connection_id: str, email: str, *, name: str | None = None
     ) -> dict[str, Any]:
         """Add a mailbox from an organization connection (async)"""
-        payload = self._build_payload(
-            email=email,
-            name=name,
+        payload = self._build_body(
+            {
+                "email": email,
+                "name": name,
+            }
         )
         return await self._client._apost(
             f"/v1/org-connections/{org_connection_id}/mailboxes", data=payload

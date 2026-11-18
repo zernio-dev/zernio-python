@@ -23,13 +23,16 @@ class CommerceResource:
     def __init__(self, client: BaseClient) -> None:
         self._client = client
 
-    def _build_params(self, **kwargs: Any) -> dict[str, Any]:
-        """Build query parameters, filtering None and empty-string values.
+    def _build_query(self, fields: dict[str, Any]) -> dict[str, Any]:
+        """Build query parameters keyed by their wire names, as given.
 
-        Empty strings are filtered because MCP tool wrappers pass ``""`` as the
-        default for optional string args, and the API rejects empty query
-        values (e.g. ``platform=``) with a 400. Filtering here keeps both direct
-        SDK callers and MCP tool callers safe.
+        Generated methods pass the parameter names exactly as the OpenAPI
+        spec declares them, so no casing rule is applied here.
+
+        None and empty strings are filtered because MCP tool wrappers pass
+        ``""`` as the default for optional string args, and the API rejects
+        empty query values (e.g. ``platform=``) with a 400. Filtering here
+        keeps both direct SDK callers and MCP tool callers safe.
 
         Enum members are unwrapped to their value: httpx serializes params
         via str(), which yields "ClassName.MEMBER" for Enum members, so
@@ -38,47 +41,72 @@ class CommerceResource:
         """
         from enum import Enum
 
-        def to_camel(s: str) -> str:
-            parts = s.split("_")
-            return parts[0] + "".join(p.title() for p in parts[1:])
-
         result: dict[str, Any] = {}
-        for k, v in kwargs.items():
+        for k, v in fields.items():
             if isinstance(v, Enum):
                 v = v.value
             if v is None or v == "":
                 continue
-            result[to_camel(k)] = v
+            result[k] = v
         return result
 
-    def _build_payload(self, **kwargs: Any) -> dict[str, Any]:
-        """Build request payload, filtering None values. Enum members are
-        unwrapped to their value so JSON bodies carry e.g. "failed" rather
-        than a raw Enum member (plain Enum members are not JSON-serializable).
+    def _build_body(self, fields: dict[str, Any]) -> dict[str, Any]:
+        """Build a JSON request body keyed by its wire names, as given.
+
+        Generated methods pass the property names exactly as the request
+        body schema declares them: most are camelCase, but some routes read
+        snake_case (``ice_breakers``, ``message_send_ttl_seconds``), so no
+        casing rule is applied here. None values are dropped, Enum members
+        are unwrapped to their value (e.g. "failed") and datetimes are sent
+        as ISO 8601 strings.
         """
         from datetime import datetime
         from enum import Enum
 
-        def to_camel(s: str) -> str:
-            parts = s.split("_")
-            return parts[0] + "".join(p.title() for p in parts[1:])
-
         result: dict[str, Any] = {}
-        for k, v in kwargs.items():
+        for k, v in fields.items():
             if isinstance(v, Enum):
                 v = v.value
             if v is None:
                 continue
             if isinstance(v, datetime):
-                result[to_camel(k)] = v.isoformat()
+                result[k] = v.isoformat()
             else:
-                result[to_camel(k)] = v
+                result[k] = v
         return result
+
+    def _build_params(self, **kwargs: Any) -> dict[str, Any]:
+        """Build query parameters from snake_case kwargs, camelCasing each key.
+
+        For hand-written resource methods, whose endpoints take camelCase
+        names. Generated methods use _build_query with the spec's names.
+        """
+
+        def to_camel(s: str) -> str:
+            parts = s.split("_")
+            return parts[0] + "".join(p.title() for p in parts[1:])
+
+        return self._build_query({to_camel(k): v for k, v in kwargs.items()})
+
+    def _build_payload(self, **kwargs: Any) -> dict[str, Any]:
+        """Build a request body from snake_case kwargs, camelCasing each key.
+
+        For hand-written resource methods, whose endpoints take camelCase
+        names. Generated methods use _build_body with the spec's names.
+        """
+
+        def to_camel(s: str) -> str:
+            parts = s.split("_")
+            return parts[0] + "".join(p.title() for p in parts[1:])
+
+        return self._build_body({to_camel(k): v for k, v in kwargs.items()})
 
     def get_commerce_store(self, account_id: str) -> dict[str, Any]:
         """Get a store"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+            }
         )
         return self._client._get("/v1/commerce/store", params=params)
 
@@ -96,23 +124,27 @@ class CommerceResource:
         number: str | None = None,
     ) -> dict[str, Any]:
         """List orders"""
-        params = self._build_params(
-            account_id=account_id,
-            limit=limit,
-            cursor=cursor,
-            created_after=created_after,
-            created_before=created_before,
-            updated_after=updated_after,
-            customer_id=customer_id,
-            email=email,
-            number=number,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "limit": limit,
+                "cursor": cursor,
+                "createdAfter": created_after,
+                "createdBefore": created_before,
+                "updatedAfter": updated_after,
+                "customerId": customer_id,
+                "email": email,
+                "number": number,
+            }
         )
         return self._client._get("/v1/commerce/orders", params=params)
 
     def get_commerce_order(self, order_id: str, account_id: str) -> dict[str, Any]:
         """Get an order"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+            }
         )
         return self._client._get(f"/v1/commerce/orders/{order_id}", params=params)
 
@@ -120,9 +152,11 @@ class CommerceResource:
         self, order_id: str, account_id: str, shipping_address: dict[str, Any]
     ) -> dict[str, Any]:
         """Update an order's shipping address"""
-        payload = self._build_payload(
-            account_id=account_id,
-            shipping_address=shipping_address,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "shippingAddress": shipping_address,
+            }
         )
         return self._client._patch(f"/v1/commerce/orders/{order_id}", data=payload)
 
@@ -141,15 +175,17 @@ class CommerceResource:
         validate_only: bool | None = False,
     ) -> dict[str, Any]:
         """Refund an order"""
-        payload = self._build_payload(
-            account_id=account_id,
-            line_items=line_items,
-            shipping=shipping,
-            amount=amount,
-            currency=currency,
-            note=note,
-            notify_customer=notify_customer,
-            validate_only=validate_only,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "lineItems": line_items,
+                "shipping": shipping,
+                "amount": amount,
+                "currency": currency,
+                "note": note,
+                "notifyCustomer": notify_customer,
+                "validateOnly": validate_only,
+            }
         )
         headers: dict[str, str] = {}
         if idempotency_key is not None:
@@ -171,13 +207,15 @@ class CommerceResource:
         validate_only: bool | None = False,
     ) -> dict[str, Any]:
         """Edit an order"""
-        payload = self._build_payload(
-            account_id=account_id,
-            add=add,
-            quantities=quantities,
-            notify_customer=notify_customer,
-            staff_note=staff_note,
-            validate_only=validate_only,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "add": add,
+                "quantities": quantities,
+                "notifyCustomer": notify_customer,
+                "staffNote": staff_note,
+                "validateOnly": validate_only,
+            }
         )
         headers: dict[str, str] = {}
         if idempotency_key is not None:
@@ -198,13 +236,15 @@ class CommerceResource:
         staff_note: str | None = None,
     ) -> dict[str, Any]:
         """Cancel an order"""
-        payload = self._build_payload(
-            account_id=account_id,
-            reason=reason,
-            refund=refund,
-            restock=restock,
-            notify_customer=notify_customer,
-            staff_note=staff_note,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "reason": reason,
+                "refund": refund,
+                "restock": restock,
+                "notifyCustomer": notify_customer,
+                "staffNote": staff_note,
+            }
         )
         return self._client._post(
             f"/v1/commerce/orders/{order_id}/cancel", data=payload
@@ -225,16 +265,18 @@ class CommerceResource:
         tags: list[str] | None = None,
     ) -> dict[str, Any]:
         """Create a draft order"""
-        payload = self._build_payload(
-            account_id=account_id,
-            customer_id=customer_id,
-            email=email,
-            line_items=line_items,
-            discount=discount,
-            shipping=shipping,
-            shipping_address=shipping_address,
-            note=note,
-            tags=tags,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "customerId": customer_id,
+                "email": email,
+                "lineItems": line_items,
+                "discount": discount,
+                "shipping": shipping,
+                "shippingAddress": shipping_address,
+                "note": note,
+                "tags": tags,
+            }
         )
         headers: dict[str, str] = {}
         if idempotency_key is not None:
@@ -247,8 +289,10 @@ class CommerceResource:
         self, draft_order_id: str, account_id: str
     ) -> dict[str, Any]:
         """Get a draft order"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+            }
         )
         return self._client._get(
             f"/v1/commerce/draft-orders/{draft_order_id}", params=params
@@ -264,11 +308,13 @@ class CommerceResource:
         custom_message: str | None = None,
     ) -> dict[str, Any]:
         """Send a draft order invoice"""
-        payload = self._build_payload(
-            account_id=account_id,
-            to=to,
-            subject=subject,
-            custom_message=custom_message,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "to": to,
+                "subject": subject,
+                "customMessage": custom_message,
+            }
         )
         return self._client._post(
             f"/v1/commerce/draft-orders/{draft_order_id}/invoice", data=payload
@@ -285,13 +331,15 @@ class CommerceResource:
         search: str | None = None,
     ) -> dict[str, Any]:
         """List customers"""
-        params = self._build_params(
-            account_id=account_id,
-            limit=limit,
-            cursor=cursor,
-            email=email,
-            phone=phone,
-            search=search,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "limit": limit,
+                "cursor": cursor,
+                "email": email,
+                "phone": phone,
+                "search": search,
+            }
         )
         return self._client._get("/v1/commerce/customers", params=params)
 
@@ -299,8 +347,10 @@ class CommerceResource:
         self, customer_id: str, account_id: str
     ) -> dict[str, Any]:
         """Get a customer"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+            }
         )
         return self._client._get(f"/v1/commerce/customers/{customer_id}", params=params)
 
@@ -315,13 +365,15 @@ class CommerceResource:
         collection_id: str | None = None,
     ) -> dict[str, Any]:
         """List products"""
-        params = self._build_params(
-            account_id=account_id,
-            limit=limit,
-            cursor=cursor,
-            status=status,
-            query=query,
-            collection_id=collection_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "limit": limit,
+                "cursor": cursor,
+                "status": status,
+                "query": query,
+                "collectionId": collection_id,
+            }
         )
         return self._client._get("/v1/commerce/products", params=params)
 
@@ -342,19 +394,21 @@ class CommerceResource:
         options: list[dict[str, Any]] | None = None,
     ) -> dict[str, Any]:
         """Create a product"""
-        payload = self._build_payload(
-            account_id=account_id,
-            title=title,
-            description_html=description_html,
-            handle=handle,
-            vendor=vendor,
-            product_type=product_type,
-            tags=tags,
-            seo=seo,
-            status=status,
-            images=images,
-            options=options,
-            variants=variants,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "title": title,
+                "descriptionHtml": description_html,
+                "handle": handle,
+                "vendor": vendor,
+                "productType": product_type,
+                "tags": tags,
+                "seo": seo,
+                "status": status,
+                "images": images,
+                "options": options,
+                "variants": variants,
+            }
         )
         return self._client._post("/v1/commerce/products", data=payload)
 
@@ -362,17 +416,21 @@ class CommerceResource:
         self, account_id: str, product_ids: list[str], action: str
     ) -> dict[str, Any]:
         """Activate, deactivate, archive or delete products"""
-        payload = self._build_payload(
-            account_id=account_id,
-            product_ids=product_ids,
-            action=action,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "productIds": product_ids,
+                "action": action,
+            }
         )
         return self._client._post("/v1/commerce/products/state", data=payload)
 
     def get_commerce_product(self, product_id: str, account_id: str) -> dict[str, Any]:
         """Get a product"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+            }
         )
         return self._client._get(f"/v1/commerce/products/{product_id}", params=params)
 
@@ -390,15 +448,17 @@ class CommerceResource:
         seo: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Update a product"""
-        payload = self._build_payload(
-            account_id=account_id,
-            title=title,
-            description_html=description_html,
-            handle=handle,
-            vendor=vendor,
-            product_type=product_type,
-            tags=tags,
-            seo=seo,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "title": title,
+                "descriptionHtml": description_html,
+                "handle": handle,
+                "vendor": vendor,
+                "productType": product_type,
+                "tags": tags,
+                "seo": seo,
+            }
         )
         return self._client._patch(f"/v1/commerce/products/{product_id}", data=payload)
 
@@ -406,9 +466,11 @@ class CommerceResource:
         self, product_id: str, account_id: str, variants: list[dict[str, Any]]
     ) -> dict[str, Any]:
         """Update variant prices"""
-        payload = self._build_payload(
-            account_id=account_id,
-            variants=variants,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "variants": variants,
+            }
         )
         return self._client._post(
             f"/v1/commerce/products/{product_id}/price", data=payload
@@ -423,11 +485,13 @@ class CommerceResource:
         query: str | None = None,
     ) -> dict[str, Any]:
         """List collections"""
-        params = self._build_params(
-            account_id=account_id,
-            limit=limit,
-            cursor=cursor,
-            query=query,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "limit": limit,
+                "cursor": cursor,
+                "query": query,
+            }
         )
         return self._client._get("/v1/commerce/collections", params=params)
 
@@ -444,15 +508,17 @@ class CommerceResource:
         product_ids: list[str] | None = None,
     ) -> dict[str, Any]:
         """Create a collection"""
-        payload = self._build_payload(
-            account_id=account_id,
-            title=title,
-            description_html=description_html,
-            handle=handle,
-            sort_order=sort_order,
-            seo=seo,
-            image=image,
-            product_ids=product_ids,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "title": title,
+                "descriptionHtml": description_html,
+                "handle": handle,
+                "sortOrder": sort_order,
+                "seo": seo,
+                "image": image,
+                "productIds": product_ids,
+            }
         )
         return self._client._post("/v1/commerce/collections", data=payload)
 
@@ -460,8 +526,10 @@ class CommerceResource:
         self, collection_id: str, account_id: str
     ) -> dict[str, Any]:
         """Get a collection"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+            }
         )
         return self._client._get(
             f"/v1/commerce/collections/{collection_id}", params=params
@@ -480,14 +548,16 @@ class CommerceResource:
         image: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Update a collection"""
-        payload = self._build_payload(
-            account_id=account_id,
-            title=title,
-            description_html=description_html,
-            handle=handle,
-            sort_order=sort_order,
-            seo=seo,
-            image=image,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "title": title,
+                "descriptionHtml": description_html,
+                "handle": handle,
+                "sortOrder": sort_order,
+                "seo": seo,
+                "image": image,
+            }
         )
         return self._client._patch(
             f"/v1/commerce/collections/{collection_id}", data=payload
@@ -497,8 +567,10 @@ class CommerceResource:
         self, collection_id: str, account_id: str
     ) -> dict[str, Any]:
         """Delete a collection"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+            }
         )
         return self._client._delete(
             f"/v1/commerce/collections/{collection_id}", params=params
@@ -513,10 +585,12 @@ class CommerceResource:
         remove: list[str] | None = None,
     ) -> dict[str, Any]:
         """Add or remove products in a collection"""
-        payload = self._build_payload(
-            account_id=account_id,
-            add=add,
-            remove=remove,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "add": add,
+                "remove": remove,
+            }
         )
         return self._client._post(
             f"/v1/commerce/collections/{collection_id}/products", data=payload
@@ -526,9 +600,11 @@ class CommerceResource:
         self, product_id: str, account_id: str, variants: list[dict[str, Any]]
     ) -> dict[str, Any]:
         """Add variants"""
-        payload = self._build_payload(
-            account_id=account_id,
-            variants=variants,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "variants": variants,
+            }
         )
         return self._client._post(
             f"/v1/commerce/products/{product_id}/variants", data=payload
@@ -538,9 +614,11 @@ class CommerceResource:
         self, product_id: str, account_id: str, variant_ids: str
     ) -> dict[str, Any]:
         """Delete variants"""
-        params = self._build_params(
-            account_id=account_id,
-            variant_ids=variant_ids,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "variantIds": variant_ids,
+            }
         )
         return self._client._delete(
             f"/v1/commerce/products/{product_id}/variants", params=params
@@ -555,10 +633,12 @@ class CommerceResource:
         create_variants: bool | None = False,
     ) -> dict[str, Any]:
         """Add options"""
-        payload = self._build_payload(
-            account_id=account_id,
-            options=options,
-            create_variants=create_variants,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "options": options,
+                "createVariants": create_variants,
+            }
         )
         return self._client._post(
             f"/v1/commerce/products/{product_id}/options", data=payload
@@ -568,9 +648,11 @@ class CommerceResource:
         self, product_id: str, account_id: str, names: str
     ) -> dict[str, Any]:
         """Delete options"""
-        params = self._build_params(
-            account_id=account_id,
-            names=names,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "names": names,
+            }
         )
         return self._client._delete(
             f"/v1/commerce/products/{product_id}/options", params=params
@@ -580,9 +662,11 @@ class CommerceResource:
         self, product_id: str, account_id: str, images: list[dict[str, Any]]
     ) -> dict[str, Any]:
         """Add images"""
-        payload = self._build_payload(
-            account_id=account_id,
-            images=images,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "images": images,
+            }
         )
         return self._client._post(
             f"/v1/commerce/products/{product_id}/images", data=payload
@@ -592,9 +676,11 @@ class CommerceResource:
         self, product_id: str, account_id: str, image_ids: str
     ) -> dict[str, Any]:
         """Remove images"""
-        params = self._build_params(
-            account_id=account_id,
-            image_ids=image_ids,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "imageIds": image_ids,
+            }
         )
         return self._client._delete(
             f"/v1/commerce/products/{product_id}/images", params=params
@@ -604,9 +690,11 @@ class CommerceResource:
         self, product_id: str, account_id: str, image_ids: list[str]
     ) -> dict[str, Any]:
         """Reorder images"""
-        payload = self._build_payload(
-            account_id=account_id,
-            image_ids=image_ids,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "imageIds": image_ids,
+            }
         )
         return self._client._post(
             f"/v1/commerce/products/{product_id}/images/reorder", data=payload
@@ -622,11 +710,13 @@ class CommerceResource:
         include_images: bool | None = True,
     ) -> dict[str, Any]:
         """Duplicate a product"""
-        payload = self._build_payload(
-            account_id=account_id,
-            title=title,
-            status=status,
-            include_images=include_images,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "title": title,
+                "status": status,
+                "includeImages": include_images,
+            }
         )
         return self._client._post(
             f"/v1/commerce/products/{product_id}/duplicate", data=payload
@@ -636,8 +726,10 @@ class CommerceResource:
         self, product_id: str, account_id: str
     ) -> dict[str, Any]:
         """List product metafields"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+            }
         )
         return self._client._get(
             f"/v1/commerce/products/{product_id}/metafields", params=params
@@ -647,9 +739,11 @@ class CommerceResource:
         self, product_id: str, account_id: str, metafields: list[Any]
     ) -> dict[str, Any]:
         """Set product metafields"""
-        payload = self._build_payload(
-            account_id=account_id,
-            metafields=metafields,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "metafields": metafields,
+            }
         )
         return self._client._put(
             f"/v1/commerce/products/{product_id}/metafields", data=payload
@@ -659,9 +753,11 @@ class CommerceResource:
         self, product_id: str, account_id: str, keys: str
     ) -> dict[str, Any]:
         """Delete product metafields"""
-        params = self._build_params(
-            account_id=account_id,
-            keys=keys,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "keys": keys,
+            }
         )
         return self._client._delete(
             f"/v1/commerce/products/{product_id}/metafields", params=params
@@ -676,10 +772,12 @@ class CommerceResource:
         unpublish: list[str] | None = None,
     ) -> dict[str, Any]:
         """Publish or unpublish a product"""
-        payload = self._build_payload(
-            account_id=account_id,
-            publish=publish,
-            unpublish=unpublish,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "publish": publish,
+                "unpublish": unpublish,
+            }
         )
         return self._client._post(
             f"/v1/commerce/products/{product_id}/channels", data=payload
@@ -689,8 +787,10 @@ class CommerceResource:
         self, collection_id: str, account_id: str
     ) -> dict[str, Any]:
         """List collection metafields"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+            }
         )
         return self._client._get(
             f"/v1/commerce/collections/{collection_id}/metafields", params=params
@@ -700,9 +800,11 @@ class CommerceResource:
         self, collection_id: str, account_id: str, metafields: list[Any]
     ) -> dict[str, Any]:
         """Set collection metafields"""
-        payload = self._build_payload(
-            account_id=account_id,
-            metafields=metafields,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "metafields": metafields,
+            }
         )
         return self._client._put(
             f"/v1/commerce/collections/{collection_id}/metafields", data=payload
@@ -712,9 +814,11 @@ class CommerceResource:
         self, collection_id: str, account_id: str, keys: str
     ) -> dict[str, Any]:
         """Delete collection metafields"""
-        params = self._build_params(
-            account_id=account_id,
-            keys=keys,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "keys": keys,
+            }
         )
         return self._client._delete(
             f"/v1/commerce/collections/{collection_id}/metafields", params=params
@@ -729,10 +833,12 @@ class CommerceResource:
         unpublish: list[str] | None = None,
     ) -> dict[str, Any]:
         """Publish or unpublish a collection"""
-        payload = self._build_payload(
-            account_id=account_id,
-            publish=publish,
-            unpublish=unpublish,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "publish": publish,
+                "unpublish": unpublish,
+            }
         )
         return self._client._post(
             f"/v1/commerce/collections/{collection_id}/channels", data=payload
@@ -747,11 +853,13 @@ class CommerceResource:
         remove: list[str] | None = None,
     ) -> dict[str, Any]:
         """Add or remove tags in bulk"""
-        payload = self._build_payload(
-            account_id=account_id,
-            product_ids=product_ids,
-            add=add,
-            remove=remove,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "productIds": product_ids,
+                "add": add,
+                "remove": remove,
+            }
         )
         return self._client._post("/v1/commerce/products/tags", data=payload)
 
@@ -759,9 +867,11 @@ class CommerceResource:
         self, collection_id: str, account_id: str, moves: list[dict[str, Any]]
     ) -> dict[str, Any]:
         """Reorder products in a collection"""
-        payload = self._build_payload(
-            account_id=account_id,
-            moves=moves,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "moves": moves,
+            }
         )
         return self._client._post(
             f"/v1/commerce/collections/{collection_id}/reorder", data=payload
@@ -776,11 +886,13 @@ class CommerceResource:
         query: str | None = None,
     ) -> dict[str, Any]:
         """List pages"""
-        params = self._build_params(
-            account_id=account_id,
-            limit=limit,
-            cursor=cursor,
-            query=query,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "limit": limit,
+                "cursor": cursor,
+                "query": query,
+            }
         )
         return self._client._get("/v1/commerce/pages", params=params)
 
@@ -794,19 +906,23 @@ class CommerceResource:
         is_published: bool | None = None,
     ) -> dict[str, Any]:
         """Create a page"""
-        payload = self._build_payload(
-            account_id=account_id,
-            title=title,
-            handle=handle,
-            body_html=body_html,
-            is_published=is_published,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "title": title,
+                "handle": handle,
+                "bodyHtml": body_html,
+                "isPublished": is_published,
+            }
         )
         return self._client._post("/v1/commerce/pages", data=payload)
 
     def get_commerce_page(self, page_id: str, account_id: str) -> dict[str, Any]:
         """Get a page"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+            }
         )
         return self._client._get(f"/v1/commerce/pages/{page_id}", params=params)
 
@@ -821,26 +937,32 @@ class CommerceResource:
         is_published: bool | None = None,
     ) -> dict[str, Any]:
         """Update a page"""
-        payload = self._build_payload(
-            account_id=account_id,
-            title=title,
-            handle=handle,
-            body_html=body_html,
-            is_published=is_published,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "title": title,
+                "handle": handle,
+                "bodyHtml": body_html,
+                "isPublished": is_published,
+            }
         )
         return self._client._patch(f"/v1/commerce/pages/{page_id}", data=payload)
 
     def delete_commerce_page(self, page_id: str, account_id: str) -> dict[str, Any]:
         """Delete a page"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+            }
         )
         return self._client._delete(f"/v1/commerce/pages/{page_id}", params=params)
 
     def list_commerce_locations(self, account_id: str) -> dict[str, Any]:
         """List locations"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+            }
         )
         return self._client._get("/v1/commerce/locations", params=params)
 
@@ -848,9 +970,11 @@ class CommerceResource:
         self, account_id: str, product_id: str
     ) -> dict[str, Any]:
         """Get a product's stock"""
-        params = self._build_params(
-            account_id=account_id,
-            product_id=product_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "productId": product_id,
+            }
         )
         return self._client._get("/v1/commerce/inventory", params=params)
 
@@ -863,10 +987,12 @@ class CommerceResource:
         mode: str | None = "set",
     ) -> dict[str, Any]:
         """Set or adjust stock"""
-        payload = self._build_payload(
-            account_id=account_id,
-            mode=mode,
-            changes=changes,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "mode": mode,
+                "changes": changes,
+            }
         )
         return self._client._post(
             f"/v1/commerce/products/{product_id}/inventory", data=payload
@@ -874,8 +1000,10 @@ class CommerceResource:
 
     def list_commerce_channels(self, account_id: str) -> dict[str, Any]:
         """List sales channels"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+            }
         )
         return self._client._get("/v1/commerce/channels", params=params)
 
@@ -888,11 +1016,13 @@ class CommerceResource:
         query: str | None = None,
     ) -> dict[str, Any]:
         """List discounts"""
-        params = self._build_params(
-            account_id=account_id,
-            limit=limit,
-            cursor=cursor,
-            query=query,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "limit": limit,
+                "cursor": cursor,
+                "query": query,
+            }
         )
         return self._client._get("/v1/commerce/discounts", params=params)
 
@@ -918,24 +1048,26 @@ class CommerceResource:
         customer_ids: list[str] | None = None,
     ) -> dict[str, Any]:
         """Create a discount"""
-        payload = self._build_payload(
-            account_id=account_id,
-            title=title,
-            method=method,
-            type=type,
-            code=code,
-            percentage=percentage,
-            amount=amount,
-            applies_on_each_item=applies_on_each_item,
-            minimum_subtotal=minimum_subtotal,
-            minimum_quantity=minimum_quantity,
-            usage_limit=usage_limit,
-            once_per_customer=once_per_customer,
-            starts_at=starts_at,
-            ends_at=ends_at,
-            product_ids=product_ids,
-            collection_ids=collection_ids,
-            customer_ids=customer_ids,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "title": title,
+                "method": method,
+                "type": type,
+                "code": code,
+                "percentage": percentage,
+                "amount": amount,
+                "appliesOnEachItem": applies_on_each_item,
+                "minimumSubtotal": minimum_subtotal,
+                "minimumQuantity": minimum_quantity,
+                "usageLimit": usage_limit,
+                "oncePerCustomer": once_per_customer,
+                "startsAt": starts_at,
+                "endsAt": ends_at,
+                "productIds": product_ids,
+                "collectionIds": collection_ids,
+                "customerIds": customer_ids,
+            }
         )
         return self._client._post("/v1/commerce/discounts", data=payload)
 
@@ -943,8 +1075,10 @@ class CommerceResource:
         self, discount_id: str, account_id: str
     ) -> dict[str, Any]:
         """Get a discount"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+            }
         )
         return self._client._get(f"/v1/commerce/discounts/{discount_id}", params=params)
 
@@ -966,19 +1100,21 @@ class CommerceResource:
         ends_at: Any | None = None,
     ) -> dict[str, Any]:
         """Update a discount"""
-        payload = self._build_payload(
-            account_id=account_id,
-            title=title,
-            code=code,
-            percentage=percentage,
-            amount=amount,
-            applies_on_each_item=applies_on_each_item,
-            minimum_subtotal=minimum_subtotal,
-            minimum_quantity=minimum_quantity,
-            usage_limit=usage_limit,
-            once_per_customer=once_per_customer,
-            starts_at=starts_at,
-            ends_at=ends_at,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "title": title,
+                "code": code,
+                "percentage": percentage,
+                "amount": amount,
+                "appliesOnEachItem": applies_on_each_item,
+                "minimumSubtotal": minimum_subtotal,
+                "minimumQuantity": minimum_quantity,
+                "usageLimit": usage_limit,
+                "oncePerCustomer": once_per_customer,
+                "startsAt": starts_at,
+                "endsAt": ends_at,
+            }
         )
         return self._client._patch(
             f"/v1/commerce/discounts/{discount_id}", data=payload
@@ -988,8 +1124,10 @@ class CommerceResource:
         self, discount_id: str, account_id: str
     ) -> dict[str, Any]:
         """Delete a discount"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+            }
         )
         return self._client._delete(
             f"/v1/commerce/discounts/{discount_id}", params=params
@@ -999,9 +1137,11 @@ class CommerceResource:
         self, discount_id: str, account_id: str, active: bool
     ) -> dict[str, Any]:
         """Activate or deactivate a discount"""
-        payload = self._build_payload(
-            account_id=account_id,
-            active=active,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "active": active,
+            }
         )
         return self._client._post(
             f"/v1/commerce/discounts/{discount_id}/state", data=payload
@@ -1011,9 +1151,11 @@ class CommerceResource:
         self, discount_id: str, account_id: str, codes: list[str]
     ) -> dict[str, Any]:
         """Add codes to a discount"""
-        payload = self._build_payload(
-            account_id=account_id,
-            codes=codes,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "codes": codes,
+            }
         )
         return self._client._post(
             f"/v1/commerce/discounts/{discount_id}/codes", data=payload
@@ -1028,11 +1170,13 @@ class CommerceResource:
         query: str | None = None,
     ) -> dict[str, Any]:
         """List URL redirects"""
-        params = self._build_params(
-            account_id=account_id,
-            limit=limit,
-            cursor=cursor,
-            query=query,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "limit": limit,
+                "cursor": cursor,
+                "query": query,
+            }
         )
         return self._client._get("/v1/commerce/redirects", params=params)
 
@@ -1040,10 +1184,12 @@ class CommerceResource:
         self, account_id: str, path: str, target: str
     ) -> dict[str, Any]:
         """Create a URL redirect"""
-        payload = self._build_payload(
-            account_id=account_id,
-            path=path,
-            target=target,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "path": path,
+                "target": target,
+            }
         )
         return self._client._post("/v1/commerce/redirects", data=payload)
 
@@ -1056,10 +1202,12 @@ class CommerceResource:
         target: str | None = None,
     ) -> dict[str, Any]:
         """Update a URL redirect"""
-        payload = self._build_payload(
-            account_id=account_id,
-            path=path,
-            target=target,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "path": path,
+                "target": target,
+            }
         )
         return self._client._patch(
             f"/v1/commerce/redirects/{redirect_id}", data=payload
@@ -1069,8 +1217,10 @@ class CommerceResource:
         self, redirect_id: str, account_id: str
     ) -> dict[str, Any]:
         """Delete a URL redirect"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+            }
         )
         return self._client._delete(
             f"/v1/commerce/redirects/{redirect_id}", params=params
@@ -1078,8 +1228,10 @@ class CommerceResource:
 
     def list_commerce_menus(self, account_id: str) -> dict[str, Any]:
         """List navigation menus"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+            }
         )
         return self._client._get("/v1/commerce/menus", params=params)
 
@@ -1087,18 +1239,22 @@ class CommerceResource:
         self, account_id: str, title: str, handle: str, items: list[Any]
     ) -> dict[str, Any]:
         """Create a navigation menu"""
-        payload = self._build_payload(
-            account_id=account_id,
-            title=title,
-            handle=handle,
-            items=items,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "title": title,
+                "handle": handle,
+                "items": items,
+            }
         )
         return self._client._post("/v1/commerce/menus", data=payload)
 
     def get_commerce_menu(self, menu_id: str, account_id: str) -> dict[str, Any]:
         """Get a navigation menu"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+            }
         )
         return self._client._get(f"/v1/commerce/menus/{menu_id}", params=params)
 
@@ -1112,25 +1268,31 @@ class CommerceResource:
         handle: str | None = None,
     ) -> dict[str, Any]:
         """Replace a navigation menu"""
-        payload = self._build_payload(
-            account_id=account_id,
-            title=title,
-            handle=handle,
-            items=items,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "title": title,
+                "handle": handle,
+                "items": items,
+            }
         )
         return self._client._put(f"/v1/commerce/menus/{menu_id}", data=payload)
 
     def delete_commerce_menu(self, menu_id: str, account_id: str) -> dict[str, Any]:
         """Delete a navigation menu"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+            }
         )
         return self._client._delete(f"/v1/commerce/menus/{menu_id}", params=params)
 
     def list_commerce_metaobject_definitions(self, account_id: str) -> dict[str, Any]:
         """List metaobject definitions"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+            }
         )
         return self._client._get("/v1/commerce/metaobject-definitions", params=params)
 
@@ -1143,11 +1305,13 @@ class CommerceResource:
         cursor: str | None = None,
     ) -> dict[str, Any]:
         """List metaobjects of a type"""
-        params = self._build_params(
-            account_id=account_id,
-            type=type,
-            limit=limit,
-            cursor=cursor,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "type": type,
+                "limit": limit,
+                "cursor": cursor,
+            }
         )
         return self._client._get("/v1/commerce/metaobjects", params=params)
 
@@ -1160,11 +1324,13 @@ class CommerceResource:
         handle: str | None = None,
     ) -> dict[str, Any]:
         """Create a metaobject"""
-        payload = self._build_payload(
-            account_id=account_id,
-            type=type,
-            handle=handle,
-            fields=fields,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "type": type,
+                "handle": handle,
+                "fields": fields,
+            }
         )
         return self._client._post("/v1/commerce/metaobjects", data=payload)
 
@@ -1172,8 +1338,10 @@ class CommerceResource:
         self, metaobject_id: str, account_id: str
     ) -> dict[str, Any]:
         """Get a metaobject"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+            }
         )
         return self._client._get(
             f"/v1/commerce/metaobjects/{metaobject_id}", params=params
@@ -1188,10 +1356,12 @@ class CommerceResource:
         handle: str | None = None,
     ) -> dict[str, Any]:
         """Update a metaobject"""
-        payload = self._build_payload(
-            account_id=account_id,
-            handle=handle,
-            fields=fields,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "handle": handle,
+                "fields": fields,
+            }
         )
         return self._client._patch(
             f"/v1/commerce/metaobjects/{metaobject_id}", data=payload
@@ -1201,8 +1371,10 @@ class CommerceResource:
         self, metaobject_id: str, account_id: str
     ) -> dict[str, Any]:
         """Delete a metaobject"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+            }
         )
         return self._client._delete(
             f"/v1/commerce/metaobjects/{metaobject_id}", params=params
@@ -1210,15 +1382,19 @@ class CommerceResource:
 
     def list_commerce_markets(self, account_id: str) -> dict[str, Any]:
         """List markets"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+            }
         )
         return self._client._get("/v1/commerce/markets", params=params)
 
     def list_commerce_price_lists(self, account_id: str) -> dict[str, Any]:
         """List price lists"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+            }
         )
         return self._client._get("/v1/commerce/price-lists", params=params)
 
@@ -1226,9 +1402,11 @@ class CommerceResource:
         self, price_list_id: str, account_id: str, prices: list[dict[str, Any]]
     ) -> dict[str, Any]:
         """Set fixed prices"""
-        payload = self._build_payload(
-            account_id=account_id,
-            prices=prices,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "prices": prices,
+            }
         )
         return self._client._put(
             f"/v1/commerce/price-lists/{price_list_id}/prices", data=payload
@@ -1238,9 +1416,11 @@ class CommerceResource:
         self, price_list_id: str, account_id: str, variant_ids: str
     ) -> dict[str, Any]:
         """Remove fixed prices"""
-        params = self._build_params(
-            account_id=account_id,
-            variant_ids=variant_ids,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "variantIds": variant_ids,
+            }
         )
         return self._client._delete(
             f"/v1/commerce/price-lists/{price_list_id}/prices", params=params
@@ -1264,20 +1444,22 @@ class CommerceResource:
         ended_at: datetime | str | None = None,
     ) -> dict[str, Any]:
         """Record a marketing activity"""
-        payload = self._build_payload(
-            account_id=account_id,
-            remote_id=remote_id,
-            title=title,
-            url=url,
-            preview_image_url=preview_image_url,
-            utm=utm,
-            tactic=tactic,
-            channel=channel,
-            status=status,
-            budget=budget,
-            ad_spend=ad_spend,
-            started_at=started_at,
-            ended_at=ended_at,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "remoteId": remote_id,
+                "title": title,
+                "url": url,
+                "previewImageUrl": preview_image_url,
+                "utm": utm,
+                "tactic": tactic,
+                "channel": channel,
+                "status": status,
+                "budget": budget,
+                "adSpend": ad_spend,
+                "startedAt": started_at,
+                "endedAt": ended_at,
+            }
         )
         return self._client._put("/v1/commerce/marketing-activities", data=payload)
 
@@ -1285,8 +1467,10 @@ class CommerceResource:
         self, remote_id: str, account_id: str
     ) -> dict[str, Any]:
         """Delete a marketing activity"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+            }
         )
         return self._client._delete(
             f"/v1/commerce/marketing-activities/{remote_id}", params=params
@@ -1307,16 +1491,18 @@ class CommerceResource:
         ad_spend: str | None = None,
     ) -> dict[str, Any]:
         """Report daily engagement"""
-        payload = self._build_payload(
-            account_id=account_id,
-            date=date,
-            impressions=impressions,
-            views=views,
-            clicks=clicks,
-            shares=shares,
-            likes=likes,
-            comments=comments,
-            ad_spend=ad_spend,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "date": date,
+                "impressions": impressions,
+                "views": views,
+                "clicks": clicks,
+                "shares": shares,
+                "likes": likes,
+                "comments": comments,
+                "adSpend": ad_spend,
+            }
         )
         return self._client._post(
             f"/v1/commerce/marketing-activities/{remote_id}/engagements", data=payload
@@ -1324,8 +1510,10 @@ class CommerceResource:
 
     def list_commerce_catalog_syncs(self, account_id: str) -> dict[str, Any]:
         """List catalog syncs"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+            }
         )
         return self._client._get("/v1/commerce/catalog-syncs", params=params)
 
@@ -1333,10 +1521,12 @@ class CommerceResource:
         self, account_id: str, catalog_account_id: str, catalog_id: str
     ) -> dict[str, Any]:
         """Sync a store into a Meta catalog"""
-        payload = self._build_payload(
-            account_id=account_id,
-            catalog_account_id=catalog_account_id,
-            catalog_id=catalog_id,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "catalogAccountId": catalog_account_id,
+                "catalogId": catalog_id,
+            }
         )
         return self._client._post("/v1/commerce/catalog-syncs", data=payload)
 
@@ -1354,8 +1544,10 @@ class CommerceResource:
 
     async def aget_commerce_store(self, account_id: str) -> dict[str, Any]:
         """Get a store (async)"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+            }
         )
         return await self._client._aget("/v1/commerce/store", params=params)
 
@@ -1373,16 +1565,18 @@ class CommerceResource:
         number: str | None = None,
     ) -> dict[str, Any]:
         """List orders (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            limit=limit,
-            cursor=cursor,
-            created_after=created_after,
-            created_before=created_before,
-            updated_after=updated_after,
-            customer_id=customer_id,
-            email=email,
-            number=number,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "limit": limit,
+                "cursor": cursor,
+                "createdAfter": created_after,
+                "createdBefore": created_before,
+                "updatedAfter": updated_after,
+                "customerId": customer_id,
+                "email": email,
+                "number": number,
+            }
         )
         return await self._client._aget("/v1/commerce/orders", params=params)
 
@@ -1390,8 +1584,10 @@ class CommerceResource:
         self, order_id: str, account_id: str
     ) -> dict[str, Any]:
         """Get an order (async)"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+            }
         )
         return await self._client._aget(
             f"/v1/commerce/orders/{order_id}", params=params
@@ -1401,9 +1597,11 @@ class CommerceResource:
         self, order_id: str, account_id: str, shipping_address: dict[str, Any]
     ) -> dict[str, Any]:
         """Update an order's shipping address (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            shipping_address=shipping_address,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "shippingAddress": shipping_address,
+            }
         )
         return await self._client._apatch(
             f"/v1/commerce/orders/{order_id}", data=payload
@@ -1424,15 +1622,17 @@ class CommerceResource:
         validate_only: bool | None = False,
     ) -> dict[str, Any]:
         """Refund an order (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            line_items=line_items,
-            shipping=shipping,
-            amount=amount,
-            currency=currency,
-            note=note,
-            notify_customer=notify_customer,
-            validate_only=validate_only,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "lineItems": line_items,
+                "shipping": shipping,
+                "amount": amount,
+                "currency": currency,
+                "note": note,
+                "notifyCustomer": notify_customer,
+                "validateOnly": validate_only,
+            }
         )
         headers: dict[str, str] = {}
         if idempotency_key is not None:
@@ -1454,13 +1654,15 @@ class CommerceResource:
         validate_only: bool | None = False,
     ) -> dict[str, Any]:
         """Edit an order (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            add=add,
-            quantities=quantities,
-            notify_customer=notify_customer,
-            staff_note=staff_note,
-            validate_only=validate_only,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "add": add,
+                "quantities": quantities,
+                "notifyCustomer": notify_customer,
+                "staffNote": staff_note,
+                "validateOnly": validate_only,
+            }
         )
         headers: dict[str, str] = {}
         if idempotency_key is not None:
@@ -1481,13 +1683,15 @@ class CommerceResource:
         staff_note: str | None = None,
     ) -> dict[str, Any]:
         """Cancel an order (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            reason=reason,
-            refund=refund,
-            restock=restock,
-            notify_customer=notify_customer,
-            staff_note=staff_note,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "reason": reason,
+                "refund": refund,
+                "restock": restock,
+                "notifyCustomer": notify_customer,
+                "staffNote": staff_note,
+            }
         )
         return await self._client._apost(
             f"/v1/commerce/orders/{order_id}/cancel", data=payload
@@ -1508,16 +1712,18 @@ class CommerceResource:
         tags: list[str] | None = None,
     ) -> dict[str, Any]:
         """Create a draft order (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            customer_id=customer_id,
-            email=email,
-            line_items=line_items,
-            discount=discount,
-            shipping=shipping,
-            shipping_address=shipping_address,
-            note=note,
-            tags=tags,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "customerId": customer_id,
+                "email": email,
+                "lineItems": line_items,
+                "discount": discount,
+                "shipping": shipping,
+                "shippingAddress": shipping_address,
+                "note": note,
+                "tags": tags,
+            }
         )
         headers: dict[str, str] = {}
         if idempotency_key is not None:
@@ -1530,8 +1736,10 @@ class CommerceResource:
         self, draft_order_id: str, account_id: str
     ) -> dict[str, Any]:
         """Get a draft order (async)"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+            }
         )
         return await self._client._aget(
             f"/v1/commerce/draft-orders/{draft_order_id}", params=params
@@ -1547,11 +1755,13 @@ class CommerceResource:
         custom_message: str | None = None,
     ) -> dict[str, Any]:
         """Send a draft order invoice (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            to=to,
-            subject=subject,
-            custom_message=custom_message,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "to": to,
+                "subject": subject,
+                "customMessage": custom_message,
+            }
         )
         return await self._client._apost(
             f"/v1/commerce/draft-orders/{draft_order_id}/invoice", data=payload
@@ -1568,13 +1778,15 @@ class CommerceResource:
         search: str | None = None,
     ) -> dict[str, Any]:
         """List customers (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            limit=limit,
-            cursor=cursor,
-            email=email,
-            phone=phone,
-            search=search,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "limit": limit,
+                "cursor": cursor,
+                "email": email,
+                "phone": phone,
+                "search": search,
+            }
         )
         return await self._client._aget("/v1/commerce/customers", params=params)
 
@@ -1582,8 +1794,10 @@ class CommerceResource:
         self, customer_id: str, account_id: str
     ) -> dict[str, Any]:
         """Get a customer (async)"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+            }
         )
         return await self._client._aget(
             f"/v1/commerce/customers/{customer_id}", params=params
@@ -1600,13 +1814,15 @@ class CommerceResource:
         collection_id: str | None = None,
     ) -> dict[str, Any]:
         """List products (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            limit=limit,
-            cursor=cursor,
-            status=status,
-            query=query,
-            collection_id=collection_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "limit": limit,
+                "cursor": cursor,
+                "status": status,
+                "query": query,
+                "collectionId": collection_id,
+            }
         )
         return await self._client._aget("/v1/commerce/products", params=params)
 
@@ -1627,19 +1843,21 @@ class CommerceResource:
         options: list[dict[str, Any]] | None = None,
     ) -> dict[str, Any]:
         """Create a product (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            title=title,
-            description_html=description_html,
-            handle=handle,
-            vendor=vendor,
-            product_type=product_type,
-            tags=tags,
-            seo=seo,
-            status=status,
-            images=images,
-            options=options,
-            variants=variants,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "title": title,
+                "descriptionHtml": description_html,
+                "handle": handle,
+                "vendor": vendor,
+                "productType": product_type,
+                "tags": tags,
+                "seo": seo,
+                "status": status,
+                "images": images,
+                "options": options,
+                "variants": variants,
+            }
         )
         return await self._client._apost("/v1/commerce/products", data=payload)
 
@@ -1647,10 +1865,12 @@ class CommerceResource:
         self, account_id: str, product_ids: list[str], action: str
     ) -> dict[str, Any]:
         """Activate, deactivate, archive or delete products (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            product_ids=product_ids,
-            action=action,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "productIds": product_ids,
+                "action": action,
+            }
         )
         return await self._client._apost("/v1/commerce/products/state", data=payload)
 
@@ -1658,8 +1878,10 @@ class CommerceResource:
         self, product_id: str, account_id: str
     ) -> dict[str, Any]:
         """Get a product (async)"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+            }
         )
         return await self._client._aget(
             f"/v1/commerce/products/{product_id}", params=params
@@ -1679,15 +1901,17 @@ class CommerceResource:
         seo: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Update a product (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            title=title,
-            description_html=description_html,
-            handle=handle,
-            vendor=vendor,
-            product_type=product_type,
-            tags=tags,
-            seo=seo,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "title": title,
+                "descriptionHtml": description_html,
+                "handle": handle,
+                "vendor": vendor,
+                "productType": product_type,
+                "tags": tags,
+                "seo": seo,
+            }
         )
         return await self._client._apatch(
             f"/v1/commerce/products/{product_id}", data=payload
@@ -1697,9 +1921,11 @@ class CommerceResource:
         self, product_id: str, account_id: str, variants: list[dict[str, Any]]
     ) -> dict[str, Any]:
         """Update variant prices (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            variants=variants,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "variants": variants,
+            }
         )
         return await self._client._apost(
             f"/v1/commerce/products/{product_id}/price", data=payload
@@ -1714,11 +1940,13 @@ class CommerceResource:
         query: str | None = None,
     ) -> dict[str, Any]:
         """List collections (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            limit=limit,
-            cursor=cursor,
-            query=query,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "limit": limit,
+                "cursor": cursor,
+                "query": query,
+            }
         )
         return await self._client._aget("/v1/commerce/collections", params=params)
 
@@ -1735,15 +1963,17 @@ class CommerceResource:
         product_ids: list[str] | None = None,
     ) -> dict[str, Any]:
         """Create a collection (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            title=title,
-            description_html=description_html,
-            handle=handle,
-            sort_order=sort_order,
-            seo=seo,
-            image=image,
-            product_ids=product_ids,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "title": title,
+                "descriptionHtml": description_html,
+                "handle": handle,
+                "sortOrder": sort_order,
+                "seo": seo,
+                "image": image,
+                "productIds": product_ids,
+            }
         )
         return await self._client._apost("/v1/commerce/collections", data=payload)
 
@@ -1751,8 +1981,10 @@ class CommerceResource:
         self, collection_id: str, account_id: str
     ) -> dict[str, Any]:
         """Get a collection (async)"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+            }
         )
         return await self._client._aget(
             f"/v1/commerce/collections/{collection_id}", params=params
@@ -1771,14 +2003,16 @@ class CommerceResource:
         image: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Update a collection (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            title=title,
-            description_html=description_html,
-            handle=handle,
-            sort_order=sort_order,
-            seo=seo,
-            image=image,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "title": title,
+                "descriptionHtml": description_html,
+                "handle": handle,
+                "sortOrder": sort_order,
+                "seo": seo,
+                "image": image,
+            }
         )
         return await self._client._apatch(
             f"/v1/commerce/collections/{collection_id}", data=payload
@@ -1788,8 +2022,10 @@ class CommerceResource:
         self, collection_id: str, account_id: str
     ) -> dict[str, Any]:
         """Delete a collection (async)"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+            }
         )
         return await self._client._adelete(
             f"/v1/commerce/collections/{collection_id}", params=params
@@ -1804,10 +2040,12 @@ class CommerceResource:
         remove: list[str] | None = None,
     ) -> dict[str, Any]:
         """Add or remove products in a collection (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            add=add,
-            remove=remove,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "add": add,
+                "remove": remove,
+            }
         )
         return await self._client._apost(
             f"/v1/commerce/collections/{collection_id}/products", data=payload
@@ -1817,9 +2055,11 @@ class CommerceResource:
         self, product_id: str, account_id: str, variants: list[dict[str, Any]]
     ) -> dict[str, Any]:
         """Add variants (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            variants=variants,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "variants": variants,
+            }
         )
         return await self._client._apost(
             f"/v1/commerce/products/{product_id}/variants", data=payload
@@ -1829,9 +2069,11 @@ class CommerceResource:
         self, product_id: str, account_id: str, variant_ids: str
     ) -> dict[str, Any]:
         """Delete variants (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            variant_ids=variant_ids,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "variantIds": variant_ids,
+            }
         )
         return await self._client._adelete(
             f"/v1/commerce/products/{product_id}/variants", params=params
@@ -1846,10 +2088,12 @@ class CommerceResource:
         create_variants: bool | None = False,
     ) -> dict[str, Any]:
         """Add options (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            options=options,
-            create_variants=create_variants,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "options": options,
+                "createVariants": create_variants,
+            }
         )
         return await self._client._apost(
             f"/v1/commerce/products/{product_id}/options", data=payload
@@ -1859,9 +2103,11 @@ class CommerceResource:
         self, product_id: str, account_id: str, names: str
     ) -> dict[str, Any]:
         """Delete options (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            names=names,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "names": names,
+            }
         )
         return await self._client._adelete(
             f"/v1/commerce/products/{product_id}/options", params=params
@@ -1871,9 +2117,11 @@ class CommerceResource:
         self, product_id: str, account_id: str, images: list[dict[str, Any]]
     ) -> dict[str, Any]:
         """Add images (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            images=images,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "images": images,
+            }
         )
         return await self._client._apost(
             f"/v1/commerce/products/{product_id}/images", data=payload
@@ -1883,9 +2131,11 @@ class CommerceResource:
         self, product_id: str, account_id: str, image_ids: str
     ) -> dict[str, Any]:
         """Remove images (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            image_ids=image_ids,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "imageIds": image_ids,
+            }
         )
         return await self._client._adelete(
             f"/v1/commerce/products/{product_id}/images", params=params
@@ -1895,9 +2145,11 @@ class CommerceResource:
         self, product_id: str, account_id: str, image_ids: list[str]
     ) -> dict[str, Any]:
         """Reorder images (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            image_ids=image_ids,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "imageIds": image_ids,
+            }
         )
         return await self._client._apost(
             f"/v1/commerce/products/{product_id}/images/reorder", data=payload
@@ -1913,11 +2165,13 @@ class CommerceResource:
         include_images: bool | None = True,
     ) -> dict[str, Any]:
         """Duplicate a product (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            title=title,
-            status=status,
-            include_images=include_images,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "title": title,
+                "status": status,
+                "includeImages": include_images,
+            }
         )
         return await self._client._apost(
             f"/v1/commerce/products/{product_id}/duplicate", data=payload
@@ -1927,8 +2181,10 @@ class CommerceResource:
         self, product_id: str, account_id: str
     ) -> dict[str, Any]:
         """List product metafields (async)"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+            }
         )
         return await self._client._aget(
             f"/v1/commerce/products/{product_id}/metafields", params=params
@@ -1938,9 +2194,11 @@ class CommerceResource:
         self, product_id: str, account_id: str, metafields: list[Any]
     ) -> dict[str, Any]:
         """Set product metafields (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            metafields=metafields,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "metafields": metafields,
+            }
         )
         return await self._client._aput(
             f"/v1/commerce/products/{product_id}/metafields", data=payload
@@ -1950,9 +2208,11 @@ class CommerceResource:
         self, product_id: str, account_id: str, keys: str
     ) -> dict[str, Any]:
         """Delete product metafields (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            keys=keys,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "keys": keys,
+            }
         )
         return await self._client._adelete(
             f"/v1/commerce/products/{product_id}/metafields", params=params
@@ -1967,10 +2227,12 @@ class CommerceResource:
         unpublish: list[str] | None = None,
     ) -> dict[str, Any]:
         """Publish or unpublish a product (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            publish=publish,
-            unpublish=unpublish,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "publish": publish,
+                "unpublish": unpublish,
+            }
         )
         return await self._client._apost(
             f"/v1/commerce/products/{product_id}/channels", data=payload
@@ -1980,8 +2242,10 @@ class CommerceResource:
         self, collection_id: str, account_id: str
     ) -> dict[str, Any]:
         """List collection metafields (async)"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+            }
         )
         return await self._client._aget(
             f"/v1/commerce/collections/{collection_id}/metafields", params=params
@@ -1991,9 +2255,11 @@ class CommerceResource:
         self, collection_id: str, account_id: str, metafields: list[Any]
     ) -> dict[str, Any]:
         """Set collection metafields (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            metafields=metafields,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "metafields": metafields,
+            }
         )
         return await self._client._aput(
             f"/v1/commerce/collections/{collection_id}/metafields", data=payload
@@ -2003,9 +2269,11 @@ class CommerceResource:
         self, collection_id: str, account_id: str, keys: str
     ) -> dict[str, Any]:
         """Delete collection metafields (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            keys=keys,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "keys": keys,
+            }
         )
         return await self._client._adelete(
             f"/v1/commerce/collections/{collection_id}/metafields", params=params
@@ -2020,10 +2288,12 @@ class CommerceResource:
         unpublish: list[str] | None = None,
     ) -> dict[str, Any]:
         """Publish or unpublish a collection (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            publish=publish,
-            unpublish=unpublish,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "publish": publish,
+                "unpublish": unpublish,
+            }
         )
         return await self._client._apost(
             f"/v1/commerce/collections/{collection_id}/channels", data=payload
@@ -2038,11 +2308,13 @@ class CommerceResource:
         remove: list[str] | None = None,
     ) -> dict[str, Any]:
         """Add or remove tags in bulk (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            product_ids=product_ids,
-            add=add,
-            remove=remove,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "productIds": product_ids,
+                "add": add,
+                "remove": remove,
+            }
         )
         return await self._client._apost("/v1/commerce/products/tags", data=payload)
 
@@ -2050,9 +2322,11 @@ class CommerceResource:
         self, collection_id: str, account_id: str, moves: list[dict[str, Any]]
     ) -> dict[str, Any]:
         """Reorder products in a collection (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            moves=moves,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "moves": moves,
+            }
         )
         return await self._client._apost(
             f"/v1/commerce/collections/{collection_id}/reorder", data=payload
@@ -2067,11 +2341,13 @@ class CommerceResource:
         query: str | None = None,
     ) -> dict[str, Any]:
         """List pages (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            limit=limit,
-            cursor=cursor,
-            query=query,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "limit": limit,
+                "cursor": cursor,
+                "query": query,
+            }
         )
         return await self._client._aget("/v1/commerce/pages", params=params)
 
@@ -2085,19 +2361,23 @@ class CommerceResource:
         is_published: bool | None = None,
     ) -> dict[str, Any]:
         """Create a page (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            title=title,
-            handle=handle,
-            body_html=body_html,
-            is_published=is_published,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "title": title,
+                "handle": handle,
+                "bodyHtml": body_html,
+                "isPublished": is_published,
+            }
         )
         return await self._client._apost("/v1/commerce/pages", data=payload)
 
     async def aget_commerce_page(self, page_id: str, account_id: str) -> dict[str, Any]:
         """Get a page (async)"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+            }
         )
         return await self._client._aget(f"/v1/commerce/pages/{page_id}", params=params)
 
@@ -2112,12 +2392,14 @@ class CommerceResource:
         is_published: bool | None = None,
     ) -> dict[str, Any]:
         """Update a page (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            title=title,
-            handle=handle,
-            body_html=body_html,
-            is_published=is_published,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "title": title,
+                "handle": handle,
+                "bodyHtml": body_html,
+                "isPublished": is_published,
+            }
         )
         return await self._client._apatch(f"/v1/commerce/pages/{page_id}", data=payload)
 
@@ -2125,8 +2407,10 @@ class CommerceResource:
         self, page_id: str, account_id: str
     ) -> dict[str, Any]:
         """Delete a page (async)"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+            }
         )
         return await self._client._adelete(
             f"/v1/commerce/pages/{page_id}", params=params
@@ -2134,8 +2418,10 @@ class CommerceResource:
 
     async def alist_commerce_locations(self, account_id: str) -> dict[str, Any]:
         """List locations (async)"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+            }
         )
         return await self._client._aget("/v1/commerce/locations", params=params)
 
@@ -2143,9 +2429,11 @@ class CommerceResource:
         self, account_id: str, product_id: str
     ) -> dict[str, Any]:
         """Get a product's stock (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            product_id=product_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "productId": product_id,
+            }
         )
         return await self._client._aget("/v1/commerce/inventory", params=params)
 
@@ -2158,10 +2446,12 @@ class CommerceResource:
         mode: str | None = "set",
     ) -> dict[str, Any]:
         """Set or adjust stock (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            mode=mode,
-            changes=changes,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "mode": mode,
+                "changes": changes,
+            }
         )
         return await self._client._apost(
             f"/v1/commerce/products/{product_id}/inventory", data=payload
@@ -2169,8 +2459,10 @@ class CommerceResource:
 
     async def alist_commerce_channels(self, account_id: str) -> dict[str, Any]:
         """List sales channels (async)"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+            }
         )
         return await self._client._aget("/v1/commerce/channels", params=params)
 
@@ -2183,11 +2475,13 @@ class CommerceResource:
         query: str | None = None,
     ) -> dict[str, Any]:
         """List discounts (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            limit=limit,
-            cursor=cursor,
-            query=query,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "limit": limit,
+                "cursor": cursor,
+                "query": query,
+            }
         )
         return await self._client._aget("/v1/commerce/discounts", params=params)
 
@@ -2213,24 +2507,26 @@ class CommerceResource:
         customer_ids: list[str] | None = None,
     ) -> dict[str, Any]:
         """Create a discount (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            title=title,
-            method=method,
-            type=type,
-            code=code,
-            percentage=percentage,
-            amount=amount,
-            applies_on_each_item=applies_on_each_item,
-            minimum_subtotal=minimum_subtotal,
-            minimum_quantity=minimum_quantity,
-            usage_limit=usage_limit,
-            once_per_customer=once_per_customer,
-            starts_at=starts_at,
-            ends_at=ends_at,
-            product_ids=product_ids,
-            collection_ids=collection_ids,
-            customer_ids=customer_ids,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "title": title,
+                "method": method,
+                "type": type,
+                "code": code,
+                "percentage": percentage,
+                "amount": amount,
+                "appliesOnEachItem": applies_on_each_item,
+                "minimumSubtotal": minimum_subtotal,
+                "minimumQuantity": minimum_quantity,
+                "usageLimit": usage_limit,
+                "oncePerCustomer": once_per_customer,
+                "startsAt": starts_at,
+                "endsAt": ends_at,
+                "productIds": product_ids,
+                "collectionIds": collection_ids,
+                "customerIds": customer_ids,
+            }
         )
         return await self._client._apost("/v1/commerce/discounts", data=payload)
 
@@ -2238,8 +2534,10 @@ class CommerceResource:
         self, discount_id: str, account_id: str
     ) -> dict[str, Any]:
         """Get a discount (async)"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+            }
         )
         return await self._client._aget(
             f"/v1/commerce/discounts/{discount_id}", params=params
@@ -2263,19 +2561,21 @@ class CommerceResource:
         ends_at: Any | None = None,
     ) -> dict[str, Any]:
         """Update a discount (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            title=title,
-            code=code,
-            percentage=percentage,
-            amount=amount,
-            applies_on_each_item=applies_on_each_item,
-            minimum_subtotal=minimum_subtotal,
-            minimum_quantity=minimum_quantity,
-            usage_limit=usage_limit,
-            once_per_customer=once_per_customer,
-            starts_at=starts_at,
-            ends_at=ends_at,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "title": title,
+                "code": code,
+                "percentage": percentage,
+                "amount": amount,
+                "appliesOnEachItem": applies_on_each_item,
+                "minimumSubtotal": minimum_subtotal,
+                "minimumQuantity": minimum_quantity,
+                "usageLimit": usage_limit,
+                "oncePerCustomer": once_per_customer,
+                "startsAt": starts_at,
+                "endsAt": ends_at,
+            }
         )
         return await self._client._apatch(
             f"/v1/commerce/discounts/{discount_id}", data=payload
@@ -2285,8 +2585,10 @@ class CommerceResource:
         self, discount_id: str, account_id: str
     ) -> dict[str, Any]:
         """Delete a discount (async)"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+            }
         )
         return await self._client._adelete(
             f"/v1/commerce/discounts/{discount_id}", params=params
@@ -2296,9 +2598,11 @@ class CommerceResource:
         self, discount_id: str, account_id: str, active: bool
     ) -> dict[str, Any]:
         """Activate or deactivate a discount (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            active=active,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "active": active,
+            }
         )
         return await self._client._apost(
             f"/v1/commerce/discounts/{discount_id}/state", data=payload
@@ -2308,9 +2612,11 @@ class CommerceResource:
         self, discount_id: str, account_id: str, codes: list[str]
     ) -> dict[str, Any]:
         """Add codes to a discount (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            codes=codes,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "codes": codes,
+            }
         )
         return await self._client._apost(
             f"/v1/commerce/discounts/{discount_id}/codes", data=payload
@@ -2325,11 +2631,13 @@ class CommerceResource:
         query: str | None = None,
     ) -> dict[str, Any]:
         """List URL redirects (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            limit=limit,
-            cursor=cursor,
-            query=query,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "limit": limit,
+                "cursor": cursor,
+                "query": query,
+            }
         )
         return await self._client._aget("/v1/commerce/redirects", params=params)
 
@@ -2337,10 +2645,12 @@ class CommerceResource:
         self, account_id: str, path: str, target: str
     ) -> dict[str, Any]:
         """Create a URL redirect (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            path=path,
-            target=target,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "path": path,
+                "target": target,
+            }
         )
         return await self._client._apost("/v1/commerce/redirects", data=payload)
 
@@ -2353,10 +2663,12 @@ class CommerceResource:
         target: str | None = None,
     ) -> dict[str, Any]:
         """Update a URL redirect (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            path=path,
-            target=target,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "path": path,
+                "target": target,
+            }
         )
         return await self._client._apatch(
             f"/v1/commerce/redirects/{redirect_id}", data=payload
@@ -2366,8 +2678,10 @@ class CommerceResource:
         self, redirect_id: str, account_id: str
     ) -> dict[str, Any]:
         """Delete a URL redirect (async)"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+            }
         )
         return await self._client._adelete(
             f"/v1/commerce/redirects/{redirect_id}", params=params
@@ -2375,8 +2689,10 @@ class CommerceResource:
 
     async def alist_commerce_menus(self, account_id: str) -> dict[str, Any]:
         """List navigation menus (async)"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+            }
         )
         return await self._client._aget("/v1/commerce/menus", params=params)
 
@@ -2384,18 +2700,22 @@ class CommerceResource:
         self, account_id: str, title: str, handle: str, items: list[Any]
     ) -> dict[str, Any]:
         """Create a navigation menu (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            title=title,
-            handle=handle,
-            items=items,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "title": title,
+                "handle": handle,
+                "items": items,
+            }
         )
         return await self._client._apost("/v1/commerce/menus", data=payload)
 
     async def aget_commerce_menu(self, menu_id: str, account_id: str) -> dict[str, Any]:
         """Get a navigation menu (async)"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+            }
         )
         return await self._client._aget(f"/v1/commerce/menus/{menu_id}", params=params)
 
@@ -2409,11 +2729,13 @@ class CommerceResource:
         handle: str | None = None,
     ) -> dict[str, Any]:
         """Replace a navigation menu (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            title=title,
-            handle=handle,
-            items=items,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "title": title,
+                "handle": handle,
+                "items": items,
+            }
         )
         return await self._client._aput(f"/v1/commerce/menus/{menu_id}", data=payload)
 
@@ -2421,8 +2743,10 @@ class CommerceResource:
         self, menu_id: str, account_id: str
     ) -> dict[str, Any]:
         """Delete a navigation menu (async)"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+            }
         )
         return await self._client._adelete(
             f"/v1/commerce/menus/{menu_id}", params=params
@@ -2432,8 +2756,10 @@ class CommerceResource:
         self, account_id: str
     ) -> dict[str, Any]:
         """List metaobject definitions (async)"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+            }
         )
         return await self._client._aget(
             "/v1/commerce/metaobject-definitions", params=params
@@ -2448,11 +2774,13 @@ class CommerceResource:
         cursor: str | None = None,
     ) -> dict[str, Any]:
         """List metaobjects of a type (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            type=type,
-            limit=limit,
-            cursor=cursor,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "type": type,
+                "limit": limit,
+                "cursor": cursor,
+            }
         )
         return await self._client._aget("/v1/commerce/metaobjects", params=params)
 
@@ -2465,11 +2793,13 @@ class CommerceResource:
         handle: str | None = None,
     ) -> dict[str, Any]:
         """Create a metaobject (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            type=type,
-            handle=handle,
-            fields=fields,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "type": type,
+                "handle": handle,
+                "fields": fields,
+            }
         )
         return await self._client._apost("/v1/commerce/metaobjects", data=payload)
 
@@ -2477,8 +2807,10 @@ class CommerceResource:
         self, metaobject_id: str, account_id: str
     ) -> dict[str, Any]:
         """Get a metaobject (async)"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+            }
         )
         return await self._client._aget(
             f"/v1/commerce/metaobjects/{metaobject_id}", params=params
@@ -2493,10 +2825,12 @@ class CommerceResource:
         handle: str | None = None,
     ) -> dict[str, Any]:
         """Update a metaobject (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            handle=handle,
-            fields=fields,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "handle": handle,
+                "fields": fields,
+            }
         )
         return await self._client._apatch(
             f"/v1/commerce/metaobjects/{metaobject_id}", data=payload
@@ -2506,8 +2840,10 @@ class CommerceResource:
         self, metaobject_id: str, account_id: str
     ) -> dict[str, Any]:
         """Delete a metaobject (async)"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+            }
         )
         return await self._client._adelete(
             f"/v1/commerce/metaobjects/{metaobject_id}", params=params
@@ -2515,15 +2851,19 @@ class CommerceResource:
 
     async def alist_commerce_markets(self, account_id: str) -> dict[str, Any]:
         """List markets (async)"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+            }
         )
         return await self._client._aget("/v1/commerce/markets", params=params)
 
     async def alist_commerce_price_lists(self, account_id: str) -> dict[str, Any]:
         """List price lists (async)"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+            }
         )
         return await self._client._aget("/v1/commerce/price-lists", params=params)
 
@@ -2531,9 +2871,11 @@ class CommerceResource:
         self, price_list_id: str, account_id: str, prices: list[dict[str, Any]]
     ) -> dict[str, Any]:
         """Set fixed prices (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            prices=prices,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "prices": prices,
+            }
         )
         return await self._client._aput(
             f"/v1/commerce/price-lists/{price_list_id}/prices", data=payload
@@ -2543,9 +2885,11 @@ class CommerceResource:
         self, price_list_id: str, account_id: str, variant_ids: str
     ) -> dict[str, Any]:
         """Remove fixed prices (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            variant_ids=variant_ids,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "variantIds": variant_ids,
+            }
         )
         return await self._client._adelete(
             f"/v1/commerce/price-lists/{price_list_id}/prices", params=params
@@ -2569,20 +2913,22 @@ class CommerceResource:
         ended_at: datetime | str | None = None,
     ) -> dict[str, Any]:
         """Record a marketing activity (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            remote_id=remote_id,
-            title=title,
-            url=url,
-            preview_image_url=preview_image_url,
-            utm=utm,
-            tactic=tactic,
-            channel=channel,
-            status=status,
-            budget=budget,
-            ad_spend=ad_spend,
-            started_at=started_at,
-            ended_at=ended_at,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "remoteId": remote_id,
+                "title": title,
+                "url": url,
+                "previewImageUrl": preview_image_url,
+                "utm": utm,
+                "tactic": tactic,
+                "channel": channel,
+                "status": status,
+                "budget": budget,
+                "adSpend": ad_spend,
+                "startedAt": started_at,
+                "endedAt": ended_at,
+            }
         )
         return await self._client._aput(
             "/v1/commerce/marketing-activities", data=payload
@@ -2592,8 +2938,10 @@ class CommerceResource:
         self, remote_id: str, account_id: str
     ) -> dict[str, Any]:
         """Delete a marketing activity (async)"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+            }
         )
         return await self._client._adelete(
             f"/v1/commerce/marketing-activities/{remote_id}", params=params
@@ -2614,16 +2962,18 @@ class CommerceResource:
         ad_spend: str | None = None,
     ) -> dict[str, Any]:
         """Report daily engagement (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            date=date,
-            impressions=impressions,
-            views=views,
-            clicks=clicks,
-            shares=shares,
-            likes=likes,
-            comments=comments,
-            ad_spend=ad_spend,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "date": date,
+                "impressions": impressions,
+                "views": views,
+                "clicks": clicks,
+                "shares": shares,
+                "likes": likes,
+                "comments": comments,
+                "adSpend": ad_spend,
+            }
         )
         return await self._client._apost(
             f"/v1/commerce/marketing-activities/{remote_id}/engagements", data=payload
@@ -2631,8 +2981,10 @@ class CommerceResource:
 
     async def alist_commerce_catalog_syncs(self, account_id: str) -> dict[str, Any]:
         """List catalog syncs (async)"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+            }
         )
         return await self._client._aget("/v1/commerce/catalog-syncs", params=params)
 
@@ -2640,10 +2992,12 @@ class CommerceResource:
         self, account_id: str, catalog_account_id: str, catalog_id: str
     ) -> dict[str, Any]:
         """Sync a store into a Meta catalog (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            catalog_account_id=catalog_account_id,
-            catalog_id=catalog_id,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "catalogAccountId": catalog_account_id,
+                "catalogId": catalog_id,
+            }
         )
         return await self._client._apost("/v1/commerce/catalog-syncs", data=payload)
 

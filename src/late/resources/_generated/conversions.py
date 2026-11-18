@@ -23,13 +23,16 @@ class ConversionsResource:
     def __init__(self, client: BaseClient) -> None:
         self._client = client
 
-    def _build_params(self, **kwargs: Any) -> dict[str, Any]:
-        """Build query parameters, filtering None and empty-string values.
+    def _build_query(self, fields: dict[str, Any]) -> dict[str, Any]:
+        """Build query parameters keyed by their wire names, as given.
 
-        Empty strings are filtered because MCP tool wrappers pass ``""`` as the
-        default for optional string args, and the API rejects empty query
-        values (e.g. ``platform=``) with a 400. Filtering here keeps both direct
-        SDK callers and MCP tool callers safe.
+        Generated methods pass the parameter names exactly as the OpenAPI
+        spec declares them, so no casing rule is applied here.
+
+        None and empty strings are filtered because MCP tool wrappers pass
+        ``""`` as the default for optional string args, and the API rejects
+        empty query values (e.g. ``platform=``) with a 400. Filtering here
+        keeps both direct SDK callers and MCP tool callers safe.
 
         Enum members are unwrapped to their value: httpx serializes params
         via str(), which yields "ClassName.MEMBER" for Enum members, so
@@ -38,50 +41,75 @@ class ConversionsResource:
         """
         from enum import Enum
 
-        def to_camel(s: str) -> str:
-            parts = s.split("_")
-            return parts[0] + "".join(p.title() for p in parts[1:])
-
         result: dict[str, Any] = {}
-        for k, v in kwargs.items():
+        for k, v in fields.items():
             if isinstance(v, Enum):
                 v = v.value
             if v is None or v == "":
                 continue
-            result[to_camel(k)] = v
+            result[k] = v
         return result
 
-    def _build_payload(self, **kwargs: Any) -> dict[str, Any]:
-        """Build request payload, filtering None values. Enum members are
-        unwrapped to their value so JSON bodies carry e.g. "failed" rather
-        than a raw Enum member (plain Enum members are not JSON-serializable).
+    def _build_body(self, fields: dict[str, Any]) -> dict[str, Any]:
+        """Build a JSON request body keyed by its wire names, as given.
+
+        Generated methods pass the property names exactly as the request
+        body schema declares them: most are camelCase, but some routes read
+        snake_case (``ice_breakers``, ``message_send_ttl_seconds``), so no
+        casing rule is applied here. None values are dropped, Enum members
+        are unwrapped to their value (e.g. "failed") and datetimes are sent
+        as ISO 8601 strings.
         """
         from datetime import datetime
         from enum import Enum
 
-        def to_camel(s: str) -> str:
-            parts = s.split("_")
-            return parts[0] + "".join(p.title() for p in parts[1:])
-
         result: dict[str, Any] = {}
-        for k, v in kwargs.items():
+        for k, v in fields.items():
             if isinstance(v, Enum):
                 v = v.value
             if v is None:
                 continue
             if isinstance(v, datetime):
-                result[to_camel(k)] = v.isoformat()
+                result[k] = v.isoformat()
             else:
-                result[to_camel(k)] = v
+                result[k] = v
         return result
+
+    def _build_params(self, **kwargs: Any) -> dict[str, Any]:
+        """Build query parameters from snake_case kwargs, camelCasing each key.
+
+        For hand-written resource methods, whose endpoints take camelCase
+        names. Generated methods use _build_query with the spec's names.
+        """
+
+        def to_camel(s: str) -> str:
+            parts = s.split("_")
+            return parts[0] + "".join(p.title() for p in parts[1:])
+
+        return self._build_query({to_camel(k): v for k, v in kwargs.items()})
+
+    def _build_payload(self, **kwargs: Any) -> dict[str, Any]:
+        """Build a request body from snake_case kwargs, camelCasing each key.
+
+        For hand-written resource methods, whose endpoints take camelCase
+        names. Generated methods use _build_body with the spec's names.
+        """
+
+        def to_camel(s: str) -> str:
+            parts = s.split("_")
+            return parts[0] + "".join(p.title() for p in parts[1:])
+
+        return self._build_body({to_camel(k): v for k, v in kwargs.items()})
 
     def get_conversions_quality(
         self, account_id: str, destination_id: str
     ) -> dict[str, Any]:
         """Get Event Match Quality"""
-        params = self._build_params(
-            account_id=account_id,
-            destination_id=destination_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "destinationId": destination_id,
+            }
         )
         return self._client._get("/v1/ads/conversions/quality", params=params)
 
@@ -95,12 +123,14 @@ class ConversionsResource:
         consent: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Send conversion events to one destination (legacy)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            destination_id=destination_id,
-            events=events,
-            test_code=test_code,
-            consent=consent,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "destinationId": destination_id,
+                "events": events,
+                "testCode": test_code,
+                "consent": consent,
+            }
         )
         return self._client._post("/v1/ads/conversions", data=payload)
 
@@ -108,10 +138,12 @@ class ConversionsResource:
         self, account_id: str, destination_id: str, adjustments: list[dict[str, Any]]
     ) -> dict[str, Any]:
         """Adjust uploaded conversions"""
-        payload = self._build_payload(
-            account_id=account_id,
-            destination_id=destination_id,
-            adjustments=adjustments,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "destinationId": destination_id,
+                "adjustments": adjustments,
+            }
         )
         return self._client._post("/v1/ads/conversions/adjustments", data=payload)
 
@@ -124,11 +156,13 @@ class ConversionsResource:
         type: str | None = None,
     ) -> dict[str, Any]:
         """List conversion actions"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            customer_id=customer_id,
-            type=type,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "customerId": customer_id,
+                "type": type,
+            }
         )
         return self._client._get("/v1/ads/conversions/actions", params=params)
 
@@ -150,20 +184,22 @@ class ConversionsResource:
         primary_for_goal: bool | None = None,
     ) -> dict[str, Any]:
         """Create conversion action"""
-        payload = self._build_payload(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            customer_id=customer_id,
-            name=name,
-            type=type,
-            default_value=default_value,
-            always_use_default_value=always_use_default_value,
-            category=category,
-            counting_type=counting_type,
-            default_currency=default_currency,
-            click_through_lookback_window_days=click_through_lookback_window_days,
-            view_through_lookback_window_days=view_through_lookback_window_days,
-            primary_for_goal=primary_for_goal,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "customerId": customer_id,
+                "name": name,
+                "type": type,
+                "defaultValue": default_value,
+                "alwaysUseDefaultValue": always_use_default_value,
+                "category": category,
+                "countingType": counting_type,
+                "defaultCurrency": default_currency,
+                "clickThroughLookbackWindowDays": click_through_lookback_window_days,
+                "viewThroughLookbackWindowDays": view_through_lookback_window_days,
+                "primaryForGoal": primary_for_goal,
+            }
         )
         return self._client._post("/v1/ads/conversions/actions", data=payload)
 
@@ -175,10 +211,12 @@ class ConversionsResource:
         customer_id: str | None = None,
     ) -> dict[str, Any]:
         """List account conversion goals"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            customer_id=customer_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "customerId": customer_id,
+            }
         )
         return self._client._get("/v1/ads/conversions/goals", params=params)
 
@@ -191,11 +229,13 @@ class ConversionsResource:
         customer_id: str | None = None,
     ) -> dict[str, Any]:
         """Update account conversion goals"""
-        payload = self._build_payload(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            customer_id=customer_id,
-            goals=goals,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "customerId": customer_id,
+                "goals": goals,
+            }
         )
         return self._client._patch("/v1/ads/conversions/goals", data=payload)
 
@@ -218,20 +258,22 @@ class ConversionsResource:
         primary_for_goal: bool | None = None,
     ) -> dict[str, Any]:
         """Update a conversion action's settings"""
-        payload = self._build_payload(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            customer_id=customer_id,
-            name=name,
-            status=status,
-            default_value=default_value,
-            always_use_default_value=always_use_default_value,
-            category=category,
-            counting_type=counting_type,
-            default_currency=default_currency,
-            click_through_lookback_window_days=click_through_lookback_window_days,
-            view_through_lookback_window_days=view_through_lookback_window_days,
-            primary_for_goal=primary_for_goal,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "customerId": customer_id,
+                "name": name,
+                "status": status,
+                "defaultValue": default_value,
+                "alwaysUseDefaultValue": always_use_default_value,
+                "category": category,
+                "countingType": counting_type,
+                "defaultCurrency": default_currency,
+                "clickThroughLookbackWindowDays": click_through_lookback_window_days,
+                "viewThroughLookbackWindowDays": view_through_lookback_window_days,
+                "primaryForGoal": primary_for_goal,
+            }
         )
         return self._client._patch(
             f"/v1/ads/conversions/actions/{action_id}", data=payload
@@ -245,10 +287,12 @@ class ConversionsResource:
         customer_id: str | None = None,
     ) -> dict[str, Any]:
         """List custom conversion goals"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            customer_id=customer_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "customerId": customer_id,
+            }
         )
         return self._client._get("/v1/ads/conversions/custom-goals", params=params)
 
@@ -262,12 +306,14 @@ class ConversionsResource:
         customer_id: str | None = None,
     ) -> dict[str, Any]:
         """Create a custom conversion goal"""
-        payload = self._build_payload(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            customer_id=customer_id,
-            name=name,
-            conversion_action_ids=conversion_action_ids,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "customerId": customer_id,
+                "name": name,
+                "conversionActionIds": conversion_action_ids,
+            }
         )
         return self._client._post("/v1/ads/conversions/custom-goals", data=payload)
 
@@ -282,12 +328,14 @@ class ConversionsResource:
         conversion_action_ids: list[str] | None = None,
     ) -> dict[str, Any]:
         """Update a custom conversion goal"""
-        payload = self._build_payload(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            customer_id=customer_id,
-            name=name,
-            conversion_action_ids=conversion_action_ids,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "customerId": customer_id,
+                "name": name,
+                "conversionActionIds": conversion_action_ids,
+            }
         )
         return self._client._patch(
             f"/v1/ads/conversions/custom-goals/{goal_id}", data=payload
@@ -302,10 +350,12 @@ class ConversionsResource:
         customer_id: str | None = None,
     ) -> dict[str, Any]:
         """Remove a custom conversion goal"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            customer_id=customer_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "customerId": customer_id,
+            }
         )
         return self._client._delete(
             f"/v1/ads/conversions/custom-goals/{goal_id}", params=params
@@ -325,16 +375,18 @@ class ConversionsResource:
         cursor: str | None = None,
     ) -> dict[str, Any]:
         """List stored events"""
-        params = self._build_params(
-            profile_id=profile_id,
-            limit=limit,
-            from_=from_,
-            to=to,
-            event_name=event_name,
-            source=source,
-            platform=platform,
-            delivery_status=delivery_status,
-            cursor=cursor,
+        params = self._build_query(
+            {
+                "profileId": profile_id,
+                "limit": limit,
+                "from": from_,
+                "to": to,
+                "eventName": event_name,
+                "source": source,
+                "platform": platform,
+                "deliveryStatus": delivery_status,
+                "cursor": cursor,
+            }
         )
         return self._client._get("/v1/events", params=params)
 
@@ -350,13 +402,15 @@ class ConversionsResource:
         mode: str | None = "sync",
     ) -> dict[str, Any]:
         """Send events to every destination"""
-        payload = self._build_payload(
-            profile_id=profile_id,
-            events=events,
-            destinations=destinations,
-            consent=consent,
-            test_code=test_code,
-            mode=mode,
+        payload = self._build_body(
+            {
+                "profileId": profile_id,
+                "events": events,
+                "destinations": destinations,
+                "consent": consent,
+                "testCode": test_code,
+                "mode": mode,
+            }
         )
         headers: dict[str, str] = {}
         if idempotency_key is not None:
@@ -365,8 +419,10 @@ class ConversionsResource:
 
     def get_events_overview(self, *, profile_id: str | None = None) -> dict[str, Any]:
         """Get today's tracking overview"""
-        params = self._build_params(
-            profile_id=profile_id,
+        params = self._build_query(
+            {
+                "profileId": profile_id,
+            }
         )
         return self._client._get("/v1/events/overview", params=params)
 
@@ -374,23 +430,29 @@ class ConversionsResource:
         self, *, profile_id: str | None = None, period: str | None = "7d"
     ) -> dict[str, Any]:
         """Get daily tracking figures"""
-        params = self._build_params(
-            profile_id=profile_id,
-            period=period,
+        params = self._build_query(
+            {
+                "profileId": profile_id,
+                "period": period,
+            }
         )
         return self._client._get("/v1/events/overview/daily", params=params)
 
     def list_event_names(self, *, profile_id: str | None = None) -> dict[str, Any]:
         """List stored event names"""
-        params = self._build_params(
-            profile_id=profile_id,
+        params = self._build_query(
+            {
+                "profileId": profile_id,
+            }
         )
         return self._client._get("/v1/events/names", params=params)
 
     def get_event(self, event_id: str, profile_id: str) -> dict[str, Any]:
         """Get one stored event and its deliveries"""
-        params = self._build_params(
-            profile_id=profile_id,
+        params = self._build_query(
+            {
+                "profileId": profile_id,
+            }
         )
         return self._client._get(f"/v1/events/{event_id}", params=params)
 
@@ -403,17 +465,21 @@ class ConversionsResource:
         currency: str | None = None,
     ) -> dict[str, Any]:
         """Change a stored event's value"""
-        payload = self._build_payload(
-            profile_id=profile_id,
-            value=value,
-            currency=currency,
+        payload = self._build_body(
+            {
+                "profileId": profile_id,
+                "value": value,
+                "currency": currency,
+            }
         )
         return self._client._patch(f"/v1/events/{event_id}", data=payload)
 
     def retract_event(self, event_id: str, profile_id: str) -> dict[str, Any]:
         """Retract a stored event"""
-        params = self._build_params(
-            profile_id=profile_id,
+        params = self._build_query(
+            {
+                "profileId": profile_id,
+            }
         )
         return self._client._delete(f"/v1/events/{event_id}", params=params)
 
@@ -421,8 +487,10 @@ class ConversionsResource:
         self, *, profile_id: str | None = None
     ) -> dict[str, Any]:
         """List event destinations"""
-        params = self._build_params(
-            profile_id=profile_id,
+        params = self._build_query(
+            {
+                "profileId": profile_id,
+            }
         )
         return self._client._get("/v1/events/destinations", params=params)
 
@@ -435,11 +503,13 @@ class ConversionsResource:
         event_names: list[str] | None = None,
     ) -> dict[str, Any]:
         """Add an event destination"""
-        payload = self._build_payload(
-            profile_id=profile_id,
-            account_id=account_id,
-            destination_id=destination_id,
-            event_names=event_names,
+        payload = self._build_body(
+            {
+                "profileId": profile_id,
+                "accountId": account_id,
+                "destinationId": destination_id,
+                "eventNames": event_names,
+            }
         )
         return self._client._post("/v1/events/destinations", data=payload)
 
@@ -449,8 +519,10 @@ class ConversionsResource:
 
     def list_forwarding_rules(self, *, profile_id: str | None = None) -> dict[str, Any]:
         """List forwarding rules"""
-        params = self._build_params(
-            profile_id=profile_id,
+        params = self._build_query(
+            {
+                "profileId": profile_id,
+            }
         )
         return self._client._get("/v1/events/forwarding-rules", params=params)
 
@@ -465,20 +537,24 @@ class ConversionsResource:
         api_secret: str | None = None,
     ) -> dict[str, Any]:
         """Add a forwarding rule"""
-        payload = self._build_payload(
-            profile_id=profile_id,
-            account_id=account_id,
-            destination_id=destination_id,
-            event_names=event_names,
-            sources=sources,
-            api_secret=api_secret,
+        payload = self._build_body(
+            {
+                "profileId": profile_id,
+                "accountId": account_id,
+                "destinationId": destination_id,
+                "eventNames": event_names,
+                "sources": sources,
+                "apiSecret": api_secret,
+            }
         )
         return self._client._post("/v1/events/forwarding-rules", data=payload)
 
     def update_forwarding_rule(self, rule_id: str, api_secret: str) -> dict[str, Any]:
         """Change a forwarding rule's API secret"""
-        payload = self._build_payload(
-            api_secret=api_secret,
+        payload = self._build_body(
+            {
+                "apiSecret": api_secret,
+            }
         )
         return self._client._patch(
             f"/v1/events/forwarding-rules/{rule_id}", data=payload
@@ -496,10 +572,12 @@ class ConversionsResource:
         cursor: str | None = None,
     ) -> dict[str, Any]:
         """List tracking sites"""
-        params = self._build_params(
-            profile_id=profile_id,
-            limit=limit,
-            cursor=cursor,
+        params = self._build_query(
+            {
+                "profileId": profile_id,
+                "limit": limit,
+                "cursor": cursor,
+            }
         )
         return self._client._get("/v1/tracking-sites", params=params)
 
@@ -525,12 +603,14 @@ class ConversionsResource:
         proxy_path: Any | None = None,
     ) -> dict[str, Any]:
         """Update a tracking site"""
-        payload = self._build_payload(
-            name=name,
-            domains=domains,
-            consent_mode=consent_mode,
-            custom_hostname=custom_hostname,
-            proxy_path=proxy_path,
+        payload = self._build_body(
+            {
+                "name": name,
+                "domains": domains,
+                "consentMode": consent_mode,
+                "customHostname": custom_hostname,
+                "proxyPath": proxy_path,
+            }
         )
         return self._client._patch(f"/v1/tracking-sites/{site_id}", data=payload)
 
@@ -549,8 +629,10 @@ class ConversionsResource:
 
     def list_ad_conversion_destinations(self, account_id: str) -> dict[str, Any]:
         """List conversion destinations"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+            }
         )
         return self._client._get("/v1/ads/conversions/destinations", params=params)
 
@@ -571,19 +653,21 @@ class ConversionsResource:
         primary_for_goal: bool | None = None,
     ) -> dict[str, Any]:
         """Create a conversion destination"""
-        payload = self._build_payload(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            name=name,
-            type=type,
-            attribution_type=attribution_type,
-            post_click_attribution_window_size=post_click_attribution_window_size,
-            view_through_attribution_window_size=view_through_attribution_window_size,
-            value_type=value_type,
-            value=value,
-            auto_association_type=auto_association_type,
-            counting_type=counting_type,
-            primary_for_goal=primary_for_goal,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "name": name,
+                "type": type,
+                "attributionType": attribution_type,
+                "postClickAttributionWindowSize": post_click_attribution_window_size,
+                "viewThroughAttributionWindowSize": view_through_attribution_window_size,
+                "valueType": value_type,
+                "value": value,
+                "autoAssociationType": auto_association_type,
+                "countingType": counting_type,
+                "primaryForGoal": primary_for_goal,
+            }
         )
         return self._client._post("/v1/ads/conversions/destinations", data=payload)
 
@@ -591,9 +675,11 @@ class ConversionsResource:
         self, account_id: str, destination_id: str, ad_account_id: str
     ) -> dict[str, Any]:
         """Get a conversion destination"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+            }
         )
         return self._client._get(
             f"/v1/ads/conversions/destinations/{destination_id}", params=params
@@ -614,16 +700,18 @@ class ConversionsResource:
         value: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Update a conversion destination"""
-        payload = self._build_payload(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            name=name,
-            enabled=enabled,
-            attribution_type=attribution_type,
-            post_click_attribution_window_size=post_click_attribution_window_size,
-            view_through_attribution_window_size=view_through_attribution_window_size,
-            value_type=value_type,
-            value=value,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "name": name,
+                "enabled": enabled,
+                "attributionType": attribution_type,
+                "postClickAttributionWindowSize": post_click_attribution_window_size,
+                "viewThroughAttributionWindowSize": view_through_attribution_window_size,
+                "valueType": value_type,
+                "value": value,
+            }
         )
         return self._client._patch(
             f"/v1/ads/conversions/destinations/{destination_id}", data=payload
@@ -633,9 +721,11 @@ class ConversionsResource:
         self, account_id: str, destination_id: str, *, ad_account_id: str | None = None
     ) -> dict[str, Any]:
         """Delete a conversion destination"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+            }
         )
         return self._client._delete(
             f"/v1/ads/conversions/destinations/{destination_id}", params=params
@@ -645,9 +735,11 @@ class ConversionsResource:
         self, account_id: str, destination_id: str, ad_account_id: str
     ) -> dict[str, Any]:
         """List associated campaigns"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+            }
         )
         return self._client._get(
             f"/v1/ads/conversions/destinations/{destination_id}/associations",
@@ -662,10 +754,12 @@ class ConversionsResource:
         campaign_ids: list[str],
     ) -> dict[str, Any]:
         """Associate campaigns"""
-        payload = self._build_payload(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            campaign_ids=campaign_ids,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "campaignIds": campaign_ids,
+            }
         )
         return self._client._post(
             f"/v1/ads/conversions/destinations/{destination_id}/associations",
@@ -680,10 +774,12 @@ class ConversionsResource:
         campaign_ids: str,
     ) -> dict[str, Any]:
         """Remove associated campaigns"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            campaign_ids=campaign_ids,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "campaignIds": campaign_ids,
+            }
         )
         return self._client._delete(
             f"/v1/ads/conversions/destinations/{destination_id}/associations",
@@ -701,12 +797,14 @@ class ConversionsResource:
         granularity: str | None = "DAILY",
     ) -> dict[str, Any]:
         """Get attribution metrics"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            start_date=start_date,
-            end_date=end_date,
-            granularity=granularity,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "startDate": start_date,
+                "endDate": end_date,
+                "granularity": granularity,
+            }
         )
         return self._client._get(
             f"/v1/ads/conversions/destinations/{destination_id}/metrics", params=params
@@ -716,9 +814,11 @@ class ConversionsResource:
         self, account_id: str, ad_account_id: str
     ) -> dict[str, Any]:
         """List custom conversions"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+            }
         )
         return self._client._get(
             "/v1/ads/conversions/custom-conversions", params=params
@@ -734,13 +834,15 @@ class ConversionsResource:
         rule: dict[str, Any],
     ) -> dict[str, Any]:
         """Create custom conversion"""
-        payload = self._build_payload(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            name=name,
-            pixel_id=pixel_id,
-            custom_event_type=custom_event_type,
-            rule=rule,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "name": name,
+                "pixelId": pixel_id,
+                "customEventType": custom_event_type,
+                "rule": rule,
+            }
         )
         return self._client._post(
             "/v1/ads/conversions/custom-conversions", data=payload
@@ -767,18 +869,20 @@ class ConversionsResource:
         primary_for_goal: bool | None = None,
     ) -> dict[str, Any]:
         """Create a conversion destination"""
-        payload = self._build_payload(
-            ad_account_id=ad_account_id,
-            name=name,
-            type=type,
-            attribution_type=attribution_type,
-            post_click_attribution_window_size=post_click_attribution_window_size,
-            view_through_attribution_window_size=view_through_attribution_window_size,
-            value_type=value_type,
-            value=value,
-            auto_association_type=auto_association_type,
-            counting_type=counting_type,
-            primary_for_goal=primary_for_goal,
+        payload = self._build_body(
+            {
+                "adAccountId": ad_account_id,
+                "name": name,
+                "type": type,
+                "attributionType": attribution_type,
+                "postClickAttributionWindowSize": post_click_attribution_window_size,
+                "viewThroughAttributionWindowSize": view_through_attribution_window_size,
+                "valueType": value_type,
+                "value": value,
+                "autoAssociationType": auto_association_type,
+                "countingType": counting_type,
+                "primaryForGoal": primary_for_goal,
+            }
         )
         return self._client._post(
             f"/v1/accounts/{account_id}/conversion-destinations", data=payload
@@ -788,8 +892,10 @@ class ConversionsResource:
         self, account_id: str, destination_id: str, ad_account_id: str
     ) -> dict[str, Any]:
         """Get a conversion destination"""
-        params = self._build_params(
-            ad_account_id=ad_account_id,
+        params = self._build_query(
+            {
+                "adAccountId": ad_account_id,
+            }
         )
         return self._client._get(
             f"/v1/accounts/{account_id}/conversion-destinations/{destination_id}",
@@ -811,15 +917,17 @@ class ConversionsResource:
         value: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Update a conversion destination"""
-        payload = self._build_payload(
-            ad_account_id=ad_account_id,
-            name=name,
-            enabled=enabled,
-            attribution_type=attribution_type,
-            post_click_attribution_window_size=post_click_attribution_window_size,
-            view_through_attribution_window_size=view_through_attribution_window_size,
-            value_type=value_type,
-            value=value,
+        payload = self._build_body(
+            {
+                "adAccountId": ad_account_id,
+                "name": name,
+                "enabled": enabled,
+                "attributionType": attribution_type,
+                "postClickAttributionWindowSize": post_click_attribution_window_size,
+                "viewThroughAttributionWindowSize": view_through_attribution_window_size,
+                "valueType": value_type,
+                "value": value,
+            }
         )
         return self._client._patch(
             f"/v1/accounts/{account_id}/conversion-destinations/{destination_id}",
@@ -830,8 +938,10 @@ class ConversionsResource:
         self, account_id: str, destination_id: str, *, ad_account_id: str | None = None
     ) -> dict[str, Any]:
         """Delete a conversion destination"""
-        params = self._build_params(
-            ad_account_id=ad_account_id,
+        params = self._build_query(
+            {
+                "adAccountId": ad_account_id,
+            }
         )
         return self._client._delete(
             f"/v1/accounts/{account_id}/conversion-destinations/{destination_id}",
@@ -842,8 +952,10 @@ class ConversionsResource:
         self, account_id: str, destination_id: str, ad_account_id: str
     ) -> dict[str, Any]:
         """List associated campaigns"""
-        params = self._build_params(
-            ad_account_id=ad_account_id,
+        params = self._build_query(
+            {
+                "adAccountId": ad_account_id,
+            }
         )
         return self._client._get(
             f"/v1/accounts/{account_id}/conversion-destinations/{destination_id}/associations",
@@ -858,9 +970,11 @@ class ConversionsResource:
         campaign_ids: list[str],
     ) -> dict[str, Any]:
         """Associate campaigns"""
-        payload = self._build_payload(
-            ad_account_id=ad_account_id,
-            campaign_ids=campaign_ids,
+        payload = self._build_body(
+            {
+                "adAccountId": ad_account_id,
+                "campaignIds": campaign_ids,
+            }
         )
         return self._client._post(
             f"/v1/accounts/{account_id}/conversion-destinations/{destination_id}/associations",
@@ -875,9 +989,11 @@ class ConversionsResource:
         campaign_ids: str,
     ) -> dict[str, Any]:
         """Remove associated campaigns"""
-        params = self._build_params(
-            ad_account_id=ad_account_id,
-            campaign_ids=campaign_ids,
+        params = self._build_query(
+            {
+                "adAccountId": ad_account_id,
+                "campaignIds": campaign_ids,
+            }
         )
         return self._client._delete(
             f"/v1/accounts/{account_id}/conversion-destinations/{destination_id}/associations",
@@ -895,11 +1011,13 @@ class ConversionsResource:
         granularity: str | None = "DAILY",
     ) -> dict[str, Any]:
         """Get attribution metrics"""
-        params = self._build_params(
-            ad_account_id=ad_account_id,
-            start_date=start_date,
-            end_date=end_date,
-            granularity=granularity,
+        params = self._build_query(
+            {
+                "adAccountId": ad_account_id,
+                "startDate": start_date,
+                "endDate": end_date,
+                "granularity": granularity,
+            }
         )
         return self._client._get(
             f"/v1/accounts/{account_id}/conversion-destinations/{destination_id}/metrics",
@@ -910,9 +1028,11 @@ class ConversionsResource:
         self, account_id: str, destination_id: str
     ) -> dict[str, Any]:
         """Get Event Match Quality (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            destination_id=destination_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "destinationId": destination_id,
+            }
         )
         return await self._client._aget("/v1/ads/conversions/quality", params=params)
 
@@ -926,12 +1046,14 @@ class ConversionsResource:
         consent: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Send conversion events to one destination (legacy) (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            destination_id=destination_id,
-            events=events,
-            test_code=test_code,
-            consent=consent,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "destinationId": destination_id,
+                "events": events,
+                "testCode": test_code,
+                "consent": consent,
+            }
         )
         return await self._client._apost("/v1/ads/conversions", data=payload)
 
@@ -939,10 +1061,12 @@ class ConversionsResource:
         self, account_id: str, destination_id: str, adjustments: list[dict[str, Any]]
     ) -> dict[str, Any]:
         """Adjust uploaded conversions (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            destination_id=destination_id,
-            adjustments=adjustments,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "destinationId": destination_id,
+                "adjustments": adjustments,
+            }
         )
         return await self._client._apost(
             "/v1/ads/conversions/adjustments", data=payload
@@ -957,11 +1081,13 @@ class ConversionsResource:
         type: str | None = None,
     ) -> dict[str, Any]:
         """List conversion actions (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            customer_id=customer_id,
-            type=type,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "customerId": customer_id,
+                "type": type,
+            }
         )
         return await self._client._aget("/v1/ads/conversions/actions", params=params)
 
@@ -983,20 +1109,22 @@ class ConversionsResource:
         primary_for_goal: bool | None = None,
     ) -> dict[str, Any]:
         """Create conversion action (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            customer_id=customer_id,
-            name=name,
-            type=type,
-            default_value=default_value,
-            always_use_default_value=always_use_default_value,
-            category=category,
-            counting_type=counting_type,
-            default_currency=default_currency,
-            click_through_lookback_window_days=click_through_lookback_window_days,
-            view_through_lookback_window_days=view_through_lookback_window_days,
-            primary_for_goal=primary_for_goal,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "customerId": customer_id,
+                "name": name,
+                "type": type,
+                "defaultValue": default_value,
+                "alwaysUseDefaultValue": always_use_default_value,
+                "category": category,
+                "countingType": counting_type,
+                "defaultCurrency": default_currency,
+                "clickThroughLookbackWindowDays": click_through_lookback_window_days,
+                "viewThroughLookbackWindowDays": view_through_lookback_window_days,
+                "primaryForGoal": primary_for_goal,
+            }
         )
         return await self._client._apost("/v1/ads/conversions/actions", data=payload)
 
@@ -1008,10 +1136,12 @@ class ConversionsResource:
         customer_id: str | None = None,
     ) -> dict[str, Any]:
         """List account conversion goals (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            customer_id=customer_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "customerId": customer_id,
+            }
         )
         return await self._client._aget("/v1/ads/conversions/goals", params=params)
 
@@ -1024,11 +1154,13 @@ class ConversionsResource:
         customer_id: str | None = None,
     ) -> dict[str, Any]:
         """Update account conversion goals (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            customer_id=customer_id,
-            goals=goals,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "customerId": customer_id,
+                "goals": goals,
+            }
         )
         return await self._client._apatch("/v1/ads/conversions/goals", data=payload)
 
@@ -1051,20 +1183,22 @@ class ConversionsResource:
         primary_for_goal: bool | None = None,
     ) -> dict[str, Any]:
         """Update a conversion action's settings (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            customer_id=customer_id,
-            name=name,
-            status=status,
-            default_value=default_value,
-            always_use_default_value=always_use_default_value,
-            category=category,
-            counting_type=counting_type,
-            default_currency=default_currency,
-            click_through_lookback_window_days=click_through_lookback_window_days,
-            view_through_lookback_window_days=view_through_lookback_window_days,
-            primary_for_goal=primary_for_goal,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "customerId": customer_id,
+                "name": name,
+                "status": status,
+                "defaultValue": default_value,
+                "alwaysUseDefaultValue": always_use_default_value,
+                "category": category,
+                "countingType": counting_type,
+                "defaultCurrency": default_currency,
+                "clickThroughLookbackWindowDays": click_through_lookback_window_days,
+                "viewThroughLookbackWindowDays": view_through_lookback_window_days,
+                "primaryForGoal": primary_for_goal,
+            }
         )
         return await self._client._apatch(
             f"/v1/ads/conversions/actions/{action_id}", data=payload
@@ -1078,10 +1212,12 @@ class ConversionsResource:
         customer_id: str | None = None,
     ) -> dict[str, Any]:
         """List custom conversion goals (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            customer_id=customer_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "customerId": customer_id,
+            }
         )
         return await self._client._aget(
             "/v1/ads/conversions/custom-goals", params=params
@@ -1097,12 +1233,14 @@ class ConversionsResource:
         customer_id: str | None = None,
     ) -> dict[str, Any]:
         """Create a custom conversion goal (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            customer_id=customer_id,
-            name=name,
-            conversion_action_ids=conversion_action_ids,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "customerId": customer_id,
+                "name": name,
+                "conversionActionIds": conversion_action_ids,
+            }
         )
         return await self._client._apost(
             "/v1/ads/conversions/custom-goals", data=payload
@@ -1119,12 +1257,14 @@ class ConversionsResource:
         conversion_action_ids: list[str] | None = None,
     ) -> dict[str, Any]:
         """Update a custom conversion goal (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            customer_id=customer_id,
-            name=name,
-            conversion_action_ids=conversion_action_ids,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "customerId": customer_id,
+                "name": name,
+                "conversionActionIds": conversion_action_ids,
+            }
         )
         return await self._client._apatch(
             f"/v1/ads/conversions/custom-goals/{goal_id}", data=payload
@@ -1139,10 +1279,12 @@ class ConversionsResource:
         customer_id: str | None = None,
     ) -> dict[str, Any]:
         """Remove a custom conversion goal (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            customer_id=customer_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "customerId": customer_id,
+            }
         )
         return await self._client._adelete(
             f"/v1/ads/conversions/custom-goals/{goal_id}", params=params
@@ -1162,16 +1304,18 @@ class ConversionsResource:
         cursor: str | None = None,
     ) -> dict[str, Any]:
         """List stored events (async)"""
-        params = self._build_params(
-            profile_id=profile_id,
-            limit=limit,
-            from_=from_,
-            to=to,
-            event_name=event_name,
-            source=source,
-            platform=platform,
-            delivery_status=delivery_status,
-            cursor=cursor,
+        params = self._build_query(
+            {
+                "profileId": profile_id,
+                "limit": limit,
+                "from": from_,
+                "to": to,
+                "eventName": event_name,
+                "source": source,
+                "platform": platform,
+                "deliveryStatus": delivery_status,
+                "cursor": cursor,
+            }
         )
         return await self._client._aget("/v1/events", params=params)
 
@@ -1187,13 +1331,15 @@ class ConversionsResource:
         mode: str | None = "sync",
     ) -> dict[str, Any]:
         """Send events to every destination (async)"""
-        payload = self._build_payload(
-            profile_id=profile_id,
-            events=events,
-            destinations=destinations,
-            consent=consent,
-            test_code=test_code,
-            mode=mode,
+        payload = self._build_body(
+            {
+                "profileId": profile_id,
+                "events": events,
+                "destinations": destinations,
+                "consent": consent,
+                "testCode": test_code,
+                "mode": mode,
+            }
         )
         headers: dict[str, str] = {}
         if idempotency_key is not None:
@@ -1204,8 +1350,10 @@ class ConversionsResource:
         self, *, profile_id: str | None = None
     ) -> dict[str, Any]:
         """Get today's tracking overview (async)"""
-        params = self._build_params(
-            profile_id=profile_id,
+        params = self._build_query(
+            {
+                "profileId": profile_id,
+            }
         )
         return await self._client._aget("/v1/events/overview", params=params)
 
@@ -1213,9 +1361,11 @@ class ConversionsResource:
         self, *, profile_id: str | None = None, period: str | None = "7d"
     ) -> dict[str, Any]:
         """Get daily tracking figures (async)"""
-        params = self._build_params(
-            profile_id=profile_id,
-            period=period,
+        params = self._build_query(
+            {
+                "profileId": profile_id,
+                "period": period,
+            }
         )
         return await self._client._aget("/v1/events/overview/daily", params=params)
 
@@ -1223,15 +1373,19 @@ class ConversionsResource:
         self, *, profile_id: str | None = None
     ) -> dict[str, Any]:
         """List stored event names (async)"""
-        params = self._build_params(
-            profile_id=profile_id,
+        params = self._build_query(
+            {
+                "profileId": profile_id,
+            }
         )
         return await self._client._aget("/v1/events/names", params=params)
 
     async def aget_event(self, event_id: str, profile_id: str) -> dict[str, Any]:
         """Get one stored event and its deliveries (async)"""
-        params = self._build_params(
-            profile_id=profile_id,
+        params = self._build_query(
+            {
+                "profileId": profile_id,
+            }
         )
         return await self._client._aget(f"/v1/events/{event_id}", params=params)
 
@@ -1244,17 +1398,21 @@ class ConversionsResource:
         currency: str | None = None,
     ) -> dict[str, Any]:
         """Change a stored event's value (async)"""
-        payload = self._build_payload(
-            profile_id=profile_id,
-            value=value,
-            currency=currency,
+        payload = self._build_body(
+            {
+                "profileId": profile_id,
+                "value": value,
+                "currency": currency,
+            }
         )
         return await self._client._apatch(f"/v1/events/{event_id}", data=payload)
 
     async def aretract_event(self, event_id: str, profile_id: str) -> dict[str, Any]:
         """Retract a stored event (async)"""
-        params = self._build_params(
-            profile_id=profile_id,
+        params = self._build_query(
+            {
+                "profileId": profile_id,
+            }
         )
         return await self._client._adelete(f"/v1/events/{event_id}", params=params)
 
@@ -1262,8 +1420,10 @@ class ConversionsResource:
         self, *, profile_id: str | None = None
     ) -> dict[str, Any]:
         """List event destinations (async)"""
-        params = self._build_params(
-            profile_id=profile_id,
+        params = self._build_query(
+            {
+                "profileId": profile_id,
+            }
         )
         return await self._client._aget("/v1/events/destinations", params=params)
 
@@ -1276,11 +1436,13 @@ class ConversionsResource:
         event_names: list[str] | None = None,
     ) -> dict[str, Any]:
         """Add an event destination (async)"""
-        payload = self._build_payload(
-            profile_id=profile_id,
-            account_id=account_id,
-            destination_id=destination_id,
-            event_names=event_names,
+        payload = self._build_body(
+            {
+                "profileId": profile_id,
+                "accountId": account_id,
+                "destinationId": destination_id,
+                "eventNames": event_names,
+            }
         )
         return await self._client._apost("/v1/events/destinations", data=payload)
 
@@ -1292,8 +1454,10 @@ class ConversionsResource:
         self, *, profile_id: str | None = None
     ) -> dict[str, Any]:
         """List forwarding rules (async)"""
-        params = self._build_params(
-            profile_id=profile_id,
+        params = self._build_query(
+            {
+                "profileId": profile_id,
+            }
         )
         return await self._client._aget("/v1/events/forwarding-rules", params=params)
 
@@ -1308,13 +1472,15 @@ class ConversionsResource:
         api_secret: str | None = None,
     ) -> dict[str, Any]:
         """Add a forwarding rule (async)"""
-        payload = self._build_payload(
-            profile_id=profile_id,
-            account_id=account_id,
-            destination_id=destination_id,
-            event_names=event_names,
-            sources=sources,
-            api_secret=api_secret,
+        payload = self._build_body(
+            {
+                "profileId": profile_id,
+                "accountId": account_id,
+                "destinationId": destination_id,
+                "eventNames": event_names,
+                "sources": sources,
+                "apiSecret": api_secret,
+            }
         )
         return await self._client._apost("/v1/events/forwarding-rules", data=payload)
 
@@ -1322,8 +1488,10 @@ class ConversionsResource:
         self, rule_id: str, api_secret: str
     ) -> dict[str, Any]:
         """Change a forwarding rule's API secret (async)"""
-        payload = self._build_payload(
-            api_secret=api_secret,
+        payload = self._build_body(
+            {
+                "apiSecret": api_secret,
+            }
         )
         return await self._client._apatch(
             f"/v1/events/forwarding-rules/{rule_id}", data=payload
@@ -1341,10 +1509,12 @@ class ConversionsResource:
         cursor: str | None = None,
     ) -> dict[str, Any]:
         """List tracking sites (async)"""
-        params = self._build_params(
-            profile_id=profile_id,
-            limit=limit,
-            cursor=cursor,
+        params = self._build_query(
+            {
+                "profileId": profile_id,
+                "limit": limit,
+                "cursor": cursor,
+            }
         )
         return await self._client._aget("/v1/tracking-sites", params=params)
 
@@ -1372,12 +1542,14 @@ class ConversionsResource:
         proxy_path: Any | None = None,
     ) -> dict[str, Any]:
         """Update a tracking site (async)"""
-        payload = self._build_payload(
-            name=name,
-            domains=domains,
-            consent_mode=consent_mode,
-            custom_hostname=custom_hostname,
-            proxy_path=proxy_path,
+        payload = self._build_body(
+            {
+                "name": name,
+                "domains": domains,
+                "consentMode": consent_mode,
+                "customHostname": custom_hostname,
+                "proxyPath": proxy_path,
+            }
         )
         return await self._client._apatch(f"/v1/tracking-sites/{site_id}", data=payload)
 
@@ -1396,8 +1568,10 @@ class ConversionsResource:
 
     async def alist_ad_conversion_destinations(self, account_id: str) -> dict[str, Any]:
         """List conversion destinations (async)"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+            }
         )
         return await self._client._aget(
             "/v1/ads/conversions/destinations", params=params
@@ -1420,19 +1594,21 @@ class ConversionsResource:
         primary_for_goal: bool | None = None,
     ) -> dict[str, Any]:
         """Create a conversion destination (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            name=name,
-            type=type,
-            attribution_type=attribution_type,
-            post_click_attribution_window_size=post_click_attribution_window_size,
-            view_through_attribution_window_size=view_through_attribution_window_size,
-            value_type=value_type,
-            value=value,
-            auto_association_type=auto_association_type,
-            counting_type=counting_type,
-            primary_for_goal=primary_for_goal,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "name": name,
+                "type": type,
+                "attributionType": attribution_type,
+                "postClickAttributionWindowSize": post_click_attribution_window_size,
+                "viewThroughAttributionWindowSize": view_through_attribution_window_size,
+                "valueType": value_type,
+                "value": value,
+                "autoAssociationType": auto_association_type,
+                "countingType": counting_type,
+                "primaryForGoal": primary_for_goal,
+            }
         )
         return await self._client._apost(
             "/v1/ads/conversions/destinations", data=payload
@@ -1442,9 +1618,11 @@ class ConversionsResource:
         self, account_id: str, destination_id: str, ad_account_id: str
     ) -> dict[str, Any]:
         """Get a conversion destination (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+            }
         )
         return await self._client._aget(
             f"/v1/ads/conversions/destinations/{destination_id}", params=params
@@ -1465,16 +1643,18 @@ class ConversionsResource:
         value: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Update a conversion destination (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            name=name,
-            enabled=enabled,
-            attribution_type=attribution_type,
-            post_click_attribution_window_size=post_click_attribution_window_size,
-            view_through_attribution_window_size=view_through_attribution_window_size,
-            value_type=value_type,
-            value=value,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "name": name,
+                "enabled": enabled,
+                "attributionType": attribution_type,
+                "postClickAttributionWindowSize": post_click_attribution_window_size,
+                "viewThroughAttributionWindowSize": view_through_attribution_window_size,
+                "valueType": value_type,
+                "value": value,
+            }
         )
         return await self._client._apatch(
             f"/v1/ads/conversions/destinations/{destination_id}", data=payload
@@ -1484,9 +1664,11 @@ class ConversionsResource:
         self, account_id: str, destination_id: str, *, ad_account_id: str | None = None
     ) -> dict[str, Any]:
         """Delete a conversion destination (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+            }
         )
         return await self._client._adelete(
             f"/v1/ads/conversions/destinations/{destination_id}", params=params
@@ -1496,9 +1678,11 @@ class ConversionsResource:
         self, account_id: str, destination_id: str, ad_account_id: str
     ) -> dict[str, Any]:
         """List associated campaigns (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+            }
         )
         return await self._client._aget(
             f"/v1/ads/conversions/destinations/{destination_id}/associations",
@@ -1513,10 +1697,12 @@ class ConversionsResource:
         campaign_ids: list[str],
     ) -> dict[str, Any]:
         """Associate campaigns (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            campaign_ids=campaign_ids,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "campaignIds": campaign_ids,
+            }
         )
         return await self._client._apost(
             f"/v1/ads/conversions/destinations/{destination_id}/associations",
@@ -1531,10 +1717,12 @@ class ConversionsResource:
         campaign_ids: str,
     ) -> dict[str, Any]:
         """Remove associated campaigns (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            campaign_ids=campaign_ids,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "campaignIds": campaign_ids,
+            }
         )
         return await self._client._adelete(
             f"/v1/ads/conversions/destinations/{destination_id}/associations",
@@ -1552,12 +1740,14 @@ class ConversionsResource:
         granularity: str | None = "DAILY",
     ) -> dict[str, Any]:
         """Get attribution metrics (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            start_date=start_date,
-            end_date=end_date,
-            granularity=granularity,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "startDate": start_date,
+                "endDate": end_date,
+                "granularity": granularity,
+            }
         )
         return await self._client._aget(
             f"/v1/ads/conversions/destinations/{destination_id}/metrics", params=params
@@ -1567,9 +1757,11 @@ class ConversionsResource:
         self, account_id: str, ad_account_id: str
     ) -> dict[str, Any]:
         """List custom conversions (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+            }
         )
         return await self._client._aget(
             "/v1/ads/conversions/custom-conversions", params=params
@@ -1585,13 +1777,15 @@ class ConversionsResource:
         rule: dict[str, Any],
     ) -> dict[str, Any]:
         """Create custom conversion (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            name=name,
-            pixel_id=pixel_id,
-            custom_event_type=custom_event_type,
-            rule=rule,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "name": name,
+                "pixelId": pixel_id,
+                "customEventType": custom_event_type,
+                "rule": rule,
+            }
         )
         return await self._client._apost(
             "/v1/ads/conversions/custom-conversions", data=payload
@@ -1620,18 +1814,20 @@ class ConversionsResource:
         primary_for_goal: bool | None = None,
     ) -> dict[str, Any]:
         """Create a conversion destination (async)"""
-        payload = self._build_payload(
-            ad_account_id=ad_account_id,
-            name=name,
-            type=type,
-            attribution_type=attribution_type,
-            post_click_attribution_window_size=post_click_attribution_window_size,
-            view_through_attribution_window_size=view_through_attribution_window_size,
-            value_type=value_type,
-            value=value,
-            auto_association_type=auto_association_type,
-            counting_type=counting_type,
-            primary_for_goal=primary_for_goal,
+        payload = self._build_body(
+            {
+                "adAccountId": ad_account_id,
+                "name": name,
+                "type": type,
+                "attributionType": attribution_type,
+                "postClickAttributionWindowSize": post_click_attribution_window_size,
+                "viewThroughAttributionWindowSize": view_through_attribution_window_size,
+                "valueType": value_type,
+                "value": value,
+                "autoAssociationType": auto_association_type,
+                "countingType": counting_type,
+                "primaryForGoal": primary_for_goal,
+            }
         )
         return await self._client._apost(
             f"/v1/accounts/{account_id}/conversion-destinations", data=payload
@@ -1641,8 +1837,10 @@ class ConversionsResource:
         self, account_id: str, destination_id: str, ad_account_id: str
     ) -> dict[str, Any]:
         """Get a conversion destination (async)"""
-        params = self._build_params(
-            ad_account_id=ad_account_id,
+        params = self._build_query(
+            {
+                "adAccountId": ad_account_id,
+            }
         )
         return await self._client._aget(
             f"/v1/accounts/{account_id}/conversion-destinations/{destination_id}",
@@ -1664,15 +1862,17 @@ class ConversionsResource:
         value: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Update a conversion destination (async)"""
-        payload = self._build_payload(
-            ad_account_id=ad_account_id,
-            name=name,
-            enabled=enabled,
-            attribution_type=attribution_type,
-            post_click_attribution_window_size=post_click_attribution_window_size,
-            view_through_attribution_window_size=view_through_attribution_window_size,
-            value_type=value_type,
-            value=value,
+        payload = self._build_body(
+            {
+                "adAccountId": ad_account_id,
+                "name": name,
+                "enabled": enabled,
+                "attributionType": attribution_type,
+                "postClickAttributionWindowSize": post_click_attribution_window_size,
+                "viewThroughAttributionWindowSize": view_through_attribution_window_size,
+                "valueType": value_type,
+                "value": value,
+            }
         )
         return await self._client._apatch(
             f"/v1/accounts/{account_id}/conversion-destinations/{destination_id}",
@@ -1683,8 +1883,10 @@ class ConversionsResource:
         self, account_id: str, destination_id: str, *, ad_account_id: str | None = None
     ) -> dict[str, Any]:
         """Delete a conversion destination (async)"""
-        params = self._build_params(
-            ad_account_id=ad_account_id,
+        params = self._build_query(
+            {
+                "adAccountId": ad_account_id,
+            }
         )
         return await self._client._adelete(
             f"/v1/accounts/{account_id}/conversion-destinations/{destination_id}",
@@ -1695,8 +1897,10 @@ class ConversionsResource:
         self, account_id: str, destination_id: str, ad_account_id: str
     ) -> dict[str, Any]:
         """List associated campaigns (async)"""
-        params = self._build_params(
-            ad_account_id=ad_account_id,
+        params = self._build_query(
+            {
+                "adAccountId": ad_account_id,
+            }
         )
         return await self._client._aget(
             f"/v1/accounts/{account_id}/conversion-destinations/{destination_id}/associations",
@@ -1711,9 +1915,11 @@ class ConversionsResource:
         campaign_ids: list[str],
     ) -> dict[str, Any]:
         """Associate campaigns (async)"""
-        payload = self._build_payload(
-            ad_account_id=ad_account_id,
-            campaign_ids=campaign_ids,
+        payload = self._build_body(
+            {
+                "adAccountId": ad_account_id,
+                "campaignIds": campaign_ids,
+            }
         )
         return await self._client._apost(
             f"/v1/accounts/{account_id}/conversion-destinations/{destination_id}/associations",
@@ -1728,9 +1934,11 @@ class ConversionsResource:
         campaign_ids: str,
     ) -> dict[str, Any]:
         """Remove associated campaigns (async)"""
-        params = self._build_params(
-            ad_account_id=ad_account_id,
-            campaign_ids=campaign_ids,
+        params = self._build_query(
+            {
+                "adAccountId": ad_account_id,
+                "campaignIds": campaign_ids,
+            }
         )
         return await self._client._adelete(
             f"/v1/accounts/{account_id}/conversion-destinations/{destination_id}/associations",
@@ -1748,11 +1956,13 @@ class ConversionsResource:
         granularity: str | None = "DAILY",
     ) -> dict[str, Any]:
         """Get attribution metrics (async)"""
-        params = self._build_params(
-            ad_account_id=ad_account_id,
-            start_date=start_date,
-            end_date=end_date,
-            granularity=granularity,
+        params = self._build_query(
+            {
+                "adAccountId": ad_account_id,
+                "startDate": start_date,
+                "endDate": end_date,
+                "granularity": granularity,
+            }
         )
         return await self._client._aget(
             f"/v1/accounts/{account_id}/conversion-destinations/{destination_id}/metrics",

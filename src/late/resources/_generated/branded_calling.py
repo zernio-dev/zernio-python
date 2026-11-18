@@ -21,13 +21,16 @@ class BrandedCallingResource:
     def __init__(self, client: BaseClient) -> None:
         self._client = client
 
-    def _build_params(self, **kwargs: Any) -> dict[str, Any]:
-        """Build query parameters, filtering None and empty-string values.
+    def _build_query(self, fields: dict[str, Any]) -> dict[str, Any]:
+        """Build query parameters keyed by their wire names, as given.
 
-        Empty strings are filtered because MCP tool wrappers pass ``""`` as the
-        default for optional string args, and the API rejects empty query
-        values (e.g. ``platform=``) with a 400. Filtering here keeps both direct
-        SDK callers and MCP tool callers safe.
+        Generated methods pass the parameter names exactly as the OpenAPI
+        spec declares them, so no casing rule is applied here.
+
+        None and empty strings are filtered because MCP tool wrappers pass
+        ``""`` as the default for optional string args, and the API rejects
+        empty query values (e.g. ``platform=``) with a 400. Filtering here
+        keeps both direct SDK callers and MCP tool callers safe.
 
         Enum members are unwrapped to their value: httpx serializes params
         via str(), which yields "ClassName.MEMBER" for Enum members, so
@@ -36,42 +39,65 @@ class BrandedCallingResource:
         """
         from enum import Enum
 
-        def to_camel(s: str) -> str:
-            parts = s.split("_")
-            return parts[0] + "".join(p.title() for p in parts[1:])
-
         result: dict[str, Any] = {}
-        for k, v in kwargs.items():
+        for k, v in fields.items():
             if isinstance(v, Enum):
                 v = v.value
             if v is None or v == "":
                 continue
-            result[to_camel(k)] = v
+            result[k] = v
         return result
 
-    def _build_payload(self, **kwargs: Any) -> dict[str, Any]:
-        """Build request payload, filtering None values. Enum members are
-        unwrapped to their value so JSON bodies carry e.g. "failed" rather
-        than a raw Enum member (plain Enum members are not JSON-serializable).
+    def _build_body(self, fields: dict[str, Any]) -> dict[str, Any]:
+        """Build a JSON request body keyed by its wire names, as given.
+
+        Generated methods pass the property names exactly as the request
+        body schema declares them: most are camelCase, but some routes read
+        snake_case (``ice_breakers``, ``message_send_ttl_seconds``), so no
+        casing rule is applied here. None values are dropped, Enum members
+        are unwrapped to their value (e.g. "failed") and datetimes are sent
+        as ISO 8601 strings.
         """
         from datetime import datetime
         from enum import Enum
 
-        def to_camel(s: str) -> str:
-            parts = s.split("_")
-            return parts[0] + "".join(p.title() for p in parts[1:])
-
         result: dict[str, Any] = {}
-        for k, v in kwargs.items():
+        for k, v in fields.items():
             if isinstance(v, Enum):
                 v = v.value
             if v is None:
                 continue
             if isinstance(v, datetime):
-                result[to_camel(k)] = v.isoformat()
+                result[k] = v.isoformat()
             else:
-                result[to_camel(k)] = v
+                result[k] = v
         return result
+
+    def _build_params(self, **kwargs: Any) -> dict[str, Any]:
+        """Build query parameters from snake_case kwargs, camelCasing each key.
+
+        For hand-written resource methods, whose endpoints take camelCase
+        names. Generated methods use _build_query with the spec's names.
+        """
+
+        def to_camel(s: str) -> str:
+            parts = s.split("_")
+            return parts[0] + "".join(p.title() for p in parts[1:])
+
+        return self._build_query({to_camel(k): v for k, v in kwargs.items()})
+
+    def _build_payload(self, **kwargs: Any) -> dict[str, Any]:
+        """Build a request body from snake_case kwargs, camelCasing each key.
+
+        For hand-written resource methods, whose endpoints take camelCase
+        names. Generated methods use _build_body with the spec's names.
+        """
+
+        def to_camel(s: str) -> str:
+            parts = s.split("_")
+            return parts[0] + "".join(p.title() for p in parts[1:])
+
+        return self._build_body({to_camel(k): v for k, v in kwargs.items()})
 
     def create_branded_calling_enterprise(
         self,
@@ -93,21 +119,23 @@ class BrandedCallingResource:
         idempotency_key: str | None = None,
     ) -> dict[str, Any]:
         """Register a business for Branded Calling"""
-        payload = self._build_payload(
-            legal_name=legal_name,
-            doing_business_as=doing_business_as,
-            organization_type=organization_type,
-            organization_legal_type=organization_legal_type,
-            country_code=country_code,
-            jurisdiction_of_incorporation=jurisdiction_of_incorporation,
-            website=website,
-            fein=fein,
-            industry=industry,
-            number_of_employees=number_of_employees,
-            organization_contact=organization_contact,
-            billing_contact=billing_contact,
-            physical_address=physical_address,
-            billing_address=billing_address,
+        payload = self._build_body(
+            {
+                "legalName": legal_name,
+                "doingBusinessAs": doing_business_as,
+                "organizationType": organization_type,
+                "organizationLegalType": organization_legal_type,
+                "countryCode": country_code,
+                "jurisdictionOfIncorporation": jurisdiction_of_incorporation,
+                "website": website,
+                "fein": fein,
+                "industry": industry,
+                "numberOfEmployees": number_of_employees,
+                "organizationContact": organization_contact,
+                "billingContact": billing_contact,
+                "physicalAddress": physical_address,
+                "billingAddress": billing_address,
+            }
         )
         headers: dict[str, str] = {}
         if idempotency_key is not None:
@@ -132,9 +160,11 @@ class BrandedCallingResource:
         self, *, enterprise_id: str | None = None, identity_id: str | None = None
     ) -> dict[str, Any]:
         """Create a caller identity share link"""
-        payload = self._build_payload(
-            enterprise_id=enterprise_id,
-            identity_id=identity_id,
+        payload = self._build_body(
+            {
+                "enterpriseId": enterprise_id,
+                "identityId": identity_id,
+            }
         )
         return self._client._post("/v1/branded-calling/share", data=payload)
 
@@ -154,13 +184,15 @@ class BrandedCallingResource:
         logo_url: str | None = None,
     ) -> dict[str, Any]:
         """Create a caller identity"""
-        payload = self._build_payload(
-            enterprise_id=enterprise_id,
-            display_name=display_name,
-            call_reasons=call_reasons,
-            logo_url=logo_url,
-            authorizer=authorizer,
-            references=references,
+        payload = self._build_body(
+            {
+                "enterpriseId": enterprise_id,
+                "displayName": display_name,
+                "callReasons": call_reasons,
+                "logoUrl": logo_url,
+                "authorizer": authorizer,
+                "references": references,
+            }
         )
         headers: dict[str, str] = {}
         if idempotency_key is not None:
@@ -184,13 +216,15 @@ class BrandedCallingResource:
         logo_url: str | None = None,
     ) -> dict[str, Any]:
         """Dry-run a caller identity before creating it"""
-        payload = self._build_payload(
-            enterprise_id=enterprise_id,
-            display_name=display_name,
-            call_reasons=call_reasons,
-            logo_url=logo_url,
-            authorizer=authorizer,
-            references=references,
+        payload = self._build_body(
+            {
+                "enterpriseId": enterprise_id,
+                "displayName": display_name,
+                "callReasons": call_reasons,
+                "logoUrl": logo_url,
+                "authorizer": authorizer,
+                "references": references,
+            }
         )
         return self._client._post(
             "/v1/branded-calling/identities/preflight", data=payload
@@ -213,14 +247,16 @@ class BrandedCallingResource:
         review_note: str | None = None,
     ) -> dict[str, Any]:
         """Edit or resubmit a caller identity"""
-        payload = self._build_payload(
-            display_name=display_name,
-            call_reasons=call_reasons,
-            logo_url=logo_url,
-            authorizer=authorizer,
-            references=references,
-            review_answers=review_answers,
-            review_note=review_note,
+        payload = self._build_body(
+            {
+                "displayName": display_name,
+                "callReasons": call_reasons,
+                "logoUrl": logo_url,
+                "authorizer": authorizer,
+                "references": references,
+                "reviewAnswers": review_answers,
+                "reviewNote": review_note,
+            }
         )
         return self._client._patch(f"/v1/branded-calling/identities/{id}", data=payload)
 
@@ -236,8 +272,10 @@ class BrandedCallingResource:
         self, id: str, code: str
     ) -> dict[str, Any]:
         """Confirm the authorizer's code"""
-        payload = self._build_payload(
-            code=code,
+        payload = self._build_body(
+            {
+                "code": code,
+            }
         )
         return self._client._post(
             f"/v1/branded-calling/identities/{id}/verify-email/confirm", data=payload
@@ -251,9 +289,11 @@ class BrandedCallingResource:
         self, id: str, phone_number_ids: list[str], signature: dict[str, Any]
     ) -> dict[str, Any]:
         """Attach numbers to a verified identity"""
-        payload = self._build_payload(
-            phone_number_ids=phone_number_ids,
-            signature=signature,
+        payload = self._build_body(
+            {
+                "phoneNumberIds": phone_number_ids,
+                "signature": signature,
+            }
         )
         return self._client._post(
             f"/v1/branded-calling/identities/{id}/numbers", data=payload
@@ -263,8 +303,10 @@ class BrandedCallingResource:
         self, id: str, phone_numbers: list[str]
     ) -> dict[str, Any]:
         """Detach numbers from an identity"""
-        payload = self._build_payload(
-            phone_numbers=phone_numbers,
+        payload = self._build_body(
+            {
+                "phoneNumbers": phone_numbers,
+            }
         )
         return self._client._delete(
             f"/v1/branded-calling/identities/{id}/numbers", data=payload
@@ -290,21 +332,23 @@ class BrandedCallingResource:
         idempotency_key: str | None = None,
     ) -> dict[str, Any]:
         """Register a business for Branded Calling (async)"""
-        payload = self._build_payload(
-            legal_name=legal_name,
-            doing_business_as=doing_business_as,
-            organization_type=organization_type,
-            organization_legal_type=organization_legal_type,
-            country_code=country_code,
-            jurisdiction_of_incorporation=jurisdiction_of_incorporation,
-            website=website,
-            fein=fein,
-            industry=industry,
-            number_of_employees=number_of_employees,
-            organization_contact=organization_contact,
-            billing_contact=billing_contact,
-            physical_address=physical_address,
-            billing_address=billing_address,
+        payload = self._build_body(
+            {
+                "legalName": legal_name,
+                "doingBusinessAs": doing_business_as,
+                "organizationType": organization_type,
+                "organizationLegalType": organization_legal_type,
+                "countryCode": country_code,
+                "jurisdictionOfIncorporation": jurisdiction_of_incorporation,
+                "website": website,
+                "fein": fein,
+                "industry": industry,
+                "numberOfEmployees": number_of_employees,
+                "organizationContact": organization_contact,
+                "billingContact": billing_contact,
+                "physicalAddress": physical_address,
+                "billingAddress": billing_address,
+            }
         )
         headers: dict[str, str] = {}
         if idempotency_key is not None:
@@ -329,9 +373,11 @@ class BrandedCallingResource:
         self, *, enterprise_id: str | None = None, identity_id: str | None = None
     ) -> dict[str, Any]:
         """Create a caller identity share link (async)"""
-        payload = self._build_payload(
-            enterprise_id=enterprise_id,
-            identity_id=identity_id,
+        payload = self._build_body(
+            {
+                "enterpriseId": enterprise_id,
+                "identityId": identity_id,
+            }
         )
         return await self._client._apost("/v1/branded-calling/share", data=payload)
 
@@ -351,13 +397,15 @@ class BrandedCallingResource:
         logo_url: str | None = None,
     ) -> dict[str, Any]:
         """Create a caller identity (async)"""
-        payload = self._build_payload(
-            enterprise_id=enterprise_id,
-            display_name=display_name,
-            call_reasons=call_reasons,
-            logo_url=logo_url,
-            authorizer=authorizer,
-            references=references,
+        payload = self._build_body(
+            {
+                "enterpriseId": enterprise_id,
+                "displayName": display_name,
+                "callReasons": call_reasons,
+                "logoUrl": logo_url,
+                "authorizer": authorizer,
+                "references": references,
+            }
         )
         headers: dict[str, str] = {}
         if idempotency_key is not None:
@@ -381,13 +429,15 @@ class BrandedCallingResource:
         logo_url: str | None = None,
     ) -> dict[str, Any]:
         """Dry-run a caller identity before creating it (async)"""
-        payload = self._build_payload(
-            enterprise_id=enterprise_id,
-            display_name=display_name,
-            call_reasons=call_reasons,
-            logo_url=logo_url,
-            authorizer=authorizer,
-            references=references,
+        payload = self._build_body(
+            {
+                "enterpriseId": enterprise_id,
+                "displayName": display_name,
+                "callReasons": call_reasons,
+                "logoUrl": logo_url,
+                "authorizer": authorizer,
+                "references": references,
+            }
         )
         return await self._client._apost(
             "/v1/branded-calling/identities/preflight", data=payload
@@ -410,14 +460,16 @@ class BrandedCallingResource:
         review_note: str | None = None,
     ) -> dict[str, Any]:
         """Edit or resubmit a caller identity (async)"""
-        payload = self._build_payload(
-            display_name=display_name,
-            call_reasons=call_reasons,
-            logo_url=logo_url,
-            authorizer=authorizer,
-            references=references,
-            review_answers=review_answers,
-            review_note=review_note,
+        payload = self._build_body(
+            {
+                "displayName": display_name,
+                "callReasons": call_reasons,
+                "logoUrl": logo_url,
+                "authorizer": authorizer,
+                "references": references,
+                "reviewAnswers": review_answers,
+                "reviewNote": review_note,
+            }
         )
         return await self._client._apatch(
             f"/v1/branded-calling/identities/{id}", data=payload
@@ -437,8 +489,10 @@ class BrandedCallingResource:
         self, id: str, code: str
     ) -> dict[str, Any]:
         """Confirm the authorizer's code (async)"""
-        payload = self._build_payload(
-            code=code,
+        payload = self._build_body(
+            {
+                "code": code,
+            }
         )
         return await self._client._apost(
             f"/v1/branded-calling/identities/{id}/verify-email/confirm", data=payload
@@ -452,9 +506,11 @@ class BrandedCallingResource:
         self, id: str, phone_number_ids: list[str], signature: dict[str, Any]
     ) -> dict[str, Any]:
         """Attach numbers to a verified identity (async)"""
-        payload = self._build_payload(
-            phone_number_ids=phone_number_ids,
-            signature=signature,
+        payload = self._build_body(
+            {
+                "phoneNumberIds": phone_number_ids,
+                "signature": signature,
+            }
         )
         return await self._client._apost(
             f"/v1/branded-calling/identities/{id}/numbers", data=payload
@@ -464,8 +520,10 @@ class BrandedCallingResource:
         self, id: str, phone_numbers: list[str]
     ) -> dict[str, Any]:
         """Detach numbers from an identity (async)"""
-        payload = self._build_payload(
-            phone_numbers=phone_numbers,
+        payload = self._build_body(
+            {
+                "phoneNumbers": phone_numbers,
+            }
         )
         return await self._client._adelete(
             f"/v1/branded-calling/identities/{id}/numbers", data=payload
