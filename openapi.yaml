@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.664.0"
+  version: "1.665.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -101485,6 +101485,18 @@ paths:
                         error: { type: [string, "null"] }
                         errorCode: { type: [string, "null"] }
                         sentAt: { type: string, format: date-time }
+                  touches:
+                    type: array
+                    description: 'The touches of the person before the event that its credit is split across, oldest first: website visits from somewhere (an ad click, search, a tagged link) and earlier lead forms or sales. Empty when the event counts whole for its own campaign under every model.'
+                    items:
+                      type: object
+                      properties:
+                        at: { type: string, format: date-time }
+                        kind: { type: string, enum: [ad_click, paid, email, social, campaign, organic_search, ai_assistant, referral, lead_form, event] }
+                        platform: { type: [string, "null"] }
+                        adAccountId: { type: [string, "null"] }
+                        campaignId: { type: [string, "null"], description: 'The campaign the touch resolved to; null for a touch that named none (search, referral).' }
+                        credit: { type: object, additionalProperties: { type: number }, description: 'The share of the event (0 to 1) this touch gets per model: first_touch, last_non_direct, linear, position_based, time_decay.', example: { linear: 0.5, first_touch: 1, time_decay: 0.35 } }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
     patch:
