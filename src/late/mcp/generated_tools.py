@@ -36461,39 +36461,43 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Send an email
 
-        Sends from the connected mailbox and returns the stored sent copy.
+            Sends from the connected mailbox and returns the stored sent copy.
 
-        The message is mirrored into the inbox (`message.sent` fires once) and counted against the mailbox's daily cap. The cap is reported in the `X-Zernio-Send-Limit`, `X-Zernio-Send-Remaining` and `X-Zernio-Send-Reset` response headers, plus `X-Zernio-Send-Doubles-At` while the cap can still double.
+            The message is mirrored into the inbox (`message.sent` fires once) and counted against the mailbox's daily cap. The cap is reported in the `X-Zernio-Send-Limit`, `X-Zernio-Send-Remaining` and `X-Zernio-Send-Reset` response headers, plus `X-Zernio-Send-Doubles-At` while the cap can still double.
 
-        ### Sending limits
+            ### Sending limits
 
-        These mailboxes are for one-to-one mail, not bulk sends. Protection on every mailbox:
+            These mailboxes are for one-to-one mail, not bulk sends. Protection on every mailbox:
 
-        - Daily cap: Microsoft 1,000; Google Workspace 500; Gmail consumer 200; IMAP 200. Reaching it answers 429 `email_send_cap_reached` with `details.cap`.
-        - The cap of a Microsoft, Google Workspace or Gmail mailbox doubles once (2,000, 1,000 and 400) after 14 days with a successful send, counted since its last spam signal and never past the provider's own limit. Days need not be consecutive.
-        - A spam signal starts the count over and returns the cap to its base. Signals: a same-body burst, a send refused over the mailbox's ...
+            - Daily cap: Microsoft 1,000; Google Workspace 500; Gmail consumer 200; IMAP 200. Reaching it answers 429 `email_send_cap_reached` with `details.cap`.
+            - The cap of a Microsoft, Google Workspace or Gmail mailbox doubles once (2,000, 1,000 and 400) after 14 days with a successful send, counted since its last spam signal and never past the provider's own limit. Days need not be consecutive.
+            - A spam signal starts the count over and returns the cap to its base. Signals: a same-body burst, a send refused over the mailbox's ...
 
-        Args:
-            account_id: (required)
-            to: Each item is an object with keys: email (string, required); name (string) (required)
-            cc: Each item is an object with keys: email (string, required); name (string)
-            bcc: Each item is an object with keys: email (string, required); name (string)
-            reply_to: Each item is an object with keys: email (string, required); name (string)
-            from_name
-            from_: Send from another address listed by `GET /v1/email/send-as`; on Outlook, declare a shared mailbox there first. An address not on the list answers 400, and Outlook refusing it at send time answers 403. Omitted, the mail leaves from the mailbox address.
-            append_signature: Appends the signature of the sending address: its Zernio default first, else its Gmail signature. 400 when it has neither.
-            signature_id: Appends this Zernio signature instead. Wins over `appendSignature`.
-            subject: (required)
-            text: Plain-text body. One of `text` or `html` is required.
-            html
-            attachments: 25 MB in total on every provider. Send files over 4 MB by url: request bodies are capped at 4.5 MB. Each item is an object with keys: filename (string, required); contentType (string, required); url (string) - Fetched at send time. Exactly one of `url` or `base64`.; base64 (string); contentId (string) - Makes the attachment inline (`cid:` reference in the html).
-            headers: Custom `X-` headers only. `List-Unsubscribe` is dropped on Microsoft and reported in `metadata.droppedHeaders`.
-            metadata
-            scheduled_for: Send later, between 1 minute and 30 days from now. The request answers 202 with the scheduled send; it leaves within a minute of this time through the same caps as an immediate send. List or cancel it under `/v1/email/messages/scheduled`.
-            hold_as_draft: Needs `scheduledFor`. Saves the email as a draft in the mailbox now and sends that draft at `scheduledFor`, with any edits the user made in their mail app. A draft deleted or sent from the mailbox first fails the send (`email.send_failed`). Cancelling deletes the draft.
-            track_opens: Adds an open pixel to the html and fires `email.opened`. Needs `html`.
-            track_links: Rewrites every http(s) link in the html through a Zernio redirect and fires `email.link_clicked`. Needs `html`.
-            track_replies: Fires `email.thread_replied` when someone else writes in this message's thread. Works with text or html."""
+            Args:
+                account_id: (required)
+                to: Each item is an object with keys: email (string, required); name (string) (required)
+                cc: Each item is an object with keys: email (string, required); name (string)
+                bcc: Each item is an object with keys: email (string, required); name (string)
+                reply_to: Each item is an object with keys: email (string, required); name (string)
+                from_name
+                from_: Send from another address listed by `GET /v1/email/send-as`; on Outlook, declare a shared mailbox there first. An address not on the list answers 400, and Outlook refusing it at send time answers 403. Omitted, the mail leaves from the mailbox address.
+                append_signature: Appends the signature of the sending address: its Zernio default first, else its Gmail signature. 400 when it has neither.
+                signature_id: Appends this Zernio signature instead. Wins over `appendSignature`.
+                subject: (required)
+                text: Plain-text body. One of `text` or `html` is required.
+                html
+                attachments: 25 MB in total on every provider. Send files over 4 MB by url: request bodies are capped at 4.5 MB. Each item is an object with keys: filename (string, required); contentType (string, required); url (string) - Fetched at send time. Exactly one of `url` or `base64`.; base64 (string); contentId (string) - Makes the attachment inline (`cid:` reference in the html).
+                headers: Custom headers: `X-` names, plus `List-Unsubscribe`, `List-Unsubscribe-Post`, `List-Id`, `Precedence` and `Auto-Submitted`. Other names, values with line breaks and header lines over 998 characters answer 400.
+
+        `List-Unsubscribe` takes one or more `<https://...>` or `<mailto:...>` URIs separated by commas. `List-Unsubscribe-Post` must be exactly `List-Unsubscribe=One-Click` and needs an https URI in `List-Unsubscribe` (RFC 8058).
+
+        Gmail and IMAP send them all. Outlook sends only `X-` headers: the others are left out and named in `metadata.droppedHeaders` on the sent message.
+                metadata
+                scheduled_for: Send later, between 1 minute and 30 days from now. The request answers 202 with the scheduled send; it leaves within a minute of this time through the same caps as an immediate send. List or cancel it under `/v1/email/messages/scheduled`.
+                hold_as_draft: Needs `scheduledFor`. Saves the email as a draft in the mailbox now and sends that draft at `scheduledFor`, with any edits the user made in their mail app. A draft deleted or sent from the mailbox first fails the send (`email.send_failed`). Cancelling deletes the draft.
+                track_opens: Adds an open pixel to the html and fires `email.opened`. Needs `html`.
+                track_links: Rewrites every http(s) link in the html through a Zernio redirect and fires `email.link_clicked`. Needs `html`.
+                track_replies: Fires `email.thread_replied` when someone else writes in this message's thread. Works with text or html."""
         client = _get_client()
         try:
             response = client.email.send_email_message(
@@ -36740,33 +36744,37 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Reply to a message
 
-        Replies inside the provider's thread: the provider builds the quoted original and threading headers, your `html` or `text` goes above the quote. `to`, `cc`, `bcc`, `replyTo`, `subject`, `headers` and `attachments` are honoured.
+            Replies inside the provider's thread: the provider builds the quoted original and threading headers, your `html` or `text` goes above the quote. `to`, `cc`, `bcc`, `replyTo`, `subject`, `headers` and `attachments` are honoured.
 
-        `scheduledFor` schedules the reply (202) and `trackOpens`, `trackLinks` and `trackReplies` track it, as on send; `holdAsDraft` holds it as a reply draft in the thread until then. Same protection, caps and headers as sending.
+            `scheduledFor` schedules the reply (202) and `trackOpens`, `trackLinks` and `trackReplies` track it, as on send; `holdAsDraft` holds it as a reply draft in the thread until then. Same protection, caps and headers as sending.
 
-        Args:
-            message_id: (required)
-            account_id: (required)
-            to: Each item is an object with keys: email (string, required); name (string) (required)
-            cc: Each item is an object with keys: email (string, required); name (string)
-            bcc: Each item is an object with keys: email (string, required); name (string)
-            reply_to: Each item is an object with keys: email (string, required); name (string)
-            from_name
-            from_: Send from another address listed by `GET /v1/email/send-as`; on Outlook, declare a shared mailbox there first. An address not on the list answers 400, and Outlook refusing it at send time answers 403. Omitted, the mail leaves from the mailbox address.
-            append_signature: Appends the signature of the sending address: its Zernio default first, else its Gmail signature. 400 when it has neither.
-            signature_id: Appends this Zernio signature instead. Wins over `appendSignature`.
-            subject: Optional on replies; the provider keeps the thread subject. (required)
-            text: Plain-text body. One of `text` or `html` is required.
-            html
-            attachments: 25 MB in total on every provider. Send files over 4 MB by url: request bodies are capped at 4.5 MB. Each item is an object with keys: filename (string, required); contentType (string, required); url (string) - Fetched at send time. Exactly one of `url` or `base64`.; base64 (string); contentId (string) - Makes the attachment inline (`cid:` reference in the html).
-            headers: Custom `X-` headers only. `List-Unsubscribe` is dropped on Microsoft and reported in `metadata.droppedHeaders`.
-            metadata
-            scheduled_for: Send later, between 1 minute and 30 days from now. The request answers 202 with the scheduled send; it leaves within a minute of this time through the same caps as an immediate send. List or cancel it under `/v1/email/messages/scheduled`.
-            hold_as_draft: Needs `scheduledFor`. Saves the email as a draft in the mailbox now and sends that draft at `scheduledFor`, with any edits the user made in their mail app. A draft deleted or sent from the mailbox first fails the send (`email.send_failed`). Cancelling deletes the draft.
-            track_opens: Adds an open pixel to the html and fires `email.opened`. Needs `html`.
-            track_links: Rewrites every http(s) link in the html through a Zernio redirect and fires `email.link_clicked`. Needs `html`.
-            track_replies: Fires `email.thread_replied` when someone else writes in this message's thread. Works with text or html.
-            mode"""
+            Args:
+                message_id: (required)
+                account_id: (required)
+                to: Each item is an object with keys: email (string, required); name (string) (required)
+                cc: Each item is an object with keys: email (string, required); name (string)
+                bcc: Each item is an object with keys: email (string, required); name (string)
+                reply_to: Each item is an object with keys: email (string, required); name (string)
+                from_name
+                from_: Send from another address listed by `GET /v1/email/send-as`; on Outlook, declare a shared mailbox there first. An address not on the list answers 400, and Outlook refusing it at send time answers 403. Omitted, the mail leaves from the mailbox address.
+                append_signature: Appends the signature of the sending address: its Zernio default first, else its Gmail signature. 400 when it has neither.
+                signature_id: Appends this Zernio signature instead. Wins over `appendSignature`.
+                subject: Optional on replies; the provider keeps the thread subject. (required)
+                text: Plain-text body. One of `text` or `html` is required.
+                html
+                attachments: 25 MB in total on every provider. Send files over 4 MB by url: request bodies are capped at 4.5 MB. Each item is an object with keys: filename (string, required); contentType (string, required); url (string) - Fetched at send time. Exactly one of `url` or `base64`.; base64 (string); contentId (string) - Makes the attachment inline (`cid:` reference in the html).
+                headers: Custom headers: `X-` names, plus `List-Unsubscribe`, `List-Unsubscribe-Post`, `List-Id`, `Precedence` and `Auto-Submitted`. Other names, values with line breaks and header lines over 998 characters answer 400.
+
+        `List-Unsubscribe` takes one or more `<https://...>` or `<mailto:...>` URIs separated by commas. `List-Unsubscribe-Post` must be exactly `List-Unsubscribe=One-Click` and needs an https URI in `List-Unsubscribe` (RFC 8058).
+
+        Gmail and IMAP send them all. Outlook sends only `X-` headers: the others are left out and named in `metadata.droppedHeaders` on the sent message.
+                metadata
+                scheduled_for: Send later, between 1 minute and 30 days from now. The request answers 202 with the scheduled send; it leaves within a minute of this time through the same caps as an immediate send. List or cancel it under `/v1/email/messages/scheduled`.
+                hold_as_draft: Needs `scheduledFor`. Saves the email as a draft in the mailbox now and sends that draft at `scheduledFor`, with any edits the user made in their mail app. A draft deleted or sent from the mailbox first fails the send (`email.send_failed`). Cancelling deletes the draft.
+                track_opens: Adds an open pixel to the html and fires `email.opened`. Needs `html`.
+                track_links: Rewrites every http(s) link in the html through a Zernio redirect and fires `email.link_clicked`. Needs `html`.
+                track_replies: Fires `email.thread_replied` when someone else writes in this message's thread. Works with text or html.
+                mode"""
         client = _get_client()
         try:
             response = client.email.reply_email_message(
@@ -36965,7 +36973,7 @@ def register_generated_tools(mcp, _get_client):
             text
             html
             attachments: Each item is an object with keys: filename (string, required); contentType (string, required); url (string) - Fetched at send time. Exactly one of `url` or `base64`.; base64 (string); contentId (string) - Makes the attachment inline (`cid:` reference in the html).
-            headers: Custom `X-` headers only.
+            headers: Same headers as on `POST /v1/email/messages`: `X-` names plus `List-Unsubscribe`, `List-Unsubscribe-Post`, `List-Id`, `Precedence` and `Auto-Submitted`. Outlook drafts leave out all but `X-` headers.
             metadata: Kept with the draft and returned on the sent message and its email.* webhooks.
             in_reply_to: Makes a reply draft in that message's thread, addressed and threaded like a reply. Not with `forwardOf`.
             reply_all: With `inReplyTo`: address every recipient of the original. Leave out `to`, `cc` and `bcc`.
