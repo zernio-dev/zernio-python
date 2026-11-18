@@ -30954,7 +30954,7 @@ def register_generated_tools(mcp, _get_client):
 
         Paginate with `cursor`: pass the `nextCursor` of the previous page until it comes back `null`.
 
-        Platforms: meta, google, tiktok, linkedin, pinterest, reddit, openai, applovinads, googleanalytics, stripe, hubspot, salesforce
+        Platforms: meta, google, tiktok, linkedin, microsoft, x, pinterest, reddit, openai, applovinads, googleanalytics, stripe, hubspot, salesforce
 
         Args:
             profile_id: The profile to list. Omit to cover every profile you can access.
@@ -31017,7 +31017,7 @@ def register_generated_tools(mcp, _get_client):
         - `sourceUrl` keeps only its origin, path and attribution parameters (`utm_*`, `gclid`, `fbclid`, `ttclid`, `li_fat_id`, `epik`, `rdt_cid`, `gbraid`, `wbraid`).
         - Events sent with `testCode` are forwarded but not ...
 
-        Platforms: meta, google, tiktok, linkedin, pinterest, reddit, openai, applovinads, googleanalytics
+        Platforms: meta, google, tiktok, linkedin, microsoft, x, pinterest, reddit, openai, applovinads, googleanalytics
 
         Args:
             profile_id: Profile the events belong to. Its saved destinations receive the events. (required)
@@ -31343,7 +31343,7 @@ def register_generated_tools(mcp, _get_client):
 
         Pick `destinationId` from `GET /v1/ads/conversions/destinations`. Set `eventNames` to forward only those events, such as only `Purchase`; leave it out to forward every event.
 
-        Platforms: meta, google, tiktok, linkedin, pinterest, reddit, openai, applovinads, googleanalytics, hubspot, salesforce
+        Platforms: meta, google, tiktok, linkedin, microsoft, x, pinterest, reddit, openai, applovinads, googleanalytics, hubspot, salesforce
 
         Args:
             profile_id: (required)
