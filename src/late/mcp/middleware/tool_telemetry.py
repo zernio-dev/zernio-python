@@ -14,7 +14,7 @@ from fastmcp.server.dependencies import get_access_token
 from fastmcp.server.middleware import CallNext, Middleware, MiddlewareContext
 from mcp.types import CallToolRequestParams, TextContent
 
-from late.client.exceptions import LateAPIError
+from late.client.exceptions import LateAPIError, LateRateLimitError
 from late.mcp.auth import token_cache_key
 from late.mcp.response_format import format_stats
 from late.mcp.telemetry import (
@@ -95,6 +95,8 @@ def _error_fields(exc: Exception) -> dict[str, Any]:
     fields: dict[str, Any] = {"error_type": type(cause).__name__}
     if isinstance(cause, LateAPIError):
         fields["status_code"] = cause.status_code
+    if isinstance(cause, LateRateLimitError) and cause.retry_after is not None:
+        fields["retry_after_s"] = cause.retry_after
     return fields
 
 

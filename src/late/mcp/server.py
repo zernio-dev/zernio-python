@@ -53,6 +53,7 @@ from .idempotency import same_arguments_key
 from .middleware import (
     FEEDBACK_TOOL,
     FeedbackSourceMiddleware,
+    RateLimitGuidanceMiddleware,
     ToolGuidanceMiddleware,
     WellFormedOutputMiddleware,
     WellFormedOutputTransform,
@@ -405,6 +406,7 @@ details.
 )
 
 mcp.add_middleware(WellFormedOutputMiddleware())
+mcp.add_middleware(RateLimitGuidanceMiddleware())
 mcp.add_middleware(
     ToolGuidanceMiddleware(
         search_tool=_SEARCH_TOOL,
