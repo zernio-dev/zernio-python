@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.657.0"
+  version: "1.665.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -14938,7 +14938,18 @@ components:
               base64: { type: string }
               contentId: { type: string, description: 'Makes the attachment inline (`cid:` reference in the html).' }
           description: '25 MB in total on every provider. Send files over 4 MB by url: request bodies are capped at 4.5 MB.'
-        headers: { type: object, additionalProperties: { type: string }, description: 'Custom `X-` headers only. `List-Unsubscribe` is dropped on Microsoft and reported in `metadata.droppedHeaders`.' }
+        headers:
+          type: object
+          additionalProperties: { type: string, maxLength: 996 }
+          description: |-
+            Custom headers: `X-` names, plus `List-Unsubscribe`, `List-Unsubscribe-Post`, `List-Id`, `Precedence` and `Auto-Submitted`. Other names, values with line breaks and header lines over 998 characters answer 400.
+
+            `List-Unsubscribe` takes one or more `<https://...>` or `<mailto:...>` URIs separated by commas. `List-Unsubscribe-Post` must be exactly `List-Unsubscribe=One-Click` and needs an https URI in `List-Unsubscribe` (RFC 8058).
+
+            Gmail and IMAP send them all. Outlook sends only `X-` headers: the others are left out and named in `metadata.droppedHeaders` on the sent message.
+          example:
+            List-Unsubscribe: '<https://example.com/unsubscribe?u=123>, <mailto:unsubscribe@example.com>'
+            List-Unsubscribe-Post: List-Unsubscribe=One-Click
         metadata: { type: object, additionalProperties: { type: string } }
         scheduledFor: { type: string, format: date-time, description: 'Send later, between 1 minute and 30 days from now. The request answers 202 with the scheduled send; it leaves within a minute of this time through the same caps as an immediate send. List or cancel it under `/v1/email/messages/scheduled`.' }
         holdAsDraft: { type: boolean, description: 'Needs `scheduledFor`. Saves the email as a draft in the mailbox now and sends that draft at `scheduledFor`, with any edits the user made in their mail app. A draft deleted or sent from the mailbox first fails the send (`email.send_failed`). Cancelling deletes the draft.' }
@@ -14989,7 +15000,7 @@ components:
         text: { type: string }
         html: { type: string }
         attachments: { type: array, maxItems: 20, items: { $ref: '#/components/schemas/EmailAttachmentInput' } }
-        headers: { type: object, additionalProperties: { type: string }, description: 'Custom `X-` headers only.' }
+        headers: { type: object, additionalProperties: { type: string }, description: 'Same headers as on `POST /v1/email/messages`: `X-` names plus `List-Unsubscribe`, `List-Unsubscribe-Post`, `List-Id`, `Precedence` and `Auto-Submitted`. Outlook drafts leave out all but `X-` headers.' }
         metadata: { type: object, additionalProperties: { type: string }, description: 'Kept with the draft and returned on the sent message and its email.* webhooks.' }
         inReplyTo: { type: string, description: 'Makes a reply draft in that message''s thread, addressed and threaded like a reply. Not with `forwardOf`.' }
         replyAll: { type: boolean, description: 'With `inReplyTo`: address every recipient of the original. Leave out `to`, `cc` and `bcc`.' }
@@ -22099,6 +22110,18 @@ components:
             secret:
               type: [string, "null"]
               description: "Signs the visitor's IP and country your proxy forwards. Only on reading or updating one site."
+            googleTags:
+              type: array
+              description: "The loader of each of `googleTagIds` on the site's own domain. Use `src` in place of the tag's googletagmanager.com address."
+              items:
+                type: object
+                properties:
+                  id: { type: string, description: 'The Google tag id, such as `GTM-XXXXXXX` or `G-XXXXXXXXXX`.' }
+                  src: { type: string, description: 'Such as `https://brand.com/zt/gtg/<hex>/?id=GTM-XXXXXXX`.' }
+        googleTagIds:
+          type: array
+          items: { type: string }
+          description: "The site's own Google tags (Tag Manager, GA4, Google Ads) its own-domain path relays to Google, so they load and measure from the site's domain."
         consentMode: { $ref: '#/components/schemas/TrackingSiteConsentMode' }
         checks:
           type: array
@@ -22249,6 +22272,8 @@ components:
                 aleid: { type: string, description: "Axon (AppLovin) click id (the `aleid` URL param Axon adds to ad clicks, kept by its pixel in the `_axeid` cookie). Sent to Axon as `user_data.aleid`, not hashed." }
                 alart: { type: string, description: "Axon (AppLovin) attribution token (the `alart` URL param, `_axart` cookie). Sent to Axon as `user_data.alart`, not hashed." }
                 axwrt: { type: string, description: "Axon Pixel browser id (the `_axwrt` cookie). Sent to Axon as `user_data.axwrt`, not hashed." }
+                twclid: { type: string, description: "X click ID (the `twclid` URL param X adds to ad clicks). Sent to X as a `twclid` identifier, not hashed." }
+                msclkid: { type: string, description: "Microsoft Advertising click ID (the `msclkid` URL param Microsoft adds to ad clicks). Sent to Microsoft as `MicrosoftClickId`, not hashed." }
         items:
           type: array
           description: Item-level detail for ecommerce events.
@@ -45090,6 +45115,31 @@ paths:
           description: >-
             Zernio account ID of the Google Analytics account being reconnected. Picking a different property
             then fails instead of adding a second account.
+        - name: welcome
+          in: query
+          schema: { type: boolean }
+          description: |
+            When `true`, `authUrl` opens on the Zernio-hosted welcome screen with your brand, as on GET /v1/connect/{platform}, naming Google Analytics.
+
+            - With no `redirect_url`, the flow ends on the branded result page instead of the Zernio dashboard.
+            - When left out, the screen shows if the workspace saved it as on by default (`PUT /v1/connect/welcome-screen`). Pass `false` to skip it.
+            - Cannot be combined with `headless=true` in `redirect_url` (400 `INVALID_FIELD_VALUE`).
+        - name: brandName
+          in: query
+          schema: { type: string, minLength: 1, maxLength: 60 }
+          description: 'Welcome screen only: your product name in its heading. Same rules as on GET /v1/connect/{platform}.'
+        - name: logoUrl
+          in: query
+          schema: { type: string, format: uri, maxLength: 2048 }
+          description: 'Welcome screen only: https URL of your square logo. Rejected with 400 `INVALID_FIELD_VALUE` when the welcome screen is not shown.'
+        - name: primaryColor
+          in: query
+          schema: { type: string, pattern: '^#[0-9a-fA-F]{6}$' }
+          description: 'Welcome screen only: hex colour (`#RRGGBB`) of its button.'
+        - name: welcomeTheme
+          in: query
+          schema: { type: string, maxLength: 4000 }
+          description: 'Welcome screen only: a URL-encoded JSON object restyling and rewording the welcome screen and the result page, with the keys documented on GET /v1/connect/{platform}. Rejected when the welcome screen is not shown.'
       responses:
         '200':
           description: OAuth authorization URL and authenticated state
@@ -45287,6 +45337,31 @@ paths:
           description: >-
             Zernio account ID of the Google Search Console account being reconnected. Picking a different site
             then fails instead of adding a second account.
+        - name: welcome
+          in: query
+          schema: { type: boolean }
+          description: |
+            When `true`, `authUrl` opens on the Zernio-hosted welcome screen with your brand, as on GET /v1/connect/{platform}, naming Google Search Console.
+
+            - With no `redirect_url`, the flow ends on the branded result page instead of the Zernio dashboard.
+            - When left out, the screen shows if the workspace saved it as on by default (`PUT /v1/connect/welcome-screen`). Pass `false` to skip it.
+            - Cannot be combined with `headless=true` in `redirect_url` (400 `INVALID_FIELD_VALUE`).
+        - name: brandName
+          in: query
+          schema: { type: string, minLength: 1, maxLength: 60 }
+          description: 'Welcome screen only: your product name in its heading. Same rules as on GET /v1/connect/{platform}.'
+        - name: logoUrl
+          in: query
+          schema: { type: string, format: uri, maxLength: 2048 }
+          description: 'Welcome screen only: https URL of your square logo. Rejected with 400 `INVALID_FIELD_VALUE` when the welcome screen is not shown.'
+        - name: primaryColor
+          in: query
+          schema: { type: string, pattern: '^#[0-9a-fA-F]{6}$' }
+          description: 'Welcome screen only: hex colour (`#RRGGBB`) of its button.'
+        - name: welcomeTheme
+          in: query
+          schema: { type: string, maxLength: 4000 }
+          description: 'Welcome screen only: a URL-encoded JSON object restyling and rewording the welcome screen and the result page, with the keys documented on GET /v1/connect/{platform}. Rejected when the welcome screen is not shown.'
       responses:
         '200':
           description: OAuth authorization URL and authenticated state
@@ -82806,6 +82881,67 @@ paths:
                   totals: { type: object, additionalProperties: { type: number }, example: { qualified_leads: 140, sales: 23, revenue: 41200 } }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
+  /v1/ads/campaign-results/events:
+    get:
+      x-resource-group: ads
+      operationId: getCampaignResultEvents
+      tags: ["Ad Campaign Results"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "reddit"]
+      summary: List the events that count as campaign results
+      description: |
+        The names of the events sent to `POST /v1/events` that your team counts as campaign results. Only these are tied to a campaign when they arrive. Until you choose, they are `Purchase`, `Lead` and `QualifiedLead`.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: The event names.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [eventNames]
+                properties:
+                  eventNames: { type: array, items: { type: string }, example: [Purchase, Lead, CompleteRegistration] }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+    put:
+      x-resource-group: ads
+      operationId: setCampaignResultEvents
+      tags: ["Ad Campaign Results"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "reddit"]
+      summary: Choose the events that count as campaign results
+      description: |
+        Sets which stored events are tied to a campaign when they arrive and add to its results.
+
+        `Purchase` adds `sales` and `revenue`, `Lead` adds `leads` and `QualifiedLead` adds `qualified_leads`. Any other event adds 1 per event to a metric keyed `event_` plus its name in lowercase, e.g. `event_completeregistration`, which formulas and rules can read.
+
+        Events stored before the change keep how they were counted. Send `null` to go back to `Purchase`, `Lead` and `QualifiedLead`.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [eventNames]
+              properties:
+                eventNames:
+                  type: [array, "null"]
+                  maxItems: 50
+                  items: { type: string, minLength: 1, maxLength: 100 }
+                  example: [Purchase, Lead, CompleteRegistration]
+      responses:
+        '200':
+          description: The event names now counted.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [eventNames]
+                properties:
+                  eventNames: { type: array, items: { type: string } }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
   /v1/ads/campaign-results/metrics:
     get:
       x-resource-group: ads
@@ -99984,6 +100120,8 @@ paths:
         - OpenAI Ads (`openaiads`) via its Conversions API (a separate host, `bzr.openai.com`)
         - Pinterest (`pinterestads`) via `POST /v5/ad_accounts/{id}/events`
         - Reddit (`redditads`) via the Reddit Conversions API (`POST /api/v3/pixels/{pixelId}/conversion_events`)
+        - Microsoft Advertising (`microsoftads`) via offline conversion uploads (`ApplyOfflineConversions`)
+        - X Ads (`xads`) via the X Conversion API (`POST /12/measurement/conversions/{pixelId}`)
 
         ### `destinationId` per platform
 
@@ -99994,6 +100132,8 @@ paths:
         - OpenAI Ads: pixel wire id (numeric `pixel_id`, distinct from the internal pixel id), as returned by `GET /v1/ads/conversions/destinations`
         - Pinterest: numeric ad account id, e.g. `549755885175` (Pinterest attributes to the ad account, not to a tag)
         - Reddit: pixel id, e.g. `a2_abc123`, as returned by `GET /v1/ads/conversions/destinations` (any other shape returns 400)
+        - Microsoft Advertising: offline conversion goal, e.g. `accounts/123456789/conversionGoals/987654`. Each event needs `clickIds.msclkid`, an `email` or a `phone`; the goal decides the event type.
+        - X Ads: X Pixel event id, e.g. `tw-rbhhj-rcfms`. Each event needs `clickIds.twclid`, an `email`, a `phone`, or `ipAddress` plus `userAgent`; the event decides the type and `eventId` is sent as `conversion_id`.
 
         Callers can list valid destinations via `GET /v1/ads/conversions/destinations`.
 
@@ -100836,7 +100976,7 @@ paths:
   /v1/events:
     get:
       x-resource-group: "ads"
-      x-platforms: [meta, google, tiktok, linkedin, pinterest, reddit, openai, applovinads, googleanalytics, stripe, hubspot, salesforce]
+      x-platforms: [meta, google, tiktok, linkedin, microsoft, x, pinterest, reddit, openai, applovinads, googleanalytics, stripe, hubspot, salesforce]
       operationId: listEvents
       tags: [Conversions]
       summary: List stored events
@@ -100926,7 +101066,7 @@ paths:
       x-resource-group: "ads"
       operationId: sendEvents
       tags: [Conversions]
-      x-platforms: [meta, google, tiktok, linkedin, pinterest, reddit, openai, applovinads, googleanalytics]
+      x-platforms: [meta, google, tiktok, linkedin, microsoft, x, pinterest, reddit, openai, applovinads, googleanalytics]
       summary: Send events to every destination
       description: |
         The recommended way to send conversions. Sends conversion events once and forwards them to every ad platform destination saved for the profile (see `POST /v1/events/destinations`), or to the `destinations` given in the request. Requires the Ads add-on.
@@ -101088,6 +101228,7 @@ paths:
                       sent: { type: integer, description: 'Event sends to a destination today, one per event and destination.' }
                       accepted: { type: integer, description: 'Those whose latest send the platform accepted.' }
                       matched: { type: integer, description: 'Today''s events matched to an ad campaign.' }
+                      counted: { type: integer, description: 'Today''s events that count as campaign results (see `GET /v1/ads/campaign-results/events`), the ones looked up for a campaign.' }
                   platforms:
                     type: array
                     description: One entry per forwarding rule of the profiles covered.
@@ -101163,9 +101304,9 @@ paths:
       tags: [Conversions]
       summary: Get daily tracking figures
       description: |
-        The tracking figures of a period, day by day (UTC): events stored, events sent to the ad platforms and how many they accepted, plus the period's totals in the same shape as the overview's `today`.
+        The tracking figures of a period, day by day (UTC): events stored per event name, events sent to each ad platform and how many it accepted, the period's totals in the same shape as the overview's `today`, and how many website conversions each platform's browser pixel missed.
 
-        An event sent to a destination counts once, on the day of its first send, by its latest outcome. Without `profileId` it covers every profile you can access. Requires the Ads add-on.
+        An event sent to a destination counts once, on the day of its first send, by its latest outcome. Without `profileId` it covers every profile you can access. `eventName`, `sources` and `platform` narrow every figure. Requires the Ads add-on.
       security:
         - bearerAuth: []
       parameters:
@@ -101177,8 +101318,23 @@ paths:
         - name: period
           in: query
           required: false
-          description: 'The days to cover, each ending today (UTC): `today`, the last 7 days or the last 30 days.'
-          schema: { type: string, enum: ['today', '7d', '30d'], default: '7d' }
+          description: 'The days to cover, each ending today (UTC): `today`, the last 7, 30 or 90 days.'
+          schema: { type: string, enum: ['today', '7d', '30d', '90d'], default: '7d' }
+        - name: eventName
+          in: query
+          required: false
+          description: Only events of this name, such as `Purchase`.
+          schema: { type: string, maxLength: 100 }
+        - name: sources
+          in: query
+          required: false
+          description: 'Comma-separated sources (`web`, `shopify`, `stripe`, `api`...). Only events from them.'
+          schema: { type: string }
+        - name: platform
+          in: query
+          required: false
+          description: 'Only sends to this platform (`metaads`, `googleads`...), and only the events sent to it.'
+          schema: { type: string, maxLength: 40 }
       responses:
         '200':
           description: The period's daily figures.
@@ -101187,17 +101343,20 @@ paths:
               schema:
                 type: object
                 properties:
-                  period: { type: string, enum: ['today', '7d', '30d'] }
+                  period: { type: string, enum: ['today', '7d', '30d', '90d'] }
                   totals:
                     type: object
                     description: 'The period''s figures, shaped like the overview''s `today`.'
                     properties:
                       conversions: { type: integer, description: 'Stored events that occurred in the period, retracted ones excluded.' }
                       value: { type: number, description: 'Value of those events in `currency`. Events in other currencies are left out.' }
+                      valueSent: { type: number, description: 'Value in `currency` of those events at least one platform accepted.' }
                       currency: { type: [string, "null"], description: 'The currency most of the period''s events use; `null` when none carried a value.' }
                       sent: { type: integer, description: 'Events first sent to a destination in the period, one per event and destination.' }
                       accepted: { type: integer, description: 'Those whose latest send the platform accepted.' }
                       matched: { type: integer, description: 'The period''s events matched to an ad campaign.' }
+                      counted: { type: integer, description: 'The period''s events that count as campaign results, the ones looked up for a campaign.' }
+                      fromAds: { type: integer, description: 'Of the counted events, those that came from an ad: they named a campaign or carried a UTM campaign, a Google click id or a Zernio ad id (`zrn`), their own or the website visit''s behind them. `matched` over `fromAds` is the share tied to a campaign.' }
                   days:
                     type: array
                     description: 'Every day of the period, oldest first, zero where nothing happened.'
@@ -101208,6 +101367,41 @@ paths:
                         conversions: { type: integer, description: Stored events that occurred that day. }
                         sent: { type: integer, description: 'Events first sent to a destination that day.' }
                         accepted: { type: integer, description: 'Those the platform accepted.' }
+                        byEvent:
+                          type: object
+                          description: 'The day''s stored events per event name.'
+                          additionalProperties: { type: integer }
+                  eventNames:
+                    type: array
+                    description: 'The event names stored in the period, most events first.'
+                    items: { type: string }
+                  platforms:
+                    type: array
+                    description: 'Each platform events were sent to in the period, most sends first.'
+                    items:
+                      type: object
+                      properties:
+                        platform: { type: string, description: 'Such as `metaads` or `googleads`.' }
+                        sent: { type: integer, description: 'Events first sent to it in the period.' }
+                        accepted: { type: integer, description: 'Those it accepted.' }
+                        days:
+                          type: array
+                          description: 'Every day of the period, oldest first.'
+                          items:
+                            type: object
+                            properties:
+                              day: { type: string, format: date }
+                              sent: { type: integer }
+                              accepted: { type: integer }
+                  pixelMissed:
+                    type: [array, "null"]
+                    description: 'For each platform sent to in the period, the website conversions of people who allowed ad cookies (bots left out) and how many its browser pixel missed, which Zernio sent from its server. Most missed first; `null` without a tracked website in scope.'
+                    items:
+                      type: object
+                      properties:
+                        platform: { type: string }
+                        conversions: { type: integer }
+                        missed: { type: integer }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
@@ -101291,6 +101485,18 @@ paths:
                         error: { type: [string, "null"] }
                         errorCode: { type: [string, "null"] }
                         sentAt: { type: string, format: date-time }
+                  touches:
+                    type: array
+                    description: 'The touches of the person before the event that its credit is split across, oldest first: website visits from somewhere (an ad click, search, a tagged link) and earlier lead forms or sales. Empty when the event counts whole for its own campaign under every model.'
+                    items:
+                      type: object
+                      properties:
+                        at: { type: string, format: date-time }
+                        kind: { type: string, enum: [ad_click, paid, email, social, campaign, organic_search, ai_assistant, referral, lead_form, event] }
+                        platform: { type: [string, "null"] }
+                        adAccountId: { type: [string, "null"] }
+                        campaignId: { type: [string, "null"], description: 'The campaign the touch resolved to; null for a touch that named none (search, referral).' }
+                        credit: { type: object, additionalProperties: { type: number }, description: 'The share of the event (0 to 1) this touch gets per model: first_touch, last_non_direct, linear, position_based, time_decay.', example: { linear: 0.5, first_touch: 1, time_decay: 0.35 } }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
     patch:
@@ -101506,7 +101712,7 @@ paths:
     post:
       x-resource-group: "ads"
       operationId: createForwardingRule
-      x-platforms: [meta, google, tiktok, linkedin, pinterest, reddit, openai, applovinads, googleanalytics, hubspot, salesforce]
+      x-platforms: [meta, google, tiktok, linkedin, microsoft, x, pinterest, reddit, openai, applovinads, googleanalytics, hubspot, salesforce]
       tags: [Conversions]
       summary: Add a forwarding rule
       description: |
@@ -101763,6 +101969,10 @@ paths:
 
         `proxyPath` serves the tag from a path of the site itself, such as `brand.com/zt`, through a proxy on your
         server. The response's `proxy.secret` signs what the proxy forwards. `null` removes it.
+
+
+        `googleTagIds` lists the site's own Google tags that the same proxy relays to Google's tag gateway. Load each
+        from its `proxy.googleTags[].src` instead of googletagmanager.com. `null` or an empty list removes them.
       security:
         - bearerAuth: []
       requestBody:
@@ -101790,6 +102000,11 @@ paths:
                   type: [string, "null"]
                   pattern: '^/[A-Za-z0-9_-]{1,32}$'
                   description: "The path your server forwards to the collector, such as `/zt`. `null` removes it."
+                googleTagIds:
+                  type: [array, "null"]
+                  maxItems: 10
+                  items: { type: string, pattern: '^(GTM|GT|G|AW|DC)-[A-Z0-9]{4,20}$' }
+                  description: 'Google tag ids such as `GTM-XXXXXXX`, `G-XXXXXXXXXX` or `AW-XXXXXXXXXX`, up to 10. `null` or `[]` removes them.'
       responses:
         '200':
           description: The updated site.
@@ -102003,7 +102218,9 @@ paths:
                             Destination identifier. Meta: pixel ID. Google:
                             conversion action resource name. LinkedIn:
                             numeric conversion rule ID. OpenAI Ads: pixel wire
-                            id. Reddit: pixel id (`a2_...`).
+                            id. Reddit: pixel id (`a2_...`). Microsoft
+                            Advertising: `accounts/{id}/conversionGoals/{id}`.
+                            X Ads: pixel event id (`tw-...`).
                         name: { type: string }
                         type:
                           type: string
@@ -102741,7 +102958,9 @@ paths:
                             Destination identifier. Meta: pixel ID. Google:
                             conversion action resource name. LinkedIn:
                             numeric conversion rule ID. OpenAI Ads: pixel wire
-                            id. Reddit: pixel id (`a2_...`).
+                            id. Reddit: pixel id (`a2_...`). Microsoft
+                            Advertising: `accounts/{id}/conversionGoals/{id}`.
+                            X Ads: pixel event id (`tw-...`).
                         name: { type: string }
                         type:
                           type: string

@@ -6232,6 +6232,59 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="List the events that count as campaign results",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def ad_campaign_results_get_campaign_result_events() -> str:
+        """List the events that count as campaign results
+
+        The names of the events sent to `POST /v1/events` that your team counts as campaign results. Only these are tied to a campaign when they arrive. Until you choose, they are `Purchase`, `Lead` and `QualifiedLead`.
+
+        Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit"""
+        client = _get_client()
+        try:
+            response = client.ad_campaign_results.get_campaign_result_events()
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Choose the events that count as campaign results",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def ad_campaign_results_set_campaign_result_events(
+        event_names: list[str] | None,
+    ) -> str:
+        """Choose the events that count as campaign results
+
+        Sets which stored events are tied to a campaign when they arrive and add to its results.
+
+        `Purchase` adds `sales` and `revenue`, `Lead` adds `leads` and `QualifiedLead` adds `qualified_leads`. Any other event adds 1 per event to a metric keyed `event_` plus its name in lowercase, e.g. `event_completeregistration`, which formulas and rules can read.
+
+        Events stored before the change keep how they were counted. Send `null` to go back to `Purchase`, `Lead` and `QualifiedLead`.
+
+        Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit
+
+        Args:
+            event_names: (required)"""
+        client = _get_client()
+        try:
+            response = client.ad_campaign_results.set_campaign_result_events(
+                event_names=event_names
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="List your result metrics",
             readOnlyHint=True,
             destructiveHint=False,
@@ -26366,38 +26419,57 @@ def register_generated_tools(mcp, _get_client):
         profile_id: str,
         redirect_url: str | None = None,
         reconnect_account_id: str | None = None,
+        welcome: bool | None = None,
+        brand_name: str | None = None,
+        logo_url: str | None = None,
+        primary_color: str | None = None,
+        welcome_theme: str | None = None,
     ) -> str:
         """Get Google Analytics OAuth connect URL
 
-        Starts OAuth for Google Analytics (GA4). Each connected GA4 property becomes its own account with platform `googleanalytics`; it reads reports and does not post.
+            Starts OAuth for Google Analytics (GA4). Each connected GA4 property becomes its own account with platform `googleanalytics`; it reads reports and does not post.
 
-        Requested scope: `https://www.googleapis.com/auth/analytics.readonly`.
+            Requested scope: `https://www.googleapis.com/auth/analytics.readonly`.
 
-        ### Flow
+            ### Flow
 
-        Redirect the user to `authUrl`.
+            Redirect the user to `authUrl`.
 
-        - **One readable property:** Zernio connects it and redirects to `redirect_url` (or the dashboard) with `connected=googleanalytics`, `profileId`, `accountId` and `username` (the property name).
-        - **Several properties:** the user first picks one on a Zernio-hosted page, which then redirects the same way.
+            - **One readable property:** Zernio connects it and redirects to `redirect_url` (or the dashboard) with `connected=googleanalytics`, `profileId`, `accountId` and `username` (the property name).
+            - **Several properties:** the user first picks one on a Zernio-hosted page, which then redirects the same way.
 
-        ### Your own property picker
+            ### Your own property picker
 
-        Add `headless=true` to `redirect_url`. Zernio then redirects there with `step=select_property`, `profileId`, `platform=googleanalytics` and a `pendingDataToken` for `GET /v1/connect/googleanalytics/properties` and `POST /v1/connect/googleanalytics/select-property`.
+            Add `headless=true` to `redirect_url`. Zernio then redirects there with `step=select_property`, `profileId`, `platform=googleanalytics` and a `pendingDataToken` for `GET /v1/connect/googleanalytics/properties` and `POST /v1/connect/googleanalytics/select-property`.
 
-        ### Errors
+            ### Errors
 
-        On failure the redirect carries `error`, `platform=googleanalytics` and `error_message`. Errors include: ...
+            On failure the redirect carries `error`, `platform=googleanalytics` and `error_message`. Errors include: ...
 
-        Args:
-            profile_id: Your Zernio profile ID (get from /v1/profiles). (required)
-            redirect_url: Custom redirect after connection. Must be an absolute http(s) URL or custom app scheme such as `myapp://callback`; relative and unsafe URLs return 400.
-            reconnect_account_id: Zernio account ID of the Google Analytics account being reconnected. Picking a different property then fails instead of adding a second account."""
+            Args:
+                profile_id: Your Zernio profile ID (get from /v1/profiles). (required)
+                redirect_url: Custom redirect after connection. Must be an absolute http(s) URL or custom app scheme such as `myapp://callback`; relative and unsafe URLs return 400.
+                reconnect_account_id: Zernio account ID of the Google Analytics account being reconnected. Picking a different property then fails instead of adding a second account.
+                welcome: When `true`, `authUrl` opens on the Zernio-hosted welcome screen with your brand, as on GET /v1/connect/{platform}, naming Google Analytics.
+
+        - With no `redirect_url`, the flow ends on the branded result page instead of the Zernio dashboard.
+        - When left out, the screen shows if the workspace saved it as on by default (`PUT /v1/connect/welcome-screen`). Pass `false` to skip it.
+        - Cannot be combined with `headless=true` in `redirect_url` (400 `INVALID_FIELD_VALUE`).
+                brand_name: Welcome screen only: your product name in its heading. Same rules as on GET /v1/connect/{platform}.
+                logo_url: Welcome screen only: https URL of your square logo. Rejected with 400 `INVALID_FIELD_VALUE` when the welcome screen is not shown.
+                primary_color: Welcome screen only: hex colour (`#RRGGBB`) of its button.
+                welcome_theme: Welcome screen only: a URL-encoded JSON object restyling and rewording the welcome screen and the result page, with the keys documented on GET /v1/connect/{platform}. Rejected when the welcome screen is not shown."""
         client = _get_client()
         try:
             response = client.connect.get_google_analytics_connect_url(
                 profile_id=profile_id,
                 redirect_url=redirect_url,
                 reconnect_account_id=reconnect_account_id,
+                welcome=welcome,
+                brand_name=brand_name,
+                logo_url=logo_url,
+                primary_color=primary_color,
+                welcome_theme=welcome_theme,
             )
             return _format_response(response)
         except Exception as e:
@@ -26486,40 +26558,59 @@ def register_generated_tools(mcp, _get_client):
         profile_id: str,
         redirect_url: str | None = None,
         reconnect_account_id: str | None = None,
+        welcome: bool | None = None,
+        brand_name: str | None = None,
+        logo_url: str | None = None,
+        primary_color: str | None = None,
+        welcome_theme: str | None = None,
     ) -> str:
         """Get Google Search Console OAuth connect URL
 
-        Starts OAuth for Google Search Console. Each connected site becomes its own account with platform `googlesearchconsole`; it reads Google Search data and does not post.
+            Starts OAuth for Google Search Console. Each connected site becomes its own account with platform `googlesearchconsole`; it reads Google Search data and does not post.
 
-        Requested scope: `https://www.googleapis.com/auth/webmasters.readonly`.
+            Requested scope: `https://www.googleapis.com/auth/webmasters.readonly`.
 
-        ### Flow
+            ### Flow
 
-        Redirect the user to `authUrl`.
+            Redirect the user to `authUrl`.
 
-        - **One verified site:** Zernio connects it and redirects to `redirect_url` (or the dashboard) with `connected=googlesearchconsole`, `profileId`, `accountId` and `username` (the site, such as `acme.com`).
-        - **Several sites:** the user first picks one on a Zernio-hosted page, which then redirects the same way.
+            - **One verified site:** Zernio connects it and redirects to `redirect_url` (or the dashboard) with `connected=googlesearchconsole`, `profileId`, `accountId` and `username` (the site, such as `acme.com`).
+            - **Several sites:** the user first picks one on a Zernio-hosted page, which then redirects the same way.
 
-        ### Your own site picker
+            ### Your own site picker
 
-        Add `headless=true` to `redirect_url`. Zernio then redirects there with `step=select_site`, `profileId`, `platform=googlesearchconsole` and a `pendingDataToken` for `GET /v1/connect/googlesearchconsole/sites` and `POST /v1/connect/googlesearchconsole/select-site`.
+            Add `headless=true` to `redirect_url`. Zernio then redirects there with `step=select_site`, `profileId`, `platform=googlesearchconsole` and a `pendingDataToken` for `GET /v1/connect/googlesearchconsole/sites` and `POST /v1/connect/googlesearchconsole/select-site`.
 
-        ### Errors
+            ### Errors
 
-        On failure the redirect carries `error`, `platform=googlesearchconsole` and `error_message`. ...
+            On failure the redirect carries `error`, `platform=googlesearchconsole` and `error_message`. ...
 
-        Platforms: googlesearchconsole
+            Platforms: googlesearchconsole
 
-        Args:
-            profile_id: Your Zernio profile ID (get from /v1/profiles). (required)
-            redirect_url: Custom redirect after connection. Must be an absolute http(s) URL or custom app scheme such as `myapp://callback`; relative and unsafe URLs return 400.
-            reconnect_account_id: Zernio account ID of the Google Search Console account being reconnected. Picking a different site then fails instead of adding a second account."""
+            Args:
+                profile_id: Your Zernio profile ID (get from /v1/profiles). (required)
+                redirect_url: Custom redirect after connection. Must be an absolute http(s) URL or custom app scheme such as `myapp://callback`; relative and unsafe URLs return 400.
+                reconnect_account_id: Zernio account ID of the Google Search Console account being reconnected. Picking a different site then fails instead of adding a second account.
+                welcome: When `true`, `authUrl` opens on the Zernio-hosted welcome screen with your brand, as on GET /v1/connect/{platform}, naming Google Search Console.
+
+        - With no `redirect_url`, the flow ends on the branded result page instead of the Zernio dashboard.
+        - When left out, the screen shows if the workspace saved it as on by default (`PUT /v1/connect/welcome-screen`). Pass `false` to skip it.
+        - Cannot be combined with `headless=true` in `redirect_url` (400 `INVALID_FIELD_VALUE`).
+                brand_name: Welcome screen only: your product name in its heading. Same rules as on GET /v1/connect/{platform}.
+                logo_url: Welcome screen only: https URL of your square logo. Rejected with 400 `INVALID_FIELD_VALUE` when the welcome screen is not shown.
+                primary_color: Welcome screen only: hex colour (`#RRGGBB`) of its button.
+                welcome_theme: Welcome screen only: a URL-encoded JSON object restyling and rewording the welcome screen and the result page, with the keys documented on GET /v1/connect/{platform}. Rejected when the welcome screen is not shown."""
         client = _get_client()
         try:
             response = client.connect.get_google_search_console_connect_url(
                 profile_id=profile_id,
                 redirect_url=redirect_url,
                 reconnect_account_id=reconnect_account_id,
+                welcome=welcome,
+                brand_name=brand_name,
+                logo_url=logo_url,
+                primary_color=primary_color,
+                welcome_theme=welcome_theme,
             )
             return _format_response(response)
         except Exception as e:
@@ -30916,7 +31007,7 @@ def register_generated_tools(mcp, _get_client):
 
         Paginate with `cursor`: pass the `nextCursor` of the previous page until it comes back `null`.
 
-        Platforms: meta, google, tiktok, linkedin, pinterest, reddit, openai, applovinads, googleanalytics, stripe, hubspot, salesforce
+        Platforms: meta, google, tiktok, linkedin, microsoft, x, pinterest, reddit, openai, applovinads, googleanalytics, stripe, hubspot, salesforce
 
         Args:
             profile_id: The profile to list. Omit to cover every profile you can access.
@@ -30979,7 +31070,7 @@ def register_generated_tools(mcp, _get_client):
         - `sourceUrl` keeps only its origin, path and attribution parameters (`utm_*`, `gclid`, `fbclid`, `ttclid`, `li_fat_id`, `epik`, `rdt_cid`, `gbraid`, `wbraid`).
         - Events sent with `testCode` are forwarded but not ...
 
-        Platforms: meta, google, tiktok, linkedin, pinterest, reddit, openai, applovinads, googleanalytics
+        Platforms: meta, google, tiktok, linkedin, microsoft, x, pinterest, reddit, openai, applovinads, googleanalytics
 
         Args:
             profile_id: Profile the events belong to. Its saved destinations receive the events. (required)
@@ -31036,21 +31127,32 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def conversions_get_events_overview_daily(
-        profile_id: str | None = None, period: Literal["today", "7d", "30d"] = "7d"
+        profile_id: str | None = None,
+        period: Literal["today", "7d", "30d", "90d"] = "7d",
+        event_name: str | None = None,
+        sources: str | None = None,
+        platform: str | None = None,
     ) -> str:
         """Get daily tracking figures
 
-        The tracking figures of a period, day by day (UTC): events stored, events sent to the ad platforms and how many they accepted, plus the period's totals in the same shape as the overview's `today`.
+        The tracking figures of a period, day by day (UTC): events stored per event name, events sent to each ad platform and how many it accepted, the period's totals in the same shape as the overview's `today`, and how many website conversions each platform's browser pixel missed.
 
-        An event sent to a destination counts once, on the day of its first send, by its latest outcome. Without `profileId` it covers every profile you can access. Requires the Ads add-on.
+        An event sent to a destination counts once, on the day of its first send, by its latest outcome. Without `profileId` it covers every profile you can access. `eventName`, `sources` and `platform` narrow every figure. Requires the Ads add-on.
 
         Args:
             profile_id: The profile to read. Omit to cover every profile you can access, summed across them.
-            period: The days to cover, each ending today (UTC): `today`, the last 7 days or the last 30 days."""
+            period: The days to cover, each ending today (UTC): `today`, the last 7, 30 or 90 days.
+            event_name: Only events of this name, such as `Purchase`.
+            sources: Comma-separated sources (`web`, `shopify`, `stripe`, `api`...). Only events from them.
+            platform: Only sends to this platform (`metaads`, `googleads`...), and only the events sent to it."""
         client = _get_client()
         try:
             response = client.conversions.get_events_overview_daily(
-                profile_id=profile_id, period=period
+                profile_id=profile_id,
+                period=period,
+                event_name=event_name,
+                sources=sources,
+                platform=platform,
             )
             return _format_response(response)
         except Exception as e:
@@ -31305,7 +31407,7 @@ def register_generated_tools(mcp, _get_client):
 
         Pick `destinationId` from `GET /v1/ads/conversions/destinations`. Set `eventNames` to forward only those events, such as only `Purchase`; leave it out to forward every event.
 
-        Platforms: meta, google, tiktok, linkedin, pinterest, reddit, openai, applovinads, googleanalytics, hubspot, salesforce
+        Platforms: meta, google, tiktok, linkedin, microsoft, x, pinterest, reddit, openai, applovinads, googleanalytics, hubspot, salesforce
 
         Args:
             profile_id: (required)
@@ -31469,6 +31571,7 @@ def register_generated_tools(mcp, _get_client):
         consent_mode: Literal["eu_opt_in", "opt_in", "opt_out"] | None = None,
         custom_hostname: str | None = None,
         proxy_path: str | None = None,
+        google_tag_ids: list[str] | None = None,
     ) -> str:
         """Update a tracking site
 
@@ -31478,13 +31581,16 @@ def register_generated_tools(mcp, _get_client):
 
         `proxyPath` serves the tag from a path of the site itself, such as `brand.com/zt`, through a proxy on your server. The response's `proxy.secret` signs what the proxy forwards. `null` removes it.
 
+        `googleTagIds` lists the site's own Google tags that the same proxy relays to Google's tag gateway. Load each from its `proxy.googleTags[].src` instead of googletagmanager.com. `null` or an empty list removes them.
+
         Args:
             site_id: (required)
             name
             domains: Hosts allowed to send events, such as `brand.com`. Events from any other origin are dropped.
             consent_mode
             custom_hostname: A subdomain of one of the site's domains, never the domain itself. `null` removes it.
-            proxy_path: The path your server forwards to the collector, such as `/zt`. `null` removes it."""
+            proxy_path: The path your server forwards to the collector, such as `/zt`. `null` removes it.
+            google_tag_ids: Google tag ids such as `GTM-XXXXXXX`, `G-XXXXXXXXXX` or `AW-XXXXXXXXXX`, up to 10. `null` or `[]` removes them."""
         client = _get_client()
         try:
             response = client.conversions.update_tracking_site(
@@ -31494,6 +31600,7 @@ def register_generated_tools(mcp, _get_client):
                 consent_mode=consent_mode,
                 custom_hostname=custom_hostname,
                 proxy_path=proxy_path,
+                google_tag_ids=google_tag_ids,
             )
             return _format_response(response)
         except Exception as e:
@@ -36418,39 +36525,43 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Send an email
 
-        Sends from the connected mailbox and returns the stored sent copy.
+            Sends from the connected mailbox and returns the stored sent copy.
 
-        The message is mirrored into the inbox (`message.sent` fires once) and counted against the mailbox's daily cap. The cap is reported in the `X-Zernio-Send-Limit`, `X-Zernio-Send-Remaining` and `X-Zernio-Send-Reset` response headers, plus `X-Zernio-Send-Doubles-At` while the cap can still double.
+            The message is mirrored into the inbox (`message.sent` fires once) and counted against the mailbox's daily cap. The cap is reported in the `X-Zernio-Send-Limit`, `X-Zernio-Send-Remaining` and `X-Zernio-Send-Reset` response headers, plus `X-Zernio-Send-Doubles-At` while the cap can still double.
 
-        ### Sending limits
+            ### Sending limits
 
-        These mailboxes are for one-to-one mail, not bulk sends. Protection on every mailbox:
+            These mailboxes are for one-to-one mail, not bulk sends. Protection on every mailbox:
 
-        - Daily cap: Microsoft 1,000; Google Workspace 500; Gmail consumer 200; IMAP 200. Reaching it answers 429 `email_send_cap_reached` with `details.cap`.
-        - The cap of a Microsoft, Google Workspace or Gmail mailbox doubles once (2,000, 1,000 and 400) after 14 days with a successful send, counted since its last spam signal and never past the provider's own limit. Days need not be consecutive.
-        - A spam signal starts the count over and returns the cap to its base. Signals: a same-body burst, a send refused over the mailbox's ...
+            - Daily cap: Microsoft 1,000; Google Workspace 500; Gmail consumer 200; IMAP 200. Reaching it answers 429 `email_send_cap_reached` with `details.cap`.
+            - The cap of a Microsoft, Google Workspace or Gmail mailbox doubles once (2,000, 1,000 and 400) after 14 days with a successful send, counted since its last spam signal and never past the provider's own limit. Days need not be consecutive.
+            - A spam signal starts the count over and returns the cap to its base. Signals: a same-body burst, a send refused over the mailbox's ...
 
-        Args:
-            account_id: (required)
-            to: Each item is an object with keys: email (string, required); name (string) (required)
-            cc: Each item is an object with keys: email (string, required); name (string)
-            bcc: Each item is an object with keys: email (string, required); name (string)
-            reply_to: Each item is an object with keys: email (string, required); name (string)
-            from_name
-            from_: Send from another address listed by `GET /v1/email/send-as`; on Outlook, declare a shared mailbox there first. An address not on the list answers 400, and Outlook refusing it at send time answers 403. Omitted, the mail leaves from the mailbox address.
-            append_signature: Appends the signature of the sending address: its Zernio default first, else its Gmail signature. 400 when it has neither.
-            signature_id: Appends this Zernio signature instead. Wins over `appendSignature`.
-            subject: (required)
-            text: Plain-text body. One of `text` or `html` is required.
-            html
-            attachments: 25 MB in total on every provider. Send files over 4 MB by url: request bodies are capped at 4.5 MB. Each item is an object with keys: filename (string, required); contentType (string, required); url (string) - Fetched at send time. Exactly one of `url` or `base64`.; base64 (string); contentId (string) - Makes the attachment inline (`cid:` reference in the html).
-            headers: Custom `X-` headers only. `List-Unsubscribe` is dropped on Microsoft and reported in `metadata.droppedHeaders`.
-            metadata
-            scheduled_for: Send later, between 1 minute and 30 days from now. The request answers 202 with the scheduled send; it leaves within a minute of this time through the same caps as an immediate send. List or cancel it under `/v1/email/messages/scheduled`.
-            hold_as_draft: Needs `scheduledFor`. Saves the email as a draft in the mailbox now and sends that draft at `scheduledFor`, with any edits the user made in their mail app. A draft deleted or sent from the mailbox first fails the send (`email.send_failed`). Cancelling deletes the draft.
-            track_opens: Adds an open pixel to the html and fires `email.opened`. Needs `html`.
-            track_links: Rewrites every http(s) link in the html through a Zernio redirect and fires `email.link_clicked`. Needs `html`.
-            track_replies: Fires `email.thread_replied` when someone else writes in this message's thread. Works with text or html."""
+            Args:
+                account_id: (required)
+                to: Each item is an object with keys: email (string, required); name (string) (required)
+                cc: Each item is an object with keys: email (string, required); name (string)
+                bcc: Each item is an object with keys: email (string, required); name (string)
+                reply_to: Each item is an object with keys: email (string, required); name (string)
+                from_name
+                from_: Send from another address listed by `GET /v1/email/send-as`; on Outlook, declare a shared mailbox there first. An address not on the list answers 400, and Outlook refusing it at send time answers 403. Omitted, the mail leaves from the mailbox address.
+                append_signature: Appends the signature of the sending address: its Zernio default first, else its Gmail signature. 400 when it has neither.
+                signature_id: Appends this Zernio signature instead. Wins over `appendSignature`.
+                subject: (required)
+                text: Plain-text body. One of `text` or `html` is required.
+                html
+                attachments: 25 MB in total on every provider. Send files over 4 MB by url: request bodies are capped at 4.5 MB. Each item is an object with keys: filename (string, required); contentType (string, required); url (string) - Fetched at send time. Exactly one of `url` or `base64`.; base64 (string); contentId (string) - Makes the attachment inline (`cid:` reference in the html).
+                headers: Custom headers: `X-` names, plus `List-Unsubscribe`, `List-Unsubscribe-Post`, `List-Id`, `Precedence` and `Auto-Submitted`. Other names, values with line breaks and header lines over 998 characters answer 400.
+
+        `List-Unsubscribe` takes one or more `<https://...>` or `<mailto:...>` URIs separated by commas. `List-Unsubscribe-Post` must be exactly `List-Unsubscribe=One-Click` and needs an https URI in `List-Unsubscribe` (RFC 8058).
+
+        Gmail and IMAP send them all. Outlook sends only `X-` headers: the others are left out and named in `metadata.droppedHeaders` on the sent message.
+                metadata
+                scheduled_for: Send later, between 1 minute and 30 days from now. The request answers 202 with the scheduled send; it leaves within a minute of this time through the same caps as an immediate send. List or cancel it under `/v1/email/messages/scheduled`.
+                hold_as_draft: Needs `scheduledFor`. Saves the email as a draft in the mailbox now and sends that draft at `scheduledFor`, with any edits the user made in their mail app. A draft deleted or sent from the mailbox first fails the send (`email.send_failed`). Cancelling deletes the draft.
+                track_opens: Adds an open pixel to the html and fires `email.opened`. Needs `html`.
+                track_links: Rewrites every http(s) link in the html through a Zernio redirect and fires `email.link_clicked`. Needs `html`.
+                track_replies: Fires `email.thread_replied` when someone else writes in this message's thread. Works with text or html."""
         client = _get_client()
         try:
             response = client.email.send_email_message(
@@ -36697,33 +36808,37 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Reply to a message
 
-        Replies inside the provider's thread: the provider builds the quoted original and threading headers, your `html` or `text` goes above the quote. `to`, `cc`, `bcc`, `replyTo`, `subject`, `headers` and `attachments` are honoured.
+            Replies inside the provider's thread: the provider builds the quoted original and threading headers, your `html` or `text` goes above the quote. `to`, `cc`, `bcc`, `replyTo`, `subject`, `headers` and `attachments` are honoured.
 
-        `scheduledFor` schedules the reply (202) and `trackOpens`, `trackLinks` and `trackReplies` track it, as on send; `holdAsDraft` holds it as a reply draft in the thread until then. Same protection, caps and headers as sending.
+            `scheduledFor` schedules the reply (202) and `trackOpens`, `trackLinks` and `trackReplies` track it, as on send; `holdAsDraft` holds it as a reply draft in the thread until then. Same protection, caps and headers as sending.
 
-        Args:
-            message_id: (required)
-            account_id: (required)
-            to: Each item is an object with keys: email (string, required); name (string) (required)
-            cc: Each item is an object with keys: email (string, required); name (string)
-            bcc: Each item is an object with keys: email (string, required); name (string)
-            reply_to: Each item is an object with keys: email (string, required); name (string)
-            from_name
-            from_: Send from another address listed by `GET /v1/email/send-as`; on Outlook, declare a shared mailbox there first. An address not on the list answers 400, and Outlook refusing it at send time answers 403. Omitted, the mail leaves from the mailbox address.
-            append_signature: Appends the signature of the sending address: its Zernio default first, else its Gmail signature. 400 when it has neither.
-            signature_id: Appends this Zernio signature instead. Wins over `appendSignature`.
-            subject: Optional on replies; the provider keeps the thread subject. (required)
-            text: Plain-text body. One of `text` or `html` is required.
-            html
-            attachments: 25 MB in total on every provider. Send files over 4 MB by url: request bodies are capped at 4.5 MB. Each item is an object with keys: filename (string, required); contentType (string, required); url (string) - Fetched at send time. Exactly one of `url` or `base64`.; base64 (string); contentId (string) - Makes the attachment inline (`cid:` reference in the html).
-            headers: Custom `X-` headers only. `List-Unsubscribe` is dropped on Microsoft and reported in `metadata.droppedHeaders`.
-            metadata
-            scheduled_for: Send later, between 1 minute and 30 days from now. The request answers 202 with the scheduled send; it leaves within a minute of this time through the same caps as an immediate send. List or cancel it under `/v1/email/messages/scheduled`.
-            hold_as_draft: Needs `scheduledFor`. Saves the email as a draft in the mailbox now and sends that draft at `scheduledFor`, with any edits the user made in their mail app. A draft deleted or sent from the mailbox first fails the send (`email.send_failed`). Cancelling deletes the draft.
-            track_opens: Adds an open pixel to the html and fires `email.opened`. Needs `html`.
-            track_links: Rewrites every http(s) link in the html through a Zernio redirect and fires `email.link_clicked`. Needs `html`.
-            track_replies: Fires `email.thread_replied` when someone else writes in this message's thread. Works with text or html.
-            mode"""
+            Args:
+                message_id: (required)
+                account_id: (required)
+                to: Each item is an object with keys: email (string, required); name (string) (required)
+                cc: Each item is an object with keys: email (string, required); name (string)
+                bcc: Each item is an object with keys: email (string, required); name (string)
+                reply_to: Each item is an object with keys: email (string, required); name (string)
+                from_name
+                from_: Send from another address listed by `GET /v1/email/send-as`; on Outlook, declare a shared mailbox there first. An address not on the list answers 400, and Outlook refusing it at send time answers 403. Omitted, the mail leaves from the mailbox address.
+                append_signature: Appends the signature of the sending address: its Zernio default first, else its Gmail signature. 400 when it has neither.
+                signature_id: Appends this Zernio signature instead. Wins over `appendSignature`.
+                subject: Optional on replies; the provider keeps the thread subject. (required)
+                text: Plain-text body. One of `text` or `html` is required.
+                html
+                attachments: 25 MB in total on every provider. Send files over 4 MB by url: request bodies are capped at 4.5 MB. Each item is an object with keys: filename (string, required); contentType (string, required); url (string) - Fetched at send time. Exactly one of `url` or `base64`.; base64 (string); contentId (string) - Makes the attachment inline (`cid:` reference in the html).
+                headers: Custom headers: `X-` names, plus `List-Unsubscribe`, `List-Unsubscribe-Post`, `List-Id`, `Precedence` and `Auto-Submitted`. Other names, values with line breaks and header lines over 998 characters answer 400.
+
+        `List-Unsubscribe` takes one or more `<https://...>` or `<mailto:...>` URIs separated by commas. `List-Unsubscribe-Post` must be exactly `List-Unsubscribe=One-Click` and needs an https URI in `List-Unsubscribe` (RFC 8058).
+
+        Gmail and IMAP send them all. Outlook sends only `X-` headers: the others are left out and named in `metadata.droppedHeaders` on the sent message.
+                metadata
+                scheduled_for: Send later, between 1 minute and 30 days from now. The request answers 202 with the scheduled send; it leaves within a minute of this time through the same caps as an immediate send. List or cancel it under `/v1/email/messages/scheduled`.
+                hold_as_draft: Needs `scheduledFor`. Saves the email as a draft in the mailbox now and sends that draft at `scheduledFor`, with any edits the user made in their mail app. A draft deleted or sent from the mailbox first fails the send (`email.send_failed`). Cancelling deletes the draft.
+                track_opens: Adds an open pixel to the html and fires `email.opened`. Needs `html`.
+                track_links: Rewrites every http(s) link in the html through a Zernio redirect and fires `email.link_clicked`. Needs `html`.
+                track_replies: Fires `email.thread_replied` when someone else writes in this message's thread. Works with text or html.
+                mode"""
         client = _get_client()
         try:
             response = client.email.reply_email_message(
@@ -36922,7 +37037,7 @@ def register_generated_tools(mcp, _get_client):
             text
             html
             attachments: Each item is an object with keys: filename (string, required); contentType (string, required); url (string) - Fetched at send time. Exactly one of `url` or `base64`.; base64 (string); contentId (string) - Makes the attachment inline (`cid:` reference in the html).
-            headers: Custom `X-` headers only.
+            headers: Same headers as on `POST /v1/email/messages`: `X-` names plus `List-Unsubscribe`, `List-Unsubscribe-Post`, `List-Id`, `Precedence` and `Auto-Submitted`. Outlook drafts leave out all but `X-` headers.
             metadata: Kept with the draft and returned on the sent message and its email.* webhooks.
             in_reply_to: Makes a reply draft in that message's thread, addressed and threaded like a reply. Not with `forwardOf`.
             reply_all: With `inReplyTo`: address every recipient of the original. Leave out `to`, `cc` and `bcc`.

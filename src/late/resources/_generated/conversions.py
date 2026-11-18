@@ -427,13 +427,22 @@ class ConversionsResource:
         return self._client._get("/v1/events/overview", params=params)
 
     def get_events_overview_daily(
-        self, *, profile_id: str | None = None, period: str | None = "7d"
+        self,
+        *,
+        profile_id: str | None = None,
+        period: str | None = "7d",
+        event_name: str | None = None,
+        sources: str | None = None,
+        platform: str | None = None,
     ) -> dict[str, Any]:
         """Get daily tracking figures"""
         params = self._build_query(
             {
                 "profileId": profile_id,
                 "period": period,
+                "eventName": event_name,
+                "sources": sources,
+                "platform": platform,
             }
         )
         return self._client._get("/v1/events/overview/daily", params=params)
@@ -601,6 +610,7 @@ class ConversionsResource:
         consent_mode: Any | None = None,
         custom_hostname: Any | None = None,
         proxy_path: Any | None = None,
+        google_tag_ids: Any | None = None,
     ) -> dict[str, Any]:
         """Update a tracking site"""
         payload = self._build_body(
@@ -610,6 +620,7 @@ class ConversionsResource:
                 "consentMode": consent_mode,
                 "customHostname": custom_hostname,
                 "proxyPath": proxy_path,
+                "googleTagIds": google_tag_ids,
             }
         )
         return self._client._patch(f"/v1/tracking-sites/{site_id}", data=payload)
@@ -1358,13 +1369,22 @@ class ConversionsResource:
         return await self._client._aget("/v1/events/overview", params=params)
 
     async def aget_events_overview_daily(
-        self, *, profile_id: str | None = None, period: str | None = "7d"
+        self,
+        *,
+        profile_id: str | None = None,
+        period: str | None = "7d",
+        event_name: str | None = None,
+        sources: str | None = None,
+        platform: str | None = None,
     ) -> dict[str, Any]:
         """Get daily tracking figures (async)"""
         params = self._build_query(
             {
                 "profileId": profile_id,
                 "period": period,
+                "eventName": event_name,
+                "sources": sources,
+                "platform": platform,
             }
         )
         return await self._client._aget("/v1/events/overview/daily", params=params)
@@ -1540,6 +1560,7 @@ class ConversionsResource:
         consent_mode: Any | None = None,
         custom_hostname: Any | None = None,
         proxy_path: Any | None = None,
+        google_tag_ids: Any | None = None,
     ) -> dict[str, Any]:
         """Update a tracking site (async)"""
         payload = self._build_body(
@@ -1549,6 +1570,7 @@ class ConversionsResource:
                 "consentMode": consent_mode,
                 "customHostname": custom_hostname,
                 "proxyPath": proxy_path,
+                "googleTagIds": google_tag_ids,
             }
         )
         return await self._client._apatch(f"/v1/tracking-sites/{site_id}", data=payload)
