@@ -192,7 +192,7 @@ export interface CommentsData {
 
 export interface PreviewData {
   content: string;
-  media: { type: string; url: string }[];
+  media: { type?: string; url: string }[];
   targets: { platform: string; accountId?: string; handle?: string; error?: string }[];
   validation?: {
     valid?: boolean;

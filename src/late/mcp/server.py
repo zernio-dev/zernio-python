@@ -45,15 +45,17 @@ from fastmcp.server.transforms.search import BM25SearchTransform
 from fastmcp.server.transforms.search.base import serialize_tools_for_output_markdown
 from mcp.types import INVALID_PARAMS, ToolAnnotations
 
-from late import Late, MediaType, PostStatus
+from late import Late, PostStatus
 from late.client.exceptions import LateAPIError, LateError, LateRateLimitError
 
 from .apps import APP_TOOLS, apps_enabled, register_apps
 from .auth import build_auth_provider, forget_rejected_token
 from .idempotency import same_arguments_key
+from .media_items import media_item
 from .middleware import (
     FEEDBACK_TOOL,
     FeedbackSourceMiddleware,
+    RateLimitGuidanceMiddleware,
     ToolGuidanceMiddleware,
     WellFormedOutputMiddleware,
     WellFormedOutputTransform,
@@ -408,6 +410,7 @@ details.
 )
 
 mcp.add_middleware(WellFormedOutputMiddleware())
+mcp.add_middleware(RateLimitGuidanceMiddleware())
 mcp.add_middleware(
     ToolGuidanceMiddleware(
         search_tool=_SEARCH_TOOL,
@@ -841,21 +844,6 @@ def _platform_errors(post: Any) -> list[str]:
     ]
 
 
-def _media_items(media_urls: str) -> list[dict[str, Any]]:
-    """Media items for comma-separated URLs, typed by file extension."""
-    items = []
-    for url in (u.strip() for u in media_urls.split(",")):
-        if not url:
-            continue
-        media_type: MediaType | str = MediaType.IMAGE
-        if any(ext in url.lower() for ext in [".mp4", ".mov", ".avi", ".webm", ".m4v"]):
-            media_type = MediaType.VIDEO
-        elif ".gif" in url.lower():
-            media_type = MediaType.GIF
-        items.append({"type": media_type, "url": url})
-    return items
-
-
 @tool_def("posts_list")
 def posts_list(status: str = "", limit: int = 10) -> str:
     client = _get_client()
@@ -953,7 +941,9 @@ def posts_create(
         params["title"] = title
 
     if media_urls:
-        params["media_items"] = _media_items(media_urls)
+        urls = [u.strip() for u in media_urls.split(",") if u.strip()]
+        media_items = [media_item(url) for url in urls]
+        params["media_items"] = media_items
 
     if is_draft:
         params["is_draft"] = True
@@ -1053,7 +1043,9 @@ def posts_cross_post(
     }
 
     if media_urls:
-        params["media_items"] = _media_items(media_urls)
+        urls = [u.strip() for u in media_urls.split(",") if u.strip()]
+        media_items = [media_item(url) for url in urls]
+        params["media_items"] = media_items
 
     if is_draft:
         params["is_draft"] = True

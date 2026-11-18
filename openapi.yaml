@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.655.0"
+  version: "1.657.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -1580,7 +1580,11 @@ components:
     AnalyticsRateLimited:
       x-summary: "Too many requests: wait `Retry-After` seconds, then spread the calls out."
       description: |
-        A limit on your request rate was reached: your plan's API limit, or the team's analytics read cap on a 30-second sliding window. `details.scope` names the capped group (`campaign-analytics`, `ad-analytics`, `ads-listings` or `post-analytics`) and is absent for the API limit.
+        A limit on your request rate was reached. `details.scope` says which one:
+
+        - absent: your plan's API limit.
+        - `campaign-analytics`, `ad-analytics`, `ads-listings`, `post-analytics` or `account-insights`: the team's analytics read cap for that group, on a 30-second sliding window.
+        - `account_route`: 120 reads per hour of one account on one account-level analytics endpoint.
       headers:
         Retry-After:
           description: Seconds to wait before retrying.
@@ -1606,13 +1610,13 @@ components:
                   currentCount: { type: integer }
                   limit: { type: integer }
                   retryAfterSeconds: { type: integer }
-                  scope: { type: string, enum: [campaign-analytics, ad-analytics, ads-listings, post-analytics] }
+                  scope: { type: string, enum: [campaign-analytics, ad-analytics, ads-listings, post-analytics, account-insights, account_route] }
                   window: { type: string }
           example:
-            error: 'Limit of 120 requests per 30 s reached for campaign-analytics reads. Read many campaigns in one request with GET /v1/ads/tree instead of one request each. Please retry after 12 seconds.'
+            error: 'Limit of 300 requests per 30 s reached for campaign-analytics reads. Read many campaigns in one request with GET /v1/ads/tree instead of one request each. Please retry after 12 seconds.'
             details:
-              currentCount: 121
-              limit: 120
+              currentCount: 301
+              limit: 300
               retryAfterSeconds: 12
               scope: campaign-analytics
               window: 30 s
@@ -1976,7 +1980,17 @@ components:
           items: { type: object, properties: { id: { type: string, enum: [enable_imap] }, text: { type: string }, url: { type: string, format: uri } } }
         reconnectCause: { type: [string, "null"] }
         reason: { type: [string, "null"] }
-        unsupportedReason: { type: [string, "null"], enum: [proton_requires_bridge, forwarding_only, null], description: 'proton_requires_bridge: Proton Mail only works through its local bridge. forwarding_only: the domain forwards mail (Cloudflare Email Routing) and stores none, so connect the mailbox it forwards to.' }
+        unsupportedReason:
+          type: [string, "null"]
+          enum: [proton_requires_bridge, forwarding_only, domain_typo, no_mail_domain, null]
+          description: |
+            Why an `unsupported` route cannot connect:
+
+            - `proton_requires_bridge`: Proton Mail only works through its local bridge.
+            - `forwarding_only`: the domain forwards mail (Cloudflare Email Routing) and stores none, so connect the mailbox it forwards to.
+            - `domain_typo`: the domain takes no mail and looks like a mistyped consumer domain. `suggestedEmail` has the likely address.
+            - `no_mail_domain`: the domain has no MX and no address, so it cannot receive email.
+        suggestedEmail: { type: [string, "null"], description: 'With unsupportedReason domain_typo: the address the user most likely meant, such as ana7275@gmail.com for ana@7275gmail.com. Run discovery again with it once the user confirms.' }
         appPasswordFallback:
           type: object
           description: 'Google only: Gmail over IMAP with an app password, for accounts whose admin blocks Google sign-in for other apps.'

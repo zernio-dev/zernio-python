@@ -21,6 +21,7 @@ from fastmcp.tools import ToolResult
 from mcp.types import ToolAnnotations
 
 from late.client.exceptions import LateError
+from late.mcp.media_items import media_item
 
 if TYPE_CHECKING:
     from fastmcp import FastMCP
@@ -194,7 +195,7 @@ def register_tools(mcp: FastMCP, app_uri: str) -> None:
                 }
             )
 
-        media = server._media_items(media_urls)
+        media = [media_item(u.strip()) for u in media_urls.split(",") if u.strip()]
         resolved = [
             {"platform": t["platform"], "accountId": t["accountId"]}
             for t in targets
@@ -235,10 +236,7 @@ def register_tools(mcp: FastMCP, app_uri: str) -> None:
             "preview",
             {
                 "content": content,
-                "media": [
-                    {"type": getattr(m["type"], "value", m["type"]), "url": m["url"]}
-                    for m in media
-                ],
+                "media": media,
                 "targets": targets,
                 "validation": validation,
                 # What the app's buttons send to posts_cross_post, with the
