@@ -279,6 +279,22 @@ async def test_a_tool_behind_call_tool_is_one_sentry_transaction(sentry_events) 
     assert transaction["tags"]["mcp.via"] == "call_tool"
 
 
+async def test_a_guessed_name_through_call_tool_opens_no_sentry_issue(
+    sentry_events, quieted_fastmcp_logs
+) -> None:
+    # FastMCP 4's call_tool checks the name itself and re-wraps its NotFoundError
+    # in a ToolError: 8 Cursor guesses became Sentry issue ZERNIO-MCP-S.
+    async with Client(_proxied_server()) as client:
+        await client.call_tool(
+            "call_tool",
+            {"name": "lead_gen_list_forms", "arguments": {}},
+            raise_on_error=False,
+        )
+
+    assert sentry_events.payloads("event") == []
+    assert quieted_fastmcp_logs.records == []
+
+
 async def test_a_direct_call_is_tagged_direct_with_its_caller(
     sentry_events, monkeypatch
 ) -> None:

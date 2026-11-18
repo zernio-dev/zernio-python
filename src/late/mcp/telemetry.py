@@ -113,6 +113,7 @@ def quiet_routine_logs() -> None:
 def is_expected_failure(exc: Exception) -> bool:
     if isinstance(exc, ToolError) and exc.__cause__ is not None:
         # A generated tool re-wraps what it raised itself, e.g. the refusal
-        # of a file too large to return.
-        return isinstance(exc.__cause__, (LateError, FastMCPError))
+        # of a file too large to return, and FastMCP 4's call_tool re-wraps
+        # the NotFoundError of a guessed name (not a FastMCPError).
+        return isinstance(exc.__cause__, (LateError, FastMCPError, NotFoundError))
     return isinstance(exc, (FastMCPError, NotFoundError, LateError))
