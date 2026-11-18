@@ -43,8 +43,8 @@ RUN groupadd --system --gid 10001 app \
 
 COPY --from=builder /app/.venv /app/.venv
 
-ENV MALLOC_ARENA_MAX=2 \
-    PYTHONUNBUFFERED=1
+ENV MALLOC_ARENA_MAX=2
+ENV PYTHONUNBUFFERED=1
 ENV PATH="/app/.venv/bin:$PATH"
 
 WORKDIR /app
