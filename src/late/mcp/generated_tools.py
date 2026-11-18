@@ -31469,6 +31469,7 @@ def register_generated_tools(mcp, _get_client):
         consent_mode: Literal["eu_opt_in", "opt_in", "opt_out"] | None = None,
         custom_hostname: str | None = None,
         proxy_path: str | None = None,
+        google_tag_ids: list[str] | None = None,
     ) -> str:
         """Update a tracking site
 
@@ -31478,13 +31479,16 @@ def register_generated_tools(mcp, _get_client):
 
         `proxyPath` serves the tag from a path of the site itself, such as `brand.com/zt`, through a proxy on your server. The response's `proxy.secret` signs what the proxy forwards. `null` removes it.
 
+        `googleTagIds` lists the site's own Google tags that the same proxy relays to Google's tag gateway. Load each from its `proxy.googleTags[].src` instead of googletagmanager.com. `null` or an empty list removes them.
+
         Args:
             site_id: (required)
             name
             domains: Hosts allowed to send events, such as `brand.com`. Events from any other origin are dropped.
             consent_mode
             custom_hostname: A subdomain of one of the site's domains, never the domain itself. `null` removes it.
-            proxy_path: The path your server forwards to the collector, such as `/zt`. `null` removes it."""
+            proxy_path: The path your server forwards to the collector, such as `/zt`. `null` removes it.
+            google_tag_ids: Google tag ids such as `GTM-XXXXXXX`, `G-XXXXXXXXXX` or `AW-XXXXXXXXXX`, up to 10. `null` or `[]` removes them."""
         client = _get_client()
         try:
             response = client.conversions.update_tracking_site(
@@ -31494,6 +31498,7 @@ def register_generated_tools(mcp, _get_client):
                 consent_mode=consent_mode,
                 custom_hostname=custom_hostname,
                 proxy_path=proxy_path,
+                google_tag_ids=google_tag_ids,
             )
             return _format_response(response)
         except Exception as e:

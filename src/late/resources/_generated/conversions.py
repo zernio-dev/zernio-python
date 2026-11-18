@@ -601,6 +601,7 @@ class ConversionsResource:
         consent_mode: Any | None = None,
         custom_hostname: Any | None = None,
         proxy_path: Any | None = None,
+        google_tag_ids: Any | None = None,
     ) -> dict[str, Any]:
         """Update a tracking site"""
         payload = self._build_body(
@@ -610,6 +611,7 @@ class ConversionsResource:
                 "consentMode": consent_mode,
                 "customHostname": custom_hostname,
                 "proxyPath": proxy_path,
+                "googleTagIds": google_tag_ids,
             }
         )
         return self._client._patch(f"/v1/tracking-sites/{site_id}", data=payload)
@@ -1540,6 +1542,7 @@ class ConversionsResource:
         consent_mode: Any | None = None,
         custom_hostname: Any | None = None,
         proxy_path: Any | None = None,
+        google_tag_ids: Any | None = None,
     ) -> dict[str, Any]:
         """Update a tracking site (async)"""
         payload = self._build_body(
@@ -1549,6 +1552,7 @@ class ConversionsResource:
                 "consentMode": consent_mode,
                 "customHostname": custom_hostname,
                 "proxyPath": proxy_path,
+                "googleTagIds": google_tag_ids,
             }
         )
         return await self._client._apatch(f"/v1/tracking-sites/{site_id}", data=payload)

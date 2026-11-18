@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.657.0"
+  version: "1.658.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -22099,6 +22099,18 @@ components:
             secret:
               type: [string, "null"]
               description: "Signs the visitor's IP and country your proxy forwards. Only on reading or updating one site."
+            googleTags:
+              type: array
+              description: "The loader of each of `googleTagIds` on the site's own domain. Use `src` in place of the tag's googletagmanager.com address."
+              items:
+                type: object
+                properties:
+                  id: { type: string, description: 'The Google tag id, such as `GTM-XXXXXXX` or `G-XXXXXXXXXX`.' }
+                  src: { type: string, description: 'Such as `https://brand.com/zt/gtg/<hex>/?id=GTM-XXXXXXX`.' }
+        googleTagIds:
+          type: array
+          items: { type: string }
+          description: "The site's own Google tags (Tag Manager, GA4, Google Ads) its own-domain path relays to Google, so they load and measure from the site's domain."
         consentMode: { $ref: '#/components/schemas/TrackingSiteConsentMode' }
         checks:
           type: array
@@ -101763,6 +101775,10 @@ paths:
 
         `proxyPath` serves the tag from a path of the site itself, such as `brand.com/zt`, through a proxy on your
         server. The response's `proxy.secret` signs what the proxy forwards. `null` removes it.
+
+
+        `googleTagIds` lists the site's own Google tags that the same proxy relays to Google's tag gateway. Load each
+        from its `proxy.googleTags[].src` instead of googletagmanager.com. `null` or an empty list removes them.
       security:
         - bearerAuth: []
       requestBody:
@@ -101790,6 +101806,11 @@ paths:
                   type: [string, "null"]
                   pattern: '^/[A-Za-z0-9_-]{1,32}$'
                   description: "The path your server forwards to the collector, such as `/zt`. `null` removes it."
+                googleTagIds:
+                  type: [array, "null"]
+                  maxItems: 10
+                  items: { type: string, pattern: '^(GTM|GT|G|AW|DC)-[A-Z0-9]{4,20}$' }
+                  description: 'Google tag ids such as `GTM-XXXXXXX`, `G-XXXXXXXXXX` or `AW-XXXXXXXXXX`, up to 10. `null` or `[]` removes them.'
       responses:
         '200':
           description: The updated site.
