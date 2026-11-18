@@ -31167,6 +31167,36 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="Get buyer cohorts by first purchase month and first channel",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def conversions_get_ltv_cohorts(
+        from_month: str, to_month: str, profile_id: str | None = None
+    ) -> str:
+        """Get buyer cohorts by first purchase month and first channel
+
+        Buyers grouped by the month of their first purchase and the platform that first brought them, with their purchases added up over the year after (months 0, 1, 3, 6 and 12).
+
+        A buyer is a hashed email, else external id, else phone. The first channel is the first touch's platform, else the first purchase's own campaign, else `none`. Values stay in each purchase's currency, one row per currency. Requires the Ads add-on.
+
+        Args:
+            profile_id: The profile to read. Omit for every profile you can access.
+            from_month: (required)
+            to_month: (required)"""
+        client = _get_client()
+        try:
+            response = client.conversions.get_ltv_cohorts(
+                profile_id=profile_id, from_month=from_month, to_month=to_month
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="Get today's tracking overview",
             readOnlyHint=True,
             destructiveHint=False,

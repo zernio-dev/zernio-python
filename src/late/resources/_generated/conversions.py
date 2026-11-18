@@ -436,6 +436,19 @@ class ConversionsResource:
         )
         return self._client._get("/v1/events/paths", params=params)
 
+    def get_ltv_cohorts(
+        self, from_month: str, to_month: str, *, profile_id: str | None = None
+    ) -> dict[str, Any]:
+        """Get buyer cohorts by first purchase month and first channel"""
+        params = self._build_query(
+            {
+                "profileId": profile_id,
+                "fromMonth": from_month,
+                "toMonth": to_month,
+            }
+        )
+        return self._client._get("/v1/events/ltv", params=params)
+
     def get_events_overview(self, *, profile_id: str | None = None) -> dict[str, Any]:
         """Get today's tracking overview"""
         params = self._build_query(
@@ -1394,6 +1407,19 @@ class ConversionsResource:
             }
         )
         return await self._client._aget("/v1/events/paths", params=params)
+
+    async def aget_ltv_cohorts(
+        self, from_month: str, to_month: str, *, profile_id: str | None = None
+    ) -> dict[str, Any]:
+        """Get buyer cohorts by first purchase month and first channel (async)"""
+        params = self._build_query(
+            {
+                "profileId": profile_id,
+                "fromMonth": from_month,
+                "toMonth": to_month,
+            }
+        )
+        return await self._client._aget("/v1/events/ltv", params=params)
 
     async def aget_events_overview(
         self, *, profile_id: str | None = None
