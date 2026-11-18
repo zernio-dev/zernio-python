@@ -21,13 +21,16 @@ class ContactsResource:
     def __init__(self, client: BaseClient) -> None:
         self._client = client
 
-    def _build_params(self, **kwargs: Any) -> dict[str, Any]:
-        """Build query parameters, filtering None and empty-string values.
+    def _build_query(self, fields: dict[str, Any]) -> dict[str, Any]:
+        """Build query parameters keyed by their wire names, as given.
 
-        Empty strings are filtered because MCP tool wrappers pass ``""`` as the
-        default for optional string args, and the API rejects empty query
-        values (e.g. ``platform=``) with a 400. Filtering here keeps both direct
-        SDK callers and MCP tool callers safe.
+        Generated methods pass the parameter names exactly as the OpenAPI
+        spec declares them, so no casing rule is applied here.
+
+        None and empty strings are filtered because MCP tool wrappers pass
+        ``""`` as the default for optional string args, and the API rejects
+        empty query values (e.g. ``platform=``) with a 400. Filtering here
+        keeps both direct SDK callers and MCP tool callers safe.
 
         Enum members are unwrapped to their value: httpx serializes params
         via str(), which yields "ClassName.MEMBER" for Enum members, so
@@ -36,42 +39,65 @@ class ContactsResource:
         """
         from enum import Enum
 
-        def to_camel(s: str) -> str:
-            parts = s.split("_")
-            return parts[0] + "".join(p.title() for p in parts[1:])
-
         result: dict[str, Any] = {}
-        for k, v in kwargs.items():
+        for k, v in fields.items():
             if isinstance(v, Enum):
                 v = v.value
             if v is None or v == "":
                 continue
-            result[to_camel(k)] = v
+            result[k] = v
         return result
 
-    def _build_payload(self, **kwargs: Any) -> dict[str, Any]:
-        """Build request payload, filtering None values. Enum members are
-        unwrapped to their value so JSON bodies carry e.g. "failed" rather
-        than a raw Enum member (plain Enum members are not JSON-serializable).
+    def _build_body(self, fields: dict[str, Any]) -> dict[str, Any]:
+        """Build a JSON request body keyed by its wire names, as given.
+
+        Generated methods pass the property names exactly as the request
+        body schema declares them: most are camelCase, but some routes read
+        snake_case (``ice_breakers``, ``message_send_ttl_seconds``), so no
+        casing rule is applied here. None values are dropped, Enum members
+        are unwrapped to their value (e.g. "failed") and datetimes are sent
+        as ISO 8601 strings.
         """
         from datetime import datetime
         from enum import Enum
 
-        def to_camel(s: str) -> str:
-            parts = s.split("_")
-            return parts[0] + "".join(p.title() for p in parts[1:])
-
         result: dict[str, Any] = {}
-        for k, v in kwargs.items():
+        for k, v in fields.items():
             if isinstance(v, Enum):
                 v = v.value
             if v is None:
                 continue
             if isinstance(v, datetime):
-                result[to_camel(k)] = v.isoformat()
+                result[k] = v.isoformat()
             else:
-                result[to_camel(k)] = v
+                result[k] = v
         return result
+
+    def _build_params(self, **kwargs: Any) -> dict[str, Any]:
+        """Build query parameters from snake_case kwargs, camelCasing each key.
+
+        For hand-written resource methods, whose endpoints take camelCase
+        names. Generated methods use _build_query with the spec's names.
+        """
+
+        def to_camel(s: str) -> str:
+            parts = s.split("_")
+            return parts[0] + "".join(p.title() for p in parts[1:])
+
+        return self._build_query({to_camel(k): v for k, v in kwargs.items()})
+
+    def _build_payload(self, **kwargs: Any) -> dict[str, Any]:
+        """Build a request body from snake_case kwargs, camelCasing each key.
+
+        For hand-written resource methods, whose endpoints take camelCase
+        names. Generated methods use _build_body with the spec's names.
+        """
+
+        def to_camel(s: str) -> str:
+            parts = s.split("_")
+            return parts[0] + "".join(p.title() for p in parts[1:])
+
+        return self._build_body({to_camel(k): v for k, v in kwargs.items()})
 
     def list_contacts(
         self,
@@ -88,17 +114,19 @@ class ContactsResource:
         skip: int | None = 0,
     ) -> dict[str, Any]:
         """List contacts"""
-        params = self._build_params(
-            profile_id=profile_id,
-            account_id=account_id,
-            search=search,
-            tag=tag,
-            tags=tags,
-            platform=platform,
-            group=group,
-            is_subscribed=is_subscribed,
-            limit=limit,
-            skip=skip,
+        params = self._build_query(
+            {
+                "profileId": profile_id,
+                "accountId": account_id,
+                "search": search,
+                "tag": tag,
+                "tags": tags,
+                "platform": platform,
+                "group": group,
+                "isSubscribed": is_subscribed,
+                "limit": limit,
+                "skip": skip,
+            }
         )
         return self._client._get("/v1/contacts", params=params)
 
@@ -118,25 +146,29 @@ class ContactsResource:
         display_identifier: str | None = None,
     ) -> dict[str, Any]:
         """Create contact"""
-        payload = self._build_payload(
-            profile_id=profile_id,
-            name=name,
-            email=email,
-            company=company,
-            tags=tags,
-            is_subscribed=is_subscribed,
-            notes=notes,
-            account_id=account_id,
-            platform=platform,
-            platform_identifier=platform_identifier,
-            display_identifier=display_identifier,
+        payload = self._build_body(
+            {
+                "profileId": profile_id,
+                "name": name,
+                "email": email,
+                "company": company,
+                "tags": tags,
+                "isSubscribed": is_subscribed,
+                "notes": notes,
+                "accountId": account_id,
+                "platform": platform,
+                "platformIdentifier": platform_identifier,
+                "displayIdentifier": display_identifier,
+            }
         )
         return self._client._post("/v1/contacts", data=payload)
 
     def list_contact_groups(self, account_id: str) -> dict[str, Any]:
         """List contact groups"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+            }
         )
         return self._client._get("/v1/contacts/groups", params=params)
 
@@ -144,10 +176,12 @@ class ContactsResource:
         self, account_id: str, q: str, *, limit: int | None = 10
     ) -> dict[str, Any]:
         """Search people"""
-        params = self._build_params(
-            account_id=account_id,
-            q=q,
-            limit=limit,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "q": q,
+                "limit": limit,
+            }
         )
         return self._client._get("/v1/contacts/autocomplete", params=params)
 
@@ -169,15 +203,17 @@ class ContactsResource:
         notes: str | None = None,
     ) -> dict[str, Any]:
         """Update contact"""
-        payload = self._build_payload(
-            name=name,
-            email=email,
-            company=company,
-            avatar_url=avatar_url,
-            tags=tags,
-            is_subscribed=is_subscribed,
-            is_blocked=is_blocked,
-            notes=notes,
+        payload = self._build_body(
+            {
+                "name": name,
+                "email": email,
+                "company": company,
+                "avatarUrl": avatar_url,
+                "tags": tags,
+                "isSubscribed": is_subscribed,
+                "isBlocked": is_blocked,
+                "notes": notes,
+            }
         )
         return self._client._patch(f"/v1/contacts/{contact_id}", data=payload)
 
@@ -198,11 +234,13 @@ class ContactsResource:
         platform: str | None = None,
     ) -> dict[str, Any]:
         """Bulk create contacts"""
-        payload = self._build_payload(
-            profile_id=profile_id,
-            account_id=account_id,
-            platform=platform,
-            contacts=contacts,
+        payload = self._build_body(
+            {
+                "profileId": profile_id,
+                "accountId": account_id,
+                "platform": platform,
+                "contacts": contacts,
+            }
         )
         return self._client._post("/v1/contacts/bulk", data=payload)
 
@@ -221,17 +259,19 @@ class ContactsResource:
         skip: int | None = 0,
     ) -> dict[str, Any]:
         """List contacts (async)"""
-        params = self._build_params(
-            profile_id=profile_id,
-            account_id=account_id,
-            search=search,
-            tag=tag,
-            tags=tags,
-            platform=platform,
-            group=group,
-            is_subscribed=is_subscribed,
-            limit=limit,
-            skip=skip,
+        params = self._build_query(
+            {
+                "profileId": profile_id,
+                "accountId": account_id,
+                "search": search,
+                "tag": tag,
+                "tags": tags,
+                "platform": platform,
+                "group": group,
+                "isSubscribed": is_subscribed,
+                "limit": limit,
+                "skip": skip,
+            }
         )
         return await self._client._aget("/v1/contacts", params=params)
 
@@ -251,25 +291,29 @@ class ContactsResource:
         display_identifier: str | None = None,
     ) -> dict[str, Any]:
         """Create contact (async)"""
-        payload = self._build_payload(
-            profile_id=profile_id,
-            name=name,
-            email=email,
-            company=company,
-            tags=tags,
-            is_subscribed=is_subscribed,
-            notes=notes,
-            account_id=account_id,
-            platform=platform,
-            platform_identifier=platform_identifier,
-            display_identifier=display_identifier,
+        payload = self._build_body(
+            {
+                "profileId": profile_id,
+                "name": name,
+                "email": email,
+                "company": company,
+                "tags": tags,
+                "isSubscribed": is_subscribed,
+                "notes": notes,
+                "accountId": account_id,
+                "platform": platform,
+                "platformIdentifier": platform_identifier,
+                "displayIdentifier": display_identifier,
+            }
         )
         return await self._client._apost("/v1/contacts", data=payload)
 
     async def alist_contact_groups(self, account_id: str) -> dict[str, Any]:
         """List contact groups (async)"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+            }
         )
         return await self._client._aget("/v1/contacts/groups", params=params)
 
@@ -277,10 +321,12 @@ class ContactsResource:
         self, account_id: str, q: str, *, limit: int | None = 10
     ) -> dict[str, Any]:
         """Search people (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            q=q,
-            limit=limit,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "q": q,
+                "limit": limit,
+            }
         )
         return await self._client._aget("/v1/contacts/autocomplete", params=params)
 
@@ -302,15 +348,17 @@ class ContactsResource:
         notes: str | None = None,
     ) -> dict[str, Any]:
         """Update contact (async)"""
-        payload = self._build_payload(
-            name=name,
-            email=email,
-            company=company,
-            avatar_url=avatar_url,
-            tags=tags,
-            is_subscribed=is_subscribed,
-            is_blocked=is_blocked,
-            notes=notes,
+        payload = self._build_body(
+            {
+                "name": name,
+                "email": email,
+                "company": company,
+                "avatarUrl": avatar_url,
+                "tags": tags,
+                "isSubscribed": is_subscribed,
+                "isBlocked": is_blocked,
+                "notes": notes,
+            }
         )
         return await self._client._apatch(f"/v1/contacts/{contact_id}", data=payload)
 
@@ -331,10 +379,12 @@ class ContactsResource:
         platform: str | None = None,
     ) -> dict[str, Any]:
         """Bulk create contacts (async)"""
-        payload = self._build_payload(
-            profile_id=profile_id,
-            account_id=account_id,
-            platform=platform,
-            contacts=contacts,
+        payload = self._build_body(
+            {
+                "profileId": profile_id,
+                "accountId": account_id,
+                "platform": platform,
+                "contacts": contacts,
+            }
         )
         return await self._client._apost("/v1/contacts/bulk", data=payload)

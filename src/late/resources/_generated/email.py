@@ -23,13 +23,16 @@ class EmailResource:
     def __init__(self, client: BaseClient) -> None:
         self._client = client
 
-    def _build_params(self, **kwargs: Any) -> dict[str, Any]:
-        """Build query parameters, filtering None and empty-string values.
+    def _build_query(self, fields: dict[str, Any]) -> dict[str, Any]:
+        """Build query parameters keyed by their wire names, as given.
 
-        Empty strings are filtered because MCP tool wrappers pass ``""`` as the
-        default for optional string args, and the API rejects empty query
-        values (e.g. ``platform=``) with a 400. Filtering here keeps both direct
-        SDK callers and MCP tool callers safe.
+        Generated methods pass the parameter names exactly as the OpenAPI
+        spec declares them, so no casing rule is applied here.
+
+        None and empty strings are filtered because MCP tool wrappers pass
+        ``""`` as the default for optional string args, and the API rejects
+        empty query values (e.g. ``platform=``) with a 400. Filtering here
+        keeps both direct SDK callers and MCP tool callers safe.
 
         Enum members are unwrapped to their value: httpx serializes params
         via str(), which yields "ClassName.MEMBER" for Enum members, so
@@ -38,42 +41,65 @@ class EmailResource:
         """
         from enum import Enum
 
-        def to_camel(s: str) -> str:
-            parts = s.split("_")
-            return parts[0] + "".join(p.title() for p in parts[1:])
-
         result: dict[str, Any] = {}
-        for k, v in kwargs.items():
+        for k, v in fields.items():
             if isinstance(v, Enum):
                 v = v.value
             if v is None or v == "":
                 continue
-            result[to_camel(k)] = v
+            result[k] = v
         return result
 
-    def _build_payload(self, **kwargs: Any) -> dict[str, Any]:
-        """Build request payload, filtering None values. Enum members are
-        unwrapped to their value so JSON bodies carry e.g. "failed" rather
-        than a raw Enum member (plain Enum members are not JSON-serializable).
+    def _build_body(self, fields: dict[str, Any]) -> dict[str, Any]:
+        """Build a JSON request body keyed by its wire names, as given.
+
+        Generated methods pass the property names exactly as the request
+        body schema declares them: most are camelCase, but some routes read
+        snake_case (``ice_breakers``, ``message_send_ttl_seconds``), so no
+        casing rule is applied here. None values are dropped, Enum members
+        are unwrapped to their value (e.g. "failed") and datetimes are sent
+        as ISO 8601 strings.
         """
         from datetime import datetime
         from enum import Enum
 
-        def to_camel(s: str) -> str:
-            parts = s.split("_")
-            return parts[0] + "".join(p.title() for p in parts[1:])
-
         result: dict[str, Any] = {}
-        for k, v in kwargs.items():
+        for k, v in fields.items():
             if isinstance(v, Enum):
                 v = v.value
             if v is None:
                 continue
             if isinstance(v, datetime):
-                result[to_camel(k)] = v.isoformat()
+                result[k] = v.isoformat()
             else:
-                result[to_camel(k)] = v
+                result[k] = v
         return result
+
+    def _build_params(self, **kwargs: Any) -> dict[str, Any]:
+        """Build query parameters from snake_case kwargs, camelCasing each key.
+
+        For hand-written resource methods, whose endpoints take camelCase
+        names. Generated methods use _build_query with the spec's names.
+        """
+
+        def to_camel(s: str) -> str:
+            parts = s.split("_")
+            return parts[0] + "".join(p.title() for p in parts[1:])
+
+        return self._build_query({to_camel(k): v for k, v in kwargs.items()})
+
+    def _build_payload(self, **kwargs: Any) -> dict[str, Any]:
+        """Build a request body from snake_case kwargs, camelCasing each key.
+
+        For hand-written resource methods, whose endpoints take camelCase
+        names. Generated methods use _build_body with the spec's names.
+        """
+
+        def to_camel(s: str) -> str:
+            parts = s.split("_")
+            return parts[0] + "".join(p.title() for p in parts[1:])
+
+        return self._build_body({to_camel(k): v for k, v in kwargs.items()})
 
     def list_email_threads(
         self,
@@ -97,24 +123,26 @@ class EmailResource:
         limit: int | None = 50,
     ) -> dict[str, Any]:
         """List email threads"""
-        params = self._build_params(
-            account_id=account_id,
-            folder=folder,
-            unread=unread,
-            starred=starred,
-            has_attachment=has_attachment,
-            subject=subject,
-            from_=from_,
-            to=to,
-            cc=cc,
-            bcc=bcc,
-            any_email=any_email,
-            after=after,
-            before=before,
-            search_query_native=search_query_native,
-            sort_order=sort_order,
-            cursor=cursor,
-            limit=limit,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "folder": folder,
+                "unread": unread,
+                "starred": starred,
+                "hasAttachment": has_attachment,
+                "subject": subject,
+                "from": from_,
+                "to": to,
+                "cc": cc,
+                "bcc": bcc,
+                "anyEmail": any_email,
+                "after": after,
+                "before": before,
+                "searchQueryNative": search_query_native,
+                "sortOrder": sort_order,
+                "cursor": cursor,
+                "limit": limit,
+            }
         )
         return self._client._get("/v1/email/threads", params=params)
 
@@ -122,9 +150,11 @@ class EmailResource:
         self, thread_id: str, account_id: str, *, clean: bool | None = False
     ) -> dict[str, Any]:
         """Get an email thread with its messages"""
-        params = self._build_params(
-            account_id=account_id,
-            clean=clean,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "clean": clean,
+            }
         )
         return self._client._get(f"/v1/email/threads/{thread_id}", params=params)
 
@@ -140,13 +170,15 @@ class EmailResource:
         remove_labels: list[str] | None = None,
     ) -> dict[str, Any]:
         """Update every message in a thread"""
-        payload = self._build_payload(
-            account_id=account_id,
-            unread=unread,
-            starred=starred,
-            folder=folder,
-            add_labels=add_labels,
-            remove_labels=remove_labels,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "unread": unread,
+                "starred": starred,
+                "folder": folder,
+                "addLabels": add_labels,
+                "removeLabels": remove_labels,
+            }
         )
         return self._client._patch(f"/v1/email/threads/{thread_id}", data=payload)
 
@@ -172,24 +204,26 @@ class EmailResource:
         limit: int | None = 50,
     ) -> dict[str, Any]:
         """List email messages"""
-        params = self._build_params(
-            account_id=account_id,
-            folder=folder,
-            unread=unread,
-            starred=starred,
-            has_attachment=has_attachment,
-            subject=subject,
-            from_=from_,
-            to=to,
-            cc=cc,
-            bcc=bcc,
-            any_email=any_email,
-            after=after,
-            before=before,
-            search_query_native=search_query_native,
-            sort_order=sort_order,
-            cursor=cursor,
-            limit=limit,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "folder": folder,
+                "unread": unread,
+                "starred": starred,
+                "hasAttachment": has_attachment,
+                "subject": subject,
+                "from": from_,
+                "to": to,
+                "cc": cc,
+                "bcc": bcc,
+                "anyEmail": any_email,
+                "after": after,
+                "before": before,
+                "searchQueryNative": search_query_native,
+                "sortOrder": sort_order,
+                "cursor": cursor,
+                "limit": limit,
+            }
         )
         return self._client._get("/v1/email/messages", params=params)
 
@@ -219,27 +253,29 @@ class EmailResource:
         track_replies: bool | None = None,
     ) -> dict[str, Any]:
         """Send an email"""
-        payload = self._build_payload(
-            account_id=account_id,
-            to=to,
-            cc=cc,
-            bcc=bcc,
-            reply_to=reply_to,
-            from_name=from_name,
-            from_=from_,
-            append_signature=append_signature,
-            signature_id=signature_id,
-            subject=subject,
-            text=text,
-            html=html,
-            attachments=attachments,
-            headers=headers,
-            metadata=metadata,
-            scheduled_for=scheduled_for,
-            hold_as_draft=hold_as_draft,
-            track_opens=track_opens,
-            track_links=track_links,
-            track_replies=track_replies,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "to": to,
+                "cc": cc,
+                "bcc": bcc,
+                "replyTo": reply_to,
+                "fromName": from_name,
+                "from": from_,
+                "appendSignature": append_signature,
+                "signatureId": signature_id,
+                "subject": subject,
+                "text": text,
+                "html": html,
+                "attachments": attachments,
+                "headers": headers,
+                "metadata": metadata,
+                "scheduledFor": scheduled_for,
+                "holdAsDraft": hold_as_draft,
+                "trackOpens": track_opens,
+                "trackLinks": track_links,
+                "trackReplies": track_replies,
+            }
         )
         headers: dict[str, str] = {}
         if idempotency_key is not None:
@@ -255,18 +291,22 @@ class EmailResource:
         limit: int | None = 50,
     ) -> dict[str, Any]:
         """List scheduled emails"""
-        params = self._build_params(
-            account_id=account_id,
-            status=status,
-            cursor=cursor,
-            limit=limit,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "status": status,
+                "cursor": cursor,
+                "limit": limit,
+            }
         )
         return self._client._get("/v1/email/messages/scheduled", params=params)
 
     def get_scheduled_email(self, schedule_id: str, account_id: str) -> dict[str, Any]:
         """Get a scheduled email"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+            }
         )
         return self._client._get(
             f"/v1/email/messages/scheduled/{schedule_id}", params=params
@@ -276,8 +316,10 @@ class EmailResource:
         self, schedule_id: str, account_id: str
     ) -> dict[str, Any]:
         """Cancel a scheduled email"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+            }
         )
         return self._client._delete(
             f"/v1/email/messages/scheduled/{schedule_id}", params=params
@@ -293,11 +335,13 @@ class EmailResource:
         clean: bool | None = False,
     ) -> dict[str, Any]:
         """Get an email message"""
-        params = self._build_params(
-            account_id=account_id,
-            include_headers=include_headers,
-            raw=raw,
-            clean=clean,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "includeHeaders": include_headers,
+                "raw": raw,
+                "clean": clean,
+            }
         )
         return self._client._get(f"/v1/email/messages/{message_id}", params=params)
 
@@ -313,20 +357,24 @@ class EmailResource:
         remove_labels: list[str] | None = None,
     ) -> dict[str, Any]:
         """Mark read or starred, label, or move a message"""
-        payload = self._build_payload(
-            account_id=account_id,
-            unread=unread,
-            starred=starred,
-            folder=folder,
-            add_labels=add_labels,
-            remove_labels=remove_labels,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "unread": unread,
+                "starred": starred,
+                "folder": folder,
+                "addLabels": add_labels,
+                "removeLabels": remove_labels,
+            }
         )
         return self._client._patch(f"/v1/email/messages/{message_id}", data=payload)
 
     def trash_email_message(self, message_id: str, account_id: str) -> dict[str, Any]:
         """Move a message to trash"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+            }
         )
         return self._client._delete(f"/v1/email/messages/{message_id}", params=params)
 
@@ -358,28 +406,30 @@ class EmailResource:
         mode: str | None = "reply",
     ) -> dict[str, Any]:
         """Reply to a message"""
-        payload = self._build_payload(
-            account_id=account_id,
-            to=to,
-            cc=cc,
-            bcc=bcc,
-            reply_to=reply_to,
-            from_name=from_name,
-            from_=from_,
-            append_signature=append_signature,
-            signature_id=signature_id,
-            subject=subject,
-            text=text,
-            html=html,
-            attachments=attachments,
-            headers=headers,
-            metadata=metadata,
-            scheduled_for=scheduled_for,
-            hold_as_draft=hold_as_draft,
-            track_opens=track_opens,
-            track_links=track_links,
-            track_replies=track_replies,
-            mode=mode,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "to": to,
+                "cc": cc,
+                "bcc": bcc,
+                "replyTo": reply_to,
+                "fromName": from_name,
+                "from": from_,
+                "appendSignature": append_signature,
+                "signatureId": signature_id,
+                "subject": subject,
+                "text": text,
+                "html": html,
+                "attachments": attachments,
+                "headers": headers,
+                "metadata": metadata,
+                "scheduledFor": scheduled_for,
+                "holdAsDraft": hold_as_draft,
+                "trackOpens": track_opens,
+                "trackLinks": track_links,
+                "trackReplies": track_replies,
+                "mode": mode,
+            }
         )
         headers: dict[str, str] = {}
         if idempotency_key is not None:
@@ -414,26 +464,28 @@ class EmailResource:
         track_replies: bool | None = None,
     ) -> dict[str, Any]:
         """Forward a message"""
-        payload = self._build_payload(
-            account_id=account_id,
-            to=to,
-            cc=cc,
-            bcc=bcc,
-            reply_to=reply_to,
-            from_name=from_name,
-            from_=from_,
-            append_signature=append_signature,
-            signature_id=signature_id,
-            subject=subject,
-            text=text,
-            html=html,
-            attachments=attachments,
-            include_attachments=include_attachments,
-            exclude_attachment_ids=exclude_attachment_ids,
-            metadata=metadata,
-            track_opens=track_opens,
-            track_links=track_links,
-            track_replies=track_replies,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "to": to,
+                "cc": cc,
+                "bcc": bcc,
+                "replyTo": reply_to,
+                "fromName": from_name,
+                "from": from_,
+                "appendSignature": append_signature,
+                "signatureId": signature_id,
+                "subject": subject,
+                "text": text,
+                "html": html,
+                "attachments": attachments,
+                "includeAttachments": include_attachments,
+                "excludeAttachmentIds": exclude_attachment_ids,
+                "metadata": metadata,
+                "trackOpens": track_opens,
+                "trackLinks": track_links,
+                "trackReplies": track_replies,
+            }
         )
         headers: dict[str, str] = {}
         if idempotency_key is not None:
@@ -446,10 +498,12 @@ class EmailResource:
         self, account_id: str, *, limit: int | None = 25, cursor: str | None = None
     ) -> dict[str, Any]:
         """List drafts"""
-        params = self._build_params(
-            account_id=account_id,
-            limit=limit,
-            cursor=cursor,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "limit": limit,
+                "cursor": cursor,
+            }
         )
         return self._client._get("/v1/email/drafts", params=params)
 
@@ -482,30 +536,32 @@ class EmailResource:
         track_replies: bool | None = None,
     ) -> dict[str, Any]:
         """Create a draft"""
-        payload = self._build_payload(
-            account_id=account_id,
-            to=to,
-            cc=cc,
-            bcc=bcc,
-            reply_to=reply_to,
-            from_name=from_name,
-            from_=from_,
-            append_signature=append_signature,
-            signature_id=signature_id,
-            subject=subject,
-            text=text,
-            html=html,
-            attachments=attachments,
-            headers=headers,
-            metadata=metadata,
-            in_reply_to=in_reply_to,
-            reply_all=reply_all,
-            forward_of=forward_of,
-            include_attachments=include_attachments,
-            exclude_attachment_ids=exclude_attachment_ids,
-            track_opens=track_opens,
-            track_links=track_links,
-            track_replies=track_replies,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "to": to,
+                "cc": cc,
+                "bcc": bcc,
+                "replyTo": reply_to,
+                "fromName": from_name,
+                "from": from_,
+                "appendSignature": append_signature,
+                "signatureId": signature_id,
+                "subject": subject,
+                "text": text,
+                "html": html,
+                "attachments": attachments,
+                "headers": headers,
+                "metadata": metadata,
+                "inReplyTo": in_reply_to,
+                "replyAll": reply_all,
+                "forwardOf": forward_of,
+                "includeAttachments": include_attachments,
+                "excludeAttachmentIds": exclude_attachment_ids,
+                "trackOpens": track_opens,
+                "trackLinks": track_links,
+                "trackReplies": track_replies,
+            }
         )
         headers: dict[str, str] = {}
         if idempotency_key is not None:
@@ -514,8 +570,10 @@ class EmailResource:
 
     def get_email_draft(self, draft_id: str, account_id: str) -> dict[str, Any]:
         """Get a draft"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+            }
         )
         return self._client._get(f"/v1/email/drafts/{draft_id}", params=params)
 
@@ -536,24 +594,28 @@ class EmailResource:
         signature_id: Any | None = None,
     ) -> dict[str, Any]:
         """Update a draft"""
-        payload = self._build_payload(
-            account_id=account_id,
-            to=to,
-            cc=cc,
-            bcc=bcc,
-            reply_to=reply_to,
-            subject=subject,
-            text=text,
-            html=html,
-            attachments=attachments,
-            signature_id=signature_id,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "to": to,
+                "cc": cc,
+                "bcc": bcc,
+                "replyTo": reply_to,
+                "subject": subject,
+                "text": text,
+                "html": html,
+                "attachments": attachments,
+                "signatureId": signature_id,
+            }
         )
         return self._client._patch(f"/v1/email/drafts/{draft_id}", data=payload)
 
     def delete_email_draft(self, draft_id: str, account_id: str) -> dict[str, Any]:
         """Delete a draft"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+            }
         )
         return self._client._delete(f"/v1/email/drafts/{draft_id}", params=params)
 
@@ -567,9 +629,11 @@ class EmailResource:
         send_at: datetime | str | None = None,
     ) -> dict[str, Any]:
         """Send a draft"""
-        payload = self._build_payload(
-            account_id=account_id,
-            send_at=send_at,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "sendAt": send_at,
+            }
         )
         headers: dict[str, str] = {}
         if if_match is not None:
@@ -582,15 +646,19 @@ class EmailResource:
 
     def list_email_folders(self, account_id: str) -> dict[str, Any]:
         """List mailbox folders"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+            }
         )
         return self._client._get("/v1/email/folders", params=params)
 
     def discover_imap_settings(self, email: str) -> dict[str, Any]:
         """Find the mail settings for an address"""
-        payload = self._build_payload(
-            email=email,
+        payload = self._build_body(
+            {
+                "email": email,
+            }
         )
         return self._client._post("/v1/email/imap/discover", data=payload)
 
@@ -609,24 +677,28 @@ class EmailResource:
         reconnect_account_id: str | None = None,
     ) -> dict[str, Any]:
         """Connect an IMAP mailbox"""
-        payload = self._build_payload(
-            profile_id=profile_id,
-            email=email,
-            name=name,
-            password=password,
-            imap=imap,
-            smtp=smtp,
-            identities=identities,
-            dry_run=dry_run,
-            allow_self_signed_certificate=allow_self_signed_certificate,
-            reconnect_account_id=reconnect_account_id,
+        payload = self._build_body(
+            {
+                "profileId": profile_id,
+                "email": email,
+                "name": name,
+                "password": password,
+                "imap": imap,
+                "smtp": smtp,
+                "identities": identities,
+                "dryRun": dry_run,
+                "allowSelfSignedCertificate": allow_self_signed_certificate,
+                "reconnectAccountId": reconnect_account_id,
+            }
         )
         return self._client._post("/v1/email/imap/accounts", data=payload)
 
     def list_email_labels(self, account_id: str) -> dict[str, Any]:
         """List labels"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+            }
         )
         return self._client._get("/v1/email/labels", params=params)
 
@@ -634,17 +706,21 @@ class EmailResource:
         self, account_id: str, name: str, *, color: dict[str, Any] | None = None
     ) -> dict[str, Any]:
         """Create a label"""
-        payload = self._build_payload(
-            account_id=account_id,
-            name=name,
-            color=color,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "name": name,
+                "color": color,
+            }
         )
         return self._client._post("/v1/email/labels", data=payload)
 
     def list_email_send_as(self, account_id: str) -> dict[str, Any]:
         """List send-as addresses"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+            }
         )
         return self._client._get("/v1/email/send-as", params=params)
 
@@ -652,24 +728,30 @@ class EmailResource:
         self, account_id: str, email: str, *, name: str | None = None
     ) -> dict[str, Any]:
         """Declare a send-as address"""
-        payload = self._build_payload(
-            account_id=account_id,
-            email=email,
-            name=name,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "email": email,
+                "name": name,
+            }
         )
         return self._client._post("/v1/email/send-as", data=payload)
 
     def delete_email_send_as(self, email: str, account_id: str) -> dict[str, Any]:
         """Remove a declared send-as address"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+            }
         )
         return self._client._delete(f"/v1/email/send-as/{email}", params=params)
 
     def list_email_shared_mailboxes(self, account_id: str) -> dict[str, Any]:
         """List shared mailboxes"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+            }
         )
         return self._client._get("/v1/email/shared-mailboxes", params=params)
 
@@ -677,17 +759,21 @@ class EmailResource:
         self, account_id: str, address: str, *, display_name: str | None = None
     ) -> dict[str, Any]:
         """Add a shared mailbox"""
-        payload = self._build_payload(
-            account_id=account_id,
-            address=address,
-            display_name=display_name,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "address": address,
+                "displayName": display_name,
+            }
         )
         return self._client._post("/v1/email/shared-mailboxes", data=payload)
 
     def list_email_signatures(self, *, account_id: str | None = None) -> dict[str, Any]:
         """List signatures"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+            }
         )
         return self._client._get("/v1/email/signatures", params=params)
 
@@ -701,19 +787,23 @@ class EmailResource:
         default_for: list[str] | None = None,
     ) -> dict[str, Any]:
         """Create a signature"""
-        payload = self._build_payload(
-            account_id=account_id,
-            name=name,
-            html=html,
-            text=text,
-            default_for=default_for,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "name": name,
+                "html": html,
+                "text": text,
+                "defaultFor": default_for,
+            }
         )
         return self._client._post("/v1/email/signatures", data=payload)
 
     def import_email_signatures(self, account_id: str) -> dict[str, Any]:
         """Import Gmail signatures"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+            }
         )
         return self._client._post("/v1/email/signatures/import", params=params)
 
@@ -731,11 +821,13 @@ class EmailResource:
         default_for: list[str] | None = None,
     ) -> dict[str, Any]:
         """Update a signature"""
-        payload = self._build_payload(
-            name=name,
-            html=html,
-            text=text,
-            default_for=default_for,
+        payload = self._build_body(
+            {
+                "name": name,
+                "html": html,
+                "text": text,
+                "defaultFor": default_for,
+            }
         )
         return self._client._patch(f"/v1/email/signatures/{signature_id}", data=payload)
 
@@ -745,8 +837,10 @@ class EmailResource:
 
     def delete_email_label(self, label_id: str, account_id: str) -> dict[str, Any]:
         """Delete a label"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+            }
         )
         return self._client._delete(f"/v1/email/labels/{label_id}", params=params)
 
@@ -754,9 +848,11 @@ class EmailResource:
         self, attachment_id: str, account_id: str, message_id: str
     ) -> dict[str, Any]:
         """Download an attachment"""
-        params = self._build_params(
-            account_id=account_id,
-            message_id=message_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "messageId": message_id,
+            }
         )
         return self._client._get(
             f"/v1/email/attachments/{attachment_id}", params=params
@@ -784,24 +880,26 @@ class EmailResource:
         limit: int | None = 50,
     ) -> dict[str, Any]:
         """List email threads (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            folder=folder,
-            unread=unread,
-            starred=starred,
-            has_attachment=has_attachment,
-            subject=subject,
-            from_=from_,
-            to=to,
-            cc=cc,
-            bcc=bcc,
-            any_email=any_email,
-            after=after,
-            before=before,
-            search_query_native=search_query_native,
-            sort_order=sort_order,
-            cursor=cursor,
-            limit=limit,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "folder": folder,
+                "unread": unread,
+                "starred": starred,
+                "hasAttachment": has_attachment,
+                "subject": subject,
+                "from": from_,
+                "to": to,
+                "cc": cc,
+                "bcc": bcc,
+                "anyEmail": any_email,
+                "after": after,
+                "before": before,
+                "searchQueryNative": search_query_native,
+                "sortOrder": sort_order,
+                "cursor": cursor,
+                "limit": limit,
+            }
         )
         return await self._client._aget("/v1/email/threads", params=params)
 
@@ -809,9 +907,11 @@ class EmailResource:
         self, thread_id: str, account_id: str, *, clean: bool | None = False
     ) -> dict[str, Any]:
         """Get an email thread with its messages (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            clean=clean,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "clean": clean,
+            }
         )
         return await self._client._aget(f"/v1/email/threads/{thread_id}", params=params)
 
@@ -827,13 +927,15 @@ class EmailResource:
         remove_labels: list[str] | None = None,
     ) -> dict[str, Any]:
         """Update every message in a thread (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            unread=unread,
-            starred=starred,
-            folder=folder,
-            add_labels=add_labels,
-            remove_labels=remove_labels,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "unread": unread,
+                "starred": starred,
+                "folder": folder,
+                "addLabels": add_labels,
+                "removeLabels": remove_labels,
+            }
         )
         return await self._client._apatch(
             f"/v1/email/threads/{thread_id}", data=payload
@@ -861,24 +963,26 @@ class EmailResource:
         limit: int | None = 50,
     ) -> dict[str, Any]:
         """List email messages (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            folder=folder,
-            unread=unread,
-            starred=starred,
-            has_attachment=has_attachment,
-            subject=subject,
-            from_=from_,
-            to=to,
-            cc=cc,
-            bcc=bcc,
-            any_email=any_email,
-            after=after,
-            before=before,
-            search_query_native=search_query_native,
-            sort_order=sort_order,
-            cursor=cursor,
-            limit=limit,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "folder": folder,
+                "unread": unread,
+                "starred": starred,
+                "hasAttachment": has_attachment,
+                "subject": subject,
+                "from": from_,
+                "to": to,
+                "cc": cc,
+                "bcc": bcc,
+                "anyEmail": any_email,
+                "after": after,
+                "before": before,
+                "searchQueryNative": search_query_native,
+                "sortOrder": sort_order,
+                "cursor": cursor,
+                "limit": limit,
+            }
         )
         return await self._client._aget("/v1/email/messages", params=params)
 
@@ -908,27 +1012,29 @@ class EmailResource:
         track_replies: bool | None = None,
     ) -> dict[str, Any]:
         """Send an email (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            to=to,
-            cc=cc,
-            bcc=bcc,
-            reply_to=reply_to,
-            from_name=from_name,
-            from_=from_,
-            append_signature=append_signature,
-            signature_id=signature_id,
-            subject=subject,
-            text=text,
-            html=html,
-            attachments=attachments,
-            headers=headers,
-            metadata=metadata,
-            scheduled_for=scheduled_for,
-            hold_as_draft=hold_as_draft,
-            track_opens=track_opens,
-            track_links=track_links,
-            track_replies=track_replies,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "to": to,
+                "cc": cc,
+                "bcc": bcc,
+                "replyTo": reply_to,
+                "fromName": from_name,
+                "from": from_,
+                "appendSignature": append_signature,
+                "signatureId": signature_id,
+                "subject": subject,
+                "text": text,
+                "html": html,
+                "attachments": attachments,
+                "headers": headers,
+                "metadata": metadata,
+                "scheduledFor": scheduled_for,
+                "holdAsDraft": hold_as_draft,
+                "trackOpens": track_opens,
+                "trackLinks": track_links,
+                "trackReplies": track_replies,
+            }
         )
         headers: dict[str, str] = {}
         if idempotency_key is not None:
@@ -946,11 +1052,13 @@ class EmailResource:
         limit: int | None = 50,
     ) -> dict[str, Any]:
         """List scheduled emails (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            status=status,
-            cursor=cursor,
-            limit=limit,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "status": status,
+                "cursor": cursor,
+                "limit": limit,
+            }
         )
         return await self._client._aget("/v1/email/messages/scheduled", params=params)
 
@@ -958,8 +1066,10 @@ class EmailResource:
         self, schedule_id: str, account_id: str
     ) -> dict[str, Any]:
         """Get a scheduled email (async)"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+            }
         )
         return await self._client._aget(
             f"/v1/email/messages/scheduled/{schedule_id}", params=params
@@ -969,8 +1079,10 @@ class EmailResource:
         self, schedule_id: str, account_id: str
     ) -> dict[str, Any]:
         """Cancel a scheduled email (async)"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+            }
         )
         return await self._client._adelete(
             f"/v1/email/messages/scheduled/{schedule_id}", params=params
@@ -986,11 +1098,13 @@ class EmailResource:
         clean: bool | None = False,
     ) -> dict[str, Any]:
         """Get an email message (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            include_headers=include_headers,
-            raw=raw,
-            clean=clean,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "includeHeaders": include_headers,
+                "raw": raw,
+                "clean": clean,
+            }
         )
         return await self._client._aget(
             f"/v1/email/messages/{message_id}", params=params
@@ -1008,13 +1122,15 @@ class EmailResource:
         remove_labels: list[str] | None = None,
     ) -> dict[str, Any]:
         """Mark read or starred, label, or move a message (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            unread=unread,
-            starred=starred,
-            folder=folder,
-            add_labels=add_labels,
-            remove_labels=remove_labels,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "unread": unread,
+                "starred": starred,
+                "folder": folder,
+                "addLabels": add_labels,
+                "removeLabels": remove_labels,
+            }
         )
         return await self._client._apatch(
             f"/v1/email/messages/{message_id}", data=payload
@@ -1024,8 +1140,10 @@ class EmailResource:
         self, message_id: str, account_id: str
     ) -> dict[str, Any]:
         """Move a message to trash (async)"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+            }
         )
         return await self._client._adelete(
             f"/v1/email/messages/{message_id}", params=params
@@ -1059,28 +1177,30 @@ class EmailResource:
         mode: str | None = "reply",
     ) -> dict[str, Any]:
         """Reply to a message (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            to=to,
-            cc=cc,
-            bcc=bcc,
-            reply_to=reply_to,
-            from_name=from_name,
-            from_=from_,
-            append_signature=append_signature,
-            signature_id=signature_id,
-            subject=subject,
-            text=text,
-            html=html,
-            attachments=attachments,
-            headers=headers,
-            metadata=metadata,
-            scheduled_for=scheduled_for,
-            hold_as_draft=hold_as_draft,
-            track_opens=track_opens,
-            track_links=track_links,
-            track_replies=track_replies,
-            mode=mode,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "to": to,
+                "cc": cc,
+                "bcc": bcc,
+                "replyTo": reply_to,
+                "fromName": from_name,
+                "from": from_,
+                "appendSignature": append_signature,
+                "signatureId": signature_id,
+                "subject": subject,
+                "text": text,
+                "html": html,
+                "attachments": attachments,
+                "headers": headers,
+                "metadata": metadata,
+                "scheduledFor": scheduled_for,
+                "holdAsDraft": hold_as_draft,
+                "trackOpens": track_opens,
+                "trackLinks": track_links,
+                "trackReplies": track_replies,
+                "mode": mode,
+            }
         )
         headers: dict[str, str] = {}
         if idempotency_key is not None:
@@ -1115,26 +1235,28 @@ class EmailResource:
         track_replies: bool | None = None,
     ) -> dict[str, Any]:
         """Forward a message (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            to=to,
-            cc=cc,
-            bcc=bcc,
-            reply_to=reply_to,
-            from_name=from_name,
-            from_=from_,
-            append_signature=append_signature,
-            signature_id=signature_id,
-            subject=subject,
-            text=text,
-            html=html,
-            attachments=attachments,
-            include_attachments=include_attachments,
-            exclude_attachment_ids=exclude_attachment_ids,
-            metadata=metadata,
-            track_opens=track_opens,
-            track_links=track_links,
-            track_replies=track_replies,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "to": to,
+                "cc": cc,
+                "bcc": bcc,
+                "replyTo": reply_to,
+                "fromName": from_name,
+                "from": from_,
+                "appendSignature": append_signature,
+                "signatureId": signature_id,
+                "subject": subject,
+                "text": text,
+                "html": html,
+                "attachments": attachments,
+                "includeAttachments": include_attachments,
+                "excludeAttachmentIds": exclude_attachment_ids,
+                "metadata": metadata,
+                "trackOpens": track_opens,
+                "trackLinks": track_links,
+                "trackReplies": track_replies,
+            }
         )
         headers: dict[str, str] = {}
         if idempotency_key is not None:
@@ -1147,10 +1269,12 @@ class EmailResource:
         self, account_id: str, *, limit: int | None = 25, cursor: str | None = None
     ) -> dict[str, Any]:
         """List drafts (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            limit=limit,
-            cursor=cursor,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "limit": limit,
+                "cursor": cursor,
+            }
         )
         return await self._client._aget("/v1/email/drafts", params=params)
 
@@ -1183,30 +1307,32 @@ class EmailResource:
         track_replies: bool | None = None,
     ) -> dict[str, Any]:
         """Create a draft (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            to=to,
-            cc=cc,
-            bcc=bcc,
-            reply_to=reply_to,
-            from_name=from_name,
-            from_=from_,
-            append_signature=append_signature,
-            signature_id=signature_id,
-            subject=subject,
-            text=text,
-            html=html,
-            attachments=attachments,
-            headers=headers,
-            metadata=metadata,
-            in_reply_to=in_reply_to,
-            reply_all=reply_all,
-            forward_of=forward_of,
-            include_attachments=include_attachments,
-            exclude_attachment_ids=exclude_attachment_ids,
-            track_opens=track_opens,
-            track_links=track_links,
-            track_replies=track_replies,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "to": to,
+                "cc": cc,
+                "bcc": bcc,
+                "replyTo": reply_to,
+                "fromName": from_name,
+                "from": from_,
+                "appendSignature": append_signature,
+                "signatureId": signature_id,
+                "subject": subject,
+                "text": text,
+                "html": html,
+                "attachments": attachments,
+                "headers": headers,
+                "metadata": metadata,
+                "inReplyTo": in_reply_to,
+                "replyAll": reply_all,
+                "forwardOf": forward_of,
+                "includeAttachments": include_attachments,
+                "excludeAttachmentIds": exclude_attachment_ids,
+                "trackOpens": track_opens,
+                "trackLinks": track_links,
+                "trackReplies": track_replies,
+            }
         )
         headers: dict[str, str] = {}
         if idempotency_key is not None:
@@ -1217,8 +1343,10 @@ class EmailResource:
 
     async def aget_email_draft(self, draft_id: str, account_id: str) -> dict[str, Any]:
         """Get a draft (async)"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+            }
         )
         return await self._client._aget(f"/v1/email/drafts/{draft_id}", params=params)
 
@@ -1239,17 +1367,19 @@ class EmailResource:
         signature_id: Any | None = None,
     ) -> dict[str, Any]:
         """Update a draft (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            to=to,
-            cc=cc,
-            bcc=bcc,
-            reply_to=reply_to,
-            subject=subject,
-            text=text,
-            html=html,
-            attachments=attachments,
-            signature_id=signature_id,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "to": to,
+                "cc": cc,
+                "bcc": bcc,
+                "replyTo": reply_to,
+                "subject": subject,
+                "text": text,
+                "html": html,
+                "attachments": attachments,
+                "signatureId": signature_id,
+            }
         )
         return await self._client._apatch(f"/v1/email/drafts/{draft_id}", data=payload)
 
@@ -1257,8 +1387,10 @@ class EmailResource:
         self, draft_id: str, account_id: str
     ) -> dict[str, Any]:
         """Delete a draft (async)"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+            }
         )
         return await self._client._adelete(
             f"/v1/email/drafts/{draft_id}", params=params
@@ -1274,9 +1406,11 @@ class EmailResource:
         send_at: datetime | str | None = None,
     ) -> dict[str, Any]:
         """Send a draft (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            send_at=send_at,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "sendAt": send_at,
+            }
         )
         headers: dict[str, str] = {}
         if if_match is not None:
@@ -1289,15 +1423,19 @@ class EmailResource:
 
     async def alist_email_folders(self, account_id: str) -> dict[str, Any]:
         """List mailbox folders (async)"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+            }
         )
         return await self._client._aget("/v1/email/folders", params=params)
 
     async def adiscover_imap_settings(self, email: str) -> dict[str, Any]:
         """Find the mail settings for an address (async)"""
-        payload = self._build_payload(
-            email=email,
+        payload = self._build_body(
+            {
+                "email": email,
+            }
         )
         return await self._client._apost("/v1/email/imap/discover", data=payload)
 
@@ -1316,24 +1454,28 @@ class EmailResource:
         reconnect_account_id: str | None = None,
     ) -> dict[str, Any]:
         """Connect an IMAP mailbox (async)"""
-        payload = self._build_payload(
-            profile_id=profile_id,
-            email=email,
-            name=name,
-            password=password,
-            imap=imap,
-            smtp=smtp,
-            identities=identities,
-            dry_run=dry_run,
-            allow_self_signed_certificate=allow_self_signed_certificate,
-            reconnect_account_id=reconnect_account_id,
+        payload = self._build_body(
+            {
+                "profileId": profile_id,
+                "email": email,
+                "name": name,
+                "password": password,
+                "imap": imap,
+                "smtp": smtp,
+                "identities": identities,
+                "dryRun": dry_run,
+                "allowSelfSignedCertificate": allow_self_signed_certificate,
+                "reconnectAccountId": reconnect_account_id,
+            }
         )
         return await self._client._apost("/v1/email/imap/accounts", data=payload)
 
     async def alist_email_labels(self, account_id: str) -> dict[str, Any]:
         """List labels (async)"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+            }
         )
         return await self._client._aget("/v1/email/labels", params=params)
 
@@ -1341,17 +1483,21 @@ class EmailResource:
         self, account_id: str, name: str, *, color: dict[str, Any] | None = None
     ) -> dict[str, Any]:
         """Create a label (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            name=name,
-            color=color,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "name": name,
+                "color": color,
+            }
         )
         return await self._client._apost("/v1/email/labels", data=payload)
 
     async def alist_email_send_as(self, account_id: str) -> dict[str, Any]:
         """List send-as addresses (async)"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+            }
         )
         return await self._client._aget("/v1/email/send-as", params=params)
 
@@ -1359,10 +1505,12 @@ class EmailResource:
         self, account_id: str, email: str, *, name: str | None = None
     ) -> dict[str, Any]:
         """Declare a send-as address (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            email=email,
-            name=name,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "email": email,
+                "name": name,
+            }
         )
         return await self._client._apost("/v1/email/send-as", data=payload)
 
@@ -1370,15 +1518,19 @@ class EmailResource:
         self, email: str, account_id: str
     ) -> dict[str, Any]:
         """Remove a declared send-as address (async)"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+            }
         )
         return await self._client._adelete(f"/v1/email/send-as/{email}", params=params)
 
     async def alist_email_shared_mailboxes(self, account_id: str) -> dict[str, Any]:
         """List shared mailboxes (async)"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+            }
         )
         return await self._client._aget("/v1/email/shared-mailboxes", params=params)
 
@@ -1386,10 +1538,12 @@ class EmailResource:
         self, account_id: str, address: str, *, display_name: str | None = None
     ) -> dict[str, Any]:
         """Add a shared mailbox (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            address=address,
-            display_name=display_name,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "address": address,
+                "displayName": display_name,
+            }
         )
         return await self._client._apost("/v1/email/shared-mailboxes", data=payload)
 
@@ -1397,8 +1551,10 @@ class EmailResource:
         self, *, account_id: str | None = None
     ) -> dict[str, Any]:
         """List signatures (async)"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+            }
         )
         return await self._client._aget("/v1/email/signatures", params=params)
 
@@ -1412,19 +1568,23 @@ class EmailResource:
         default_for: list[str] | None = None,
     ) -> dict[str, Any]:
         """Create a signature (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            name=name,
-            html=html,
-            text=text,
-            default_for=default_for,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "name": name,
+                "html": html,
+                "text": text,
+                "defaultFor": default_for,
+            }
         )
         return await self._client._apost("/v1/email/signatures", data=payload)
 
     async def aimport_email_signatures(self, account_id: str) -> dict[str, Any]:
         """Import Gmail signatures (async)"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+            }
         )
         return await self._client._apost("/v1/email/signatures/import", params=params)
 
@@ -1442,11 +1602,13 @@ class EmailResource:
         default_for: list[str] | None = None,
     ) -> dict[str, Any]:
         """Update a signature (async)"""
-        payload = self._build_payload(
-            name=name,
-            html=html,
-            text=text,
-            default_for=default_for,
+        payload = self._build_body(
+            {
+                "name": name,
+                "html": html,
+                "text": text,
+                "defaultFor": default_for,
+            }
         )
         return await self._client._apatch(
             f"/v1/email/signatures/{signature_id}", data=payload
@@ -1460,8 +1622,10 @@ class EmailResource:
         self, label_id: str, account_id: str
     ) -> dict[str, Any]:
         """Delete a label (async)"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+            }
         )
         return await self._client._adelete(
             f"/v1/email/labels/{label_id}", params=params
@@ -1471,9 +1635,11 @@ class EmailResource:
         self, attachment_id: str, account_id: str, message_id: str
     ) -> dict[str, Any]:
         """Download an attachment (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            message_id=message_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "messageId": message_id,
+            }
         )
         return await self._client._aget(
             f"/v1/email/attachments/{attachment_id}", params=params

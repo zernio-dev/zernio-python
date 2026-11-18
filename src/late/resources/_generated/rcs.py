@@ -21,13 +21,16 @@ class RcsResource:
     def __init__(self, client: BaseClient) -> None:
         self._client = client
 
-    def _build_params(self, **kwargs: Any) -> dict[str, Any]:
-        """Build query parameters, filtering None and empty-string values.
+    def _build_query(self, fields: dict[str, Any]) -> dict[str, Any]:
+        """Build query parameters keyed by their wire names, as given.
 
-        Empty strings are filtered because MCP tool wrappers pass ``""`` as the
-        default for optional string args, and the API rejects empty query
-        values (e.g. ``platform=``) with a 400. Filtering here keeps both direct
-        SDK callers and MCP tool callers safe.
+        Generated methods pass the parameter names exactly as the OpenAPI
+        spec declares them, so no casing rule is applied here.
+
+        None and empty strings are filtered because MCP tool wrappers pass
+        ``""`` as the default for optional string args, and the API rejects
+        empty query values (e.g. ``platform=``) with a 400. Filtering here
+        keeps both direct SDK callers and MCP tool callers safe.
 
         Enum members are unwrapped to their value: httpx serializes params
         via str(), which yields "ClassName.MEMBER" for Enum members, so
@@ -36,42 +39,65 @@ class RcsResource:
         """
         from enum import Enum
 
-        def to_camel(s: str) -> str:
-            parts = s.split("_")
-            return parts[0] + "".join(p.title() for p in parts[1:])
-
         result: dict[str, Any] = {}
-        for k, v in kwargs.items():
+        for k, v in fields.items():
             if isinstance(v, Enum):
                 v = v.value
             if v is None or v == "":
                 continue
-            result[to_camel(k)] = v
+            result[k] = v
         return result
 
-    def _build_payload(self, **kwargs: Any) -> dict[str, Any]:
-        """Build request payload, filtering None values. Enum members are
-        unwrapped to their value so JSON bodies carry e.g. "failed" rather
-        than a raw Enum member (plain Enum members are not JSON-serializable).
+    def _build_body(self, fields: dict[str, Any]) -> dict[str, Any]:
+        """Build a JSON request body keyed by its wire names, as given.
+
+        Generated methods pass the property names exactly as the request
+        body schema declares them: most are camelCase, but some routes read
+        snake_case (``ice_breakers``, ``message_send_ttl_seconds``), so no
+        casing rule is applied here. None values are dropped, Enum members
+        are unwrapped to their value (e.g. "failed") and datetimes are sent
+        as ISO 8601 strings.
         """
         from datetime import datetime
         from enum import Enum
 
-        def to_camel(s: str) -> str:
-            parts = s.split("_")
-            return parts[0] + "".join(p.title() for p in parts[1:])
-
         result: dict[str, Any] = {}
-        for k, v in kwargs.items():
+        for k, v in fields.items():
             if isinstance(v, Enum):
                 v = v.value
             if v is None:
                 continue
             if isinstance(v, datetime):
-                result[to_camel(k)] = v.isoformat()
+                result[k] = v.isoformat()
             else:
-                result[to_camel(k)] = v
+                result[k] = v
         return result
+
+    def _build_params(self, **kwargs: Any) -> dict[str, Any]:
+        """Build query parameters from snake_case kwargs, camelCasing each key.
+
+        For hand-written resource methods, whose endpoints take camelCase
+        names. Generated methods use _build_query with the spec's names.
+        """
+
+        def to_camel(s: str) -> str:
+            parts = s.split("_")
+            return parts[0] + "".join(p.title() for p in parts[1:])
+
+        return self._build_query({to_camel(k): v for k, v in kwargs.items()})
+
+    def _build_payload(self, **kwargs: Any) -> dict[str, Any]:
+        """Build a request body from snake_case kwargs, camelCasing each key.
+
+        For hand-written resource methods, whose endpoints take camelCase
+        names. Generated methods use _build_body with the spec's names.
+        """
+
+        def to_camel(s: str) -> str:
+            parts = s.split("_")
+            return parts[0] + "".join(p.title() for p in parts[1:])
+
+        return self._build_body({to_camel(k): v for k, v in kwargs.items()})
 
     def list_rcs_brands(self) -> dict[str, Any]:
         """List RCS brands"""
@@ -79,8 +105,10 @@ class RcsResource:
 
     def list_rcs_agents(self, *, include_closed: bool | None = None) -> dict[str, Any]:
         """List RCS agents"""
-        params = self._build_params(
-            include_closed=include_closed,
+        params = self._build_query(
+            {
+                "includeClosed": include_closed,
+            }
         )
         return self._client._get("/v1/rcs/agents", params=params)
 
@@ -97,14 +125,16 @@ class RcsResource:
         sms_fallback_from: str | None = None,
     ) -> dict[str, Any]:
         """Request an RCS agent"""
-        payload = self._build_payload(
-            profile_id=profile_id,
-            brand_id=brand_id,
-            brand=brand,
-            display_name=display_name,
-            use_case=use_case,
-            profile=profile,
-            sms_fallback_from=sms_fallback_from,
+        payload = self._build_body(
+            {
+                "profileId": profile_id,
+                "brandId": brand_id,
+                "brand": brand,
+                "displayName": display_name,
+                "useCase": use_case,
+                "profile": profile,
+                "smsFallbackFrom": sms_fallback_from,
+            }
         )
         headers: dict[str, str] = {}
         if idempotency_key is not None:
@@ -126,12 +156,14 @@ class RcsResource:
         sms_fallback_from: Any | None = None,
     ) -> dict[str, Any]:
         """Update an RCS agent"""
-        payload = self._build_payload(
-            display_name=display_name,
-            use_case=use_case,
-            profile=profile,
-            brand=brand,
-            sms_fallback_from=sms_fallback_from,
+        payload = self._build_body(
+            {
+                "displayName": display_name,
+                "useCase": use_case,
+                "profile": profile,
+                "brand": brand,
+                "smsFallbackFrom": sms_fallback_from,
+            }
         )
         return self._client._patch(f"/v1/rcs/agents/{agent_id}", data=payload)
 
@@ -152,14 +184,16 @@ class RcsResource:
         additional_information: str | None = None,
     ) -> dict[str, Any]:
         """Send the launch filing"""
-        payload = self._build_payload(
-            company_overview=company_overview,
-            agent_overview=agent_overview,
-            interactions=interactions,
-            message_examples=message_examples,
-            consent=consent,
-            test_video_url=test_video_url,
-            additional_information=additional_information,
+        payload = self._build_body(
+            {
+                "companyOverview": company_overview,
+                "agentOverview": agent_overview,
+                "interactions": interactions,
+                "messageExamples": message_examples,
+                "consent": consent,
+                "testVideoUrl": test_video_url,
+                "additionalInformation": additional_information,
+            }
         )
         return self._client._post(
             f"/v1/rcs/agents/{agent_id}/launch-request", data=payload
@@ -171,8 +205,10 @@ class RcsResource:
 
     def add_rcs_test_device(self, agent_id: str, phone_number: str) -> dict[str, Any]:
         """Invite an RCS test phone"""
-        payload = self._build_payload(
-            phone_number=phone_number,
+        payload = self._build_body(
+            {
+                "phoneNumber": phone_number,
+            }
         )
         return self._client._post(
             f"/v1/rcs/agents/{agent_id}/test-devices", data=payload
@@ -202,13 +238,15 @@ class RcsResource:
         ttl_seconds: int | None = None,
     ) -> dict[str, Any]:
         """Send an RCS message"""
-        payload = self._build_payload(
-            agent_id=agent_id,
-            to=to,
-            text=text,
-            content=content,
-            fallback_text=fallback_text,
-            ttl_seconds=ttl_seconds,
+        payload = self._build_body(
+            {
+                "agentId": agent_id,
+                "to": to,
+                "text": text,
+                "content": content,
+                "fallbackText": fallback_text,
+                "ttlSeconds": ttl_seconds,
+            }
         )
         headers: dict[str, str] = {}
         if idempotency_key is not None:
@@ -217,9 +255,11 @@ class RcsResource:
 
     def get_rcs_capabilities(self, agent_id: str, numbers: str) -> dict[str, Any]:
         """Check RCS capability"""
-        params = self._build_params(
-            agent_id=agent_id,
-            numbers=numbers,
+        params = self._build_query(
+            {
+                "agentId": agent_id,
+                "numbers": numbers,
+            }
         )
         return self._client._get("/v1/rcs/capabilities", params=params)
 
@@ -231,8 +271,10 @@ class RcsResource:
         self, *, include_closed: bool | None = None
     ) -> dict[str, Any]:
         """List RCS agents (async)"""
-        params = self._build_params(
-            include_closed=include_closed,
+        params = self._build_query(
+            {
+                "includeClosed": include_closed,
+            }
         )
         return await self._client._aget("/v1/rcs/agents", params=params)
 
@@ -249,14 +291,16 @@ class RcsResource:
         sms_fallback_from: str | None = None,
     ) -> dict[str, Any]:
         """Request an RCS agent (async)"""
-        payload = self._build_payload(
-            profile_id=profile_id,
-            brand_id=brand_id,
-            brand=brand,
-            display_name=display_name,
-            use_case=use_case,
-            profile=profile,
-            sms_fallback_from=sms_fallback_from,
+        payload = self._build_body(
+            {
+                "profileId": profile_id,
+                "brandId": brand_id,
+                "brand": brand,
+                "displayName": display_name,
+                "useCase": use_case,
+                "profile": profile,
+                "smsFallbackFrom": sms_fallback_from,
+            }
         )
         headers: dict[str, str] = {}
         if idempotency_key is not None:
@@ -280,12 +324,14 @@ class RcsResource:
         sms_fallback_from: Any | None = None,
     ) -> dict[str, Any]:
         """Update an RCS agent (async)"""
-        payload = self._build_payload(
-            display_name=display_name,
-            use_case=use_case,
-            profile=profile,
-            brand=brand,
-            sms_fallback_from=sms_fallback_from,
+        payload = self._build_body(
+            {
+                "displayName": display_name,
+                "useCase": use_case,
+                "profile": profile,
+                "brand": brand,
+                "smsFallbackFrom": sms_fallback_from,
+            }
         )
         return await self._client._apatch(f"/v1/rcs/agents/{agent_id}", data=payload)
 
@@ -306,14 +352,16 @@ class RcsResource:
         additional_information: str | None = None,
     ) -> dict[str, Any]:
         """Send the launch filing (async)"""
-        payload = self._build_payload(
-            company_overview=company_overview,
-            agent_overview=agent_overview,
-            interactions=interactions,
-            message_examples=message_examples,
-            consent=consent,
-            test_video_url=test_video_url,
-            additional_information=additional_information,
+        payload = self._build_body(
+            {
+                "companyOverview": company_overview,
+                "agentOverview": agent_overview,
+                "interactions": interactions,
+                "messageExamples": message_examples,
+                "consent": consent,
+                "testVideoUrl": test_video_url,
+                "additionalInformation": additional_information,
+            }
         )
         return await self._client._apost(
             f"/v1/rcs/agents/{agent_id}/launch-request", data=payload
@@ -327,8 +375,10 @@ class RcsResource:
         self, agent_id: str, phone_number: str
     ) -> dict[str, Any]:
         """Invite an RCS test phone (async)"""
-        payload = self._build_payload(
-            phone_number=phone_number,
+        payload = self._build_body(
+            {
+                "phoneNumber": phone_number,
+            }
         )
         return await self._client._apost(
             f"/v1/rcs/agents/{agent_id}/test-devices", data=payload
@@ -358,13 +408,15 @@ class RcsResource:
         ttl_seconds: int | None = None,
     ) -> dict[str, Any]:
         """Send an RCS message (async)"""
-        payload = self._build_payload(
-            agent_id=agent_id,
-            to=to,
-            text=text,
-            content=content,
-            fallback_text=fallback_text,
-            ttl_seconds=ttl_seconds,
+        payload = self._build_body(
+            {
+                "agentId": agent_id,
+                "to": to,
+                "text": text,
+                "content": content,
+                "fallbackText": fallback_text,
+                "ttlSeconds": ttl_seconds,
+            }
         )
         headers: dict[str, str] = {}
         if idempotency_key is not None:
@@ -377,8 +429,10 @@ class RcsResource:
         self, agent_id: str, numbers: str
     ) -> dict[str, Any]:
         """Check RCS capability (async)"""
-        params = self._build_params(
-            agent_id=agent_id,
-            numbers=numbers,
+        params = self._build_query(
+            {
+                "agentId": agent_id,
+                "numbers": numbers,
+            }
         )
         return await self._client._aget("/v1/rcs/capabilities", params=params)

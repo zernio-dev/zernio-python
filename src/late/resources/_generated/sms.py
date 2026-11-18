@@ -23,13 +23,16 @@ class SmsResource:
     def __init__(self, client: BaseClient) -> None:
         self._client = client
 
-    def _build_params(self, **kwargs: Any) -> dict[str, Any]:
-        """Build query parameters, filtering None and empty-string values.
+    def _build_query(self, fields: dict[str, Any]) -> dict[str, Any]:
+        """Build query parameters keyed by their wire names, as given.
 
-        Empty strings are filtered because MCP tool wrappers pass ``""`` as the
-        default for optional string args, and the API rejects empty query
-        values (e.g. ``platform=``) with a 400. Filtering here keeps both direct
-        SDK callers and MCP tool callers safe.
+        Generated methods pass the parameter names exactly as the OpenAPI
+        spec declares them, so no casing rule is applied here.
+
+        None and empty strings are filtered because MCP tool wrappers pass
+        ``""`` as the default for optional string args, and the API rejects
+        empty query values (e.g. ``platform=``) with a 400. Filtering here
+        keeps both direct SDK callers and MCP tool callers safe.
 
         Enum members are unwrapped to their value: httpx serializes params
         via str(), which yields "ClassName.MEMBER" for Enum members, so
@@ -38,42 +41,65 @@ class SmsResource:
         """
         from enum import Enum
 
-        def to_camel(s: str) -> str:
-            parts = s.split("_")
-            return parts[0] + "".join(p.title() for p in parts[1:])
-
         result: dict[str, Any] = {}
-        for k, v in kwargs.items():
+        for k, v in fields.items():
             if isinstance(v, Enum):
                 v = v.value
             if v is None or v == "":
                 continue
-            result[to_camel(k)] = v
+            result[k] = v
         return result
 
-    def _build_payload(self, **kwargs: Any) -> dict[str, Any]:
-        """Build request payload, filtering None values. Enum members are
-        unwrapped to their value so JSON bodies carry e.g. "failed" rather
-        than a raw Enum member (plain Enum members are not JSON-serializable).
+    def _build_body(self, fields: dict[str, Any]) -> dict[str, Any]:
+        """Build a JSON request body keyed by its wire names, as given.
+
+        Generated methods pass the property names exactly as the request
+        body schema declares them: most are camelCase, but some routes read
+        snake_case (``ice_breakers``, ``message_send_ttl_seconds``), so no
+        casing rule is applied here. None values are dropped, Enum members
+        are unwrapped to their value (e.g. "failed") and datetimes are sent
+        as ISO 8601 strings.
         """
         from datetime import datetime
         from enum import Enum
 
-        def to_camel(s: str) -> str:
-            parts = s.split("_")
-            return parts[0] + "".join(p.title() for p in parts[1:])
-
         result: dict[str, Any] = {}
-        for k, v in kwargs.items():
+        for k, v in fields.items():
             if isinstance(v, Enum):
                 v = v.value
             if v is None:
                 continue
             if isinstance(v, datetime):
-                result[to_camel(k)] = v.isoformat()
+                result[k] = v.isoformat()
             else:
-                result[to_camel(k)] = v
+                result[k] = v
         return result
+
+    def _build_params(self, **kwargs: Any) -> dict[str, Any]:
+        """Build query parameters from snake_case kwargs, camelCasing each key.
+
+        For hand-written resource methods, whose endpoints take camelCase
+        names. Generated methods use _build_query with the spec's names.
+        """
+
+        def to_camel(s: str) -> str:
+            parts = s.split("_")
+            return parts[0] + "".join(p.title() for p in parts[1:])
+
+        return self._build_query({to_camel(k): v for k, v in kwargs.items()})
+
+    def _build_payload(self, **kwargs: Any) -> dict[str, Any]:
+        """Build a request body from snake_case kwargs, camelCasing each key.
+
+        For hand-written resource methods, whose endpoints take camelCase
+        names. Generated methods use _build_body with the spec's names.
+        """
+
+        def to_camel(s: str) -> str:
+            parts = s.split("_")
+            return parts[0] + "".join(p.title() for p in parts[1:])
+
+        return self._build_body({to_camel(k): v for k, v in kwargs.items()})
 
     def send_sms(
         self,
@@ -86,12 +112,14 @@ class SmsResource:
         send_at: datetime | str | None = None,
     ) -> dict[str, Any]:
         """Send an SMS/MMS"""
-        payload = self._build_payload(
-            from_=from_,
-            to=to,
-            text=text,
-            media_urls=media_urls,
-            send_at=send_at,
+        payload = self._build_body(
+            {
+                "from": from_,
+                "to": to,
+                "text": text,
+                "mediaUrls": media_urls,
+                "sendAt": send_at,
+            }
         )
         headers: dict[str, str] = {}
         if idempotency_key is not None:
@@ -100,8 +128,10 @@ class SmsResource:
 
     def lookup_sms_number(self, number: str) -> dict[str, Any]:
         """Look up carrier + line type"""
-        params = self._build_params(
-            number=number,
+        params = self._build_query(
+            {
+                "number": number,
+            }
         )
         return self._client._get("/v1/sms/lookup", params=params)
 
@@ -109,32 +139,40 @@ class SmsResource:
         self, *, format: str | None = "json", limit: int | None = 500
     ) -> dict[str, Any]:
         """List SMS opt-outs"""
-        params = self._build_params(
-            format=format,
-            limit=limit,
+        params = self._build_query(
+            {
+                "format": format,
+                "limit": limit,
+            }
         )
         return self._client._get("/v1/sms/opt-outs", params=params)
 
     def create_sms_opt_out(self, account_id: str, phone: str) -> dict[str, Any]:
         """Record an SMS opt-out"""
-        payload = self._build_payload(
-            account_id=account_id,
-            phone=phone,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "phone": phone,
+            }
         )
         return self._client._post("/v1/sms/opt-outs", data=payload)
 
     def delete_sms_opt_out(self, account_id: str, phone: str) -> dict[str, Any]:
         """Remove an SMS opt-out"""
-        payload = self._build_payload(
-            account_id=account_id,
-            phone=phone,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "phone": phone,
+            }
         )
         return self._client._delete("/v1/sms/opt-outs", data=payload)
 
     def create_sms_sender_id(self, sender_id: str) -> dict[str, Any]:
         """Create an alphanumeric sender ID"""
-        payload = self._build_payload(
-            sender_id=sender_id,
+        payload = self._build_body(
+            {
+                "senderId": sender_id,
+            }
         )
         return self._client._post("/v1/sms/sender-ids", data=payload)
 
@@ -146,9 +184,11 @@ class SmsResource:
         self, requested_cap: int, reason: str
     ) -> dict[str, Any]:
         """Request a higher sender ID daily limit"""
-        payload = self._build_payload(
-            requested_cap=requested_cap,
-            reason=reason,
+        payload = self._build_body(
+            {
+                "requestedCap": requested_cap,
+                "reason": reason,
+            }
         )
         return self._client._post("/v1/sms/sender-ids/limit-request", data=payload)
 
@@ -169,15 +209,17 @@ class SmsResource:
         toll_free: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Start a carrier registration"""
-        payload = self._build_payload(
-            registration_type=registration_type,
-            phone_numbers=phone_numbers,
-            brand=brand,
-            campaign=campaign,
-            messaging_brand_name=messaging_brand_name,
-            wizard_values=wizard_values,
-            resubmit_request_id=resubmit_request_id,
-            toll_free=toll_free,
+        payload = self._build_body(
+            {
+                "registrationType": registration_type,
+                "phoneNumbers": phone_numbers,
+                "brand": brand,
+                "campaign": campaign,
+                "messagingBrandName": messaging_brand_name,
+                "wizardValues": wizard_values,
+                "resubmitRequestId": resubmit_request_id,
+                "tollFree": toll_free,
+            }
         )
         return self._client._post("/v1/sms/registrations", data=payload)
 
@@ -185,8 +227,10 @@ class SmsResource:
         self, *, include_deactivated: bool | None = None
     ) -> dict[str, Any]:
         """List carrier registrations"""
-        params = self._build_params(
-            include_deactivated=include_deactivated,
+        params = self._build_query(
+            {
+                "includeDeactivated": include_deactivated,
+            }
         )
         return self._client._get("/v1/sms/registrations", params=params)
 
@@ -200,12 +244,14 @@ class SmsResource:
         messaging_brand_name: str | None = None,
     ) -> dict[str, Any]:
         """Pre-check a carrier registration"""
-        payload = self._build_payload(
-            registration_type=registration_type,
-            phone_numbers=phone_numbers,
-            brand=brand,
-            campaign=campaign,
-            messaging_brand_name=messaging_brand_name,
+        payload = self._build_body(
+            {
+                "registrationType": registration_type,
+                "phoneNumbers": phone_numbers,
+                "brand": brand,
+                "campaign": campaign,
+                "messagingBrandName": messaging_brand_name,
+            }
         )
         return self._client._post("/v1/sms/registrations/preflight", data=payload)
 
@@ -219,8 +265,10 @@ class SmsResource:
 
     def verify_sms_registration_otp(self, id: str, otp_pin: str) -> dict[str, Any]:
         """Submit the sole-prop OTP"""
-        payload = self._build_payload(
-            otp_pin=otp_pin,
+        payload = self._build_body(
+            {
+                "otpPin": otp_pin,
+            }
         )
         return self._client._post(
             f"/v1/sms/registrations/{id}/verify-otp", data=payload
@@ -240,11 +288,13 @@ class SmsResource:
         sample2: str | None = None,
     ) -> dict[str, Any]:
         """Appeal a rejected campaign"""
-        payload = self._build_payload(
-            appeal_reason=appeal_reason,
-            message_flow=message_flow,
-            sample1=sample1,
-            sample2=sample2,
+        payload = self._build_body(
+            {
+                "appealReason": appeal_reason,
+                "messageFlow": message_flow,
+                "sample1": sample1,
+                "sample2": sample2,
+            }
         )
         return self._client._post(f"/v1/sms/registrations/{id}/appeal", data=payload)
 
@@ -258,11 +308,13 @@ class SmsResource:
         answers: list[dict[str, Any]] | None = None,
     ) -> dict[str, Any]:
         """Reply to a change request"""
-        payload = self._build_payload(
-            note=note,
-            files=files,
-            request_id=request_id,
-            answers=answers,
+        payload = self._build_body(
+            {
+                "note": note,
+                "files": files,
+                "requestId": request_id,
+                "answers": answers,
+            }
         )
         return self._client._post(f"/v1/sms/registrations/{id}/respond", data=payload)
 
@@ -276,8 +328,10 @@ class SmsResource:
 
     def share_sms_registration(self, number_id: str) -> dict[str, Any]:
         """Create a registration share link"""
-        payload = self._build_payload(
-            number_id=number_id,
+        payload = self._build_body(
+            {
+                "numberId": number_id,
+            }
         )
         return self._client._post("/v1/sms/registrations/share", data=payload)
 
@@ -304,12 +358,14 @@ class SmsResource:
         send_at: datetime | str | None = None,
     ) -> dict[str, Any]:
         """Send an SMS/MMS (async)"""
-        payload = self._build_payload(
-            from_=from_,
-            to=to,
-            text=text,
-            media_urls=media_urls,
-            send_at=send_at,
+        payload = self._build_body(
+            {
+                "from": from_,
+                "to": to,
+                "text": text,
+                "mediaUrls": media_urls,
+                "sendAt": send_at,
+            }
         )
         headers: dict[str, str] = {}
         if idempotency_key is not None:
@@ -320,8 +376,10 @@ class SmsResource:
 
     async def alookup_sms_number(self, number: str) -> dict[str, Any]:
         """Look up carrier + line type (async)"""
-        params = self._build_params(
-            number=number,
+        params = self._build_query(
+            {
+                "number": number,
+            }
         )
         return await self._client._aget("/v1/sms/lookup", params=params)
 
@@ -329,32 +387,40 @@ class SmsResource:
         self, *, format: str | None = "json", limit: int | None = 500
     ) -> dict[str, Any]:
         """List SMS opt-outs (async)"""
-        params = self._build_params(
-            format=format,
-            limit=limit,
+        params = self._build_query(
+            {
+                "format": format,
+                "limit": limit,
+            }
         )
         return await self._client._aget("/v1/sms/opt-outs", params=params)
 
     async def acreate_sms_opt_out(self, account_id: str, phone: str) -> dict[str, Any]:
         """Record an SMS opt-out (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            phone=phone,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "phone": phone,
+            }
         )
         return await self._client._apost("/v1/sms/opt-outs", data=payload)
 
     async def adelete_sms_opt_out(self, account_id: str, phone: str) -> dict[str, Any]:
         """Remove an SMS opt-out (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            phone=phone,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "phone": phone,
+            }
         )
         return await self._client._adelete("/v1/sms/opt-outs", data=payload)
 
     async def acreate_sms_sender_id(self, sender_id: str) -> dict[str, Any]:
         """Create an alphanumeric sender ID (async)"""
-        payload = self._build_payload(
-            sender_id=sender_id,
+        payload = self._build_body(
+            {
+                "senderId": sender_id,
+            }
         )
         return await self._client._apost("/v1/sms/sender-ids", data=payload)
 
@@ -366,9 +432,11 @@ class SmsResource:
         self, requested_cap: int, reason: str
     ) -> dict[str, Any]:
         """Request a higher sender ID daily limit (async)"""
-        payload = self._build_payload(
-            requested_cap=requested_cap,
-            reason=reason,
+        payload = self._build_body(
+            {
+                "requestedCap": requested_cap,
+                "reason": reason,
+            }
         )
         return await self._client._apost(
             "/v1/sms/sender-ids/limit-request", data=payload
@@ -391,15 +459,17 @@ class SmsResource:
         toll_free: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Start a carrier registration (async)"""
-        payload = self._build_payload(
-            registration_type=registration_type,
-            phone_numbers=phone_numbers,
-            brand=brand,
-            campaign=campaign,
-            messaging_brand_name=messaging_brand_name,
-            wizard_values=wizard_values,
-            resubmit_request_id=resubmit_request_id,
-            toll_free=toll_free,
+        payload = self._build_body(
+            {
+                "registrationType": registration_type,
+                "phoneNumbers": phone_numbers,
+                "brand": brand,
+                "campaign": campaign,
+                "messagingBrandName": messaging_brand_name,
+                "wizardValues": wizard_values,
+                "resubmitRequestId": resubmit_request_id,
+                "tollFree": toll_free,
+            }
         )
         return await self._client._apost("/v1/sms/registrations", data=payload)
 
@@ -407,8 +477,10 @@ class SmsResource:
         self, *, include_deactivated: bool | None = None
     ) -> dict[str, Any]:
         """List carrier registrations (async)"""
-        params = self._build_params(
-            include_deactivated=include_deactivated,
+        params = self._build_query(
+            {
+                "includeDeactivated": include_deactivated,
+            }
         )
         return await self._client._aget("/v1/sms/registrations", params=params)
 
@@ -422,12 +494,14 @@ class SmsResource:
         messaging_brand_name: str | None = None,
     ) -> dict[str, Any]:
         """Pre-check a carrier registration (async)"""
-        payload = self._build_payload(
-            registration_type=registration_type,
-            phone_numbers=phone_numbers,
-            brand=brand,
-            campaign=campaign,
-            messaging_brand_name=messaging_brand_name,
+        payload = self._build_body(
+            {
+                "registrationType": registration_type,
+                "phoneNumbers": phone_numbers,
+                "brand": brand,
+                "campaign": campaign,
+                "messagingBrandName": messaging_brand_name,
+            }
         )
         return await self._client._apost(
             "/v1/sms/registrations/preflight", data=payload
@@ -445,8 +519,10 @@ class SmsResource:
         self, id: str, otp_pin: str
     ) -> dict[str, Any]:
         """Submit the sole-prop OTP (async)"""
-        payload = self._build_payload(
-            otp_pin=otp_pin,
+        payload = self._build_body(
+            {
+                "otpPin": otp_pin,
+            }
         )
         return await self._client._apost(
             f"/v1/sms/registrations/{id}/verify-otp", data=payload
@@ -466,11 +542,13 @@ class SmsResource:
         sample2: str | None = None,
     ) -> dict[str, Any]:
         """Appeal a rejected campaign (async)"""
-        payload = self._build_payload(
-            appeal_reason=appeal_reason,
-            message_flow=message_flow,
-            sample1=sample1,
-            sample2=sample2,
+        payload = self._build_body(
+            {
+                "appealReason": appeal_reason,
+                "messageFlow": message_flow,
+                "sample1": sample1,
+                "sample2": sample2,
+            }
         )
         return await self._client._apost(
             f"/v1/sms/registrations/{id}/appeal", data=payload
@@ -486,11 +564,13 @@ class SmsResource:
         answers: list[dict[str, Any]] | None = None,
     ) -> dict[str, Any]:
         """Reply to a change request (async)"""
-        payload = self._build_payload(
-            note=note,
-            files=files,
-            request_id=request_id,
-            answers=answers,
+        payload = self._build_body(
+            {
+                "note": note,
+                "files": files,
+                "requestId": request_id,
+                "answers": answers,
+            }
         )
         return await self._client._apost(
             f"/v1/sms/registrations/{id}/respond", data=payload
@@ -506,8 +586,10 @@ class SmsResource:
 
     async def ashare_sms_registration(self, number_id: str) -> dict[str, Any]:
         """Create a registration share link (async)"""
-        payload = self._build_payload(
-            number_id=number_id,
+        payload = self._build_body(
+            {
+                "numberId": number_id,
+            }
         )
         return await self._client._apost("/v1/sms/registrations/share", data=payload)
 

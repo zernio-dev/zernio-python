@@ -21,13 +21,16 @@ class AdCreativesResource:
     def __init__(self, client: BaseClient) -> None:
         self._client = client
 
-    def _build_params(self, **kwargs: Any) -> dict[str, Any]:
-        """Build query parameters, filtering None and empty-string values.
+    def _build_query(self, fields: dict[str, Any]) -> dict[str, Any]:
+        """Build query parameters keyed by their wire names, as given.
 
-        Empty strings are filtered because MCP tool wrappers pass ``""`` as the
-        default for optional string args, and the API rejects empty query
-        values (e.g. ``platform=``) with a 400. Filtering here keeps both direct
-        SDK callers and MCP tool callers safe.
+        Generated methods pass the parameter names exactly as the OpenAPI
+        spec declares them, so no casing rule is applied here.
+
+        None and empty strings are filtered because MCP tool wrappers pass
+        ``""`` as the default for optional string args, and the API rejects
+        empty query values (e.g. ``platform=``) with a 400. Filtering here
+        keeps both direct SDK callers and MCP tool callers safe.
 
         Enum members are unwrapped to their value: httpx serializes params
         via str(), which yields "ClassName.MEMBER" for Enum members, so
@@ -36,42 +39,65 @@ class AdCreativesResource:
         """
         from enum import Enum
 
-        def to_camel(s: str) -> str:
-            parts = s.split("_")
-            return parts[0] + "".join(p.title() for p in parts[1:])
-
         result: dict[str, Any] = {}
-        for k, v in kwargs.items():
+        for k, v in fields.items():
             if isinstance(v, Enum):
                 v = v.value
             if v is None or v == "":
                 continue
-            result[to_camel(k)] = v
+            result[k] = v
         return result
 
-    def _build_payload(self, **kwargs: Any) -> dict[str, Any]:
-        """Build request payload, filtering None values. Enum members are
-        unwrapped to their value so JSON bodies carry e.g. "failed" rather
-        than a raw Enum member (plain Enum members are not JSON-serializable).
+    def _build_body(self, fields: dict[str, Any]) -> dict[str, Any]:
+        """Build a JSON request body keyed by its wire names, as given.
+
+        Generated methods pass the property names exactly as the request
+        body schema declares them: most are camelCase, but some routes read
+        snake_case (``ice_breakers``, ``message_send_ttl_seconds``), so no
+        casing rule is applied here. None values are dropped, Enum members
+        are unwrapped to their value (e.g. "failed") and datetimes are sent
+        as ISO 8601 strings.
         """
         from datetime import datetime
         from enum import Enum
 
-        def to_camel(s: str) -> str:
-            parts = s.split("_")
-            return parts[0] + "".join(p.title() for p in parts[1:])
-
         result: dict[str, Any] = {}
-        for k, v in kwargs.items():
+        for k, v in fields.items():
             if isinstance(v, Enum):
                 v = v.value
             if v is None:
                 continue
             if isinstance(v, datetime):
-                result[to_camel(k)] = v.isoformat()
+                result[k] = v.isoformat()
             else:
-                result[to_camel(k)] = v
+                result[k] = v
         return result
+
+    def _build_params(self, **kwargs: Any) -> dict[str, Any]:
+        """Build query parameters from snake_case kwargs, camelCasing each key.
+
+        For hand-written resource methods, whose endpoints take camelCase
+        names. Generated methods use _build_query with the spec's names.
+        """
+
+        def to_camel(s: str) -> str:
+            parts = s.split("_")
+            return parts[0] + "".join(p.title() for p in parts[1:])
+
+        return self._build_query({to_camel(k): v for k, v in kwargs.items()})
+
+    def _build_payload(self, **kwargs: Any) -> dict[str, Any]:
+        """Build a request body from snake_case kwargs, camelCasing each key.
+
+        For hand-written resource methods, whose endpoints take camelCase
+        names. Generated methods use _build_body with the spec's names.
+        """
+
+        def to_camel(s: str) -> str:
+            parts = s.split("_")
+            return parts[0] + "".join(p.title() for p in parts[1:])
+
+        return self._build_body({to_camel(k): v for k, v in kwargs.items()})
 
     def generate_ad_previews(
         self,
@@ -83,12 +109,14 @@ class AdCreativesResource:
         creative_spec: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Render pre-create ad previews"""
-        payload = self._build_payload(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            formats=formats,
-            existing_creative_id=existing_creative_id,
-            creative_spec=creative_spec,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "formats": formats,
+                "existingCreativeId": existing_creative_id,
+                "creativeSpec": creative_spec,
+            }
         )
         return self._client._post("/v1/ads/preview", data=payload)
 
@@ -96,9 +124,11 @@ class AdCreativesResource:
         self, ad_id: str, *, account_id: str | None = None, formats: str | None = None
     ) -> dict[str, Any]:
         """Render previews of an existing ad"""
-        params = self._build_params(
-            account_id=account_id,
-            formats=formats,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "formats": formats,
+            }
         )
         return self._client._get(f"/v1/ads/{ad_id}/preview", params=params)
 
@@ -106,8 +136,10 @@ class AdCreativesResource:
         self, ad_id: str, *, account_id: str | None = None
     ) -> dict[str, Any]:
         """Direct video and image URLs for an ad"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+            }
         )
         return self._client._get(f"/v1/ads/{ad_id}/media", params=params)
 
@@ -115,9 +147,11 @@ class AdCreativesResource:
         self, account_id: str, ad_account_id: str
     ) -> dict[str, Any]:
         """List TikTok ad identities"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+            }
         )
         return self._client._get("/v1/ads/tiktok-identities", params=params)
 
@@ -131,12 +165,14 @@ class AdCreativesResource:
         after: str | None = None,
     ) -> dict[str, Any]:
         """Creative library"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            fields=fields,
-            limit=limit,
-            after=after,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "fields": fields,
+                "limit": limit,
+                "after": after,
+            }
         )
         return self._client._get("/v1/ads/creatives", params=params)
 
@@ -162,24 +198,26 @@ class AdCreativesResource:
         ai_disclosure: str | None = None,
     ) -> dict[str, Any]:
         """Create a standalone creative"""
-        payload = self._build_payload(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            headline=headline,
-            body=body,
-            description=description,
-            call_to_action=call_to_action,
-            link_url=link_url,
-            image_url=image_url,
-            image_hash=image_hash,
-            carousel_cards=carousel_cards,
-            instagram_account_id=instagram_account_id,
-            optimize_card_order=optimize_card_order,
-            url_tags=url_tags,
-            promotion=promotion,
-            creative_features=creative_features,
-            multi_advertiser=multi_advertiser,
-            ai_disclosure=ai_disclosure,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "headline": headline,
+                "body": body,
+                "description": description,
+                "callToAction": call_to_action,
+                "linkUrl": link_url,
+                "imageUrl": image_url,
+                "imageHash": image_hash,
+                "carouselCards": carousel_cards,
+                "instagramAccountId": instagram_account_id,
+                "optimizeCardOrder": optimize_card_order,
+                "urlTags": url_tags,
+                "promotion": promotion,
+                "creativeFeatures": creative_features,
+                "multiAdvertiser": multi_advertiser,
+                "aiDisclosure": ai_disclosure,
+            }
         )
         return self._client._post("/v1/ads/creatives", data=payload)
 
@@ -193,11 +231,13 @@ class AdCreativesResource:
         thumbnail_height: int | None = None,
     ) -> dict[str, Any]:
         """Creative details"""
-        params = self._build_params(
-            account_id=account_id,
-            fields=fields,
-            thumbnail_width=thumbnail_width,
-            thumbnail_height=thumbnail_height,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "fields": fields,
+                "thumbnailWidth": thumbnail_width,
+                "thumbnailHeight": thumbnail_height,
+            }
         )
         return self._client._get(f"/v1/ads/creatives/{creative_id}", params=params)
 
@@ -205,16 +245,20 @@ class AdCreativesResource:
         self, creative_id: str, account_id: str, name: str
     ) -> dict[str, Any]:
         """Rename a creative"""
-        payload = self._build_payload(
-            account_id=account_id,
-            name=name,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "name": name,
+            }
         )
         return self._client._put(f"/v1/ads/creatives/{creative_id}", data=payload)
 
     def delete_ad_creative(self, creative_id: str, account_id: str) -> dict[str, Any]:
         """Delete a creative"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+            }
         )
         return self._client._delete(f"/v1/ads/creatives/{creative_id}", params=params)
 
@@ -227,11 +271,13 @@ class AdCreativesResource:
         filename: str | None = None,
     ) -> dict[str, Any]:
         """Upload an ad image from base64"""
-        payload = self._build_payload(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            image_base64=image_base64,
-            filename=filename,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "imageBase64": image_base64,
+                "filename": filename,
+            }
         )
         return self._client._post("/v1/ads/images", data=payload)
 
@@ -245,12 +291,14 @@ class AdCreativesResource:
         after: str | None = None,
     ) -> dict[str, Any]:
         """Ad image library"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            fields=fields,
-            limit=limit,
-            after=after,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "fields": fields,
+                "limit": limit,
+                "after": after,
+            }
         )
         return self._client._get("/v1/ads/images", params=params)
 
@@ -266,14 +314,16 @@ class AdCreativesResource:
         async_: bool | None = False,
     ) -> dict[str, Any]:
         """Upload an ad video"""
-        payload = self._build_payload(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            video_url=video_url,
-            video_base64=video_base64,
-            filename=filename,
-            name=name,
-            async_=async_,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "videoUrl": video_url,
+                "videoBase64": video_base64,
+                "filename": filename,
+                "name": name,
+                "async": async_,
+            }
         )
         return self._client._post("/v1/ads/videos", data=payload)
 
@@ -287,12 +337,14 @@ class AdCreativesResource:
         after: str | None = None,
     ) -> dict[str, Any]:
         """Ad video library"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            fields=fields,
-            limit=limit,
-            after=after,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "fields": fields,
+                "limit": limit,
+                "after": after,
+            }
         )
         return self._client._get("/v1/ads/videos", params=params)
 
@@ -300,9 +352,11 @@ class AdCreativesResource:
         self, video_id: str, account_id: str, ad_account_id: str
     ) -> dict[str, Any]:
         """Get ad video processing status"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+            }
         )
         return self._client._get(f"/v1/ads/videos/{video_id}", params=params)
 
@@ -310,9 +364,11 @@ class AdCreativesResource:
         self, video_id: str, account_id: str, ad_account_id: str
     ) -> dict[str, Any]:
         """Delete an ad video"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+            }
         )
         return self._client._delete(f"/v1/ads/videos/{video_id}", params=params)
 
@@ -325,11 +381,13 @@ class AdCreativesResource:
         only_allowlisted: bool | None = None,
     ) -> dict[str, Any]:
         """List partnership ad content"""
-        params = self._build_params(
-            account_id=account_id,
-            creator_username=creator_username,
-            post_url=post_url,
-            only_allowlisted=only_allowlisted,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "creatorUsername": creator_username,
+                "postUrl": post_url,
+                "onlyAllowlisted": only_allowlisted,
+            }
         )
         return self._client._get("/v1/ads/partnership-content", params=params)
 
@@ -337,9 +395,11 @@ class AdCreativesResource:
         self, account_id: str, *, creator_username: str | None = None
     ) -> dict[str, Any]:
         """List partnership permissions"""
-        params = self._build_params(
-            account_id=account_id,
-            creator_username=creator_username,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "creatorUsername": creator_username,
+            }
         )
         return self._client._get("/v1/ads/partnership-permissions", params=params)
 
@@ -347,10 +407,12 @@ class AdCreativesResource:
         self, account_id: str, creator_username: str, *, revoke: bool | None = None
     ) -> dict[str, Any]:
         """Set partnership permission"""
-        payload = self._build_payload(
-            account_id=account_id,
-            creator_username=creator_username,
-            revoke=revoke,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "creatorUsername": creator_username,
+                "revoke": revoke,
+            }
         )
         return self._client._post("/v1/ads/partnership-permissions", data=payload)
 
@@ -364,12 +426,14 @@ class AdCreativesResource:
         creative_spec: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Render pre-create ad previews (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            formats=formats,
-            existing_creative_id=existing_creative_id,
-            creative_spec=creative_spec,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "formats": formats,
+                "existingCreativeId": existing_creative_id,
+                "creativeSpec": creative_spec,
+            }
         )
         return await self._client._apost("/v1/ads/preview", data=payload)
 
@@ -377,9 +441,11 @@ class AdCreativesResource:
         self, ad_id: str, *, account_id: str | None = None, formats: str | None = None
     ) -> dict[str, Any]:
         """Render previews of an existing ad (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            formats=formats,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "formats": formats,
+            }
         )
         return await self._client._aget(f"/v1/ads/{ad_id}/preview", params=params)
 
@@ -387,8 +453,10 @@ class AdCreativesResource:
         self, ad_id: str, *, account_id: str | None = None
     ) -> dict[str, Any]:
         """Direct video and image URLs for an ad (async)"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+            }
         )
         return await self._client._aget(f"/v1/ads/{ad_id}/media", params=params)
 
@@ -396,9 +464,11 @@ class AdCreativesResource:
         self, account_id: str, ad_account_id: str
     ) -> dict[str, Any]:
         """List TikTok ad identities (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+            }
         )
         return await self._client._aget("/v1/ads/tiktok-identities", params=params)
 
@@ -412,12 +482,14 @@ class AdCreativesResource:
         after: str | None = None,
     ) -> dict[str, Any]:
         """Creative library (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            fields=fields,
-            limit=limit,
-            after=after,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "fields": fields,
+                "limit": limit,
+                "after": after,
+            }
         )
         return await self._client._aget("/v1/ads/creatives", params=params)
 
@@ -443,24 +515,26 @@ class AdCreativesResource:
         ai_disclosure: str | None = None,
     ) -> dict[str, Any]:
         """Create a standalone creative (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            headline=headline,
-            body=body,
-            description=description,
-            call_to_action=call_to_action,
-            link_url=link_url,
-            image_url=image_url,
-            image_hash=image_hash,
-            carousel_cards=carousel_cards,
-            instagram_account_id=instagram_account_id,
-            optimize_card_order=optimize_card_order,
-            url_tags=url_tags,
-            promotion=promotion,
-            creative_features=creative_features,
-            multi_advertiser=multi_advertiser,
-            ai_disclosure=ai_disclosure,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "headline": headline,
+                "body": body,
+                "description": description,
+                "callToAction": call_to_action,
+                "linkUrl": link_url,
+                "imageUrl": image_url,
+                "imageHash": image_hash,
+                "carouselCards": carousel_cards,
+                "instagramAccountId": instagram_account_id,
+                "optimizeCardOrder": optimize_card_order,
+                "urlTags": url_tags,
+                "promotion": promotion,
+                "creativeFeatures": creative_features,
+                "multiAdvertiser": multi_advertiser,
+                "aiDisclosure": ai_disclosure,
+            }
         )
         return await self._client._apost("/v1/ads/creatives", data=payload)
 
@@ -474,11 +548,13 @@ class AdCreativesResource:
         thumbnail_height: int | None = None,
     ) -> dict[str, Any]:
         """Creative details (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            fields=fields,
-            thumbnail_width=thumbnail_width,
-            thumbnail_height=thumbnail_height,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "fields": fields,
+                "thumbnailWidth": thumbnail_width,
+                "thumbnailHeight": thumbnail_height,
+            }
         )
         return await self._client._aget(
             f"/v1/ads/creatives/{creative_id}", params=params
@@ -488,9 +564,11 @@ class AdCreativesResource:
         self, creative_id: str, account_id: str, name: str
     ) -> dict[str, Any]:
         """Rename a creative (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            name=name,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "name": name,
+            }
         )
         return await self._client._aput(
             f"/v1/ads/creatives/{creative_id}", data=payload
@@ -500,8 +578,10 @@ class AdCreativesResource:
         self, creative_id: str, account_id: str
     ) -> dict[str, Any]:
         """Delete a creative (async)"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+            }
         )
         return await self._client._adelete(
             f"/v1/ads/creatives/{creative_id}", params=params
@@ -516,11 +596,13 @@ class AdCreativesResource:
         filename: str | None = None,
     ) -> dict[str, Any]:
         """Upload an ad image from base64 (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            image_base64=image_base64,
-            filename=filename,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "imageBase64": image_base64,
+                "filename": filename,
+            }
         )
         return await self._client._apost("/v1/ads/images", data=payload)
 
@@ -534,12 +616,14 @@ class AdCreativesResource:
         after: str | None = None,
     ) -> dict[str, Any]:
         """Ad image library (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            fields=fields,
-            limit=limit,
-            after=after,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "fields": fields,
+                "limit": limit,
+                "after": after,
+            }
         )
         return await self._client._aget("/v1/ads/images", params=params)
 
@@ -555,14 +639,16 @@ class AdCreativesResource:
         async_: bool | None = False,
     ) -> dict[str, Any]:
         """Upload an ad video (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            video_url=video_url,
-            video_base64=video_base64,
-            filename=filename,
-            name=name,
-            async_=async_,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "videoUrl": video_url,
+                "videoBase64": video_base64,
+                "filename": filename,
+                "name": name,
+                "async": async_,
+            }
         )
         return await self._client._apost("/v1/ads/videos", data=payload)
 
@@ -576,12 +662,14 @@ class AdCreativesResource:
         after: str | None = None,
     ) -> dict[str, Any]:
         """Ad video library (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            fields=fields,
-            limit=limit,
-            after=after,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "fields": fields,
+                "limit": limit,
+                "after": after,
+            }
         )
         return await self._client._aget("/v1/ads/videos", params=params)
 
@@ -589,9 +677,11 @@ class AdCreativesResource:
         self, video_id: str, account_id: str, ad_account_id: str
     ) -> dict[str, Any]:
         """Get ad video processing status (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+            }
         )
         return await self._client._aget(f"/v1/ads/videos/{video_id}", params=params)
 
@@ -599,9 +689,11 @@ class AdCreativesResource:
         self, video_id: str, account_id: str, ad_account_id: str
     ) -> dict[str, Any]:
         """Delete an ad video (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+            }
         )
         return await self._client._adelete(f"/v1/ads/videos/{video_id}", params=params)
 
@@ -614,11 +706,13 @@ class AdCreativesResource:
         only_allowlisted: bool | None = None,
     ) -> dict[str, Any]:
         """List partnership ad content (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            creator_username=creator_username,
-            post_url=post_url,
-            only_allowlisted=only_allowlisted,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "creatorUsername": creator_username,
+                "postUrl": post_url,
+                "onlyAllowlisted": only_allowlisted,
+            }
         )
         return await self._client._aget("/v1/ads/partnership-content", params=params)
 
@@ -626,9 +720,11 @@ class AdCreativesResource:
         self, account_id: str, *, creator_username: str | None = None
     ) -> dict[str, Any]:
         """List partnership permissions (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            creator_username=creator_username,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "creatorUsername": creator_username,
+            }
         )
         return await self._client._aget(
             "/v1/ads/partnership-permissions", params=params
@@ -638,10 +734,12 @@ class AdCreativesResource:
         self, account_id: str, creator_username: str, *, revoke: bool | None = None
     ) -> dict[str, Any]:
         """Set partnership permission (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            creator_username=creator_username,
-            revoke=revoke,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "creatorUsername": creator_username,
+                "revoke": revoke,
+            }
         )
         return await self._client._apost(
             "/v1/ads/partnership-permissions", data=payload

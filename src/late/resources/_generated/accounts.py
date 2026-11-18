@@ -21,13 +21,16 @@ class AccountsResource:
     def __init__(self, client: BaseClient) -> None:
         self._client = client
 
-    def _build_params(self, **kwargs: Any) -> dict[str, Any]:
-        """Build query parameters, filtering None and empty-string values.
+    def _build_query(self, fields: dict[str, Any]) -> dict[str, Any]:
+        """Build query parameters keyed by their wire names, as given.
 
-        Empty strings are filtered because MCP tool wrappers pass ``""`` as the
-        default for optional string args, and the API rejects empty query
-        values (e.g. ``platform=``) with a 400. Filtering here keeps both direct
-        SDK callers and MCP tool callers safe.
+        Generated methods pass the parameter names exactly as the OpenAPI
+        spec declares them, so no casing rule is applied here.
+
+        None and empty strings are filtered because MCP tool wrappers pass
+        ``""`` as the default for optional string args, and the API rejects
+        empty query values (e.g. ``platform=``) with a 400. Filtering here
+        keeps both direct SDK callers and MCP tool callers safe.
 
         Enum members are unwrapped to their value: httpx serializes params
         via str(), which yields "ClassName.MEMBER" for Enum members, so
@@ -36,42 +39,65 @@ class AccountsResource:
         """
         from enum import Enum
 
-        def to_camel(s: str) -> str:
-            parts = s.split("_")
-            return parts[0] + "".join(p.title() for p in parts[1:])
-
         result: dict[str, Any] = {}
-        for k, v in kwargs.items():
+        for k, v in fields.items():
             if isinstance(v, Enum):
                 v = v.value
             if v is None or v == "":
                 continue
-            result[to_camel(k)] = v
+            result[k] = v
         return result
 
-    def _build_payload(self, **kwargs: Any) -> dict[str, Any]:
-        """Build request payload, filtering None values. Enum members are
-        unwrapped to their value so JSON bodies carry e.g. "failed" rather
-        than a raw Enum member (plain Enum members are not JSON-serializable).
+    def _build_body(self, fields: dict[str, Any]) -> dict[str, Any]:
+        """Build a JSON request body keyed by its wire names, as given.
+
+        Generated methods pass the property names exactly as the request
+        body schema declares them: most are camelCase, but some routes read
+        snake_case (``ice_breakers``, ``message_send_ttl_seconds``), so no
+        casing rule is applied here. None values are dropped, Enum members
+        are unwrapped to their value (e.g. "failed") and datetimes are sent
+        as ISO 8601 strings.
         """
         from datetime import datetime
         from enum import Enum
 
-        def to_camel(s: str) -> str:
-            parts = s.split("_")
-            return parts[0] + "".join(p.title() for p in parts[1:])
-
         result: dict[str, Any] = {}
-        for k, v in kwargs.items():
+        for k, v in fields.items():
             if isinstance(v, Enum):
                 v = v.value
             if v is None:
                 continue
             if isinstance(v, datetime):
-                result[to_camel(k)] = v.isoformat()
+                result[k] = v.isoformat()
             else:
-                result[to_camel(k)] = v
+                result[k] = v
         return result
+
+    def _build_params(self, **kwargs: Any) -> dict[str, Any]:
+        """Build query parameters from snake_case kwargs, camelCasing each key.
+
+        For hand-written resource methods, whose endpoints take camelCase
+        names. Generated methods use _build_query with the spec's names.
+        """
+
+        def to_camel(s: str) -> str:
+            parts = s.split("_")
+            return parts[0] + "".join(p.title() for p in parts[1:])
+
+        return self._build_query({to_camel(k): v for k, v in kwargs.items()})
+
+    def _build_payload(self, **kwargs: Any) -> dict[str, Any]:
+        """Build a request body from snake_case kwargs, camelCasing each key.
+
+        For hand-written resource methods, whose endpoints take camelCase
+        names. Generated methods use _build_body with the spec's names.
+        """
+
+        def to_camel(s: str) -> str:
+            parts = s.split("_")
+            return parts[0] + "".join(p.title() for p in parts[1:])
+
+        return self._build_body({to_camel(k): v for k, v in kwargs.items()})
 
     def list_accounts(
         self,
@@ -97,26 +123,28 @@ class AccountsResource:
         per_profile: int | None = None,
     ) -> dict[str, Any]:
         """List accounts"""
-        params = self._build_params(
-            profile_id=profile_id,
-            platform=platform,
-            status=status,
-            search=search,
-            category=category,
-            sort=sort,
-            order=order,
-            include_over_limit=include_over_limit,
-            exclude_hidden=exclude_hidden,
-            platforms=platforms,
-            ad_account_rows=ad_account_rows,
-            include_creator_accounts=include_creator_accounts,
-            include_sandbox=include_sandbox,
-            include_status_counts=include_status_counts,
-            page=page,
-            limit=limit,
-            cursor=cursor,
-            profile_ids=profile_ids,
-            per_profile=per_profile,
+        params = self._build_query(
+            {
+                "profileId": profile_id,
+                "platform": platform,
+                "status": status,
+                "search": search,
+                "category": category,
+                "sort": sort,
+                "order": order,
+                "includeOverLimit": include_over_limit,
+                "excludeHidden": exclude_hidden,
+                "platforms": platforms,
+                "adAccountRows": ad_account_rows,
+                "includeCreatorAccounts": include_creator_accounts,
+                "includeSandbox": include_sandbox,
+                "includeStatusCounts": include_status_counts,
+                "page": page,
+                "limit": limit,
+                "cursor": cursor,
+                "profileIds": profile_ids,
+                "perProfile": per_profile,
+            }
         )
         return self._client._get("/v1/accounts", params=params)
 
@@ -132,14 +160,16 @@ class AccountsResource:
         cursor: str | None = None,
     ) -> dict[str, Any]:
         """Get follower stats"""
-        params = self._build_params(
-            account_ids=account_ids,
-            profile_id=profile_id,
-            from_date=from_date,
-            to_date=to_date,
-            granularity=granularity,
-            limit=limit,
-            cursor=cursor,
+        params = self._build_query(
+            {
+                "accountIds": account_ids,
+                "profileId": profile_id,
+                "fromDate": from_date,
+                "toDate": to_date,
+                "granularity": granularity,
+                "limit": limit,
+                "cursor": cursor,
+            }
         )
         return self._client._get("/v1/accounts/follower-stats", params=params)
 
@@ -153,11 +183,13 @@ class AccountsResource:
         meta_ads_sync_enabled: bool | None = None,
     ) -> dict[str, Any]:
         """Update account"""
-        payload = self._build_payload(
-            username=username,
-            display_name=display_name,
-            x_capabilities=x_capabilities,
-            meta_ads_sync_enabled=meta_ads_sync_enabled,
+        payload = self._build_body(
+            {
+                "username": username,
+                "displayName": display_name,
+                "xCapabilities": x_capabilities,
+                "metaAdsSyncEnabled": meta_ads_sync_enabled,
+            }
         )
         return self._client._put(f"/v1/accounts/{account_id}", data=payload)
 
@@ -165,8 +197,10 @@ class AccountsResource:
         self, account_id: str, profile_id: str
     ) -> dict[str, Any]:
         """Move account to another profile"""
-        payload = self._build_payload(
-            profile_id=profile_id,
+        payload = self._build_body(
+            {
+                "profileId": profile_id,
+            }
         )
         return self._client._patch(f"/v1/accounts/{account_id}", data=payload)
 
@@ -182,10 +216,12 @@ class AccountsResource:
         status: str | None = None,
     ) -> dict[str, Any]:
         """Check accounts health"""
-        params = self._build_params(
-            profile_id=profile_id,
-            platform=platform,
-            status=status,
+        params = self._build_query(
+            {
+                "profileId": profile_id,
+                "platform": platform,
+                "status": status,
+            }
         )
         return self._client._get("/v1/accounts/health", params=params)
 
@@ -201,8 +237,10 @@ class AccountsResource:
         self, account_id: str, user_id: str, *, refresh: bool | None = None
     ) -> dict[str, Any]:
         """Check whether an Instagram user follows the account"""
-        params = self._build_params(
-            refresh=refresh,
+        params = self._build_query(
+            {
+                "refresh": refresh,
+            }
         )
         return self._client._get(
             f"/v1/accounts/{account_id}/follow-status/{user_id}", params=params
@@ -212,8 +250,10 @@ class AccountsResource:
         self, account_id: str, *, country_code: str | None = None
     ) -> dict[str, Any]:
         """List trending commercial music"""
-        params = self._build_params(
-            country_code=country_code,
+        params = self._build_query(
+            {
+                "countryCode": country_code,
+            }
         )
         return self._client._get(
             f"/v1/accounts/{account_id}/tiktok/commercial-music", params=params
@@ -221,8 +261,10 @@ class AccountsResource:
 
     def search_tik_tok_locations(self, account_id: str, query: str) -> dict[str, Any]:
         """Search TikTok location tags"""
-        params = self._build_params(
-            query=query,
+        params = self._build_query(
+            {
+                "query": query,
+            }
         )
         return self._client._get(
             f"/v1/accounts/{account_id}/tiktok/locations", params=params
@@ -232,8 +274,10 @@ class AccountsResource:
         self, account_id: str, *, media_type: str | None = "video"
     ) -> dict[str, Any]:
         """Get TikTok creator info"""
-        params = self._build_params(
-            media_type=media_type,
+        params = self._build_query(
+            {
+                "mediaType": media_type,
+            }
         )
         return self._client._get(
             f"/v1/accounts/{account_id}/tiktok/creator-info", params=params
@@ -248,10 +292,12 @@ class AccountsResource:
         page_token: str | None = None,
     ) -> dict[str, Any]:
         """Get reviews"""
-        params = self._build_params(
-            location_id=location_id,
-            page_size=page_size,
-            page_token=page_token,
+        params = self._build_query(
+            {
+                "locationId": location_id,
+                "pageSize": page_size,
+                "pageToken": page_token,
+            }
         )
         return self._client._get(
             f"/v1/accounts/{account_id}/gmb-reviews", params=params
@@ -261,8 +307,10 @@ class AccountsResource:
         self, account_id: str, *, location_id: str | None = None
     ) -> dict[str, Any]:
         """Get food menus"""
-        params = self._build_params(
-            location_id=location_id,
+        params = self._build_query(
+            {
+                "locationId": location_id,
+            }
         )
         return self._client._get(
             f"/v1/accounts/{account_id}/gmb-food-menus", params=params
@@ -277,12 +325,16 @@ class AccountsResource:
         update_mask: str | None = None,
     ) -> dict[str, Any]:
         """Update food menus"""
-        params = self._build_params(
-            location_id=location_id,
+        params = self._build_query(
+            {
+                "locationId": location_id,
+            }
         )
-        payload = self._build_payload(
-            menus=menus,
-            update_mask=update_mask,
+        payload = self._build_body(
+            {
+                "menus": menus,
+                "updateMask": update_mask,
+            }
         )
         return self._client._put(
             f"/v1/accounts/{account_id}/gmb-food-menus", data=payload, params=params
@@ -296,9 +348,11 @@ class AccountsResource:
         read_mask: str | None = None,
     ) -> dict[str, Any]:
         """Get location details"""
-        params = self._build_params(
-            location_id=location_id,
-            read_mask=read_mask,
+        params = self._build_query(
+            {
+                "locationId": location_id,
+                "readMask": read_mask,
+            }
         )
         return self._client._get(
             f"/v1/accounts/{account_id}/gmb-location-details", params=params
@@ -328,27 +382,31 @@ class AccountsResource:
         ad_words_location_extensions: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Update location details"""
-        params = self._build_params(
-            location_id=location_id,
+        params = self._build_query(
+            {
+                "locationId": location_id,
+            }
         )
-        payload = self._build_payload(
-            update_mask=update_mask,
-            regular_hours=regular_hours,
-            special_hours=special_hours,
-            profile=profile,
-            website_uri=website_uri,
-            phone_numbers=phone_numbers,
-            categories=categories,
-            service_items=service_items,
-            title=title,
-            store_code=store_code,
-            labels=labels,
-            storefront_address=storefront_address,
-            service_area=service_area,
-            open_info=open_info,
-            more_hours=more_hours,
-            latlng=latlng,
-            ad_words_location_extensions=ad_words_location_extensions,
+        payload = self._build_body(
+            {
+                "updateMask": update_mask,
+                "regularHours": regular_hours,
+                "specialHours": special_hours,
+                "profile": profile,
+                "websiteUri": website_uri,
+                "phoneNumbers": phone_numbers,
+                "categories": categories,
+                "serviceItems": service_items,
+                "title": title,
+                "storeCode": store_code,
+                "labels": labels,
+                "storefrontAddress": storefront_address,
+                "serviceArea": service_area,
+                "openInfo": open_info,
+                "moreHours": more_hours,
+                "latlng": latlng,
+                "adWordsLocationExtensions": ad_words_location_extensions,
+            }
         )
         return self._client._put(
             f"/v1/accounts/{account_id}/gmb-location-details",
@@ -365,10 +423,12 @@ class AccountsResource:
         page_token: str | None = None,
     ) -> dict[str, Any]:
         """List media"""
-        params = self._build_params(
-            location_id=location_id,
-            page_size=page_size,
-            page_token=page_token,
+        params = self._build_query(
+            {
+                "locationId": location_id,
+                "pageSize": page_size,
+                "pageToken": page_token,
+            }
         )
         return self._client._get(f"/v1/accounts/{account_id}/gmb-media", params=params)
 
@@ -383,14 +443,18 @@ class AccountsResource:
         category: str | None = None,
     ) -> dict[str, Any]:
         """Upload photo"""
-        params = self._build_params(
-            location_id=location_id,
+        params = self._build_query(
+            {
+                "locationId": location_id,
+            }
         )
-        payload = self._build_payload(
-            source_url=source_url,
-            media_format=media_format,
-            description=description,
-            category=category,
+        payload = self._build_body(
+            {
+                "sourceUrl": source_url,
+                "mediaFormat": media_format,
+                "description": description,
+                "category": category,
+            }
         )
         return self._client._post(
             f"/v1/accounts/{account_id}/gmb-media", data=payload, params=params
@@ -400,9 +464,11 @@ class AccountsResource:
         self, account_id: str, media_id: str, *, location_id: str | None = None
     ) -> dict[str, Any]:
         """Delete photo"""
-        params = self._build_params(
-            location_id=location_id,
-            media_id=media_id,
+        params = self._build_query(
+            {
+                "locationId": location_id,
+                "mediaId": media_id,
+            }
         )
         return self._client._delete(
             f"/v1/accounts/{account_id}/gmb-media", params=params
@@ -420,13 +486,15 @@ class AccountsResource:
         page_token: str | None = None,
     ) -> dict[str, Any]:
         """Get attribute metadata"""
-        params = self._build_params(
-            location_id=location_id,
-            category_name=category_name,
-            region_code=region_code,
-            language_code=language_code,
-            page_size=page_size,
-            page_token=page_token,
+        params = self._build_query(
+            {
+                "locationId": location_id,
+                "categoryName": category_name,
+                "regionCode": region_code,
+                "languageCode": language_code,
+                "pageSize": page_size,
+                "pageToken": page_token,
+            }
         )
         return self._client._get(
             f"/v1/accounts/{account_id}/gmb-attribute-metadata", params=params
@@ -436,8 +504,10 @@ class AccountsResource:
         self, account_id: str, *, location_id: str | None = None
     ) -> dict[str, Any]:
         """Get attributes"""
-        params = self._build_params(
-            location_id=location_id,
+        params = self._build_query(
+            {
+                "locationId": location_id,
+            }
         )
         return self._client._get(
             f"/v1/accounts/{account_id}/gmb-attributes", params=params
@@ -452,12 +522,16 @@ class AccountsResource:
         location_id: str | None = None,
     ) -> dict[str, Any]:
         """Update attributes"""
-        params = self._build_params(
-            location_id=location_id,
+        params = self._build_query(
+            {
+                "locationId": location_id,
+            }
         )
-        payload = self._build_payload(
-            attributes=attributes,
-            attribute_mask=attribute_mask,
+        payload = self._build_body(
+            {
+                "attributes": attributes,
+                "attributeMask": attribute_mask,
+            }
         )
         return self._client._put(
             f"/v1/accounts/{account_id}/gmb-attributes", data=payload, params=params
@@ -472,10 +546,12 @@ class AccountsResource:
         page_token: str | None = None,
     ) -> dict[str, Any]:
         """List action links"""
-        params = self._build_params(
-            location_id=location_id,
-            page_size=page_size,
-            page_token=page_token,
+        params = self._build_query(
+            {
+                "locationId": location_id,
+                "pageSize": page_size,
+                "pageToken": page_token,
+            }
         )
         return self._client._get(
             f"/v1/accounts/{account_id}/gmb-place-actions", params=params
@@ -490,12 +566,16 @@ class AccountsResource:
         location_id: str | None = None,
     ) -> dict[str, Any]:
         """Create action link"""
-        params = self._build_params(
-            location_id=location_id,
+        params = self._build_query(
+            {
+                "locationId": location_id,
+            }
         )
-        payload = self._build_payload(
-            uri=uri,
-            place_action_type=place_action_type,
+        payload = self._build_body(
+            {
+                "uri": uri,
+                "placeActionType": place_action_type,
+            }
         )
         return self._client._post(
             f"/v1/accounts/{account_id}/gmb-place-actions", data=payload, params=params
@@ -505,9 +585,11 @@ class AccountsResource:
         self, account_id: str, name: str, *, location_id: str | None = None
     ) -> dict[str, Any]:
         """Delete action link"""
-        params = self._build_params(
-            location_id=location_id,
-            name=name,
+        params = self._build_query(
+            {
+                "locationId": location_id,
+                "name": name,
+            }
         )
         return self._client._delete(
             f"/v1/accounts/{account_id}/gmb-place-actions", params=params
@@ -523,13 +605,17 @@ class AccountsResource:
         place_action_type: str | None = None,
     ) -> dict[str, Any]:
         """Update action link"""
-        params = self._build_params(
-            location_id=location_id,
+        params = self._build_query(
+            {
+                "locationId": location_id,
+            }
         )
-        payload = self._build_payload(
-            name=name,
-            uri=uri,
-            place_action_type=place_action_type,
+        payload = self._build_body(
+            {
+                "name": name,
+                "uri": uri,
+                "placeActionType": place_action_type,
+            }
         )
         return self._client._patch(
             f"/v1/accounts/{account_id}/gmb-place-actions", data=payload, params=params
@@ -545,11 +631,13 @@ class AccountsResource:
         order_by: str | None = "updateTime desc",
     ) -> dict[str, Any]:
         """Batch get reviews"""
-        payload = self._build_payload(
-            location_names=location_names,
-            page_size=page_size,
-            page_token=page_token,
-            order_by=order_by,
+        payload = self._build_body(
+            {
+                "locationNames": location_names,
+                "pageSize": page_size,
+                "pageToken": page_token,
+                "orderBy": order_by,
+            }
         )
         return self._client._post(
             f"/v1/accounts/{account_id}/gmb-reviews/batch", data=payload
@@ -559,8 +647,10 @@ class AccountsResource:
         self, account_id: str, review_id: str, *, location_id: str | None = None
     ) -> dict[str, Any]:
         """Get a review"""
-        params = self._build_params(
-            location_id=location_id,
+        params = self._build_query(
+            {
+                "locationId": location_id,
+            }
         )
         return self._client._get(
             f"/v1/accounts/{account_id}/gmb-reviews/{review_id}", params=params
@@ -570,8 +660,10 @@ class AccountsResource:
         self, account_id: str, review_id: str, comment: str
     ) -> dict[str, Any]:
         """Reply to a review"""
-        payload = self._build_payload(
-            comment=comment,
+        payload = self._build_body(
+            {
+                "comment": comment,
+            }
         )
         return self._client._post(
             f"/v1/accounts/{account_id}/gmb-reviews/{review_id}/reply", data=payload
@@ -597,9 +689,11 @@ class AccountsResource:
         permitted_tasks: list[str] | None = None,
     ) -> dict[str, Any]:
         """Share the Page with a partner business"""
-        payload = self._build_payload(
-            business_id=business_id,
-            permitted_tasks=permitted_tasks,
+        payload = self._build_body(
+            {
+                "businessId": business_id,
+                "permittedTasks": permitted_tasks,
+            }
         )
         return self._client._post(
             f"/v1/accounts/{account_id}/business-partners", data=payload
@@ -609,8 +703,10 @@ class AccountsResource:
         self, account_id: str, business_id: str
     ) -> dict[str, Any]:
         """Revoke a partner business from the Page"""
-        params = self._build_params(
-            business_id=business_id,
+        params = self._build_query(
+            {
+                "businessId": business_id,
+            }
         )
         return self._client._delete(
             f"/v1/accounts/{account_id}/business-partners", params=params
@@ -620,9 +716,11 @@ class AccountsResource:
         self, account_id: str, url: str, *, display_name: str | None = None
     ) -> dict[str, Any]:
         """Resolve LinkedIn mention"""
-        params = self._build_params(
-            url=url,
-            display_name=display_name,
+        params = self._build_query(
+            {
+                "url": url,
+                "displayName": display_name,
+            }
         )
         return self._client._get(
             f"/v1/accounts/{account_id}/linkedin-mentions", params=params
@@ -644,13 +742,15 @@ class AccountsResource:
         use_deals_as_results: bool | None = None,
     ) -> dict[str, Any]:
         """Update HubSpot account settings"""
-        payload = self._build_payload(
-            sync_contacts=sync_contacts,
-            log_messages=log_messages,
-            log_delivery_status=log_delivery_status,
-            contact_defaults=contact_defaults,
-            report_deals=report_deals,
-            use_deals_as_results=use_deals_as_results,
+        payload = self._build_body(
+            {
+                "syncContacts": sync_contacts,
+                "logMessages": log_messages,
+                "logDeliveryStatus": log_delivery_status,
+                "contactDefaults": contact_defaults,
+                "reportDeals": report_deals,
+                "useDealsAsResults": use_deals_as_results,
+            }
         )
         return self._client._patch(
             f"/v1/accounts/{account_id}/hubspot-settings", data=payload
@@ -672,13 +772,15 @@ class AccountsResource:
         report_opportunities_to_ads: bool | None = None,
     ) -> dict[str, Any]:
         """Update Salesforce account settings"""
-        payload = self._build_payload(
-            sync_contacts=sync_contacts,
-            log_messages=log_messages,
-            create_as=create_as,
-            log_delivery_status=log_delivery_status,
-            use_opportunities_in_results=use_opportunities_in_results,
-            report_opportunities_to_ads=report_opportunities_to_ads,
+        payload = self._build_body(
+            {
+                "syncContacts": sync_contacts,
+                "logMessages": log_messages,
+                "createAs": create_as,
+                "logDeliveryStatus": log_delivery_status,
+                "useOpportunitiesInResults": use_opportunities_in_results,
+                "reportOpportunitiesToAds": report_opportunities_to_ads,
+            }
         )
         return self._client._patch(
             f"/v1/accounts/{account_id}/salesforce-settings", data=payload
@@ -692,8 +794,10 @@ class AccountsResource:
         self, account_id: str, forward_sales: bool
     ) -> dict[str, Any]:
         """Update Stripe account settings"""
-        payload = self._build_payload(
-            forward_sales=forward_sales,
+        payload = self._build_body(
+            {
+                "forwardSales": forward_sales,
+            }
         )
         return self._client._patch(
             f"/v1/accounts/{account_id}/stripe-settings", data=payload
@@ -712,10 +816,12 @@ class AccountsResource:
         apply_to_workspace: bool | None = False,
     ) -> dict[str, Any]:
         """Update Slack account settings"""
-        payload = self._build_payload(
-            default_username=default_username,
-            default_icon_url=default_icon_url,
-            apply_to_workspace=apply_to_workspace,
+        payload = self._build_body(
+            {
+                "defaultUsername": default_username,
+                "defaultIconUrl": default_icon_url,
+                "applyToWorkspace": apply_to_workspace,
+            }
         )
         return self._client._patch(
             f"/v1/accounts/{account_id}/slack-settings", data=payload
@@ -729,8 +835,10 @@ class AccountsResource:
         self, account_id: str, default_langs: Any
     ) -> dict[str, Any]:
         """Update Bluesky account settings"""
-        payload = self._build_payload(
-            default_langs=default_langs,
+        payload = self._build_body(
+            {
+                "defaultLangs": default_langs,
+            }
         )
         return self._client._patch(
             f"/v1/accounts/{account_id}/bluesky-settings", data=payload
@@ -760,26 +868,28 @@ class AccountsResource:
         per_profile: int | None = None,
     ) -> dict[str, Any]:
         """List accounts (async)"""
-        params = self._build_params(
-            profile_id=profile_id,
-            platform=platform,
-            status=status,
-            search=search,
-            category=category,
-            sort=sort,
-            order=order,
-            include_over_limit=include_over_limit,
-            exclude_hidden=exclude_hidden,
-            platforms=platforms,
-            ad_account_rows=ad_account_rows,
-            include_creator_accounts=include_creator_accounts,
-            include_sandbox=include_sandbox,
-            include_status_counts=include_status_counts,
-            page=page,
-            limit=limit,
-            cursor=cursor,
-            profile_ids=profile_ids,
-            per_profile=per_profile,
+        params = self._build_query(
+            {
+                "profileId": profile_id,
+                "platform": platform,
+                "status": status,
+                "search": search,
+                "category": category,
+                "sort": sort,
+                "order": order,
+                "includeOverLimit": include_over_limit,
+                "excludeHidden": exclude_hidden,
+                "platforms": platforms,
+                "adAccountRows": ad_account_rows,
+                "includeCreatorAccounts": include_creator_accounts,
+                "includeSandbox": include_sandbox,
+                "includeStatusCounts": include_status_counts,
+                "page": page,
+                "limit": limit,
+                "cursor": cursor,
+                "profileIds": profile_ids,
+                "perProfile": per_profile,
+            }
         )
         return await self._client._aget("/v1/accounts", params=params)
 
@@ -795,14 +905,16 @@ class AccountsResource:
         cursor: str | None = None,
     ) -> dict[str, Any]:
         """Get follower stats (async)"""
-        params = self._build_params(
-            account_ids=account_ids,
-            profile_id=profile_id,
-            from_date=from_date,
-            to_date=to_date,
-            granularity=granularity,
-            limit=limit,
-            cursor=cursor,
+        params = self._build_query(
+            {
+                "accountIds": account_ids,
+                "profileId": profile_id,
+                "fromDate": from_date,
+                "toDate": to_date,
+                "granularity": granularity,
+                "limit": limit,
+                "cursor": cursor,
+            }
         )
         return await self._client._aget("/v1/accounts/follower-stats", params=params)
 
@@ -816,11 +928,13 @@ class AccountsResource:
         meta_ads_sync_enabled: bool | None = None,
     ) -> dict[str, Any]:
         """Update account (async)"""
-        payload = self._build_payload(
-            username=username,
-            display_name=display_name,
-            x_capabilities=x_capabilities,
-            meta_ads_sync_enabled=meta_ads_sync_enabled,
+        payload = self._build_body(
+            {
+                "username": username,
+                "displayName": display_name,
+                "xCapabilities": x_capabilities,
+                "metaAdsSyncEnabled": meta_ads_sync_enabled,
+            }
         )
         return await self._client._aput(f"/v1/accounts/{account_id}", data=payload)
 
@@ -828,8 +942,10 @@ class AccountsResource:
         self, account_id: str, profile_id: str
     ) -> dict[str, Any]:
         """Move account to another profile (async)"""
-        payload = self._build_payload(
-            profile_id=profile_id,
+        payload = self._build_body(
+            {
+                "profileId": profile_id,
+            }
         )
         return await self._client._apatch(f"/v1/accounts/{account_id}", data=payload)
 
@@ -845,10 +961,12 @@ class AccountsResource:
         status: str | None = None,
     ) -> dict[str, Any]:
         """Check accounts health (async)"""
-        params = self._build_params(
-            profile_id=profile_id,
-            platform=platform,
-            status=status,
+        params = self._build_query(
+            {
+                "profileId": profile_id,
+                "platform": platform,
+                "status": status,
+            }
         )
         return await self._client._aget("/v1/accounts/health", params=params)
 
@@ -864,8 +982,10 @@ class AccountsResource:
         self, account_id: str, user_id: str, *, refresh: bool | None = None
     ) -> dict[str, Any]:
         """Check whether an Instagram user follows the account (async)"""
-        params = self._build_params(
-            refresh=refresh,
+        params = self._build_query(
+            {
+                "refresh": refresh,
+            }
         )
         return await self._client._aget(
             f"/v1/accounts/{account_id}/follow-status/{user_id}", params=params
@@ -875,8 +995,10 @@ class AccountsResource:
         self, account_id: str, *, country_code: str | None = None
     ) -> dict[str, Any]:
         """List trending commercial music (async)"""
-        params = self._build_params(
-            country_code=country_code,
+        params = self._build_query(
+            {
+                "countryCode": country_code,
+            }
         )
         return await self._client._aget(
             f"/v1/accounts/{account_id}/tiktok/commercial-music", params=params
@@ -886,8 +1008,10 @@ class AccountsResource:
         self, account_id: str, query: str
     ) -> dict[str, Any]:
         """Search TikTok location tags (async)"""
-        params = self._build_params(
-            query=query,
+        params = self._build_query(
+            {
+                "query": query,
+            }
         )
         return await self._client._aget(
             f"/v1/accounts/{account_id}/tiktok/locations", params=params
@@ -897,8 +1021,10 @@ class AccountsResource:
         self, account_id: str, *, media_type: str | None = "video"
     ) -> dict[str, Any]:
         """Get TikTok creator info (async)"""
-        params = self._build_params(
-            media_type=media_type,
+        params = self._build_query(
+            {
+                "mediaType": media_type,
+            }
         )
         return await self._client._aget(
             f"/v1/accounts/{account_id}/tiktok/creator-info", params=params
@@ -913,10 +1039,12 @@ class AccountsResource:
         page_token: str | None = None,
     ) -> dict[str, Any]:
         """Get reviews (async)"""
-        params = self._build_params(
-            location_id=location_id,
-            page_size=page_size,
-            page_token=page_token,
+        params = self._build_query(
+            {
+                "locationId": location_id,
+                "pageSize": page_size,
+                "pageToken": page_token,
+            }
         )
         return await self._client._aget(
             f"/v1/accounts/{account_id}/gmb-reviews", params=params
@@ -926,8 +1054,10 @@ class AccountsResource:
         self, account_id: str, *, location_id: str | None = None
     ) -> dict[str, Any]:
         """Get food menus (async)"""
-        params = self._build_params(
-            location_id=location_id,
+        params = self._build_query(
+            {
+                "locationId": location_id,
+            }
         )
         return await self._client._aget(
             f"/v1/accounts/{account_id}/gmb-food-menus", params=params
@@ -942,12 +1072,16 @@ class AccountsResource:
         update_mask: str | None = None,
     ) -> dict[str, Any]:
         """Update food menus (async)"""
-        params = self._build_params(
-            location_id=location_id,
+        params = self._build_query(
+            {
+                "locationId": location_id,
+            }
         )
-        payload = self._build_payload(
-            menus=menus,
-            update_mask=update_mask,
+        payload = self._build_body(
+            {
+                "menus": menus,
+                "updateMask": update_mask,
+            }
         )
         return await self._client._aput(
             f"/v1/accounts/{account_id}/gmb-food-menus", data=payload, params=params
@@ -961,9 +1095,11 @@ class AccountsResource:
         read_mask: str | None = None,
     ) -> dict[str, Any]:
         """Get location details (async)"""
-        params = self._build_params(
-            location_id=location_id,
-            read_mask=read_mask,
+        params = self._build_query(
+            {
+                "locationId": location_id,
+                "readMask": read_mask,
+            }
         )
         return await self._client._aget(
             f"/v1/accounts/{account_id}/gmb-location-details", params=params
@@ -993,27 +1129,31 @@ class AccountsResource:
         ad_words_location_extensions: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Update location details (async)"""
-        params = self._build_params(
-            location_id=location_id,
+        params = self._build_query(
+            {
+                "locationId": location_id,
+            }
         )
-        payload = self._build_payload(
-            update_mask=update_mask,
-            regular_hours=regular_hours,
-            special_hours=special_hours,
-            profile=profile,
-            website_uri=website_uri,
-            phone_numbers=phone_numbers,
-            categories=categories,
-            service_items=service_items,
-            title=title,
-            store_code=store_code,
-            labels=labels,
-            storefront_address=storefront_address,
-            service_area=service_area,
-            open_info=open_info,
-            more_hours=more_hours,
-            latlng=latlng,
-            ad_words_location_extensions=ad_words_location_extensions,
+        payload = self._build_body(
+            {
+                "updateMask": update_mask,
+                "regularHours": regular_hours,
+                "specialHours": special_hours,
+                "profile": profile,
+                "websiteUri": website_uri,
+                "phoneNumbers": phone_numbers,
+                "categories": categories,
+                "serviceItems": service_items,
+                "title": title,
+                "storeCode": store_code,
+                "labels": labels,
+                "storefrontAddress": storefront_address,
+                "serviceArea": service_area,
+                "openInfo": open_info,
+                "moreHours": more_hours,
+                "latlng": latlng,
+                "adWordsLocationExtensions": ad_words_location_extensions,
+            }
         )
         return await self._client._aput(
             f"/v1/accounts/{account_id}/gmb-location-details",
@@ -1030,10 +1170,12 @@ class AccountsResource:
         page_token: str | None = None,
     ) -> dict[str, Any]:
         """List media (async)"""
-        params = self._build_params(
-            location_id=location_id,
-            page_size=page_size,
-            page_token=page_token,
+        params = self._build_query(
+            {
+                "locationId": location_id,
+                "pageSize": page_size,
+                "pageToken": page_token,
+            }
         )
         return await self._client._aget(
             f"/v1/accounts/{account_id}/gmb-media", params=params
@@ -1050,14 +1192,18 @@ class AccountsResource:
         category: str | None = None,
     ) -> dict[str, Any]:
         """Upload photo (async)"""
-        params = self._build_params(
-            location_id=location_id,
+        params = self._build_query(
+            {
+                "locationId": location_id,
+            }
         )
-        payload = self._build_payload(
-            source_url=source_url,
-            media_format=media_format,
-            description=description,
-            category=category,
+        payload = self._build_body(
+            {
+                "sourceUrl": source_url,
+                "mediaFormat": media_format,
+                "description": description,
+                "category": category,
+            }
         )
         return await self._client._apost(
             f"/v1/accounts/{account_id}/gmb-media", data=payload, params=params
@@ -1067,9 +1213,11 @@ class AccountsResource:
         self, account_id: str, media_id: str, *, location_id: str | None = None
     ) -> dict[str, Any]:
         """Delete photo (async)"""
-        params = self._build_params(
-            location_id=location_id,
-            media_id=media_id,
+        params = self._build_query(
+            {
+                "locationId": location_id,
+                "mediaId": media_id,
+            }
         )
         return await self._client._adelete(
             f"/v1/accounts/{account_id}/gmb-media", params=params
@@ -1087,13 +1235,15 @@ class AccountsResource:
         page_token: str | None = None,
     ) -> dict[str, Any]:
         """Get attribute metadata (async)"""
-        params = self._build_params(
-            location_id=location_id,
-            category_name=category_name,
-            region_code=region_code,
-            language_code=language_code,
-            page_size=page_size,
-            page_token=page_token,
+        params = self._build_query(
+            {
+                "locationId": location_id,
+                "categoryName": category_name,
+                "regionCode": region_code,
+                "languageCode": language_code,
+                "pageSize": page_size,
+                "pageToken": page_token,
+            }
         )
         return await self._client._aget(
             f"/v1/accounts/{account_id}/gmb-attribute-metadata", params=params
@@ -1103,8 +1253,10 @@ class AccountsResource:
         self, account_id: str, *, location_id: str | None = None
     ) -> dict[str, Any]:
         """Get attributes (async)"""
-        params = self._build_params(
-            location_id=location_id,
+        params = self._build_query(
+            {
+                "locationId": location_id,
+            }
         )
         return await self._client._aget(
             f"/v1/accounts/{account_id}/gmb-attributes", params=params
@@ -1119,12 +1271,16 @@ class AccountsResource:
         location_id: str | None = None,
     ) -> dict[str, Any]:
         """Update attributes (async)"""
-        params = self._build_params(
-            location_id=location_id,
+        params = self._build_query(
+            {
+                "locationId": location_id,
+            }
         )
-        payload = self._build_payload(
-            attributes=attributes,
-            attribute_mask=attribute_mask,
+        payload = self._build_body(
+            {
+                "attributes": attributes,
+                "attributeMask": attribute_mask,
+            }
         )
         return await self._client._aput(
             f"/v1/accounts/{account_id}/gmb-attributes", data=payload, params=params
@@ -1139,10 +1295,12 @@ class AccountsResource:
         page_token: str | None = None,
     ) -> dict[str, Any]:
         """List action links (async)"""
-        params = self._build_params(
-            location_id=location_id,
-            page_size=page_size,
-            page_token=page_token,
+        params = self._build_query(
+            {
+                "locationId": location_id,
+                "pageSize": page_size,
+                "pageToken": page_token,
+            }
         )
         return await self._client._aget(
             f"/v1/accounts/{account_id}/gmb-place-actions", params=params
@@ -1157,12 +1315,16 @@ class AccountsResource:
         location_id: str | None = None,
     ) -> dict[str, Any]:
         """Create action link (async)"""
-        params = self._build_params(
-            location_id=location_id,
+        params = self._build_query(
+            {
+                "locationId": location_id,
+            }
         )
-        payload = self._build_payload(
-            uri=uri,
-            place_action_type=place_action_type,
+        payload = self._build_body(
+            {
+                "uri": uri,
+                "placeActionType": place_action_type,
+            }
         )
         return await self._client._apost(
             f"/v1/accounts/{account_id}/gmb-place-actions", data=payload, params=params
@@ -1172,9 +1334,11 @@ class AccountsResource:
         self, account_id: str, name: str, *, location_id: str | None = None
     ) -> dict[str, Any]:
         """Delete action link (async)"""
-        params = self._build_params(
-            location_id=location_id,
-            name=name,
+        params = self._build_query(
+            {
+                "locationId": location_id,
+                "name": name,
+            }
         )
         return await self._client._adelete(
             f"/v1/accounts/{account_id}/gmb-place-actions", params=params
@@ -1190,13 +1354,17 @@ class AccountsResource:
         place_action_type: str | None = None,
     ) -> dict[str, Any]:
         """Update action link (async)"""
-        params = self._build_params(
-            location_id=location_id,
+        params = self._build_query(
+            {
+                "locationId": location_id,
+            }
         )
-        payload = self._build_payload(
-            name=name,
-            uri=uri,
-            place_action_type=place_action_type,
+        payload = self._build_body(
+            {
+                "name": name,
+                "uri": uri,
+                "placeActionType": place_action_type,
+            }
         )
         return await self._client._apatch(
             f"/v1/accounts/{account_id}/gmb-place-actions", data=payload, params=params
@@ -1212,11 +1380,13 @@ class AccountsResource:
         order_by: str | None = "updateTime desc",
     ) -> dict[str, Any]:
         """Batch get reviews (async)"""
-        payload = self._build_payload(
-            location_names=location_names,
-            page_size=page_size,
-            page_token=page_token,
-            order_by=order_by,
+        payload = self._build_body(
+            {
+                "locationNames": location_names,
+                "pageSize": page_size,
+                "pageToken": page_token,
+                "orderBy": order_by,
+            }
         )
         return await self._client._apost(
             f"/v1/accounts/{account_id}/gmb-reviews/batch", data=payload
@@ -1226,8 +1396,10 @@ class AccountsResource:
         self, account_id: str, review_id: str, *, location_id: str | None = None
     ) -> dict[str, Any]:
         """Get a review (async)"""
-        params = self._build_params(
-            location_id=location_id,
+        params = self._build_query(
+            {
+                "locationId": location_id,
+            }
         )
         return await self._client._aget(
             f"/v1/accounts/{account_id}/gmb-reviews/{review_id}", params=params
@@ -1237,8 +1409,10 @@ class AccountsResource:
         self, account_id: str, review_id: str, comment: str
     ) -> dict[str, Any]:
         """Reply to a review (async)"""
-        payload = self._build_payload(
-            comment=comment,
+        payload = self._build_body(
+            {
+                "comment": comment,
+            }
         )
         return await self._client._apost(
             f"/v1/accounts/{account_id}/gmb-reviews/{review_id}/reply", data=payload
@@ -1264,9 +1438,11 @@ class AccountsResource:
         permitted_tasks: list[str] | None = None,
     ) -> dict[str, Any]:
         """Share the Page with a partner business (async)"""
-        payload = self._build_payload(
-            business_id=business_id,
-            permitted_tasks=permitted_tasks,
+        payload = self._build_body(
+            {
+                "businessId": business_id,
+                "permittedTasks": permitted_tasks,
+            }
         )
         return await self._client._apost(
             f"/v1/accounts/{account_id}/business-partners", data=payload
@@ -1276,8 +1452,10 @@ class AccountsResource:
         self, account_id: str, business_id: str
     ) -> dict[str, Any]:
         """Revoke a partner business from the Page (async)"""
-        params = self._build_params(
-            business_id=business_id,
+        params = self._build_query(
+            {
+                "businessId": business_id,
+            }
         )
         return await self._client._adelete(
             f"/v1/accounts/{account_id}/business-partners", params=params
@@ -1287,9 +1465,11 @@ class AccountsResource:
         self, account_id: str, url: str, *, display_name: str | None = None
     ) -> dict[str, Any]:
         """Resolve LinkedIn mention (async)"""
-        params = self._build_params(
-            url=url,
-            display_name=display_name,
+        params = self._build_query(
+            {
+                "url": url,
+                "displayName": display_name,
+            }
         )
         return await self._client._aget(
             f"/v1/accounts/{account_id}/linkedin-mentions", params=params
@@ -1311,13 +1491,15 @@ class AccountsResource:
         use_deals_as_results: bool | None = None,
     ) -> dict[str, Any]:
         """Update HubSpot account settings (async)"""
-        payload = self._build_payload(
-            sync_contacts=sync_contacts,
-            log_messages=log_messages,
-            log_delivery_status=log_delivery_status,
-            contact_defaults=contact_defaults,
-            report_deals=report_deals,
-            use_deals_as_results=use_deals_as_results,
+        payload = self._build_body(
+            {
+                "syncContacts": sync_contacts,
+                "logMessages": log_messages,
+                "logDeliveryStatus": log_delivery_status,
+                "contactDefaults": contact_defaults,
+                "reportDeals": report_deals,
+                "useDealsAsResults": use_deals_as_results,
+            }
         )
         return await self._client._apatch(
             f"/v1/accounts/{account_id}/hubspot-settings", data=payload
@@ -1341,13 +1523,15 @@ class AccountsResource:
         report_opportunities_to_ads: bool | None = None,
     ) -> dict[str, Any]:
         """Update Salesforce account settings (async)"""
-        payload = self._build_payload(
-            sync_contacts=sync_contacts,
-            log_messages=log_messages,
-            create_as=create_as,
-            log_delivery_status=log_delivery_status,
-            use_opportunities_in_results=use_opportunities_in_results,
-            report_opportunities_to_ads=report_opportunities_to_ads,
+        payload = self._build_body(
+            {
+                "syncContacts": sync_contacts,
+                "logMessages": log_messages,
+                "createAs": create_as,
+                "logDeliveryStatus": log_delivery_status,
+                "useOpportunitiesInResults": use_opportunities_in_results,
+                "reportOpportunitiesToAds": report_opportunities_to_ads,
+            }
         )
         return await self._client._apatch(
             f"/v1/accounts/{account_id}/salesforce-settings", data=payload
@@ -1361,8 +1545,10 @@ class AccountsResource:
         self, account_id: str, forward_sales: bool
     ) -> dict[str, Any]:
         """Update Stripe account settings (async)"""
-        payload = self._build_payload(
-            forward_sales=forward_sales,
+        payload = self._build_body(
+            {
+                "forwardSales": forward_sales,
+            }
         )
         return await self._client._apatch(
             f"/v1/accounts/{account_id}/stripe-settings", data=payload
@@ -1381,10 +1567,12 @@ class AccountsResource:
         apply_to_workspace: bool | None = False,
     ) -> dict[str, Any]:
         """Update Slack account settings (async)"""
-        payload = self._build_payload(
-            default_username=default_username,
-            default_icon_url=default_icon_url,
-            apply_to_workspace=apply_to_workspace,
+        payload = self._build_body(
+            {
+                "defaultUsername": default_username,
+                "defaultIconUrl": default_icon_url,
+                "applyToWorkspace": apply_to_workspace,
+            }
         )
         return await self._client._apatch(
             f"/v1/accounts/{account_id}/slack-settings", data=payload
@@ -1398,8 +1586,10 @@ class AccountsResource:
         self, account_id: str, default_langs: Any
     ) -> dict[str, Any]:
         """Update Bluesky account settings (async)"""
-        payload = self._build_payload(
-            default_langs=default_langs,
+        payload = self._build_body(
+            {
+                "defaultLangs": default_langs,
+            }
         )
         return await self._client._apatch(
             f"/v1/accounts/{account_id}/bluesky-settings", data=payload
