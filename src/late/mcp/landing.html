@@ -1,0 +1,415 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Zernio MCP Server: connect Claude, ChatGPT, Cursor and Codex</title>
+<meta name="description" content="Connect Claude, ChatGPT, Codex, Cursor or any MCP client to the Zernio API. Schedule posts, answer DMs and email, run ads and read analytics from your agent.">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="{{MCP_URL}}/">
+<meta name="theme-color" content="#FAF9F8" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0F0F10" media="(prefers-color-scheme: dark)">
+<meta name="color-scheme" content="light dark">
+
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Zernio">
+<meta property="og:locale" content="en_US">
+<meta property="og:url" content="{{MCP_URL}}/">
+<meta property="og:title" content="Zernio MCP Server">
+<meta property="og:description" content="Point any MCP client at {{MCP_URL}}/mcp and sign in with your Zernio account. Nothing to install.">
+<meta property="og:image" content="https://zernio.com/opengraph-image.png?v=4">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Zernio">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Zernio MCP Server">
+<meta name="twitter:description" content="Point any MCP client at {{MCP_URL}}/mcp and sign in with your Zernio account. Nothing to install.">
+<meta name="twitter:image" content="https://zernio.com/opengraph-image.png?v=4">
+
+<link rel="icon" href="https://zernio.com/favicon.ico?v=2" sizes="32x32">
+<link rel="icon" href="https://zernio.com/icon.svg?v=4" type="image/svg+xml">
+<link rel="apple-touch-icon" href="https://zernio.com/apple-icon.png?v=2">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/geist@1.7.0/dist/fonts/geist-sans/Geist-Variable.woff2" as="font" type="font/woff2" crossorigin>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "Zernio MCP Server",
+  "url": "{{MCP_URL}}/",
+  "applicationCategory": "DeveloperApplication",
+  "operatingSystem": "Any",
+  "description": "A hosted Model Context Protocol server that gives Claude, ChatGPT, Codex, Cursor and other MCP clients the Zernio API.",
+  "sameAs": ["https://docs.zernio.com/mcp", "https://github.com/zernio-dev/zernio-python"],
+  "publisher": { "@type": "Organization", "name": "Zernio", "url": "https://zernio.com", "logo": "https://zernio.com/icon.svg?v=4" }
+}
+</script>
+
+<style>
+  /* Zernio design system v2, the dashboard's look (data-look="v2"): fonts, Theme tokens and the
+     marketing type scale from libs/design-system/new-look.ts in Schedule-Posts-API. */
+  @font-face { font-family: "Geist"; src: url("https://cdn.jsdelivr.net/npm/geist@1.7.0/dist/fonts/geist-sans/Geist-Variable.woff2") format("woff2"); font-weight: 100 900; font-display: swap; }
+  @font-face { font-family: "Geist Mono"; src: url("https://cdn.jsdelivr.net/npm/geist@1.7.0/dist/fonts/geist-mono/GeistMono-Variable.woff2") format("woff2"); font-weight: 100 900; font-display: swap; }
+  @font-face { font-family: "Geist Pixel Square"; src: url("https://cdn.jsdelivr.net/npm/geist@1.7.0/dist/fonts/geist-pixel/GeistPixel-Square.woff2") format("woff2"); font-weight: 500; font-display: swap; }
+
+  :root {
+    --bg-base: #FAF9F8;
+    --bg-raised: #FFFFFF;
+    --fill-hover: rgba(92, 68, 37, 0.03);
+    --fill-active: rgba(92, 68, 37, 0.05);
+    --text-primary: #1A1A1A;
+    --text-secondary: #525252;
+    --text-tertiary: #6B6B6B;
+    --text-link: #1E4A7C;
+    --border-default: #E4E4E4;
+    --border-subtle: #F2F2F2;
+    --border-focus: #1A1A1A;
+    --brand-default: #EB3514;
+    --brand-hover: #D12C0E;
+    --brand-subtle: #FBE8E5;
+    --success-fg: #15803D;
+    --success-bg: #E3F4E9;
+    --shadow-color: rgba(0, 0, 0, 0.1);
+    --sans: "Geist", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --mono: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    --pixel: "Geist Pixel Square", "Geist Mono", ui-monospace, Menlo, monospace;
+    --ease: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg-base: #0F0F10;
+      --bg-raised: #151516;
+      --fill-hover: rgba(255, 255, 255, 0.04);
+      --fill-active: rgba(255, 255, 255, 0.06);
+      --text-primary: #FAFAFA;
+      --text-secondary: #D4D4D4;
+      --text-tertiary: #A3A3A3;
+      --text-link: #7ED4FC;
+      --border-default: #212122;
+      --border-subtle: #1C1C1D;
+      --border-focus: #FAFAFA;
+      --brand-subtle: #261514;
+      --success-fg: #6EE7B7;
+      --success-bg: #0D2418;
+      --shadow-color: rgba(0, 0, 0, 0.5);
+    }
+  }
+
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg-base); color: var(--text-primary); font: 400 16px/24px var(--sans); -webkit-font-smoothing: antialiased; }
+  a { color: var(--text-link); text-decoration: underline; text-underline-offset: 2px; }
+  :focus-visible { outline: 2px solid var(--border-focus); outline-offset: 2px; }
+  svg { flex: none; }
+  .page { max-width: 760px; margin: 0 auto; padding: 0 24px; }
+
+  /* Header */
+  header { display: flex; align-items: center; gap: 24px; height: 64px; border-bottom: 1px solid var(--border-default); }
+  header .brand { display: flex; }
+  header .brand svg { height: 20px; width: auto; }
+  header nav { margin-left: auto; display: flex; gap: 20px; }
+  header nav a { color: var(--text-tertiary); text-decoration: none; font-weight: 500; font-size: 14px; line-height: 20px; transition: color 150ms var(--ease); }
+  header nav a:hover { color: var(--text-primary); }
+
+  /* Type: the marketing scale (display/64, heading/24, heading/16, body/18, body/16, pixel/14, mono/14) */
+  .eyebrow { display: inline-block; font: 500 14px/20px var(--pixel); text-transform: uppercase; color: var(--brand-default); background: var(--brand-subtle); border-radius: 4px; padding: 2px 6px; }
+  h1 { font-weight: 500; font-size: 24px; line-height: 32px; margin: 8px 0; }
+  .muted { color: var(--text-tertiary); }
+  .intro { max-width: 720px; }
+  h2 { font-weight: 500; font-size: 16px; line-height: 24px; margin: 48px 0 12px; }
+  h3 { display: flex; align-items: center; gap: 8px; font-weight: 500; font-size: 14px; line-height: 20px; color: var(--text-primary); margin: 24px 0 8px; }
+  h3 svg { width: 16px; height: 16px; }
+  p, ul { margin: 0 0 12px; color: var(--text-secondary); }
+  ul { padding-left: 20px; }
+  strong { color: var(--text-primary); font-weight: 500; }
+  :not(pre) > code { font: 400 14px var(--mono); color: var(--text-primary); background: var(--fill-active); border-radius: 4px; padding: 1px 5px; }
+  main { padding: 56px 0 0; }
+
+  /* Buttons: square, the pixel face for labels */
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 36px; padding: 0 16px; font: 500 16px/24px var(--pixel); text-decoration: none; border: 1px solid transparent; cursor: pointer; transition: background 150ms var(--ease), color 150ms var(--ease), border-color 150ms var(--ease); }
+  .btn svg { width: 16px; height: 16px; }
+  .btn-solid { background: var(--brand-default); color: #FFFFFF; }
+  .btn-solid:hover { background: var(--brand-hover); }
+  .install { margin: 0 0 16px; }
+
+  .copy { display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 10px; font: 500 14px/20px var(--pixel); color: var(--text-secondary); background: var(--bg-raised); border: 1px solid var(--border-default); cursor: pointer; transition: background 200ms var(--ease), color 200ms var(--ease), border-color 200ms var(--ease); }
+  .copy:hover { color: var(--text-primary); background: var(--fill-hover); }
+  .copy svg { width: 14px; height: 14px; }
+  .copy { display: inline-grid; }
+  .copy > span { grid-area: 1 / 1; display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+  .copy .done, .copy.copied .idle { visibility: hidden; }
+  .copy.copied .done { visibility: visible; }
+  .copy.copied { color: var(--success-fg); background: var(--success-bg); border-color: var(--success-bg); }
+  @media (prefers-reduced-motion: no-preference) {
+    .copy.copied svg { animation: pop 250ms var(--ease); }
+    @keyframes pop { from { transform: scale(0.4); opacity: 0; } }
+  }
+
+  /* The endpoint */
+  .endpoint { display: flex; align-items: center; gap: 12px; margin: 28px 0 0; padding: 8px 8px 8px 16px; background: var(--bg-raised); border: 1px solid var(--border-default); box-shadow: 0 1px 2px var(--shadow-color); }
+  .endpoint code { flex: 1; min-width: 0; overflow-x: auto; white-space: nowrap; font: 400 14px/24px var(--mono) !important; color: var(--text-primary) !important; background: none !important; padding: 0 !important; }
+
+  /* Code blocks: the v2 CodeConsole, a light window with its bar */
+  .code { margin: 0 0 24px; background: var(--bg-raised); border: 1px solid var(--border-default); box-shadow: 0 1px 2px var(--shadow-color); }
+  .code .bar { display: flex; align-items: center; gap: 12px; height: 44px; padding: 0 8px 0 16px; border-bottom: 1px solid var(--border-default); }
+  .code .dots { display: flex; gap: 6px; }
+  .code .dots i { width: 10px; height: 10px; border-radius: 50%; background: var(--fill-active); box-shadow: inset 0 0 0 1px var(--border-default); }
+  .code .file { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 400 12px/16px var(--mono); color: var(--text-tertiary); }
+  .code pre { margin: 0; padding: 16px; font: 400 14px/24px var(--mono); color: var(--text-primary); overflow-x: auto; }
+  .code .k { color: var(--brand-default); }
+  .code .s { color: var(--success-fg); }
+  p:has(+ .code) { margin-bottom: 8px; }
+
+  /* Client tabs: underline tabs; the selected one carries the brand line */
+  .tabs { display: flex; overflow-x: auto; scrollbar-width: none; box-shadow: inset 0 -1px 0 var(--border-default); }
+  .tabs::-webkit-scrollbar { display: none; }
+  .tabs button { display: inline-flex; align-items: center; gap: 8px; flex: none; padding: 10px 10px 8px; font: 500 14px/20px var(--sans); color: var(--text-tertiary); background: none; border: 0; border-bottom: 2px solid transparent; cursor: pointer; white-space: nowrap; -webkit-tap-highlight-color: transparent; transition: color 150ms var(--ease), border-color 150ms var(--ease); }
+  @media (hover: hover) { .tabs button:hover { color: var(--text-primary); } }
+  .tabs button[aria-selected="true"] { color: var(--text-primary); border-bottom-color: var(--brand-default); }
+  .tabs svg { width: 16px; height: 16px; }
+  .claude { color: #D97757; }
+  .vscode { color: #0078D4; }
+  [role="tabpanel"] { margin-bottom: 24px; }
+  [role="tabpanel"] > :last-child, main > :last-child { margin-bottom: 0; }
+
+  footer { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 20px; margin-top: 72px; padding: 24px 0 40px; border-top: 1px solid var(--border-default); font-size: 14px; line-height: 20px; }
+  footer a { color: var(--text-tertiary); text-decoration: none; }
+  footer a:hover { color: var(--text-primary); }
+  footer .copyright { margin-left: auto; font: 400 12px/16px var(--mono); color: var(--text-tertiary); }
+
+  /* Phones: one swipeable row of tabs, wrapped code, full width install buttons */
+  @media (max-width: 639px) {
+    main { padding-top: 40px; }
+    .code pre { white-space: pre-wrap; overflow-wrap: anywhere; font-size: 12px; line-height: 20px; padding: 14px 12px; }
+    .install { display: flex; }
+    footer .copyright { margin-left: 0; width: 100%; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+  <header>
+    <a class="brand" href="https://zernio.com" aria-label="Zernio">{{LOGO}}</a>
+    <nav aria-label="Main">
+      <a href="https://docs.zernio.com/mcp">Docs</a>
+      <a href="https://zernio.com/dashboard/api-keys">API keys</a>
+    </nav>
+  </header>
+
+  <main>
+    <span class="eyebrow">MCP server</span>
+    <h1>Zernio MCP Server. <span class="muted">The whole API in your AI client.</span></h1>
+    <p class="intro">Connect Claude, ChatGPT, Codex, Cursor or any MCP client, then sign in with your Zernio account. The server is hosted, so there is nothing to install.</p>
+
+    <div class="endpoint">
+      <code>{{MCP_URL}}/mcp</code>
+      <button class="copy" type="button">Copy</button>
+    </div>
+
+    <h2>Connect your client</h2>
+    <div class="tabs" role="tablist" aria-label="MCP client">
+      <button role="tab" data-tab="cursor"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><use href="#i-cursor"/></svg>Cursor</button>
+      <button role="tab" data-tab="claude-code"><svg class="claude" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><use href="#i-claude"/></svg>Claude Code</button>
+      <button role="tab" data-tab="codex"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><use href="#i-codex"/></svg>Codex</button>
+      <button role="tab" data-tab="chatgpt"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><use href="#i-openai"/></svg>ChatGPT</button>
+      <button role="tab" data-tab="claude"><svg class="claude" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><use href="#i-claude"/></svg>Claude</button>
+      <button role="tab" data-tab="vscode"><svg class="vscode" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><use href="#i-vscode"/></svg>VS Code</button>
+      <button role="tab" data-tab="other"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><use href="#i-plug"/></svg>Other</button>
+    </div>
+
+    <section role="tabpanel" data-tab="cursor">
+      <h3><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><use href="#i-cursor"/></svg>Cursor</h3>
+      <a class="btn btn-solid install" href="cursor://anysphere.cursor-deeplink/mcp/install?name=zernio&amp;config={{CURSOR_CONFIG}}">Install in Cursor<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><use href="#i-chevron"/></svg></a>
+      <p>The install link opens Cursor and adds the server. To add it by hand instead, put this in <code>~/.cursor/mcp.json</code>:</p>
+      <figure class="code" data-file="~/.cursor/mcp.json"><pre>{
+  "mcpServers": {
+    "zernio": {
+      "url": "{{MCP_URL}}/mcp"
+    }
+  }
+}</pre></figure>
+      <p>Cursor prompts you to sign in with your Zernio account.</p>
+    </section>
+
+    <section role="tabpanel" data-tab="claude-code">
+      <h3><svg class="claude" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><use href="#i-claude"/></svg>Claude Code</h3>
+      <p>Add the server:</p>
+      <figure class="code" data-file="Terminal"><pre>claude mcp add --transport http zernio {{MCP_URL}}/mcp</pre></figure>
+      <p>Then sign in with your Zernio account:</p>
+      <figure class="code" data-file="Terminal"><pre>claude /mcp</pre></figure>
+    </section>
+
+    <section role="tabpanel" data-tab="codex">
+      <h3><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><use href="#i-codex"/></svg>Codex</h3>
+      <p>Add the server:</p>
+      <figure class="code" data-file="Terminal"><pre>codex mcp add zernio --url {{MCP_URL}}/mcp</pre></figure>
+      <p>Then sign in with your Zernio account:</p>
+      <figure class="code" data-file="Terminal"><pre>codex mcp login zernio</pre></figure>
+    </section>
+
+    <section role="tabpanel" data-tab="chatgpt">
+      <h3><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><use href="#i-openai"/></svg>ChatGPT</h3>
+      <p>MCP servers are available on ChatGPT Pro, Plus, Business, Enterprise and Education accounts. Follow the <a href="https://platform.openai.com/docs/guides/developer-mode">OpenAI documentation</a> to enable developer mode, then create a custom connector with:</p>
+      <ul>
+        <li><strong>Server URL:</strong> <code>{{MCP_URL}}/mcp</code></li>
+        <li><strong>Authentication:</strong> OAuth</li>
+      </ul>
+      <p>ChatGPT redirects you to sign in with your Zernio account, and the connector activates.</p>
+    </section>
+
+    <section role="tabpanel" data-tab="claude">
+      <h3><svg class="claude" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><use href="#i-claude"/></svg>Claude</h3>
+      <a class="btn btn-solid install" href="https://claude.ai/customize/connectors?modal=add-custom-connector&amp;connectorName=Zernio&amp;connectorUrl={{CLAUDE_CONNECTOR_URL}}">Add to Claude<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><use href="#i-chevron"/></svg></a>
+      <p>The link opens Claude with the connector filled in. Click <strong>Add</strong>, then sign in with your Zernio account.</p>
+      <p>To add it by hand instead, open <strong>Settings</strong>, then <strong>Connectors</strong>, then <strong>Add custom connector</strong>:</p>
+      <ul>
+        <li><strong>Name:</strong> Zernio</li>
+        <li><strong>URL:</strong> <code>{{MCP_URL}}/mcp</code></li>
+      </ul>
+    </section>
+
+    <section role="tabpanel" data-tab="vscode">
+      <h3><svg class="vscode" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><use href="#i-vscode"/></svg>VS Code</h3>
+      <a class="btn btn-solid install" href="https://vscode.dev/redirect/mcp/install?name=zernio&amp;config={{VSCODE_CONFIG}}">Install in VS Code<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><use href="#i-chevron"/></svg></a>
+      <p>The install link opens VS Code and adds the server. To add it by hand instead, put this in the project's <code>.vscode/mcp.json</code>:</p>
+      <figure class="code" data-file=".vscode/mcp.json"><pre>{
+  "servers": {
+    "zernio": {
+      "type": "http",
+      "url": "{{MCP_URL}}/mcp"
+    }
+  }
+}</pre></figure>
+    </section>
+
+    <section role="tabpanel" data-tab="other">
+      <h3><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><use href="#i-plug"/></svg>Other clients</h3>
+      <p>Use the server URL <code>{{MCP_URL}}/mcp</code> and OAuth when your client supports it. Otherwise pass an <a href="https://zernio.com/dashboard/api-keys">API key</a> in the <code>Authorization</code> header:</p>
+      <figure class="code" data-file="MCP config"><pre>{
+  "zernio": {
+    "url": "{{MCP_URL}}/mcp",
+    "headers": {
+      "Authorization": "Bearer $ZERNIO_API_KEY"
+    }
+  }
+}</pre></figure>
+      <p>If your client only runs local commands, bridge to the hosted server with <code>mcp-remote</code>. It opens a browser to sign in:</p>
+      <figure class="code" data-file="MCP config"><pre>{
+  "mcpServers": {
+    "zernio": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-remote@latest",
+        "{{MCP_URL}}/mcp"
+      ]
+    }
+  }
+}</pre></figure>
+    </section>
+
+    <p>To check it works, ask the assistant to list your connected Zernio accounts.</p>
+
+    <h2>API keys for agents</h2>
+    <p>An autonomous agent has nobody at a browser to sign in. Send an <a href="https://zernio.com/dashboard/api-keys">API key</a> as a bearer token instead:</p>
+    <figure class="code" data-file="HTTP header"><pre>Authorization: Bearer $ZERNIO_API_KEY</pre></figure>
+  </main>
+
+  <footer>
+    <a href="https://docs.zernio.com/mcp/setup">Full setup guide</a>
+    <a href="https://docs.zernio.com/mcp/tools">Tools</a>
+    <a href="https://status.zernio.com">Status</a>
+    <a href="https://github.com/zernio-dev/zernio-python">GitHub</a>
+    <a href="/server.json">server.json</a>
+    <span class="copyright">© Zernio</span>
+  </footer>
+</div>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <!-- Client marks, as on the docs' MCP tabs (react-icons, LobeHub). -->
+  <symbol id="i-cursor" viewBox="0 0 24 24"><path d="M22.106 5.68L12.5.135a.998.998 0 00-.998 0L1.893 5.68a.84.84 0 00-.419.726v11.186c0 .3.16.577.42.727l9.607 5.547a.999.999 0 00.998 0l9.608-5.547a.84.84 0 00.42-.727V6.407a.84.84 0 00-.42-.726zm-.603 1.176L12.228 22.92c-.063.108-.228.064-.228-.061V12.34a.59.59 0 00-.295-.51l-9.11-5.26c-.107-.062-.063-.228.062-.228h18.55c.264 0 .428.286.296.514z"/></symbol>
+  <symbol id="i-claude" viewBox="0 0 24 24"><path d="m4.7144 15.9555 4.7174-2.6471.079-.2307-.079-.1275h-.2307l-.7893-.0486-2.6956-.0729-2.3375-.0971-2.2646-.1214-.5707-.1215-.5343-.7042.0546-.3522.4797-.3218.686.0608 1.5179.1032 2.2767.1578 1.6514.0972 2.4468.255h.3886l.0546-.1579-.1336-.0971-.1032-.0972L6.973 9.8356l-2.55-1.6879-1.3356-.9714-.7225-.4918-.3643-.4614-.1578-1.0078.6557-.7225.8803.0607.2246.0607.8925.686 1.9064 1.4754 2.4893 1.8336.3643.3035.1457-.1032.0182-.0728-.164-.2733-1.3539-2.4467-1.445-2.4893-.6435-1.032-.17-.6194c-.0607-.255-.1032-.4674-.1032-.7285L6.287.1335 6.6997 0l.9957.1336.419.3642.6192 1.4147 1.0018 2.2282 1.5543 3.0296.4553.8985.2429.8318.091.255h.1579v-.1457l.1275-1.706.2368-2.0947.2307-2.6957.0789-.7589.3764-.9107.7468-.4918.5828.2793.4797.686-.0668.4433-.2853 1.8517-.5586 2.9021-.3643 1.9429h.2125l.2429-.2429.9835-1.3053 1.6514-2.0643.7286-.8196.85-.9046.5464-.4311h1.0321l.759 1.1293-.34 1.1657-1.0625 1.3478-.8804 1.1414-1.2628 1.7-.7893 1.36.0729.1093.1882-.0183 2.8535-.607 1.5421-.2794 1.8396-.3157.8318.3886.091.3946-.3278.8075-1.967.4857-2.3072.4614-3.4364.8136-.0425.0304.0486.0607 1.5482.1457.6618.0364h1.621l3.0175.2247.7892.522.4736.6376-.079.4857-1.2142.6193-1.6393-.3886-3.825-.9107-1.3113-.3279h-.1822v.1093l1.0929 1.0686 2.0035 1.8092 2.5075 2.3314.1275.5768-.3218.4554-.34-.0486-2.2039-1.6575-.85-.7468-1.9246-1.621h-.1275v.17l.4432.6496 2.3436 3.5214.1214 1.0807-.17.3521-.6071.2125-.6679-.1214-1.3721-1.9246L14.38 17.959l-1.1414-1.9428-.1397.079-.674 7.2552-.3156.3703-.7286.2793-.6071-.4614-.3218-.7468.3218-1.4753.3886-1.9246.3157-1.53.2853-1.9004.17-.6314-.0121-.0425-.1397.0182-1.4328 1.9672-2.1796 2.9446-1.7243 1.8456-.4128.164-.7164-.3704.0667-.6618.4008-.5889 2.386-3.0357 1.4389-1.882.929-1.0868-.0062-.1579h-.0546l-6.3385 4.1164-1.1293.1457-.4857-.4554.0608-.7467.2307-.2429 1.9064-1.3114Z"/></symbol>
+  <symbol id="i-openai" viewBox="0 0 24 24"><path d="M22.2819 9.8211a5.9847 5.9847 0 0 0-.5157-4.9108 6.0462 6.0462 0 0 0-6.5098-2.9A6.0651 6.0651 0 0 0 4.9807 4.1818a5.9847 5.9847 0 0 0-3.9977 2.9 6.0462 6.0462 0 0 0 .7427 7.0966 5.98 5.98 0 0 0 .511 4.9107 6.051 6.051 0 0 0 6.5146 2.9001A5.9847 5.9847 0 0 0 13.2599 24a6.0557 6.0557 0 0 0 5.7718-4.2058 5.9894 5.9894 0 0 0 3.9977-2.9001 6.0557 6.0557 0 0 0-.7475-7.0729zm-9.022 12.6081a4.4755 4.4755 0 0 1-2.8764-1.0408l.1419-.0804 4.7783-2.7582a.7948.7948 0 0 0 .3927-.6813v-6.7369l2.02 1.1686a.071.071 0 0 1 .038.052v5.5826a4.504 4.504 0 0 1-4.4945 4.4944zm-9.6607-4.1254a4.4708 4.4708 0 0 1-.5346-3.0137l.142.0852 4.783 2.7582a.7712.7712 0 0 0 .7806 0l5.8428-3.3685v2.3324a.0804.0804 0 0 1-.0332.0615L9.74 19.9502a4.4992 4.4992 0 0 1-6.1408-1.6464zM2.3408 7.8956a4.485 4.485 0 0 1 2.3655-1.9728V11.6a.7664.7664 0 0 0 .3879.6765l5.8144 3.3543-2.0201 1.1685a.0757.0757 0 0 1-.071 0l-4.8303-2.7865A4.504 4.504 0 0 1 2.3408 7.872zm16.5963 3.8558L13.1038 8.364 15.1192 7.2a.0757.0757 0 0 1 .071 0l4.8303 2.7913a4.4944 4.4944 0 0 1-.6765 8.1042v-5.6772a.79.79 0 0 0-.407-.667zm2.0107-3.0231l-.142-.0852-4.7735-2.7818a.7759.7759 0 0 0-.7854 0L9.409 9.2297V6.8974a.0662.0662 0 0 1 .0284-.0615l4.8303-2.7866a4.4992 4.4992 0 0 1 6.6802 4.66zM8.3065 12.863l-2.02-1.1638a.0804.0804 0 0 1-.038-.0567V6.0742a4.4992 4.4992 0 0 1 7.3757-3.4537l-.142.0805L8.704 5.459a.7948.7948 0 0 0-.3927.6813zm1.0976-2.3654l2.602-1.4998 2.6069 1.4998v2.9994l-2.5974 1.4997-2.6067-1.4997Z"/></symbol>
+  <symbol id="i-codex" viewBox="0 0 24 24"><path fill-rule="evenodd" clip-rule="evenodd" d="M8.086.457a6.105 6.105 0 013.046-.415c1.333.153 2.521.72 3.564 1.7a.117.117 0 00.107.029c1.408-.346 2.762-.224 4.061.366l.063.03.154.076c1.357.703 2.33 1.77 2.918 3.198.278.679.418 1.388.421 2.126a5.655 5.655 0 01-.18 1.631.167.167 0 00.04.155 5.982 5.982 0 011.578 2.891c.385 1.901-.01 3.615-1.183 5.14l-.182.22a6.063 6.063 0 01-2.934 1.851.162.162 0 00-.108.102c-.255.736-.511 1.364-.987 1.992-1.199 1.582-2.962 2.462-4.948 2.451-1.583-.008-2.986-.587-4.21-1.736a.145.145 0 00-.14-.032c-.518.167-1.04.191-1.604.185a5.924 5.924 0 01-2.595-.622 6.058 6.058 0 01-2.146-1.781c-.203-.269-.404-.522-.551-.821a7.74 7.74 0 01-.495-1.283 6.11 6.11 0 01-.017-3.064.166.166 0 00.008-.074.115.115 0 00-.037-.064 5.958 5.958 0 01-1.38-2.202 5.196 5.196 0 01-.333-1.589 6.915 6.915 0 01.188-2.132c.45-1.484 1.309-2.648 2.577-3.493.282-.188.55-.334.802-.438.286-.12.573-.22.861-.304a.129.129 0 00.087-.087A6.016 6.016 0 015.635 2.31C6.315 1.464 7.132.846 8.086.457zm-.804 7.85a.848.848 0 00-1.473.842l1.694 2.965-1.688 2.848a.849.849 0 001.46.864l1.94-3.272a.849.849 0 00.007-.854l-1.94-3.393zm5.446 6.24a.849.849 0 000 1.695h4.848a.849.849 0 000-1.696h-4.848z"/></symbol>
+  <symbol id="i-vscode" viewBox="0 0 16 16"><path d="M10.8634 13.9195C10.6568 14.0195 10.4233 14.0246 10.2185 13.9444C10.1162 13.9044 10.021 13.843 9.93997 13.7614L4.81616 9.06268L2.58433 10.7656C2.37657 10.9241 2.08597 10.9111 1.89301 10.7347L1.17719 10.0802C0.941168 9.86437 0.940898 9.49112 1.17661 9.27496L3.11213 7.5L1.17661 5.72504C0.940898 5.50888 0.941168 5.13563 1.17719 4.91982L1.89301 4.2653C2.08597 4.08887 2.37657 4.07588 2.58433 4.2344L4.81616 5.93732L9.93997 1.23855C9.97037 1.20797 10.0028 1.18023 10.0368 1.15538C10.2748 0.981429 10.5922 0.949298 10.8634 1.08048L13.5399 2.37507C13.8212 2.5111 14 2.79721 14 3.11109V8H10.752V4.53356L6.86419 7.5L10.752 10.4664V8H14V11.8889C14 12.2028 13.8211 12.4889 13.5399 12.625L10.8634 13.9195Z"/></symbol>
+  <!-- UI icons: pixelarticons 2.4.2, the set the v2 look swaps in for Lucide. -->
+  <symbol id="i-copy" viewBox="0 0 24 24"><path d="M8 6h12v2H8zM4 2h12v2H4zm2 6h2v12H6zM2 4h2v12H2zm6 16h12v2H8zM20 8h2v12h-2zm-4-4h2v2h-2zM4 16h2v2H4z"/></symbol>
+  <symbol id="i-copied" viewBox="0 0 24 24"><path d="M4 2h16v2H4zm0 18h16v2H4zM2 4h2v16H2zm18 0h2v16h-2zM7 12h2v2H7zm2 2h2v2H9zm2-2h2v2h-2zm2-2h2v2h-2zm2-2h2v2h-2z"/></symbol>
+  <symbol id="i-chevron" viewBox="0 0 24 24"><path d="M16 13v-2h-2v2h2Zm-2-2V9h-2v2h2Zm0 4v-2h-2v2h2Zm-2-6V7h-2v2h2Zm0 8v-2h-2v2h2ZM10 7V5H8v2h2Zm0 12v-2H8v2h2Z"/></symbol>
+  <symbol id="i-plug" viewBox="0 0 24 24"><path d="M16 18h-3v4h-2v-4H8v-2h8v2Zm-8-2H6v-2h2v2Zm10 0h-2v-2h2v2Zm-8-9h4V2h2v5h5v2h-1v5h-2V9H6v5H4V9H3V7h5V2h2v5Z"/></symbol>
+</svg>
+
+<script>
+  var ICON = function (id) { return '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><use href="#' + id + '"/></svg>'; };
+
+  // Each code block gets the CodeConsole bar: window dots, what the block is, and Copy.
+  // JSON is coloured like CodeConsole: keys in brand, strings in success.
+  document.querySelectorAll(".code").forEach(function (block) {
+    var pre = block.querySelector("pre");
+    var bar = document.createElement("figcaption");
+    bar.className = "bar";
+    bar.innerHTML = '<span class="dots" aria-hidden="true"><i></i><i></i><i></i></span><span class="file"></span><button class="copy" type="button"></button>';
+    bar.querySelector(".file").textContent = block.dataset.file;
+    block.insertBefore(bar, pre);
+    if (pre.textContent.charAt(0) === "{") {
+      pre.innerHTML = pre.innerHTML.replace(/("(?:[^"\\]|\\.)*")(\s*:)?/g, function (_, str, colon) {
+        return colon ? '<span class="k">' + str + "</span>" + colon : '<span class="s">' + str + "</span>";
+      });
+    }
+  });
+
+  // The Clipboard API only exists on HTTPS and localhost; fall back to a hidden
+  // textarea so Copy also works on plain-HTTP previews.
+  function copyText(text) {
+    if (navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(text);
+    return new Promise(function (resolve, reject) {
+      var area = document.createElement("textarea");
+      area.value = text;
+      area.style.position = "fixed";
+      area.style.opacity = "0";
+      document.body.appendChild(area);
+      area.select();
+      var ok = document.execCommand("copy");
+      area.remove();
+      ok ? resolve() : reject();
+    });
+  }
+
+  document.querySelectorAll(".copy").forEach(function (button) {
+    var target = button.closest(".code, .endpoint").querySelector("pre, code");
+    var timer;
+    button.innerHTML = '<span class="idle">' + ICON("i-copy") + 'Copy</span><span class="done">' + ICON("i-copied") + "Copied</span>";
+    button.setAttribute("aria-live", "polite");
+    button.addEventListener("click", function () {
+      copyText(target.textContent).then(function () {
+        button.classList.add("copied");
+        clearTimeout(timer);
+        timer = setTimeout(function () { button.classList.remove("copied"); }, 1800);
+      }, function () {
+        // Nothing reached the clipboard: select the text so Ctrl+C copies it.
+        getSelection().selectAllChildren(target);
+      });
+    });
+  });
+
+  // One client panel at a time; the selection follows the URL hash, like the docs (#cursor).
+  function select(id) {
+    document.querySelectorAll("[data-tab]").forEach(function (el) {
+      var on = el.dataset.tab === id;
+      if (el.role !== "tab") el.hidden = !on;
+      else {
+        el.setAttribute("aria-selected", on);
+        if (on) el.parentNode.scrollLeft = el.offsetLeft - el.parentNode.offsetLeft - 6;
+      }
+    });
+  }
+  document.querySelectorAll('[role="tab"]').forEach(function (tab) {
+    tab.addEventListener("click", function () {
+      select(tab.dataset.tab);
+      history.replaceState(null, "", "#" + tab.dataset.tab);
+    });
+  });
+  var fromHash = location.hash.slice(1);
+  select(document.querySelector('[role="tab"][data-tab="' + fromHash + '"]') ? fromHash : "cursor");
+</script>
+</body>
+</html>
