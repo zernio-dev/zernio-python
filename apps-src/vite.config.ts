@@ -10,6 +10,6 @@ export default defineConfig({
   build: {
     outDir: "../src/late/mcp/apps/bundle",
     emptyOutDir: true,
-    rollupOptions: { input: "mcp-app.html" },
+    rolldownOptions: { input: "mcp-app.html" },
   },
 });
