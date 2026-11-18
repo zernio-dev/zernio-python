@@ -23,13 +23,16 @@ class CrmResource:
     def __init__(self, client: BaseClient) -> None:
         self._client = client
 
-    def _build_params(self, **kwargs: Any) -> dict[str, Any]:
-        """Build query parameters, filtering None and empty-string values.
+    def _build_query(self, fields: dict[str, Any]) -> dict[str, Any]:
+        """Build query parameters keyed by their wire names, as given.
 
-        Empty strings are filtered because MCP tool wrappers pass ``""`` as the
-        default for optional string args, and the API rejects empty query
-        values (e.g. ``platform=``) with a 400. Filtering here keeps both direct
-        SDK callers and MCP tool callers safe.
+        Generated methods pass the parameter names exactly as the OpenAPI
+        spec declares them, so no casing rule is applied here.
+
+        None and empty strings are filtered because MCP tool wrappers pass
+        ``""`` as the default for optional string args, and the API rejects
+        empty query values (e.g. ``platform=``) with a 400. Filtering here
+        keeps both direct SDK callers and MCP tool callers safe.
 
         Enum members are unwrapped to their value: httpx serializes params
         via str(), which yields "ClassName.MEMBER" for Enum members, so
@@ -38,42 +41,65 @@ class CrmResource:
         """
         from enum import Enum
 
-        def to_camel(s: str) -> str:
-            parts = s.split("_")
-            return parts[0] + "".join(p.title() for p in parts[1:])
-
         result: dict[str, Any] = {}
-        for k, v in kwargs.items():
+        for k, v in fields.items():
             if isinstance(v, Enum):
                 v = v.value
             if v is None or v == "":
                 continue
-            result[to_camel(k)] = v
+            result[k] = v
         return result
 
-    def _build_payload(self, **kwargs: Any) -> dict[str, Any]:
-        """Build request payload, filtering None values. Enum members are
-        unwrapped to their value so JSON bodies carry e.g. "failed" rather
-        than a raw Enum member (plain Enum members are not JSON-serializable).
+    def _build_body(self, fields: dict[str, Any]) -> dict[str, Any]:
+        """Build a JSON request body keyed by its wire names, as given.
+
+        Generated methods pass the property names exactly as the request
+        body schema declares them: most are camelCase, but some routes read
+        snake_case (``ice_breakers``, ``message_send_ttl_seconds``), so no
+        casing rule is applied here. None values are dropped, Enum members
+        are unwrapped to their value (e.g. "failed") and datetimes are sent
+        as ISO 8601 strings.
         """
         from datetime import datetime
         from enum import Enum
 
-        def to_camel(s: str) -> str:
-            parts = s.split("_")
-            return parts[0] + "".join(p.title() for p in parts[1:])
-
         result: dict[str, Any] = {}
-        for k, v in kwargs.items():
+        for k, v in fields.items():
             if isinstance(v, Enum):
                 v = v.value
             if v is None:
                 continue
             if isinstance(v, datetime):
-                result[to_camel(k)] = v.isoformat()
+                result[k] = v.isoformat()
             else:
-                result[to_camel(k)] = v
+                result[k] = v
         return result
+
+    def _build_params(self, **kwargs: Any) -> dict[str, Any]:
+        """Build query parameters from snake_case kwargs, camelCasing each key.
+
+        For hand-written resource methods, whose endpoints take camelCase
+        names. Generated methods use _build_query with the spec's names.
+        """
+
+        def to_camel(s: str) -> str:
+            parts = s.split("_")
+            return parts[0] + "".join(p.title() for p in parts[1:])
+
+        return self._build_query({to_camel(k): v for k, v in kwargs.items()})
+
+    def _build_payload(self, **kwargs: Any) -> dict[str, Any]:
+        """Build a request body from snake_case kwargs, camelCasing each key.
+
+        For hand-written resource methods, whose endpoints take camelCase
+        names. Generated methods use _build_body with the spec's names.
+        """
+
+        def to_camel(s: str) -> str:
+            parts = s.split("_")
+            return parts[0] + "".join(p.title() for p in parts[1:])
+
+        return self._build_body({to_camel(k): v for k, v in kwargs.items()})
 
     def search_crm_contacts(
         self,
@@ -88,14 +114,16 @@ class CrmResource:
         cursor: str | None = None,
     ) -> dict[str, Any]:
         """Search CRM contacts"""
-        params = self._build_params(
-            q=q,
-            email=email,
-            phone=phone,
-            properties=properties,
-            include_raw=include_raw,
-            limit=limit,
-            cursor=cursor,
+        params = self._build_query(
+            {
+                "q": q,
+                "email": email,
+                "phone": phone,
+                "properties": properties,
+                "includeRaw": include_raw,
+                "limit": limit,
+                "cursor": cursor,
+            }
         )
         return self._client._get(f"/v1/crm/{account_id}/contacts/search", params=params)
 
@@ -113,15 +141,17 @@ class CrmResource:
         create_as: str | None = None,
     ) -> dict[str, Any]:
         """Create a CRM contact"""
-        payload = self._build_payload(
-            first_name=first_name,
-            last_name=last_name,
-            email=email,
-            phone=phone,
-            company=company,
-            owner_id=owner_id,
-            properties=properties,
-            create_as=create_as,
+        payload = self._build_body(
+            {
+                "firstName": first_name,
+                "lastName": last_name,
+                "email": email,
+                "phone": phone,
+                "company": company,
+                "ownerId": owner_id,
+                "properties": properties,
+                "createAs": create_as,
+            }
         )
         return self._client._post(f"/v1/crm/{account_id}/contacts", data=payload)
 
@@ -134,9 +164,11 @@ class CrmResource:
         include_raw: bool | None = False,
     ) -> dict[str, Any]:
         """Get a CRM contact"""
-        params = self._build_params(
-            properties=properties,
-            include_raw=include_raw,
+        params = self._build_query(
+            {
+                "properties": properties,
+                "includeRaw": include_raw,
+            }
         )
         return self._client._get(
             f"/v1/crm/{account_id}/contacts/{contact_id}", params=params
@@ -156,14 +188,16 @@ class CrmResource:
         properties: Any | None = None,
     ) -> dict[str, Any]:
         """Update a CRM contact"""
-        payload = self._build_payload(
-            first_name=first_name,
-            last_name=last_name,
-            email=email,
-            phone=phone,
-            company=company,
-            owner_id=owner_id,
-            properties=properties,
+        payload = self._build_body(
+            {
+                "firstName": first_name,
+                "lastName": last_name,
+                "email": email,
+                "phone": phone,
+                "company": company,
+                "ownerId": owner_id,
+                "properties": properties,
+            }
         )
         return self._client._patch(
             f"/v1/crm/{account_id}/contacts/{contact_id}", data=payload
@@ -181,12 +215,14 @@ class CrmResource:
         occurred_at: datetime | str | None = None,
     ) -> dict[str, Any]:
         """Log a CRM activity"""
-        payload = self._build_payload(
-            body=body,
-            subject=subject,
-            channel=channel,
-            direction=direction,
-            occurred_at=occurred_at,
+        payload = self._build_body(
+            {
+                "body": body,
+                "subject": subject,
+                "channel": channel,
+                "direction": direction,
+                "occurredAt": occurred_at,
+            }
         )
         return self._client._post(
             f"/v1/crm/{account_id}/contacts/{contact_id}/activities", data=payload
@@ -204,13 +240,15 @@ class CrmResource:
         cursor: str | None = None,
     ) -> dict[str, Any]:
         """List CRM deals"""
-        params = self._build_params(
-            stage=stage,
-            updated_since=updated_since,
-            properties=properties,
-            include_raw=include_raw,
-            limit=limit,
-            cursor=cursor,
+        params = self._build_query(
+            {
+                "stage": stage,
+                "updatedSince": updated_since,
+                "properties": properties,
+                "includeRaw": include_raw,
+                "limit": limit,
+                "cursor": cursor,
+            }
         )
         return self._client._get(f"/v1/crm/{account_id}/deals", params=params)
 
@@ -223,9 +261,11 @@ class CrmResource:
         include_raw: bool | None = False,
     ) -> dict[str, Any]:
         """Get a CRM deal"""
-        params = self._build_params(
-            properties=properties,
-            include_raw=include_raw,
+        params = self._build_query(
+            {
+                "properties": properties,
+                "includeRaw": include_raw,
+            }
         )
         return self._client._get(f"/v1/crm/{account_id}/deals/{deal_id}", params=params)
 
@@ -243,14 +283,16 @@ class CrmResource:
         properties: Any | None = None,
     ) -> dict[str, Any]:
         """Update a CRM deal"""
-        payload = self._build_payload(
-            name=name,
-            stage=stage,
-            amount=amount,
-            currency=currency,
-            close_date=close_date,
-            owner_id=owner_id,
-            properties=properties,
+        payload = self._build_body(
+            {
+                "name": name,
+                "stage": stage,
+                "amount": amount,
+                "currency": currency,
+                "closeDate": close_date,
+                "ownerId": owner_id,
+                "properties": properties,
+            }
         )
         return self._client._patch(
             f"/v1/crm/{account_id}/deals/{deal_id}", data=payload
@@ -265,10 +307,12 @@ class CrmResource:
         cursor: str | None = None,
     ) -> dict[str, Any]:
         """List CRM owners"""
-        params = self._build_params(
-            include_raw=include_raw,
-            limit=limit,
-            cursor=cursor,
+        params = self._build_query(
+            {
+                "includeRaw": include_raw,
+                "limit": limit,
+                "cursor": cursor,
+            }
         )
         return self._client._get(f"/v1/crm/{account_id}/owners", params=params)
 
@@ -285,14 +329,16 @@ class CrmResource:
         cursor: str | None = None,
     ) -> dict[str, Any]:
         """Search CRM contacts (async)"""
-        params = self._build_params(
-            q=q,
-            email=email,
-            phone=phone,
-            properties=properties,
-            include_raw=include_raw,
-            limit=limit,
-            cursor=cursor,
+        params = self._build_query(
+            {
+                "q": q,
+                "email": email,
+                "phone": phone,
+                "properties": properties,
+                "includeRaw": include_raw,
+                "limit": limit,
+                "cursor": cursor,
+            }
         )
         return await self._client._aget(
             f"/v1/crm/{account_id}/contacts/search", params=params
@@ -312,15 +358,17 @@ class CrmResource:
         create_as: str | None = None,
     ) -> dict[str, Any]:
         """Create a CRM contact (async)"""
-        payload = self._build_payload(
-            first_name=first_name,
-            last_name=last_name,
-            email=email,
-            phone=phone,
-            company=company,
-            owner_id=owner_id,
-            properties=properties,
-            create_as=create_as,
+        payload = self._build_body(
+            {
+                "firstName": first_name,
+                "lastName": last_name,
+                "email": email,
+                "phone": phone,
+                "company": company,
+                "ownerId": owner_id,
+                "properties": properties,
+                "createAs": create_as,
+            }
         )
         return await self._client._apost(f"/v1/crm/{account_id}/contacts", data=payload)
 
@@ -333,9 +381,11 @@ class CrmResource:
         include_raw: bool | None = False,
     ) -> dict[str, Any]:
         """Get a CRM contact (async)"""
-        params = self._build_params(
-            properties=properties,
-            include_raw=include_raw,
+        params = self._build_query(
+            {
+                "properties": properties,
+                "includeRaw": include_raw,
+            }
         )
         return await self._client._aget(
             f"/v1/crm/{account_id}/contacts/{contact_id}", params=params
@@ -355,14 +405,16 @@ class CrmResource:
         properties: Any | None = None,
     ) -> dict[str, Any]:
         """Update a CRM contact (async)"""
-        payload = self._build_payload(
-            first_name=first_name,
-            last_name=last_name,
-            email=email,
-            phone=phone,
-            company=company,
-            owner_id=owner_id,
-            properties=properties,
+        payload = self._build_body(
+            {
+                "firstName": first_name,
+                "lastName": last_name,
+                "email": email,
+                "phone": phone,
+                "company": company,
+                "ownerId": owner_id,
+                "properties": properties,
+            }
         )
         return await self._client._apatch(
             f"/v1/crm/{account_id}/contacts/{contact_id}", data=payload
@@ -380,12 +432,14 @@ class CrmResource:
         occurred_at: datetime | str | None = None,
     ) -> dict[str, Any]:
         """Log a CRM activity (async)"""
-        payload = self._build_payload(
-            body=body,
-            subject=subject,
-            channel=channel,
-            direction=direction,
-            occurred_at=occurred_at,
+        payload = self._build_body(
+            {
+                "body": body,
+                "subject": subject,
+                "channel": channel,
+                "direction": direction,
+                "occurredAt": occurred_at,
+            }
         )
         return await self._client._apost(
             f"/v1/crm/{account_id}/contacts/{contact_id}/activities", data=payload
@@ -403,13 +457,15 @@ class CrmResource:
         cursor: str | None = None,
     ) -> dict[str, Any]:
         """List CRM deals (async)"""
-        params = self._build_params(
-            stage=stage,
-            updated_since=updated_since,
-            properties=properties,
-            include_raw=include_raw,
-            limit=limit,
-            cursor=cursor,
+        params = self._build_query(
+            {
+                "stage": stage,
+                "updatedSince": updated_since,
+                "properties": properties,
+                "includeRaw": include_raw,
+                "limit": limit,
+                "cursor": cursor,
+            }
         )
         return await self._client._aget(f"/v1/crm/{account_id}/deals", params=params)
 
@@ -422,9 +478,11 @@ class CrmResource:
         include_raw: bool | None = False,
     ) -> dict[str, Any]:
         """Get a CRM deal (async)"""
-        params = self._build_params(
-            properties=properties,
-            include_raw=include_raw,
+        params = self._build_query(
+            {
+                "properties": properties,
+                "includeRaw": include_raw,
+            }
         )
         return await self._client._aget(
             f"/v1/crm/{account_id}/deals/{deal_id}", params=params
@@ -444,14 +502,16 @@ class CrmResource:
         properties: Any | None = None,
     ) -> dict[str, Any]:
         """Update a CRM deal (async)"""
-        payload = self._build_payload(
-            name=name,
-            stage=stage,
-            amount=amount,
-            currency=currency,
-            close_date=close_date,
-            owner_id=owner_id,
-            properties=properties,
+        payload = self._build_body(
+            {
+                "name": name,
+                "stage": stage,
+                "amount": amount,
+                "currency": currency,
+                "closeDate": close_date,
+                "ownerId": owner_id,
+                "properties": properties,
+            }
         )
         return await self._client._apatch(
             f"/v1/crm/{account_id}/deals/{deal_id}", data=payload
@@ -466,9 +526,11 @@ class CrmResource:
         cursor: str | None = None,
     ) -> dict[str, Any]:
         """List CRM owners (async)"""
-        params = self._build_params(
-            include_raw=include_raw,
-            limit=limit,
-            cursor=cursor,
+        params = self._build_query(
+            {
+                "includeRaw": include_raw,
+                "limit": limit,
+                "cursor": cursor,
+            }
         )
         return await self._client._aget(f"/v1/crm/{account_id}/owners", params=params)

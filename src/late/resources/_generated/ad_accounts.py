@@ -21,13 +21,16 @@ class AdAccountsResource:
     def __init__(self, client: BaseClient) -> None:
         self._client = client
 
-    def _build_params(self, **kwargs: Any) -> dict[str, Any]:
-        """Build query parameters, filtering None and empty-string values.
+    def _build_query(self, fields: dict[str, Any]) -> dict[str, Any]:
+        """Build query parameters keyed by their wire names, as given.
 
-        Empty strings are filtered because MCP tool wrappers pass ``""`` as the
-        default for optional string args, and the API rejects empty query
-        values (e.g. ``platform=``) with a 400. Filtering here keeps both direct
-        SDK callers and MCP tool callers safe.
+        Generated methods pass the parameter names exactly as the OpenAPI
+        spec declares them, so no casing rule is applied here.
+
+        None and empty strings are filtered because MCP tool wrappers pass
+        ``""`` as the default for optional string args, and the API rejects
+        empty query values (e.g. ``platform=``) with a 400. Filtering here
+        keeps both direct SDK callers and MCP tool callers safe.
 
         Enum members are unwrapped to their value: httpx serializes params
         via str(), which yields "ClassName.MEMBER" for Enum members, so
@@ -36,42 +39,65 @@ class AdAccountsResource:
         """
         from enum import Enum
 
-        def to_camel(s: str) -> str:
-            parts = s.split("_")
-            return parts[0] + "".join(p.title() for p in parts[1:])
-
         result: dict[str, Any] = {}
-        for k, v in kwargs.items():
+        for k, v in fields.items():
             if isinstance(v, Enum):
                 v = v.value
             if v is None or v == "":
                 continue
-            result[to_camel(k)] = v
+            result[k] = v
         return result
 
-    def _build_payload(self, **kwargs: Any) -> dict[str, Any]:
-        """Build request payload, filtering None values. Enum members are
-        unwrapped to their value so JSON bodies carry e.g. "failed" rather
-        than a raw Enum member (plain Enum members are not JSON-serializable).
+    def _build_body(self, fields: dict[str, Any]) -> dict[str, Any]:
+        """Build a JSON request body keyed by its wire names, as given.
+
+        Generated methods pass the property names exactly as the request
+        body schema declares them: most are camelCase, but some routes read
+        snake_case (``ice_breakers``, ``message_send_ttl_seconds``), so no
+        casing rule is applied here. None values are dropped, Enum members
+        are unwrapped to their value (e.g. "failed") and datetimes are sent
+        as ISO 8601 strings.
         """
         from datetime import datetime
         from enum import Enum
 
-        def to_camel(s: str) -> str:
-            parts = s.split("_")
-            return parts[0] + "".join(p.title() for p in parts[1:])
-
         result: dict[str, Any] = {}
-        for k, v in kwargs.items():
+        for k, v in fields.items():
             if isinstance(v, Enum):
                 v = v.value
             if v is None:
                 continue
             if isinstance(v, datetime):
-                result[to_camel(k)] = v.isoformat()
+                result[k] = v.isoformat()
             else:
-                result[to_camel(k)] = v
+                result[k] = v
         return result
+
+    def _build_params(self, **kwargs: Any) -> dict[str, Any]:
+        """Build query parameters from snake_case kwargs, camelCasing each key.
+
+        For hand-written resource methods, whose endpoints take camelCase
+        names. Generated methods use _build_query with the spec's names.
+        """
+
+        def to_camel(s: str) -> str:
+            parts = s.split("_")
+            return parts[0] + "".join(p.title() for p in parts[1:])
+
+        return self._build_query({to_camel(k): v for k, v in kwargs.items()})
+
+    def _build_payload(self, **kwargs: Any) -> dict[str, Any]:
+        """Build a request body from snake_case kwargs, camelCasing each key.
+
+        For hand-written resource methods, whose endpoints take camelCase
+        names. Generated methods use _build_body with the spec's names.
+        """
+
+        def to_camel(s: str) -> str:
+            parts = s.split("_")
+            return parts[0] + "".join(p.title() for p in parts[1:])
+
+        return self._build_body({to_camel(k): v for k, v in kwargs.items()})
 
     def get_ad_comments(
         self,
@@ -84,12 +110,14 @@ class AdAccountsResource:
         cursor: str | None = None,
     ) -> dict[str, Any]:
         """List comments on an ad"""
-        params = self._build_params(
-            placement=placement,
-            limit=limit,
-            since=since,
-            until=until,
-            cursor=cursor,
+        params = self._build_query(
+            {
+                "placement": placement,
+                "limit": limit,
+                "since": since,
+                "until": until,
+                "cursor": cursor,
+            }
         )
         return self._client._get(f"/v1/ads/{ad_id}/comments", params=params)
 
@@ -103,12 +131,16 @@ class AdAccountsResource:
         until: str | None = None,
     ) -> dict[str, Any]:
         """Reply to an ad comment"""
-        params = self._build_params(
-            since=since,
-            until=until,
+        params = self._build_query(
+            {
+                "since": since,
+                "until": until,
+            }
         )
-        payload = self._build_payload(
-            text=text,
+        payload = self._build_body(
+            {
+                "text": text,
+            }
         )
         return self._client._post(
             f"/v1/ads/{ad_id}/comments/{comment_id}/reply", data=payload, params=params
@@ -124,12 +156,16 @@ class AdAccountsResource:
         until: str | None = None,
     ) -> dict[str, Any]:
         """Hide or unhide an ad comment"""
-        params = self._build_params(
-            since=since,
-            until=until,
+        params = self._build_query(
+            {
+                "since": since,
+                "until": until,
+            }
         )
-        payload = self._build_payload(
-            hidden=hidden,
+        payload = self._build_body(
+            {
+                "hidden": hidden,
+            }
         )
         return self._client._post(
             f"/v1/ads/{ad_id}/comments/{comment_id}/hide", data=payload, params=params
@@ -144,9 +180,11 @@ class AdAccountsResource:
         until: str | None = None,
     ) -> dict[str, Any]:
         """Delete an ad comment"""
-        params = self._build_params(
-            since=since,
-            until=until,
+        params = self._build_query(
+            {
+                "since": since,
+                "until": until,
+            }
         )
         return self._client._delete(
             f"/v1/ads/{ad_id}/comments/{comment_id}", params=params
@@ -154,8 +192,10 @@ class AdAccountsResource:
 
     def list_ads_business_centers(self, account_id: str) -> dict[str, Any]:
         """List TikTok Business Centers"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+            }
         )
         return self._client._get("/v1/ads/business-centers", params=params)
 
@@ -171,14 +211,16 @@ class AdAccountsResource:
         after: str | None = None,
     ) -> dict[str, Any]:
         """Ad account change / audit log"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            since=since,
-            until=until,
-            object_id=object_id,
-            limit=limit,
-            after=after,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "since": since,
+                "until": until,
+                "objectId": object_id,
+                "limit": limit,
+                "after": after,
+            }
         )
         return self._client._get("/v1/ads/activity", params=params)
 
@@ -192,12 +234,14 @@ class AdAccountsResource:
         after: str | None = None,
     ) -> dict[str, Any]:
         """A/B tests and lift studies"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            fields=fields,
-            limit=limit,
-            after=after,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "fields": fields,
+                "limit": limit,
+                "after": after,
+            }
         )
         return self._client._get("/v1/ads/studies", params=params)
 
@@ -205,9 +249,11 @@ class AdAccountsResource:
         self, account_id: str, ad_account_id: str
     ) -> dict[str, Any]:
         """List Instagram ad identities"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+            }
         )
         return self._client._get("/v1/ads/instagram-accounts", params=params)
 
@@ -221,12 +267,14 @@ class AdAccountsResource:
         after: str | None = None,
     ) -> dict[str, Any]:
         """List Instagram posts to boost"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            ig_user_id=ig_user_id,
-            limit=limit,
-            after=after,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "igUserId": ig_user_id,
+                "limit": limit,
+                "after": after,
+            }
         )
         return self._client._get("/v1/ads/instagram-posts", params=params)
 
@@ -234,9 +282,11 @@ class AdAccountsResource:
         self, account_id: str, ad_account_id: str
     ) -> dict[str, Any]:
         """List advertisable apps"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+            }
         )
         return self._client._get("/v1/ads/advertisable-applications", params=params)
 
@@ -244,10 +294,12 @@ class AdAccountsResource:
         self, account_id: str, ad_account_id: str, application_id: str
     ) -> dict[str, Any]:
         """Get iOS 14 campaign limits"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            application_id=application_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "applicationId": application_id,
+            }
         )
         return self._client._get("/v1/ads/ios-fourteen-campaign-limits", params=params)
 
@@ -255,10 +307,12 @@ class AdAccountsResource:
         self, account_id: str, *, limit: int | None = 25, after: str | None = None
     ) -> dict[str, Any]:
         """Businesses list"""
-        params = self._build_params(
-            account_id=account_id,
-            limit=limit,
-            after=after,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "limit": limit,
+                "after": after,
+            }
         )
         return self._client._get("/v1/ads/businesses", params=params)
 
@@ -266,9 +320,11 @@ class AdAccountsResource:
         self, account_id: str, business_id: str
     ) -> dict[str, Any]:
         """Business users"""
-        params = self._build_params(
-            account_id=account_id,
-            business_id=business_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "businessId": business_id,
+            }
         )
         return self._client._get("/v1/ads/businesses/users", params=params)
 
@@ -276,10 +332,12 @@ class AdAccountsResource:
         self, account_id: str, page_id: str, business_id: str
     ) -> dict[str, Any]:
         """Page users of a business"""
-        params = self._build_params(
-            account_id=account_id,
-            page_id=page_id,
-            business_id=business_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "pageId": page_id,
+                "businessId": business_id,
+            }
         )
         return self._client._get("/v1/ads/page-users", params=params)
 
@@ -292,12 +350,14 @@ class AdAccountsResource:
         tasks: list[str],
     ) -> dict[str, Any]:
         """Assign a user to a Page"""
-        payload = self._build_payload(
-            account_id=account_id,
-            page_id=page_id,
-            business_id=business_id,
-            user_id=user_id,
-            tasks=tasks,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "pageId": page_id,
+                "businessId": business_id,
+                "userId": user_id,
+                "tasks": tasks,
+            }
         )
         return self._client._post("/v1/ads/page-users", data=payload)
 
@@ -305,10 +365,12 @@ class AdAccountsResource:
         self, account_id: str, page_id: str, user_id: str
     ) -> dict[str, Any]:
         """Remove a user from a Page"""
-        params = self._build_params(
-            account_id=account_id,
-            page_id=page_id,
-            user_id=user_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "pageId": page_id,
+                "userId": user_id,
+            }
         )
         return self._client._delete("/v1/ads/page-users", params=params)
 
@@ -322,12 +384,14 @@ class AdAccountsResource:
         after: str | None = None,
     ) -> dict[str, Any]:
         """List ad labels"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            customer_id=customer_id,
-            limit=limit,
-            after=after,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "customerId": customer_id,
+                "limit": limit,
+                "after": after,
+            }
         )
         return self._client._get("/v1/ads/labels", params=params)
 
@@ -342,13 +406,15 @@ class AdAccountsResource:
         description: str | None = None,
     ) -> dict[str, Any]:
         """Create a Google Ads label"""
-        payload = self._build_payload(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            customer_id=customer_id,
-            name=name,
-            background_color=background_color,
-            description=description,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "customerId": customer_id,
+                "name": name,
+                "backgroundColor": background_color,
+                "description": description,
+            }
         )
         return self._client._post("/v1/ads/labels", data=payload)
 
@@ -364,13 +430,15 @@ class AdAccountsResource:
         description: str | None = None,
     ) -> dict[str, Any]:
         """Update a Google Ads label"""
-        payload = self._build_payload(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            customer_id=customer_id,
-            name=name,
-            background_color=background_color,
-            description=description,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "customerId": customer_id,
+                "name": name,
+                "backgroundColor": background_color,
+                "description": description,
+            }
         )
         return self._client._patch(f"/v1/ads/labels/{label_id}", data=payload)
 
@@ -383,10 +451,12 @@ class AdAccountsResource:
         customer_id: str | None = None,
     ) -> dict[str, Any]:
         """Remove a Google Ads label"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            customer_id=customer_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "customerId": customer_id,
+            }
         )
         return self._client._delete(f"/v1/ads/labels/{label_id}", params=params)
 
@@ -403,14 +473,16 @@ class AdAccountsResource:
         keyword_ids: list[str] | None = None,
     ) -> dict[str, Any]:
         """Attach a Google Ads label"""
-        payload = self._build_payload(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            customer_id=customer_id,
-            campaign_ids=campaign_ids,
-            ad_set_ids=ad_set_ids,
-            ad_ids=ad_ids,
-            keyword_ids=keyword_ids,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "customerId": customer_id,
+                "campaignIds": campaign_ids,
+                "adSetIds": ad_set_ids,
+                "adIds": ad_ids,
+                "keywordIds": keyword_ids,
+            }
         )
         return self._client._post(
             f"/v1/ads/labels/{label_id}/assignments", data=payload
@@ -429,14 +501,16 @@ class AdAccountsResource:
         keyword_ids: list[str] | None = None,
     ) -> dict[str, Any]:
         """Detach a Google Ads label"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            customer_id=customer_id,
-            campaign_ids=campaign_ids,
-            ad_set_ids=ad_set_ids,
-            ad_ids=ad_ids,
-            keyword_ids=keyword_ids,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "customerId": customer_id,
+                "campaignIds": campaign_ids,
+                "adSetIds": ad_set_ids,
+                "adIds": ad_ids,
+                "keywordIds": keyword_ids,
+            }
         )
         return self._client._delete(
             f"/v1/ads/labels/{label_id}/assignments", params=params
@@ -452,12 +526,14 @@ class AdAccountsResource:
         after: str | None = None,
     ) -> dict[str, Any]:
         """List high-demand periods"""
-        params = self._build_params(
-            account_id=account_id,
-            campaign_id=campaign_id,
-            ad_set_id=ad_set_id,
-            limit=limit,
-            after=after,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "campaignId": campaign_id,
+                "adSetId": ad_set_id,
+                "limit": limit,
+                "after": after,
+            }
         )
         return self._client._get("/v1/ads/high-demand-periods", params=params)
 
@@ -475,16 +551,18 @@ class AdAccountsResource:
         currency: str | None = None,
     ) -> dict[str, Any]:
         """Schedule a budget increase"""
-        payload = self._build_payload(
-            account_id=account_id,
-            campaign_id=campaign_id,
-            ad_set_id=ad_set_id,
-            budget_value=budget_value,
-            budget_value_type=budget_value_type,
-            time_start=time_start,
-            time_end=time_end,
-            recurrence_type=recurrence_type,
-            currency=currency,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "campaignId": campaign_id,
+                "adSetId": ad_set_id,
+                "budgetValue": budget_value,
+                "budgetValueType": budget_value_type,
+                "timeStart": time_start,
+                "timeEnd": time_end,
+                "recurrenceType": recurrence_type,
+                "currency": currency,
+            }
         )
         return self._client._post("/v1/ads/high-demand-periods", data=payload)
 
@@ -497,11 +575,13 @@ class AdAccountsResource:
         after: str | None = None,
     ) -> dict[str, Any]:
         """List value rule sets"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            limit=limit,
-            after=after,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "limit": limit,
+                "after": after,
+            }
         )
         return self._client._get("/v1/ads/value-rule-sets", params=params)
 
@@ -509,11 +589,13 @@ class AdAccountsResource:
         self, account_id: str, ad_account_id: str, name: str, rules: list[Any]
     ) -> dict[str, Any]:
         """Create a value rule set"""
-        payload = self._build_payload(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            name=name,
-            rules=rules,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "name": name,
+                "rules": rules,
+            }
         )
         return self._client._post("/v1/ads/value-rule-sets", data=payload)
 
@@ -521,8 +603,10 @@ class AdAccountsResource:
         self, value_rule_set_id: str, account_id: str
     ) -> dict[str, Any]:
         """Read a value rule set"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+            }
         )
         return self._client._get(
             f"/v1/ads/value-rule-sets/{value_rule_set_id}", params=params
@@ -532,10 +616,12 @@ class AdAccountsResource:
         self, value_rule_set_id: str, account_id: str, name: str, rules: list[Any]
     ) -> dict[str, Any]:
         """Replace a value rule set"""
-        payload = self._build_payload(
-            account_id=account_id,
-            name=name,
-            rules=rules,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "name": name,
+                "rules": rules,
+            }
         )
         return self._client._put(
             f"/v1/ads/value-rule-sets/{value_rule_set_id}", data=payload
@@ -545,8 +631,10 @@ class AdAccountsResource:
         self, value_rule_set_id: str, account_id: str
     ) -> dict[str, Any]:
         """Delete a value rule set"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+            }
         )
         return self._client._delete(
             f"/v1/ads/value-rule-sets/{value_rule_set_id}", params=params
@@ -561,11 +649,13 @@ class AdAccountsResource:
         platform: str | None = None,
     ) -> dict[str, Any]:
         """List negative keyword lists"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            customer_id=customer_id,
-            platform=platform,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "customerId": customer_id,
+                "platform": platform,
+            }
         )
         return self._client._get(
             "/v1/ads/accounts/negative-keyword-lists", params=params
@@ -582,13 +672,15 @@ class AdAccountsResource:
         keywords: list[Any] | None = None,
     ) -> dict[str, Any]:
         """Create a negative keyword list"""
-        payload = self._build_payload(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            customer_id=customer_id,
-            platform=platform,
-            name=name,
-            keywords=keywords,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "customerId": customer_id,
+                "platform": platform,
+                "name": name,
+                "keywords": keywords,
+            }
         )
         return self._client._post(
             "/v1/ads/accounts/negative-keyword-lists", data=payload
@@ -604,11 +696,13 @@ class AdAccountsResource:
         platform: str | None = None,
     ) -> dict[str, Any]:
         """Get a negative keyword list"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            customer_id=customer_id,
-            platform=platform,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "customerId": customer_id,
+                "platform": platform,
+            }
         )
         return self._client._get(
             f"/v1/ads/accounts/negative-keyword-lists/{list_id}", params=params
@@ -625,12 +719,14 @@ class AdAccountsResource:
         platform: str | None = None,
     ) -> dict[str, Any]:
         """Rename a negative keyword list"""
-        payload = self._build_payload(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            customer_id=customer_id,
-            platform=platform,
-            name=name,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "customerId": customer_id,
+                "platform": platform,
+                "name": name,
+            }
         )
         return self._client._put(
             f"/v1/ads/accounts/negative-keyword-lists/{list_id}", data=payload
@@ -646,11 +742,13 @@ class AdAccountsResource:
         platform: str | None = None,
     ) -> dict[str, Any]:
         """Delete a negative keyword list"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            customer_id=customer_id,
-            platform=platform,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "customerId": customer_id,
+                "platform": platform,
+            }
         )
         return self._client._delete(
             f"/v1/ads/accounts/negative-keyword-lists/{list_id}", params=params
@@ -667,12 +765,14 @@ class AdAccountsResource:
         platform: str | None = None,
     ) -> dict[str, Any]:
         """Replace negative list keywords"""
-        payload = self._build_payload(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            customer_id=customer_id,
-            platform=platform,
-            keywords=keywords,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "customerId": customer_id,
+                "platform": platform,
+                "keywords": keywords,
+            }
         )
         return self._client._put(
             f"/v1/ads/accounts/negative-keyword-lists/{list_id}/keywords", data=payload
@@ -686,10 +786,12 @@ class AdAccountsResource:
         customer_id: str | None = None,
     ) -> dict[str, Any]:
         """List account callouts"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            customer_id=customer_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "customerId": customer_id,
+            }
         )
         return self._client._get("/v1/ads/accounts/callouts", params=params)
 
@@ -702,11 +804,13 @@ class AdAccountsResource:
         customer_id: str | None = None,
     ) -> dict[str, Any]:
         """Add account callouts"""
-        payload = self._build_payload(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            customer_id=customer_id,
-            callouts=callouts,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "customerId": customer_id,
+                "callouts": callouts,
+            }
         )
         return self._client._post("/v1/ads/accounts/callouts", data=payload)
 
@@ -719,11 +823,13 @@ class AdAccountsResource:
         customer_id: str | None = None,
     ) -> dict[str, Any]:
         """Update account callouts"""
-        payload = self._build_payload(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            customer_id=customer_id,
-            updates=updates,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "customerId": customer_id,
+                "updates": updates,
+            }
         )
         return self._client._put("/v1/ads/accounts/callouts", data=payload)
 
@@ -736,11 +842,13 @@ class AdAccountsResource:
         customer_id: str | None = None,
     ) -> dict[str, Any]:
         """Remove account callout"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            customer_id=customer_id,
-            asset_id=asset_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "customerId": customer_id,
+                "assetId": asset_id,
+            }
         )
         return self._client._delete("/v1/ads/accounts/callouts", params=params)
 
@@ -752,10 +860,12 @@ class AdAccountsResource:
         customer_id: str | None = None,
     ) -> dict[str, Any]:
         """List account sitelinks"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            customer_id=customer_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "customerId": customer_id,
+            }
         )
         return self._client._get("/v1/ads/accounts/sitelinks", params=params)
 
@@ -768,11 +878,13 @@ class AdAccountsResource:
         customer_id: str | None = None,
     ) -> dict[str, Any]:
         """Add account sitelinks"""
-        payload = self._build_payload(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            customer_id=customer_id,
-            sitelinks=sitelinks,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "customerId": customer_id,
+                "sitelinks": sitelinks,
+            }
         )
         return self._client._post("/v1/ads/accounts/sitelinks", data=payload)
 
@@ -785,11 +897,13 @@ class AdAccountsResource:
         customer_id: str | None = None,
     ) -> dict[str, Any]:
         """Update account sitelinks"""
-        payload = self._build_payload(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            customer_id=customer_id,
-            updates=updates,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "customerId": customer_id,
+                "updates": updates,
+            }
         )
         return self._client._put("/v1/ads/accounts/sitelinks", data=payload)
 
@@ -802,11 +916,13 @@ class AdAccountsResource:
         customer_id: str | None = None,
     ) -> dict[str, Any]:
         """Remove account sitelink"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            customer_id=customer_id,
-            asset_id=asset_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "customerId": customer_id,
+                "assetId": asset_id,
+            }
         )
         return self._client._delete("/v1/ads/accounts/sitelinks", params=params)
 
@@ -818,10 +934,12 @@ class AdAccountsResource:
         customer_id: str | None = None,
     ) -> dict[str, Any]:
         """List account snippets"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            customer_id=customer_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "customerId": customer_id,
+            }
         )
         return self._client._get("/v1/ads/accounts/structured-snippets", params=params)
 
@@ -834,11 +952,13 @@ class AdAccountsResource:
         customer_id: str | None = None,
     ) -> dict[str, Any]:
         """Add account snippets"""
-        payload = self._build_payload(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            customer_id=customer_id,
-            structured_snippets=structured_snippets,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "customerId": customer_id,
+                "structuredSnippets": structured_snippets,
+            }
         )
         return self._client._post("/v1/ads/accounts/structured-snippets", data=payload)
 
@@ -851,11 +971,13 @@ class AdAccountsResource:
         customer_id: str | None = None,
     ) -> dict[str, Any]:
         """Update account snippets"""
-        payload = self._build_payload(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            customer_id=customer_id,
-            updates=updates,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "customerId": customer_id,
+                "updates": updates,
+            }
         )
         return self._client._put("/v1/ads/accounts/structured-snippets", data=payload)
 
@@ -868,11 +990,13 @@ class AdAccountsResource:
         customer_id: str | None = None,
     ) -> dict[str, Any]:
         """Remove account snippet"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            customer_id=customer_id,
-            asset_id=asset_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "customerId": customer_id,
+                "assetId": asset_id,
+            }
         )
         return self._client._delete(
             "/v1/ads/accounts/structured-snippets", params=params
@@ -886,10 +1010,12 @@ class AdAccountsResource:
         customer_id: str | None = None,
     ) -> dict[str, Any]:
         """Get manager account hierarchy"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            customer_id=customer_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "customerId": customer_id,
+            }
         )
         return self._client._get("/v1/ads/accounts/hierarchy", params=params)
 
@@ -902,11 +1028,13 @@ class AdAccountsResource:
         validate_only: bool | None = False,
     ) -> dict[str, Any]:
         """Invite a client account to a manager"""
-        payload = self._build_payload(
-            account_id=account_id,
-            manager_customer_id=manager_customer_id,
-            client_customer_id=client_customer_id,
-            validate_only=validate_only,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "managerCustomerId": manager_customer_id,
+                "clientCustomerId": client_customer_id,
+                "validateOnly": validate_only,
+            }
         )
         return self._client._post("/v1/ads/accounts/manager-links", data=payload)
 
@@ -921,13 +1049,15 @@ class AdAccountsResource:
         validate_only: bool | None = False,
     ) -> dict[str, Any]:
         """Accept, decline, cancel or end a manager link"""
-        payload = self._build_payload(
-            account_id=account_id,
-            manager_customer_id=manager_customer_id,
-            client_customer_id=client_customer_id,
-            manager_link_id=manager_link_id,
-            action=action,
-            validate_only=validate_only,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "managerCustomerId": manager_customer_id,
+                "clientCustomerId": client_customer_id,
+                "managerLinkId": manager_link_id,
+                "action": action,
+                "validateOnly": validate_only,
+            }
         )
         return self._client._patch("/v1/ads/accounts/manager-links", data=payload)
 
@@ -935,9 +1065,11 @@ class AdAccountsResource:
         self, account_id: str, *, ad_account_id: str | None = None
     ) -> dict[str, Any]:
         """Get ad account billing"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+            }
         )
         return self._client._get("/v1/ads/accounts/billing", params=params)
 
@@ -953,14 +1085,16 @@ class AdAccountsResource:
         validate_only: bool | None = False,
     ) -> dict[str, Any]:
         """Set up ad account billing (monthly invoicing)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            payments_account_id=payments_account_id,
-            spending_limit=spending_limit,
-            budget_name=budget_name,
-            purchase_order_number=purchase_order_number,
-            validate_only=validate_only,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "paymentsAccountId": payments_account_id,
+                "spendingLimit": spending_limit,
+                "budgetName": budget_name,
+                "purchaseOrderNumber": purchase_order_number,
+                "validateOnly": validate_only,
+            }
         )
         return self._client._post("/v1/ads/accounts/billing", data=payload)
 
@@ -968,9 +1102,11 @@ class AdAccountsResource:
         self, account_id: str, *, ad_account_id: str | None = None
     ) -> dict[str, Any]:
         """List user access invitations"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+            }
         )
         return self._client._get("/v1/ads/accounts/user-invitations", params=params)
 
@@ -984,12 +1120,14 @@ class AdAccountsResource:
         validate_only: bool | None = False,
     ) -> dict[str, Any]:
         """Invite a user to an ad account by email"""
-        payload = self._build_payload(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            email_address=email_address,
-            access_role=access_role,
-            validate_only=validate_only,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "emailAddress": email_address,
+                "accessRole": access_role,
+                "validateOnly": validate_only,
+            }
         )
         return self._client._post("/v1/ads/accounts/user-invitations", data=payload)
 
@@ -997,10 +1135,12 @@ class AdAccountsResource:
         self, account_id: str, ad_account_id: str, invitation_id: str
     ) -> dict[str, Any]:
         """Revoke a user access invitation"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            invitation_id=invitation_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "invitationId": invitation_id,
+            }
         )
         return self._client._delete("/v1/ads/accounts/user-invitations", params=params)
 
@@ -1008,9 +1148,11 @@ class AdAccountsResource:
         self, account_id: str, *, ad_account_id: str | None = None
     ) -> dict[str, Any]:
         """List invitations awaiting multi-party approval"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+            }
         )
         return self._client._get(
             "/v1/ads/accounts/user-invitations/pending-approvals", params=params
@@ -1020,10 +1162,12 @@ class AdAccountsResource:
         self, account_id: str, ad_account_id: str, multi_party_auth_review_id: str
     ) -> dict[str, Any]:
         """Withdraw an invitation awaiting multi-party approval"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            multi_party_auth_review_id=multi_party_auth_review_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "multiPartyAuthReviewId": multi_party_auth_review_id,
+            }
         )
         return self._client._delete(
             "/v1/ads/accounts/user-invitations/pending-approvals", params=params
@@ -1033,10 +1177,12 @@ class AdAccountsResource:
         self, account_id: str, ad_account_id: str, business_id: str
     ) -> dict[str, Any]:
         """Ad account users"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            business_id=business_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "businessId": business_id,
+            }
         )
         return self._client._get("/v1/ads/accounts/users", params=params)
 
@@ -1044,11 +1190,13 @@ class AdAccountsResource:
         self, account_id: str, ad_account_id: str, user_id: str, tasks: list[str]
     ) -> dict[str, Any]:
         """Assign a user to an ad account"""
-        payload = self._build_payload(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            user_id=user_id,
-            tasks=tasks,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "userId": user_id,
+                "tasks": tasks,
+            }
         )
         return self._client._post("/v1/ads/accounts/users", data=payload)
 
@@ -1056,10 +1204,12 @@ class AdAccountsResource:
         self, account_id: str, ad_account_id: str, user_id: str
     ) -> dict[str, Any]:
         """Remove a user from an ad account"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            user_id=user_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "userId": user_id,
+            }
         )
         return self._client._delete("/v1/ads/accounts/users", params=params)
 
@@ -1067,9 +1217,11 @@ class AdAccountsResource:
         self, account_id: str, ad_account_id: str
     ) -> dict[str, Any]:
         """Ad account finances"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+            }
         )
         return self._client._get("/v1/ads/accounts/finance", params=params)
 
@@ -1077,9 +1229,11 @@ class AdAccountsResource:
         self, account_id: str, ad_account_id: str
     ) -> dict[str, Any]:
         """Check an ad account before creating ads"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+            }
         )
         return self._client._get("/v1/ads/accounts/health", params=params)
 
@@ -1094,13 +1248,15 @@ class AdAccountsResource:
         after: str | None = None,
     ) -> dict[str, Any]:
         """Read an ad account's campaigns and ad sets live"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            status=status,
-            level=level,
-            limit=limit,
-            after=after,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "status": status,
+                "level": level,
+                "limit": limit,
+                "after": after,
+            }
         )
         return self._client._get("/v1/ads/accounts/live", params=params)
 
@@ -1123,12 +1279,14 @@ class AdAccountsResource:
         live: bool | None = False,
     ) -> dict[str, Any]:
         """List ad accounts"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            limit=limit,
-            in_scope_only=in_scope_only,
-            live=live,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "limit": limit,
+                "inScopeOnly": in_scope_only,
+                "live": live,
+            }
         )
         return self._client._get("/v1/ads/accounts", params=params)
 
@@ -1146,24 +1304,28 @@ class AdAccountsResource:
         final_url_suffix: str | None = None,
     ) -> dict[str, Any]:
         """Update ad account settings"""
-        payload = self._build_payload(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            name=name,
-            spend_cap=spend_cap,
-            reset_amount_spent=reset_amount_spent,
-            default_dsa_beneficiary=default_dsa_beneficiary,
-            default_dsa_payor=default_dsa_payor,
-            tracking_url_template=tracking_url_template,
-            final_url_suffix=final_url_suffix,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "name": name,
+                "spendCap": spend_cap,
+                "resetAmountSpent": reset_amount_spent,
+                "defaultDsaBeneficiary": default_dsa_beneficiary,
+                "defaultDsaPayor": default_dsa_payor,
+                "trackingUrlTemplate": tracking_url_template,
+                "finalUrlSuffix": final_url_suffix,
+            }
         )
         return self._client._patch("/v1/ads/accounts", data=payload)
 
     def get_dsa_defaults(self, account_id: str, ad_account_id: str) -> dict[str, Any]:
         """Get ad account DSA defaults"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+            }
         )
         return self._client._get("/v1/ads/dsa-defaults", params=params)
 
@@ -1171,9 +1333,11 @@ class AdAccountsResource:
         self, account_id: str, ad_account_id: str
     ) -> dict[str, Any]:
         """Get DSA recommendations"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+            }
         )
         return self._client._get("/v1/ads/dsa-recommendations", params=params)
 
@@ -1181,8 +1345,10 @@ class AdAccountsResource:
         self, account_id: str, ad_account_id: str
     ) -> dict[str, Any]:
         """List custom conversions"""
-        params = self._build_params(
-            ad_account_id=ad_account_id,
+        params = self._build_query(
+            {
+                "adAccountId": ad_account_id,
+            }
         )
         return self._client._get(
             f"/v1/accounts/{account_id}/custom-conversions", params=params
@@ -1198,12 +1364,14 @@ class AdAccountsResource:
         rule: dict[str, Any],
     ) -> dict[str, Any]:
         """Create custom conversion"""
-        payload = self._build_payload(
-            ad_account_id=ad_account_id,
-            name=name,
-            pixel_id=pixel_id,
-            custom_event_type=custom_event_type,
-            rule=rule,
+        payload = self._build_body(
+            {
+                "adAccountId": ad_account_id,
+                "name": name,
+                "pixelId": pixel_id,
+                "customEventType": custom_event_type,
+                "rule": rule,
+            }
         )
         return self._client._post(
             f"/v1/accounts/{account_id}/custom-conversions", data=payload
@@ -1218,11 +1386,13 @@ class AdAccountsResource:
         code: str | None = None,
     ) -> dict[str, Any]:
         """List TikTok ad pixels"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            advertiser_id=advertiser_id,
-            code=code,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "advertiserId": advertiser_id,
+                "code": code,
+            }
         )
         return self._client._get("/v1/ads/pixels", params=params)
 
@@ -1237,12 +1407,14 @@ class AdAccountsResource:
         cursor: str | None = None,
     ) -> dict[str, Any]:
         """List comments on an ad (async)"""
-        params = self._build_params(
-            placement=placement,
-            limit=limit,
-            since=since,
-            until=until,
-            cursor=cursor,
+        params = self._build_query(
+            {
+                "placement": placement,
+                "limit": limit,
+                "since": since,
+                "until": until,
+                "cursor": cursor,
+            }
         )
         return await self._client._aget(f"/v1/ads/{ad_id}/comments", params=params)
 
@@ -1256,12 +1428,16 @@ class AdAccountsResource:
         until: str | None = None,
     ) -> dict[str, Any]:
         """Reply to an ad comment (async)"""
-        params = self._build_params(
-            since=since,
-            until=until,
+        params = self._build_query(
+            {
+                "since": since,
+                "until": until,
+            }
         )
-        payload = self._build_payload(
-            text=text,
+        payload = self._build_body(
+            {
+                "text": text,
+            }
         )
         return await self._client._apost(
             f"/v1/ads/{ad_id}/comments/{comment_id}/reply", data=payload, params=params
@@ -1277,12 +1453,16 @@ class AdAccountsResource:
         until: str | None = None,
     ) -> dict[str, Any]:
         """Hide or unhide an ad comment (async)"""
-        params = self._build_params(
-            since=since,
-            until=until,
+        params = self._build_query(
+            {
+                "since": since,
+                "until": until,
+            }
         )
-        payload = self._build_payload(
-            hidden=hidden,
+        payload = self._build_body(
+            {
+                "hidden": hidden,
+            }
         )
         return await self._client._apost(
             f"/v1/ads/{ad_id}/comments/{comment_id}/hide", data=payload, params=params
@@ -1297,9 +1477,11 @@ class AdAccountsResource:
         until: str | None = None,
     ) -> dict[str, Any]:
         """Delete an ad comment (async)"""
-        params = self._build_params(
-            since=since,
-            until=until,
+        params = self._build_query(
+            {
+                "since": since,
+                "until": until,
+            }
         )
         return await self._client._adelete(
             f"/v1/ads/{ad_id}/comments/{comment_id}", params=params
@@ -1307,8 +1489,10 @@ class AdAccountsResource:
 
     async def alist_ads_business_centers(self, account_id: str) -> dict[str, Any]:
         """List TikTok Business Centers (async)"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+            }
         )
         return await self._client._aget("/v1/ads/business-centers", params=params)
 
@@ -1324,14 +1508,16 @@ class AdAccountsResource:
         after: str | None = None,
     ) -> dict[str, Any]:
         """Ad account change / audit log (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            since=since,
-            until=until,
-            object_id=object_id,
-            limit=limit,
-            after=after,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "since": since,
+                "until": until,
+                "objectId": object_id,
+                "limit": limit,
+                "after": after,
+            }
         )
         return await self._client._aget("/v1/ads/activity", params=params)
 
@@ -1345,12 +1531,14 @@ class AdAccountsResource:
         after: str | None = None,
     ) -> dict[str, Any]:
         """A/B tests and lift studies (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            fields=fields,
-            limit=limit,
-            after=after,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "fields": fields,
+                "limit": limit,
+                "after": after,
+            }
         )
         return await self._client._aget("/v1/ads/studies", params=params)
 
@@ -1358,9 +1546,11 @@ class AdAccountsResource:
         self, account_id: str, ad_account_id: str
     ) -> dict[str, Any]:
         """List Instagram ad identities (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+            }
         )
         return await self._client._aget("/v1/ads/instagram-accounts", params=params)
 
@@ -1374,12 +1564,14 @@ class AdAccountsResource:
         after: str | None = None,
     ) -> dict[str, Any]:
         """List Instagram posts to boost (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            ig_user_id=ig_user_id,
-            limit=limit,
-            after=after,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "igUserId": ig_user_id,
+                "limit": limit,
+                "after": after,
+            }
         )
         return await self._client._aget("/v1/ads/instagram-posts", params=params)
 
@@ -1387,9 +1579,11 @@ class AdAccountsResource:
         self, account_id: str, ad_account_id: str
     ) -> dict[str, Any]:
         """List advertisable apps (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+            }
         )
         return await self._client._aget(
             "/v1/ads/advertisable-applications", params=params
@@ -1399,10 +1593,12 @@ class AdAccountsResource:
         self, account_id: str, ad_account_id: str, application_id: str
     ) -> dict[str, Any]:
         """Get iOS 14 campaign limits (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            application_id=application_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "applicationId": application_id,
+            }
         )
         return await self._client._aget(
             "/v1/ads/ios-fourteen-campaign-limits", params=params
@@ -1412,10 +1608,12 @@ class AdAccountsResource:
         self, account_id: str, *, limit: int | None = 25, after: str | None = None
     ) -> dict[str, Any]:
         """Businesses list (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            limit=limit,
-            after=after,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "limit": limit,
+                "after": after,
+            }
         )
         return await self._client._aget("/v1/ads/businesses", params=params)
 
@@ -1423,9 +1621,11 @@ class AdAccountsResource:
         self, account_id: str, business_id: str
     ) -> dict[str, Any]:
         """Business users (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            business_id=business_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "businessId": business_id,
+            }
         )
         return await self._client._aget("/v1/ads/businesses/users", params=params)
 
@@ -1433,10 +1633,12 @@ class AdAccountsResource:
         self, account_id: str, page_id: str, business_id: str
     ) -> dict[str, Any]:
         """Page users of a business (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            page_id=page_id,
-            business_id=business_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "pageId": page_id,
+                "businessId": business_id,
+            }
         )
         return await self._client._aget("/v1/ads/page-users", params=params)
 
@@ -1449,12 +1651,14 @@ class AdAccountsResource:
         tasks: list[str],
     ) -> dict[str, Any]:
         """Assign a user to a Page (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            page_id=page_id,
-            business_id=business_id,
-            user_id=user_id,
-            tasks=tasks,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "pageId": page_id,
+                "businessId": business_id,
+                "userId": user_id,
+                "tasks": tasks,
+            }
         )
         return await self._client._apost("/v1/ads/page-users", data=payload)
 
@@ -1462,10 +1666,12 @@ class AdAccountsResource:
         self, account_id: str, page_id: str, user_id: str
     ) -> dict[str, Any]:
         """Remove a user from a Page (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            page_id=page_id,
-            user_id=user_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "pageId": page_id,
+                "userId": user_id,
+            }
         )
         return await self._client._adelete("/v1/ads/page-users", params=params)
 
@@ -1479,12 +1685,14 @@ class AdAccountsResource:
         after: str | None = None,
     ) -> dict[str, Any]:
         """List ad labels (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            customer_id=customer_id,
-            limit=limit,
-            after=after,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "customerId": customer_id,
+                "limit": limit,
+                "after": after,
+            }
         )
         return await self._client._aget("/v1/ads/labels", params=params)
 
@@ -1499,13 +1707,15 @@ class AdAccountsResource:
         description: str | None = None,
     ) -> dict[str, Any]:
         """Create a Google Ads label (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            customer_id=customer_id,
-            name=name,
-            background_color=background_color,
-            description=description,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "customerId": customer_id,
+                "name": name,
+                "backgroundColor": background_color,
+                "description": description,
+            }
         )
         return await self._client._apost("/v1/ads/labels", data=payload)
 
@@ -1521,13 +1731,15 @@ class AdAccountsResource:
         description: str | None = None,
     ) -> dict[str, Any]:
         """Update a Google Ads label (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            customer_id=customer_id,
-            name=name,
-            background_color=background_color,
-            description=description,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "customerId": customer_id,
+                "name": name,
+                "backgroundColor": background_color,
+                "description": description,
+            }
         )
         return await self._client._apatch(f"/v1/ads/labels/{label_id}", data=payload)
 
@@ -1540,10 +1752,12 @@ class AdAccountsResource:
         customer_id: str | None = None,
     ) -> dict[str, Any]:
         """Remove a Google Ads label (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            customer_id=customer_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "customerId": customer_id,
+            }
         )
         return await self._client._adelete(f"/v1/ads/labels/{label_id}", params=params)
 
@@ -1560,14 +1774,16 @@ class AdAccountsResource:
         keyword_ids: list[str] | None = None,
     ) -> dict[str, Any]:
         """Attach a Google Ads label (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            customer_id=customer_id,
-            campaign_ids=campaign_ids,
-            ad_set_ids=ad_set_ids,
-            ad_ids=ad_ids,
-            keyword_ids=keyword_ids,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "customerId": customer_id,
+                "campaignIds": campaign_ids,
+                "adSetIds": ad_set_ids,
+                "adIds": ad_ids,
+                "keywordIds": keyword_ids,
+            }
         )
         return await self._client._apost(
             f"/v1/ads/labels/{label_id}/assignments", data=payload
@@ -1586,14 +1802,16 @@ class AdAccountsResource:
         keyword_ids: list[str] | None = None,
     ) -> dict[str, Any]:
         """Detach a Google Ads label (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            customer_id=customer_id,
-            campaign_ids=campaign_ids,
-            ad_set_ids=ad_set_ids,
-            ad_ids=ad_ids,
-            keyword_ids=keyword_ids,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "customerId": customer_id,
+                "campaignIds": campaign_ids,
+                "adSetIds": ad_set_ids,
+                "adIds": ad_ids,
+                "keywordIds": keyword_ids,
+            }
         )
         return await self._client._adelete(
             f"/v1/ads/labels/{label_id}/assignments", params=params
@@ -1609,12 +1827,14 @@ class AdAccountsResource:
         after: str | None = None,
     ) -> dict[str, Any]:
         """List high-demand periods (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            campaign_id=campaign_id,
-            ad_set_id=ad_set_id,
-            limit=limit,
-            after=after,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "campaignId": campaign_id,
+                "adSetId": ad_set_id,
+                "limit": limit,
+                "after": after,
+            }
         )
         return await self._client._aget("/v1/ads/high-demand-periods", params=params)
 
@@ -1632,16 +1852,18 @@ class AdAccountsResource:
         currency: str | None = None,
     ) -> dict[str, Any]:
         """Schedule a budget increase (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            campaign_id=campaign_id,
-            ad_set_id=ad_set_id,
-            budget_value=budget_value,
-            budget_value_type=budget_value_type,
-            time_start=time_start,
-            time_end=time_end,
-            recurrence_type=recurrence_type,
-            currency=currency,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "campaignId": campaign_id,
+                "adSetId": ad_set_id,
+                "budgetValue": budget_value,
+                "budgetValueType": budget_value_type,
+                "timeStart": time_start,
+                "timeEnd": time_end,
+                "recurrenceType": recurrence_type,
+                "currency": currency,
+            }
         )
         return await self._client._apost("/v1/ads/high-demand-periods", data=payload)
 
@@ -1654,11 +1876,13 @@ class AdAccountsResource:
         after: str | None = None,
     ) -> dict[str, Any]:
         """List value rule sets (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            limit=limit,
-            after=after,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "limit": limit,
+                "after": after,
+            }
         )
         return await self._client._aget("/v1/ads/value-rule-sets", params=params)
 
@@ -1666,11 +1890,13 @@ class AdAccountsResource:
         self, account_id: str, ad_account_id: str, name: str, rules: list[Any]
     ) -> dict[str, Any]:
         """Create a value rule set (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            name=name,
-            rules=rules,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "name": name,
+                "rules": rules,
+            }
         )
         return await self._client._apost("/v1/ads/value-rule-sets", data=payload)
 
@@ -1678,8 +1904,10 @@ class AdAccountsResource:
         self, value_rule_set_id: str, account_id: str
     ) -> dict[str, Any]:
         """Read a value rule set (async)"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+            }
         )
         return await self._client._aget(
             f"/v1/ads/value-rule-sets/{value_rule_set_id}", params=params
@@ -1689,10 +1917,12 @@ class AdAccountsResource:
         self, value_rule_set_id: str, account_id: str, name: str, rules: list[Any]
     ) -> dict[str, Any]:
         """Replace a value rule set (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            name=name,
-            rules=rules,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "name": name,
+                "rules": rules,
+            }
         )
         return await self._client._aput(
             f"/v1/ads/value-rule-sets/{value_rule_set_id}", data=payload
@@ -1702,8 +1932,10 @@ class AdAccountsResource:
         self, value_rule_set_id: str, account_id: str
     ) -> dict[str, Any]:
         """Delete a value rule set (async)"""
-        params = self._build_params(
-            account_id=account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+            }
         )
         return await self._client._adelete(
             f"/v1/ads/value-rule-sets/{value_rule_set_id}", params=params
@@ -1718,11 +1950,13 @@ class AdAccountsResource:
         platform: str | None = None,
     ) -> dict[str, Any]:
         """List negative keyword lists (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            customer_id=customer_id,
-            platform=platform,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "customerId": customer_id,
+                "platform": platform,
+            }
         )
         return await self._client._aget(
             "/v1/ads/accounts/negative-keyword-lists", params=params
@@ -1739,13 +1973,15 @@ class AdAccountsResource:
         keywords: list[Any] | None = None,
     ) -> dict[str, Any]:
         """Create a negative keyword list (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            customer_id=customer_id,
-            platform=platform,
-            name=name,
-            keywords=keywords,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "customerId": customer_id,
+                "platform": platform,
+                "name": name,
+                "keywords": keywords,
+            }
         )
         return await self._client._apost(
             "/v1/ads/accounts/negative-keyword-lists", data=payload
@@ -1761,11 +1997,13 @@ class AdAccountsResource:
         platform: str | None = None,
     ) -> dict[str, Any]:
         """Get a negative keyword list (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            customer_id=customer_id,
-            platform=platform,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "customerId": customer_id,
+                "platform": platform,
+            }
         )
         return await self._client._aget(
             f"/v1/ads/accounts/negative-keyword-lists/{list_id}", params=params
@@ -1782,12 +2020,14 @@ class AdAccountsResource:
         platform: str | None = None,
     ) -> dict[str, Any]:
         """Rename a negative keyword list (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            customer_id=customer_id,
-            platform=platform,
-            name=name,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "customerId": customer_id,
+                "platform": platform,
+                "name": name,
+            }
         )
         return await self._client._aput(
             f"/v1/ads/accounts/negative-keyword-lists/{list_id}", data=payload
@@ -1803,11 +2043,13 @@ class AdAccountsResource:
         platform: str | None = None,
     ) -> dict[str, Any]:
         """Delete a negative keyword list (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            customer_id=customer_id,
-            platform=platform,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "customerId": customer_id,
+                "platform": platform,
+            }
         )
         return await self._client._adelete(
             f"/v1/ads/accounts/negative-keyword-lists/{list_id}", params=params
@@ -1824,12 +2066,14 @@ class AdAccountsResource:
         platform: str | None = None,
     ) -> dict[str, Any]:
         """Replace negative list keywords (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            customer_id=customer_id,
-            platform=platform,
-            keywords=keywords,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "customerId": customer_id,
+                "platform": platform,
+                "keywords": keywords,
+            }
         )
         return await self._client._aput(
             f"/v1/ads/accounts/negative-keyword-lists/{list_id}/keywords", data=payload
@@ -1843,10 +2087,12 @@ class AdAccountsResource:
         customer_id: str | None = None,
     ) -> dict[str, Any]:
         """List account callouts (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            customer_id=customer_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "customerId": customer_id,
+            }
         )
         return await self._client._aget("/v1/ads/accounts/callouts", params=params)
 
@@ -1859,11 +2105,13 @@ class AdAccountsResource:
         customer_id: str | None = None,
     ) -> dict[str, Any]:
         """Add account callouts (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            customer_id=customer_id,
-            callouts=callouts,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "customerId": customer_id,
+                "callouts": callouts,
+            }
         )
         return await self._client._apost("/v1/ads/accounts/callouts", data=payload)
 
@@ -1876,11 +2124,13 @@ class AdAccountsResource:
         customer_id: str | None = None,
     ) -> dict[str, Any]:
         """Update account callouts (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            customer_id=customer_id,
-            updates=updates,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "customerId": customer_id,
+                "updates": updates,
+            }
         )
         return await self._client._aput("/v1/ads/accounts/callouts", data=payload)
 
@@ -1893,11 +2143,13 @@ class AdAccountsResource:
         customer_id: str | None = None,
     ) -> dict[str, Any]:
         """Remove account callout (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            customer_id=customer_id,
-            asset_id=asset_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "customerId": customer_id,
+                "assetId": asset_id,
+            }
         )
         return await self._client._adelete("/v1/ads/accounts/callouts", params=params)
 
@@ -1909,10 +2161,12 @@ class AdAccountsResource:
         customer_id: str | None = None,
     ) -> dict[str, Any]:
         """List account sitelinks (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            customer_id=customer_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "customerId": customer_id,
+            }
         )
         return await self._client._aget("/v1/ads/accounts/sitelinks", params=params)
 
@@ -1925,11 +2179,13 @@ class AdAccountsResource:
         customer_id: str | None = None,
     ) -> dict[str, Any]:
         """Add account sitelinks (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            customer_id=customer_id,
-            sitelinks=sitelinks,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "customerId": customer_id,
+                "sitelinks": sitelinks,
+            }
         )
         return await self._client._apost("/v1/ads/accounts/sitelinks", data=payload)
 
@@ -1942,11 +2198,13 @@ class AdAccountsResource:
         customer_id: str | None = None,
     ) -> dict[str, Any]:
         """Update account sitelinks (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            customer_id=customer_id,
-            updates=updates,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "customerId": customer_id,
+                "updates": updates,
+            }
         )
         return await self._client._aput("/v1/ads/accounts/sitelinks", data=payload)
 
@@ -1959,11 +2217,13 @@ class AdAccountsResource:
         customer_id: str | None = None,
     ) -> dict[str, Any]:
         """Remove account sitelink (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            customer_id=customer_id,
-            asset_id=asset_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "customerId": customer_id,
+                "assetId": asset_id,
+            }
         )
         return await self._client._adelete("/v1/ads/accounts/sitelinks", params=params)
 
@@ -1975,10 +2235,12 @@ class AdAccountsResource:
         customer_id: str | None = None,
     ) -> dict[str, Any]:
         """List account snippets (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            customer_id=customer_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "customerId": customer_id,
+            }
         )
         return await self._client._aget(
             "/v1/ads/accounts/structured-snippets", params=params
@@ -1993,11 +2255,13 @@ class AdAccountsResource:
         customer_id: str | None = None,
     ) -> dict[str, Any]:
         """Add account snippets (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            customer_id=customer_id,
-            structured_snippets=structured_snippets,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "customerId": customer_id,
+                "structuredSnippets": structured_snippets,
+            }
         )
         return await self._client._apost(
             "/v1/ads/accounts/structured-snippets", data=payload
@@ -2012,11 +2276,13 @@ class AdAccountsResource:
         customer_id: str | None = None,
     ) -> dict[str, Any]:
         """Update account snippets (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            customer_id=customer_id,
-            updates=updates,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "customerId": customer_id,
+                "updates": updates,
+            }
         )
         return await self._client._aput(
             "/v1/ads/accounts/structured-snippets", data=payload
@@ -2031,11 +2297,13 @@ class AdAccountsResource:
         customer_id: str | None = None,
     ) -> dict[str, Any]:
         """Remove account snippet (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            customer_id=customer_id,
-            asset_id=asset_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "customerId": customer_id,
+                "assetId": asset_id,
+            }
         )
         return await self._client._adelete(
             "/v1/ads/accounts/structured-snippets", params=params
@@ -2049,10 +2317,12 @@ class AdAccountsResource:
         customer_id: str | None = None,
     ) -> dict[str, Any]:
         """Get manager account hierarchy (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            customer_id=customer_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "customerId": customer_id,
+            }
         )
         return await self._client._aget("/v1/ads/accounts/hierarchy", params=params)
 
@@ -2065,11 +2335,13 @@ class AdAccountsResource:
         validate_only: bool | None = False,
     ) -> dict[str, Any]:
         """Invite a client account to a manager (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            manager_customer_id=manager_customer_id,
-            client_customer_id=client_customer_id,
-            validate_only=validate_only,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "managerCustomerId": manager_customer_id,
+                "clientCustomerId": client_customer_id,
+                "validateOnly": validate_only,
+            }
         )
         return await self._client._apost("/v1/ads/accounts/manager-links", data=payload)
 
@@ -2084,13 +2356,15 @@ class AdAccountsResource:
         validate_only: bool | None = False,
     ) -> dict[str, Any]:
         """Accept, decline, cancel or end a manager link (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            manager_customer_id=manager_customer_id,
-            client_customer_id=client_customer_id,
-            manager_link_id=manager_link_id,
-            action=action,
-            validate_only=validate_only,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "managerCustomerId": manager_customer_id,
+                "clientCustomerId": client_customer_id,
+                "managerLinkId": manager_link_id,
+                "action": action,
+                "validateOnly": validate_only,
+            }
         )
         return await self._client._apatch(
             "/v1/ads/accounts/manager-links", data=payload
@@ -2100,9 +2374,11 @@ class AdAccountsResource:
         self, account_id: str, *, ad_account_id: str | None = None
     ) -> dict[str, Any]:
         """Get ad account billing (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+            }
         )
         return await self._client._aget("/v1/ads/accounts/billing", params=params)
 
@@ -2118,14 +2394,16 @@ class AdAccountsResource:
         validate_only: bool | None = False,
     ) -> dict[str, Any]:
         """Set up ad account billing (monthly invoicing) (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            payments_account_id=payments_account_id,
-            spending_limit=spending_limit,
-            budget_name=budget_name,
-            purchase_order_number=purchase_order_number,
-            validate_only=validate_only,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "paymentsAccountId": payments_account_id,
+                "spendingLimit": spending_limit,
+                "budgetName": budget_name,
+                "purchaseOrderNumber": purchase_order_number,
+                "validateOnly": validate_only,
+            }
         )
         return await self._client._apost("/v1/ads/accounts/billing", data=payload)
 
@@ -2133,9 +2411,11 @@ class AdAccountsResource:
         self, account_id: str, *, ad_account_id: str | None = None
     ) -> dict[str, Any]:
         """List user access invitations (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+            }
         )
         return await self._client._aget(
             "/v1/ads/accounts/user-invitations", params=params
@@ -2151,12 +2431,14 @@ class AdAccountsResource:
         validate_only: bool | None = False,
     ) -> dict[str, Any]:
         """Invite a user to an ad account by email (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            email_address=email_address,
-            access_role=access_role,
-            validate_only=validate_only,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "emailAddress": email_address,
+                "accessRole": access_role,
+                "validateOnly": validate_only,
+            }
         )
         return await self._client._apost(
             "/v1/ads/accounts/user-invitations", data=payload
@@ -2166,10 +2448,12 @@ class AdAccountsResource:
         self, account_id: str, ad_account_id: str, invitation_id: str
     ) -> dict[str, Any]:
         """Revoke a user access invitation (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            invitation_id=invitation_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "invitationId": invitation_id,
+            }
         )
         return await self._client._adelete(
             "/v1/ads/accounts/user-invitations", params=params
@@ -2179,9 +2463,11 @@ class AdAccountsResource:
         self, account_id: str, *, ad_account_id: str | None = None
     ) -> dict[str, Any]:
         """List invitations awaiting multi-party approval (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+            }
         )
         return await self._client._aget(
             "/v1/ads/accounts/user-invitations/pending-approvals", params=params
@@ -2191,10 +2477,12 @@ class AdAccountsResource:
         self, account_id: str, ad_account_id: str, multi_party_auth_review_id: str
     ) -> dict[str, Any]:
         """Withdraw an invitation awaiting multi-party approval (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            multi_party_auth_review_id=multi_party_auth_review_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "multiPartyAuthReviewId": multi_party_auth_review_id,
+            }
         )
         return await self._client._adelete(
             "/v1/ads/accounts/user-invitations/pending-approvals", params=params
@@ -2204,10 +2492,12 @@ class AdAccountsResource:
         self, account_id: str, ad_account_id: str, business_id: str
     ) -> dict[str, Any]:
         """Ad account users (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            business_id=business_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "businessId": business_id,
+            }
         )
         return await self._client._aget("/v1/ads/accounts/users", params=params)
 
@@ -2215,11 +2505,13 @@ class AdAccountsResource:
         self, account_id: str, ad_account_id: str, user_id: str, tasks: list[str]
     ) -> dict[str, Any]:
         """Assign a user to an ad account (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            user_id=user_id,
-            tasks=tasks,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "userId": user_id,
+                "tasks": tasks,
+            }
         )
         return await self._client._apost("/v1/ads/accounts/users", data=payload)
 
@@ -2227,10 +2519,12 @@ class AdAccountsResource:
         self, account_id: str, ad_account_id: str, user_id: str
     ) -> dict[str, Any]:
         """Remove a user from an ad account (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            user_id=user_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "userId": user_id,
+            }
         )
         return await self._client._adelete("/v1/ads/accounts/users", params=params)
 
@@ -2238,9 +2532,11 @@ class AdAccountsResource:
         self, account_id: str, ad_account_id: str
     ) -> dict[str, Any]:
         """Ad account finances (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+            }
         )
         return await self._client._aget("/v1/ads/accounts/finance", params=params)
 
@@ -2248,9 +2544,11 @@ class AdAccountsResource:
         self, account_id: str, ad_account_id: str
     ) -> dict[str, Any]:
         """Check an ad account before creating ads (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+            }
         )
         return await self._client._aget("/v1/ads/accounts/health", params=params)
 
@@ -2265,13 +2563,15 @@ class AdAccountsResource:
         after: str | None = None,
     ) -> dict[str, Any]:
         """Read an ad account's campaigns and ad sets live (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            status=status,
-            level=level,
-            limit=limit,
-            after=after,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "status": status,
+                "level": level,
+                "limit": limit,
+                "after": after,
+            }
         )
         return await self._client._aget("/v1/ads/accounts/live", params=params)
 
@@ -2294,12 +2594,14 @@ class AdAccountsResource:
         live: bool | None = False,
     ) -> dict[str, Any]:
         """List ad accounts (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            limit=limit,
-            in_scope_only=in_scope_only,
-            live=live,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "limit": limit,
+                "inScopeOnly": in_scope_only,
+                "live": live,
+            }
         )
         return await self._client._aget("/v1/ads/accounts", params=params)
 
@@ -2317,16 +2619,18 @@ class AdAccountsResource:
         final_url_suffix: str | None = None,
     ) -> dict[str, Any]:
         """Update ad account settings (async)"""
-        payload = self._build_payload(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            name=name,
-            spend_cap=spend_cap,
-            reset_amount_spent=reset_amount_spent,
-            default_dsa_beneficiary=default_dsa_beneficiary,
-            default_dsa_payor=default_dsa_payor,
-            tracking_url_template=tracking_url_template,
-            final_url_suffix=final_url_suffix,
+        payload = self._build_body(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "name": name,
+                "spendCap": spend_cap,
+                "resetAmountSpent": reset_amount_spent,
+                "defaultDsaBeneficiary": default_dsa_beneficiary,
+                "defaultDsaPayor": default_dsa_payor,
+                "trackingUrlTemplate": tracking_url_template,
+                "finalUrlSuffix": final_url_suffix,
+            }
         )
         return await self._client._apatch("/v1/ads/accounts", data=payload)
 
@@ -2334,9 +2638,11 @@ class AdAccountsResource:
         self, account_id: str, ad_account_id: str
     ) -> dict[str, Any]:
         """Get ad account DSA defaults (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+            }
         )
         return await self._client._aget("/v1/ads/dsa-defaults", params=params)
 
@@ -2344,9 +2650,11 @@ class AdAccountsResource:
         self, account_id: str, ad_account_id: str
     ) -> dict[str, Any]:
         """Get DSA recommendations (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+            }
         )
         return await self._client._aget("/v1/ads/dsa-recommendations", params=params)
 
@@ -2354,8 +2662,10 @@ class AdAccountsResource:
         self, account_id: str, ad_account_id: str
     ) -> dict[str, Any]:
         """List custom conversions (async)"""
-        params = self._build_params(
-            ad_account_id=ad_account_id,
+        params = self._build_query(
+            {
+                "adAccountId": ad_account_id,
+            }
         )
         return await self._client._aget(
             f"/v1/accounts/{account_id}/custom-conversions", params=params
@@ -2371,12 +2681,14 @@ class AdAccountsResource:
         rule: dict[str, Any],
     ) -> dict[str, Any]:
         """Create custom conversion (async)"""
-        payload = self._build_payload(
-            ad_account_id=ad_account_id,
-            name=name,
-            pixel_id=pixel_id,
-            custom_event_type=custom_event_type,
-            rule=rule,
+        payload = self._build_body(
+            {
+                "adAccountId": ad_account_id,
+                "name": name,
+                "pixelId": pixel_id,
+                "customEventType": custom_event_type,
+                "rule": rule,
+            }
         )
         return await self._client._apost(
             f"/v1/accounts/{account_id}/custom-conversions", data=payload
@@ -2391,10 +2703,12 @@ class AdAccountsResource:
         code: str | None = None,
     ) -> dict[str, Any]:
         """List TikTok ad pixels (async)"""
-        params = self._build_params(
-            account_id=account_id,
-            ad_account_id=ad_account_id,
-            advertiser_id=advertiser_id,
-            code=code,
+        params = self._build_query(
+            {
+                "accountId": account_id,
+                "adAccountId": ad_account_id,
+                "advertiserId": advertiser_id,
+                "code": code,
+            }
         )
         return await self._client._aget("/v1/ads/pixels", params=params)
