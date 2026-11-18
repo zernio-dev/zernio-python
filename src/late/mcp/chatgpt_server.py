@@ -25,9 +25,9 @@ from pydantic import BaseModel, Field
 
 from late.client.base import _retry_after_seconds
 from late.mcp.auth import build_auth_provider, forget_rejected_token
+from late.mcp.media_items import media_item
 from late.mcp.middleware import WellFormedOutputMiddleware, WellFormedOutputTransform
 from late.mcp.middleware.rate_limit import wait_hint
-from late.mcp.media_items import media_item
 from late.mcp.user_agent import mcp_user_agent
 
 API_BASE = (

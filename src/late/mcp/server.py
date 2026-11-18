@@ -50,6 +50,7 @@ from late.client.exceptions import LateAPIError, LateError, LateRateLimitError
 
 from .auth import build_auth_provider, forget_rejected_token
 from .idempotency import same_arguments_key
+from .media_items import media_item
 from .middleware import (
     FEEDBACK_TOOL,
     FeedbackSourceMiddleware,
@@ -58,7 +59,6 @@ from .middleware import (
     WellFormedOutputMiddleware,
     WellFormedOutputTransform,
 )
-from .media_items import media_item
 from .resources import register_resources
 from .tool_definitions import TOOL_DEFINITIONS
 from .user_agent import mcp_user_agent
