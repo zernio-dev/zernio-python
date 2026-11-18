@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.677.0"
+  version: "1.678.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -59040,7 +59040,12 @@ paths:
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '422':
-          description: 'A check failed. code names the stage (imap_auth_failed, app_password_required, use_oauth, imap_disabled, imap_unreachable, tls_hostname_mismatch, tls_untrusted, smtp_unreachable, smtp_auth_failed, provider_unsupported, discovery_failed); details.stages says which checks passed. For imap_auth_failed, smtp_auth_failed and app_password_required, details.guidance holds the provider fix (providerId, providerName, summary, steps, helpUrl, appPassword, preflight) when Zernio knows one for that stage; null otherwise.'
+          description: |
+            A check failed. code names the stage (imap_auth_failed, app_password_required, use_oauth, imap_disabled, imap_unreachable, tls_hostname_mismatch, tls_untrusted, smtp_unreachable, smtp_auth_failed, provider_unsupported, discovery_failed). details.stages says which checks passed.
+
+            For imap_auth_failed, smtp_auth_failed and app_password_required, details.guidance holds the provider fix (providerId, providerName, summary, steps, helpUrl, appPassword, preflight) when Zernio knows one for that stage; null otherwise.
+
+            For tls_hostname_mismatch, details.suggestedHost (also details.suggestion.host) is a name the certificate covers that Zernio checked resolves and verifies. It is absent when none does.
           content:
             application/json:
               schema: { $ref: '#/components/schemas/ErrorResponse' }
@@ -88219,6 +88224,7 @@ paths:
       responses:
         '409': { $ref: '#/components/responses/AccountConnectionRequired' }
         '404': { $ref: '#/components/responses/AccountUnavailable' }
+        '422': { x-summary: "Meta refused the query as too large: narrow it or run it as an async report.", description: "Meta: `query_too_large` when Meta refuses the query as too much data (code 1). Narrow the date range, level, breakdowns or limit, or run it with POST /v1/ads/insights/reports." }
         '200':
           description: Insight rows (raw platform shape)
           content:
