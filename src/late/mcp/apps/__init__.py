@@ -20,11 +20,14 @@ from fastmcp.apps import UI_MIME_TYPE, AppConfig, ResourceCSP, app_config_to_met
 from fastmcp.resources import TextResource
 from fastmcp.tools import ToolResult
 from mcp.types import ToolAnnotations
+from starlette.responses import Response
 
+from ..constants import MCP_PUBLIC_URL
 from .tools import register_tools
 
 if TYPE_CHECKING:
     from fastmcp import FastMCP
+    from starlette.requests import Request
 
 _DIR = Path(__file__).parent
 
@@ -100,23 +103,57 @@ def register_apps(mcp: FastMCP) -> None:
     _register_app(mcp)
 
 
-# The app, built from apps-src/ (Vite + React + the ext-apps SDK)
-# into bundle/mcp-app.html, committed so the Python image needs no Node. It loads
+# The app, built from apps-src/ (Vite + React + the ext-apps SDK) into
+# bundle/mcp-app.html, committed so the Python image needs no Node. It loads
 # its own data through the server's tools, so the opening tool only says which
 # screen to show.
 APP_URI = f"ui://zernio/{_VERSION}/app.html"
 
+# The design system's fonts, served by this server: MCP Apps take fonts only
+# from origins the resource declares, never as data: URLs. The bundle names
+# its origin as __ZERNIO_ORIGIN__, filled in when it is served.
+_FONT_PATH = "/apps/fonts/{name}"
+_FONTS = {
+    name: (_DIR / "fonts" / name).read_bytes()
+    for name in ("Geist-Variable.woff2", "GeistMono-Variable.woff2", "GeistPixel-Square.woff2")
+}
+
+# Its own origin (fonts) and zernio.com (platform app icons, the logo) on top
+# of the views' domains. Built from MCP_PUBLIC_URL, so dev and prod each name
+# themselves: a wrong origin fails silently, as a blocked font.
+_APP_CSP = ResourceCSP(
+    resource_domains=[MCP_PUBLIC_URL, "https://zernio.com", *(_CSP.resource_domains or [])],
+)
+
+
+async def _app_font(request: Request) -> Response:
+    body = _FONTS.get(request.path_params["name"])
+    if body is None:
+        return Response(status_code=404)
+    return Response(
+        body,
+        media_type="font/woff2",
+        headers={
+            # Claude loads it from its sandbox origin (*.claudemcpcontent.com).
+            "Access-Control-Allow-Origin": "*",
+            "Cross-Origin-Resource-Policy": "cross-origin",
+            "Cache-Control": "public, max-age=86400",
+        },
+    )
+
 
 def _register_app(mcp: FastMCP) -> None:
+    html = (_DIR / "bundle" / "mcp-app.html").read_text(encoding="utf-8")
     mcp.add_resource(
         TextResource(
             uri=APP_URI,
             name="Zernio",
             mime_type=UI_MIME_TYPE,
-            text=(_DIR / "bundle" / "mcp-app.html").read_text(encoding="utf-8"),
-            meta={"ui": app_config_to_meta_dict(AppConfig(csp=_CSP))},
+            text=html.replace("__ZERNIO_ORIGIN__", MCP_PUBLIC_URL),
+            meta={"ui": app_config_to_meta_dict(AppConfig(csp=_APP_CSP))},
         )
     )
+    mcp.custom_route(_FONT_PATH, methods=["GET"])(_app_font)
 
     @mcp.tool(
         name="zernio_open_app",

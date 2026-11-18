@@ -6,8 +6,12 @@ import type { App, McpUiHostContext } from "@modelcontextprotocol/ext-apps";
 import { useApp, useHostStyles } from "@modelcontextprotocol/ext-apps/react";
 import { StrictMode, useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
+import { installFonts } from "./fonts";
 import { Home } from "./Home";
+import { Spinner } from "./ui";
 import "./global.css";
+
+installFonts();
 
 function ZernioApp() {
   const [hostContext, setHostContext] = useState<McpUiHostContext | undefined>();
@@ -45,8 +49,8 @@ function Shell({ app, hostContext }: { app: App; hostContext?: McpUiHostContext 
       style={{ paddingTop: insets?.top, paddingRight: insets?.right, paddingLeft: insets?.left }}
     >
       <header className="header">
-        <span className="mark" aria-hidden="true" />
-        <span className="brand">Zernio</span>
+        <img className="logo" src="https://zernio.com/icon.svg?v=4" alt="" width={18} height={18} />
+        <span className="type-page-title">Zernio</span>
       </header>
       <Home
         app={app}
@@ -60,10 +64,8 @@ function Shell({ app, hostContext }: { app: App; hostContext?: McpUiHostContext 
 
 function Skeleton() {
   return (
-    <div className="skeleton" aria-busy="true" aria-label="Loading">
-      <i style={{ width: "40%" }} />
-      <i />
-      <i style={{ width: "70%" }} />
+    <div className="loading">
+      <Spinner />
     </div>
   );
 }

@@ -59,3 +59,10 @@ const PLATFORMS: Record<string, string> = {
 export function platformName(platform: string): string {
   return PLATFORMS[platform] ?? platform;
 }
+
+/** The platform's full-colour app icon, as the dashboard shows it (zernio.com/platform-logos). */
+const ICON_FILES: Record<string, string> = { twitter: "x", googlebusiness: "google" };
+
+export function platformIcon(platform: string): string {
+  return `https://zernio.com/platform-logos/${ICON_FILES[platform] ?? platform}-icon.png`;
+}

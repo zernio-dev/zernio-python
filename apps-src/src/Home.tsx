@@ -1,12 +1,17 @@
 /**
- * Home: the workspace at a glance. Inline it is a compact card (three
- * numbers, up to three accounts that need attention, Open Zernio); full
- * screen it lists every account.
+ * Home: the workspace at a glance. Inline it shows the KPI row and up to
+ * three accounts that need attention, with Open Zernio; full screen it lists
+ * every account.
  */
 import type { App } from "@modelcontextprotocol/ext-apps";
-import { CircleAlert, CircleCheck, Maximize2, RefreshCw, SendHorizontal } from "lucide-react";
+import { CheckDouble } from "pixelarticons/react/CheckDouble.js";
+import { Expand } from "pixelarticons/react/Expand.js";
+import { InfoBox } from "pixelarticons/react/InfoBox.js";
+import { Reload } from "pixelarticons/react/Reload.js";
+import { WarningDiamond } from "pixelarticons/react/WarningDiamond.js";
 import { useCallback, useEffect, useState } from "react";
 import { type Account, type AccountsHealth, getAccountsHealth, getFailedPostCount, platformName } from "./api";
+import { Button, Notice, PlatformTile, Section, Spinner, StatusPill } from "./ui";
 
 interface Props {
   app: App;
@@ -16,6 +21,12 @@ interface Props {
 }
 
 const RANK = { error: 0, warning: 1, healthy: 2 } as const;
+/** 48. Green works, amber needs action, red is broken. */
+const STATE = {
+  healthy: { label: "Healthy", tone: "success" },
+  warning: { label: "Needs attention", tone: "warning" },
+  error: { label: "Broken", tone: "danger" },
+} as const;
 
 export function Home({ app, fullscreen, canExpand, locale }: Props) {
   const [health, setHealth] = useState<AccountsHealth>();
@@ -28,7 +39,7 @@ export function Home({ app, fullscreen, canExpand, locale }: Props) {
     setLoading(true);
     const [h, f] = await Promise.allSettled([getAccountsHealth(app), getFailedPostCount(app)]);
     if (h.status === "fulfilled") setHealth(h.value);
-    setError(h.status === "rejected" ? String(h.reason) : undefined);
+    setError(h.status === "rejected" ? String((h.reason as Error)?.message ?? h.reason) : undefined);
     setFailed(f.status === "fulfilled" ? f.value : undefined);
     if (f.status === "rejected") console.warn("[zernio] failed posts unavailable:", f.reason);
     setLoading(false);
@@ -41,6 +52,7 @@ export function Home({ app, fullscreen, canExpand, locale }: Props) {
   const accounts = [...(health?.accounts ?? [])].sort((a, b) => RANK[a.status] - RANK[b.status]);
   const attention = accounts.filter((a) => a.status !== "healthy");
   const summary = health?.summary ?? {};
+  const needAttention = (summary.warning ?? 0) + (summary.error ?? 0);
 
   // Tell Claude what the panel shows, so "these accounts" resolves to them.
   useEffect(() => {
@@ -55,7 +67,7 @@ export function Home({ app, fullscreen, canExpand, locale }: Props) {
   }, [app, health, failed]);
 
   const ask = async (account: Account) => {
-    const issue = account.issues?.[0] || account.disconnectReason || account.status;
+    const issue = reasonOf(account) || STATE[account.status].label;
     const { isError } = await app.sendMessage({
       role: "user",
       content: [{ type: "text", text: `My ${platformName(account.platform)} account @${account.username ?? account.accountId} (account_id ${account.accountId}) shows "${issue}" in Zernio. Help me fix it.` }],
@@ -65,84 +77,93 @@ export function Home({ app, fullscreen, canExpand, locale }: Props) {
 
   const fmt = (n?: number) => (n === undefined ? "—" : new Intl.NumberFormat(locale).format(n));
   const listed = fullscreen ? accounts : attention.slice(0, 3);
-  const needAttention = (summary.warning ?? 0) + (summary.error ?? 0);
+
+  if (loading && !health && !error) {
+    return <div className="loading"><Spinner /></div>;
+  }
 
   return (
-    <>
-      {loading && health && <div className="progress" role="progressbar" aria-label="Refreshing" />}
-      {error && <p className="notice notice-error" role="alert">Could not load your workspace. {error}</p>}
-      {notice && <p className="notice" role="status">{notice}</p>}
+    <div className="stack">
+      {error && <Notice tone="danger" icon={<WarningDiamond className="icon" />}>Could not load your workspace. {error}</Notice>}
+      {notice && <Notice tone="muted">{notice}</Notice>}
 
-      <div className="stats">
-        <Stat label="Accounts" value={fmt(summary.total)} />
-        <Stat label="Need attention" value={fmt(needAttention)} tone={needAttention ? "warning" : undefined} />
-        <Stat label="Failed posts" value={fmt(failed)} tone={failed ? "error" : undefined} />
+      {/* 20. Every KPI on one row of one panel, divided by hairlines: grey label on top, then the figure. */}
+      <div className="kpis">
+        <Kpi label="Accounts" value={fmt(summary.total)} />
+        <Kpi label="Need attention" value={fmt(needAttention)} />
+        <Kpi label="Failed posts" value={fmt(failed)} />
       </div>
 
-      <section className="section">
-        <h2 className="eyebrow">{fullscreen ? "All accounts" : "Need attention"}</h2>
+      <Section
+        title={fullscreen ? "Accounts" : "Accounts that need attention"}
+        actions={
+          <Button variant="ghost" size="sm" icon onClick={() => void load()} disabled={loading} aria-label="Refresh" title="Refresh">
+            {loading ? <Spinner label="Refreshing" /> : <Reload className="icon" />}
+          </Button>
+        }
+      >
         {listed.length ? (
-          <ul className="list">
+          <ul className="rows">
             {listed.map((a) => (
-              <AccountRow key={a.accountId} account={a} onAsk={() => void ask(a)} />
+              <AccountRow
+                key={a.accountId}
+                account={a}
+                onReconnect={() => void app.openLink({ url: "https://zernio.com/dashboard" })}
+                onAsk={() => void ask(a)}
+              />
             ))}
           </ul>
         ) : (
-          <p className="empty"><CircleCheck size={16} aria-hidden /> Every account can post.</p>
+          // 54. An empty list says what it would hold, with an icon.
+          <div className="empty"><CheckDouble className="icon" /> Every account can post.</div>
         )}
-      </section>
+      </Section>
 
-      <div className="actions">
-        {canExpand && (
-          // requestDisplayMode must run inside the click: the host refuses it otherwise.
-          <button className="btn btn-primary" onClick={() => void app.requestDisplayMode({ mode: "fullscreen" })}>
-            <Maximize2 size={16} aria-hidden /> Open Zernio
-          </button>
-        )}
-        {!!summary.needsReconnect && (
-          <button className="btn" onClick={() => void app.openLink({ url: "https://zernio.com/dashboard" })}>
-            Reconnect in Zernio
-          </button>
-        )}
-        <button className="btn btn-ghost btn-icon" onClick={() => void load()} disabled={loading} aria-label="Refresh" title="Refresh">
-          <RefreshCw size={16} className={loading ? "spin" : undefined} aria-hidden />
-        </button>
-      </div>
-    </>
-  );
-}
-
-function Stat({ label, value, tone }: { label: string; value: string; tone?: "warning" | "error" }) {
-  return (
-    <div className={tone ? `stat stat-${tone}` : "stat"}>
-      <div className="eyebrow">{label}</div>
-      <div className="stat-value">{value}</div>
+      {canExpand && (
+        <div className="actions">
+          {/* requestDisplayMode must run inside the click: the host refuses it otherwise. */}
+          <Button variant="primary" onClick={() => void app.requestDisplayMode({ mode: "fullscreen" })}>
+            <Expand className="icon" /> Open Zernio
+          </Button>
+        </div>
+      )}
     </div>
   );
 }
 
-function AccountRow({ account, onAsk }: { account: Account; onAsk: () => void }) {
-  const issue = account.needsReconnect
-    ? account.disconnectReason || "Needs to be reconnected"
-    : account.issues?.[0] || account.disconnectReason || "";
-  const label = { healthy: "Healthy", warning: "Warning", error: "Error" }[account.status];
+function Kpi({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="kpi">
+      <div className="kpi-label">{label}</div>
+      <div className="type-metric">{value}</div>
+    </div>
+  );
+}
+
+function reasonOf(account: Account): string {
+  if (account.needsReconnect) return account.disconnectReason || "Needs to be reconnected";
+  return account.issues?.[0] || account.disconnectReason || "";
+}
+
+/** 40, 43, 66. One line: tile, name with the handle in grey, the state (its reason behind the info mark), the fix. */
+function AccountRow({ account, onReconnect, onAsk }: { account: Account; onReconnect: () => void; onAsk: () => void }) {
+  const state = STATE[account.status];
+  const reason = reasonOf(account);
   return (
     <li className="row">
-      <div className="row-main">
-        <div className="row-title">
-          {platformName(account.platform)} <span className="muted">{account.username ? `@${account.username}` : account.displayName}</span>
-        </div>
-        {issue && <div className="row-sub">{issue}</div>}
+      <PlatformTile platform={account.platform} />
+      <div className="row-name">
+        <span className="type-label">{platformName(account.platform)}</span>
+        <span className="row-secondary">{account.username ? `@${account.username}` : account.displayName}</span>
       </div>
-      <span className={`badge badge-${account.status}`}>
-        {account.status === "healthy" ? <CircleCheck size={14} aria-hidden /> : <CircleAlert size={14} aria-hidden />}
-        {label}
-      </span>
-      {account.status !== "healthy" && (
-        <button className="btn btn-ghost btn-icon" onClick={onAsk} title="Ask Claude to fix" aria-label={`Ask Claude to fix @${account.username ?? account.accountId}`}>
-          <SendHorizontal size={16} aria-hidden />
-        </button>
-      )}
+      <StatusPill label={state.label} tone={state.tone} title={reason || state.label} suffix={reason ? <InfoBox className="icon-sm" aria-hidden /> : undefined} />
+      <div className="row-fix">
+        {account.needsReconnect ? (
+          <Button size="sm" onClick={onReconnect}>Reconnect</Button>
+        ) : account.status !== "healthy" ? (
+          <Button size="sm" onClick={onAsk}>Ask Claude</Button>
+        ) : null}
+      </div>
     </li>
   );
 }
