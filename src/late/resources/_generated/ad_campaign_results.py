@@ -153,6 +153,19 @@ class AdCampaignResultsResource:
         )
         return self._client._get("/v1/ads/campaign-results/totals", params=params)
 
+    def get_campaign_result_events(self) -> dict[str, Any]:
+        """List the events that count as campaign results"""
+        return self._client._get("/v1/ads/campaign-results/events")
+
+    def set_campaign_result_events(self, event_names: Any) -> dict[str, Any]:
+        """Choose the events that count as campaign results"""
+        payload = self._build_body(
+            {
+                "eventNames": event_names,
+            }
+        )
+        return self._client._put("/v1/ads/campaign-results/events", data=payload)
+
     def list_campaign_result_metrics(self) -> dict[str, Any]:
         """List your result metrics"""
         return self._client._get("/v1/ads/campaign-results/metrics")
@@ -234,6 +247,19 @@ class AdCampaignResultsResource:
         return await self._client._aget(
             "/v1/ads/campaign-results/totals", params=params
         )
+
+    async def aget_campaign_result_events(self) -> dict[str, Any]:
+        """List the events that count as campaign results (async)"""
+        return await self._client._aget("/v1/ads/campaign-results/events")
+
+    async def aset_campaign_result_events(self, event_names: Any) -> dict[str, Any]:
+        """Choose the events that count as campaign results (async)"""
+        payload = self._build_body(
+            {
+                "eventNames": event_names,
+            }
+        )
+        return await self._client._aput("/v1/ads/campaign-results/events", data=payload)
 
     async def alist_campaign_result_metrics(self) -> dict[str, Any]:
         """List your result metrics (async)"""

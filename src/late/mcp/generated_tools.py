@@ -6232,6 +6232,59 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="List the events that count as campaign results",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def ad_campaign_results_get_campaign_result_events() -> str:
+        """List the events that count as campaign results
+
+        The names of the events sent to `POST /v1/events` that your team counts as campaign results. Only these are tied to a campaign when they arrive. Until you choose, they are `Purchase`, `Lead` and `QualifiedLead`.
+
+        Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit"""
+        client = _get_client()
+        try:
+            response = client.ad_campaign_results.get_campaign_result_events()
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Choose the events that count as campaign results",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def ad_campaign_results_set_campaign_result_events(
+        event_names: list[str] | None,
+    ) -> str:
+        """Choose the events that count as campaign results
+
+        Sets which stored events are tied to a campaign when they arrive and add to its results.
+
+        `Purchase` adds `sales` and `revenue`, `Lead` adds `leads` and `QualifiedLead` adds `qualified_leads`. Any other event adds 1 per event to a metric keyed `event_` plus its name in lowercase, e.g. `event_completeregistration`, which formulas and rules can read.
+
+        Events stored before the change keep how they were counted. Send `null` to go back to `Purchase`, `Lead` and `QualifiedLead`.
+
+        Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit
+
+        Args:
+            event_names: (required)"""
+        client = _get_client()
+        try:
+            response = client.ad_campaign_results.set_campaign_result_events(
+                event_names=event_names
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="List your result metrics",
             readOnlyHint=True,
             destructiveHint=False,

@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.661.0"
+  version: "1.662.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -82881,6 +82881,67 @@ paths:
                   totals: { type: object, additionalProperties: { type: number }, example: { qualified_leads: 140, sales: 23, revenue: 41200 } }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
+  /v1/ads/campaign-results/events:
+    get:
+      x-resource-group: ads
+      operationId: getCampaignResultEvents
+      tags: ["Ad Campaign Results"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "reddit"]
+      summary: List the events that count as campaign results
+      description: |
+        The names of the events sent to `POST /v1/events` that your team counts as campaign results. Only these are tied to a campaign when they arrive. Until you choose, they are `Purchase`, `Lead` and `QualifiedLead`.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: The event names.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [eventNames]
+                properties:
+                  eventNames: { type: array, items: { type: string }, example: [Purchase, Lead, CompleteRegistration] }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+    put:
+      x-resource-group: ads
+      operationId: setCampaignResultEvents
+      tags: ["Ad Campaign Results"]
+      x-platforms: ["meta", "google", "tiktok", "linkedin", "pinterest", "x", "reddit"]
+      summary: Choose the events that count as campaign results
+      description: |
+        Sets which stored events are tied to a campaign when they arrive and add to its results.
+
+        `Purchase` adds `sales` and `revenue`, `Lead` adds `leads` and `QualifiedLead` adds `qualified_leads`. Any other event adds 1 per event to a metric keyed `event_` plus its name in lowercase, e.g. `event_completeregistration`, which formulas and rules can read.
+
+        Events stored before the change keep how they were counted. Send `null` to go back to `Purchase`, `Lead` and `QualifiedLead`.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [eventNames]
+              properties:
+                eventNames:
+                  type: [array, "null"]
+                  maxItems: 50
+                  items: { type: string, minLength: 1, maxLength: 100 }
+                  example: [Purchase, Lead, CompleteRegistration]
+      responses:
+        '200':
+          description: The event names now counted.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [eventNames]
+                properties:
+                  eventNames: { type: array, items: { type: string } }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
   /v1/ads/campaign-results/metrics:
     get:
       x-resource-group: ads
@@ -101167,6 +101228,7 @@ paths:
                       sent: { type: integer, description: 'Event sends to a destination today, one per event and destination.' }
                       accepted: { type: integer, description: 'Those whose latest send the platform accepted.' }
                       matched: { type: integer, description: 'Today''s events matched to an ad campaign.' }
+                      counted: { type: integer, description: 'Today''s events that count as campaign results (see `GET /v1/ads/campaign-results/events`), the ones looked up for a campaign.' }
                   platforms:
                     type: array
                     description: One entry per forwarding rule of the profiles covered.
@@ -101277,6 +101339,7 @@ paths:
                       sent: { type: integer, description: 'Events first sent to a destination in the period, one per event and destination.' }
                       accepted: { type: integer, description: 'Those whose latest send the platform accepted.' }
                       matched: { type: integer, description: 'The period''s events matched to an ad campaign.' }
+                      counted: { type: integer, description: 'The period''s events that count as campaign results, the ones looked up for a campaign.' }
                   days:
                     type: array
                     description: 'Every day of the period, oldest first, zero where nothing happened.'
