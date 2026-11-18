@@ -1,0 +1,126 @@
+/*
+ * As in the ext-apps examples: the host's style variables drive structure
+ * (text, borders, surfaces, fonts, radii) and useHostStyles applies them; the
+ * values below are fallbacks, taken from zernio.com, for a host that sends
+ * none. Zernio's own identity is the accent and the mono labels.
+ */
+:root {
+  color-scheme: light dark;
+
+  --color-text-primary: light-dark(#1a1a1a, #fafafa);
+  --color-text-secondary: light-dark(#525252, #d4d4d4);
+  --color-text-tertiary: light-dark(#6b6b6b, #a3a3a3);
+  --color-text-success: light-dark(#15803d, #4ade80);
+  --color-text-warning: light-dark(#b45309, #fbbf24);
+  --color-text-danger: light-dark(#c0260f, #f87171);
+  --color-background-secondary: light-dark(#faf9f7, #151516);
+  --color-background-success: light-dark(#ecfdf3, rgb(74 222 128 / 0.1));
+  --color-background-warning: light-dark(#fffbeb, rgb(251 191 36 / 0.1));
+  --color-background-danger: light-dark(#fef2f0, rgb(248 113 113 / 0.1));
+  --color-border-primary: light-dark(#e4e4e4, rgb(255 255 255 / 0.14));
+  --color-border-secondary: light-dark(#f2f2f2, rgb(255 255 255 / 0.08));
+  --border-radius-sm: 4px;
+  --border-radius-md: 6px;
+  --font-sans: "Geist", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Geist Mono", ui-monospace, Menlo, Consolas, monospace;
+
+  /* Zernio */
+  --color-accent: #eb3514;
+  --color-accent-hover: #d22e0e;
+  --color-text-on-accent: #ffffff;
+}
+:root[data-theme="light"] { color-scheme: light; }
+:root[data-theme="dark"] { color-scheme: dark; }
+
+* { box-sizing: border-box; }
+html, body { margin: 0; background: transparent; }
+body {
+  font: 400 14px/20px var(--font-sans);
+  color: var(--color-text-primary);
+  -webkit-font-smoothing: antialiased;
+}
+button { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
+
+.app { position: relative; padding: 4px 2px 8px; }
+.app-fullscreen { max-width: 960px; margin: 0 auto; padding: 20px 16px 112px; }
+
+.header { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
+.mark { width: 14px; height: 14px; border-radius: 3px; background: var(--color-accent); }
+.brand { font-weight: 600; }
+
+.eyebrow {
+  margin: 0;
+  font: 500 10.5px/14px var(--font-mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-text-tertiary);
+}
+.muted { color: var(--color-text-tertiary); font-weight: 400; }
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  border: 1px solid var(--color-border-primary);
+  border-radius: var(--border-radius-md);
+}
+.stat { padding: 12px 14px; }
+.stat + .stat { border-left: 1px solid var(--color-border-primary); }
+.stat-value { margin-top: 6px; font: 500 22px/28px var(--font-mono); font-variant-numeric: tabular-nums; }
+.stat-warning .stat-value { color: var(--color-text-warning); }
+.stat-error .stat-value { color: var(--color-text-danger); }
+
+.section { margin-top: 20px; }
+.list { list-style: none; margin: 6px 0 0; padding: 0; }
+.row { display: flex; align-items: center; gap: 10px; padding: 10px 0; }
+.row + .row { border-top: 1px solid var(--color-border-secondary); }
+.row-main { flex: 1; min-width: 0; }
+.row-title { font-weight: 500; }
+.row-sub { font-size: 13px; color: var(--color-text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.empty { display: flex; align-items: center; gap: 8px; margin: 8px 0 0; color: var(--color-text-secondary); }
+.empty svg { color: var(--color-text-success); }
+
+.badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  height: 24px; padding: 0 8px;
+  border-radius: var(--border-radius-sm);
+  font-size: 12px; font-weight: 500; white-space: nowrap;
+}
+.badge-healthy { color: var(--color-text-success); background: var(--color-background-success); }
+.badge-warning { color: var(--color-text-warning); background: var(--color-background-warning); }
+.badge-error { color: var(--color-text-danger); background: var(--color-background-danger); }
+
+.actions { display: flex; align-items: center; gap: 8px; margin-top: 18px; }
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  height: 32px; padding: 0 12px;
+  border: 1px solid var(--color-border-primary);
+  border-radius: var(--border-radius-sm);
+  background: transparent;
+  font-size: 13px; font-weight: 500; cursor: pointer;
+}
+.btn:hover { background: var(--color-background-secondary); }
+.btn:disabled { opacity: 0.5; cursor: default; }
+.btn-primary { background: var(--color-accent); border-color: var(--color-accent); color: var(--color-text-on-accent); }
+.btn-primary:hover { background: var(--color-accent-hover); border-color: var(--color-accent-hover); }
+.btn-ghost { border-color: transparent; }
+.btn-icon { width: 32px; padding: 0; }
+.actions .btn-icon { margin-left: auto; }
+
+.notice { margin: 0 0 12px; padding: 8px 12px; border-radius: var(--border-radius-sm); font-size: 13px; background: var(--color-background-secondary); }
+.notice-error { color: var(--color-text-danger); background: var(--color-background-danger); }
+
+.progress {
+  position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, transparent, var(--color-accent), transparent) 0 0 / 40% 100% no-repeat;
+  animation: progress 1.2s ease-in-out infinite;
+}
+.skeleton { display: grid; gap: 10px; padding: 8px 2px; }
+.skeleton i { display: block; height: 14px; border-radius: 2px; background: var(--color-border-secondary); animation: pulse 1.4s ease-in-out infinite; }
+.spin { animation: spin 1s linear infinite; }
+
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes progress { from { background-position: -40% 0; } to { background-position: 140% 0; } }
+@keyframes pulse { 50% { opacity: 0.5; } }
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
+@media (max-width: 420px) { .stat { padding: 10px; } .stat-value { font-size: 18px; } }

@@ -100,8 +100,8 @@ def register_apps(mcp: FastMCP) -> None:
     _register_app(mcp)
 
 
-# The routed app, built from apps-src/ (Vite + TypeScript + the ext-apps SDK)
-# into bundle/app.html, committed so the Python image needs no Node. It loads
+# The app, built from apps-src/ (Vite + React + the ext-apps SDK)
+# into bundle/mcp-app.html, committed so the Python image needs no Node. It loads
 # its own data through the server's tools, so the opening tool only says which
 # screen to show.
 APP_URI = f"ui://zernio/{_VERSION}/app.html"
@@ -113,9 +113,8 @@ def _register_app(mcp: FastMCP) -> None:
             uri=APP_URI,
             name="Zernio",
             mime_type=UI_MIME_TYPE,
-            text=(_DIR / "bundle" / "app.html").read_text(encoding="utf-8"),
-            # The app draws its own frame.
-            meta={"ui": app_config_to_meta_dict(AppConfig(csp=_CSP, prefers_border=False))},
+            text=(_DIR / "bundle" / "mcp-app.html").read_text(encoding="utf-8"),
+            meta={"ui": app_config_to_meta_dict(AppConfig(csp=_CSP))},
         )
     )
 
