@@ -8831,6 +8831,14 @@ def register_generated_tools(mcp, _get_client):
         daily_level: Literal["campaign", "adset", "ad"] = "campaign",
         compare: Literal["previous"] | None = None,
         results: bool | None = None,
+        model: Literal[
+            "last_click",
+            "first_touch",
+            "last_non_direct",
+            "linear",
+            "position_based",
+            "time_decay",
+        ] = "last_click",
         depth: Literal["campaign", "adset", "ad"] = "campaign",
     ) -> str:
         """Get campaign tree
@@ -8901,6 +8909,7 @@ def register_generated_tools(mcp, _get_client):
         - `ad`: on every ad in `ads[]` as well. Heaviest (a long range × up to 100 ads per ad set); scope with `campaignId` to keep responses small.
                 compare: Set to `previous` to also read the period of the same length that ends the day before `fromDate`. Every campaign, ad set and ad gains `previousMetrics` (same fields as `metrics`) and the response gains `previousRange`, so a table can show the change against the previous period in one call.
                 results: Set to `true` to add your own results (see [Campaign results](/guides/campaign-results)): every campaign gains `results`, the values you sent for the range plus each formula they allow, and the response gains `resultMetrics` to label them.
+                model: With `results=true`: the attribution model your stored sales and leads count under in `results`. Uploaded values are the same under every model.
                 depth: How deep the tree goes. Metrics always roll up over every ad, whatever the depth.
 
         - `ad` (default): campaigns, their ad sets and each ad set's ads.
@@ -8930,6 +8939,7 @@ def register_generated_tools(mcp, _get_client):
                 daily_level=daily_level,
                 compare=compare,
                 results=results,
+                model=model,
                 depth=depth,
             )
             return _format_response(response)

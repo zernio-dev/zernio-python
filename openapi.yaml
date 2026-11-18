@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.671.0"
+  version: "1.672.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -85653,6 +85653,7 @@ paths:
         - { name: dailyLevel, in: query, schema: { type: string, enum: [campaign, adset, ad], default: campaign }, description: "Which tree levels get the `daily[]` series when `timeIncrement=1`. Ignored when `timeIncrement` is unset.\n\n- `campaign` (default): on campaign nodes only. The common per-campaign-trend case, and the smallest payload.\n- `adset`: on ad sets too.\n- `ad`: on every ad in `ads[]` as well. Heaviest (a long range × up to 100 ads per ad set); scope with `campaignId` to keep responses small." }
         - { name: compare, in: query, schema: { type: string, enum: [previous] }, description: "Set to `previous` to also read the period of the same length that ends the day before `fromDate`. Every campaign, ad set and ad gains `previousMetrics` (same fields as `metrics`) and the response gains `previousRange`, so a table can show the change against the previous period in one call." }
         - { name: results, in: query, schema: { type: boolean }, description: "Set to `true` to add your own results (see [Campaign results](/guides/campaign-results)): every campaign gains `results`, the values you sent for the range plus each formula they allow, and the response gains `resultMetrics` to label them." }
+        - { name: model, in: query, schema: { type: string, enum: [last_click, first_touch, last_non_direct, linear, position_based, time_decay], default: last_click }, description: 'With `results=true`: the attribution model your stored sales and leads count under in `results`. Uploaded values are the same under every model.' }
         - { name: depth, in: query, schema: { type: string, enum: [campaign, adset, ad], default: ad }, description: "How deep the tree goes. Metrics always roll up over every ad, whatever the depth.\n\n- `ad` (default): campaigns, their ad sets and each ad set's ads.\n- `adset`: campaigns and ad sets; every `ads[]` is empty and `adCount` still counts the ads.\n- `campaign`: campaigns only; every `adSets[]` is empty and `adSetCount` / `adCount` still count them." }
       responses:
         '200':

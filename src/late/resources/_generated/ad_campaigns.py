@@ -1000,6 +1000,7 @@ class AdCampaignsResource:
         daily_level: str | None = "campaign",
         compare: str | None = None,
         results: bool | None = None,
+        model: str | None = "last_click",
         depth: str | None = "ad",
     ) -> dict[str, Any]:
         """Get campaign tree"""
@@ -1026,6 +1027,7 @@ class AdCampaignsResource:
                 "dailyLevel": daily_level,
                 "compare": compare,
                 "results": results,
+                "model": model,
                 "depth": depth,
             }
         )
@@ -2871,6 +2873,7 @@ class AdCampaignsResource:
         daily_level: str | None = "campaign",
         compare: str | None = None,
         results: bool | None = None,
+        model: str | None = "last_click",
         depth: str | None = "ad",
     ) -> dict[str, Any]:
         """Get campaign tree (async)"""
@@ -2897,6 +2900,7 @@ class AdCampaignsResource:
                 "dailyLevel": daily_level,
                 "compare": compare,
                 "results": results,
+                "model": model,
                 "depth": depth,
             }
         )
