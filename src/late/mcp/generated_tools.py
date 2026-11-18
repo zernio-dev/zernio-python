@@ -7,13 +7,19 @@ DO NOT EDIT - Run `python scripts/generate_mcp_tools.py` to regenerate.
 from __future__ import annotations
 
 import base64
-from typing import Any, Literal
+from typing import TYPE_CHECKING, Any, Literal
 
 from fastmcp.exceptions import ToolError
 from mcp.types import ToolAnnotations
 
+from late.client.binary_response import BinaryResponse
+
+from .binary_content import binary_tool_result
 from .idempotency import same_arguments_key
 from .response_format import format_payload
+
+if TYPE_CHECKING:
+    from fastmcp.tools import ToolResult
 
 
 def _decode_base64(value: str) -> bytes:
@@ -39,10 +45,13 @@ def _enum_str(value: Any) -> str:
     return str(value)
 
 
-def _format_response(response: Any) -> str:
+def _format_response(response: Any) -> str | ToolResult:
     """Format SDK response for MCP output."""
     if response is None:
         return "Success"
+    if isinstance(response, BinaryResponse):
+        # A file the API streamed as raw bytes (media, attachment, receipt).
+        return binary_tool_result(response)
     if hasattr(response, "__dict__"):
         # Handle response objects
         if hasattr(response, "posts") and response.posts:
@@ -13772,15 +13781,18 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=False,
         )
     )
-    def ad_rules_get_ad_rule() -> str:
+    def ad_rules_get_ad_rule(rule_id: str) -> str:
         """Get an ad rule
 
         Returns one ad rule.
 
-        Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit"""
+        Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit
+
+        Args:
+            rule_id: (required)"""
         client = _get_client()
         try:
-            response = client.ad_rules.get_ad_rule()
+            response = client.ad_rules.get_ad_rule(rule_id=rule_id)
             return _format_response(response)
         except Exception as e:
             raise ToolError(f"Error: {e}") from e
@@ -13794,6 +13806,7 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def ad_rules_update_ad_rule(
+        rule_id: str,
         name: str | None = None,
         level: Literal["campaign", "adset", "ad", "keyword", "search_term"]
         | None = None,
@@ -13816,6 +13829,7 @@ def register_generated_tools(mcp, _get_client):
         Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit
 
         Args:
+            rule_id: (required)
             name
             level
             campaign_ids
@@ -13830,6 +13844,7 @@ def register_generated_tools(mcp, _get_client):
         client = _get_client()
         try:
             response = client.ad_rules.update_ad_rule(
+                rule_id=rule_id,
                 name=name,
                 level=level,
                 campaign_ids=campaign_ids,
@@ -13854,15 +13869,18 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=True,
         )
     )
-    def ad_rules_delete_ad_rule() -> str:
+    def ad_rules_delete_ad_rule(rule_id: str) -> str:
         """Delete an ad rule
 
         Deletes a rule and its run history. Changes the rule already made on the platform stay.
 
-        Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit"""
+        Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit
+
+        Args:
+            rule_id: (required)"""
         client = _get_client()
         try:
-            response = client.ad_rules.delete_ad_rule()
+            response = client.ad_rules.delete_ad_rule(rule_id=rule_id)
             return _format_response(response)
         except Exception as e:
             raise ToolError(f"Error: {e}") from e
@@ -16909,13 +16927,16 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=False,
         )
     )
-    def automations_get_automation() -> str:
+    def automations_get_automation(automation_id: str) -> str:
         """Get an automation
 
-        An automation installed from a template also carries `template`."""
+        An automation installed from a template also carries `template`.
+
+        Args:
+            automation_id: (required)"""
         client = _get_client()
         try:
-            response = client.automations.get_automation()
+            response = client.automations.get_automation(automation_id=automation_id)
             return _format_response(response)
         except Exception as e:
             raise ToolError(f"Error: {e}") from e
@@ -16929,6 +16950,7 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def automations_update_automation(
+        automation_id: str,
         name: str | None = None,
         status: Literal["active", "paused"] | None = None,
         trigger: dict[str, Any] | None = None,
@@ -16948,6 +16970,7 @@ def register_generated_tools(mcp, _get_client):
         Send the `version` you read as `If-Match`: if the automation was saved since, the edit is refused with a 409 (`automation_stale`). An edit is also refused with a 409 when another save lands while it is being applied.
 
         Args:
+            automation_id: (required)
             name
             status
             trigger: Object with keys: type (string, required); every (one of: 15m, 30m, 1h, 3h, 6h, 12h, 1d) - Run every interval. Send this or `times`, not both.; times (list of objects with keys days, at) - Set weekly times. Send this or `every`, not both.; startsAt (string) - Runs from this time on.; endsAt (string) - Stops running after this time. Must be after `startsAt`.; quietHours (object with keys from, to) - A daily window with no checks. It may wrap past midnight, such as `22:00` to `06:00`.
@@ -16960,6 +16983,7 @@ def register_generated_tools(mcp, _get_client):
         client = _get_client()
         try:
             response = client.automations.update_automation(
+                automation_id=automation_id,
                 name=name,
                 status=status,
                 trigger=trigger,
@@ -16982,11 +17006,14 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=True,
         )
     )
-    def automations_delete_automation() -> str:
-        """Delete an automation"""
+    def automations_delete_automation(automation_id: str) -> str:
+        """Delete an automation
+
+        Args:
+            automation_id: (required)"""
         client = _get_client()
         try:
-            response = client.automations.delete_automation()
+            response = client.automations.delete_automation(automation_id=automation_id)
             return _format_response(response)
         except Exception as e:
             raise ToolError(f"Error: {e}") from e
@@ -27454,11 +27481,14 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=False,
         )
     )
-    def connect_get_o_auth_app() -> str:
-        """Get an OAuth app"""
+    def connect_get_o_auth_app(app_id: str) -> str:
+        """Get an OAuth app
+
+        Args:
+            app_id: (required)"""
         client = _get_client()
         try:
-            response = client.connect.get_o_auth_app()
+            response = client.connect.get_o_auth_app(app_id=app_id)
             return _format_response(response)
         except Exception as e:
             raise ToolError(f"Error: {e}") from e
@@ -27472,6 +27502,7 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def connect_update_o_auth_app(
+        app_id: str,
         label: str | None = None,
         client_secret: str | None = None,
         meta_app_id: str | None = None,
@@ -27489,6 +27520,7 @@ def register_generated_tools(mcp, _get_client):
         The client ID cannot change: a different client ID is a different app, so add it and reconnect the accounts through it.
 
         Args:
+            app_id: (required)
             label
             client_secret
             meta_app_id: Instagram only: the numeric ID of the Meta app your Instagram app lives in. Zernio uses it with `metaAppSecret` to register the webhook. Send both or neither.
@@ -27498,6 +27530,7 @@ def register_generated_tools(mcp, _get_client):
         client = _get_client()
         try:
             response = client.connect.update_o_auth_app(
+                app_id=app_id,
                 label=label,
                 client_secret=client_secret,
                 meta_app_id=meta_app_id,
@@ -27517,16 +27550,17 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=True,
         )
     )
-    def connect_delete_o_auth_app(confirm: bool = False) -> str:
+    def connect_delete_o_auth_app(app_id: str, confirm: bool = False) -> str:
         """Remove an OAuth app
 
         Removes the app. Accounts connected through it can no longer refresh their tokens, so when any are connected the call returns 409 OAUTH_APP_IN_USE with `details.accountCount` unless `confirm=true` is passed. With confirm, those accounts are marked as needing reconnection and each fires `account.disconnected`.
 
         Args:
+            app_id: (required)
             confirm"""
         client = _get_client()
         try:
-            response = client.connect.delete_o_auth_app(confirm=confirm)
+            response = client.connect.delete_o_auth_app(app_id=app_id, confirm=confirm)
             return _format_response(response)
         except Exception as e:
             raise ToolError(f"Error: {e}") from e
@@ -29543,15 +29577,20 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=False,
         )
     )
-    def connect_get_org_connection() -> str:
+    def connect_get_org_connection(org_connection_id: str) -> str:
         """Get an organization connection
 
         One organization connection with its status and setup instructions.
 
-        Platforms: google, microsoft"""
+        Platforms: google, microsoft
+
+        Args:
+            org_connection_id: (required)"""
         client = _get_client()
         try:
-            response = client.connect.get_org_connection()
+            response = client.connect.get_org_connection(
+                org_connection_id=org_connection_id
+            )
             return _format_response(response)
         except Exception as e:
             raise ToolError(f"Error: {e}") from e
@@ -29565,7 +29604,9 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def connect_update_org_connection(
-        allowed_emails: list[str] | None = None, admin_email: str | None = None
+        org_connection_id: str,
+        allowed_emails: list[str] | None = None,
+        admin_email: str | None = None,
     ) -> str:
         """Update an organization connection
 
@@ -29576,12 +29617,15 @@ def register_generated_tools(mcp, _get_client):
         Platforms: google, microsoft
 
         Args:
+            org_connection_id: (required)
             allowed_emails
             admin_email"""
         client = _get_client()
         try:
             response = client.connect.update_org_connection(
-                allowed_emails=allowed_emails, admin_email=admin_email
+                org_connection_id=org_connection_id,
+                allowed_emails=allowed_emails,
+                admin_email=admin_email,
             )
             return _format_response(response)
         except Exception as e:
@@ -29595,17 +29639,22 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=True,
         )
     )
-    def connect_delete_org_connection() -> str:
+    def connect_delete_org_connection(org_connection_id: str) -> str:
         """Delete an organization connection
 
         Deletes the connection. Mailboxes added from it stay on the profile and answer `401` `reconnect_required` until you disconnect them or connect them another way.
 
         `mailboxAccountIds` lists them.
 
-        Platforms: google, microsoft"""
+        Platforms: google, microsoft
+
+        Args:
+            org_connection_id: (required)"""
         client = _get_client()
         try:
-            response = client.connect.delete_org_connection()
+            response = client.connect.delete_org_connection(
+                org_connection_id=org_connection_id
+            )
             return _format_response(response)
         except Exception as e:
             raise ToolError(f"Error: {e}") from e
@@ -31377,13 +31426,16 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=False,
         )
     )
-    def conversions_get_tracking_site() -> str:
+    def conversions_get_tracking_site(site_id: str) -> str:
         """Get a tracking site
 
-        One site, with its snippet, its custom subdomain and the latest result of each setup check."""
+        One site, with its snippet, its custom subdomain and the latest result of each setup check.
+
+        Args:
+            site_id: (required)"""
         client = _get_client()
         try:
-            response = client.conversions.get_tracking_site()
+            response = client.conversions.get_tracking_site(site_id=site_id)
             return _format_response(response)
         except Exception as e:
             raise ToolError(f"Error: {e}") from e
@@ -31397,6 +31449,7 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def conversions_update_tracking_site(
+        site_id: str,
         name: str | None = None,
         domains: list[str] | None = None,
         consent_mode: Literal["eu_opt_in", "opt_in", "opt_out"] | None = None,
@@ -31412,6 +31465,7 @@ def register_generated_tools(mcp, _get_client):
         `proxyPath` serves the tag from a path of the site itself, such as `brand.com/zt`, through a proxy on your server. The response's `proxy.secret` signs what the proxy forwards. `null` removes it.
 
         Args:
+            site_id: (required)
             name
             domains: Hosts allowed to send events, such as `brand.com`. Events from any other origin are dropped.
             consent_mode
@@ -31420,6 +31474,7 @@ def register_generated_tools(mcp, _get_client):
         client = _get_client()
         try:
             response = client.conversions.update_tracking_site(
+                site_id=site_id,
                 name=name,
                 domains=domains,
                 consent_mode=consent_mode,
@@ -31438,13 +31493,16 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=True,
         )
     )
-    def conversions_delete_tracking_site() -> str:
+    def conversions_delete_tracking_site(site_id: str) -> str:
         """Delete a tracking site
 
-        Stops collecting at once, removes the tag from the connected store and releases the custom subdomain. Events already stored are kept."""
+        Stops collecting at once, removes the tag from the connected store and releases the custom subdomain. Events already stored are kept.
+
+        Args:
+            site_id: (required)"""
         client = _get_client()
         try:
-            response = client.conversions.delete_tracking_site()
+            response = client.conversions.delete_tracking_site(site_id=site_id)
             return _format_response(response)
         except Exception as e:
             raise ToolError(f"Error: {e}") from e
@@ -33169,6 +33227,7 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def creator_campaigns_create_campaign_payout_batch(
+        campaign_id: str,
         participant_ids: list[str] | None = None,
         exclude_participant_ids: list[str] | None = None,
         payment_method_id: str | None = None,
@@ -33188,12 +33247,14 @@ def register_generated_tools(mcp, _get_client):
         A creator whose payouts were disabled before the hold ended is skipped and stays payable. A charge refunded or disputed during the hold pays nobody: every amount is payable again. ...
 
         Args:
+            campaign_id: Campaign ID. (required)
             participant_ids: Pay only these participants. Defaults to every payable participant who is ready.
             exclude_participant_ids: Leave these participants out.
             payment_method_id: A saved card of the billing owner's (`pm_...`). Defaults to the default payment method."""
         client = _get_client()
         try:
             response = client.creator_campaigns.create_campaign_payout_batch(
+                campaign_id=campaign_id,
                 participant_ids=participant_ids,
                 exclude_participant_ids=exclude_participant_ids,
                 payment_method_id=payment_method_id,
@@ -33211,19 +33272,20 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def creator_campaigns_list_campaign_payout_batches(
-        limit: int = 20, skip: int = 0
+        campaign_id: str, limit: int = 20, skip: int = 0
     ) -> str:
         """List payout batches
 
         The campaign's payout batches, newest first, with each creator's item.
 
         Args:
+            campaign_id: Campaign ID. (required)
             limit
             skip"""
         client = _get_client()
         try:
             response = client.creator_campaigns.list_campaign_payout_batches(
-                limit=limit, skip=skip
+                campaign_id=campaign_id, limit=limit, skip=skip
             )
             return _format_response(response)
         except Exception as e:
@@ -34158,7 +34220,7 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=False,
         )
     )
-    def creator_portal_get_creator_portal() -> str:
+    def creator_portal_get_creator_portal(token: str) -> str:
         """Read a creator invite or participant page
 
         What a creator sees behind a campaign link, with no API key. Never cached.
@@ -34168,10 +34230,13 @@ def register_generated_tools(mcp, _get_client):
         - An open invite token (from `POST /v1/creator-campaigns/{campaignId}/invite-link`): answers `kind: invite` with the campaign only.
         - A participant token (from an invite or a join): answers `kind: participant` with the creator's connected accounts, latest 100 submissions, draft versions, sample requests, earnings and payout setup. A creator held for approval reads it with `participant.status` `pending` (or `denied` once turned away).
 
-        Reading a participant page also re-checks the creator's connected accounts."""
+        Reading a participant page also re-checks the creator's connected accounts.
+
+        Args:
+            token: A participant token or an open invite token. A malformed token answers 404 like an unknown one. (required)"""
         client = _get_client()
         try:
-            response = client.creator_portal.get_creator_portal()
+            response = client.creator_portal.get_creator_portal(token=token)
             return _format_response(response)
         except Exception as e:
             raise ToolError(f"Error: {e}") from e
@@ -34185,7 +34250,7 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def creator_portal_join_creator_campaign(
-        display_name: str | None = None, email: str | None = None
+        token: str, display_name: str | None = None, email: str | None = None
     ) -> str:
         """Join a campaign
 
@@ -34198,12 +34263,13 @@ def register_generated_tools(mcp, _get_client):
         Open-link joins are limited to about 20 per IP address and 60 per link every 10 minutes.
 
         Args:
+            token: A participant token or an open invite token. A malformed token answers 404 like an unknown one. (required)
             display_name: Required when joining through an open invite link.
             email"""
         client = _get_client()
         try:
             response = client.creator_portal.join_creator_campaign(
-                display_name=display_name, email=email
+                token=token, display_name=display_name, email=email
             )
             return _format_response(response)
         except Exception as e:
@@ -34218,7 +34284,7 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def creator_portal_start_creator_connect(
-        platform: str, window_url: str | None = None
+        token: str, platform: str, window_url: str | None = None
     ) -> str:
         """Start connecting a creator account
 
@@ -34231,12 +34297,13 @@ def register_generated_tools(mcp, _get_client):
         when `windowUrl` is sent.
 
         Args:
+            token: A participant token or an open invite token. A malformed token answers 404 like an unknown one. (required)
             platform: One of the campaign's platforms, for example tiktok. (required)
             window_url: The Zernio connect window the participant page opened (`/connect/complete` with its `window` id). Any other URL answers 400 `invalid_field_value`."""
         client = _get_client()
         try:
             response = client.creator_portal.start_creator_connect(
-                platform=platform, window_url=window_url
+                token=token, platform=platform, window_url=window_url
             )
             return _format_response(response)
         except Exception as e:
@@ -34251,7 +34318,7 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def creator_portal_submit_creator_post(
-        url: str, draft_id: str | None = None
+        token: str, url: str, draft_id: str | None = None
     ) -> str:
         """Submit a post
 
@@ -34260,12 +34327,13 @@ def register_generated_tools(mcp, _get_client):
         attempts and 10 accepted posts per participant every 10 minutes.
 
         Args:
+            token: A participant token or an open invite token. A malformed token answers 404 like an unknown one. (required)
             url: The public link to the post. (required)
             draft_id: The approved draft this post publishes. Required when the campaign has `requireDraftApproval`: it must be one of the creator's own drafts, `approved`, and not used by another post yet (each draft backs one post only)."""
         client = _get_client()
         try:
             response = client.creator_portal.submit_creator_post(
-                url=url, draft_id=draft_id
+                token=token, url=url, draft_id=draft_id
             )
             return _format_response(response)
         except Exception as e:
@@ -34280,6 +34348,7 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def creator_portal_presign_creator_draft_upload(
+        token: str,
         filename: str,
         content_type: Literal[
             "video/mp4",
@@ -34298,13 +34367,14 @@ def register_generated_tools(mcp, _get_client):
         Accepted files: MP4, MOV or WebM video, JPG, PNG or WebP image, up to 500 MB. About 20 uploads per participant every 10 minutes.
 
         Args:
+            token: A participant token or an open invite token. A malformed token answers 404 like an unknown one. (required)
             filename: (required)
             content_type: (required)
             size: File size in bytes. Optional; over 500 MB answers 400."""
         client = _get_client()
         try:
             response = client.creator_portal.presign_creator_draft_upload(
-                filename=filename, content_type=content_type, size=size
+                token=token, filename=filename, content_type=content_type, size=size
             )
             return _format_response(response)
         except Exception as e:
@@ -34319,6 +34389,7 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def creator_portal_submit_creator_draft(
+        token: str,
         media_url: str,
         media_type: Literal["video", "image"],
         caption: str = "",
@@ -34336,6 +34407,7 @@ def register_generated_tools(mcp, _get_client):
         About 20 drafts per participant every 10 minutes.
 
         Args:
+            token: A participant token or an open invite token. A malformed token answers 404 like an unknown one. (required)
             media_url: The `publicUrl` of the uploaded file. (required)
             media_type: (required)
             caption
@@ -34343,6 +34415,7 @@ def register_generated_tools(mcp, _get_client):
         client = _get_client()
         try:
             response = client.creator_portal.submit_creator_draft(
+                token=token,
                 media_url=media_url,
                 media_type=media_type,
                 caption=caption,
@@ -34361,6 +34434,7 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def creator_portal_request_creator_sample(
+        token: str,
         product_id: str,
         shipping_address: dict[str, Any] | None,
         variant_id: str | None = None,
@@ -34376,6 +34450,7 @@ def register_generated_tools(mcp, _get_client):
         About 10 requests per participant every 10 minutes.
 
         Args:
+            token: A participant token or an open invite token. A malformed token answers 404 like an unknown one. (required)
             product_id: A `productId` from the campaign's `sampleProducts`. (required)
             variant_id: Required when the product lists `variants`.
             shipping_address: Object with keys: name (string, required); line1 (string, required); line2 (string); city (string, required); region (string); postalCode (string, required); country (string, required) - ISO 3166-1 alpha-2 country code.; phone (string) (required)
@@ -34383,6 +34458,7 @@ def register_generated_tools(mcp, _get_client):
         client = _get_client()
         try:
             response = client.creator_portal.request_creator_sample(
+                token=token,
                 product_id=product_id,
                 variant_id=variant_id,
                 shipping_address=shipping_address,
@@ -34400,7 +34476,7 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=True,
         )
     )
-    def creator_portal_remove_creator_account() -> str:
+    def creator_portal_remove_creator_account(token: str, account_id: str) -> str:
         """Remove a connected account
 
         Disconnects one of the creator's accounts. The account belongs to the creator, not to one campaign, so it stops
@@ -34409,10 +34485,16 @@ def register_generated_tools(mcp, _get_client):
         What its posts already earned stays: accrued, approved and paid amounts are not touched.
 
         Refused while a post from the account is still counting views, because those views are read through the
-        account. It can be removed once their tracking ends."""
+        account. It can be removed once their tracking ends.
+
+        Args:
+            token: A participant token or an open invite token. A malformed token answers 404 like an unknown one. (required)
+            account_id: The `id` of one of the participant's `accounts`. (required)"""
         client = _get_client()
         try:
-            response = client.creator_portal.remove_creator_account()
+            response = client.creator_portal.remove_creator_account(
+                token=token, account_id=account_id
+            )
             return _format_response(response)
         except Exception as e:
             raise ToolError(f"Error: {e}") from e
@@ -34425,7 +34507,9 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=True,
         )
     )
-    def creator_portal_set_creator_spark_code(spark_auth_code: str) -> str:
+    def creator_portal_set_creator_spark_code(
+        token: str, submission_id: str, spark_auth_code: str
+    ) -> str:
         """Set a post's Spark code
 
         The creator pastes the Spark code of one of their TikTok posts (generated in the TikTok app under the post's
@@ -34434,11 +34518,15 @@ def register_generated_tools(mcp, _get_client):
         Send `null` to clear it. The code is never returned: submissions only expose `hasSparkCode`.
 
         Args:
+            token: A participant token or an open invite token. A malformed token answers 404 like an unknown one. (required)
+            submission_id: The `id` of one of the participant's `submissions`. (required)
             spark_auth_code: The Spark code, or null to clear it. (required)"""
         client = _get_client()
         try:
             response = client.creator_portal.set_creator_spark_code(
-                spark_auth_code=spark_auth_code
+                token=token,
+                submission_id=submission_id,
+                spark_auth_code=spark_auth_code,
             )
             return _format_response(response)
         except Exception as e:
@@ -34452,7 +34540,9 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=False,
         )
     )
-    def creator_portal_get_creator_payouts(limit: int = 50, skip: int = 0) -> str:
+    def creator_portal_get_creator_payouts(
+        token: str, limit: int = 50, skip: int = 0
+    ) -> str:
         """List a creator's earnings history
 
         The participant's ledger entries, newest first, with the bucket each one moved money
@@ -34460,11 +34550,14 @@ def register_generated_tools(mcp, _get_client):
         side), plus the payout setup. Never cached.
 
         Args:
+            token: A participant token or an open invite token. A malformed token answers 404 like an unknown one. (required)
             limit
             skip"""
         client = _get_client()
         try:
-            response = client.creator_portal.get_creator_payouts(limit=limit, skip=skip)
+            response = client.creator_portal.get_creator_payouts(
+                token=token, limit=limit, skip=skip
+            )
             return _format_response(response)
         except Exception as e:
             raise ToolError(f"Error: {e}") from e
@@ -34478,7 +34571,7 @@ def register_generated_tools(mcp, _get_client):
         )
     )
     def creator_portal_start_creator_payouts(
-        action: Literal["onboard"], country: str | None = None
+        token: str, action: Literal["onboard"], country: str | None = None
     ) -> str:
         """Start payout onboarding
 
@@ -34488,12 +34581,13 @@ def register_generated_tools(mcp, _get_client):
         attempts per participant every 10 minutes.
 
         Args:
+            token: A participant token or an open invite token. A malformed token answers 404 like an unknown one. (required)
             action: (required)
             country: ISO 3166-1 alpha-2 country the creator lives in. Required on the first call."""
         client = _get_client()
         try:
             response = client.creator_portal.start_creator_payouts(
-                action=action, country=country
+                token=token, action=action, country=country
             )
             return _format_response(response)
         except Exception as e:
@@ -34507,15 +34601,18 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=True,
         )
     )
-    def creator_portal_create_creator_payout_login() -> str:
+    def creator_portal_create_creator_payout_login(token: str) -> str:
         """Open the creator's Stripe dashboard
 
         Returns a one-time link into the creator's Stripe Express dashboard, where they change bank
         details and see each payout. Only after the creator submitted their payout details. About
-        20 attempts per participant every 10 minutes."""
+        20 attempts per participant every 10 minutes.
+
+        Args:
+            token: A participant token or an open invite token. A malformed token answers 404 like an unknown one. (required)"""
         client = _get_client()
         try:
-            response = client.creator_portal.create_creator_payout_login()
+            response = client.creator_portal.create_creator_payout_login(token=token)
             return _format_response(response)
         except Exception as e:
             raise ToolError(f"Error: {e}") from e
@@ -34528,17 +34625,25 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=False,
         )
     )
-    def creator_portal_get_creator_payout_statement() -> str:
+    def creator_portal_get_creator_payout_statement(
+        token: str, transfer_id: str
+    ) -> str:
         """Download a payout statement
 
         A PDF statement of one paid payout to this creator: who paid, the campaign, the date, the amount and the Stripe transfer id. It is a statement of a payment, not a tax invoice.
 
         Only for a paid payout of this participant; anything else answers 404.
 
-        About 60 downloads per participant every 10 minutes."""
+        About 60 downloads per participant every 10 minutes.
+
+        Args:
+            token: A participant token or an open invite token. A malformed token answers 404 like an unknown one. (required)
+            transfer_id: (required)"""
         client = _get_client()
         try:
-            response = client.creator_portal.get_creator_payout_statement()
+            response = client.creator_portal.get_creator_payout_statement(
+                token=token, transfer_id=transfer_id
+            )
             return _format_response(response)
         except Exception as e:
             raise ToolError(f"Error: {e}") from e

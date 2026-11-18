@@ -1,6 +1,6 @@
 [project]
 name = "zernio-sdk"
-version = "1.4.1839"
+version = "1.4.1840"
 description = "The official Python library for the Zernio API"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -66,6 +66,7 @@ mcp = [
     # FastMCP 4 needs Python 3.11+; on 3.10 the MCP server is unavailable.
     "fastmcp>=4.2.1; python_version >= '3.11'",
     "mcp>=2.3.0",
+    "pypdf>=6.21.4",
     "sentry-sdk>=2.43.0",
     "starlette>=1.0.1",
     "uvicorn[standard]>=0.32.0",

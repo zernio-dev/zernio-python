@@ -434,6 +434,7 @@ class CreatorCampaignsResource:
 
     def create_campaign_payout_batch(
         self,
+        campaign_id: str,
         *,
         idempotency_key: str | None = None,
         participant_ids: list[str] | None = None,
@@ -452,13 +453,13 @@ class CreatorCampaignsResource:
         if idempotency_key is not None:
             headers["Idempotency-Key"] = idempotency_key
         return self._client._post(
-            "/v1/creator-campaigns/{campaignId}/payout-batches",
+            f"/v1/creator-campaigns/{campaign_id}/payout-batches",
             data=payload,
             headers=headers,
         )
 
     def list_campaign_payout_batches(
-        self, *, limit: int | None = 20, skip: int | None = 0
+        self, campaign_id: str, *, limit: int | None = 20, skip: int | None = 0
     ) -> dict[str, Any]:
         """List payout batches"""
         params = self._build_query(
@@ -468,7 +469,7 @@ class CreatorCampaignsResource:
             }
         )
         return self._client._get(
-            "/v1/creator-campaigns/{campaignId}/payout-batches", params=params
+            f"/v1/creator-campaigns/{campaign_id}/payout-batches", params=params
         )
 
     def preview_campaign_payout_batch(
@@ -1243,6 +1244,7 @@ class CreatorCampaignsResource:
 
     async def acreate_campaign_payout_batch(
         self,
+        campaign_id: str,
         *,
         idempotency_key: str | None = None,
         participant_ids: list[str] | None = None,
@@ -1261,13 +1263,13 @@ class CreatorCampaignsResource:
         if idempotency_key is not None:
             headers["Idempotency-Key"] = idempotency_key
         return await self._client._apost(
-            "/v1/creator-campaigns/{campaignId}/payout-batches",
+            f"/v1/creator-campaigns/{campaign_id}/payout-batches",
             data=payload,
             headers=headers,
         )
 
     async def alist_campaign_payout_batches(
-        self, *, limit: int | None = 20, skip: int | None = 0
+        self, campaign_id: str, *, limit: int | None = 20, skip: int | None = 0
     ) -> dict[str, Any]:
         """List payout batches (async)"""
         params = self._build_query(
@@ -1277,7 +1279,7 @@ class CreatorCampaignsResource:
             }
         )
         return await self._client._aget(
-            "/v1/creator-campaigns/{campaignId}/payout-batches", params=params
+            f"/v1/creator-campaigns/{campaign_id}/payout-batches", params=params
         )
 
     async def apreview_campaign_payout_batch(

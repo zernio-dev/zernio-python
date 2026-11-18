@@ -21,7 +21,7 @@ from pathlib import Path
 from typing import Any
 
 import yaml
-from openapi_body import flatten_request_body_schema, resolve_parameter_ref
+from openapi_body import flatten_request_body_schema, merge_parameters
 
 # Map OpenAPI tags to SDK resource names
 TAG_TO_RESOURCE: dict[str, str] = {
@@ -515,12 +515,14 @@ def _with_agent_view(operation_id: str, params: list[dict[str, Any]]) -> list[di
 def extract_parameters(
     operation: dict[str, Any],
     spec: dict[str, Any] | None = None,
+    path_item: dict[str, Any] | None = None,
 ) -> list[dict[str, Any]]:
     """Extract parameters from operation.
 
     `spec` is threaded through so `get_python_type` can dereference
     `$ref`/`allOf` schemas to read the underlying type. A `$ref` parameter
-    without `spec` raises ValueError.
+    without `spec` raises ValueError. `path_item` supplies the parameters its
+    operations share (see `merge_parameters`).
 
     Dedupes by Python name: when the same parameter appears in both the path
     and the request body (e.g. `accountId` as a path param and also in the
@@ -537,9 +539,7 @@ def extract_parameters(
         seen_names.add(entry["name"])
         params.append(entry)
 
-    for param in operation.get("parameters", []):
-        param = resolve_parameter_ref(param, spec)
-
+    for param in merge_parameters(path_item, operation, spec):
         if "name" not in param:
             continue
 
@@ -821,7 +821,7 @@ def main() -> int:
                 "title": summary.split("\n")[0].strip()[:80],
                 "params": _with_agent_view(
                     operation_id,
-                    _with_page_size(operation_id, _with_bounded_limit(operation_id, extract_parameters(operation, spec))),
+                    _with_page_size(operation_id, _with_bounded_limit(operation_id, extract_parameters(operation, spec, path_item))),
                 ),
                 "idempotency_scope": tool_name if operation_id in SAME_ARGUMENTS_IDEMPOTENT_OPERATIONS else None,
             })
@@ -837,13 +837,19 @@ def main() -> int:
         "from __future__ import annotations",
         "",
         "import base64",
-        "from typing import Any, Literal",
+        "from typing import TYPE_CHECKING, Any, Literal",
         "",
         "from fastmcp.exceptions import ToolError",
         "from mcp.types import ToolAnnotations",
         "",
+        "from late.client.binary_response import BinaryResponse",
+        "",
+        "from .binary_content import binary_tool_result",
         "from .idempotency import same_arguments_key",
         "from .response_format import format_payload",
+        "",
+        "if TYPE_CHECKING:",
+        "    from fastmcp.tools import ToolResult",
         "",
         "",
         "def _decode_base64(value: str) -> bytes:",
@@ -869,10 +875,13 @@ def main() -> int:
         "    return str(value)",
         "",
         "",
-        "def _format_response(response: Any) -> str:",
+        "def _format_response(response: Any) -> str | ToolResult:",
         '    """Format SDK response for MCP output."""',
         "    if response is None:",
         '        return "Success"',
+        "    if isinstance(response, BinaryResponse):",
+        "        # A file the API streamed as raw bytes (media, attachment, receipt).",
+        "        return binary_tool_result(response)",
         "    if hasattr(response, '__dict__'):",
         "        # Handle response objects",
         "        if hasattr(response, 'posts') and response.posts:",

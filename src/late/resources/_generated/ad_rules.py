@@ -202,12 +202,13 @@ class AdRulesResource:
         """Undo a change an ad rule made"""
         return self._client._post(f"/v1/ads/rules/activity/{activity_id}/undo")
 
-    def get_ad_rule(self) -> dict[str, Any]:
+    def get_ad_rule(self, rule_id: str) -> dict[str, Any]:
         """Get an ad rule"""
-        return self._client._get("/v1/ads/rules/{ruleId}")
+        return self._client._get(f"/v1/ads/rules/{rule_id}")
 
     def update_ad_rule(
         self,
+        rule_id: str,
         *,
         name: str | None = None,
         level: Any | None = None,
@@ -237,11 +238,11 @@ class AdRulesResource:
                 "enabled": enabled,
             }
         )
-        return self._client._patch("/v1/ads/rules/{ruleId}", data=payload)
+        return self._client._patch(f"/v1/ads/rules/{rule_id}", data=payload)
 
-    def delete_ad_rule(self) -> dict[str, Any]:
+    def delete_ad_rule(self, rule_id: str) -> dict[str, Any]:
         """Delete an ad rule"""
-        return self._client._delete("/v1/ads/rules/{ruleId}")
+        return self._client._delete(f"/v1/ads/rules/{rule_id}")
 
     def preview_ad_rule(self, rule_id: str) -> dict[str, Any]:
         """Preview an ad rule"""
@@ -397,12 +398,13 @@ class AdRulesResource:
         """Undo a change an ad rule made (async)"""
         return await self._client._apost(f"/v1/ads/rules/activity/{activity_id}/undo")
 
-    async def aget_ad_rule(self) -> dict[str, Any]:
+    async def aget_ad_rule(self, rule_id: str) -> dict[str, Any]:
         """Get an ad rule (async)"""
-        return await self._client._aget("/v1/ads/rules/{ruleId}")
+        return await self._client._aget(f"/v1/ads/rules/{rule_id}")
 
     async def aupdate_ad_rule(
         self,
+        rule_id: str,
         *,
         name: str | None = None,
         level: Any | None = None,
@@ -432,11 +434,11 @@ class AdRulesResource:
                 "enabled": enabled,
             }
         )
-        return await self._client._apatch("/v1/ads/rules/{ruleId}", data=payload)
+        return await self._client._apatch(f"/v1/ads/rules/{rule_id}", data=payload)
 
-    async def adelete_ad_rule(self) -> dict[str, Any]:
+    async def adelete_ad_rule(self, rule_id: str) -> dict[str, Any]:
         """Delete an ad rule (async)"""
-        return await self._client._adelete("/v1/ads/rules/{ruleId}")
+        return await self._client._adelete(f"/v1/ads/rules/{rule_id}")
 
     async def apreview_ad_rule(self, rule_id: str) -> dict[str, Any]:
         """Preview an ad rule (async)"""

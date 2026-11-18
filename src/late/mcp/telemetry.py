@@ -112,5 +112,7 @@ def quiet_routine_logs() -> None:
 
 def is_expected_failure(exc: Exception) -> bool:
     if isinstance(exc, ToolError) and exc.__cause__ is not None:
-        return isinstance(exc.__cause__, LateError)
+        # A generated tool re-wraps what it raised itself, e.g. the refusal
+        # of a file too large to return.
+        return isinstance(exc.__cause__, (LateError, FastMCPError))
     return isinstance(exc, (FastMCPError, NotFoundError, LateError))

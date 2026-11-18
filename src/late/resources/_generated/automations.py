@@ -183,12 +183,13 @@ class AutomationsResource:
         )
         return self._client._post("/v1/automations/preview", data=body, params=params)
 
-    def get_automation(self) -> dict[str, Any]:
+    def get_automation(self, automation_id: str) -> dict[str, Any]:
         """Get an automation"""
-        return self._client._get("/v1/automations/{automationId}")
+        return self._client._get(f"/v1/automations/{automation_id}")
 
     def update_automation(
         self,
+        automation_id: str,
         *,
         if_match: str | None = None,
         name: str | None = None,
@@ -215,11 +216,11 @@ class AutomationsResource:
                 "limits": limits,
             }
         )
-        return self._client._patch("/v1/automations/{automationId}", data=payload)
+        return self._client._patch(f"/v1/automations/{automation_id}", data=payload)
 
-    def delete_automation(self) -> dict[str, Any]:
+    def delete_automation(self, automation_id: str) -> dict[str, Any]:
         """Delete an automation"""
-        return self._client._delete("/v1/automations/{automationId}")
+        return self._client._delete(f"/v1/automations/{automation_id}")
 
     def activate_automation(self, automation_id: str) -> dict[str, Any]:
         """Turn an automation on"""
@@ -586,12 +587,13 @@ class AutomationsResource:
             "/v1/automations/preview", data=body, params=params
         )
 
-    async def aget_automation(self) -> dict[str, Any]:
+    async def aget_automation(self, automation_id: str) -> dict[str, Any]:
         """Get an automation (async)"""
-        return await self._client._aget("/v1/automations/{automationId}")
+        return await self._client._aget(f"/v1/automations/{automation_id}")
 
     async def aupdate_automation(
         self,
+        automation_id: str,
         *,
         if_match: str | None = None,
         name: str | None = None,
@@ -619,12 +621,12 @@ class AutomationsResource:
             }
         )
         return await self._client._apatch(
-            "/v1/automations/{automationId}", data=payload
+            f"/v1/automations/{automation_id}", data=payload
         )
 
-    async def adelete_automation(self) -> dict[str, Any]:
+    async def adelete_automation(self, automation_id: str) -> dict[str, Any]:
         """Delete an automation (async)"""
-        return await self._client._adelete("/v1/automations/{automationId}")
+        return await self._client._adelete(f"/v1/automations/{automation_id}")
 
     async def aactivate_automation(self, automation_id: str) -> dict[str, Any]:
         """Turn an automation on (async)"""

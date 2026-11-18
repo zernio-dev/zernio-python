@@ -22,7 +22,7 @@ from pathlib import Path
 from typing import Any
 
 import yaml
-from openapi_body import flatten_request_body_schema, resolve_parameter_ref
+from openapi_body import flatten_request_body_schema, merge_parameters
 
 # Map OpenAPI tags to resource class names
 TAG_TO_RESOURCE: dict[str, str] = {
@@ -129,15 +129,15 @@ def get_python_type(schema: dict[str, Any], required: bool = True) -> str:
 
 
 def extract_parameters(
-    operation: dict[str, Any], spec: dict[str, Any]
+    operation: dict[str, Any],
+    spec: dict[str, Any],
+    path_item: dict[str, Any] | None = None,
 ) -> list[dict[str, Any]]:
-    """Extract parameters from an operation."""
+    """Extract parameters from an operation (and its path item's shared ones)."""
     params = []
 
     # Query/path parameters
-    for param in operation.get("parameters", []):
-        param = resolve_parameter_ref(param, spec)
-
+    for param in merge_parameters(path_item, operation, spec):
         if "name" not in param:
             continue
 
@@ -675,7 +675,7 @@ def main() -> int:
                 "path": path,
                 "summary": operation.get("summary", ""),
                 "description": operation.get("description", ""),
-                "params": extract_parameters(operation, spec),
+                "params": extract_parameters(operation, spec, path_item),
             })
 
     # Paths
