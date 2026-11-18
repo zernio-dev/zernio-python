@@ -26320,7 +26320,7 @@ def register_generated_tools(mcp, _get_client):
 
         Reconnecting the same portal and profile updates the stored connection in place and keeps its settings.
 
-        Requested scopes: `oauth`, `crm.objects.contacts.read`, `crm.objects.contacts.write`.
+        Requested scopes: `oauth`, `crm.objects.contacts.read`, `crm.objects.contacts.write`. Optional: `crm.objects.deals.read` (deals in ad results), `automation` (the Send WhatsApp template workflow ...
 
         Platforms: hubspot
 
