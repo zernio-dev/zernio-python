@@ -13,6 +13,7 @@ from typing import TYPE_CHECKING, Any
 
 import httpx
 
+from .binary_response import BinaryResponse, is_json_content_type
 from .exceptions import (
     LateAPIError,
     LateAuthenticationError,
@@ -263,10 +264,12 @@ class BaseClient:
                 details=error_data,
             )
 
-        # Return parsed JSON or empty dict
-        if response.content:
+        # Return parsed JSON, the raw bytes of a file, or an empty dict
+        if not response.content:
+            return {}
+        if is_json_content_type(response.headers.get("content-type")):
             return response.json()  # type: ignore[no-any-return]
-        return {}
+        return BinaryResponse.from_response(response)
 
     def _request_with_retry(
         self,

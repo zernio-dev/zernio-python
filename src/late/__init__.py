@@ -6,6 +6,7 @@ Schedule social media posts across multiple platforms.
 All original ``Late*`` names are still available for backwards compatibility.
 """
 
+from .client.binary_response import BinaryResponse
 from .client.exceptions import (
     LateAPIError,
     LateAuthenticationError,
@@ -48,6 +49,7 @@ __all__ = [
     # Client
     "Zernio",
     "Late",
+    "BinaryResponse",
     # Enums - Core
     "Platform",
     "PostStatus",
