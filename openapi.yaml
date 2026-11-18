@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.678.0"
+  version: "1.679.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -50299,6 +50299,10 @@ paths:
 
         Zernio checks both keys with Axon before saving them. The account then receives the conversion events you forward to it (`POST /v1/events`, forwarding rules), and its Event Key works as a site tag on tracking sites.
 
+        Add the optional Report Key to sync AppLovin spend. Every few hours Zernio reads spend, impressions and clicks per campaign and creative set for the last 7 days, so AppLovin campaigns show in the ads campaign listings and in campaign results.
+
+        Zernio checks the Report Key with AppLovin before saving it. Connecting again without a Report Key keeps the one already saved.
+
         Requires the Ads add-on.
       requestBody:
         required: true
@@ -50314,6 +50318,9 @@ paths:
                 eventKey:
                   type: string
                   description: 'Event Key from the Keys page of Axon Ads Manager: 8 to 128 letters, digits, dots, dashes or underscores.'
+                reportKey:
+                  type: string
+                  description: 'Optional Report Key from the Keys page of your AppLovin account. With it, Zernio syncs AppLovin spend per campaign.'
                 name:
                   type: string
                   maxLength: 100
@@ -50349,12 +50356,12 @@ paths:
                 accountName: "Axon abc123"
         '400': { $ref: '#/components/responses/BadRequest' }
         '401':
-          description: "Unauthorized, or Axon did not accept the Conversion API key and Event Key (code invalid_credentials)."
+          description: "Unauthorized, or Axon did not accept the Conversion API key and Event Key, or AppLovin did not accept the Report Key (code invalid_credentials)."
         '402': { $ref: '#/components/responses/PaymentRequired' }
         '403':
           description: Ads add-on required.
         '502':
-          description: Axon could not confirm the keys right now, so nothing was saved (code platform_api_error). Retry in a minute.
+          description: Axon or AppLovin could not confirm the keys right now, so nothing was saved (code platform_api_error). Retry in a minute.
 
   /v1/connect/snapchat-ads/credentials:
     post:

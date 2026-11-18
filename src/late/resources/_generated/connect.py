@@ -975,6 +975,7 @@ class ConnectResource:
         event_key: str,
         profile_id: str,
         *,
+        report_key: str | None = None,
         name: str | None = None,
         state: str | None = None,
         redirect_url: str | None = None,
@@ -984,6 +985,7 @@ class ConnectResource:
             {
                 "apiKey": api_key,
                 "eventKey": event_key,
+                "reportKey": report_key,
                 "name": name,
                 "profileId": profile_id,
                 "state": state,
@@ -2675,6 +2677,7 @@ class ConnectResource:
         event_key: str,
         profile_id: str,
         *,
+        report_key: str | None = None,
         name: str | None = None,
         state: str | None = None,
         redirect_url: str | None = None,
@@ -2684,6 +2687,7 @@ class ConnectResource:
             {
                 "apiKey": api_key,
                 "eventKey": event_key,
+                "reportKey": report_key,
                 "name": name,
                 "profileId": profile_id,
                 "state": state,

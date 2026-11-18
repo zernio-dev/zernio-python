@@ -28149,6 +28149,7 @@ def register_generated_tools(mcp, _get_client):
         api_key: str,
         event_key: str,
         profile_id: str,
+        report_key: str | None = None,
         name: str | None = None,
         state: str | None = None,
         redirect_url: str | None = None,
@@ -28159,11 +28160,16 @@ def register_generated_tools(mcp, _get_client):
 
         Zernio checks both keys with Axon before saving them. The account then receives the conversion events you forward to it (`POST /v1/events`, forwarding rules), and its Event Key works as a site tag on tracking sites.
 
+        Add the optional Report Key to sync AppLovin spend. Every few hours Zernio reads spend, impressions and clicks per campaign and creative set for the last 7 days, so AppLovin campaigns show in the ads campaign listings and in campaign results.
+
+        Zernio checks the Report Key with AppLovin before saving it. Connecting again without a Report Key keeps the one already saved.
+
         Requires the Ads add-on.
 
         Args:
             api_key: Conversion API key from the Keys page of Axon Ads Manager. (required)
             event_key: Event Key from the Keys page of Axon Ads Manager: 8 to 128 letters, digits, dots, dashes or underscores. (required)
+            report_key: Optional Report Key from the Keys page of your AppLovin account. With it, Zernio syncs AppLovin spend per campaign.
             name: Optional display name for the account.
             profile_id: Your Zernio profile ID (required)
             state: Optional state passthrough for the connect flow.
@@ -28173,6 +28179,7 @@ def register_generated_tools(mcp, _get_client):
             response = client.connect.connect_app_lovin_ads_credentials(
                 api_key=api_key,
                 event_key=event_key,
+                report_key=report_key,
                 name=name,
                 profile_id=profile_id,
                 state=state,
