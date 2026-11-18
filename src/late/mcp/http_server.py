@@ -15,16 +15,27 @@ the Streamable HTTP endpoint.
 """
 
 import argparse
+import base64
+import hashlib
+import json
 import logging
 import os
+import re
 import sys
+import urllib.parse
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 import anyio
 import uvicorn
 from starlette.applications import Starlette
 from starlette.requests import ClientDisconnect, Request
-from starlette.responses import JSONResponse, PlainTextResponse, RedirectResponse
+from starlette.responses import (
+    HTMLResponse,
+    JSONResponse,
+    PlainTextResponse,
+    RedirectResponse,
+)
 from starlette.types import ASGIApp, Receive, Scope, Send
 
 from late.mcp.auth import is_allowed_origin
@@ -97,9 +108,58 @@ for _logger_name in (
     logging.getLogger(_logger_name).addFilter(_disconnect_filter)
 
 
+def _render_landing_page() -> str:
+    """The landing page at /, with this deployment's URL filled in."""
+    logo = (Path(__file__).parent / "logo.svg").read_text()
+    url = f"{MCP_PUBLIC_URL}{ENDPOINT_MCP}"
+    cursor_config = base64.b64encode(json.dumps({"url": url}).encode()).decode()
+    vscode_config = urllib.parse.quote(json.dumps({"type": "http", "url": url}))
+    return (
+        (Path(__file__).parent / "landing.html")
+        .read_text()
+        .replace("{{LOGO}}", logo)
+        .replace("{{MCP_URL}}", MCP_PUBLIC_URL)
+        .replace("{{CURSOR_CONFIG}}", cursor_config)
+        .replace("{{VSCODE_CONFIG}}", vscode_config)
+        .replace("{{CLAUDE_CONNECTOR_URL}}", urllib.parse.quote(url, safe=""))
+    )
+
+
+_LANDING_PAGE = _render_landing_page()
+
+# The page's one inline script is allowed by its hash, so nothing else can run.
+_LANDING_SCRIPT_HASH = base64.b64encode(
+    hashlib.sha256(
+        re.search(r"<script>(.*?)</script>", _LANDING_PAGE, re.S).group(1).encode()
+    ).digest()
+).decode()
+_LANDING_HEADERS = {
+    "Content-Security-Policy": (
+        "default-src 'none'; "
+        f"script-src 'sha256-{_LANDING_SCRIPT_HASH}'; "
+        "style-src 'unsafe-inline'; "
+        "font-src https://cdn.jsdelivr.net; "
+        "img-src https://zernio.com data:; "
+        "base-uri 'none'; form-action 'none'; frame-ancestors 'none'"
+    ),
+    "X-Content-Type-Options": "nosniff",
+    "X-Frame-Options": "DENY",
+    "Referrer-Policy": "strict-origin-when-cross-origin",
+    "Permissions-Policy": "camera=(), microphone=(), geolocation=()",
+    "Strict-Transport-Security": "max-age=31536000",
+    # Revalidate every load, like zernio.com, so a deploy shows up at once.
+    "Cache-Control": "public, max-age=0, must-revalidate",
+    # / answers HTML or JSON by Accept, so caches must key on it.
+    "Vary": "Accept",
+}
+
+
 @mcp.custom_route(ENDPOINT_ROOT, methods=["GET"])
-async def handle_root(_request: Request) -> JSONResponse:
-    """Root endpoint with server information (public, no auth)."""
+async def handle_root(request: Request) -> HTMLResponse | JSONResponse:
+    """Root endpoint (public, no auth): the landing page for browsers, server
+    information as JSON for everything else."""
+    if "text/html" in request.headers.get("accept", ""):
+        return HTMLResponse(_LANDING_PAGE, headers=_LANDING_HEADERS)
     return JSONResponse(
         {
             "service": SERVICE_NAME,
@@ -113,7 +173,8 @@ async def handle_root(_request: Request) -> JSONResponse:
             },
             "documentation": DOCS_URL,
             "authentication": "Required: 'Authorization: Bearer YOUR_API_KEY'",
-        }
+        },
+        headers={"Vary": "Accept"},
     )
 
 
