@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.653.0"
+  version: "1.653.1"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -15815,7 +15815,7 @@ components:
           description: What a person new to Salesforce is created as.
         logDeliveryStatus:
           type: boolean
-          description: Whether sent messages in the transcript are marked delivered, read or failed.
+          description: Whether sent WhatsApp, SMS and RCS messages in the transcript are marked sent, delivered, read, played or failed.
         syncIssue:
           type: [object, "null"]
           description: >-
@@ -54280,8 +54280,8 @@ paths:
       x-platforms: [hubspot]
       summary: Update HubSpot account settings
       description: >-
-        Turn contact sync, message logging or deal reporting on or off for a connected HubSpot portal. Send at
-        least one field; omitted fields keep their value. Settings survive reconnecting the same portal.
+        Turn contact sync, message logging, delivery status or deal reporting on or off for a connected HubSpot portal,
+        or set defaults for the contact properties the portal requires. Send at least one field; omitted fields keep their value. Settings survive reconnecting the same portal.
       parameters:
         - name: accountId
           in: path
@@ -54421,13 +54421,13 @@ paths:
                   description: What a person new to Salesforce is created as. Leads get Company `[not provided]`.
                 logDeliveryStatus:
                   type: boolean
-                  description: Mark sent messages in the transcript as delivered, read or failed.
+                  description: Mark sent WhatsApp, SMS and RCS messages in the transcript as sent, delivered, read, played or failed.
                 useOpportunitiesInResults:
                   type: boolean
                   description: >-
                     Count closed-won Opportunities as sales on the ad campaign named by their Primary Campaign Source,
                     in campaign results and ad rules. Turning it on also fills in the Opportunities won in the last 90
-                    days. Lost or reopened Opportunities stop counting.
+                    days, never sent to the ad platforms. Lost or reopened Opportunities stop counting.
                 reportOpportunitiesToAds:
                   type: boolean
                   description: >-

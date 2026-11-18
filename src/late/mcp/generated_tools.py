@@ -2310,7 +2310,7 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Update HubSpot account settings
 
-        Turn contact sync, message logging or deal reporting on or off for a connected HubSpot portal. Send at least one field; omitted fields keep their value. Settings survive reconnecting the same portal.
+        Turn contact sync, message logging, delivery status or deal reporting on or off for a connected HubSpot portal, or set defaults for the contact properties the portal requires. Send at least one field; omitted fields keep their value. Settings survive reconnecting the same portal.
 
         Platforms: hubspot
 
@@ -2389,8 +2389,8 @@ def register_generated_tools(mcp, _get_client):
             sync_contacts: Create a Lead or Contact for an inbox contact that matches nobody by phone (any phone field) or email. A match is linked as it is and never updated.
             log_messages: Log inbound and outbound inbox messages as one conversation Task per person, channel and day.
             create_as: What a person new to Salesforce is created as. Leads get Company `[not provided]`.
-            log_delivery_status: Mark sent messages in the transcript as delivered, read or failed.
-            use_opportunities_in_results: Count closed-won Opportunities as sales on the ad campaign named by their Primary Campaign Source, in campaign results and ad rules. Turning it on also fills in the Opportunities won in the last 90 days. Lost or reopened Opportunities stop counting.
+            log_delivery_status: Mark sent WhatsApp, SMS and RCS messages in the transcript as sent, delivered, read, played or failed.
+            use_opportunities_in_results: Count closed-won Opportunities as sales on the ad campaign named by their Primary Campaign Source, in campaign results and ad rules. Turning it on also fills in the Opportunities won in the last 90 days, never sent to the ad platforms. Lost or reopened Opportunities stop counting.
             report_opportunities_to_ads: Send each newly closed-won Opportunity once as a Purchase event (source `salesforce`, event id `salesforce_opp_{orgId}_{opportunityId}`) to the profile's event destinations, with the email and phone of its primary contact role, else the first Contact of its Account. Opportunities won before it was turned on are not sent."""
         client = _get_client()
         try:
