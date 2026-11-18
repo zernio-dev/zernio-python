@@ -31,6 +31,30 @@ def resolve_parameter_ref(
     return param
 
 
+def merge_parameters(
+    path_item: dict[str, Any] | None,
+    operation: dict[str, Any],
+    spec: dict[str, Any] | None,
+) -> list[dict[str, Any]]:
+    """Resolved parameters for an operation, including its path item's.
+
+    OpenAPI lets a path item declare `parameters` shared by all of its
+    operations (e.g. `ruleId` on `/v1/ads/rules/{ruleId}`). Reading only the
+    operation's list drops them and leaves `{ruleId}` unfilled in the URL. An
+    operation-level parameter with the same name and location wins.
+    """
+    path_params = [
+        resolve_parameter_ref(p, spec) for p in (path_item or {}).get("parameters", [])
+    ]
+    op_params = [
+        resolve_parameter_ref(p, spec) for p in operation.get("parameters", [])
+    ]
+    overridden = {(p.get("name"), p.get("in")) for p in op_params}
+    return [
+        p for p in path_params if (p.get("name"), p.get("in")) not in overridden
+    ] + op_params
+
+
 def flatten_request_body_schema(
     schema: dict[str, Any], spec: dict[str, Any]
 ) -> dict[str, Any] | None:

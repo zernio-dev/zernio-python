@@ -510,12 +510,13 @@ class ConversionsResource:
         headers = {"Idempotency-Key": idempotency_key}
         return self._client._post("/v1/tracking-sites", data=body, headers=headers)
 
-    def get_tracking_site(self) -> dict[str, Any]:
+    def get_tracking_site(self, site_id: str) -> dict[str, Any]:
         """Get a tracking site"""
-        return self._client._get("/v1/tracking-sites/{siteId}")
+        return self._client._get(f"/v1/tracking-sites/{site_id}")
 
     def update_tracking_site(
         self,
+        site_id: str,
         *,
         name: str | None = None,
         domains: list[str] | None = None,
@@ -531,11 +532,11 @@ class ConversionsResource:
             custom_hostname=custom_hostname,
             proxy_path=proxy_path,
         )
-        return self._client._patch("/v1/tracking-sites/{siteId}", data=payload)
+        return self._client._patch(f"/v1/tracking-sites/{site_id}", data=payload)
 
-    def delete_tracking_site(self) -> dict[str, Any]:
+    def delete_tracking_site(self, site_id: str) -> dict[str, Any]:
         """Delete a tracking site"""
-        return self._client._delete("/v1/tracking-sites/{siteId}")
+        return self._client._delete(f"/v1/tracking-sites/{site_id}")
 
     def rotate_tracking_site_key(
         self, site_id: str, idempotency_key: str
@@ -1356,12 +1357,13 @@ class ConversionsResource:
             "/v1/tracking-sites", data=body, headers=headers
         )
 
-    async def aget_tracking_site(self) -> dict[str, Any]:
+    async def aget_tracking_site(self, site_id: str) -> dict[str, Any]:
         """Get a tracking site (async)"""
-        return await self._client._aget("/v1/tracking-sites/{siteId}")
+        return await self._client._aget(f"/v1/tracking-sites/{site_id}")
 
     async def aupdate_tracking_site(
         self,
+        site_id: str,
         *,
         name: str | None = None,
         domains: list[str] | None = None,
@@ -1377,11 +1379,11 @@ class ConversionsResource:
             custom_hostname=custom_hostname,
             proxy_path=proxy_path,
         )
-        return await self._client._apatch("/v1/tracking-sites/{siteId}", data=payload)
+        return await self._client._apatch(f"/v1/tracking-sites/{site_id}", data=payload)
 
-    async def adelete_tracking_site(self) -> dict[str, Any]:
+    async def adelete_tracking_site(self, site_id: str) -> dict[str, Any]:
         """Delete a tracking site (async)"""
-        return await self._client._adelete("/v1/tracking-sites/{siteId}")
+        return await self._client._adelete(f"/v1/tracking-sites/{site_id}")
 
     async def arotate_tracking_site_key(
         self, site_id: str, idempotency_key: str

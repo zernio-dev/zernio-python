@@ -589,12 +589,13 @@ class ConnectResource:
         )
         return self._client._post("/v1/connect/oauth-apps", data=payload)
 
-    def get_o_auth_app(self) -> dict[str, Any]:
+    def get_o_auth_app(self, app_id: str) -> dict[str, Any]:
         """Get an OAuth app"""
-        return self._client._get("/v1/connect/oauth-apps/{appId}")
+        return self._client._get(f"/v1/connect/oauth-apps/{app_id}")
 
     def update_o_auth_app(
         self,
+        app_id: str,
         *,
         label: str | None = None,
         client_secret: str | None = None,
@@ -612,14 +613,16 @@ class ConnectResource:
             slack_signing_secret=slack_signing_secret,
             scope_areas=scope_areas,
         )
-        return self._client._patch("/v1/connect/oauth-apps/{appId}", data=payload)
+        return self._client._patch(f"/v1/connect/oauth-apps/{app_id}", data=payload)
 
-    def delete_o_auth_app(self, *, confirm: bool | None = False) -> dict[str, Any]:
+    def delete_o_auth_app(
+        self, app_id: str, *, confirm: bool | None = False
+    ) -> dict[str, Any]:
         """Remove an OAuth app"""
         params = self._build_params(
             confirm=confirm,
         )
-        return self._client._delete("/v1/connect/oauth-apps/{appId}", params=params)
+        return self._client._delete(f"/v1/connect/oauth-apps/{app_id}", params=params)
 
     def test_o_auth_app(self, app_id: str) -> dict[str, Any]:
         """Check an OAuth app's keys"""
@@ -1451,12 +1454,16 @@ class ConnectResource:
         )
         return self._client._get("/v1/org-connections", params=params)
 
-    def get_org_connection(self) -> dict[str, Any]:
+    def get_org_connection(self, org_connection_id: str) -> dict[str, Any]:
         """Get an organization connection"""
-        return self._client._get("/v1/org-connections/{orgConnectionId}")
+        return self._client._get(f"/v1/org-connections/{org_connection_id}")
 
     def update_org_connection(
-        self, *, allowed_emails: Any | None = None, admin_email: Any | None = None
+        self,
+        org_connection_id: str,
+        *,
+        allowed_emails: Any | None = None,
+        admin_email: Any | None = None,
     ) -> dict[str, Any]:
         """Update an organization connection"""
         payload = self._build_payload(
@@ -1464,12 +1471,12 @@ class ConnectResource:
             admin_email=admin_email,
         )
         return self._client._patch(
-            "/v1/org-connections/{orgConnectionId}", data=payload
+            f"/v1/org-connections/{org_connection_id}", data=payload
         )
 
-    def delete_org_connection(self) -> dict[str, Any]:
+    def delete_org_connection(self, org_connection_id: str) -> dict[str, Any]:
         """Delete an organization connection"""
-        return self._client._delete("/v1/org-connections/{orgConnectionId}")
+        return self._client._delete(f"/v1/org-connections/{org_connection_id}")
 
     def verify_org_connection(
         self, org_connection_id: str, *, email: str | None = None
@@ -2025,12 +2032,13 @@ class ConnectResource:
         )
         return await self._client._apost("/v1/connect/oauth-apps", data=payload)
 
-    async def aget_o_auth_app(self) -> dict[str, Any]:
+    async def aget_o_auth_app(self, app_id: str) -> dict[str, Any]:
         """Get an OAuth app (async)"""
-        return await self._client._aget("/v1/connect/oauth-apps/{appId}")
+        return await self._client._aget(f"/v1/connect/oauth-apps/{app_id}")
 
     async def aupdate_o_auth_app(
         self,
+        app_id: str,
         *,
         label: str | None = None,
         client_secret: str | None = None,
@@ -2049,18 +2057,18 @@ class ConnectResource:
             scope_areas=scope_areas,
         )
         return await self._client._apatch(
-            "/v1/connect/oauth-apps/{appId}", data=payload
+            f"/v1/connect/oauth-apps/{app_id}", data=payload
         )
 
     async def adelete_o_auth_app(
-        self, *, confirm: bool | None = False
+        self, app_id: str, *, confirm: bool | None = False
     ) -> dict[str, Any]:
         """Remove an OAuth app (async)"""
         params = self._build_params(
             confirm=confirm,
         )
         return await self._client._adelete(
-            "/v1/connect/oauth-apps/{appId}", params=params
+            f"/v1/connect/oauth-apps/{app_id}", params=params
         )
 
     async def atest_o_auth_app(self, app_id: str) -> dict[str, Any]:
@@ -2923,12 +2931,16 @@ class ConnectResource:
         )
         return await self._client._aget("/v1/org-connections", params=params)
 
-    async def aget_org_connection(self) -> dict[str, Any]:
+    async def aget_org_connection(self, org_connection_id: str) -> dict[str, Any]:
         """Get an organization connection (async)"""
-        return await self._client._aget("/v1/org-connections/{orgConnectionId}")
+        return await self._client._aget(f"/v1/org-connections/{org_connection_id}")
 
     async def aupdate_org_connection(
-        self, *, allowed_emails: Any | None = None, admin_email: Any | None = None
+        self,
+        org_connection_id: str,
+        *,
+        allowed_emails: Any | None = None,
+        admin_email: Any | None = None,
     ) -> dict[str, Any]:
         """Update an organization connection (async)"""
         payload = self._build_payload(
@@ -2936,12 +2948,12 @@ class ConnectResource:
             admin_email=admin_email,
         )
         return await self._client._apatch(
-            "/v1/org-connections/{orgConnectionId}", data=payload
+            f"/v1/org-connections/{org_connection_id}", data=payload
         )
 
-    async def adelete_org_connection(self) -> dict[str, Any]:
+    async def adelete_org_connection(self, org_connection_id: str) -> dict[str, Any]:
         """Delete an organization connection (async)"""
-        return await self._client._adelete("/v1/org-connections/{orgConnectionId}")
+        return await self._client._adelete(f"/v1/org-connections/{org_connection_id}")
 
     async def averify_org_connection(
         self, org_connection_id: str, *, email: str | None = None
