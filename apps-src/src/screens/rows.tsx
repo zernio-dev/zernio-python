@@ -18,7 +18,25 @@ function accountReason(account: Account): string {
   return account.issues?.[0] || account.disconnectReason || "";
 }
 
+/** The account's own reconnect link: signing in there refreshes this account, keeping its id and history. */
+async function reconnect(ctx: Ctx, account: Account): Promise<string | undefined> {
+  if (!account.profileId) return "This account has no profile to reconnect it on.";
+  const result = await ctx.act("ui_reconnect_account", {
+    account_id: account.accountId,
+    platform: account.platform,
+    profile_id: account.profileId,
+  });
+  const url = (result.data as { authUrl?: string } | undefined)?.authUrl;
+  if (!result.ok || !url) return result.text || "Could not get the reconnect link.";
+  const opened = await ctx.app.openLink({ url });
+  if (opened.isError) return "The link could not be opened.";
+  ctx.tell(`From the Zernio app the user opened the reconnect link for ${account.platform} account ${account.accountId}.`);
+  return undefined;
+}
+
 export function AccountRow({ ctx, account }: { ctx: Ctx; account: Account }) {
+  const [busy, setBusy] = useState(false);
+  const [failed, setFailed] = useState<string>();
   const state = ACCOUNT_STATE[account.status];
   const reason = accountReason(account);
   const handle = account.username ? `@${account.username}` : account.displayName;
@@ -27,10 +45,29 @@ export function AccountRow({ ctx, account }: { ctx: Ctx; account: Account }) {
       lead={<PlatformTile platform={account.platform} />}
       name={platformName(account.platform)}
       secondary={handle}
-      state={<StatusPill label={state.label} tone={state.tone} reason={reason || undefined} />}
+      state={
+        failed ? (
+          <StatusPill label="Reconnect failed" tone="danger" reason={failed} />
+        ) : (
+          <StatusPill label={state.label} tone={state.tone} reason={reason || undefined} />
+        )
+      }
       fix={
         account.needsReconnect ? (
-          <Button size="sm" onClick={() => void ctx.app.openLink({ url: "https://zernio.com/dashboard" })}>Reconnect</Button>
+          <Button
+            size="sm"
+            disabled={busy}
+            onClick={() => {
+              setBusy(true);
+              setFailed(undefined);
+              void reconnect(ctx, account).then((error) => {
+                setFailed(error);
+                setBusy(false);
+              });
+            }}
+          >
+            {busy ? "Opening…" : "Reconnect"}
+          </Button>
         ) : account.status !== "healthy" ? (
           <Button
             size="sm"

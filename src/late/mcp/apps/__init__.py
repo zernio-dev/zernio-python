@@ -68,6 +68,7 @@ APP_TOOLS = [
     "show_account_health",
     "show_ads_alerts",
     "show_automation_approvals",
+    "ui_reconnect_account",
     "ui_dismiss_ads_alert",
     "ui_decide_automation_approval",
 ]

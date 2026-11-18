@@ -58,6 +58,7 @@ export function screenOf(result: CallResult): Screen | undefined {
 export interface Account {
   accountId: string;
   platform: string;
+  profileId?: string;
   username?: string;
   displayName?: string;
   status: "healthy" | "warning" | "error";

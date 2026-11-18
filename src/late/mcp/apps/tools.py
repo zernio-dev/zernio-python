@@ -402,6 +402,20 @@ def register_tools(mcp: FastMCP, app_uri: str) -> None:
         )
 
     @app_only(
+        "ui_reconnect_account",
+        "Reconnect an account",
+        "The sign-in link that reconnects one connected account in place, keeping its "
+        "account ID and history. Called by the Zernio app's Reconnect buttons.",
+    )
+    def ui_reconnect_account(account_id: str, platform: str, profile_id: str) -> dict[str, Any]:
+        client = _server()._get_client()
+        return _api(
+            lambda: client.connect.get_connect_url(
+                platform, profile_id, reconnect_account_id=account_id
+            )
+        )
+
+    @app_only(
         "ui_dismiss_ads_alert",
         "Dismiss an ads alert",
         "Hide an ads alert for 30 days. Called by the Zernio app.",
