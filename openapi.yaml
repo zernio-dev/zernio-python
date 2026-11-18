@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.668.0"
+  version: "1.674.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -3484,10 +3484,16 @@ components:
         expiresAt: { type: [string, "null"], description: "When the reservation's locked price expires (set after reserving)." }
     MessagingCarouselCard:
       type: object
-      required: [imageUrl]
-      description: 'One card of a messaging ad carousel (Meta link_data.child_attachments). Every card opens the same conversation, so a card has no link of its own.'
+      description: 'One card of a messaging ad carousel (Meta link_data.child_attachments). Every card opens the same conversation, so a card has no link of its own. Exactly one of `imageUrl` or `video` (a 400 otherwise).'
       properties:
-        imageUrl: { type: string, format: uri, description: 'Card image. Uploaded to the ad account and sent as the card image_hash (by URL on validateOnly).' }
+        imageUrl: { type: string, format: uri, description: 'Image card. Uploaded to the ad account and sent as the card image_hash (by URL on validateOnly).' }
+        video:
+          type: object
+          description: 'Video card, sent as the card''s `video_id`. Needs `url` or `id`. On validateOnly only `id` works, since `url` needs an upload first.'
+          properties:
+            url: { type: string, format: uri, description: Video file uploaded to the ad account. }
+            id: { type: string, description: A video already on the ad account. }
+            thumbnailUrl: { type: string, format: uri, description: "The card's poster. Defaults to Meta's auto-generated thumbnail." }
         headline: { type: string, maxLength: 255, description: 'Card title (Meta name).' }
         description: { type: string, maxLength: 255, description: 'Card description, under the title.' }
         callToAction:
@@ -3503,7 +3509,7 @@ components:
         Besides the `required` list, the request must use EXACTLY ONE of these shapes:
 
         - Single-creative: `headline`, `body`, and one of `imageUrl` / `video`, OR `platformPostId` / `objectStoryId` to reuse an organic post. On POST /v1/ads/messaging, `placementAssets` can replace `imageUrl` / `video`.
-        - Carousel (messaging and CTWA): `body` and `carouselCards` (2-10 image cards) instead of `imageUrl` / `video`, top level or per `creatives[]` entry.
+        - Carousel (messaging and CTWA): `body` and `carouselCards` (2-10 image or video cards) instead of `imageUrl` / `video`, top level or per `creatives[]` entry.
         - Multi-creative: a non-empty `creatives[]` array. Top-level creative fields must NOT be set on this shape.
 
         **Existing post references** work on messaging and CTWA only (not call ads). They cannot be combined with each other or with headline, body, imageUrl or video. `welcomeMessage` works on them (it lives on the ad, not the post).
@@ -3664,7 +3670,7 @@ components:
           maxItems: 10
           items: { $ref: '#/components/schemas/MessagingCarouselCard' }
           description: |
-            Messaging and CTWA only (a 400 on POST /v1/ads/call). A hand-built carousel of 2-10 image cards, sent to Meta in the given order as `link_data.child_attachments`.
+            Messaging and CTWA only (a 400 on POST /v1/ads/call). A hand-built carousel of 2-10 image or video cards, sent to Meta in the given order as `link_data.child_attachments`.
 
             - Meta may reorder cards for performance, since `multi_share_optimized` defaults to true; `optimizeCardOrder: false` keeps your order.
             - Every card (and the carousel) carries the destination's messaging call to action (WHATSAPP_MESSAGE, MESSAGE_PAGE or INSTAGRAM_MESSAGE), so a tap on any card opens the conversation.
@@ -95602,7 +95608,7 @@ paths:
         - Single image or video also needs `linkUrl`, unless the goal is `lead_generation` or `page_visits` or `leadGenFormId` is set.
         - `bodies[]` / `headlines[]` text variations: `body`, one list with 2+ items, `callToAction`, `imageUrl` or `video`, and `linkUrl` unless the goal is `lead_generation` or `leadGenFormId` is set. `headline` is not required.
         - `placementAssets`: `headline`, `body`, `callToAction`, and `linkUrl` with the same exemptions as the single shape; the media comes from `placementAssets`.
-        - `carouselCards`: `body`, `callToAction`, and `linkUrl` unless the goal is `lead_generation` or `leadGenFormId` is set. `headline` is not required.
+        - `carouselCards`, also with `adSetId`: `body`, `callToAction`, and `linkUrl` unless the goal is `lead_generation` or `leadGenFormId` is set. `headline` is not required. Each card takes `imageUrl` or `video`.
         - `creatives[]`: per entry `headline`, `body`, `callToAction`, `imageUrl` or `video`, and `linkUrl` unless the goal is `lead_generation`. Top-level `body` is not required.
         - `dynamicCreative`: `imageUrls` or `videoUrls`, `callToActionTypes`, and `linkUrls` unless the goal is `lead_generation`. Top-level `body` is not required.
         - `existingCreativeId`: no creative fields.
@@ -95649,7 +95655,7 @@ paths:
         - `imageUrl`: an image ad.
         - None of them: a text ad, which cannot link out (`linkUrl` is a 400 there; `body` is required).
 
-        Only the legacy single-creative shape is available: `creatives[]`, `adSetId`, `existingCampaignId` and `validateOnly` are refused.
+        `creatives[]` and `validateOnly` are refused. `adSetId` adds the ad, in any of these formats, to an existing ad group, and `existingCampaignId` creates a new ad group in an existing campaign.
 
         Reddit throttling surfaces as 429 `rate_limited` with `platform: reddit`; retry after a delay. To promote an existing Reddit post, use POST /v1/ads/boost.
 
@@ -95827,7 +95833,8 @@ paths:
                     Before the dry run, Meta validateOnly runs the account status and payment checks of GET /v1/ads/accounts/health: an ad account that is not ready answers its blocker `code` (`ad_account_unusable`, `ad_account_payment_required`) with `details.hint` and `details.fix`, and Meta is not called.
 
                     - Supported: a single image or existing video.id (each also with bodies[] / headlines[] Multiple Text Options), all-image placementAssets with per-rule copy and text pools, placementAssets with an existing video id in every slot and no thumbnails, or existingCreativeId.
-                    - Return 400: dynamicCreative, translations, carouselCards, placement videos by URL or with thumbnails, new video uploads, creatives[], adSetId, RESERVED buying.
+                    - Also supported: carouselCards whose cards are images or existing video.id videos, sent by URL with nothing uploaded.
+                    - Return 400: dynamicCreative, translations, carousel cards with video.url, placement videos by URL or with thumbnails, new video uploads, creatives[], adSetId, RESERVED buying.
                     - Placement validation uses existing Instagram identities only. Existing campaign or creative nodes are marked skipped.
                     - When Meta cannot dry-run the nested tree, the campaign and creative are validated alone and the adSet and ad nodes return unverified with the reason. This covers code 2, and two errors Meta returns but then creates normally (below).
                     - Code 1 (unknown error) on an OFFSITE_CONVERSIONS ad set nested in a new campaign (some website-conversion ad sets).
@@ -95946,7 +95953,7 @@ paths:
                   description: 'Meta only. Optional description variations for Multiple Text Options. Sent alongside `bodies` and `headlines`.'
                 callToAction: { type: string, enum: [BOOK_TRAVEL, CONTACT_US, DONATE, DONATE_NOW, DOWNLOAD, GET_DIRECTIONS, GO_LIVE, INTERESTED, LEARN_MORE, SEE_DETAILS, LIKE_PAGE, MESSAGE_PAGE, RAISE_MONEY, SAVE, SEND_TIP, SHOP_NOW, SIGN_UP, VIEW_INSTAGRAM_PROFILE, INSTAGRAM_MESSAGE, LOYALTY_LEARN_MORE, PURCHASE_GIFT_CARDS, PAY_TO_ACCESS, SEE_MORE, TRY_IN_CAMERA, WHATSAPP_LINK, GET_IN_TOUCH, TRY_NOW, ASK_A_QUESTION, START_A_CHAT, CHAT_NOW, ASK_US, CHAT_WITH_US, SHOP_ON_RETAILER, BOOK_NOW, CHECK_AVAILABILITY, ORDER_NOW, WHATSAPP_MESSAGE, GET_MOBILE_APP, INSTALL_MOBILE_APP, USE_MOBILE_APP, INSTALL_APP, USE_APP, PLAY_GAME, TRY_DEMO, WATCH_VIDEO, WATCH_MORE, OPEN_LINK, NO_BUTTON, LISTEN_MUSIC, MOBILE_DOWNLOAD, GET_OFFER, GET_OFFER_VIEW, BUY_NOW, BUY_TICKETS, UPDATE_APP, BET_NOW, ADD_TO_CART, SELL_NOW, GET_SHOWTIMES, LISTEN_NOW, GET_EVENT_TICKETS, REMIND_ME, SEARCH_MORE, PRE_REGISTER, SWIPE_UP_PRODUCT, SWIPE_UP_SHOP, PLAY_GAME_ON_FACEBOOK, VISIT_WORLD, OPEN_INSTANT_APP, JOIN_GROUP, GET_PROMOTIONS, SEND_UPDATES, INQUIRE_NOW, VISIT_PROFILE, CHAT_ON_WHATSAPP, EXPLORE_MORE, CONFIRM, JOIN_CHANNEL, MAKE_AN_APPOINTMENT, ASK_ABOUT_SERVICES, BOOK_A_CONSULTATION, GET_A_QUOTE, BUY_VIA_MESSAGE, ASK_FOR_MORE_INFO, VIEW_PRODUCT, VIEW_CHANNEL, WATCH_LIVE_VIDEO, JOIN_LIVE_VIDEO, IMAGINE, WATCH_NOW, STREAM_NOW, BUY_ACTIVITY_TICKETS, CALL, MISSED_CALL, CALL_NOW, CALL_ME, APPLY_NOW, BUY, GET_QUOTE, SUBSCRIBE, RECORD_NOW, VOTE_NOW, GIVE_FREE_RIDES, REGISTER_NOW, OPEN_MESSENGER_EXT, EVENT_RSVP, CIVIC_ACTION, SEND_INVITES, REFER_FRIENDS, REQUEST_TIME, SEE_MENU, SEARCH, TRY_IT, TRY_ON, LINK_CARD, DIAL_CODE, FIND_YOUR_GROUPS, START_ORDER, REGISTER, JOIN, ATTEND, REQUEST_DEMO, VIEW_QUOTE, APPLY], description: "The ad's call-to-action button.\n\n- **Meta:** required on legacy + attach shapes. Accepts every call to action type Meta itself accepts (the enum lists them), including values such as SEE_DETAILS that ads synced from Meta carry.\n- **TikTok:** honoured, passed through to the Spark Ad creative's `call_to_action`.\n- **LinkedIn:** the CTA button on the ad; defaults to LEARN_MORE when `linkUrl` is set. Accepts LEARN_MORE, SIGN_UP, DOWNLOAD, SUBSCRIBE, REGISTER, JOIN, ATTEND, REQUEST_DEMO, VIEW_QUOTE, APPLY, SEE_MORE, SHOP_NOW, BUY_NOW.\n- **Reddit** (image, video and carousel ads): accepts LEARN_MORE, SHOP_NOW, SIGN_UP, CONTACT_US, DOWNLOAD, GET_QUOTE, SUBSCRIBE, APPLY_NOW, BOOK_NOW, BUY_TICKETS, DONATE_NOW, GET_DIRECTIONS, GET_SHOWTIMES, LISTEN_NOW, ORDER_NOW, SEE_MENU, INSTALL_MOBILE_APP. Other values return 400.\n- **Google, Pinterest, and X:** ignored." }
                 linkUrl: { type: string, format: uri, description: "The ad's destination URL. Required on legacy + attach shapes (skip for multi-creative). NOT required when `goal` is `lead_generation` (the ad opens a Lead Gen form instead).\n\n- **LinkedIn:** required for `traffic` ads, optional for `engagement` / `awareness`. `imageUrl` + `linkUrl` publishes an ARTICLE-content creative (LinkedIn's article ad format), with the image as thumbnail and `longHeadline` as description.\n- **OpenAI Ads:** required (the chat card's target_url).\n- **Reddit:** required on image and video ads (the post's destination and the ad's click URL), the fallback for carousel cards without their own, and refused with 400 on text ads." }
-                leadGenFormId: { type: string, description: "Lead Gen form ID to attach to the ad's creative. REQUIRED when `goal` is `lead_generation`. Create one via POST /v1/ads/lead-forms.\n\n- Meta (facebook/instagram): the leadgen_forms ID. The ad set's promoted_object.page_id, LEAD_GENERATION optimization and destination_type ON_AD are derived automatically from the goal.\n- Meta: also required on every ATTACH (`adSetId`) call targeting a lead ad set (the form attaches per-ad; Meta rejects a formless ad in a lead ad set).\n- Meta: `placementAssets`, `dynamicCreative` and `carouselCards` (multi-card Instant-Form lead ad) ARE supported on instant-form lead ads. `linkUrl` and per-card `linkUrl` are optional, forwarded as real destinations when sent, else falling back to Meta's lead-form link.\n- LinkedIn: the adForm ID. The creative's `leadgenCallToAction.destination` is set to `urn:li:adForm:{id}` and the campaign objective to MAX_LEAD. Forms must be owned by the sponsoredAccount (not the organization) for the URN to resolve.\n- Reddit: rejected with 400 on every goal (Reddit retired its native lead forms)." }
+                leadGenFormId: { type: string, description: "Lead Gen form ID to attach to the ad's creative. REQUIRED when `goal` is `lead_generation`. Create one via POST /v1/ads/lead-forms.\n\n- Meta (facebook/instagram): the leadgen_forms ID. The ad set's promoted_object.page_id, LEAD_GENERATION optimization and destination_type ON_AD are derived automatically from the goal.\n- Meta: also required on every ATTACH (`adSetId`) call targeting an Instant Form lead ad set (the form attaches per-ad; Meta rejects a formless ad in a lead ad set, so Zernio returns a 400 naming `leadGenFormId` before uploading anything). This includes a carousel attached with `carouselCards`.\n- Meta: `placementAssets`, `dynamicCreative` and `carouselCards` (multi-card Instant-Form lead ad) ARE supported on instant-form lead ads. `linkUrl` and per-card `linkUrl` are optional, forwarded as real destinations when sent, else falling back to Meta's lead-form link.\n- LinkedIn: the adForm ID. The creative's `leadgenCallToAction.destination` is set to `urn:li:adForm:{id}` and the campaign objective to MAX_LEAD. Forms must be owned by the sponsoredAccount (not the organization) for the URN to resolve.\n- Reddit: rejected with 400 on every goal (Reddit retired its native lead forms)." }
                 imageUrl: { type: string, format: uri, description: "Image creative for Meta/Google/Pinterest/LinkedIn on legacy + attach shapes. Mutually exclusive with `video`.\n\n- LinkedIn: required unless `video` is set. Uploaded to LinkedIn under the authoring Company Page (see `organizationId`); recommended ratio 1.91:1 (e.g. 1200×627).\n- Google: not required for Search campaigns. For Display, treated as the landscape image (alias of `images.landscape`); supply `images.square` alongside or the request is rejected.\n- TikTok: this field carries the VIDEO URL (the TikTok ads endpoint is video-only; the `imageUrl` name is kept for cross-platform consistency).\n- X: imageUrl + headline + linkUrl together build a website card (image, title and destination under the post; the URL is not added to the post text). Sending only some of them is a 400.\n- X: description, video and callToAction are rejected with 400 (promote a post that carries a video with POST /v1/ads/boost).\n- OpenAI Ads: required, uploaded as the chat card's image (OpenAI has no video ad format).\n- Reddit: builds an image ad (requires `linkUrl`). On a Reddit video ad it is the fallback for `video.thumbnailUrl`." }
                 images:
                   type: object
@@ -96448,13 +96455,24 @@ paths:
 
                     - Meta may still reorder cards for performance (`multi_share_optimized` defaults to true); send `optimizeCardOrder: false` to keep your order.
                     - Requires top-level `body` and `callToAction`; `linkUrl` too UNLESS `leadGenFormId` is set. These become the ad's Destination and button (`link_data.link` / `link_data.call_to_action`) and the per-card fallback.
-                    - Mutually exclusive with `imageUrl`/`video`, `creatives[]`, `dynamicCreative`, `placementAssets`, `existingCreativeId`, `adSetId` and goal `catalog_sales`.
+                    - Each card is an image card (`imageUrl`) or a video card (`video`), never both. Image and video cards can be mixed.
                     - With `leadGenFormId` it builds a carousel Instant-Form lead ad: `linkUrl` and per-card `linkUrl` become OPTIONAL, forwarded as real destinations when sent; when omitted, the destination falls back to Meta's lead-form link.
+                    - With `adSetId` it adds one carousel ad to that existing ad set, which keeps its budget, schedule, targeting and optimization. An Instant Form ad set (destination ON_AD, LEAD_GENERATION or QUALITY_LEAD optimization) needs `leadGenFormId` on every ad: without it the request is a 400 naming `leadGenFormId`.
+                    - Also works with `existingCampaignId` and `optimizeCardOrder`.
+                    - Mutually exclusive with `imageUrl`/`video`, `creatives[]`, `dynamicCreative`, `placementAssets`, `existingCreativeId`, `bodies`/`headlines`, `translations` and catalog template creatives (goal `catalog_sales`, or `promotedObject.productSetId`). The 400 names the conflicting field.
+                    - `validateOnly` dry-runs image cards and `video.id` cards without uploading; a card with `video.url` is a 400 there.
                   items:
                     type: object
-                    required: [imageUrl]
+                    description: Exactly one of `imageUrl` or `video` (a 400 otherwise).
                     properties:
-                      imageUrl: { type: string, format: uri, description: "Card image; uploaded to the ad account and referenced by hash." }
+                      imageUrl: { type: string, format: uri, description: "Image card: the card image, uploaded to the ad account and referenced by hash." }
+                      video:
+                        type: object
+                        description: 'Meta only (a 400 on Reddit, whose carousels are images only). Video card, sent as the card''s `video_id`. Needs `url` or `id`.'
+                        properties:
+                          url: { type: string, format: uri, description: Video file uploaded to the ad account. }
+                          id: { type: string, description: 'A video already on the ad account (the videoId of an earlier upload). Reused without re-uploading.' }
+                          thumbnailUrl: { type: string, format: uri, description: "The card's poster. Defaults to Meta's auto-generated thumbnail of the video." }
                       linkUrl: { type: string, format: uri, description: "Card destination URL. Defaults to the top-level linkUrl, or Meta's lead-form link when leadGenFormId is set and neither is provided." }
                       headline: { type: string, maxLength: 255, description: "Card headline, shown below the card image." }
                       description: { type: string, maxLength: 255, description: "Card description, shown under the headline." }
@@ -104082,7 +104100,7 @@ paths:
                       description: |
                         Dry-runs the ad on Meta with execution_options validate_only, as ONE inline campaign + ad set + creative + ad (or creative + ad on the existing ad set with `adSetId`). Nothing is uploaded, created or stored; media is checked by URL.
 
-                        - **Supported:** one creative with `imageUrl`, image `placementAssets`, `carouselCards`, an existing `video.id`, or an existing post.
+                        - **Supported:** one creative with `imageUrl`, image `placementAssets`, `carouselCards` (image cards or existing `video.id` cards), an existing `video.id`, or an existing post.
                         - **Returns 400:** several creatives, a new `video.url` and video `placementAssets` (they need uploads first).
 
                         Success returns 200 with per-node results; a Meta rejection returns the Meta error.
