@@ -41,6 +41,7 @@
   --status-info-fg: #1e4a7c;
   --status-info-bg: #e4eefb;
   --shadow-color: rgb(0 0 0 / 0.1);
+  --chart-3: #1e4a7c;
 
   /* Scale */
   --size-control-sm: 28px;
@@ -92,6 +93,7 @@
   --status-info-fg: #7ed4fc;
   --status-info-bg: #0e1c2e;
   --shadow-color: rgb(0 0 0 / 0.5);
+  --chart-3: #7ed4fc;
   color-scheme: dark;
 }
 
@@ -111,12 +113,24 @@ img { display: block; }
 .type-eyebrow { margin: 0; font: 500 12px/16px var(--font-pixel); text-transform: uppercase; color: var(--text-tertiary); }
 .type-metric { font: 500 24px/32px var(--font-sans); font-variant-numeric: tabular-nums; }
 .type-label { font: 500 14px/20px var(--font-sans); }
+.type-mono { font: 400 14px/20px var(--font-mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
+/* 5. A count beside a pixel title: pixel font, light outline. */
+.count { display: inline-block; margin-left: 6px; padding: 0 4px; border: 1px solid var(--border-default); border-radius: var(--radius-item); font: inherit; color: var(--text-tertiary); }
 .icon { width: var(--size-icon-md); height: var(--size-icon-md); flex: none; }
 .icon-sm { width: var(--size-icon-sm); height: var(--size-icon-sm); flex: none; }
 
 .app { padding: 2px 0 4px; }
-.app-fullscreen { min-height: 100vh; max-width: 960px; margin: 0 auto; padding: 12px 12px 112px; background: var(--bg-base); }
-.header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.app-fullscreen { min-height: 100vh; max-width: 960px; margin: 0 auto; padding: 12px 12px calc(var(--safe-bottom, 0px) + 112px); background: var(--bg-base); }
+.header { display: flex; align-items: center; gap: 8px; min-height: var(--size-control-md); margin-bottom: 8px; }
+.crumb { color: var(--text-tertiary); }
+.crumb::before { content: "/"; margin-right: 8px; color: var(--border-default); }
+.header-actions { margin-left: auto; display: inline-flex; align-items: center; gap: 4px; color: var(--text-tertiary); }
+
+/* 28. Underline tabs: the active one marked, the rest grey; hover darkens the text only. */
+.tabs { display: flex; gap: 16px; margin-bottom: 8px; border-bottom: 1px solid var(--border-default); }
+.tab { height: var(--size-control-md); padding: 0; border: 0; border-bottom: 1px solid transparent; margin-bottom: -1px; background: none; color: var(--text-tertiary); cursor: pointer; }
+.tab:hover { color: var(--text-primary); }
+.tab-active { color: var(--text-primary); border-bottom-color: var(--text-primary); }
 .logo { width: 18px; height: 18px; border-radius: var(--radius-item); }
 .stack { display: flex; flex-direction: column; gap: 8px; }
 
@@ -135,12 +149,50 @@ img { display: block; }
 }
 .section-actions { display: flex; align-items: center; gap: 4px; }
 .section-body { padding: 0 8px; }
+.section-body-flush { padding: 0; }
+.section-body > .notice { padding: 8px 0; }
+.section-footer { display: flex; gap: 8px; padding: 8px 0; border-top: 1px solid var(--border-subtle); }
+.more { display: flex; padding: 4px 0 8px; }
 
 /* 20. KPIs: one row, divided by hairlines, grey label above the figure. */
-.kpis { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
-.kpi { padding: 12px; }
+.kpi-row { display: grid; }
+.kpi { padding: 12px; text-align: left; border: 0; background: none; color: inherit; }
 .kpi + .kpi { border-left: 1px solid var(--border-default); }
+button.kpi { cursor: pointer; box-shadow: inset 0 -2px 0 transparent; }
+button.kpi:hover { background: var(--fill-hover); }
+.kpi-selected { box-shadow: inset 0 -2px 0 var(--chart-3) !important; }
 .kpi-label { color: var(--text-tertiary); }
+.kpi-chart { padding: 8px 12px 12px; border-top: 1px solid var(--border-default); }
+
+/* 20. The chart: the panel's hue, dashed gridlines, dates under it. */
+.chart-readout { display: flex; align-items: baseline; gap: 8px; margin-bottom: 8px; }
+.chart-plot { position: relative; }
+.chart-plot svg { display: block; width: 100%; touch-action: none; }
+.chart-max { position: absolute; top: -2px; right: 0; color: var(--text-tertiary); font: 400 12px/16px var(--font-mono); background: var(--bg-raised); padding-left: 4px; }
+.chart-grid { stroke: var(--border-default); stroke-dasharray: 3 3; vector-effect: non-scaling-stroke; }
+.chart-axis { stroke: var(--border-default); vector-effect: non-scaling-stroke; }
+.chart-line { fill: none; stroke: var(--chart-3); stroke-width: 1.5; vector-effect: non-scaling-stroke; }
+.chart-dates { display: flex; justify-content: space-between; margin-top: 4px; color: var(--text-tertiary); font: 400 12px/16px var(--font-mono); }
+
+/* 24, 51. Tables: eyebrow headers, 14px cells, one line, the share as a grey bar. */
+.table { width: 100%; border-collapse: collapse; }
+.table th { height: var(--size-control-md); padding: 0 8px; text-align: left; font: 500 12px/16px var(--font-pixel); text-transform: uppercase; color: var(--text-tertiary); border-bottom: 1px solid var(--border-default); white-space: nowrap; }
+.table td { height: var(--size-row); padding: 0 8px; white-space: nowrap; }
+.table tr + tr td { border-top: 1px solid var(--border-subtle); }
+.table .num { text-align: right; font-variant-numeric: tabular-nums; }
+.share-col { width: 25%; }
+.share { display: block; height: 6px; background: var(--fill-active); }
+.share > span { display: block; height: 100%; background: var(--text-tertiary); }
+.cell-lead { display: inline-flex; align-items: center; gap: 8px; }
+
+/* 16. A label that is not a state: outline chip. */
+.badge { display: inline-flex; align-items: center; height: 20px; padding: 0 4px; border: 1px solid var(--border-default); border-radius: var(--radius-item); color: var(--text-secondary); white-space: nowrap; flex: none; }
+
+/* Post preview */
+.post-body { margin: 0; padding: 8px 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+.media { display: flex; gap: 4px; padding-bottom: 8px; }
+.media img, .media-tile { width: 64px; height: 64px; object-fit: cover; border: 1px solid var(--border-default); border-radius: var(--radius-item-lg); }
+.media-tile { display: inline-flex; align-items: center; justify-content: center; color: var(--text-tertiary); background: var(--fill-primary); }
 
 /* Rows: 40px, one line, everything centred (22, 44); one border between rows (23). */
 .rows { list-style: none; margin: 0; padding: 0; }
@@ -149,7 +201,9 @@ img { display: block; }
 .row-name { flex: 1; min-width: 0; display: flex; align-items: baseline; gap: 6px; overflow: hidden; white-space: nowrap; }
 .row-name > * { overflow: hidden; text-overflow: ellipsis; }
 .row-secondary { color: var(--text-tertiary); }
-.row-fix { width: 104px; display: flex; justify-content: flex-end; flex: none; }
+.row-fix { min-width: 96px; display: flex; justify-content: flex-end; flex: none; }
+.row-actions { display: inline-flex; align-items: center; gap: 4px; }
+.platform-tiles { display: inline-flex; align-items: center; gap: 2px; flex: none; }
 
 /* 42. PlatformTile md: the app icon in a 22px bordered tile, radius/item-lg. */
 .platform-tile {
@@ -193,6 +247,8 @@ img { display: block; }
 .btn-outline:hover { background: var(--fill-hover); }
 .btn-ghost { color: var(--text-primary); }
 .btn-ghost:hover { background: var(--fill-hover); }
+.btn-link { padding: 0; height: auto; color: var(--brand-default); }
+.btn-link:hover { color: var(--brand-hover); }
 .btn:disabled { cursor: default; }
 .btn:focus-visible { outline: none; border-color: var(--border-focus); }
 .btn-primary:focus-visible { background: var(--brand-hover); }
@@ -204,6 +260,7 @@ img { display: block; }
 .notice .icon { margin-top: 2px; }
 .notice-danger { color: var(--status-danger-fg); }
 .notice-success { color: var(--status-success-fg); }
+.notice-warning { color: var(--status-warning-fg); }
 .notice-muted { color: var(--text-tertiary); }
 
 /* 54. Empty state: icon and what the list would hold. */
@@ -223,5 +280,7 @@ img { display: block; }
 @media (max-width: 420px) {
   .kpi { padding: 8px; }
   .type-metric { font-size: 16px; line-height: 24px; }
-  .row-fix { width: auto; }
+  .row-fix { min-width: 0; }
+  .row-secondary { display: none; }
+  .share-col { display: none; }
 }

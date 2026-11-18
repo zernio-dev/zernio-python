@@ -1,12 +1,13 @@
-"""Display tools: one per view, always listed, each fetching its own data.
+"""The tools that open the Zernio app, one per screen, always listed.
 
-The data tools stay text-only behind search_tools. A view binds to the tool
-the host called, so a view on a tool reached through call_tool never renders;
-these show_* tools are the listed entry points instead (monday.com's
-show-table / show-board pattern). Each returns a text summary for the model
-and clients without MCP Apps, and structured_content for its view.
+A view binds to the tool the host called, and most tools are reached through
+call_tool, so these are the app's listed entry points. Each returns a text
+summary for the model and clients without MCP Apps, and structured_content
+`{view, data, args}`: the screen to show, its data, and the arguments that
+produced it, so the app can refresh the screen or switch to another by
+calling these same tools.
 
-The ui_* tools are app-only: the views' buttons call them, the model never
+The ui_* tools are app-only: the app's buttons call them, the model never
 sees them.
 """
 
@@ -25,8 +26,9 @@ if TYPE_CHECKING:
     from fastmcp import FastMCP
 
 _DISPLAY = (
-    "UI display tool: renders an interactive view in clients that support MCP Apps, "
-    "with a text summary for those that do not."
+    "UI display tool: opens the Zernio app on this screen in clients that support "
+    "MCP Apps, with a text summary for those that do not. The user sees it and can "
+    "act there; do not repeat its contents as text."
 )
 
 _READ = ToolAnnotations(readOnlyHint=True, destructiveHint=False, openWorldHint=False)
@@ -47,13 +49,67 @@ def _api(call: Any) -> Any:
         raise ToolError(f"Error: {e}") from e
 
 
-def register_tools(mcp: FastMCP, view_uri: Any) -> None:
-    def show(name: str, view: str, title: str, description: str) -> Any:
+def _screen(view: str, data: Any, text: str, args: dict[str, Any]) -> ToolResult:
+    return ToolResult(content=text, structured_content={"view": view, "data": data, "args": args})
+
+
+def _failed_posts(limit: int) -> tuple[list[dict[str, Any]], int]:
+    server = _server()
+    client = server._get_client()
+    response = _api(lambda: client.posts.list(status="failed", limit=limit))
+    posts = [
+        {
+            "id": post.field_id,
+            "title": post.title or "",
+            "content": (post.content or "")[:280],
+            "platforms": [t.platform for t in post.platforms or [] if t.platform],
+            "errors": [
+                {"platform": platform, "message": message}
+                for platform, message in server._failed_targets(post)
+            ],
+            "updatedAt": post.updatedAt.isoformat() if post.updatedAt else None,
+        }
+        for post in response.posts or []
+    ]
+    total = getattr(getattr(response, "pagination", None), "total", None)
+    return posts, total if total is not None else len(posts)
+
+
+def _health(profile_id: str = "", platform: str = "") -> dict[str, Any]:
+    client = _server()._get_client()
+    return _api(
+        lambda: client.accounts.get_all_accounts_health(
+            profile_id=profile_id or None, platform=platform or None
+        )
+    )
+
+
+def _health_text(data: dict[str, Any]) -> str:
+    summary = data.get("summary") or {}
+    unhealthy = [a for a in data.get("accounts") or [] if a.get("status") != "healthy"]
+    lines = [
+        f"{summary.get('total', 0)} account(s): {summary.get('healthy', 0)} healthy, "
+        f"{summary.get('warning', 0)} warning, {summary.get('error', 0)} error, "
+        f"{summary.get('needsReconnect', 0)} need reconnecting."
+    ]
+    for a in unhealthy[:25]:
+        reason = (a.get("issues") or [a.get("disconnectReason")])[0]
+        lines.append(
+            f"- {a.get('platform')} @{a.get('username') or a.get('accountId')}: {a.get('status')}"
+            + (f" ({reason})" if reason else "")
+        )
+    return "\n".join(lines)
+
+
+def register_tools(mcp: FastMCP, app_uri: str) -> None:
+    def show(name: str, title: str, description: str, meta: dict[str, Any] | None = None) -> Any:
         return mcp.tool(
             name=name,
+            title=title,
             description=f"{description}\n\n{_DISPLAY}",
             annotations=_READ.model_copy(update={"title": title}),
-            app=AppConfig(resource_uri=view_uri(view)),
+            app=AppConfig(resource_uri=app_uri),
+            meta=meta,
         )
 
     def app_only(name: str, title: str, description: str) -> Any:
@@ -67,13 +123,33 @@ def register_tools(mcp: FastMCP, view_uri: Any) -> None:
         )
 
     @show(
+        "zernio_open_app",
+        "Open Zernio",
+        "Open the Zernio app: the workspace at a glance (connected accounts, the ones "
+        "that need attention, failed posts), with tabs for posts, analytics, accounts "
+        "and ads. Use it when the user wants to see their Zernio workspace.",
+        # Lists the app on Claude's Artifacts page, where people open and pin it
+        # without asking Claude (custom and Verified connectors only).
+        meta={"openai/ui": {"entrypoints": [{"type": "global"}]}},
+    )
+    def zernio_open_app() -> ToolResult:
+        health = _health()
+        failed, failed_total = _failed_posts(3)
+        text = _health_text(health) + f"\n{failed_total} failed post(s)."
+        return _screen(
+            "home",
+            {"health": health, "failedPosts": failed, "failedTotal": failed_total},
+            text,
+            {},
+        )
+
+    @show(
         "show_post_preview",
-        "post-preview",
         "Preview a post",
         "Show the user how a post will go out on each platform before anything is "
         "published: the account each platform resolves to, the text, the media, and "
         "validation errors and warnings. Use it when the user wants to see or review a "
-        "post first. Nothing is published; the view's Publish now and Save as draft "
+        "post first. Nothing is published; the app's Publish now and Save as draft "
         "buttons call posts_cross_post with these same arguments. For a scheduled post, "
         "confirm in chat and call posts_create or posts_cross_post.\n\n"
         "Args:\n"
@@ -155,20 +231,17 @@ def register_tools(mcp: FastMCP, view_uri: Any) -> None:
                 f"'{','.join(t['accountId'] for t in targets)}'."
             )
 
-        return ToolResult(
-            content="\n".join(lines),
-            structured_content={
-                "kind": "preview",
-                "post": {
-                    "content": content,
-                    "media": [
-                        {"type": getattr(m["type"], "value", m["type"]), "url": m["url"]}
-                        for m in media
-                    ],
-                    "targets": targets,
-                },
+        return _screen(
+            "preview",
+            {
+                "content": content,
+                "media": [
+                    {"type": getattr(m["type"], "value", m["type"]), "url": m["url"]}
+                    for m in media
+                ],
+                "targets": targets,
                 "validation": validation,
-                # What the view's buttons send to posts_cross_post, with the
+                # What the app's buttons send to posts_cross_post, with the
                 # accounts already resolved.
                 "request": {
                     "content": content,
@@ -178,47 +251,38 @@ def register_tools(mcp: FastMCP, view_uri: Any) -> None:
                     "media_urls": media_urls,
                 },
             },
+            "\n".join(lines),
+            {
+                "content": content,
+                "platforms": platforms,
+                "account_ids": account_ids,
+                "profile_id": profile_id,
+                "media_urls": media_urls,
+            },
         )
 
     @show(
         "show_failed_posts",
-        "failed-posts",
         "Show failed posts",
         "Show the posts that failed to publish, each platform's error, and a Retry button "
         "per post. Use it when the user wants to see what failed or fix it.\n\n"
         "Args:\n"
-        "    limit: Maximum number of posts to show. Default: 10.",
+        "    limit: Maximum number of posts to show. Default: 20.",
     )
-    def show_failed_posts(limit: int = 10) -> ToolResult:
-        server = _server()
-        client = server._get_client()
-        posts = _api(lambda: client.posts.list(status="failed", limit=limit)).posts or []
-
-        view = [
-            {
-                "id": post.field_id,
-                "content": (post.content or "")[:280],
-                "platforms": [t.platform for t in post.platforms or [] if t.platform],
-                "errors": [
-                    {"platform": platform, "message": message}
-                    for platform, message in server._failed_targets(post)
-                ],
-            }
-            for post in posts
-        ]
-        lines = [f"{len(view)} failed post(s)."] + [
+    def show_failed_posts(limit: int = 20) -> ToolResult:
+        posts, total = _failed_posts(limit)
+        lines = [f"{total} failed post(s)."] + [
             f"- {p['id']} ({', '.join(p['platforms'])}): "
             + ("; ".join(f"{e['platform']}: {e['message']}" for e in p["errors"]) or "Unknown error")
-            for p in view
+            for p in posts
         ]
-        return ToolResult(content="\n".join(lines), structured_content={"posts": view})
+        return _screen("posts", {"posts": posts, "total": total}, "\n".join(lines), {"limit": limit})
 
     @show(
         "show_analytics",
-        "analytics",
         "Show analytics",
-        "Show daily post analytics as a chart: totals for impressions, engagement, views and "
-        "posts, a per-day chart of each, and a fullscreen per-platform breakdown. Use it when "
+        "Show daily post analytics: totals for impressions, engagement, views and posts, "
+        "a per-day chart of the one picked, and the breakdown per platform. Use it when "
         "the user wants to see how their posts perform. Defaults to the last 180 days.\n\n"
         "Args:\n"
         "    platform: Only this platform, e.g. 'instagram'.\n"
@@ -251,48 +315,38 @@ def register_tools(mcp: FastMCP, view_uri: Any) -> None:
             f"{totals.get('impressions', 0)} impressions, {totals.get('engagement', 0)} "
             f"engagements, {totals.get('views', 0)} views."
         )
-        return ToolResult(content=text, structured_content=data)
+        args = {
+            "platform": platform,
+            "profile_id": profile_id,
+            "account_id": account_id,
+            "from_date": from_date,
+            "to_date": to_date,
+        }
+        return _screen("analytics", data, text, args)
 
     @show(
         "show_account_health",
-        "account-health",
         "Show account health",
-        "Show connected social accounts by health status, the ones that need attention and "
-        "why, with a link to reconnect. Use it when the user asks whether their accounts "
-        "work or why posting fails for one.\n\n"
+        "Show connected social accounts by health state, the ones that need attention "
+        "and why, with Reconnect where it fixes them. Use it when the user asks whether "
+        "their accounts work or why posting fails for one.\n\n"
         "Args:\n"
         "    profile_id: Only this profile.\n"
         "    platform: Only this platform.",
     )
     def show_account_health(profile_id: str = "", platform: str = "") -> ToolResult:
-        client = _server()._get_client()
-        data = _api(
-            lambda: client.accounts.get_all_accounts_health(
-                profile_id=profile_id or None, platform=platform or None
-            )
+        data = _health(profile_id, platform)
+        return _screen(
+            "accounts", data, _health_text(data), {"profile_id": profile_id, "platform": platform}
         )
-        summary = data.get("summary") or {}
-        unhealthy = [a for a in data.get("accounts") or [] if a.get("status") != "healthy"]
-        lines = [
-            f"{summary.get('total', 0)} account(s): {summary.get('healthy', 0)} healthy, "
-            f"{summary.get('warning', 0)} warning, {summary.get('error', 0)} error, "
-            f"{summary.get('needsReconnect', 0)} need reconnecting."
-        ] + [
-            f"- {a.get('platform')} @{a.get('username') or a.get('accountId')}: {a.get('status')}"
-            + (f" ({(a.get('issues') or [a.get('disconnectReason')])[0]})" if a.get("issues") or a.get("disconnectReason") else "")
-            for a in unhealthy[:25]
-        ]
-        return ToolResult(content="\n".join(lines), structured_content=data)
 
     @show(
         "show_ads_alerts",
-        "ads-alerts",
         "Show ads that need attention",
         "Show what needs attention across the user's ads, most severe first: rejected ads, "
         "delivery issues, payment problems, campaigns spending without results, capped "
-        "budgets, lost connections and failing syncs. Each has a link to fix it and can be "
-        "dismissed for 30 days. Use it when the user asks how their ads are doing or what "
-        "is wrong with them.\n\n"
+        "budgets, lost connections and failing syncs, each with its fix. Use it when the "
+        "user asks how their ads are doing or what is wrong with them.\n\n"
         "Args:\n"
         "    account_id: Only alerts of this ads connection.\n"
         "    profile_id: Only alerts of the ads connections on this profile.",
@@ -309,15 +363,16 @@ def register_tools(mcp: FastMCP, view_uri: Any) -> None:
             f"- [{a.get('severity')}] {a.get('title')}: {a.get('message')} (id: {a.get('id')})"
             for a in alerts[:25]
         ]
-        return ToolResult(content="\n".join(lines), structured_content=data)
+        return _screen(
+            "ads", data, "\n".join(lines), {"account_id": account_id, "profile_id": profile_id}
+        )
 
     @show(
         "show_automation_approvals",
-        "automation-approvals",
         "Show automation approvals",
         "Show the changes an ads automation is waiting for a person to approve (pauses, "
-        "budget, bid and target changes), with Approve and Reject buttons. Use it when the "
-        "user wants to review or decide pending automation approvals. Find automation IDs "
+        "budget, bid and target changes), with Approve and Reject. Use it when the user "
+        "wants to review or decide pending automation approvals. Find automation IDs "
         "with search_tools ('list automations').\n\n"
         "Args:\n"
         "    automation_id: The automation (required)\n"
@@ -339,15 +394,17 @@ def register_tools(mcp: FastMCP, view_uri: Any) -> None:
             + ("" if a.get("canDecide") else " (you cannot decide it)")
             for a in approvals
         ]
-        return ToolResult(
-            content="\n".join(lines),
-            structured_content={**data, "automationId": automation_id},
+        return _screen(
+            "approvals",
+            {**data, "automationId": automation_id},
+            "\n".join(lines),
+            {"automation_id": automation_id, "status": status},
         )
 
     @app_only(
         "ui_dismiss_ads_alert",
         "Dismiss an ads alert",
-        "Hide an ads alert for 30 days. Called by the ads alerts view.",
+        "Hide an ads alert for 30 days. Called by the Zernio app.",
     )
     def ui_dismiss_ads_alert(alert_id: str) -> dict[str, Any]:
         client = _server()._get_client()
@@ -356,8 +413,7 @@ def register_tools(mcp: FastMCP, view_uri: Any) -> None:
     @app_only(
         "ui_decide_automation_approval",
         "Approve or reject an automation request",
-        "Approve or reject a pending automation approval request. Called by the automation "
-        "approvals view.",
+        "Approve or reject a pending automation approval request. Called by the Zernio app.",
     )
     def ui_decide_automation_approval(
         automation_id: str, approval_id: str, decision: Literal["approve", "reject"]
