@@ -284,3 +284,27 @@ button.kpi:hover { background: var(--fill-hover); }
   .row-secondary { display: none; }
   .share-col { display: none; }
 }
+
+/* 47, 13. Fields: bordered, square, 14px; focus darkens the border, no ring. */
+.field {
+  width: 100%; min-height: 56px; padding: 6px 8px; resize: vertical;
+  border: 1px solid var(--border-default); border-radius: var(--radius-control);
+  background: var(--bg-raised); color: var(--text-primary);
+  font: 400 14px/20px var(--font-sans);
+}
+.field::placeholder { color: var(--text-placeholder); }
+.field:focus { outline: none; border-color: var(--border-focus); }
+.reply { display: flex; flex-direction: column; gap: 8px; padding: 8px 0; border-top: 1px solid var(--border-subtle); }
+.message .reply { border-top: 0; padding-bottom: 0; }
+.reply-actions { display: flex; gap: 8px; }
+
+/* Threads: messages and comments, one block each, yours tinted. */
+.thread { list-style: none; margin: 0; padding: 0; }
+.message { padding: 8px 0; }
+.message + .message { border-top: 1px solid var(--border-subtle); }
+.message-out { margin-left: 15%; padding: 8px; background: var(--fill-primary); }
+.message-out + .message, .message + .message-out { border-top: 0; margin-top: 4px; }
+.message-meta { display: flex; align-items: center; gap: 6px; min-height: 20px; }
+.message-actions { margin-left: auto; }
+.message-body { margin: 2px 0 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+.back { display: flex; }

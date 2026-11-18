@@ -16,9 +16,11 @@ import {
   type AccountsHealth,
   type AdsData,
   type AnalyticsData,
-  type ApprovalsData,
   type CallResult,
+  type CommentsData,
+  type ConversationData,
   type HomeData,
+  type InboxData,
   type PostsData,
   type PreviewData,
   type Screen,
@@ -33,9 +35,11 @@ import { installFonts } from "./fonts";
 import { Accounts } from "./screens/Accounts";
 import { Ads } from "./screens/Ads";
 import { Analytics } from "./screens/Analytics";
-import { Approvals } from "./screens/Approvals";
+import { Comments } from "./screens/Comments";
+import { ConversationView } from "./screens/Conversation";
 import type { ActResult, Ctx } from "./screens/context";
 import { Home } from "./screens/Home";
+import { Inbox } from "./screens/Inbox";
 import { Posts } from "./screens/Posts";
 import { Preview } from "./screens/Preview";
 import { Button, Notice, Spinner, Tabs } from "./ui";
@@ -228,8 +232,12 @@ function ScreenView({ ctx, screen }: { ctx: Ctx; screen: Screen }) {
       return <Ads ctx={ctx} data={screen.data as AdsData} />;
     case "preview":
       return <Preview ctx={ctx} data={screen.data as PreviewData} />;
-    case "approvals":
-      return <Approvals ctx={ctx} data={screen.data as ApprovalsData} />;
+    case "inbox":
+      return <Inbox ctx={ctx} data={screen.data as InboxData} />;
+    case "conversation":
+      return <ConversationView ctx={ctx} data={screen.data as ConversationData} />;
+    case "comments":
+      return <Comments ctx={ctx} data={screen.data as CommentsData} />;
   }
 }
 

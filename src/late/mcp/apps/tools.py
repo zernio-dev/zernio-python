@@ -13,7 +13,7 @@ sees them.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Literal
+from typing import TYPE_CHECKING, Any
 
 from fastmcp.apps import AppConfig
 from fastmcp.exceptions import ToolError
@@ -368,37 +368,133 @@ def register_tools(mcp: FastMCP, app_uri: str) -> None:
         )
 
     @show(
-        "show_automation_approvals",
-        "Show automation approvals",
-        "Show the changes an ads automation is waiting for a person to approve (pauses, "
-        "budget, bid and target changes), with Approve and Reject. Use it when the user "
-        "wants to review or decide pending automation approvals. Find automation IDs "
-        "with search_tools ('list automations').\n\n"
+        "show_inbox",
+        "Show the inbox",
+        "Show the latest conversations (DMs on Instagram, Facebook, WhatsApp, Telegram, X "
+        "and more) and the latest posts with comments, each opening its thread with a "
+        "reply box. Use it when the user wants to see or answer messages or comments.\n\n"
         "Args:\n"
-        "    automation_id: The automation (required)\n"
-        "    status: Only requests in this status. Default: pending.",
+        "    profile_id: Only this profile.\n"
+        "    platform: Only this platform, e.g. 'instagram'.\n"
+        "    account_id: Only this account.",
     )
-    def show_automation_approvals(
-        automation_id: str,
-        status: Literal["pending", "approved", "rejected", "expired", "cancelled"] = "pending",
-    ) -> ToolResult:
+    def show_inbox(profile_id: str = "", platform: str = "", account_id: str = "") -> ToolResult:
         client = _server()._get_client()
-        data = _api(
-            lambda: client.automations.list_automation_approvals(
-                automation_id=automation_id, status=status
+        scope = {
+            "profile_id": profile_id or None,
+            "platform": platform or None,
+            "account_id": account_id or None,
+        }
+        conversations = _api(lambda: client.messages.list_inbox_conversations(limit=15, **scope))
+        posts = _api(
+            lambda: client.comments.list_inbox_comments(limit=10, min_comments=1, view="summary", **scope)
+        )
+        keep_c = ("id", "platform", "accountId", "accountUsername", "participantName",
+                  "lastMessage", "updatedTime", "unreadCount", "isGroup")
+        keep_p = ("id", "platform", "accountId", "accountUsername", "content",
+                  "createdTime", "commentCount")
+        data = {
+            "conversations": [
+                {k: c.get(k) for k in keep_c} for c in conversations.get("data") or []
+            ],
+            "posts": [{k: p.get(k) for k in keep_p} for p in posts.get("data") or []],
+        }
+        unread = sum(c.get("unreadCount") or 0 for c in data["conversations"])
+        lines = [f"{len(data['conversations'])} conversation(s), {unread} unread message(s)."]
+        lines += [
+            f"- {c['platform']} {c.get('participantName') or '?'}: {(c.get('lastMessage') or '')[:80]}"
+            f" (conversation_id {c['id']}, account_id {c['accountId']})"
+            for c in data["conversations"][:10]
+        ]
+        lines.append(f"{len(data['posts'])} post(s) with comments.")
+        lines += [
+            f"- {p['platform']} post {p['id']}: {p.get('commentCount') or 0} comment(s)"
+            f" (account_id {p['accountId']})"
+            for p in data["posts"][:10]
+        ]
+        return _screen("inbox", data, "\n".join(lines), {
+            "profile_id": profile_id, "platform": platform, "account_id": account_id,
+        })
+
+    @show(
+        "show_conversation",
+        "Show a conversation",
+        "Show one inbox conversation as a thread, newest at the bottom, with a reply box. "
+        "Use it when the user wants to read or answer a DM. Find the ids with show_inbox "
+        "or messages_list_inbox_conversations.\n\n"
+        "Args:\n"
+        "    conversation_id: The conversation (required)\n"
+        "    account_id: The account it belongs to (required)",
+    )
+    def show_conversation(conversation_id: str, account_id: str) -> ToolResult:
+        client = _server()._get_client()
+        result = _api(
+            lambda: client.messages.get_inbox_conversation_messages(
+                conversation_id, account_id, limit=30, sort_order="desc"
             )
         )
-        approvals = data.get("approvals") or []
-        lines = [f"{len(approvals)} {status} approval request(s)."] + [
-            f"- {a.get('id')}: {len(a.get('changes') or [])} change(s), expires {a.get('expiresAt')}"
-            + ("" if a.get("canDecide") else " (you cannot decide it)")
-            for a in approvals
+        keep = ("id", "message", "senderName", "direction", "createdAt", "platform", "isDeleted")
+        messages = [
+            {**{k: m.get(k) for k in keep}, "attachments": len(m.get("attachments") or [])}
+            for m in reversed(result.get("messages") or [])
+        ]
+        lines = [f"{len(messages)} message(s), oldest first."] + [
+            f"- [{m.get('direction')}] {m.get('senderName') or '?'}: {(m.get('message') or '')[:120]}"
+            for m in messages[-15:]
         ]
         return _screen(
-            "approvals",
-            {**data, "automationId": automation_id},
+            "conversation",
+            {"conversationId": conversation_id, "accountId": account_id, "messages": messages},
             "\n".join(lines),
-            {"automation_id": automation_id, "status": status},
+            {"conversation_id": conversation_id, "account_id": account_id},
+        )
+
+    @show(
+        "show_post_comments",
+        "Show a post's comments",
+        "Show the comments on one published post, with a reply box per comment. Use it "
+        "when the user wants to read or answer comments. Find the ids with show_inbox or "
+        "comments_list_inbox_comments.\n\n"
+        "Args:\n"
+        "    post_id: The post (required)\n"
+        "    account_id: The account that published it (required)",
+    )
+    def show_post_comments(post_id: str, account_id: str) -> ToolResult:
+        client = _server()._get_client()
+        result = _api(lambda: client.comments.get_inbox_post_comments(post_id, account_id, limit=25))
+        keep = ("id", "message", "createdTime", "likeCount", "replyCount", "platform", "canReply", "isHidden")
+        comments = [
+            {**{k: c.get(k) for k in keep},
+             "from": {k: (c.get("from") or {}).get(k) for k in ("name", "username", "isOwner")}}
+            for c in result.get("comments") or []
+        ]
+        post = result.get("post") or {}
+        lines = [f"{len(comments)} comment(s)."] + [
+            f"- {(c['from'].get('name') or c['from'].get('username') or '?')}: {(c.get('message') or '')[:120]}"
+            f" (comment_id {c['id']})"
+            for c in comments[:15]
+        ]
+        return _screen(
+            "comments",
+            {
+                "postId": post_id,
+                "accountId": account_id,
+                "post": {k: post.get(k) for k in ("text", "permalink", "createdAt")},
+                "comments": comments,
+            },
+            "\n".join(lines),
+            {"post_id": post_id, "account_id": account_id},
+        )
+
+    @app_only(
+        "ui_send_message",
+        "Send a message",
+        "Send a text reply in an inbox conversation. Called by the Zernio app's reply box.",
+    )
+    def ui_send_message(conversation_id: str, account_id: str, message: str) -> dict[str, Any]:
+        client = _server()._get_client()
+        return _api(
+            lambda: client.messages.send_inbox_message(conversation_id, account_id, message=message)
         )
 
     @app_only(
@@ -423,19 +519,3 @@ def register_tools(mcp: FastMCP, app_uri: str) -> None:
     def ui_dismiss_ads_alert(alert_id: str) -> dict[str, Any]:
         client = _server()._get_client()
         return _api(lambda: client.ad_campaigns.dismiss_ads_alert(alert_id))
-
-    @app_only(
-        "ui_decide_automation_approval",
-        "Approve or reject an automation request",
-        "Approve or reject a pending automation approval request. Called by the Zernio app.",
-    )
-    def ui_decide_automation_approval(
-        automation_id: str, approval_id: str, decision: Literal["approve", "reject"]
-    ) -> dict[str, Any]:
-        client = _server()._get_client()
-        decide = (
-            client.automations.approve_automation_approval
-            if decision == "approve"
-            else client.automations.reject_automation_approval
-        )
-        return _api(lambda: decide(automation_id, approval_id))

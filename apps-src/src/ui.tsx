@@ -5,7 +5,7 @@
  * (Schedule-Posts-API, .claude/rules/design-principles.md).
  */
 import { InfoBox } from "pixelarticons/react/InfoBox.js";
-import type { ButtonHTMLAttributes, ReactNode } from "react";
+import { type ButtonHTMLAttributes, type ReactNode, useState } from "react";
 import { platformIcon, platformName } from "./api";
 
 /** 18. A block is a white panel; a list's panel is headed by a grey bar with its eyebrow title. */
@@ -195,6 +195,51 @@ export function More({ label, onClick }: { label: string; onClick: () => void })
   return (
     <div className="more">
       <Button variant="link" size="sm" onClick={onClick}>{label}</Button>
+    </div>
+  );
+}
+
+/**
+ * 47. A reply box: a bordered field (focus darkens its border, 13) with the
+ * main action after it. Sending clears the field; a failure keeps the text.
+ */
+export function ReplyBox({ placeholder, onSend, onDraft }: {
+  placeholder: string;
+  onSend: (text: string) => Promise<string | undefined>;
+  /** Hands drafting to Claude. */
+  onDraft?: () => void;
+}) {
+  const [text, setText] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string>();
+  const send = async () => {
+    const value = text.trim();
+    if (!value) return;
+    setBusy(true);
+    setError(undefined);
+    const failure = await onSend(value);
+    setBusy(false);
+    if (failure) setError(failure);
+    else setText("");
+  };
+  return (
+    <div className="reply">
+      <textarea
+        className="field"
+        rows={2}
+        value={text}
+        placeholder={placeholder}
+        disabled={busy}
+        onChange={(e) => setText(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) void send();
+        }}
+      />
+      {error && <Notice tone="danger">{error}</Notice>}
+      <div className="reply-actions">
+        <Button variant="primary" disabled={busy || !text.trim()} onClick={() => void send()}>{busy ? "Sending…" : "Send"}</Button>
+        {onDraft && <Button onClick={onDraft}>Draft with Claude</Button>}
+      </div>
     </div>
   );
 }

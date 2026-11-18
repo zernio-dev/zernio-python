@@ -67,10 +67,12 @@ APP_TOOLS = [
     "show_analytics",
     "show_account_health",
     "show_ads_alerts",
-    "show_automation_approvals",
+    "show_inbox",
+    "show_conversation",
+    "show_post_comments",
     "ui_reconnect_account",
+    "ui_send_message",
     "ui_dismiss_ads_alert",
-    "ui_decide_automation_approval",
 ]
 
 

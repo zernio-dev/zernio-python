@@ -9,7 +9,7 @@
  */
 import type { App } from "@modelcontextprotocol/ext-apps";
 
-export type View = "home" | "posts" | "analytics" | "accounts" | "ads" | "preview" | "approvals";
+export type View = "home" | "posts" | "analytics" | "accounts" | "ads" | "inbox" | "conversation" | "comments" | "preview";
 
 export const TOOLS: Record<View, string> = {
   home: "zernio_open_app",
@@ -17,8 +17,10 @@ export const TOOLS: Record<View, string> = {
   analytics: "show_analytics",
   accounts: "show_account_health",
   ads: "show_ads_alerts",
+  inbox: "show_inbox",
+  conversation: "show_conversation",
+  comments: "show_post_comments",
   preview: "show_post_preview",
-  approvals: "show_automation_approvals",
 };
 
 export const VIEW_TITLES: Record<View, string> = {
@@ -27,12 +29,14 @@ export const VIEW_TITLES: Record<View, string> = {
   analytics: "Analytics",
   accounts: "Accounts",
   ads: "Ads",
+  inbox: "Inbox",
+  conversation: "Conversation",
+  comments: "Comments",
   preview: "Post preview",
-  approvals: "Approvals",
 };
 
 /** The screens with a tab; the others open from a tool with their own arguments. */
-export const TABS: View[] = ["home", "posts", "analytics", "accounts", "ads"];
+export const TABS: View[] = ["home", "inbox", "posts", "analytics", "accounts", "ads"];
 
 export interface Screen<D = unknown> {
   view: View;
@@ -125,27 +129,65 @@ export interface AdsData {
   counts?: { error?: number; warning?: number; info?: number };
 }
 
-export interface ApprovalChange {
-  type: string;
-  subject?: { kind?: string; id?: string; name?: string | null };
-  previous?: Record<string, number | string> | null;
-  target?: Record<string, number | string> | null;
-  status?: string;
-}
-
-export interface Approval {
+export interface Conversation {
   id: string;
-  status: "pending" | "approved" | "rejected" | "expired" | "cancelled";
-  canDecide: boolean;
-  expiresAt: string;
-  to?: string[];
-  decidedBy?: { email?: string } | null;
-  changes: ApprovalChange[];
+  platform: string;
+  accountId: string;
+  accountUsername?: string | null;
+  participantName?: string | null;
+  lastMessage?: string | null;
+  updatedTime?: string | null;
+  unreadCount?: number | null;
+  isGroup?: boolean | null;
 }
 
-export interface ApprovalsData {
-  automationId: string;
-  approvals: Approval[];
+export interface CommentedPost {
+  id: string;
+  platform: string;
+  accountId: string;
+  accountUsername?: string | null;
+  content?: string | null;
+  createdTime?: string | null;
+  commentCount?: number | null;
+}
+
+export interface InboxData {
+  conversations: Conversation[];
+  posts: CommentedPost[];
+}
+
+export interface Message {
+  id: string;
+  message?: string | null;
+  senderName?: string | null;
+  direction?: "incoming" | "outgoing" | string | null;
+  createdAt?: string | null;
+  isDeleted?: boolean | null;
+  attachments: number;
+}
+
+export interface ConversationData {
+  conversationId: string;
+  accountId: string;
+  messages: Message[];
+}
+
+export interface Comment {
+  id: string;
+  message?: string | null;
+  createdTime?: string | null;
+  likeCount?: number | null;
+  replyCount?: number | null;
+  canReply?: boolean | null;
+  isHidden?: boolean | null;
+  from: { name?: string | null; username?: string | null; isOwner?: boolean | null };
+}
+
+export interface CommentsData {
+  postId: string;
+  accountId: string;
+  post: { text?: string | null; permalink?: string | null; createdAt?: string | null };
+  comments: Comment[];
 }
 
 export interface PreviewData {
