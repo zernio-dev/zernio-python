@@ -18,7 +18,7 @@ import respx
 from fastmcp import Client
 
 from late.mcp import auth, chatgpt_server
-from late.mcp.chatgpt_server import chatgpt_mcp
+from late.mcp.chatgpt_server import _media_items, chatgpt_mcp
 
 API = chatgpt_server.API_BASE
 
@@ -341,3 +341,22 @@ async def test_an_api_401_evicts_the_cached_token_so_chatgpt_gets_a_401_and_refr
 
     assert result.is_error
     assert auth.token_cache_key("sk_test") not in auth._VERIFIED_AT
+
+
+@pytest.mark.parametrize(
+    ("url", "expected"),
+    [
+        ("https://x.com/a.mp4", {"type": "video", "url": "https://x.com/a.mp4"}),
+        (
+            "https://x.com/a.jpg?w=1",
+            {"type": "image", "url": "https://x.com/a.jpg?w=1"},
+        ),
+        ("https://x.com/a.pdf", {"type": "document", "url": "https://x.com/a.pdf"}),
+        (
+            "https://drive.google.com/file/d/abc/view?usp=sharing",
+            {"url": "https://drive.google.com/file/d/abc/view?usp=sharing"},
+        ),
+    ],
+)
+def test_media_items_only_type_what_the_extension_proves(url, expected):
+    assert _media_items([url]) == [expected]

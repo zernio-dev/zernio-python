@@ -45,11 +45,12 @@ from fastmcp.server.transforms.search import BM25SearchTransform
 from fastmcp.server.transforms.search.base import serialize_tools_for_output_markdown
 from mcp.types import INVALID_PARAMS, ToolAnnotations
 
-from late import Late, MediaType, PostStatus
+from late import Late, PostStatus
 from late.client.exceptions import LateAPIError, LateError, LateRateLimitError
 
 from .auth import build_auth_provider, forget_rejected_token
 from .idempotency import same_arguments_key
+from .media_items import media_item
 from .middleware import (
     FEEDBACK_TOOL,
     FeedbackSourceMiddleware,
@@ -931,16 +932,7 @@ def posts_create(
     # Add media items if provided
     if media_urls:
         urls = [u.strip() for u in media_urls.split(",") if u.strip()]
-        media_items = []
-        for url in urls:
-            media_type: MediaType | str = MediaType.IMAGE
-            if any(
-                ext in url.lower() for ext in [".mp4", ".mov", ".avi", ".webm", ".m4v"]
-            ):
-                media_type = MediaType.VIDEO
-            elif any(ext in url.lower() for ext in [".gif"]):
-                media_type = MediaType.GIF
-            media_items.append({"type": media_type, "url": url})
+        media_items = [media_item(url) for url in urls]
         params["media_items"] = media_items
 
     if is_draft:
@@ -1042,16 +1034,7 @@ def posts_cross_post(
 
     if media_urls:
         urls = [u.strip() for u in media_urls.split(",") if u.strip()]
-        media_items = []
-        for url in urls:
-            media_type: MediaType | str = MediaType.IMAGE
-            if any(
-                ext in url.lower() for ext in [".mp4", ".mov", ".avi", ".webm", ".m4v"]
-            ):
-                media_type = MediaType.VIDEO
-            elif any(ext in url.lower() for ext in [".gif"]):
-                media_type = MediaType.GIF
-            media_items.append({"type": media_type, "url": url})
+        media_items = [media_item(url) for url in urls]
         params["media_items"] = media_items
 
     if is_draft:
