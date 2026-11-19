@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.682.1"
+  version: "1.683.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -2064,6 +2064,7 @@ components:
             name: { type: [string, "null"] }
             adGroupName: { type: [string, "null"], description: 'The Google ad group or Meta ad set.' }
             adName: { type: [string, "null"] }
+        counted: { type: boolean, description: '`false` for a website (`web`) copy of an event name a server source also reported that day: the server copy counts in the overview and campaign results, and this one is kept but not counted.' }
     ConnectedMessagingAccount:
       type: object
       description: The account a credentials connect created or updated.
