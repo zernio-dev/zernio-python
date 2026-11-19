@@ -9,16 +9,19 @@ from datetime import datetime, timezone
 from typing import Any
 
 import sentry_sdk
+from fastmcp.exceptions import ValidationError as InvalidArgumentsError
 from fastmcp.server.auth import AccessToken
 from fastmcp.server.dependencies import get_access_token
 from fastmcp.server.middleware import CallNext, Middleware, MiddlewareContext
 from mcp.types import CallToolRequestParams, TextContent
+from pydantic import ValidationError as PydanticValidationError
 
 from late.client.exceptions import LateAPIError, LateRateLimitError
 from late.mcp.auth import token_cache_key
 from late.mcp.response_format import format_stats
 from late.mcp.telemetry import (
     TOOL_TRANSACTION_OP,
+    argument_errors_without_input,
     is_expected_failure,
     tool_call_logger,
 )
@@ -90,8 +93,25 @@ def _result_chars(result: Any) -> int:
     return sum(len(block.text) for block in content if isinstance(block, TextContent))
 
 
+def _invalid_arguments_fields(exc: InvalidArgumentsError) -> dict[str, Any]:
+    # Named apart from ValidationError, which an SDK model rejecting an API
+    # response also raises: this one never reached the API.
+    fields: dict[str, Any] = {"error_type": "InvalidArguments"}
+    if isinstance(exc.__cause__, PydanticValidationError):
+        errors = exc.__cause__.errors(
+            include_url=False, include_context=False, include_input=False
+        )
+        fields["invalid_arguments"] = argument_errors_without_input(errors)
+    return fields
+
+
 def _error_fields(exc: Exception) -> dict[str, Any]:
+    if isinstance(exc, InvalidArgumentsError):
+        return _invalid_arguments_fields(exc)
     cause = exc.__cause__ if isinstance(exc.__cause__, Exception) else exc
+    # FastMCP 4 tags a pydantic error raised by a tool body as _ToolBodyError.
+    if isinstance(cause.__cause__, PydanticValidationError):
+        cause = cause.__cause__
     fields: dict[str, Any] = {"error_type": type(cause).__name__}
     if isinstance(cause, LateAPIError):
         fields["status_code"] = cause.status_code
@@ -180,6 +200,11 @@ class ToolTelemetryMiddleware(Middleware):
                 raise
             except Exception as exc:
                 fields = {"outcome": "error", **_error_fields(exc)}
+                transaction.set_tag("mcp.error_type", fields["error_type"])
+                if "invalid_arguments" in fields:
+                    transaction.set_tag(
+                        "mcp.invalid_arguments", fields["invalid_arguments"]
+                    )
                 if not is_expected_failure(exc):
                     sentry_sdk.capture_exception(exc)
                 raise

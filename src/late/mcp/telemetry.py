@@ -70,7 +70,7 @@ class ServerErrorAccessLogFilter(logging.Filter):
         return status_code >= 500
 
 
-def _argument_errors_without_input(detail: Any) -> str:
+def argument_errors_without_input(detail: Any) -> str:
     # FastMCP 4 logs its own input-free summary: {"error_count", "error_types"}.
     if isinstance(detail, dict) and isinstance(detail.get("error_types"), list):
         return ", ".join(str(error_type) for error_type in detail["error_types"])
@@ -87,7 +87,7 @@ class ToolFailureLogFilter(logging.Filter):
         message = str(record.msg)
         if message.startswith(_INVALID_ARGUMENTS_LOG_PREFIX):
             tool, detail = record.args
-            record.args = (tool, _argument_errors_without_input(detail))
+            record.args = (tool, argument_errors_without_input(detail))
             return True
         if not message.startswith(_TOOL_ERROR_LOG_PREFIX):
             return True
@@ -98,7 +98,7 @@ class ToolFailureLogFilter(logging.Filter):
             # An SDK model rejecting an API response: its traceback would log
             # the response values, so keep only where and why it failed.
             errors = rejection.errors(include_url=False, include_context=False, include_input=False)
-            record.msg, record.args = "%s: %s", (message, _argument_errors_without_input(errors))
+            record.msg, record.args = "%s: %s", (message, argument_errors_without_input(errors))
             record.exc_info = None
             return True
         return isinstance(exc, Exception) and not is_expected_failure(exc)
