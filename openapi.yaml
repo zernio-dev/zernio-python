@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.681.0"
+  version: "1.682.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -20371,6 +20371,10 @@ components:
           enum: ['>', '>=', '<', '<=', top, bottom]
           description: '`top` and `bottom` rank the rule''s objects by the metric over the window, highest first for `top`, and match the first `value` (a whole number from 1 to 100). Objects with no value are not ranked; the run history shows each one''s position.'
         value: { type: number, minimum: 0 }
+        model:
+          type: string
+          enum: [last_click, first_touch, last_non_direct, linear, position_based, time_decay, w_shaped]
+          description: 'With a `result:` metric, the attribution model your stored sales and leads count under (see `model` on `GET /v1/ads/campaign-results`). Last click when absent. Other metrics ignore it.'
         compareTo:
           type: string
           description: |
@@ -101502,7 +101506,7 @@ paths:
         Zernio also stores each event for the profile's reporting.
 
         - Email, phone and `externalId` are stored only as SHA-256 hashes.
-        - `sourceUrl` keeps only its origin, path and attribution parameters (`utm_*`, `gclid`, `fbclid`, `ttclid`, `li_fat_id`, `epik`, `rdt_cid`, `gbraid`, `wbraid`).
+        - `sourceUrl` keeps only its origin, path and attribution parameters (`utm_*`, `zrn`, `zcid`, `gclid`, `gbraid`, `wbraid`, `fbclid`, `ttclid`, `twclid`, `msclkid`, `li_fat_id`, `epik`, `rdt_cid`, `oppref`, `aleid`, `alart`), each also under a `z`-prefixed copy such as `zgclid`.
         - Events sent with `testCode` are forwarded but not stored.
         - Sending an event again with the same `eventId` replaces the stored one.
         - A stored `Purchase`, `Lead` or `QualifiedLead` tied to one of your campaigns (see `campaign` on each event) counts in `GET /v1/ads/campaign-results` and in ad rules as `sales` and `revenue`, `leads` or `qualified_leads`.
@@ -101699,6 +101703,80 @@ paths:
                             m12: { type: number }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
+  /v1/events/accuracy:
+    get:
+      x-resource-group: "ads"
+      operationId: getEventsAccuracy
+      tags: [Conversions]
+      summary: Get delivery accuracy per destination
+      description: |
+        For each forwarding rule of a profile: what its destination received over a period, and how many of the profile's real sales reached it.
+
+        `deliveries` counts every event sent to the destination in the period, whatever its source, by the latest outcome of each. `accuracy` compares only sales: Shopify and WooCommerce orders and Stripe payments, as Elevar's Channel Accuracy does. Sales a rule leaves out by choice do not count against it.
+
+        Without `profileId` it covers every profile you can access. Requires the Ads add-on.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: profileId
+          in: query
+          required: false
+          description: The profile to read. Omit to cover every profile you can access.
+          schema: { type: string }
+        - name: period
+          in: query
+          required: false
+          description: 'The window, ending now: `today` (since 00:00 UTC), or the last 7, 30 or 90 days.'
+          schema: { type: string, enum: [today, 7d, 30d, 90d], default: 7d }
+      responses:
+        '200':
+          description: One entry per forwarding rule.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  period: { type: string, enum: [today, 7d, 30d, 90d] }
+                  destinations:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        ruleId: { type: string, description: The forwarding rule. }
+                        profileId: { type: string }
+                        accountId: { type: string }
+                        platform: { type: string, description: 'Ad platform, such as `metaads` or `googleads`.' }
+                        accountName: { type: string }
+                        destinationId: { type: string }
+                        sales: { type: integer, description: 'Real sales in the period from the sources the rule takes.' }
+                        sent: { type: integer, description: Sales a send was tried for. }
+                        accepted: { type: integer, description: 'Sales the platform accepted, by the latest attempt.' }
+                        failed: { type: integer }
+                        retrying: { type: integer }
+                        notSent: { type: integer, description: 'Sales never sent: no ad consent, no identifier the platform matches on, or left out by the rule''s event names.' }
+                        accuracy: { type: [number, "null"], description: '`accepted / sent`, from 0 to 1. `null` with no sale sent.' }
+                        deliveries:
+                          type: object
+                          description: 'Every event of any source the rule takes that had a send in the period, by the latest outcome of each.'
+                          properties:
+                            events: { type: integer }
+                            accepted: { type: integer }
+                            failed: { type: integer }
+                            retrying: { type: integer }
+                        match:
+                          type: object
+                          description: 'The same events, and how many carried each identifier the platform matches people on.'
+                          properties:
+                            events: { type: integer }
+                            identified: { type: integer, description: Events with at least one of the identifiers below. }
+                            email: { type: integer }
+                            phone: { type: integer }
+                            externalId: { type: integer }
+                            clickId: { type: integer }
+                        matchRate: { type: [number, "null"], description: '`match.identified / match.events`. `null` with nothing sent.' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { description: 'No ads access on the account (`ads_addon_required`).' }
   /v1/events/overview:
     get:
       x-resource-group: "ads"
@@ -101801,6 +101879,17 @@ paths:
                             today: { $ref: '#/components/schemas/TrackingSitePeriodTotals' }
                             '7d': { $ref: '#/components/schemas/TrackingSitePeriodTotals' }
                             '30d': { $ref: '#/components/schemas/TrackingSitePeriodTotals' }
+                  eventNames:
+                    type: array
+                    description: 'Each event name stored in the 30 days before today and where it comes from. When a name comes from both the website tag and a server source, only the server copies count (in this overview, the daily overview and campaign results).'
+                    items:
+                      type: object
+                      properties:
+                        eventName: { type: string }
+                        serverSources: { type: array, items: { type: string }, description: 'The server sources that reported it (api, stripe, shopify...). Empty when only the website did.' }
+                        fromWebsite: { type: boolean, description: The website tag reported it. }
+                        websiteToday: { type: integer, description: Website copies today. }
+                        serverToday: { type: integer, description: Server copies today. }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }

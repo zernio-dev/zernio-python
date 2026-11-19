@@ -453,6 +453,18 @@ class ConversionsResource:
         )
         return self._client._get("/v1/events/ltv", params=params)
 
+    def get_events_accuracy(
+        self, *, profile_id: str | None = None, period: str | None = "7d"
+    ) -> dict[str, Any]:
+        """Get delivery accuracy per destination"""
+        params = self._build_query(
+            {
+                "profileId": profile_id,
+                "period": period,
+            }
+        )
+        return self._client._get("/v1/events/accuracy", params=params)
+
     def get_events_overview(self, *, profile_id: str | None = None) -> dict[str, Any]:
         """Get today's tracking overview"""
         params = self._build_query(
@@ -1428,6 +1440,18 @@ class ConversionsResource:
             }
         )
         return await self._client._aget("/v1/events/ltv", params=params)
+
+    async def aget_events_accuracy(
+        self, *, profile_id: str | None = None, period: str | None = "7d"
+    ) -> dict[str, Any]:
+        """Get delivery accuracy per destination (async)"""
+        params = self._build_query(
+            {
+                "profileId": profile_id,
+                "period": period,
+            }
+        )
+        return await self._client._aget("/v1/events/accuracy", params=params)
 
     async def aget_events_overview(
         self, *, profile_id: str | None = None

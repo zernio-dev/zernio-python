@@ -13779,7 +13779,7 @@ def register_generated_tools(mcp, _get_client):
             filters: Each item is an object with keys: field (one of: name, campaign_name, adset_name, goal; required) - The object's own name, its campaign's or ad set's name, or the campaign goal (objective) as the platform reports it.; op (one of: contains, not_contains, equals, not_equals, starts_with; required); value (string, required)
             groups: Each item is an object with keys: name (string, required) - Unique in the rule, ignoring case.; filters (list of objects with keys field, op, value, required)
             lifecycle: Object with keys: confirmChecks (integer) - Matching runs in a row before acting. Defaults to 1.; hold (object with keys all) - Keeps an open alert open after the conditions stop matching.; critical (object with keys all) - Marks an open alert critical.
-            conditions: Object with keys: all (list of objects with keys metric, window, op, value, compareTo, of, required) (required)
+            conditions: Object with keys: all (list of objects with keys metric, window, op, value, model, compareTo, of, required) (required)
             actions: Each item is an object with keys: type (one of: notify; required) - Send the `ad_rule.triggered` webhook, and the alert to every `send` destination.; send (list of objects with keys accountId, channelId) - Also send a short alert through accounts you connected: what matched, the values and what the rule did. Up to 5 destinations, checked when the rule is saved. ... (required)
             schedule: Leave it out to run every 60 minutes. Object with keys: everyMinutes (one of: 15, 30, 60, 180, 360, 720, 1440) - How often the rule runs, in minutes. Null on a rule that runs at set times.; times (list of objects with keys days, at) - Set weekly times in the ad account timezone, instead of an interval. A rule that changes ads needs a cooldown of at least the shortest gap between two times.; startsAt (string) - The rule runs from this time on.; endsAt (string) - The rule stops running after this time.; quietHours (object with keys from, to) - A daily window in the ad account timezone when the rule does not run, like `{ \"from\": \"22:00\", \"to\": \"06:00\" }`. It may wrap past midnight; the first run ...
             cooldown_minutes: How long the rule leaves an object alone after acting on it.
@@ -14006,7 +14006,7 @@ def register_generated_tools(mcp, _get_client):
             filters: Each item is an object with keys: field (one of: name, campaign_name, adset_name, goal; required) - The object's own name, its campaign's or ad set's name, or the campaign goal (objective) as the platform reports it.; op (one of: contains, not_contains, equals, not_equals, starts_with; required); value (string, required)
             groups: Null removes the groups; each campaign is then judged on its own. Each item is an object with keys: name (string, required) - Unique in the rule, ignoring case.; filters (list of objects with keys field, op, value, required)
             lifecycle: Null removes it; every matching run then acts and notifies again. Object with keys: confirmChecks (integer) - Matching runs in a row before acting. Defaults to 1.; hold (object with keys all) - Keeps an open alert open after the conditions stop matching.; critical (object with keys all) - Marks an open alert critical.
-            conditions: Object with keys: all (list of objects with keys metric, window, op, value, compareTo, of, required)
+            conditions: Object with keys: all (list of objects with keys metric, window, op, value, model, compareTo, of, required)
             actions: Each item is an object with keys: type (one of: notify; required) - Send the `ad_rule.triggered` webhook, and the alert to every `send` destination.; send (list of objects with keys accountId, channelId) - Also send a short alert through accounts you connected: what matched, the values and what the rule did. Up to 5 destinations, checked when the rule is saved. ...
             schedule: Object with keys: everyMinutes (one of: 15, 30, 60, 180, 360, 720, 1440) - How often the rule runs, in minutes. Null on a rule that runs at set times.; times (list of objects with keys days, at) - Set weekly times in the ad account timezone, instead of an interval. A rule that changes ads needs a cooldown of at least the shortest gap between two times.; startsAt (string) - The rule runs from this time on.; endsAt (string) - The rule stops running after this time.; quietHours (object with keys from, to) - A daily window in the ad account timezone when the rule does not run, like `{ \"from\": \"22:00\", \"to\": \"06:00\" }`. It may wrap past midnight; the first run ...
             cooldown_minutes
@@ -17160,7 +17160,7 @@ def register_generated_tools(mcp, _get_client):
             trigger: Object with keys: type (string, required); every (one of: 15m, 30m, 1h, 3h, 6h, 12h, 1d) - Run every interval. Send this or `times`, not both.; times (list of objects with keys days, at) - Set weekly times. Send this or `every`, not both.; startsAt (string) - Runs from this time on.; endsAt (string) - Stops running after this time. Must be after `startsAt`.; quietHours (object with keys from, to) - A daily window with no checks. It may wrap past midnight, such as `22:00` to `06:00`.
             subjects: Object with keys: each (one of: campaign, adset, ad, keyword, search_term; required) - The objects judged one by one.; adAccounts (list of objects with keys accountId, adAccountId, required) - The ad account to check. One per ad rule, and an edit cannot move it to another.; campaignIds (list of string) - Only these platform campaigns or their ad sets and ads. Leave out to check the whole ad account.; filters (list of objects with keys field, op, value) - All must hold.; groups (list of objects with keys name, filters) - Judges campaigns together (campaign rules only): each group's numbers are summed and its rates computed on the totals, and a matching group acts on each of ...
             filter: Object with keys: field (string, required) - A fact name from the catalog.; op (one of: equals, not_equals, contains, not_contains, starts_with, ends_with, exists, not_exists, matches, greater_than, less_than, greater_or_equal, less_or_equal, before, after, has_tag, not_has_tag, is_true, is_false; required); value (string or number, required)
-            conditions: Object with keys: all (list of objects with keys metric, window, op, value, compareTo, of, required)
+            conditions: Object with keys: all (list of objects with keys metric, window, op, value, model, compareTo, of, required)
             alert: Object with keys: confirmChecks (integer); hold (object with keys all); critical (object with keys all)
             steps: The steps the automation's kind takes. Each item is an object with keys: id (string); type (string, required)
             limits: Object with keys: cooldown (string) - How long an object is left alone after the rule acts on it. Whole minutes, up to `30d`.; maxChangesPerDay (integer) - Most changes across the last 24 hours. Needs an `ads.*` step.; maxChangesPerObject (integer) - Most times the rule may change one object, counted over the last 400 days. Needs an `ads.*` step."""
@@ -31250,8 +31250,7 @@ def register_generated_tools(mcp, _get_client):
         Zernio also stores each event for the profile's reporting.
 
         - Email, phone and `externalId` are stored only as SHA-256 hashes.
-        - `sourceUrl` keeps only its origin, path and attribution parameters (`utm_*`, `gclid`, `fbclid`, `ttclid`, `li_fat_id`, `epik`, `rdt_cid`, `gbraid`, `wbraid`).
-        - Events sent with `testCode` are forwarded but not ...
+        - `sourceUrl` keeps only its origin, path and attribution parameters (`utm_*`, `zrn`, `zcid`, `gclid`, `gbraid`, `wbraid`, `fbclid`, `ttclid`, `twclid`, `msclkid`, `li_fat_id`, `epik`, `rdt_cid`, `oppref`, `aleid`, ...
 
         Platforms: meta, google, tiktok, linkedin, microsoft, x, pinterest, reddit, openai, applovinads, snapchatads, googleanalytics
 
@@ -31332,6 +31331,38 @@ def register_generated_tools(mcp, _get_client):
         try:
             response = client.conversions.get_ltv_cohorts(
                 profile_id=profile_id, from_month=from_month, to_month=to_month
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get delivery accuracy per destination",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def conversions_get_events_accuracy(
+        profile_id: str | None = None,
+        period: Literal["today", "7d", "30d", "90d"] = "7d",
+    ) -> str:
+        """Get delivery accuracy per destination
+
+        For each forwarding rule of a profile: what its destination received over a period, and how many of the profile's real sales reached it.
+
+        `deliveries` counts every event sent to the destination in the period, whatever its source, by the latest outcome of each. `accuracy` compares only sales: Shopify and WooCommerce orders and Stripe payments, as Elevar's Channel Accuracy does. Sales a rule leaves out by choice do not count against it.
+
+        Without `profileId` it covers every profile you can access. Requires the Ads add-on.
+
+        Args:
+            profile_id: The profile to read. Omit to cover every profile you can access.
+            period: The window, ending now: `today` (since 00:00 UTC), or the last 7, 30 or 90 days."""
+        client = _get_client()
+        try:
+            response = client.conversions.get_events_accuracy(
+                profile_id=profile_id, period=period
             )
             return _format_response(response)
         except Exception as e:
