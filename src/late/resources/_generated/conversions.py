@@ -440,6 +440,19 @@ class ConversionsResource:
         )
         return self._client._get("/v1/events/paths", params=params)
 
+    def get_survey_answers(
+        self, from_date: str, to_date: str, *, profile_id: str | None = None
+    ) -> dict[str, Any]:
+        """Get post-purchase survey answers"""
+        params = self._build_query(
+            {
+                "profileId": profile_id,
+                "fromDate": from_date,
+                "toDate": to_date,
+            }
+        )
+        return self._client._get("/v1/events/survey", params=params)
+
     def get_ltv_cohorts(
         self, from_month: str, to_month: str, *, profile_id: str | None = None
     ) -> dict[str, Any]:
@@ -1427,6 +1440,19 @@ class ConversionsResource:
             }
         )
         return await self._client._aget("/v1/events/paths", params=params)
+
+    async def aget_survey_answers(
+        self, from_date: str, to_date: str, *, profile_id: str | None = None
+    ) -> dict[str, Any]:
+        """Get post-purchase survey answers (async)"""
+        params = self._build_query(
+            {
+                "profileId": profile_id,
+                "fromDate": from_date,
+                "toDate": to_date,
+            }
+        )
+        return await self._client._aget("/v1/events/survey", params=params)
 
     async def aget_ltv_cohorts(
         self, from_month: str, to_month: str, *, profile_id: str | None = None

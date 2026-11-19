@@ -1087,6 +1087,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `conversions.get_events_overview()` | Get today's tracking overview |
 | `conversions.get_events_overview_daily()` | Get daily tracking figures |
 | `conversions.get_ltv_cohorts()` | Get buyer cohorts by first purchase month and first channel |
+| `conversions.get_survey_answers()` | Get post-purchase survey answers |
 | `conversions.get_tracking_site()` | Get a tracking site |
 | `conversions.update_ad_conversion_destination()` | Update a conversion destination |
 | `conversions.update_ad_conversion_goals()` | Update account conversion goals |

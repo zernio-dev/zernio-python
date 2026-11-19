@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.683.0"
+  version: "1.684.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -96139,6 +96139,14 @@ paths:
                     - Omitted: leaves Meta's default.
 
                     Applied to each new creative (standalone, creatives[] and attach shapes) and preserved when a creative is rebuilt. This sets the disclosure on the ad; whether and when the viewer-facing label renders is Meta's decision.
+                websiteOnly:
+                  type: boolean
+                  description: |
+                    Meta only. Sets the creative's applink_treatment to web_only, so Ads Manager shows Website as the only destination instead of App with a website backup.
+
+                    - Omitted or false: keeps Meta's default.
+                    - Applies to new creatives (single, creatives[] and adSetId attach); rejected with existingCreativeId.
+                    - Meta rejects it when the campaign uses Website and App conversion locations.
                 retryOnServerError:
                   type: boolean
                   description: |
@@ -101665,6 +101673,56 @@ paths:
                         avgDays: { type: number, description: 'Average days from the first touch to the conversion.' }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
+  /v1/events/survey:
+    get:
+      x-resource-group: "ads"
+      operationId: getSurveyAnswers
+      tags: [Conversions]
+      summary: Get post-purchase survey answers
+      description: |
+        How buyers said they heard about the store, from the "How did you hear about us?" block on the Shopify thank-you page. Each answer comes with its orders and their revenue.
+
+        Revenue is what the orders are worth now (refunds taken off), summed across currencies as sent. Without `profileId` it covers every profile you can access. Requires the Ads add-on.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: profileId
+          in: query
+          required: false
+          schema: { type: string }
+          description: The profile to read. Omit for every profile you can access.
+        - name: fromDate
+          in: query
+          required: true
+          schema: { type: string, format: date }
+          description: First day an answer was given.
+        - name: toDate
+          in: query
+          required: true
+          schema: { type: string, format: date }
+          description: Inclusive. At most 400 days after `fromDate`.
+      responses:
+        '200':
+          description: The answers, most given first.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [fromDate, toDate, answers]
+                properties:
+                  fromDate: { type: string, format: date }
+                  toDate: { type: string, format: date }
+                  answers:
+                    type: array
+                    items:
+                      type: object
+                      required: [answer, orders, revenue]
+                      properties:
+                        answer: { type: string, description: 'The answer as the buyer picked it.', example: Podcast }
+                        orders: { type: integer, description: 'How many orders gave this answer.' }
+                        revenue: { type: number, description: 'What those orders are worth now, as sent.' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
   /v1/events/ltv:
     get:
       x-resource-group: "ads"
@@ -101972,6 +102030,10 @@ paths:
                         conversions: { type: integer, description: Stored events that occurred that day. }
                         sent: { type: integer, description: 'Events first sent to a destination that day.' }
                         accepted: { type: integer, description: 'Those the platform accepted.' }
+                        value: { type: number, description: 'The day''s value, in the period''s `totals.currency`.' }
+                        valueSent: { type: number, description: 'Of that value, the conversions a platform accepted.' }
+                        fromAds: { type: integer, description: 'Counted events that came from an ad, as in `totals.fromAds`.' }
+                        matched: { type: integer, description: 'Events matched to an ad campaign.' }
                         byEvent:
                           type: object
                           description: 'The day''s stored events per event name.'
@@ -102007,6 +102069,22 @@ paths:
                         platform: { type: string }
                         conversions: { type: integer }
                         missed: { type: integer }
+                        days:
+                          type: array
+                          description: 'Every day of the period, oldest first.'
+                          items:
+                            type: object
+                            properties:
+                              day: { type: string, format: date }
+                              conversions: { type: integer }
+                              missed: { type: integer }
+                  previous:
+                    type: object
+                    description: 'The same figures for the period of the same length just before it, to show each figure''s change.'
+                    properties:
+                      totals: { type: object, description: 'Shaped like `totals`.' }
+                      days: { type: array, description: 'Shaped like `days`.', items: { type: object } }
+                      pixelMissed: { type: [array, "null"], description: 'Shaped like `pixelMissed`.', items: { type: object } }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
@@ -102092,13 +102170,13 @@ paths:
                         sentAt: { type: string, format: date-time }
                   touches:
                     type: array
-                    description: 'The touches the event is split across, oldest first: website visits (an ad click, search, a tagged link), the first and latest visits HubSpot recorded for a deal, and earlier lead forms or sales. Empty when the event counts whole for its own campaign.'
+                    description: 'The touches the event is split across, oldest first: website visits (an ad click, search, a tagged link), the first and latest visits HubSpot recorded for a deal, earlier lead forms or sales, and a Shopify buyer''s post-purchase survey answer. Empty when the event counts whole for its own campaign.'
                     items:
                       type: object
                       properties:
                         at: { type: string, format: date-time }
-                        kind: { type: string, enum: [ad_click, paid, email, social, campaign, organic_search, ai_assistant, referral, lead_form, event] }
-                        platform: { type: [string, "null"] }
+                        kind: { type: string, enum: [ad_click, paid, email, social, campaign, organic_search, ai_assistant, referral, lead_form, event, survey] }
+                        platform: { type: [string, "null"], description: 'The ad platform of the campaign, or the one a survey answer names (Instagram reads as facebook).' }
                         adAccountId: { type: [string, "null"] }
                         campaignId: { type: [string, "null"], description: 'The campaign the touch resolved to; null for a touch that named none (search, referral).' }
                         credit: { type: object, additionalProperties: { type: number }, description: 'The share of the event (0 to 1) this touch gets per model: first_touch, last_non_direct, linear, position_based, time_decay, w_shaped.', example: { linear: 0.5, first_touch: 1, time_decay: 0.35 } }

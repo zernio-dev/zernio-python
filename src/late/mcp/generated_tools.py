@@ -10838,6 +10838,7 @@ def register_generated_tools(mcp, _get_client):
         catalog_intro_cards: list[dict[str, Any]] | None = None,
         multi_advertiser: Literal["OPT_IN", "OPT_OUT"] | None = None,
         ai_disclosure: Literal["OPT_IN", "OPT_OUT"] | None = None,
+        website_only: bool | None = None,
         retry_on_server_error: bool | None = None,
         validate_only: bool | None = None,
         budget_amount: float | None = None,
@@ -11224,6 +11225,11 @@ def register_generated_tools(mcp, _get_client):
         - Omitted: leaves Meta's default.
 
         Applied to each new creative (standalone, creatives[] and attach shapes) and preserved when a creative is rebuilt. This sets the disclosure on the ad; whether and when the viewer-facing label renders is Meta's decision.
+                website_only: Meta only. Sets the creative's applink_treatment to web_only, so Ads Manager shows Website as the only destination instead of App with a website backup.
+
+        - Omitted or false: keeps Meta's default.
+        - Applies to new creatives (single, creatives[] and adSetId attach); rejected with existingCreativeId.
+        - Meta rejects it when the campaign uses Website and App conversion locations.
                 retry_on_server_error: Meta only (a 400 elsewhere). When Meta answers a create with a 5xx and reading the parent back by name finds no such object, Zernio sends the create again (at most 3 POSTs per object, never for an object created ACTIVE) and reports it in `recoveredWrites`.
 
         `false` never sends it again: the request fails with 502 and `details.unconfirmedWrite`, so you can check the parent yourself. One object found by name is still reused.
@@ -11707,6 +11713,7 @@ def register_generated_tools(mcp, _get_client):
             "catalog_intro_cards": catalog_intro_cards,
             "multi_advertiser": multi_advertiser,
             "ai_disclosure": ai_disclosure,
+            "website_only": website_only,
             "retry_on_server_error": retry_on_server_error,
             "validate_only": validate_only,
             "budget_amount": budget_amount,
@@ -11832,6 +11839,7 @@ def register_generated_tools(mcp, _get_client):
                 catalog_intro_cards=catalog_intro_cards,
                 multi_advertiser=multi_advertiser,
                 ai_disclosure=ai_disclosure,
+                website_only=website_only,
                 retry_on_server_error=retry_on_server_error,
                 validate_only=validate_only,
                 budget_amount=budget_amount,
@@ -31301,6 +31309,36 @@ def register_generated_tools(mcp, _get_client):
         try:
             response = client.conversions.get_conversion_paths(
                 profile_id=profile_id, from_date=from_date, to_date=to_date, limit=limit
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get post-purchase survey answers",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def conversions_get_survey_answers(
+        from_date: str, to_date: str, profile_id: str | None = None
+    ) -> str:
+        """Get post-purchase survey answers
+
+        How buyers said they heard about the store, from the \"How did you hear about us?\" block on the Shopify thank-you page. Each answer comes with its orders and their revenue.
+
+        Revenue is what the orders are worth now (refunds taken off), summed across currencies as sent. Without `profileId` it covers every profile you can access. Requires the Ads add-on.
+
+        Args:
+            profile_id: The profile to read. Omit for every profile you can access.
+            from_date: First day an answer was given. (required)
+            to_date: Inclusive. At most 400 days after `fromDate`. (required)"""
+        client = _get_client()
+        try:
+            response = client.conversions.get_survey_answers(
+                profile_id=profile_id, from_date=from_date, to_date=to_date
             )
             return _format_response(response)
         except Exception as e:
