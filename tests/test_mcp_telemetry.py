@@ -5,7 +5,7 @@ import json
 import logging
 from datetime import datetime
 from types import SimpleNamespace
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 
 import httpx
 import pytest
@@ -123,6 +123,66 @@ async def test_every_tool_call_logs_its_outcome_and_latency(
     assert isinstance(line["duration_ms"], int)
     assert datetime.fromisoformat(line["ts"]).tzinfo is not None
     assert fields.items() <= line.items()
+
+
+async def test_rejected_arguments_log_which_fields_failed_without_values(
+    caplog,
+) -> None:
+    caplog.set_level(logging.INFO, logger="late.mcp.tools")
+    server = _server()
+
+    @server.tool
+    def filtered(status: Literal["active", "paused"], limit: int = 10) -> str:
+        return f"{status} {limit}"
+
+    async with Client(server) as client:
+        await client.call_tool(
+            "filtered", {"status": "not_deleted", "limit": "many"}, raise_on_error=False
+        )
+
+    [line] = _logged(caplog)
+    assert line["outcome"] == "error"
+    assert line["error_type"] == "InvalidArguments"
+    assert line["invalid_arguments"] == "status: literal_error, limit: int_parsing"
+    assert "status_code" not in line
+    assert "not_deleted" not in json.dumps(line)
+
+
+async def test_an_sdk_model_rejecting_a_response_keeps_its_validation_error_type(
+    caplog,
+) -> None:
+    caplog.set_level(logging.INFO, logger="late.mcp.tools")
+    server = _server()
+
+    @server.tool
+    def rejects_response() -> str:
+        AccountsListResponse.model_validate({"accounts": "nope"})
+        return "unreachable"
+
+    async with Client(server) as client:
+        await client.call_tool("rejects_response", {}, raise_on_error=False)
+
+    [line] = _logged(caplog)
+    assert line["error_type"] == "ValidationError"
+    assert "invalid_arguments" not in line
+
+
+async def test_rejected_arguments_tag_the_sentry_transaction(sentry_events) -> None:
+    server = _server()
+
+    @server.tool
+    def takes_a_number(value: int) -> int:
+        return value
+
+    async with Client(server) as client:
+        await client.call_tool(
+            "takes_a_number", {"value": "nope"}, raise_on_error=False
+        )
+
+    [transaction] = sentry_events.payloads("transaction")
+    assert transaction["tags"]["mcp.error_type"] == "InvalidArguments"
+    assert transaction["tags"]["mcp.invalid_arguments"] == "value: int_parsing"
+    assert sentry_events.payloads("event") == []
 
 
 def test_sentry_stays_off_without_a_dsn(monkeypatch: pytest.MonkeyPatch) -> None:
