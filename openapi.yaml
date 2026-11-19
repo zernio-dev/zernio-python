@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.698.0"
+  version: "1.700.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -7908,6 +7908,7 @@ components:
         _id: { type: string }
         phoneNumber: { type: string }
         requestedPhoneNumber: { type: string, description: 'The specific number you asked for at purchase (`phoneNumber` in the purchase body). Absent when you did not pick one. When it differs from `phoneNumber`, WhatsApp refused the picked number (it was likely registered on WhatsApp before), so a different number was issued.' }
+        purchaseIntentId: { type: string, description: 'The purchaseIntentId the number was bought or KYC-submitted with. Absent when none was sent.' }
         country: { type: string }
         numberType: { type: string, description: 'For example local, mobile, national or toll_free.' }
         status: { type: string, enum: [pending_payment, pending_regulatory, regulatory_declined, provisioning, verifying, active, suspended, releasing, released] }
@@ -30894,6 +30895,7 @@ webhooks:
                     phoneNumber: { type: string }
                     country: { type: string }
                     profileId: { type: string }
+                    purchaseIntentId: { type: string, description: 'Echo of the purchaseIntentId the number was bought or KYC-submitted with. Absent when none was sent.' }
       responses:
         '200':
           description: Webhook received successfully
@@ -30949,6 +30951,7 @@ webhooks:
                     phoneNumber: { type: string }
                     country: { type: string }
                     profileId: { type: string }
+                    purchaseIntentId: { type: string, description: 'Echo of the purchaseIntentId the number was bought or KYC-submitted with. Absent when none was sent.' }
                 reason: { type: [string, "null"] }
       responses:
         '200':
@@ -31030,6 +31033,7 @@ webhooks:
                     phoneNumber: { type: string }
                     country: { type: string }
                     profileId: { type: string }
+                    purchaseIntentId: { type: string, description: 'Echo of the purchaseIntentId the number was bought or KYC-submitted with. Absent when none was sent.' }
       responses:
         '200':
           description: Webhook received successfully
@@ -31081,6 +31085,7 @@ webhooks:
                     phoneNumber: { type: string }
                     country: { type: string }
                     profileId: { type: string }
+                    purchaseIntentId: { type: string, description: 'Echo of the purchaseIntentId the number was bought or KYC-submitted with. Absent when none was sent.' }
                 verificationUrl: { type: string }
       responses:
         '200':
@@ -31137,6 +31142,7 @@ webhooks:
                     phoneNumber: { type: string }
                     country: { type: string }
                     profileId: { type: string }
+                    purchaseIntentId: { type: string, description: 'Echo of the purchaseIntentId the number was bought or KYC-submitted with. Absent when none was sent.' }
                 reason: { type: [string, "null"] }
       responses:
         '200':
@@ -31184,6 +31190,7 @@ webhooks:
                     phoneNumber: { type: string }
                     country: { type: string }
                     profileId: { type: string }
+                    purchaseIntentId: { type: string, description: 'Echo of the purchaseIntentId the number was bought or KYC-submitted with. Absent when none was sent.' }
       responses:
         '200':
           description: Webhook received successfully
@@ -31235,6 +31242,7 @@ webhooks:
                     phoneNumber: { type: string }
                     country: { type: string }
                     profileId: { type: string }
+                    purchaseIntentId: { type: string, description: 'Echo of the purchaseIntentId the number was bought or KYC-submitted with. Absent when none was sent.' }
                 reason: { type: [string, "null"] }
       responses:
         '200':
@@ -31290,6 +31298,7 @@ webhooks:
                     phoneNumber: { type: string }
                     country: { type: string }
                     profileId: { type: string }
+                    purchaseIntentId: { type: string, description: 'Echo of the purchaseIntentId the number was bought or KYC-submitted with. Absent when none was sent.' }
       responses:
         '200':
           description: Webhook received successfully
@@ -66212,7 +66221,7 @@ paths:
                       subcode: { type: integer, description: "Meta error_subcode" }
                       fbtraceId: { type: string, description: "Meta fbtrace_id, quote this in a Meta bug report" }
                       type: { type: string, description: "Meta error type (e.g. OAuthException)" }
-                      message: { type: string, description: "TikTok error message" }
+                      message: { type: string, description: "TikTok error message. On WhatsApp, Meta's own error text, set only when error carries Zernio's explanation instead (code 10, subcode 2593184)." }
                       request_id: { type: string, description: "TikTok request_id, quote this in a TikTok support ticket" }
         '500':
           x-summary: "The platform rejected or failed the send: Zernio does not retry, so retry only if your use case tolerates a duplicate message."
@@ -76042,6 +76051,10 @@ paths:
                     description: >
                       A number was already purchased under the supplied
                       purchaseIntentId; no new number was provisioned.
+                      The number can still be in regulatory review or
+                      declined (phoneNumber can be "pending"): GET it for its
+                      status, and use a new purchaseIntentId to buy a
+                      replacement.
                     properties:
                       status: { type: string, enum: [already_purchased] }
                       numberId: { type: string }
@@ -76105,6 +76118,7 @@ paths:
                   status: { type: string, enum: [kyc_required] }
                   country: { type: string }
                   numberType: { type: string, description: The type that will be ordered after KYC approval. }
+                  purchaseIntentId: { type: string, description: 'Echo of the purchaseIntentId you sent. Pass it to the KYC submission (or the KYC share link) so the resulting numbers and their whatsapp.number.* webhooks carry it.' }
                   kycUrl: { type: string }
         '402': { x-summary: "A payment method is required because the usage-based account has no card on file: add a card, then retry.", description: 'No card on file (usage-based account): code PAYMENT_REQUIRED, add a card, then retry. Balance billing: code insufficient_balance (balance at $0, or below the number''s first month while auto top-up cannot refill it) or usage_limit_reached; add funds at `funding_url` (`required_cents` is what the balance must hold), then retry.' }
         '422': { x-summary: "International numbers require usage-based billing, and legacy Stripe users are limited to the US: switch to usage-based billing.", description: 'International numbers require usage-based billing (legacy Stripe users are US-only). Response body code: USAGE_BILLING_REQUIRED.' }
@@ -76600,6 +76614,10 @@ paths:
                     description: >
                       A number was already purchased under the supplied
                       purchaseIntentId; no new number was provisioned.
+                      The number can still be in regulatory review or
+                      declined (phoneNumber can be "pending"): GET it for its
+                      status, and use a new purchaseIntentId to buy a
+                      replacement.
                     properties:
                       status: { type: string, enum: [already_purchased] }
                       numberId: { type: string }
@@ -76643,6 +76661,7 @@ paths:
                   status: { type: string, enum: [kyc_required] }
                   country: { type: string }
                   numberType: { type: string, description: The type that will be ordered after KYC approval. }
+                  purchaseIntentId: { type: string, description: 'Echo of the purchaseIntentId you sent. Pass it to the KYC submission (or the KYC share link) so the resulting numbers and their whatsapp.number.* webhooks carry it.' }
                   kycUrl: { type: string }
         '402': { x-summary: "A payment method is required because the usage-based account has no card on file: add a card, then retry.", description: 'No card on file (usage-based account): code PAYMENT_REQUIRED, add a card, then retry. Balance billing: code insufficient_balance (balance at $0, or below the numbers'' first month while auto top-up cannot refill it) or usage_limit_reached; add funds at `funding_url` (`required_cents` is what the balance must hold), then retry.' }
         '422': { x-summary: "International numbers require usage-based billing, and legacy Stripe users are limited to the US: switch to usage-based billing.", description: 'International numbers require usage-based billing (legacy Stripe users are US-only). Response body code: USAGE_BILLING_REQUIRED.' }
@@ -76957,6 +76976,7 @@ paths:
                 reuseOptionId: { type: string, description: 'Which reusable verification to use (GET reusable.options[].id). The unambiguous selection key. Omitted = the approved default. No match = 409.' }
                 reuseFrom: { type: string, description: 'Legacy fallback for `reuseOptionId`: the source phone number (GET reusable.options[].fromPhoneNumber). Ambiguous when a number labels two verifications, so prefer `reuseOptionId`. Omitted = the approved default. No match = 409.' }
                 areaCode: { type: string, pattern: '^\d{1,4}$', description: "Area code (NDC) the number must be in. Omit for any area.\n\nHard constraint: an empty area pool fails with 409 code AREA_CODE_UNAVAILABLE instead of ordering from another area.\n\nOptions come from GET /v1/phone-numbers/availability (areaOptions). The purchase 202 kycUrl echoes the areaCode picked at purchase time so it can be passed here." }
+                purchaseIntentId: { type: string, maxLength: 100, description: 'Correlation label copied onto every number this submission creates (a batch shares it) and onto their webhooks. Not an idempotency key: use submissionId for safe retries. Max 100 characters; longer values are truncated.' }
                 phoneNumber: { type: string, pattern: '^\+[1-9]\d{6,14}$', description: 'Exact number to order, in E.164, taken from GET /v1/phone-numbers/available. It is ordered as is or the request fails with 409 code phone_number_unavailable; another number is never substituted and a pre-order is never placed. Requires quantity 1 (or omitted). Omit to let the carrier pick a number in the area.' }
                 preOrder: { type: boolean, description: "Pre-order a number when the requested area has no stock.\n\n- With areaCode: pre-order that area when it has no stock (listed in soldOutAreas with preOrderable true) instead of failing with AREA_CODE_UNAVAILABLE. The carrier sources a number in that area.\n- Without areaCode: accepts the pre-order a previous submit offered with 409 code area_pre_order_available (a geographic-match country whose address area has no stock). Resend the same body with preOrder true and the order is placed for that area.\n\nA whole pair with no stock is pre-ordered without either flag." }
                 endUserFirstName: { type: string, description: End user's legal first name. Required when the country has an action/ID-verification (Onfido) requirement. }
@@ -77195,6 +77215,7 @@ paths:
                 profileId: { type: string }
                 country: { type: string, minLength: 2, maxLength: 2, description: ISO 3166-1 alpha-2 country code (must be a regulated/KYC country). }
                 areaCode: { type: string, pattern: '^\d{1,4}$', description: 'Area code (NDC) the eventual number must be in. Hard constraint carried by the link; the end customer filling the form makes no area choice. Options come from GET /v1/phone-numbers/availability (areaOptions).' }
+                purchaseIntentId: { type: string, maxLength: 100, description: 'Correlation label stamped on the numbers when the end customer submits the hosted form, and copied onto their webhooks. Max 100 characters; longer values are truncated.' }
                 language:
                   type: string
                   enum: [en, es, pt-BR]
@@ -78042,6 +78063,7 @@ paths:
                 reuseOptionId: { type: string, description: 'Which reusable verification to use (GET reusable.options[].id). The unambiguous selection key. Omitted = the approved default. No match = 409.' }
                 reuseFrom: { type: string, description: 'Legacy fallback for `reuseOptionId`: the source phone number (GET reusable.options[].fromPhoneNumber). Ambiguous when a number labels two verifications, so prefer `reuseOptionId`. Omitted = the approved default. No match = 409.' }
                 areaCode: { type: string, pattern: '^\d{1,4}$', description: "Area code (NDC) the number must be in. Omit for any area.\n\nHard constraint: an empty area pool fails with 409 code AREA_CODE_UNAVAILABLE instead of ordering from another area.\n\nOptions come from GET /v1/phone-numbers/availability (areaOptions). The purchase 202 kycUrl echoes the areaCode picked at purchase time so it can be passed here." }
+                purchaseIntentId: { type: string, maxLength: 100, description: 'Correlation label copied onto every number this submission creates (a batch shares it) and onto their webhooks. Not an idempotency key: use submissionId for safe retries. Max 100 characters; longer values are truncated.' }
                 phoneNumber: { type: string, pattern: '^\+[1-9]\d{6,14}$', description: 'Exact number to order, in E.164, taken from GET /v1/whatsapp/phone-numbers/available. It is ordered as is or the request fails with 409 code phone_number_unavailable; another number is never substituted and a pre-order is never placed. Requires quantity 1 (or omitted). Omit to let the carrier pick a number in the area.' }
                 preOrder: { type: boolean, description: "Pre-order a number when the area has no stock.\n\n- **With areaCode:** pre-order that area when it has no stock (listed in soldOutAreas with preOrderable true) instead of failing with AREA_CODE_UNAVAILABLE. The carrier sources a number in that area.\n- **Without areaCode:** accepts the pre-order a previous submit offered with 409 code area_pre_order_available (a geographic-match country whose address area has no stock). Resend the same body with preOrder true and the order is placed for that area.\n\nA whole pair with no stock is pre-ordered without either flag." }
                 endUserFirstName: { type: string, description: End user's legal first name. Required when the country has an action/ID-verification (Onfido) requirement. }
@@ -78257,6 +78279,7 @@ paths:
                 profileId: { type: string }
                 country: { type: string, minLength: 2, maxLength: 2, description: ISO 3166-1 alpha-2 country code (must be a regulated/KYC country). }
                 areaCode: { type: string, pattern: '^\d{1,4}$', description: 'Area code (NDC) the eventual number must be in. Hard constraint carried by the link; the end customer filling the form makes no area choice. Options come from GET /v1/phone-numbers/availability (areaOptions).' }
+                purchaseIntentId: { type: string, maxLength: 100, description: 'Correlation label stamped on the numbers when the end customer submits the hosted form, and copied onto their webhooks. Max 100 characters; longer values are truncated.' }
                 language:
                   type: string
                   enum: [en, es, pt-BR]

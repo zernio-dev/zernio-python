@@ -44646,6 +44646,7 @@ def register_generated_tools(mcp, _get_client):
         reuse_option_id: str | None = None,
         reuse_from: str | None = None,
         area_code: str | None = None,
+        purchase_intent_id: str | None = None,
         phone_number: str | None = None,
         pre_order: bool | None = None,
         end_user_first_name: str | None = None,
@@ -44688,6 +44689,7 @@ def register_generated_tools(mcp, _get_client):
         Hard constraint: an empty area pool fails with 409 code AREA_CODE_UNAVAILABLE instead of ordering from another area.
 
         Options come from GET /v1/phone-numbers/availability (areaOptions). The purchase 202 kycUrl echoes the areaCode picked at purchase time so it can be passed here.
+                purchase_intent_id: Correlation label copied onto every number this submission creates (a batch shares it) and onto their webhooks. Not an idempotency key: use submissionId for safe retries. Max 100 characters; longer values are truncated.
                 phone_number: Exact number to order, in E.164, taken from GET /v1/phone-numbers/available. It is ordered as is or the request fails with 409 code phone_number_unavailable; another number is never substituted and a pre-order is never placed. Requires quantity 1 (or omitted). Omit to let the carrier pick a number in the area.
                 pre_order: Pre-order a number when the requested area has no stock.
 
@@ -44711,6 +44713,7 @@ def register_generated_tools(mcp, _get_client):
                 reuse_option_id=reuse_option_id,
                 reuse_from=reuse_from,
                 area_code=area_code,
+                purchase_intent_id=purchase_intent_id,
                 phone_number=phone_number,
                 pre_order=pre_order,
                 end_user_first_name=end_user_first_name,
@@ -44843,6 +44846,7 @@ def register_generated_tools(mcp, _get_client):
         profile_id: str,
         country: str,
         area_code: str | None = None,
+        purchase_intent_id: str | None = None,
         language: Literal["en", "es", "pt-BR"] | None = None,
         branding: dict[str, Any] | None = None,
         redirect_url: str | None = None,
@@ -44867,6 +44871,7 @@ def register_generated_tools(mcp, _get_client):
                 profile_id: (required)
                 country: ISO 3166-1 alpha-2 country code (must be a regulated/KYC country). (required)
                 area_code: Area code (NDC) the eventual number must be in. Hard constraint carried by the link; the end customer filling the form makes no area choice. Options come from GET /v1/phone-numbers/availability (areaOptions).
+                purchase_intent_id: Correlation label stamped on the numbers when the end customer submits the hosted form, and copied onto their webhooks. Max 100 characters; longer values are truncated.
                 language: Language of the hosted page: its copy, the carrier requirement texts (translated once per country and cached), the pre-submit review notes and the status emails to the end customer.
 
         Omitted: the browser language of the end customer, falling back to English. The end customer can also switch with `?lang=` on the page.
@@ -44881,6 +44886,7 @@ def register_generated_tools(mcp, _get_client):
                 profile_id=profile_id,
                 country=country,
                 area_code=area_code,
+                purchase_intent_id=purchase_intent_id,
                 language=language,
                 branding=branding,
                 redirect_url=redirect_url,
@@ -57163,6 +57169,7 @@ def register_generated_tools(mcp, _get_client):
         reuse_option_id: str | None = None,
         reuse_from: str | None = None,
         area_code: str | None = None,
+        purchase_intent_id: str | None = None,
         phone_number: str | None = None,
         pre_order: bool | None = None,
         end_user_first_name: str | None = None,
@@ -57208,6 +57215,7 @@ def register_generated_tools(mcp, _get_client):
         Hard constraint: an empty area pool fails with 409 code AREA_CODE_UNAVAILABLE instead of ordering from another area.
 
         Options come from GET /v1/phone-numbers/availability (areaOptions). The purchase 202 kycUrl echoes the areaCode picked at purchase time so it can be passed here.
+                purchase_intent_id: Correlation label copied onto every number this submission creates (a batch shares it) and onto their webhooks. Not an idempotency key: use submissionId for safe retries. Max 100 characters; longer values are truncated.
                 phone_number: Exact number to order, in E.164, taken from GET /v1/whatsapp/phone-numbers/available. It is ordered as is or the request fails with 409 code phone_number_unavailable; another number is never substituted and a pre-order is never placed. Requires quantity 1 (or omitted). Omit to let the carrier pick a number in the area.
                 pre_order: Pre-order a number when the area has no stock.
 
@@ -57231,6 +57239,7 @@ def register_generated_tools(mcp, _get_client):
                 reuse_option_id=reuse_option_id,
                 reuse_from=reuse_from,
                 area_code=area_code,
+                purchase_intent_id=purchase_intent_id,
                 phone_number=phone_number,
                 pre_order=pre_order,
                 end_user_first_name=end_user_first_name,
@@ -57344,6 +57353,7 @@ def register_generated_tools(mcp, _get_client):
         profile_id: str,
         country: str,
         area_code: str | None = None,
+        purchase_intent_id: str | None = None,
         language: Literal["en", "es", "pt-BR"] | None = None,
         branding: dict[str, Any] | None = None,
         redirect_url: str | None = None,
@@ -57366,6 +57376,7 @@ def register_generated_tools(mcp, _get_client):
                 profile_id: (required)
                 country: ISO 3166-1 alpha-2 country code (must be a regulated/KYC country). (required)
                 area_code: Area code (NDC) the eventual number must be in. Hard constraint carried by the link; the end customer filling the form makes no area choice. Options come from GET /v1/phone-numbers/availability (areaOptions).
+                purchase_intent_id: Correlation label stamped on the numbers when the end customer submits the hosted form, and copied onto their webhooks. Max 100 characters; longer values are truncated.
                 language: Language of the hosted page: its copy, the carrier requirement texts (translated once per country and cached), the pre-submit review notes and the status emails to the end customer.
 
         Omitted: the end customer's browser language, falling back to English. The end customer can also switch with `?lang=` on the page.
@@ -57380,6 +57391,7 @@ def register_generated_tools(mcp, _get_client):
                 profile_id=profile_id,
                 country=country,
                 area_code=area_code,
+                purchase_intent_id=purchase_intent_id,
                 language=language,
                 branding=branding,
                 redirect_url=redirect_url,
