@@ -1211,16 +1211,14 @@ def register_generated_tools(mcp, _get_client):
 
         Returns `limit` posts (25 by default, up to 100). When `pagination.hasMore` is true, send `pagination.nextCursor` back as `cursor` for the next, older page, until `nextCursor` is null.
 
-        On X and TikTok only the newest page is available for now: `pagination.hasMore` is always false there.
+        On TikTok only the newest page is available for now: `pagination.hasMore` is always false there.
 
-        Use it to obtain the platform's own post id, which the analytics endpoints take as input. On YouTube the returned `id` is the video ID that `GET /v1/analytics/youtube/daily-views`, `/video-retention` and `/demographics` expect as `videoId`, so this endpoint is what backs a video picker in your own UI.
+        On X:
 
-        ### Platform-specific fields
-
-        Not every field applies to every platform. Absent fields are omitted from the response.
-
-        - `reactionCount`: Facebook and LinkedIn.
-        - ...
+        - Every page, the first one included, is a separate X read billed through your X API usage. You control the cost by choosing whether to fetch the next page.
+        - A page reads `limit` tweets. X reads at least 5 per request, so a `limit` below 5 is billed as 5 tweets. A tweet read again on the same UTC day is not billed twice.
+        - A page can hold fewer than `limit` posts, because replies and reposts are left out.
+        - X serves only the newest 800 tweets of a timeline, so ...
 
         Platforms: facebook, instagram, twitter, bluesky, threads, youtube, linkedin, reddit, tiktok, pinterest
 
