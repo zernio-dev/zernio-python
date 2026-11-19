@@ -6388,6 +6388,62 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="Get your profit setting",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def ad_campaign_results_get_campaign_result_profit() -> str:
+        """Get your profit setting
+
+        The margin and cost per order your team's profit metrics use. Both are `null` until you set them.
+
+        Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit"""
+        client = _get_client()
+        try:
+            response = client.ad_campaign_results.get_campaign_result_profit()
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Set your margin and cost per order",
+            readOnlyHint=False,
+            destructiveHint=True,
+            openWorldHint=True,
+        )
+    )
+    def ad_campaign_results_set_campaign_result_profit(
+        margin_percent: float, cost_per_order: float | None = None
+    ) -> str:
+        """Set your margin and cost per order
+
+        With a `marginPercent`, your team gets three built-in formulas, listed in `GET /v1/ads/campaign-results/metrics` and readable in `GET /v1/ads/campaign-results`, the Campaigns table and ad rules (`result:profit`), under every attribution model:
+
+        - `profit` = `revenue * marginPercent / 100 - sales * costPerOrder`
+        - `poas` = `profit / spend` (profit on ad spend)
+        - `profit_after_ads` = `profit - spend`
+
+        `revenue` and `sales` are the values counted from `Purchase` events or the ones you upload. `costPerOrder` is in each ad account's currency, the one its revenue is counted in. Values are rounded to 2 decimals. Send `marginPercent: null` to remove the profit metrics.
+
+        Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit
+
+        Args:
+            margin_percent: (required)
+            cost_per_order: Needs a marginPercent. Omitted: none."""
+        client = _get_client()
+        try:
+            response = client.ad_campaign_results.set_campaign_result_profit(
+                margin_percent=margin_percent, cost_per_order=cost_per_order
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="List your result metrics",
             readOnlyHint=True,
             destructiveHint=False,
@@ -6397,7 +6453,9 @@ def register_generated_tools(mcp, _get_client):
     def ad_campaign_results_list_campaign_result_metrics() -> str:
         """List your result metrics
 
-        The metric keys your team has sent, with their label and kind, then the formulas: your own and the built-in ones (`cac_percent`, `cost_per_sale`, `cost_per_qualified_lead`, `lead_to_sale`, `qualified_rate`). A new key appears as a `count` labelled from the key; name it, or define a formula, with `PUT /v1/ads/campaign-results/metrics/{key}`.
+        The metric keys your team has sent, with their label and kind, then the formulas: your own and the built-in ones (`cac_percent`, `cost_per_sale`, `cost_per_qualified_lead`, `lead_to_sale`, `qualified_rate`).
+
+        Once you set a margin with `PUT /v1/ads/campaign-results/profit`, the built-ins add `profit`, `poas` and `profit_after_ads`. A new key appears as a `count` labelled from the key; name it, or define a formula, with `PUT /v1/ads/campaign-results/metrics/{key}`.
 
         Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit"""
         client = _get_client()

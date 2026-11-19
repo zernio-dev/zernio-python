@@ -187,6 +187,22 @@ class AdCampaignResultsResource:
         )
         return self._client._put("/v1/ads/campaign-results/tag-new-ads", data=payload)
 
+    def get_campaign_result_profit(self) -> dict[str, Any]:
+        """Get your profit setting"""
+        return self._client._get("/v1/ads/campaign-results/profit")
+
+    def set_campaign_result_profit(
+        self, margin_percent: Any, *, cost_per_order: Any | None = None
+    ) -> dict[str, Any]:
+        """Set your margin and cost per order"""
+        payload = self._build_body(
+            {
+                "marginPercent": margin_percent,
+                "costPerOrder": cost_per_order,
+            }
+        )
+        return self._client._put("/v1/ads/campaign-results/profit", data=payload)
+
     def list_campaign_result_metrics(self) -> dict[str, Any]:
         """List your result metrics"""
         return self._client._get("/v1/ads/campaign-results/metrics")
@@ -304,6 +320,22 @@ class AdCampaignResultsResource:
         return await self._client._aput(
             "/v1/ads/campaign-results/tag-new-ads", data=payload
         )
+
+    async def aget_campaign_result_profit(self) -> dict[str, Any]:
+        """Get your profit setting (async)"""
+        return await self._client._aget("/v1/ads/campaign-results/profit")
+
+    async def aset_campaign_result_profit(
+        self, margin_percent: Any, *, cost_per_order: Any | None = None
+    ) -> dict[str, Any]:
+        """Set your margin and cost per order (async)"""
+        payload = self._build_body(
+            {
+                "marginPercent": margin_percent,
+                "costPerOrder": cost_per_order,
+            }
+        )
+        return await self._client._aput("/v1/ads/campaign-results/profit", data=payload)
 
     async def alist_campaign_result_metrics(self) -> dict[str, Any]:
         """List your result metrics (async)"""
