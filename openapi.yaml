@@ -22187,9 +22187,39 @@ components:
         url: { type: string, description: "The link to put in ads, such as `https://t.brand.com/r/aB3dE5fG`. It uses the site's custom subdomain once that is active." }
         postbackUrl:
           type: string
-          description: "The server-to-server postback URL to give the network. Replace `{clickid}`, `{payout}` and `{txid}` with the network's own macros. It holds a secret: rotate it with `POST /v1/tracking-links/{linkId}/rotate-postback-token` if it leaks."
+          description: "The server-to-server postback URL for the network, with its own macros in place of `{clickid}`, `{payout}` and `{txid}`. A `status` of `rejected`, `declined`, `refunded`, `reversed` or `chargeback` retracts the conversion; `pending` is ignored. It holds a secret: rotate it with `POST /v1/tracking-links/{linkId}/rotate-postback-token` if it leaks."
         createdAt: { type: string, format: date-time }
         updatedAt: { type: string, format: date-time }
+    TrackingLinkStats:
+      type: object
+      required: [fromDate, toDate, clicks, conversions, conversionRate, revenue, destinations, formerDestinationClicks]
+      properties:
+        fromDate: { type: string, format: date }
+        toDate: { type: string, format: date }
+        clicks: { type: integer, description: Human clicks in the range. }
+        conversions: { type: integer, description: Conversions still counted whose time falls in the range. }
+        conversionRate: { type: [number, "null"], description: Conversions per click. Null without clicks. }
+        revenue:
+          type: array
+          description: The conversions' value summed per currency, most conversions first.
+          items:
+            type: object
+            required: [currency, amount, conversions]
+            properties:
+              currency: { type: string, description: 'ISO 4217 code, empty for conversions sent without a value.' }
+              amount: { type: number }
+              conversions: { type: integer }
+        destinations:
+          type: array
+          description: The link's current destinations, each with its clicks in the range.
+          items:
+            allOf:
+              - { $ref: '#/components/schemas/TrackingLinkDestination' }
+              - type: object
+                required: [clicks]
+                properties:
+                  clicks: { type: integer }
+        formerDestinationClicks: { type: integer, description: 'Clicks on destinations the link no longer has (an edited or removed URL).' }
     EventCorrection:
       type: object
       description: What happened to a correction at one destination the event was forwarded to.
@@ -102575,6 +102605,42 @@ paths:
                 type: object
                 properties:
                   link: { $ref: '#/components/schemas/TrackingLink' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /v1/tracking-links/{linkId}/stats:
+    get:
+      x-resource-group: ads
+      operationId: getTrackingLinkStats
+      tags: [Tracking links]
+      summary: Get a tracking link's results
+      description: |
+        Clicks, conversions and revenue of one link over a range of days (UTC), and its clicks per destination, the result of a split test. Clicks leave out bots.
+
+        Conversions are the link's postbacks plus website conversions carrying the click id of one of its clicks, less any retracted. The range is at most 90 days, the time clicks are kept.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: linkId
+          in: path
+          required: true
+          schema: { type: string }
+        - name: fromDate
+          in: query
+          required: true
+          description: First day of the range, `YYYY-MM-DD`.
+          schema: { type: string, format: date }
+        - name: toDate
+          in: query
+          required: true
+          description: Last day of the range, `YYYY-MM-DD`.
+          schema: { type: string, format: date }
+      responses:
+        '200':
+          description: The link's results.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TrackingLinkStats' }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }

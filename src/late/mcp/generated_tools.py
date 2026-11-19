@@ -49099,6 +49099,36 @@ def register_generated_tools(mcp, _get_client):
         except Exception as e:
             raise ToolError(f"Error: {e}") from e
 
+    @mcp.tool(
+        annotations=ToolAnnotations(
+            title="Get a tracking link's results",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def tracking_links_get_tracking_link_stats(
+        link_id: str, from_date: str, to_date: str
+    ) -> str:
+        """Get a tracking link's results
+
+        Clicks, conversions and revenue of one link over a range of days (UTC), and its clicks per destination, the result of a split test. Clicks leave out bots.
+
+        Conversions are the link's postbacks plus website conversions carrying the click id of one of its clicks, less any retracted. The range is at most 90 days, the time clicks are kept.
+
+        Args:
+            link_id: (required)
+            from_date: First day of the range, `YYYY-MM-DD`. (required)
+            to_date: Last day of the range, `YYYY-MM-DD`. (required)"""
+        client = _get_client()
+        try:
+            response = client.tracking_links.get_tracking_link_stats(
+                link_id=link_id, from_date=from_date, to_date=to_date
+            )
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
     # TRACKING_TAGS
 
     @mcp.tool(

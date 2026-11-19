@@ -1602,6 +1602,7 @@ Both `from zernio import ...` and `from late import ...` work identically. The `
 | `tracking_links.list_tracking_links()` | List tracking links |
 | `tracking_links.create_tracking_link()` | Create a tracking link |
 | `tracking_links.get_tracking_link()` | Get a tracking link |
+| `tracking_links.get_tracking_link_stats()` | Get a tracking link's results |
 | `tracking_links.update_tracking_link()` | Update a tracking link |
 | `tracking_links.delete_tracking_link()` | Delete a tracking link |
 | `tracking_links.rotate_tracking_link_postback_token()` | Rotate a tracking link's postback URL |

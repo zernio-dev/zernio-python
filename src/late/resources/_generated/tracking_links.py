@@ -176,6 +176,18 @@ class TrackingLinksResource:
             f"/v1/tracking-links/{link_id}/rotate-postback-token", headers=headers
         )
 
+    def get_tracking_link_stats(
+        self, link_id: str, from_date: str, to_date: str
+    ) -> dict[str, Any]:
+        """Get a tracking link's results"""
+        params = self._build_query(
+            {
+                "fromDate": from_date,
+                "toDate": to_date,
+            }
+        )
+        return self._client._get(f"/v1/tracking-links/{link_id}/stats", params=params)
+
     async def alist_tracking_links(
         self,
         *,
@@ -253,4 +265,18 @@ class TrackingLinksResource:
         headers = {"Idempotency-Key": idempotency_key}
         return await self._client._apost(
             f"/v1/tracking-links/{link_id}/rotate-postback-token", headers=headers
+        )
+
+    async def aget_tracking_link_stats(
+        self, link_id: str, from_date: str, to_date: str
+    ) -> dict[str, Any]:
+        """Get a tracking link's results (async)"""
+        params = self._build_query(
+            {
+                "fromDate": from_date,
+                "toDate": to_date,
+            }
+        )
+        return await self._client._aget(
+            f"/v1/tracking-links/{link_id}/stats", params=params
         )
