@@ -9,10 +9,12 @@ from datetime import datetime, timezone
 from typing import Any
 
 import sentry_sdk
+from fastmcp.exceptions import ValidationError as InvalidArgumentsError
 from fastmcp.server.auth import AccessToken
 from fastmcp.server.dependencies import get_access_token
 from fastmcp.server.middleware import CallNext, Middleware, MiddlewareContext
 from mcp.types import CallToolRequestParams, TextContent
+from pydantic import ValidationError as PydanticValidationError
 
 from late.client.exceptions import LateAPIError, LateRateLimitError
 from late.mcp.auth import token_cache_key
@@ -90,7 +92,29 @@ def _result_chars(result: Any) -> int:
     return sum(len(block.text) for block in content if isinstance(block, TextContent))
 
 
+def _invalid_fields(error: PydanticValidationError) -> str:
+    # Field paths and error types only: argument values can carry customer content.
+    return ",".join(
+        f"{'.'.join(str(part) for part in detail['loc'])}:{detail['type']}"
+        for detail in error.errors(include_input=False)
+    )
+
+
+def _pydantic_cause(exc: BaseException) -> PydanticValidationError | None:
+    while exc is not None and not isinstance(exc, PydanticValidationError):
+        exc = exc.__cause__
+    return exc
+
+
 def _error_fields(exc: Exception) -> dict[str, Any]:
+    validation = _pydantic_cause(exc)
+    if validation is not None:
+        return {
+            "error_type": "InvalidArguments"
+            if isinstance(exc, InvalidArgumentsError)
+            else "ValidationError",
+            "invalid_fields": _invalid_fields(validation),
+        }
     cause = exc.__cause__ if isinstance(exc.__cause__, Exception) else exc
     fields: dict[str, Any] = {"error_type": type(cause).__name__}
     if isinstance(cause, LateAPIError):
