@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.679.0"
+  version: "1.679.2"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -57304,7 +57304,10 @@ paths:
       operationId: getWebhookSettings
       tags: [Webhooks]
       summary: List webhooks
-      description: 'Retrieve all configured webhooks for the authenticated user. Supports up to 50 webhooks per user. A profile-scoped API key, or a team member limited to specific profiles, gets 403.'
+      description: |
+        Retrieve all configured webhooks for the authenticated user. Supports up to 50 webhooks per user. A profile-scoped API key, or a team member limited to specific profiles, gets 403.
+
+        The signing `secret` is returned only to the account owner and admins (and their API keys). Other team members get each webhook without it.
       security:
         - bearerAuth: []
       responses:
@@ -57687,7 +57690,7 @@ paths:
       description: |
         Retrieve recorded webhook delivery attempts for the authenticated user, most recent first.
 
-        A profile-scoped API key, or a team member limited to specific profiles, gets 403.
+        Delivery logs carry full payloads, so only the account owner and admins (and their API keys) can read them. Any other team member, a profile-scoped API key, or a team member limited to specific profiles, gets 403.
 
         Logs are retained for 30 days. Supports filtering by status, event type, webhook ID, and event ID, plus offset-based pagination.
 
@@ -57804,7 +57807,7 @@ paths:
         resource-group checks as live delivery, against both the key's groups and the
         subscription's `disabledResourceGroups`.
 
-        A profile-scoped API key, or a team member limited to specific profiles, gets 403.
+        Only the account owner and admins (and their API keys) can replay deliveries. Any other team member, a profile-scoped API key, or a team member limited to specific profiles, gets 403.
       security:
         - bearerAuth: []
       requestBody:
