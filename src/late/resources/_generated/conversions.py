@@ -372,6 +372,8 @@ class ConversionsResource:
         source: str | None = None,
         platform: str | None = None,
         delivery_status: str | None = None,
+        from_ad: bool | None = None,
+        campaign_id: str | None = None,
         cursor: str | None = None,
     ) -> dict[str, Any]:
         """List stored events"""
@@ -385,6 +387,8 @@ class ConversionsResource:
                 "source": source,
                 "platform": platform,
                 "deliveryStatus": delivery_status,
+                "fromAd": from_ad,
+                "campaignId": campaign_id,
                 "cursor": cursor,
             }
         )
@@ -1344,6 +1348,8 @@ class ConversionsResource:
         source: str | None = None,
         platform: str | None = None,
         delivery_status: str | None = None,
+        from_ad: bool | None = None,
+        campaign_id: str | None = None,
         cursor: str | None = None,
     ) -> dict[str, Any]:
         """List stored events (async)"""
@@ -1357,6 +1363,8 @@ class ConversionsResource:
                 "source": source,
                 "platform": platform,
                 "deliveryStatus": delivery_status,
+                "fromAd": from_ad,
+                "campaignId": campaign_id,
                 "cursor": cursor,
             }
         )

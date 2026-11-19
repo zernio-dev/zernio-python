@@ -31172,6 +31172,8 @@ def register_generated_tools(mcp, _get_client):
         | None = None,
         platform: str | None = None,
         delivery_status: Literal["sent", "failed"] | None = None,
+        from_ad: bool | None = None,
+        campaign_id: str | None = None,
         cursor: str | None = None,
     ) -> str:
         """List stored events
@@ -31195,6 +31197,8 @@ def register_generated_tools(mcp, _get_client):
             source: Only events from this source, such as `stripe` for the payments of a connected Stripe account.
             platform: Only events sent to this ad platform, such as `metaads` or `googleads`.
             delivery_status: Only events whose latest send to a destination (of `platform`, when given) was accepted (`sent`) or was not (`failed`: failed or still retrying).
+            from_ad: `true`: only events carrying an ad click or a campaign (a gclid, gbraid or wbraid, a `zrn`, or a matched campaign). `false`: only the others.
+            campaign_id: Only events of this ad platform campaign id: matched to it, or behind a Google click of it.
             cursor: `nextCursor` from the previous page."""
         client = _get_client()
         try:
@@ -31207,6 +31211,8 @@ def register_generated_tools(mcp, _get_client):
                 source=source,
                 platform=platform,
                 delivery_status=delivery_status,
+                from_ad=from_ad,
+                campaign_id=campaign_id,
                 cursor=cursor,
             )
             return _format_response(response)

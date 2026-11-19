@@ -2055,6 +2055,15 @@ components:
             adGroupId: { type: [string, "null"], description: Google only. }
             adSetId: { type: [string, "null"], description: Meta only. }
             adId: { type: [string, "null"] }
+        campaign:
+          type: [object, "null"]
+          description: 'The campaign behind the event and how Zernio knows it, with the names Zernio holds for its campaign, ad group or ad set and ad. `null` when nothing ties the event to a campaign; a Google click shows here the day after it, once Google reports it.'
+          properties:
+            via: { type: string, enum: [google_click, zernio_tag, matched, utm], description: '`google_click`: the click behind `clickIds.gclid`. `zernio_tag`: the `zrn` ad. `matched`: the campaign Zernio matched the event to. `utm`: only its `utm_campaign`, as `name`.' }
+            id: { type: [string, "null"], description: 'The ad platform campaign id; `null` for `utm`.' }
+            name: { type: [string, "null"] }
+            adGroupName: { type: [string, "null"], description: 'The Google ad group or Meta ad set.' }
+            adName: { type: [string, "null"] }
     ConnectedMessagingAccount:
       type: object
       description: The account a credentials connect created or updated.
@@ -101429,6 +101438,18 @@ paths:
           required: false
           description: 'Only events whose latest send to a destination (of `platform`, when given) was accepted (`sent`) or was not (`failed`: failed or still retrying).'
           schema: { type: string, enum: [sent, failed] }
+        - name: fromAd
+          in: query
+          required: false
+          description: '`true`: only events carrying an ad click or a campaign (a gclid, gbraid or wbraid, a `zrn`, or a matched campaign). `false`: only the others.'
+          schema:
+            type: boolean
+        - name: campaignId
+          in: query
+          required: false
+          description: 'Only events of this ad platform campaign id: matched to it, or behind a Google click of it.'
+          schema:
+            type: string
         - name: cursor
           in: query
           required: false
