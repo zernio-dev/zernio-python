@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.703.0"
+  version: "1.704.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -46562,6 +46562,17 @@ paths:
                             - $ref: '#/components/schemas/InboundActivity'
                             - type: "null"
                           description: 'Present on WhatsApp, Instagram and Facebook accounts. An active WhatsApp number with no inbound message or comment 24 hours after its latest connect gets an entry in issues, which never changes status. Null for accounts connected before tracking shipped, until their first inbound event or next connect.'
+                        publishingRestriction:
+                          type: [object, "null"]
+                          description: 'Set when the last 3 finished publishes failed with the same account-level error (suspended, restricted, a verification check, an expired login). The next successful publish or a reconnect clears it. While set, status is at least `warning`. Null when the account publishes normally.'
+                          properties:
+                            reason: { type: string, enum: [restricted, suspended, verification_required, auth_expired] }
+                            message: { type: string, description: The stored error message of the last failed publish. }
+                            since: { type: string, format: date-time }
+                            lastFailedAt: { type: string, format: date-time }
+                            blocksPublishNow:
+                              type: boolean
+                              description: 'True while POST /v1/posts refuses publish-now posts to this account with 422 `account_restricted` (24 hours after the last failure). Scheduled posts are always accepted.'
                         messagingRestriction:
                           type: [object, "null"]
                           description: |
@@ -46953,6 +46964,17 @@ paths:
                       - $ref: '#/components/schemas/InboundActivity'
                       - type: "null"
                     description: 'Present on WhatsApp, Instagram and Facebook accounts. An active WhatsApp number with no inbound message or comment 24 hours after its latest connect gets an entry in issues, which never changes status. Null for accounts connected before tracking shipped, until their first inbound event or next connect.'
+                  publishingRestriction:
+                    type: [object, "null"]
+                    description: 'Set when the last 3 finished publishes failed with the same account-level error (suspended, restricted, a verification check, an expired login). The next successful publish or a reconnect clears it. While set, status is at least `warning`. Null when the account publishes normally.'
+                    properties:
+                      reason: { type: string, enum: [restricted, suspended, verification_required, auth_expired] }
+                      message: { type: string, description: The stored error message of the last failed publish. }
+                      since: { type: string, format: date-time }
+                      lastFailedAt: { type: string, format: date-time }
+                      blocksPublishNow:
+                        type: boolean
+                        description: 'True while POST /v1/posts refuses publish-now posts to this account with 422 `account_restricted` (24 hours after the last failure). Scheduled posts are always accepted.'
                   messagingRestriction:
                     type: [object, "null"]
                     description: |
