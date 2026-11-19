@@ -7227,6 +7227,7 @@ def register_generated_tools(mcp, _get_client):
             "completed",
             "cancelled",
             "error",
+            "not_deleted",
         ]
         | None = None,
         ad_account_id: str | None = None,
@@ -8950,6 +8951,7 @@ def register_generated_tools(mcp, _get_client):
             "completed",
             "cancelled",
             "error",
+            "not_deleted",
         ]
         | None = None,
         ad_account_id: str | None = None,
