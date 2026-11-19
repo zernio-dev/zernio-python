@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.679.2"
+  version: "1.680.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -151,7 +151,7 @@ x-documentation:
 
     Reads that integrations tend to poll have an extra cap of 1,800 requests per hour per team, on a sliding window, counted separately for each group: inbox comments (`GET /v1/inbox/comments` and `GET /v1/inbox/comments/{postId}`), ad comments (`GET /v1/ads/{adId}/comments`) and Google Business reviews (`GET /v1/accounts/{accountId}/gmb-reviews` and `POST /v1/accounts/{accountId}/gmb-reviews/batch`). Past it the API answers 429 with `details.scope` naming the group. Subscribe to the `comment.received`, `review.new` and `review.updated` webhooks instead of polling these routes.
 
-    Analytics reads made with an API key have a cap per team on a 30-second sliding window, on top of the limits above and counted separately for each group: 120 requests for campaign analytics (`GET /v1/ads/campaigns/{campaignId}/analytics`), 300 for ad analytics (`GET /v1/ads/{adId}/analytics`), 150 for ads listings (`GET /v1/ads`, `/v1/ads/tree`, `/v1/ads/timeline`, `/v1/ads/campaigns`, `/v1/ads/performance` and `/v1/ads/alerts`) and 300 for post and inbox analytics (the `/v1/analytics` routes that read stored metrics; the live platform routes such as `/v1/analytics/instagram/*` are not included). Past a cap the API answers 429 with `Retry-After`, `details.scope` naming the group and `details.window`. Read many ads or campaigns in one request with `GET /v1/ads/tree` instead of one request each. Requests from the Zernio dashboard do not count.
+    Analytics reads made with an API key have a cap of 300 requests per team on a 30-second sliding window, on top of the limits above and counted separately for each group: campaign analytics (`GET /v1/ads/campaigns/{campaignId}/analytics`), ad analytics (`GET /v1/ads/{adId}/analytics`), ads listings (`GET /v1/ads`, `/v1/ads/tree`, `/v1/ads/timeline`, `/v1/ads/campaigns`, `/v1/ads/performance` and `/v1/ads/alerts`), post and inbox analytics (the `/v1/analytics` routes that read stored metrics) and account insights (the live platform routes such as `/v1/analytics/instagram/*`). On account-level endpoints (the account insights routes, `/v1/analytics/daily-metrics`, `/v1/metrics/accounts`, `/v1/analytics/dashboard`, `/v1/analytics/best-time`, `/v1/analytics/content-decay`, `/v1/analytics/posting-frequency` and `/v1/analytics/format-breakdown`), a request about one account also counts against that account on that endpoint: 120 requests per hour, answered with `details.scope` `account_route`. Past a cap the API answers 429 with `Retry-After`, `details.scope` naming the group and `details.window`. Read many ads or campaigns in one request with `GET /v1/ads/tree` instead of one request each. Requests from the Zernio dashboard do not count.
 
     Posts themselves are unlimited on every connected account; the rate limit applies only to API request throughput. Zernio also applies per-account daily publish caps as an anti-abuse safeguard (Instagram 100/day, Facebook 100/day, Google Business 100/day, Threads 250/day, X 50/day plus 200 replies for unverified accounts and 2,400 posts a day for verified X accounts, Pinterest 25/day, 50/day for every other platform), plus a 25-posts-per-hour per-account velocity cap.
 
@@ -10910,6 +10910,8 @@ components:
 
         On the other networks the review shows only in the delivery status, so an ad that leaves review paused sends no `approved` event.
 
+        On Google Performance Max the reviewed object is the asset group (the ad Zernio syncs for PMax): it fires when the group's primary status reports ASSET_GROUP_DISAPPROVED (`rejected`) or leaves ASSET_GROUP_UNDER_REVIEW for an eligible state (`approved`).
+
         Detected by Zernio's own ad sync (and, for Meta, the review poll), so it arrives within one sync cycle of the platform's decision, not instantly. Each outcome is delivered at most once per ad per 24 hours.
       required: [id, event, account, adObject, review, timestamp]
       properties:
@@ -19241,15 +19243,31 @@ components:
           type: array
           items:
             type: object
-            required: [resourceName, fieldType, status]
+            required: [resourceName, fieldType, status, policySummary]
             properties:
               resourceName: { type: string }
               fieldType: { type: string, description: "Google asset role, such as HEADLINE or LOGO." }
               status: { type: string }
               source: { type: string, description: "Who added the asset: ADVERTISER, or AUTOMATICALLY_CREATED when Google generated it. Empty when Google does not say." }
+              policySummary:
+                type: object
+                description: "Google's policy review of this asset in this group (asset_group_asset.policy_summary). Fields are null and policyTopics empty when Google has not reviewed it."
+                required: [approvalStatus, reviewStatus, policyTopics]
+                properties:
+                  approvalStatus: { type: [string, "null"], description: "APPROVED, APPROVED_LIMITED, AREA_OF_INTEREST_ONLY, DISAPPROVED or UNKNOWN, verbatim." }
+                  reviewStatus: { type: [string, "null"], description: "REVIEW_IN_PROGRESS, REVIEWED, UNDER_APPEAL or ELIGIBLE_MAY_SERVE, verbatim." }
+                  policyTopics: { type: array, items: { $ref: '#/components/schemas/GooglePolicyTopicEntry' } }
               text: { type: string }
               imageUrl: { type: string, format: uri }
               youtubeVideoId: { type: string }
+    GooglePolicyTopicEntry:
+      type: object
+      description: "One Google PolicyTopicEntry: the policy a finding is about and its effect on serving."
+      properties:
+        topic: { type: [string, "null"] }
+        type: { type: [string, "null"], description: "PROHIBITED, LIMITED, FULLY_LIMITED, DESCRIPTIVE, BROADENING, AREA_OF_INTEREST_ONLY." }
+        evidences: { type: array, items: { type: object }, description: "Google's PolicyTopicEvidence objects, verbatim." }
+        constraints: { type: array, items: { type: object }, description: "Google's PolicyTopicConstraint objects, verbatim." }
     GooglePmaxAssetGroupDetail:
       allOf:
         - $ref: '#/components/schemas/GooglePmaxAssetGroup'
@@ -19481,7 +19499,7 @@ components:
           example: ACTIVE
         reviewStatus:
           allOf: [{ $ref: '#/components/schemas/AdReviewStatus' }]
-          description: "Platform review state of this ad, independent of delivery `status` / `configuredStatus`. Absent when the platform reports no review signal."
+          description: "Platform review state of this ad, independent of delivery `status` / `configuredStatus`. Absent when the platform reports no review signal. Google: from `ad_group_ad.policy_summary.approval_status`, and for a Performance Max asset group from its primary status (DISAPPROVED -> `rejected`, under review -> `in_review`, ELIGIBLE or LIMITED -> `approved`)."
         adType: { type: string, enum: [boost, standalone] }
         creativeType:
           type: [string, "null"]
@@ -19959,6 +19977,10 @@ components:
             still being reviewed by the platform (reviewStatus=in_review).
             For Meta, derived from `effective_status` + `issues_info` on
             the Campaign, plus ad-level PENDING_REVIEW rollup.
+
+            On other platforms, including Google search, display and
+            Performance Max (whose ads are asset groups), `rejected` when any
+            ad is rejected and `in_review` when any ad is pending review.
         platformCampaignStatus:
           type: [string, "null"]
           description: "Raw platform-level campaign status (Meta `effective_status`: ACTIVE, PAUSED, DELETED, ARCHIVED, IN_PROCESS, WITH_ISSUES; ChatGPT (OpenAI): the campaign's own switch, active / paused / archived, independent of the delivery `status`; TikTok: the campaign's own switch `operation_status`, ENABLE / DISABLE; Reddit: the campaign's `configured_status`, ACTIVE / PAUSED / ARCHIVED). Distinct from per-ad `platformStatus`."
@@ -87804,6 +87826,15 @@ paths:
 
         The `forbidden*` arrays are TikTok-only and always empty on Google.
 
+        ### Google Performance Max
+
+        A Performance Max "ad" is an asset group, which has no `policy_summary` of its own. Google reports the group's review through `asset_group.primary_status` and `primary_status_reasons`, and reviews each linked asset separately (`asset_group_asset.policy_summary`). The response maps both onto the same fields as other Google ads:
+
+        - `approvalStatus`: DISAPPROVED when the reasons include ASSET_GROUP_DISAPPROVED, UNDER_REVIEW for ASSET_GROUP_UNDER_REVIEW or a PENDING group, APPROVED_LIMITED for ASSET_GROUP_LIMITED or a LIMITED group, APPROVED for an ELIGIBLE group, null otherwise (for example a group that is not serving only because its campaign is paused or ended).
+        - `reviewStatus`: REVIEW_IN_PROGRESS while the group or any linked asset is still in review, otherwise the least settled asset review status (UNDER_APPEAL, ELIGIBLE_MAY_SERVE, REVIEWED).
+        - `policyTopics`: the policy topic entries of every linked asset. Each PROHIBITED topic is also listed in `rejections`. A disapproved group whose assets name no PROHIBITED topic gets one rejection with reason ASSET_GROUP_DISAPPROVED.
+        - `assetGroup`: the group's `primaryStatus` and `primaryStatusReasons` verbatim, and each linked asset's own `approvalStatus`, `reviewStatus` and `policyTopics`. Removed asset links are left out.
+
         ### Meta (Facebook and Instagram ads)
 
         Reads the Ad's `ad_review_feedback`, `effective_status` and `issues_info` live.
@@ -87879,17 +87910,29 @@ paths:
                                 imageId: { type: [string, "null"] }
                                 videoId: { type: [string, "null"] }
                                 musicId: { type: [string, "null"] }
-                      approvalStatus: { type: [string, "null"], description: "Google only. ad_group_ad.policy_summary.approval_status, verbatim." }
+                      approvalStatus: { type: [string, "null"], description: "Google only. ad_group_ad.policy_summary.approval_status, verbatim. Performance Max: derived from the asset group's primary status (see the description)." }
                       policyTopics:
                         type: array
-                        description: "Google only. ad_group_ad.policy_summary.policy_topic_entries."
-                        items:
-                          type: object
-                          properties:
-                            topic: { type: [string, "null"] }
-                            type: { type: [string, "null"], description: "PROHIBITED, LIMITED, FULLY_LIMITED, DESCRIPTIVE, BROADENING, AREA_OF_INTEREST_ONLY." }
-                            evidences: { type: array, items: { type: object }, description: "Google's PolicyTopicEvidence objects, verbatim." }
-                            constraints: { type: array, items: { type: object }, description: "Google's PolicyTopicConstraint objects, verbatim." }
+                        description: "Google only. ad_group_ad.policy_summary.policy_topic_entries. Performance Max: the entries of every linked asset."
+                        items: { $ref: '#/components/schemas/GooglePolicyTopicEntry' }
+                      assetGroup:
+                        type: object
+                        description: "Google Performance Max only. The asset group's serving status and each linked asset's policy review."
+                        required: [primaryStatus, primaryStatusReasons, assets]
+                        properties:
+                          primaryStatus: { type: [string, "null"], description: "asset_group.primary_status, verbatim: ELIGIBLE, LIMITED, NOT_ELIGIBLE, PAUSED, PENDING, REMOVED." }
+                          primaryStatusReasons: { type: array, items: { type: string }, description: "asset_group.primary_status_reasons, verbatim, such as ASSET_GROUP_DISAPPROVED, ASSET_GROUP_UNDER_REVIEW, ASSET_GROUP_LIMITED, CAMPAIGN_PAUSED. Empty when the group serves without issues." }
+                          assets:
+                            type: array
+                            items:
+                              type: object
+                              required: [assetResourceName, fieldType, approvalStatus, reviewStatus, policyTopics]
+                              properties:
+                                assetResourceName: { type: string, description: "customers/{customerId}/assets/{assetId}" }
+                                fieldType: { type: [string, "null"], description: "The asset's role in the group, such as HEADLINE or MARKETING_IMAGE." }
+                                approvalStatus: { type: [string, "null"], description: "asset_group_asset.policy_summary.approval_status, verbatim." }
+                                reviewStatus: { type: [string, "null"], description: "asset_group_asset.policy_summary.review_status, verbatim." }
+                                policyTopics: { type: array, items: { $ref: '#/components/schemas/GooglePolicyTopicEntry' } }
                       reviewFeedback:
                         type: object
                         description: "Meta only. The Ad's `ad_review_feedback`, verbatim. Both maps are empty when Meta returned no feedback (approved or in-review ad)."
@@ -95321,6 +95364,8 @@ paths:
       description: |
         Lists a Performance Max campaign's asset groups with their linked text, image and YouTube assets.
 
+        Each asset carries Google's policy review of it in that group (`policySummary`), and each group its `primaryStatus` and `primaryStatusReasons`, so a disapproved asset or group shows here without a separate call. `GET /v1/ads/{adId}/review` reads the same verdict live for one asset group.
+
         campaignId is the platform campaign id returned by creation or the campaign list. The campaign must be visible to the caller.
 
         ### Caching
@@ -95363,6 +95408,10 @@ paths:
                         fieldType: HEADLINE
                         status: ENABLED
                         text: 'Schedule posts'
+                        policySummary:
+                          approvalStatus: APPROVED
+                          reviewStatus: REVIEWED
+                          policyTopics: []
                 cachedAt: '2026-09-10T09:00:00Z'
                 stale: false
         '400': { $ref: '#/components/responses/BadRequest' }

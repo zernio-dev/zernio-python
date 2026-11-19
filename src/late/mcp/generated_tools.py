@@ -10469,6 +10469,8 @@ def register_generated_tools(mcp, _get_client):
 
         Lists a Performance Max campaign's asset groups with their linked text, image and YouTube assets.
 
+        Each asset carries Google's policy review of it in that group (`policySummary`), and each group its `primaryStatus` and `primaryStatusReasons`, so a disapproved asset or group shows here without a separate call. `GET /v1/ads/{adId}/review` reads the same verdict live for one asset group.
+
         campaignId is the platform campaign id returned by creation or the campaign list. The campaign must be visible to the caller.
 
         ### Caching
