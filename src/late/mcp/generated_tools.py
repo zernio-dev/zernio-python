@@ -25981,7 +25981,7 @@ def register_generated_tools(mcp, _get_client):
         4. `instagram_login_method_mismatch`: an Instagram Login authorization landed on a profile whose Instagram account is connected through Facebook Login, so nothing changed. To refresh it, connect again with `loginMethod=facebook_login`. To move it to Instagram Login, disconnect it first.
                 scopes: Comma-separated permission areas to request instead of the platform's full permission set.
 
-        **Values:** `posting`, `analytics`, `comments`, `messaging`, `ads`; on google and microsoft, `email`, `calendar`, `files`, `contacts`, `directory`; on microsoft only, `shared_mailboxes`. `directory` (people search) works on microsoft, and on google only through your own OAuth app for now.
+        **Values:** `posting`, `analytics`, `comments`, `messaging`, `ads`; on google and microsoft, `email`, `calendar`, `files`, `contacts`, `directory`; on microsoft only, `shared_mailboxes`. `directory` adds people search (Google: `directory.readonly` and `contacts.other.readonly`; Microsoft: `People.Read` and `User.ReadBasic.All`).
 
         `shared_mailboxes` (Microsoft only) adds `Mail.ReadWrite.Shared` and `Mail.Send.Shared`, so the account can add shared mailboxes it has access to with `POST /v1/email/shared-mailboxes`. Pass it next to `email`. To add it to a connected account, reconnect with `scopes=email,shared_mailboxes`.
 

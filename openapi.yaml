@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.680.1"
+  version: "1.680.2"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -44353,7 +44353,7 @@ paths:
           description: |
             Comma-separated permission areas to request instead of the platform's full permission set.
 
-            **Values:** `posting`, `analytics`, `comments`, `messaging`, `ads`; on google and microsoft, `email`, `calendar`, `files`, `contacts`, `directory`; on microsoft only, `shared_mailboxes`. `directory` (people search) works on microsoft, and on google only through your own OAuth app for now.
+            **Values:** `posting`, `analytics`, `comments`, `messaging`, `ads`; on google and microsoft, `email`, `calendar`, `files`, `contacts`, `directory`; on microsoft only, `shared_mailboxes`. `directory` adds people search (Google: `directory.readonly` and `contacts.other.readonly`; Microsoft: `People.Read` and `User.ReadBasic.All`).
 
             `shared_mailboxes` (Microsoft only) adds `Mail.ReadWrite.Shared` and `Mail.Send.Shared`, so the account can add shared mailboxes it has access to with `POST /v1/email/shared-mailboxes`. Pass it next to `email`. To add it to a connected account, reconnect with `scopes=email,shared_mailboxes`.
 
