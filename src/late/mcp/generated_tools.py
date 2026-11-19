@@ -49043,7 +49043,7 @@ def register_generated_tools(mcp, _get_client):
             idempotency_key: A unique key per link you create, such as a UUID. A retry with the same key and body returns the same link. (required)
             site_id: The tracking site the link belongs to. The link takes its profile. (required)
             name: (required)
-            destinations: Each item is an object with keys: url (string, required) - An https landing page.; weight (integer, required) - This page's share of clicks, relative to the other destinations' weights. (required)
+            destinations: Each item is an object with keys: url (string, required) - An https landing page. Each click adds its click id as `zcid`, and fills any parameter set to `{zcid}`, such as `sub1={zcid}` on an affiliate network's offer ...; weight (integer, required) - This page's share of clicks, relative to the other destinations' weights. (required)
             campaign: Object with keys: platform (string) - The ad platform, such as `metaads` or `googleads`.; campaignId (string) - The platform's campaign id.; utmCampaign (string) - The `utm_campaign` value the campaign uses."""
         client = _get_client()
         try:
@@ -49102,7 +49102,7 @@ def register_generated_tools(mcp, _get_client):
         Args:
             link_id: (required)
             name
-            destinations: Each item is an object with keys: url (string, required) - An https landing page.; weight (integer, required) - This page's share of clicks, relative to the other destinations' weights.
+            destinations: Each item is an object with keys: url (string, required) - An https landing page. Each click adds its click id as `zcid`, and fills any parameter set to `{zcid}`, such as `sub1={zcid}` on an affiliate network's offer ...; weight (integer, required) - This page's share of clicks, relative to the other destinations' weights.
             campaign: Object with keys: platform (string) - The ad platform, such as `metaads` or `googleads`.; campaignId (string) - The platform's campaign id.; utmCampaign (string) - The `utm_campaign` value the campaign uses.
             status"""
         client = _get_client()

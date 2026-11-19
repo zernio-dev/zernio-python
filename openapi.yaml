@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.682.0"
+  version: "1.682.1"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -22236,7 +22236,7 @@ components:
       required: [url, weight]
       additionalProperties: false
       properties:
-        url: { type: string, format: uri, maxLength: 2048, description: 'An https landing page.' }
+        url: { type: string, format: uri, maxLength: 2048, description: 'An https landing page. Each click adds its click id as `zcid`, and fills any parameter set to `{zcid}`, such as `sub1={zcid}` on an affiliate network''s offer link.' }
         weight: { type: integer, minimum: 1, maximum: 100, description: "This page's share of clicks, relative to the other destinations' weights." }
     TrackingLinkCampaign:
       type: object
