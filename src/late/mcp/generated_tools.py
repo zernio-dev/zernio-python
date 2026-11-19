@@ -52139,6 +52139,9 @@ def register_generated_tools(mcp, _get_client):
     def voice_get_voice_call_estimate(
         to: str,
         from_: str | None = None,
+        from_number_id: str | None = None,
+        trunk_id: str | None = None,
+        via: Literal["trunk", "voice"] | None = None,
         forward_to: str | None = None,
         minutes: int = 1,
         recording: bool | None = None,
@@ -52146,28 +52149,34 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Estimate call cost
 
-        Pre-call cost estimate for a PSTN call: the carrier leg plus optional recording and transcription add-ons.
+        Pre-call cost estimate for an outbound phone call, placed through the Voice API or through a [SIP trunk](/platforms/voice/integrations/elevenlabs).
 
-        The per-minute figure is the most a minute can cost to that destination, so the final charge can be lower.
+        Rates come from the carrier's live price list. The carrier prices a route by the caller ID, so pass the number you will call from (`from` or `fromNumberId`).
 
-        The carrier figure follows the carrier's per-destination rate card: a call dialed from a number in the destination country uses the local mobile rate, and a `tel:` forward destination is quoted as a second carrier leg billed from the same number.
+        - **Caller-ID rates.** A caller in the destination country gets local rates. EEA callers get cheaper rates to EEA destinations, and some caller prefixes pay a surcharge. `rates.*.origination` names the band used.
+        - **Mobile and landline.** `rates.mobile` and `rates.landline` are quoted separately, with every network the carrier lists. `lineType` says which one `to` is, and `perMinuteUsd` follows it.
+        - **Trunk or Voice API.** Trunk calls bill twice the carrier rate. Voice API calls add a $0.002/min call-control fee before the markup, plus optional forward, recording and transcription legs.
 
-        The real cost comes from the settled carrier record after the call.
-
-        Parity endpoint of `GET /v1/whatsapp/calls/estimate`, minus the Meta line. PSTN calls have no separate Meta bill, so `totalCostUSD` equals `billableCostUSD`.
+        `via` defaults to `trunk` when the caller number is attached to a SIP trunk (or `trunkId` is ...
 
         Args:
             to: Destination number, E.164 (leading + optional). (required)
-            from_: The number the call would dial from, E.164. When it is verified on a Branded Calling identity and `to` is a US number, the estimate includes the per-call Branded Calling surcharge.
-            forward_to: Destination the call bridges to: `tel:+E164`, `sip:...` or `wss://...`. Defaults to the dialing number's configured forward. A `tel:` destination adds a second carrier leg to the quote. Encode the `+` as `%2B`.
+            from_: Caller ID the call would present, E.164. Picks the carrier's caller-ID rates, and prices a trunk call when the number is attached to a SIP trunk. A verified Branded Calling number calling the US adds the per-call surcharge.
+            from_number_id: Id of one of your numbers to use as the caller ID, instead of `from`.
+            trunk_id: SIP trunk the call goes through. Prices it as a trunk call and checks that trunk's limits. Without `from`, a number attached to the trunk is the caller ID.
+            via: Force trunk or Voice API pricing. Defaults from the caller number, see above. `trunk` without a caller ID quotes the dearest caller band.
+            forward_to: Voice API only. Destination the call bridges to: `tel:+E164`, `sip:...` or `wss://...`. Defaults to the dialing number's configured forward. A `tel:` destination adds a second carrier leg to the quote. Encode the `+` as `%2B`.
             minutes
-            recording
-            transcription"""
+            recording: Voice API only.
+            transcription: Voice API only."""
         client = _get_client()
         try:
             response = client.voice.get_voice_call_estimate(
                 to=to,
                 from_=from_,
+                from_number_id=from_number_id,
+                trunk_id=trunk_id,
+                via=via,
                 forward_to=forward_to,
                 minutes=minutes,
                 recording=recording,

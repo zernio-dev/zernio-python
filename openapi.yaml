@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.688.0"
+  version: "1.689.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -1776,6 +1776,21 @@ components:
                   effective_account_limit: 2000
                   current_account_count: 2000
   schemas:
+    VoiceCallLineRates:
+      type: [object, "null"]
+      properties:
+        origination: { type: string, enum: [local, from_eea, non_surcharged, low_surcharged, high_surcharged, surcharged, default, unknown_caller], description: "Caller-ID band the carrier rates this call with. `unknown_caller` (no caller ID) shows the dearest band." }
+        perMinuteUsd: { type: number, description: "The rate most of this line type's networks share." }
+        minPerMinuteUsd: { type: number }
+        maxPerMinuteUsd: { type: number }
+        networks:
+          type: array
+          items:
+            type: object
+            properties:
+              name: { type: string, description: "Carrier's network label, for example `Mobile EE`." }
+              perMinuteUsd: { type: number }
+              aboveRateCap: { type: boolean, description: "Trunk calls only. True when the trunk's cap refuses calls to this network." }
     CrmNativeProperties:
       type: object
       maxProperties: 50
@@ -68104,24 +68119,33 @@ paths:
       tags: [Voice]
       summary: Estimate call cost
       description: |
-        Pre-call cost estimate for a PSTN call: the carrier leg plus optional recording and transcription add-ons.
+        Pre-call cost estimate for an outbound phone call, placed through the Voice API or through a [SIP trunk](/platforms/voice/integrations/elevenlabs).
 
-        The per-minute figure is the most a minute can cost to that destination, so the final charge can be lower.
+        Rates come from the carrier's live price list. The carrier prices a route by the caller ID, so pass the number you will call from (`from` or `fromNumberId`).
 
-        The carrier figure follows the carrier's per-destination rate card: a call dialed from a number in the destination country uses the local mobile rate, and a `tel:` forward destination is quoted as a second carrier leg billed from the same number.
+        - **Caller-ID rates.** A caller in the destination country gets local rates. EEA callers get cheaper rates to EEA destinations, and some caller prefixes pay a surcharge. `rates.*.origination` names the band used.
+        - **Mobile and landline.** `rates.mobile` and `rates.landline` are quoted separately, with every network the carrier lists. `lineType` says which one `to` is, and `perMinuteUsd` follows it.
+        - **Trunk or Voice API.** Trunk calls bill twice the carrier rate. Voice API calls add a $0.002/min call-control fee before the markup, plus optional forward, recording and transcription legs.
 
-        The real cost comes from the settled carrier record after the call.
+        `via` defaults to `trunk` when the caller number is attached to a SIP trunk (or `trunkId` is passed), and to `voice` otherwise. For trunk calls, `trunk` reports whether the trunk's limits would refuse the call.
 
-        Parity endpoint of `GET /v1/whatsapp/calls/estimate`, minus the Meta line. PSTN calls have no separate Meta bill, so `totalCostUSD` equals `billableCostUSD`.
+        `trunk.maxDestinationRateUsd` is compared with the carrier's rate for the route, which is half the billed rate. Isle of Man, Jersey and Guernsey numbers on +44 count as their own countries for the whitelist.
+
+        The dialed network cannot be known from the number, so the invoice can differ within the `minPerMinuteUsd` to `maxPerMinuteUsd` range. The real cost comes from the settled carrier record after the call.
+
+        PSTN calls have no separate Meta bill, so `totalCostUSD` equals `billableCostUSD`.
       security:
         - bearerAuth: []
       parameters:
         - { name: to, in: query, required: true, schema: { type: string }, description: "Destination number, E.164 (leading + optional)." }
-        - { name: from, in: query, schema: { type: string }, description: "The number the call would dial from, E.164. When it is verified on a Branded Calling identity and `to` is a US number, the estimate includes the per-call Branded Calling surcharge." }
-        - { name: forwardTo, in: query, schema: { type: string }, description: "Destination the call bridges to: `tel:+E164`, `sip:...` or `wss://...`. Defaults to the dialing number's configured forward. A `tel:` destination adds a second carrier leg to the quote. Encode the `+` as `%2B`." }
+        - { name: from, in: query, schema: { type: string }, description: "Caller ID the call would present, E.164. Picks the carrier's caller-ID rates, and prices a trunk call when the number is attached to a SIP trunk. A verified Branded Calling number calling the US adds the per-call surcharge." }
+        - { name: fromNumberId, in: query, schema: { type: string }, description: "Id of one of your numbers to use as the caller ID, instead of `from`." }
+        - { name: trunkId, in: query, schema: { type: string }, description: "SIP trunk the call goes through. Prices it as a trunk call and checks that trunk's limits. Without `from`, a number attached to the trunk is the caller ID." }
+        - { name: via, in: query, schema: { type: string, enum: [trunk, voice] }, description: "Force trunk or Voice API pricing. Defaults from the caller number, see above. `trunk` without a caller ID quotes the dearest caller band." }
+        - { name: forwardTo, in: query, schema: { type: string }, description: "Voice API only. Destination the call bridges to: `tel:+E164`, `sip:...` or `wss://...`. Defaults to the dialing number's configured forward. A `tel:` destination adds a second carrier leg to the quote. Encode the `+` as `%2B`." }
         - { name: minutes, in: query, schema: { type: integer, minimum: 1, maximum: 120, default: 1 } }
-        - { name: recording, in: query, schema: { type: boolean } }
-        - { name: transcription, in: query, schema: { type: boolean } }
+        - { name: recording, in: query, schema: { type: boolean }, description: Voice API only. }
+        - { name: transcription, in: query, schema: { type: boolean }, description: Voice API only. }
       responses:
         '200':
           description: Estimate
@@ -68130,19 +68154,54 @@ paths:
               schema:
                 type: object
                 properties:
-                  destinationCountry: { type: [string, "null"] }
+                  via: { type: string, enum: [trunk, voice] }
+                  destinationCountry: { type: string, description: "ISO country of `to`. Isle of Man, Jersey and Guernsey numbers return IM, JE and GG." }
+                  lineType: { type: string, enum: [mobile, landline, fixed_line_or_mobile, other, unknown], description: "Line type of `to`. Where it is not `mobile` or `landline`, `perMinuteUsd` takes the dearer of the two." }
+                  callerId: { type: [string, "null"], description: "Caller ID the rates were picked for. Voice API estimates without `from` use your first calling number." }
+                  callerCountry: { type: [string, "null"] }
                   minutes: { type: integer }
-                  perMinuteUsd: { type: number, description: Billable cost per minute for the requested options. }
+                  perMinuteUsd: { type: number, description: "Billable cost per minute for `to`'s line type and the requested options." }
+                  billingIncrementSeconds:
+                    type: object
+                    description: "Billing increments of the route: 60/60 means billed per started minute."
+                    properties:
+                      first: { type: integer }
+                      next: { type: integer }
+                  rates:
+                    type: object
+                    description: "Billed per-minute rates for each line type at this destination. Null where the carrier publishes none."
+                    properties:
+                      mobile: { $ref: '#/components/schemas/VoiceCallLineRates' }
+                      landline: { $ref: '#/components/schemas/VoiceCallLineRates' }
+                  trunk:
+                    type: object
+                    description: "Trunk calls only. Whether the trunk's limits would refuse this call."
+                    properties:
+                      id: { type: [string, "null"], description: "Trunk the limits were read from. Null when none was resolved and the defaults apply." }
+                      limitsSource: { type: string, enum: [trunk, default] }
+                      maxDestinationRateUsd: { type: [number, "null"], description: "Per-minute cap, compared with the carrier's rate for the route (half the billed rate). Default 0.30, null when the trunk has no cap." }
+                      destinationWhitelisted: { type: boolean, description: "Whether destinationCountry is on the trunk's whitelist. The default whitelist is every country Zernio sells numbers in." }
+                      rateCheck: { type: string, enum: [under, partial, over], description: "`partial` means some of the destination's networks are above the cap and calls to them are refused." }
+                      outboundEnabled: { type: [boolean, "null"], description: "False while outbound is paused for an unfunded balance. Null with default limits." }
+                      wouldBlock: { type: boolean }
+                      blockReasons:
+                        type: array
+                        items: { type: string, enum: [destination_not_whitelisted, rate_above_cap, outbound_paused] }
                   breakdown:
                     type: object
                     properties:
-                      telnyxCostUSD: { type: number }
+                      telnyxCostUSD: { type: number, description: "Raw Telnyx cost: carrierCostUSD plus callControlCostUSD." }
+                      carrierCostUSD: { type: number, description: "Raw carrier cost of the legs, without call control." }
+                      callControlCostUSD: { type: number, description: "Voice API call-control fee, part of telnyxCostUSD. 0 on trunk calls." }
                       recordingCostUSD: { type: number }
                       transcriptionCostUSD: { type: number }
                       brandedCallUSD: { type: number, description: 'Branded Calling surcharge, 0 unless `from` is a verified branded number calling a US destination.' }
                       billableCostUSD: { type: number, description: What Zernio bills for the call. }
                       totalCostUSD: { type: number, description: Equals billableCostUSD (no separate Meta bill on PSTN); kept for shape parity with the WhatsApp estimate. }
+        '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '503': { description: The carrier price list is unavailable. Retry shortly. }
 
   /v1/voice/calls/web:
     post:
