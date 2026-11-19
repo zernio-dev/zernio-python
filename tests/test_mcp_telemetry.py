@@ -5,7 +5,7 @@ import json
 import logging
 from datetime import datetime
 from types import SimpleNamespace
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 
 import httpx
 import pytest
@@ -245,6 +245,49 @@ async def test_an_sdk_model_that_rejects_a_response_is_a_sentry_issue(
 
     [issue] = sentry_events.payloads("event")
     assert issue["exception"]["values"][0]["type"] == "ValidationError"
+
+
+async def test_rejected_arguments_log_which_fields_failed_without_their_values(
+    caplog,
+) -> None:
+    caplog.set_level(logging.INFO, logger="late.mcp.tools")
+    server = _server()
+
+    @server.tool
+    def list_campaigns(status: Literal["active", "paused"], limit: int = 20) -> str:
+        return f"{status} {limit}"
+
+    async with Client(server) as client:
+        await client.call_tool(
+            "list_campaigns",
+            {"status": "secret-customer-text", "limit": "many"},
+            raise_on_error=False,
+        )
+
+    [line] = _logged(caplog)
+    assert line["outcome"] == "error"
+    assert line["error_type"] == "InvalidArguments"
+    assert line["invalid_fields"] == "status:literal_error,limit:int_parsing"
+    assert "secret-customer-text" not in json.dumps(line)
+
+
+async def test_a_response_rejected_by_an_sdk_model_stays_a_validation_error(
+    caplog,
+) -> None:
+    caplog.set_level(logging.INFO, logger="late.mcp.tools")
+    server = _server()
+
+    @server.tool
+    def rejects_response() -> str:
+        AccountsListResponse.model_validate({"accounts": "nope"})
+        return "unreachable"
+
+    async with Client(server) as client:
+        await client.call_tool("rejects_response", {}, raise_on_error=False)
+
+    [line] = _logged(caplog)
+    assert line["error_type"] == "ValidationError"
+    assert line["invalid_fields"].startswith("accounts:")
 
 
 def _proxied_server() -> FastMCP:
