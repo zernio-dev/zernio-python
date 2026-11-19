@@ -930,6 +930,38 @@ def register_generated_tools(mcp, _get_client):
 
     @mcp.tool(
         annotations=ToolAnnotations(
+            title="Get account",
+            readOnlyHint=True,
+            destructiveHint=False,
+            openWorldHint=False,
+        )
+    )
+    def accounts_get_account(account_id: str) -> str:
+        """Get account
+
+        Returns one connected account, in the same shape as an item of `GET /v1/accounts`.
+
+        The same access rules apply: a key or a team member limited to some profiles gets a 404 for an account outside them.
+
+        An account the list leaves out by default is still returned when you name it:
+
+        - one over the plan's profile limit
+        - one on a creator profile
+        - an ad account listed behind its ads login
+
+        A malformed `accountId` returns 400; an unknown account, or one you cannot access, returns 404.
+
+        Args:
+            account_id: (required)"""
+        client = _get_client()
+        try:
+            response = client.accounts.get_account(account_id=account_id)
+            return _format_response(response)
+        except Exception as e:
+            raise ToolError(f"Error: {e}") from e
+
+    @mcp.tool(
+        annotations=ToolAnnotations(
             title="Update account",
             readOnlyHint=False,
             destructiveHint=True,
@@ -1168,10 +1200,18 @@ def register_generated_tools(mcp, _get_client):
             openWorldHint=False,
         )
     )
-    def accounts_get_account_posts(account_id: str) -> str:
+    def accounts_get_account_posts(
+        account_id: str, limit: int = 25, cursor: str | None = None
+    ) -> str:
         """List posts published on the platform
 
-        Returns the 25 most recent posts that exist on the platform for a connected account, read live from the platform API. This covers everything on the account, including posts that were never created through Zernio.
+        Returns the most recent posts that exist on the platform for a connected account, newest first, read live from the platform API. This covers everything on the account, including posts that were never created through Zernio.
+
+        ### Pagination
+
+        Returns `limit` posts (25 by default, up to 100). When `pagination.hasMore` is true, send `pagination.nextCursor` back as `cursor` for the next, older page, until `nextCursor` is null.
+
+        On X and TikTok only the newest page is available for now: `pagination.hasMore` is always false there.
 
         Use it to obtain the platform's own post id, which the analytics endpoints take as input. On YouTube the returned `id` is the video ID that `GET /v1/analytics/youtube/daily-views`, `/video-retention` and `/demographics` expect as `videoId`, so this endpoint is what backs a video picker in your own UI.
 
@@ -1180,19 +1220,19 @@ def register_generated_tools(mcp, _get_client):
         Not every field applies to every platform. Absent fields are omitted from the response.
 
         - `reactionCount`: Facebook and LinkedIn.
-        - `shareCount`: platform dependent.
-        - `cid`: the Bluesky content id needed to reply.
-        - `subreddit`: Reddit only.
-        - `title`, `description`, `link`, `boardId` and `boardOwnerUsername`: Pinterest only (the native Pin values; `message` keeps title and description joined).
-        - `isOwner`: Pinterest and Facebook. On Pinterest, ...
+        - ...
 
         Platforms: facebook, instagram, twitter, bluesky, threads, youtube, linkedin, reddit, tiktok, pinterest
 
         Args:
-            account_id: (required)"""
+            account_id: (required)
+            limit: Page size. Values above the maximum return 400 rather than being clamped.
+            cursor: `pagination.nextCursor` of the previous page, sent back unchanged. An unreadable cursor returns 400."""
         client = _get_client()
         try:
-            response = client.accounts.get_account_posts(account_id=account_id)
+            response = client.accounts.get_account_posts(
+                account_id=account_id, limit=limit, cursor=cursor
+            )
             return _format_response(response)
         except Exception as e:
             raise ToolError(f"Error: {e}") from e
@@ -45499,6 +45539,7 @@ def register_generated_tools(mcp, _get_client):
         fields: str | None = None,
         view: Literal["full", "summary"] = "summary",
         updated_since: str | None = None,
+        external_id: str | None = None,
         source: Literal["zernio", "external"] = "zernio",
         status: Literal[
             "draft",
@@ -45549,21 +45590,28 @@ def register_generated_tools(mcp, _get_client):
         - Not available with `sortBy=status` or `sortBy=platform`, or with `source=external`.
                 fields: Comma-separated list of post fields to return. Each post then carries `_id` plus only these fields, which makes large pages much cheaper: leave out `platforms`, `content`, `mediaItems` or `metadata` when you do not need them.
 
-        Accepted: `userId`, `title`, `content`, `mediaItems`, `platforms`, `scheduledFor`, `timezone`, `status`, `tags`, `hashtags`, `mentions`, `visibility`, `metadata`, `recycling`, `recycledFromPostId`, `queuedFromProfile`, `queueId`, `createdAt`, `updatedAt`.
+        Accepted: `userId`, `title`, `content`, `mediaItems`, `platforms`, `scheduledFor`, `timezone`, `status`, `tags`, `hashtags`, `mentions`, `visibility`, `metadata`, `externalId`, `recycling`, `recycledFromPostId`, `queuedFromProfile`, `queueId`, `createdAt`, `updatedAt`.
 
         An unknown field returns 400 naming it. `fields=_id` returns ids only. Omit it (or send it empty) for the full post. Not available with `source=external`.
                 view: `full` returns the whole post. `summary` returns only what an agent needs to read a page of posts:
 
-        - Post: `_id`, `title`, `content`, `status`, `scheduledFor`, `timezone`, `tags`, `createdAt`, `updatedAt`, and `contentNotRetained` when set.
+        - Post: `_id`, `title`, `content`, `externalId`, `status`, `scheduledFor`, `timezone`, `tags`, `createdAt`, `updatedAt`, and `contentNotRetained` when set.
         - Each platform: `platform`, `status`, `accountId` (the id), `username`, `scheduledFor`, `publishedAt`, `platformPostId`, `platformPostUrl`, `errorMessage`, `errorCategory`.
         - Left out: the author (`userId`), `mediaItems`, `metadata`, `recycling`, and each platform's custom content, custom media and `platformSpecificData`. Null values are left out too.
 
         Works with both sources. Send either `fields` or `view=summary`: both together return 400. Defaults to summary here; pass full for everything. Not sent when fields is set.
                 updated_since: Only posts whose `updatedAt` is at or after this ISO 8601 timestamp (an offset or `Z` required).
 
-        `updatedAt` moves when the post or any of its platforms changes (an edit, a status change, a platform publishing or failing). To keep a copy in sync, send the time of your previous sync instead of reading every page again.
+        `updatedAt` moves when the post or any of its platforms changes (an edit, a status change, a platform publishing or failing). To keep a copy in sync, send the time your previous sync started instead of reading every page again.
+
+        For a stable walk, pair it with `sortBy=created-asc` and follow `pagination.nextCursor` until it is null: the cursor is keyed on (`createdAt`, `_id`), which never change, so a post edited during the walk is neither skipped nor repeated, and it comes back on the next sync.
 
         Combines with the other filters and with `cursor`. Deleted posts are not returned. Not available with `source=external`.
+                external_id: Only posts whose `externalId` equals this value exactly (case-sensitive). Returns every matching post, since `externalId` is not unique.
+
+        Combines with the other filters. Not available with `source=external`.
+
+        Values stored in `metadata` cannot be filtered: set `externalId` on create or update to look a post up by your own id.
                 source: Which collection to read. `zernio` (default) returns posts authored through Zernio. `external` returns posts synced from the platform (existing/historical posts that were published outside Zernio). Combine with `accountId` and paginate via `page`/`limit` to walk the full synced history (we keep up to the last ~12 months per account).
                 status
                 platform
@@ -45588,6 +45636,7 @@ def register_generated_tools(mcp, _get_client):
                 fields=fields or None,
                 view=None if fields else view,
                 updated_since=updated_since,
+                external_id=external_id,
                 source=source,
                 status=status,
                 platform=platform,
@@ -45631,6 +45680,7 @@ def register_generated_tools(mcp, _get_client):
         mentions: list[str] | None = None,
         crossposting_enabled: bool = True,
         metadata: dict[str, Any] | None = None,
+        external_id: str | None = None,
         tiktok_settings: dict[str, Any] | None = None,
         facebook_settings: dict[str, Any] | None = None,
         recycling: dict[str, Any] | None = None,
@@ -45700,7 +45750,12 @@ def register_generated_tools(mcp, _get_client):
                 hashtags: Stored for reference only. Hashtags are NOT automatically appended to the caption when publishing. Include hashtags directly in the content field (platforms like Instagram only support hashtags as caption text). For YouTube keywords, use the tags field instead.
                 mentions: Stored for reference only. Publishing does not create mentions from this field.
                 crossposting_enabled: Stored on the post and echoed back on reads. Publishing does not branch on it: every entry in `platforms` is published regardless, so treat it as a label for your own tooling.
-                metadata: Free-form key/value pairs of your own, stored on the post and returned on reads and in webhook payloads. Zernio also writes the bookkeeping keys `usageCounted`, `usageRefunded` and `hidden` into this object; do not set them, and they are stripped from webhook payloads.
+                metadata: Free-form key/value pairs of your own, stored on the post and returned on reads and in webhook payloads.
+
+        Zernio also writes the bookkeeping keys `usageCounted`, `usageRefunded` and `hidden` into this object; do not set them, and they are stripped from webhook payloads. To look posts up by one of your ids, use `externalId` instead: metadata cannot be filtered.
+                external_id: Your own identifier for this post (a CMS id, a job id, a campaign item). Returned on every read and filterable with `GET /v1/posts?externalId=`. Leading and trailing spaces are trimmed.
+
+        Not unique: several posts can share one value (for example the same article posted twice), and the filter returns all of them. To avoid creating a post twice on retries, send an `Idempotency-Key` header instead.
                 tiktok_settings: Root-level TikTok settings applied to the TikTok platforms sent in the same request. Merged into each platform's platformSpecificData, with platform-specific settings taking precedence. Object with keys: draft (boolean) - When true, sends the post to the TikTok Creator Inbox as a draft instead of publishing immediately. The creator gets an inbox notification to complete posting ...; privacyLevel (string) - One of the values returned by the TikTok creator info API for the account. Accounts connected through the TikTok for Business app publish videos as public ...; allowComment (boolean) - Allow comments on the post; allowDuet (boolean) - Allow duets (required for video posts); allowStitch (boolean) - Allow stitches (required for video posts); commercialContentType (one of: none, brand_organic, brand_content) - Type of commercial content disclosure. Sufficient on its own: \"brand_organic\" (\"Your Brand\") implies isBrandOrganicPost and \"brand_content\" (\"Branded ...; brandPartnerPromote (boolean) - Whether the post promotes a brand partner (branded content / paid partnership). Only needed to disclose BOTH types at once (set it alongside ...; isBrandOrganicPost (boolean) - Whether the post promotes the creator's own brand (brand organic). Only needed to disclose BOTH types at once (set it alongside commercialContentType ...; contentPreviewConfirmed (boolean) - User has confirmed they previewed the content; expressConsentGiven (boolean) - User has given express consent for posting; mediaType (one of: video, photo) - Optional override. Defaults based on provided media items.; videoCoverTimestampMs (integer) - Optional for video posts. Timestamp in milliseconds to select which frame to use as thumbnail (defaults to 1000ms/1 second). Ignored when the ...; videoCoverImageUrl (string) - Optional for video posts. URL of a custom thumbnail image (JPG, PNG, or WebP, max 20MB). Any downloadable URL works: we rehost it ourselves. Overrides ...; photoCoverIndex (integer) - Optional for photo carousels. Index of image to use as cover, 0-based (defaults to 0/first image).; autoAddMusic (boolean) - When true, TikTok may add recommended music (photos only). With the brand-organic or branded-content toggle on, TikTok allows Commercial Music Library tracks ...; musicSoundInfo (object with keys musicSoundId, musicSoundVolume, musicSoundStart, musicSoundEnd) - Commercial Music Library track to attach. Accounts connected through the TikTok for Business app only: a developer-app account rejects the post at publish ...; videoOriginalSoundVolume (integer) - Volume of the video's own sound when a commercial track is attached (0 to 100). Requires musicSoundInfo. Video posts only. Omitted, TikTok keeps its API ...; videoMadeWithAi (boolean) - Set true to disclose AI-generated content. Accounts connected through the TikTok for Business app carry the disclosure on video posts only. The business photo ...; locationId (string) - Location tag to attach, as the id of a result from GET /v1/accounts/{accountId}/tiktok/locations. Requires locationName. Ignored on drafts, where TikTok ...; locationName (string) - Display name of the location tag, as returned next to its id. Required with locationId; a locationId without it is rejected at creation.; isAdsOnly (boolean) - Set true to publish the video as an \"Only show in ads\" post: it is kept off the profile and exists to be used as a Spark Ad. Accounts connected through the ...; description (string) - Optional long-form caption for photo posts (max 4000 chars). Recommended when content exceeds 90 chars, as photo titles are auto-truncated. Falls back to the ...
                 facebook_settings: Root-level Facebook settings applied to the Facebook platforms sent in the same request. Merged into each platform's platformSpecificData.facebookSettings, with platform-specific settings taking precedence. Object with keys: draft (boolean) - When true, creates the post as a draft in Facebook Publishing Tools instead of publishing immediately. Supported for feed posts (text, link, image, video) and ...; carouselCards (list of objects with keys link, name, description) - Renders the post as a multi-link carousel (organic Page post). Mutually exclusive with contentType=story|reel. - mediaItems must be provided with the same ...; carouselLink (string) - Optional top-level \"See more\" destination shown on the carousel end card. Defaults to the first card's link when omitted. Only used together with carouselCards.; textFormatPresetId (string) - Facebook-defined preset ID that renders the post as large text on a colored background (Graph `text_format_preset_id`). Supply the raw numeric ID from Meta; ...
                 recycling: Object with keys: enabled (boolean) - Set to false to disable recycling on this post; gap (integer) - Number of interval units between each repost. Required when enabling recycling.; gapFreq (one of: week, month) - Interval unit for the gap. Defaults to 'month'.; startDate (string) - When to start the recycling cycle. Defaults to the post's scheduledFor date.; expireCount (integer) - Stop recycling after this many copies have been created. Send null on update to clear this limit.; expireDate (string) - Stop recycling after this date, regardless of count. Send null on update to clear this limit.; contentVariations (list of string) - Content variations for recycled copies. Each recycle uses the next variation, in round-robin order. Recommended for X and Pinterest to avoid duplicate content ...
@@ -45727,6 +45782,7 @@ def register_generated_tools(mcp, _get_client):
                 mentions=mentions,
                 crossposting_enabled=crossposting_enabled,
                 metadata=metadata,
+                external_id=external_id,
                 tiktok_settings=tiktok_settings,
                 facebook_settings=facebook_settings,
                 recycling=recycling,
@@ -45787,6 +45843,7 @@ def register_generated_tools(mcp, _get_client):
         mentions: list[str] | None = None,
         crossposting_enabled: bool | None = None,
         metadata: dict[str, Any] | None = None,
+        external_id: str | None = None,
         queued_from_profile: str | None = None,
         queue_id: str | None = None,
         tiktok_settings: dict[str, Any] | None = None,
@@ -45795,7 +45852,7 @@ def register_generated_tools(mcp, _get_client):
     ) -> str:
         """Update post
 
-        Update an existing post. Draft, scheduled, failed, partial, and cancelled posts can be edited. Published posts can only have their recycling config updated: to change the text of a live post, use `POST /v1/posts/{postId}/edit`.
+        Update an existing post. Draft, scheduled, failed, partial, and cancelled posts can be edited. Published posts can only have their recycling config and `externalId` updated: to change the text of a live post, use `POST /v1/posts/{postId}/edit`.
 
         To promote a draft to scheduled, send `isDraft: false` together with `scheduledFor` (or `publishNow: true`, or `queuedFromProfile`). If `isDraft` is omitted the post keeps its current draft status, so sending only `scheduledFor` to a draft returns 200 but the post remains a draft.
 
@@ -45818,6 +45875,7 @@ def register_generated_tools(mcp, _get_client):
             mentions
             crossposting_enabled
             metadata
+            external_id: Your own identifier for this post (see `externalId` on create). Send `null` to clear it. Also accepted on published posts.
             queued_from_profile: Profile ID to schedule via queue.
             queue_id: Specific queue ID to use when scheduling via queue.
             tiktok_settings: Root-level TikTok settings applied to the TikTok platforms sent in the same request. Merged into each platform's platformSpecificData, with platform-specific settings taking precedence. Returns 400 if sent without a platforms array. Object with keys: draft (boolean) - When true, sends the post to the TikTok Creator Inbox as a draft instead of publishing immediately. The creator gets an inbox notification to complete posting ...; privacyLevel (string) - One of the values returned by the TikTok creator info API for the account. Accounts connected through the TikTok for Business app publish videos as public ...; allowComment (boolean) - Allow comments on the post; allowDuet (boolean) - Allow duets (required for video posts); allowStitch (boolean) - Allow stitches (required for video posts); commercialContentType (one of: none, brand_organic, brand_content) - Type of commercial content disclosure. Sufficient on its own: \"brand_organic\" (\"Your Brand\") implies isBrandOrganicPost and \"brand_content\" (\"Branded ...; brandPartnerPromote (boolean) - Whether the post promotes a brand partner (branded content / paid partnership). Only needed to disclose BOTH types at once (set it alongside ...; isBrandOrganicPost (boolean) - Whether the post promotes the creator's own brand (brand organic). Only needed to disclose BOTH types at once (set it alongside commercialContentType ...; contentPreviewConfirmed (boolean) - User has confirmed they previewed the content; expressConsentGiven (boolean) - User has given express consent for posting; mediaType (one of: video, photo) - Optional override. Defaults based on provided media items.; videoCoverTimestampMs (integer) - Optional for video posts. Timestamp in milliseconds to select which frame to use as thumbnail (defaults to 1000ms/1 second). Ignored when the ...; videoCoverImageUrl (string) - Optional for video posts. URL of a custom thumbnail image (JPG, PNG, or WebP, max 20MB). Any downloadable URL works: we rehost it ourselves. Overrides ...; photoCoverIndex (integer) - Optional for photo carousels. Index of image to use as cover, 0-based (defaults to 0/first image).; autoAddMusic (boolean) - When true, TikTok may add recommended music (photos only). With the brand-organic or branded-content toggle on, TikTok allows Commercial Music Library tracks ...; musicSoundInfo (object with keys musicSoundId, musicSoundVolume, musicSoundStart, musicSoundEnd) - Commercial Music Library track to attach. Accounts connected through the TikTok for Business app only: a developer-app account rejects the post at publish ...; videoOriginalSoundVolume (integer) - Volume of the video's own sound when a commercial track is attached (0 to 100). Requires musicSoundInfo. Video posts only. Omitted, TikTok keeps its API ...; videoMadeWithAi (boolean) - Set true to disclose AI-generated content. Accounts connected through the TikTok for Business app carry the disclosure on video posts only. The business photo ...; locationId (string) - Location tag to attach, as the id of a result from GET /v1/accounts/{accountId}/tiktok/locations. Requires locationName. Ignored on drafts, where TikTok ...; locationName (string) - Display name of the location tag, as returned next to its id. Required with locationId; a locationId without it is rejected at creation.; isAdsOnly (boolean) - Set true to publish the video as an \"Only show in ads\" post: it is kept off the profile and exists to be used as a Spark Ad. Accounts connected through the ...; description (string) - Optional long-form caption for photo posts (max 4000 chars). Recommended when content exceeds 90 chars, as photo titles are auto-truncated. Falls back to the ...
@@ -45842,6 +45900,7 @@ def register_generated_tools(mcp, _get_client):
                 mentions=mentions,
                 crossposting_enabled=crossposting_enabled,
                 metadata=metadata,
+                external_id=external_id,
                 queued_from_profile=queued_from_profile,
                 queue_id=queue_id,
                 tiktok_settings=tiktok_settings,

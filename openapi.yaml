@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.701.0"
+  version: "1.702.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -14243,6 +14243,9 @@ components:
         metadata:
           type: object
           additionalProperties: true
+        externalId:
+          type: string
+          description: 'Your own identifier for this post, as set on create or update. Absent when unset. Not unique: filter with `GET /v1/posts?externalId=`.'
         recycling:
           $ref: '#/components/schemas/RecyclingState'
         recycledFromPostId:
@@ -43224,7 +43227,7 @@ paths:
           description: |
             Comma-separated list of post fields to return. Each post then carries `_id` plus only these fields, which makes large pages much cheaper: leave out `platforms`, `content`, `mediaItems` or `metadata` when you do not need them.
 
-            Accepted: `userId`, `title`, `content`, `mediaItems`, `platforms`, `scheduledFor`, `timezone`, `status`, `tags`, `hashtags`, `mentions`, `visibility`, `metadata`, `recycling`, `recycledFromPostId`, `queuedFromProfile`, `queueId`, `createdAt`, `updatedAt`.
+            Accepted: `userId`, `title`, `content`, `mediaItems`, `platforms`, `scheduledFor`, `timezone`, `status`, `tags`, `hashtags`, `mentions`, `visibility`, `metadata`, `externalId`, `recycling`, `recycledFromPostId`, `queuedFromProfile`, `queueId`, `createdAt`, `updatedAt`.
 
             An unknown field returns 400 naming it. `fields=_id` returns ids only. Omit it (or send it empty) for the full post. Not available with `source=external`.
         - name: view
@@ -43233,7 +43236,7 @@ paths:
           description: |
             `full` returns the whole post. `summary` returns only what an agent needs to read a page of posts:
 
-            - Post: `_id`, `title`, `content`, `status`, `scheduledFor`, `timezone`, `tags`, `createdAt`, `updatedAt`, and `contentNotRetained` when set.
+            - Post: `_id`, `title`, `content`, `externalId`, `status`, `scheduledFor`, `timezone`, `tags`, `createdAt`, `updatedAt`, and `contentNotRetained` when set.
             - Each platform: `platform`, `status`, `accountId` (the id), `username`, `scheduledFor`, `publishedAt`, `platformPostId`, `platformPostUrl`, `errorMessage`, `errorCategory`.
             - Left out: the author (`userId`), `mediaItems`, `metadata`, `recycling`, and each platform's custom content, custom media and `platformSpecificData`. Null values are left out too.
 
@@ -43245,9 +43248,21 @@ paths:
           description: |
             Only posts whose `updatedAt` is at or after this ISO 8601 timestamp (an offset or `Z` required).
 
-            `updatedAt` moves when the post or any of its platforms changes (an edit, a status change, a platform publishing or failing). To keep a copy in sync, send the time of your previous sync instead of reading every page again.
+            `updatedAt` moves when the post or any of its platforms changes (an edit, a status change, a platform publishing or failing). To keep a copy in sync, send the time your previous sync started instead of reading every page again.
+
+            For a stable walk, pair it with `sortBy=created-asc` and follow `pagination.nextCursor` until it is null: the cursor is keyed on (`createdAt`, `_id`), which never change, so a post edited during the walk is neither skipped nor repeated, and it comes back on the next sync.
 
             Combines with the other filters and with `cursor`. Deleted posts are not returned. Not available with `source=external`.
+        - name: externalId
+          in: query
+          schema: { type: string, minLength: 1, maxLength: 255 }
+          example: 'cms-article-8812'
+          description: |
+            Only posts whose `externalId` equals this value exactly (case-sensitive). Returns every matching post, since `externalId` is not unique.
+
+            Combines with the other filters. Not available with `source=external`.
+
+            Values stored in `metadata` cannot be filtered: set `externalId` on create or update to look a post up by your own id.
         - name: source
           in: query
           schema: { type: string, enum: [zernio, external], default: zernio }
@@ -43415,7 +43430,7 @@ paths:
             - { title: Per platform, note: "inside each platforms[] entry", fields: ["platforms[].customContent", "platforms[].customMedia", "platforms[].scheduledFor", "platforms[].platformSpecificData"] }
             - { title: Platform defaults, note: "merged into each matching platforms[] entry", fields: [tiktokSettings, facebookSettings] }
             - { title: Scheduling, fields: [timezone, requiresApproval, queueId, recycling] }
-            - { title: Organizing, fields: [title, profileId, tags, hashtags, mentions, metadata, crosspostingEnabled] }
+            - { title: Organizing, fields: [title, profileId, externalId, tags, hashtags, mentions, metadata, crosspostingEnabled] }
             - { title: Testing, fields: [dryRun] }
         responses:
           "400": { retry: false }
@@ -43650,7 +43665,19 @@ paths:
                 metadata:
                   type: object
                   additionalProperties: true
-                  description: 'Free-form key/value pairs of your own, stored on the post and returned on reads and in webhook payloads. Zernio also writes the bookkeeping keys `usageCounted`, `usageRefunded` and `hidden` into this object; do not set them, and they are stripped from webhook payloads.'
+                  description: |
+                    Free-form key/value pairs of your own, stored on the post and returned on reads and in webhook payloads.
+
+                    Zernio also writes the bookkeeping keys `usageCounted`, `usageRefunded` and `hidden` into this object; do not set them, and they are stripped from webhook payloads. To look posts up by one of your ids, use `externalId` instead: metadata cannot be filtered.
+                externalId:
+                  type: [string, "null"]
+                  minLength: 1
+                  maxLength: 255
+                  example: 'cms-article-8812'
+                  description: |
+                    Your own identifier for this post (a CMS id, a job id, a campaign item). Returned on every read and filterable with `GET /v1/posts?externalId=`. Leading and trailing spaces are trimmed.
+
+                    Not unique: several posts can share one value (for example the same article posted twice), and the filter returns all of them. To avoid creating a post twice on retries, send an `Idempotency-Key` header instead.
                 tiktokSettings:
                   $ref: '#/components/schemas/TikTokPlatformData'
                   description: 'Root-level TikTok settings applied to the TikTok platforms sent in the same request. Merged into each platform''s platformSpecificData, with platform-specific settings taking precedence.'
@@ -44488,7 +44515,7 @@ paths:
       tags: [Posts]
       summary: Update post
       description: |
-        Update an existing post. Draft, scheduled, failed, partial, and cancelled posts can be edited. Published posts can only have their recycling config updated: to change the text of a live post, use `POST /v1/posts/{postId}/edit`.
+        Update an existing post. Draft, scheduled, failed, partial, and cancelled posts can be edited. Published posts can only have their recycling config and `externalId` updated: to change the text of a live post, use `POST /v1/posts/{postId}/edit`.
 
         To promote a draft to scheduled, send `isDraft: false` together with `scheduledFor` (or `publishNow: true`, or `queuedFromProfile`). If `isDraft` is omitted the post keeps its current draft status, so sending only `scheduledFor` to a draft returns 200 but the post remains a draft.
 
@@ -44558,6 +44585,11 @@ paths:
                   items: { type: string }
                 crosspostingEnabled: { type: boolean }
                 metadata: { type: object, additionalProperties: true }
+                externalId:
+                  type: [string, "null"]
+                  minLength: 1
+                  maxLength: 255
+                  description: 'Your own identifier for this post (see `externalId` on create). Send `null` to clear it. Also accepted on published posts.'
                 queuedFromProfile:
                   type: string
                   description: Profile ID to schedule via queue.
@@ -46194,6 +46226,54 @@ paths:
                   message: { type: string, example: Follower stats tracking requires the Analytics add-on. Please upgrade to access this feature. }
                   requiresAddon: { type: boolean, example: true }
   /v1/accounts/{accountId}:
+    get:
+      x-resource-group: "accounts"
+      operationId: getAccount
+      tags: [Accounts]
+      summary: Get account
+      description: |
+        Returns one connected account, in the same shape as an item of `GET /v1/accounts`.
+
+        The same access rules apply: a key or a team member limited to some profiles gets a 404 for an account outside them.
+
+        An account the list leaves out by default is still returned when you name it:
+
+        - one over the plan's profile limit
+        - one on a creator profile
+        - an ad account listed behind its ads login
+
+        A malformed `accountId` returns 400; an unknown account, or one you cannot access, returns 404.
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: The account
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [account]
+                properties:
+                  account: { $ref: '#/components/schemas/ListedAccount' }
+              example:
+                account:
+                  _id: "64e1..."
+                  platform: "twitter"
+                  profileId:
+                    _id: "64f0..."
+                    name: "My Brand"
+                    slug: "my-brand"
+                  username: "@acme"
+                  displayName: "Acme"
+                  profileUrl: "https://x.com/acme"
+                  isActive: true
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '503': { $ref: '#/components/responses/TemporarilyUnavailable' }
     put:
       x-resource-group: "accounts"
       operationId: updateAccount
@@ -46995,7 +47075,13 @@ paths:
       x-platforms: ["facebook", "instagram", "twitter", "bluesky", "threads", "youtube", "linkedin", "reddit", "tiktok", "pinterest"]
       summary: List posts published on the platform
       description: |
-        Returns the 25 most recent posts that exist on the platform for a connected account, read live from the platform API. This covers everything on the account, including posts that were never created through Zernio.
+        Returns the most recent posts that exist on the platform for a connected account, newest first, read live from the platform API. This covers everything on the account, including posts that were never created through Zernio.
+
+        ### Pagination
+
+        Returns `limit` posts (25 by default, up to 100). When `pagination.hasMore` is true, send `pagination.nextCursor` back as `cursor` for the next, older page, until `nextCursor` is null.
+
+        On X and TikTok only the newest page is available for now: `pagination.hasMore` is always false there.
 
         Use it to obtain the platform's own post id, which the analytics endpoints take as input. On YouTube the returned `id` is the video ID that `GET /v1/analytics/youtube/daily-views`, `/video-retention` and `/demographics` expect as `videoId`, so this endpoint is what backs a video picker in your own UI.
 
@@ -47018,6 +47104,14 @@ paths:
           in: path
           required: true
           schema: { type: string }
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 100, default: 25 }
+          description: 'Page size. Values above the maximum return 400 rather than being clamped.'
+        - name: cursor
+          in: query
+          schema: { type: string }
+          description: '`pagination.nextCursor` of the previous page, sent back unchanged. An unreadable cursor returns 400.'
       responses:
         '200':
           description: Posts list
@@ -47051,6 +47145,12 @@ paths:
                         boardId: { type: string, description: 'Pinterest only: id of the board holding the Pin' }
                         boardOwnerUsername: { type: string, description: 'Pinterest only: username of the board owner' }
                         isOwner: { type: boolean, description: 'Pinterest: true when the account created the Pin, false when it saved it from another user. Facebook: false for a collab post by another Page. Absent when the platform does not report it.' }
+                  pagination:
+                    type: object
+                    required: [hasMore, nextCursor]
+                    properties:
+                      hasMore: { type: boolean, description: 'True when older posts remain.' }
+                      nextCursor: { type: [string, "null"], description: 'Send back as `cursor` for the next page; null on the last page.' }
                   lastUpdated: { type: string, format: date-time }
               example:
                 status: "success"
@@ -47064,9 +47164,12 @@ paths:
                     mediaType: "video"
                     commentCount: 12
                     likeCount: 340
+                pagination:
+                  hasMore: true
+                  nextCursor: "2026-08-21T09:14:03.000Z_64e1f0a2b3c4d5e6f7a8b9c0_dQw4w9WgXcQ"
                 lastUpdated: "2026-08-28T11:02:44.512Z"
         '400':
-          description: 'Invalid accountId, platform does not support posts listing, or the account has no access token'
+          description: 'Invalid accountId, limit or cursor, platform does not support posts listing, or the account has no access token'
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { description: 'X analytics capability not enabled for this account (code X_ANALYTICS_NOT_ENABLED)' }
         '404': { $ref: '#/components/responses/NotFound' }
