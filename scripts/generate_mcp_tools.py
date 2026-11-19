@@ -14,6 +14,7 @@ Usage:
 
 from __future__ import annotations
 
+import ast
 import keyword
 import re
 import sys
@@ -658,16 +659,35 @@ def _escape_docstring_text(text: str) -> str:
     return text.replace("\\", "\\\\").replace('"', '\\"')
 
 
+def _platform_param_values(params: list[dict[str, Any]]) -> tuple[str, list[str]] | None:
+    """Name and allowed values of the tool's `platform`/`platforms` argument
+    when it is typed as a string enum, read off its generated `Literal[...]`."""
+    for p in params:
+        if p["name"] not in ("platform", "platforms"):
+            continue
+        match = re.search(r"Literal\[([^\]]*)\]", p["type"])
+        if match:
+            return p["name"], list(ast.literal_eval(f"({match.group(1)},)"))
+    return None
+
+
 def build_tool_description_lines(
     summary: str,
     description: str,
     platforms: list[str],
+    params: list[dict[str, Any]] | None = None,
 ) -> list[str]:
-    """Summary, then the operation description and its `x-platforms`.
+    """Summary, then the operation description and its supported platforms.
 
     The MCP tool description is all an agent sees when picking a tool, so the
     spec's operation description (e.g. "Google only; every other platform
     returns 501") and supported platforms must reach it, not just the summary.
+
+    `x-platforms` holds product names ("meta", "x") while a `platform` enum
+    holds stored values ("facebook", "twitter"); agents copy the docstring into
+    the argument, so when the enum rejects an `x-platforms` value the line
+    lists the enum instead. A narrower `x-platforms` (e.g. "google" against a
+    wider enum) is kept: it is valid and says more.
     """
     lines = [summary.rstrip()]
     if description.strip():
@@ -675,7 +695,12 @@ def build_tool_description_lines(
         lines.extend(_escape_docstring_text(_truncate_description(description)).split("\n"))
     if platforms:
         lines.append("")
-        lines.append(f"Platforms: {', '.join(platforms)}")
+        platform_param = _platform_param_values(params or [])
+        if platform_param and not set(platforms) <= set(platform_param[1]):
+            name, values = platform_param
+            lines.append(f"Platforms (the {name} parameter takes): {', '.join(values)}")
+        else:
+            lines.append(f"Platforms: {', '.join(platforms)}")
     return lines
 
 
@@ -708,7 +733,7 @@ def generate_tool_handler(
     sig = ", ".join(sig_params)
 
     # Docstring - strip trailing whitespace from all lines
-    doc_lines = build_tool_description_lines(summary, description, platforms or [])
+    doc_lines = build_tool_description_lines(summary, description, platforms or [], params)
     if idempotency_scope:
         doc_lines.extend(["", SAME_ARGUMENTS_IDEMPOTENT_NOTE])
     if params:
