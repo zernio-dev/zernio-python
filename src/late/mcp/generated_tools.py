@@ -5824,7 +5824,7 @@ def register_generated_tools(mcp, _get_client):
         On Reddit, `size` is the lower bound of Reddit's matched-users range, and `status` is `too_small`
         while the list has matched fewer than 1,000 people.
 
-        Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit
+        Platforms (the platform parameter takes): facebook, instagram, googleads, tiktok, tiktokads, pinterest, linkedin, linkedinads, twitter, xads, redditads
 
         Args:
             account_id: Account ID (required)
@@ -6577,7 +6577,7 @@ def register_generated_tools(mcp, _get_client):
 
             1. Filter by platformAdId (the Meta ...
 
-            Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit, microsoft
+            Platforms (the platform parameter takes): facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit, microsoft
 
             Args:
                 page: Page number (1-based)
@@ -7257,7 +7257,7 @@ def register_generated_tools(mcp, _get_client):
 
             Zernio's own status writes re-read the switches they change. A change made in the ...
 
-            Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit, microsoft
+            Platforms (the platform parameter takes): facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit, microsoft
 
             Args:
                 include_empty: Meta only. Set true to also list campaigns with ZERO ads, with `adCount: 0` and zeroed metrics.
@@ -7517,7 +7517,7 @@ def register_generated_tools(mcp, _get_client):
         - **Already in the requested state:** nothing is written (`updated: 0`, `skipped: 1`, with the reason).
         - **Otherwise:** the switch is written (`updated: 1`), read back and stored. The delivery status of the ads under it (up to 20) is re-read and stored, so an immediate GET returns what the platform now ...
 
-        Platforms: meta, google, tiktok, linkedin, pinterest, x, openai, reddit, microsoft
+        Platforms (the platform parameter takes): facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit, microsoft
 
         Args:
             campaign_id: Platform campaign ID (required)
@@ -7799,7 +7799,7 @@ def register_generated_tools(mcp, _get_client):
             | `name` | Yes | 501 | Reddit: Yes; others 501 |
             | ...
 
-            Platforms: meta, google, tiktok, linkedin, pinterest, x, openai, reddit, microsoft
+            Platforms (the platform parameter takes): facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit, microsoft
 
             Args:
                 campaign_id: Platform campaign ID (required)
@@ -7894,7 +7894,7 @@ def register_generated_tools(mcp, _get_client):
 
         Google, TikTok, LinkedIn, Pinterest and Reddit take the ad account from the synced ...
 
-        Platforms: meta, google, tiktok, linkedin, pinterest, x, openai, reddit, microsoft
+        Platforms (the platform parameter takes): facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit, microsoft
 
         Args:
             campaign_id: Platform campaign ID (required)
@@ -8094,7 +8094,7 @@ def register_generated_tools(mcp, _get_client):
             - `statusOption` applies at every level.
             - If any child copy fails, the partial copy is deleted and the request fails with Meta's error, so a retry starts ...
 
-            Platforms: meta, tiktok, linkedin, google
+            Platforms (the platform parameter takes): facebook, instagram, tiktok, linkedin, google
 
             Args:
                 campaign_id: Source platform campaign ID (required)
@@ -8284,7 +8284,7 @@ def register_generated_tools(mcp, _get_client):
 
             So ...
 
-            Platforms: meta, google, tiktok, linkedin, pinterest, x, openai, reddit, microsoft
+            Platforms (the platform parameter takes): facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit
 
             Args:
                 account_id: Account ID
@@ -8461,7 +8461,7 @@ def register_generated_tools(mcp, _get_client):
             - If an ad copy fails, the partial ad set copy is deleted and the request fails with Meta's error.
             - A sync discovery starts automatically and runs after the response (`syncAfter: false` to skip). The copy is readable through Zernio once it finishes, usually within a few minutes. Until then, calls that take a copied id return 404, so retry them. ...
 
-            Platforms: meta, tiktok
+            Platforms (the platform parameter takes): facebook, instagram, tiktok
 
             Args:
                 ad_set_id: Source platform ad set ID (required)
@@ -8675,7 +8675,7 @@ def register_generated_tools(mcp, _get_client):
             - Sending `valueRulesApplied: false` TOGETHER with `valueRuleSetId` returns 400 `mutually_exclusive_fields`.
             - Eligibility: only ad sets on ...
 
-            Platforms: meta, google, tiktok, linkedin, pinterest, x, openai, reddit
+            Platforms (the platform parameter takes): facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit
 
             Args:
                 ad_set_id: Platform ad set ID (required)
@@ -8903,7 +8903,7 @@ def register_generated_tools(mcp, _get_client):
 
         - When that live read ...
 
-        Platforms: meta, google, tiktok, linkedin, pinterest, x, openai, reddit, microsoft
+        Platforms (the platform parameter takes): facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit, microsoft
 
         Args:
             ad_set_id: Platform ad set ID (required)
@@ -9001,7 +9001,7 @@ def register_generated_tools(mcp, _get_client):
 
             The older days (up to 730 days back) are imported in the background; repeat the request until it returns 200. A request scoped to no Meta ...
 
-            Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit, microsoft
+            Platforms (the platform parameter takes): facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit, microsoft
 
             Args:
                 page: Page number (1-based)
@@ -9127,7 +9127,7 @@ def register_generated_tools(mcp, _get_client):
 
         A Meta range older than the imported history answers `202` with `backfillPending: true` and the covered part; repeat the request until it returns 200.
 
-        Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit, microsoft
+        Platforms (the platform parameter takes): facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit, microsoft
 
         Args:
             account_id: Account ID. Sibling-expanded to its linked posting and ads pair. An id the API key cannot reach answers 404. (required)
@@ -9198,7 +9198,7 @@ def register_generated_tools(mcp, _get_client):
 
         When an ad account connects, Zernio ...
 
-        Platforms: meta, google, tiktok, linkedin, pinterest, x, reddit, microsoft
+        Platforms (the platform parameter takes): facebook, instagram, tiktok, linkedin, pinterest, google, twitter, openai, reddit, microsoft
 
         Args:
             account_id: Account ID. Sibling-expanded to its linked posting↔ads pair. An id that does not exist or sits on a profile the API key cannot reach answers 404 (code: account_not_found). (required)
@@ -26348,7 +26348,7 @@ def register_generated_tools(mcp, _get_client):
 
             A reconnect is accepted when the new grant shares at least one ad ...
 
-            Platforms: meta, linkedin, tiktok, twitter, pinterest, google, reddit
+            Platforms (the platform parameter takes): facebook, instagram, linkedin, tiktok, twitter, pinterest, googleads, redditads, microsoftads
 
             Args:
                 identity_provider: Microsoft Ads only. How the user signs in to Microsoft Advertising: `google` for a Microsoft Advertising login that is a Google account. `google` on any other platform returns 400 `invalid_field_value`.
@@ -45470,7 +45470,7 @@ def register_generated_tools(mcp, _get_client):
         Deletes a published post from the specified platform. The post record in Zernio is kept but its status is updated to cancelled.
         Not supported on Instagram, TikTok, or Snapchat. Threaded posts delete all items. YouTube deletion is permanent.
 
-        Platforms: facebook, youtube, linkedin, twitter, threads, googlebusiness, pinterest, reddit, telegram, bluesky, discord, slack
+        Platforms (the platform parameter takes): threads, facebook, twitter, linkedin, youtube, pinterest, reddit, bluesky, googlebusiness, telegram
 
         Args:
             post_id: (required)
@@ -57233,7 +57233,7 @@ def register_generated_tools(mcp, _get_client):
 
         Create a branching conversation workflow (draft) from a node/edge graph. Created in `draft` status; activate it to start matching inbound messages. The graph is validated structurally; completeness (a trigger node + reachable entry) is required at activation.
 
-        Platforms: hubspot, salesforce
+        Platforms (the platform parameter takes): whatsapp, instagram, facebook, telegram, twitter, bluesky, reddit, tiktok, line, wechat
 
         Args:
             profile_id: (required)
