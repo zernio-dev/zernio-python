@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.700.0"
+  version: "1.701.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -180,6 +180,8 @@ x-documentation:
     - `account.disconnected` - Account disconnected: deactivated after its token was revoked or rejected (or the platform refused it, e.g. a Facebook Page left out of a later authorization), or flagged as needing reconnection. Not sent again while the account stays deactivated
     - `account.permissions_changed` - An account connected with `scopes` or through your own OAuth app lost a permission area (for example posting) while staying connected
     - `account.rate_limited` - A Google or Microsoft mailbox entered a sending cooldown; sends answer 429 until `account.resetsAt`
+    - `account.restricted` - A social account failed its last three publishes with the same account-level error (suspended, restricted, an identity or security check, or an expired login). Fires once per restriction with `restriction.reason` and the platform's error; publish-now posts to it answer 422 `account_restricted` until a publish succeeds or it is reconnected
+    - `account.recovered` - A publish succeeded on an account `account.restricted` reported
     - `account.privacy_request` - A Shopify merchant asked to export or erase a customer's data, or the shop's data after an uninstall. Erase or export your own copy
     - `account.ads.initial_sync_completed` - Initial ads sync (discovery + 90-day backfill) completed for an ads-enabled account
     - `account.ads.sync_failed` - An ad account's ads stopped syncing (no successful sync for 24 hours, or every live ad at the retry cap). Fires once until it recovers
@@ -309,6 +311,8 @@ x-documentation:
     - `balance.low` - Balance billing: the balance dropped below the low-balance alert set on auto top-up (`alertBelowCents`), once per drop, unless an auto top-up is already covering it
     - `balance.empty` - Balance billing: the balance reached $0 and no auto top-up covered it, so pay-per-use calls answer 402 until it is funded. Carries that 402 `code` and `fundingUrl`
     - `balance.charged` - Balance billing: funds were added to the balance by card, by you or by auto top-up (`topup.trigger`), with the amount, the VAT and the card charge
+    - `billing.publishing_blocked` - A failed payment paused the billing owner's account: the API answers 402 and scheduled posts fail until it is paid. Fires once per pause
+    - `billing.publishing_unblocked` - The paused account was paid and publishing resumed
     - `notification.sent` - Built for agents: one event for every notification we would email (a scheduled post failed to publish, or a connected account was disconnected), with the email's `subject` and `text`, references to the post or account, and the `actions` that resolve it. Fires regardless of the user's email toggles, and whether or not an email can be sent. The user's notification channel (Slack or Telegram) follows the toggles instead. To keep post and account state in sync, use `post.platform.failed`, `post.failed` and `account.disconnected`
     - `webhook.test` - Test event sent when verifying a webhook endpoint
 
@@ -754,7 +758,7 @@ tags:
       **Events:**
 
       - Posts: `post.scheduled`, `post.published`, `post.failed`, `post.partial`, `post.cancelled`, `post.recycled`, `post.platform.published`, `post.platform.failed`, `post.platform.deleted`, `post.tiktok.url_resolved`, `post.external.created`, `post.external.updated`, `post.external.deleted`, `post.tracking_completed`, `post.authenticity_changed`
-      - Accounts and analytics: `account.connected`, `account.disconnected`, `account.permissions_changed`, `account.ads.initial_sync_completed`, `account.ads.sync_failed`, `account.ads.sync_recovered`, `account.rate_limited`, `account.privacy_request`, `analytics.synced`
+      - Accounts and analytics: `account.connected`, `account.disconnected`, `account.permissions_changed`, `account.ads.initial_sync_completed`, `account.ads.sync_failed`, `account.ads.sync_recovered`, `account.rate_limited`, `account.restricted`, `account.recovered`, `account.privacy_request`, `analytics.synced`
       - Messages: `message.received`, `message.sent`, `message.edited`, `message.deleted`, `message.delivered`, `message.read`, `message.played`, `message.failed`, `reaction.received`, `referral.received`, `conversation.started`, `conversation.control_changed`
       - Calls: `call.received`, `call.ended`, `call.failed`, `call.permission_request`, `call.transcript_segment`, `call.recording_ready`
       - Engagement and leads: `comment.received`, `mention.received`, `review.new`, `review.updated`, `review.deleted`, `review.restored`, `lead.received`
@@ -767,7 +771,7 @@ tags:
       - Creator campaigns: `campaign_submission.received`, `campaign_submission.flagged`, `campaign_submission.pending_review`, `campaign_submission.approved`, `campaign_submission.rejected`, `creator_campaign.budget_exhausted`, `creator_campaign.closed`, `campaign_payout.payable`, `campaign_payout.settled`, `campaign_payout.failed`, `campaign_participant.joined`, `campaign_participant.pending`, `campaign_participant.approved`, `campaign_participant.denied`, `campaign_participant.suspended`, `campaign_participant.removed`, `campaign_draft.submitted`, `campaign_draft.approved`, `campaign_draft.revision_requested`, `campaign_draft.rejected`, `campaign_sample.requested`, `campaign_sample.approved`, `campaign_sample.shipped`, `campaign_sample.declined`
       - Calendar and files: `calendar.event.created`, `calendar.event.updated`, `calendar.event.deleted`, `file.created`, `file.updated`, `file.deleted`, `file.picked`
       - Email: `email.sent`, `email.opened`, `email.link_clicked`, `email.thread_replied`, `email.send_failed`, `email.bounced`, `email.updated`, `email.deleted`
-      - Billing: `balance.low`, `balance.empty`, `balance.charged`
+      - Billing: `balance.low`, `balance.empty`, `balance.charged`, `billing.publishing_blocked`, `billing.publishing_unblocked`
       - Notifications: `notification.sent`
       - Other: `api.changelog.published`, `webhook.test`
 
@@ -7553,7 +7557,7 @@ components:
           type: array
           items:
             type: string
-            enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.permissions_changed, account.ads.initial_sync_completed, account.ads.sync_failed, account.ads.sync_recovered, analytics.synced, post.tracking_completed, post.authenticity_changed, message.received, conversation.started, conversation.control_changed, call.received, call.ended, call.failed, call.permission_request, call.transcript_segment, call.recording_ready, message.sent, message.edited, message.deleted, message.delivered, message.read, message.played, message.failed, reaction.received, referral.received, comment.received, mention.received, review.new, review.updated, review.deleted, review.restored, lead.received, conversion.received, tracking_site.ready, ad.status_changed, ad.created, ad.updated, campaign.created, campaign.updated, ad_set.created, ad_set.updated, ad.review.approved, ad.review.rejected, ad.delivery_issue, campaign.budget.depleted, ad_account.status_changed, campaign.status_changed, ad.video.processed, ad_rule.triggered, automation.check.completed, automation.action.applied, automation.action.failed, automation.action.unknown, automation.alert.opened, automation.alert.escalated, automation.alert.resolved, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.account.quality_updated, whatsapp.account.status_updated, whatsapp.account.alert_received, whatsapp.contact.identity_changed, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, phone_number.stock_available, verification.approved, verification.failed, api.changelog.published, sms.registration.action_required, sms.registration.status_updated, branded_calling.identity.status_updated, branded_calling.identity.action_required, branded_calling.number.status_updated, rcs.agent.status_updated, commerce.product.created, commerce.product.updated, commerce.product.deleted, commerce.order.created, commerce.order.updated, commerce.order.refunded, contact.tag_added, contact.tag_removed, contact.field_changed, sequence.enrolled, sequence.exited, workflow.run.started, workflow.run.completed, workflow.run.failed, support.run.completed, support.run.failed, campaign_submission.received, campaign_submission.flagged, campaign_submission.pending_review, campaign_submission.approved, campaign_submission.rejected, creator_campaign.budget_exhausted, creator_campaign.closed, campaign_payout.payable, campaign_payout.settled, campaign_payout.failed, campaign_participant.joined, campaign_participant.suspended, campaign_participant.removed, account.rate_limited, account.privacy_request, calendar.event.created, calendar.event.updated, calendar.event.deleted, email.sent, email.opened, email.link_clicked, email.thread_replied, email.send_failed, email.bounced, email.updated, email.deleted, file.created, file.updated, file.deleted, file.picked, contact.updated, contact.deleted, balance.low, balance.empty, balance.charged, campaign_participant.pending, campaign_participant.approved, campaign_participant.denied, campaign_draft.submitted, campaign_draft.approved, campaign_draft.revision_requested, campaign_draft.rejected, campaign_sample.requested, campaign_sample.approved, campaign_sample.shipped, campaign_sample.declined, notification.sent]
+            enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.permissions_changed, account.ads.initial_sync_completed, account.ads.sync_failed, account.ads.sync_recovered, account.restricted, account.recovered, analytics.synced, post.tracking_completed, post.authenticity_changed, message.received, conversation.started, conversation.control_changed, call.received, call.ended, call.failed, call.permission_request, call.transcript_segment, call.recording_ready, message.sent, message.edited, message.deleted, message.delivered, message.read, message.played, message.failed, reaction.received, referral.received, comment.received, mention.received, review.new, review.updated, review.deleted, review.restored, lead.received, conversion.received, tracking_site.ready, ad.status_changed, ad.created, ad.updated, campaign.created, campaign.updated, ad_set.created, ad_set.updated, ad.review.approved, ad.review.rejected, ad.delivery_issue, campaign.budget.depleted, ad_account.status_changed, campaign.status_changed, ad.video.processed, ad_rule.triggered, automation.check.completed, automation.action.applied, automation.action.failed, automation.action.unknown, automation.alert.opened, automation.alert.escalated, automation.alert.resolved, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.account.quality_updated, whatsapp.account.status_updated, whatsapp.account.alert_received, whatsapp.contact.identity_changed, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, phone_number.stock_available, verification.approved, verification.failed, api.changelog.published, sms.registration.action_required, sms.registration.status_updated, branded_calling.identity.status_updated, branded_calling.identity.action_required, branded_calling.number.status_updated, rcs.agent.status_updated, commerce.product.created, commerce.product.updated, commerce.product.deleted, commerce.order.created, commerce.order.updated, commerce.order.refunded, contact.tag_added, contact.tag_removed, contact.field_changed, sequence.enrolled, sequence.exited, workflow.run.started, workflow.run.completed, workflow.run.failed, support.run.completed, support.run.failed, campaign_submission.received, campaign_submission.flagged, campaign_submission.pending_review, campaign_submission.approved, campaign_submission.rejected, creator_campaign.budget_exhausted, creator_campaign.closed, campaign_payout.payable, campaign_payout.settled, campaign_payout.failed, campaign_participant.joined, campaign_participant.suspended, campaign_participant.removed, account.rate_limited, account.privacy_request, calendar.event.created, calendar.event.updated, calendar.event.deleted, email.sent, email.opened, email.link_clicked, email.thread_replied, email.send_failed, email.bounced, email.updated, email.deleted, file.created, file.updated, file.deleted, file.picked, contact.updated, contact.deleted, balance.low, balance.empty, balance.charged, billing.publishing_blocked, billing.publishing_unblocked, campaign_participant.pending, campaign_participant.approved, campaign_participant.denied, campaign_draft.submitted, campaign_draft.approved, campaign_draft.revision_requested, campaign_draft.rejected, campaign_sample.requested, campaign_sample.approved, campaign_sample.shipped, campaign_sample.declined, notification.sent]
           description: Events subscribed to
         isActive:
           type: boolean
@@ -13699,6 +13703,43 @@ components:
           type: string
           format: date-time
           description: 'UTC time at which Zernio generated this event. Retries and redeliveries keep the original value.'
+    WebhookPayloadBillingPublishingBlocked:
+      type: object
+      required: [id, event, billing, billingUrl, timestamp]
+      properties:
+        id:
+          type: string
+          description: 'Stable webhook event ID: the dedupe key, also sent as the X-Zernio-Event-Id header and identical on every retry and redelivery. It identifies the event only, never an account or other resource.'
+        test:
+          type: boolean
+          description: 'Always true when present: only a sample sent by POST /v1/webhooks/test with an event carries it. Real deliveries never do.'
+        event: { type: string, enum: [billing.publishing_blocked] }
+        billing:
+          type: object
+          required: [reason, blockedAt]
+          properties:
+            reason: { type: string, enum: [payment_failed, no_payment_method, invalid_billing_address] }
+            blockedAt: { type: string, format: date-time }
+        billingUrl: { type: string, format: uri, description: 'Dashboard page where the owner pays or replaces the card.' }
+        timestamp: { type: string, format: date-time }
+    WebhookPayloadBillingPublishingUnblocked:
+      type: object
+      required: [id, event, billing, timestamp]
+      properties:
+        id:
+          type: string
+          description: 'Stable webhook event ID: the dedupe key, also sent as the X-Zernio-Event-Id header and identical on every retry and redelivery. It identifies the event only, never an account or other resource.'
+        test:
+          type: boolean
+          description: 'Always true when present: only a sample sent by POST /v1/webhooks/test with an event carries it. Real deliveries never do.'
+        event: { type: string, enum: [billing.publishing_unblocked] }
+        billing:
+          type: object
+          required: [blockedAt, unblockedAt]
+          properties:
+            blockedAt: { type: [string, "null"], format: date-time }
+            unblockedAt: { type: string, format: date-time }
+        timestamp: { type: string, format: date-time }
     WebhookPayloadBalanceCharged:
       type: object
       required: [id, event, topup, balance, timestamp]
@@ -16998,6 +17039,72 @@ components:
             reason: { type: string, enum: [recipient_burst, provider_rejection, bounces, daily_cap] }
             cooldownMinutes: { type: integer }
             resetsAt: { type: string, format: date-time }
+        timestamp: { type: string, format: date-time }
+    WebhookPayloadAccountRestricted:
+      type: object
+      description: 'Webhook payload for account.restricted: the account failed its last three publishes with the same account-level error.'
+      required: [id, event, account, restriction, timestamp]
+      properties:
+        id: { type: string }
+        profiles: { $ref: '#/components/schemas/WebhookProfiles' }
+        test:
+          type: boolean
+          description: 'Always true when present: only a sample sent by POST /v1/webhooks/test with an event carries it. Real deliveries never do.'
+        event: { type: string, enum: [account.restricted] }
+        account:
+          type: object
+          required: [accountId, profileId, platform, username]
+          properties:
+            accountId: { type: string }
+            profileId: { type: string }
+            platform: { type: string }
+            username: { type: string }
+            displayName: { type: [string, "null"] }
+        restriction:
+          type: object
+          required: [reason, message, platformError, consecutiveFailures, since, postId]
+          properties:
+            reason: { type: string, enum: [restricted, suspended, verification_required, auth_expired], description: '`suspended`: banned or suspended by the platform. `restricted`: locked, restricted or blocked from posting. `verification_required`: the platform asks for an identity or security check. `auth_expired`: the login stopped working; reconnect.' }
+            message: { type: string, description: 'The error the last failed post carries.' }
+            platformError:
+              type: [object, "null"]
+              description: "Meta's error code and subcode, for Instagram and Facebook."
+              properties:
+                code: { type: integer }
+                subcode: { type: integer }
+                message: { type: string }
+            consecutiveFailures: { type: integer, description: 'Identical failures in a row that restricted the account.' }
+            since: { type: string, format: date-time }
+            postId: { type: string, description: 'The post whose failure restricted the account.' }
+        timestamp: { type: string, format: date-time }
+    WebhookPayloadAccountRecovered:
+      type: object
+      description: 'Webhook payload for account.recovered: a publish succeeded on an account account.restricted reported.'
+      required: [id, event, account, recovery, timestamp]
+      properties:
+        id: { type: string }
+        profiles: { $ref: '#/components/schemas/WebhookProfiles' }
+        test:
+          type: boolean
+          description: 'Always true when present: only a sample sent by POST /v1/webhooks/test with an event carries it. Real deliveries never do.'
+        event: { type: string, enum: [account.recovered] }
+        account:
+          type: object
+          required: [accountId, profileId, platform, username]
+          properties:
+            accountId: { type: string }
+            profileId: { type: string }
+            platform: { type: string }
+            username: { type: string }
+            displayName: { type: [string, "null"] }
+        recovery:
+          type: object
+          required: [reason, restrictedSince, recoveredAt, postId]
+          properties:
+            reason: { type: string, enum: [restricted, suspended, verification_required, auth_expired], description: '`suspended`: banned or suspended by the platform. `restricted`: locked, restricted or blocked from posting. `verification_required`: the platform asks for an identity or security check. `auth_expired`: the login stopped working; reconnect.' }
+            restrictedSince: { type: string, format: date-time }
+            recoveredAt: { type: string, format: date-time }
+            postId: { type: string, description: 'The post that published.' }
         timestamp: { type: string, format: date-time }
     WebhookPayloadCalendarEvent:
       type: object
@@ -26491,6 +26598,89 @@ webhooks:
       responses:
         '200':
           description: Webhook received successfully
+  account.restricted:
+    post:
+      operationId: onAccountRestricted
+      summary: Account restricted from publishing
+      description: |
+        A social account failed its last three publishes with the same account-level error: the platform suspended or banned it, restricted or locked it, asks for an identity or security check, or stopped accepting its login.
+
+        ### When it fires
+
+        Once per restriction, on the third identical failure in a row. Further failures do not fire it again.
+
+        ### What changes
+
+        `POST /v1/posts` with `publishNow` (or a time already past) to this account answers 422 `account_restricted`, because it would fail the same way. Scheduled posts are still accepted.
+
+        Fix the account on the platform, then reconnect it to lift the check at once; otherwise the next successful publish lifts it (`account.recovered`). 24 hours after the last failure one publish-now is let through again.
+      tags: [Webhook Events]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              id: 00000000-0000-4000-8000-000000000000
+              event: account.restricted
+              timestamp: '2026-01-15T10:00:00Z'
+              account:
+                accountId: 507f1f77bcf86cd799439011
+                profileId: 507f1f77bcf86cd799439012
+                platform: facebook
+                username: Sample Brand
+                displayName: Sample Brand
+              restriction:
+                reason: verification_required
+                message: Facebook needs you to confirm your identity before you can publish as this Page. Open the Facebook mobile app, go to this Page, and complete the identity check.
+                platformError:
+                  code: 368
+                  subcode: 4854002
+                  message: Confirm your identity before you can publish as this Page.
+                consecutiveFailures: 3
+                since: '2026-01-15T10:00:00.000Z'
+                postId: 507f1f77bcf86cd799439013
+              profiles:
+                - id: 507f1f77bcf86cd799439012
+                  externalId: cus_8f3a2
+            schema:
+              $ref: '#/components/schemas/WebhookPayloadAccountRestricted'
+      responses:
+        '200':
+          description: Webhook received successfully
+  account.recovered:
+    post:
+      operationId: onAccountRecovered
+      summary: Account publishing again
+      description: |
+        A publish succeeded on an account that `account.restricted` reported, so the restriction is lifted and publish-now posts to it are accepted again. A reconnect also lifts it; that sends `account.connected` instead.
+      tags: [Webhook Events]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              id: 00000000-0000-4000-8000-000000000000
+              event: account.recovered
+              timestamp: '2026-01-15T10:00:00Z'
+              account:
+                accountId: 507f1f77bcf86cd799439011
+                profileId: 507f1f77bcf86cd799439012
+                platform: facebook
+                username: Sample Brand
+                displayName: Sample Brand
+              recovery:
+                reason: verification_required
+                restrictedSince: '2026-01-14T10:00:00.000Z'
+                recoveredAt: '2026-01-15T10:00:00.000Z'
+                postId: 507f1f77bcf86cd799439013
+              profiles:
+                - id: 507f1f77bcf86cd799439012
+                  externalId: cus_8f3a2
+            schema:
+              $ref: '#/components/schemas/WebhookPayloadAccountRecovered'
+      responses:
+        '200':
+          description: Webhook received successfully
   calendar.event.created:
     post:
       operationId: onCalendarEventCreated
@@ -32148,6 +32338,61 @@ webhooks:
               balance: { spendableCents: 2000 }
             schema:
               $ref: '#/components/schemas/WebhookPayloadBalanceCharged'
+      responses:
+        '200':
+          description: Webhook received successfully
+  billing.publishing_blocked:
+    post:
+      operationId: onBillingPublishingBlocked
+      summary: Publishing paused for a failed payment
+      description: |
+        A failed payment paused the billing owner's account. Until it is paid, every API call answers 402 `PAYMENT_REQUIRED` and posts that come due fail with "Publishing blocked: payment failed".
+
+        ### When it fires
+
+        Once per pause. `billing.reason` says why: the card was declined (`payment_failed`), there is no card (`no_payment_method`), or the billing address was refused (`invalid_billing_address`). Pay or replace the card at `billingUrl`.
+
+        ### Who receives it
+
+        The billing owner's endpoints. Restricted keys need the `money` resource group.
+      tags: [Webhook Events]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              id: 00000000-0000-4000-8000-000000000000
+              event: billing.publishing_blocked
+              timestamp: '2026-01-15T10:00:00Z'
+              billing:
+                reason: payment_failed
+                blockedAt: '2026-01-15T10:00:00.000Z'
+              billingUrl: https://zernio.com/dashboard/billing
+            schema:
+              $ref: '#/components/schemas/WebhookPayloadBillingPublishingBlocked'
+      responses:
+        '200':
+          description: Webhook received successfully
+  billing.publishing_unblocked:
+    post:
+      operationId: onBillingPublishingUnblocked
+      summary: Publishing resumed after payment
+      description: |
+        The account paused by `billing.publishing_blocked` was paid: the API accepts calls again and scheduled posts publish. Posts that failed during the pause stay failed; retry them with `POST /v1/posts/{postId}/retry`.
+      tags: [Webhook Events]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              id: 00000000-0000-4000-8000-000000000000
+              event: billing.publishing_unblocked
+              timestamp: '2026-01-15T10:00:00Z'
+              billing:
+                blockedAt: '2026-01-14T10:00:00.000Z'
+                unblockedAt: '2026-01-15T10:00:00.000Z'
+            schema:
+              $ref: '#/components/schemas/WebhookPayloadBillingPublishingUnblocked'
       responses:
         '200':
           description: Webhook received successfully
@@ -43929,9 +44174,30 @@ paths:
                       platform: { type: string }
                       existingPostId: { type: string }
         '503': { $ref: '#/components/responses/TemporarilyUnavailable' }
+        '422':
+          x-summary: 'A target account failed its last publishes with the same account-level error, so publishing now would fail too: fix and reconnect it, or schedule the post.'
+          description: |
+            `code: account_restricted`: a target account failed its last three publishes with the same account-level error (suspended, restricted, an identity or security check, or an expired login), and this post publishes now. Nothing was created. `details` names the account, `reason` and last failure; `account.restricted` reported it.
+
+            Scheduled posts to the account are still accepted. Reconnecting the account, or the next successful publish, lifts the check; 24 hours after the last failure one publish-now is let through again.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error: { type: string }
+                  code: { type: string, enum: [account_restricted] }
+                  details:
+                    type: object
+                    properties:
+                      accountId: { type: string }
+                      platform: { type: string }
+                      reason: { type: string, enum: [restricted, suspended, verification_required, auth_expired] }
+                      since: { type: string, format: date-time }
+                      lastFailedAt: { type: string, format: date-time }
         '429':
           x-summary: "A rate limit was hit, such as the API limit or an account cooldown: wait and retry later."
-          description: "Rate limit exceeded. Possible causes: API rate limit, account cooldown, or daily platform limits."
+          description: 'Rate limit exceeded. Possible causes: API rate limit, account cooldown, or daily platform limits. During an account cooldown (for example an Instagram or TikTok 24-hour publishing limit) `error` says when posting resumes and `details.rateLimitedUntil` carries the time; a post scheduled after it is accepted.'
           content:
             application/json:
               schema:
@@ -61056,7 +61322,7 @@ paths:
                   minItems: 1
                   items:
                     type: string
-                    enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.permissions_changed, account.ads.initial_sync_completed, account.ads.sync_failed, account.ads.sync_recovered, analytics.synced, post.tracking_completed, post.authenticity_changed, message.received, conversation.started, conversation.control_changed, call.received, call.ended, call.failed, call.permission_request, call.transcript_segment, call.recording_ready, message.sent, message.edited, message.deleted, message.delivered, message.read, message.played, message.failed, reaction.received, referral.received, comment.received, mention.received, review.new, review.updated, review.deleted, review.restored, lead.received, conversion.received, tracking_site.ready, ad.status_changed, ad.created, ad.updated, campaign.created, campaign.updated, ad_set.created, ad_set.updated, ad.review.approved, ad.review.rejected, ad.delivery_issue, campaign.budget.depleted, ad_account.status_changed, campaign.status_changed, ad.video.processed, ad_rule.triggered, automation.check.completed, automation.action.applied, automation.action.failed, automation.action.unknown, automation.alert.opened, automation.alert.escalated, automation.alert.resolved, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.account.quality_updated, whatsapp.account.status_updated, whatsapp.account.alert_received, whatsapp.contact.identity_changed, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, phone_number.stock_available, verification.approved, verification.failed, api.changelog.published, sms.registration.action_required, sms.registration.status_updated, branded_calling.identity.status_updated, branded_calling.identity.action_required, branded_calling.number.status_updated, rcs.agent.status_updated, commerce.product.created, commerce.product.updated, commerce.product.deleted, commerce.order.created, commerce.order.updated, commerce.order.refunded, contact.tag_added, contact.tag_removed, contact.field_changed, sequence.enrolled, sequence.exited, workflow.run.started, workflow.run.completed, workflow.run.failed, support.run.completed, support.run.failed, campaign_submission.received, campaign_submission.flagged, campaign_submission.pending_review, campaign_submission.approved, campaign_submission.rejected, creator_campaign.budget_exhausted, creator_campaign.closed, campaign_payout.payable, campaign_payout.settled, campaign_payout.failed, campaign_participant.joined, campaign_participant.suspended, campaign_participant.removed, balance.low, balance.empty, balance.charged, campaign_participant.pending, campaign_participant.approved, campaign_participant.denied, campaign_draft.submitted, campaign_draft.approved, campaign_draft.revision_requested, campaign_draft.rejected, campaign_sample.requested, campaign_sample.approved, campaign_sample.shipped, campaign_sample.declined, notification.sent]
+                    enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.permissions_changed, account.ads.initial_sync_completed, account.ads.sync_failed, account.ads.sync_recovered, account.restricted, account.recovered, analytics.synced, post.tracking_completed, post.authenticity_changed, message.received, conversation.started, conversation.control_changed, call.received, call.ended, call.failed, call.permission_request, call.transcript_segment, call.recording_ready, message.sent, message.edited, message.deleted, message.delivered, message.read, message.played, message.failed, reaction.received, referral.received, comment.received, mention.received, review.new, review.updated, review.deleted, review.restored, lead.received, conversion.received, tracking_site.ready, ad.status_changed, ad.created, ad.updated, campaign.created, campaign.updated, ad_set.created, ad_set.updated, ad.review.approved, ad.review.rejected, ad.delivery_issue, campaign.budget.depleted, ad_account.status_changed, campaign.status_changed, ad.video.processed, ad_rule.triggered, automation.check.completed, automation.action.applied, automation.action.failed, automation.action.unknown, automation.alert.opened, automation.alert.escalated, automation.alert.resolved, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.account.quality_updated, whatsapp.account.status_updated, whatsapp.account.alert_received, whatsapp.contact.identity_changed, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, phone_number.stock_available, verification.approved, verification.failed, api.changelog.published, sms.registration.action_required, sms.registration.status_updated, branded_calling.identity.status_updated, branded_calling.identity.action_required, branded_calling.number.status_updated, rcs.agent.status_updated, commerce.product.created, commerce.product.updated, commerce.product.deleted, commerce.order.created, commerce.order.updated, commerce.order.refunded, contact.tag_added, contact.tag_removed, contact.field_changed, sequence.enrolled, sequence.exited, workflow.run.started, workflow.run.completed, workflow.run.failed, support.run.completed, support.run.failed, campaign_submission.received, campaign_submission.flagged, campaign_submission.pending_review, campaign_submission.approved, campaign_submission.rejected, creator_campaign.budget_exhausted, creator_campaign.closed, campaign_payout.payable, campaign_payout.settled, campaign_payout.failed, campaign_participant.joined, campaign_participant.suspended, campaign_participant.removed, balance.low, balance.empty, balance.charged, billing.publishing_blocked, billing.publishing_unblocked, campaign_participant.pending, campaign_participant.approved, campaign_participant.denied, campaign_draft.submitted, campaign_draft.approved, campaign_draft.revision_requested, campaign_draft.rejected, campaign_sample.requested, campaign_sample.approved, campaign_sample.shipped, campaign_sample.declined, notification.sent]
                   description: Events to subscribe to (at least one required)
                 isActive:
                   type: boolean
@@ -61225,7 +61491,7 @@ paths:
                   minItems: 1
                   items:
                     type: string
-                    enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.permissions_changed, account.ads.initial_sync_completed, account.ads.sync_failed, account.ads.sync_recovered, analytics.synced, post.tracking_completed, post.authenticity_changed, message.received, conversation.started, conversation.control_changed, call.received, call.ended, call.failed, call.permission_request, call.transcript_segment, call.recording_ready, message.sent, message.edited, message.deleted, message.delivered, message.read, message.played, message.failed, reaction.received, referral.received, comment.received, mention.received, review.new, review.updated, review.deleted, review.restored, lead.received, conversion.received, tracking_site.ready, ad.status_changed, ad.created, ad.updated, campaign.created, campaign.updated, ad_set.created, ad_set.updated, ad.review.approved, ad.review.rejected, ad.delivery_issue, campaign.budget.depleted, ad_account.status_changed, campaign.status_changed, ad.video.processed, ad_rule.triggered, automation.check.completed, automation.action.applied, automation.action.failed, automation.action.unknown, automation.alert.opened, automation.alert.escalated, automation.alert.resolved, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.account.quality_updated, whatsapp.account.status_updated, whatsapp.account.alert_received, whatsapp.contact.identity_changed, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, phone_number.stock_available, verification.approved, verification.failed, api.changelog.published, sms.registration.action_required, sms.registration.status_updated, branded_calling.identity.status_updated, branded_calling.identity.action_required, branded_calling.number.status_updated, rcs.agent.status_updated, commerce.product.created, commerce.product.updated, commerce.product.deleted, commerce.order.created, commerce.order.updated, commerce.order.refunded, contact.tag_added, contact.tag_removed, contact.field_changed, sequence.enrolled, sequence.exited, workflow.run.started, workflow.run.completed, workflow.run.failed, support.run.completed, support.run.failed, campaign_submission.received, campaign_submission.flagged, campaign_submission.pending_review, campaign_submission.approved, campaign_submission.rejected, creator_campaign.budget_exhausted, creator_campaign.closed, campaign_payout.payable, campaign_payout.settled, campaign_payout.failed, campaign_participant.joined, campaign_participant.suspended, campaign_participant.removed, balance.low, balance.empty, balance.charged, campaign_participant.pending, campaign_participant.approved, campaign_participant.denied, campaign_draft.submitted, campaign_draft.approved, campaign_draft.revision_requested, campaign_draft.rejected, campaign_sample.requested, campaign_sample.approved, campaign_sample.shipped, campaign_sample.declined, notification.sent]
+                    enum: [post.scheduled, post.published, post.failed, post.partial, post.cancelled, post.recycled, post.platform.published, post.platform.failed, post.platform.deleted, post.tiktok.url_resolved, post.external.created, post.external.updated, post.external.deleted, account.connected, account.disconnected, account.permissions_changed, account.ads.initial_sync_completed, account.ads.sync_failed, account.ads.sync_recovered, account.restricted, account.recovered, analytics.synced, post.tracking_completed, post.authenticity_changed, message.received, conversation.started, conversation.control_changed, call.received, call.ended, call.failed, call.permission_request, call.transcript_segment, call.recording_ready, message.sent, message.edited, message.deleted, message.delivered, message.read, message.played, message.failed, reaction.received, referral.received, comment.received, mention.received, review.new, review.updated, review.deleted, review.restored, lead.received, conversion.received, tracking_site.ready, ad.status_changed, ad.created, ad.updated, campaign.created, campaign.updated, ad_set.created, ad_set.updated, ad.review.approved, ad.review.rejected, ad.delivery_issue, campaign.budget.depleted, ad_account.status_changed, campaign.status_changed, ad.video.processed, ad_rule.triggered, automation.check.completed, automation.action.applied, automation.action.failed, automation.action.unknown, automation.alert.opened, automation.alert.escalated, automation.alert.resolved, whatsapp.template.status_updated, whatsapp.template.category_updated, whatsapp.account.name_status_updated, whatsapp.account.quality_updated, whatsapp.account.status_updated, whatsapp.account.alert_received, whatsapp.contact.identity_changed, whatsapp.automatic_event, whatsapp.number.activated, whatsapp.number.declined, whatsapp.number.action_required, whatsapp.number.verification_required, whatsapp.number.suspended, whatsapp.number.reactivated, whatsapp.number.released, whatsapp.number.kyc_submitted, phone_number.stock_available, verification.approved, verification.failed, api.changelog.published, sms.registration.action_required, sms.registration.status_updated, branded_calling.identity.status_updated, branded_calling.identity.action_required, branded_calling.number.status_updated, rcs.agent.status_updated, commerce.product.created, commerce.product.updated, commerce.product.deleted, commerce.order.created, commerce.order.updated, commerce.order.refunded, contact.tag_added, contact.tag_removed, contact.field_changed, sequence.enrolled, sequence.exited, workflow.run.started, workflow.run.completed, workflow.run.failed, support.run.completed, support.run.failed, campaign_submission.received, campaign_submission.flagged, campaign_submission.pending_review, campaign_submission.approved, campaign_submission.rejected, creator_campaign.budget_exhausted, creator_campaign.closed, campaign_payout.payable, campaign_payout.settled, campaign_payout.failed, campaign_participant.joined, campaign_participant.suspended, campaign_participant.removed, balance.low, balance.empty, balance.charged, billing.publishing_blocked, billing.publishing_unblocked, campaign_participant.pending, campaign_participant.approved, campaign_participant.denied, campaign_draft.submitted, campaign_draft.approved, campaign_draft.revision_requested, campaign_draft.rejected, campaign_sample.requested, campaign_sample.approved, campaign_sample.shipped, campaign_sample.declined, notification.sent]
                   description: Events to subscribe to. Must contain at least one event if provided.
                 isActive:
                   type: boolean
@@ -61588,6 +61854,8 @@ paths:
                     - account.ads.sync_failed
                     - account.ads.sync_recovered
                     - account.rate_limited
+                    - account.restricted
+                    - account.recovered
                     - account.privacy_request
                     - calendar.event.created
                     - calendar.event.updated
@@ -61726,6 +61994,8 @@ paths:
                     - balance.low
                     - balance.empty
                     - balance.charged
+                    - billing.publishing_blocked
+                    - billing.publishing_unblocked
                     - notification.sent
                     - api.changelog.published
             examples:
