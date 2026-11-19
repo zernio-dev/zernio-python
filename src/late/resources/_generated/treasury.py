@@ -115,6 +115,7 @@ class TreasuryResource:
         to_cents: int | None = None,
         monthly_limit_cents: Any | None = None,
         alert_below_cents: Any | None = None,
+        consent_wording: str | None = None,
     ) -> dict[str, Any]:
         """Update auto top-up settings"""
         payload = self._build_body(
@@ -124,6 +125,7 @@ class TreasuryResource:
                 "toCents": to_cents,
                 "monthlyLimitCents": monthly_limit_cents,
                 "alertBelowCents": alert_below_cents,
+                "consentWording": consent_wording,
             }
         )
         return self._client._patch("/v1/balance/auto-recharge", data=payload)
@@ -272,6 +274,7 @@ class TreasuryResource:
         to_cents: int | None = None,
         monthly_limit_cents: Any | None = None,
         alert_below_cents: Any | None = None,
+        consent_wording: str | None = None,
     ) -> dict[str, Any]:
         """Update auto top-up settings (async)"""
         payload = self._build_body(
@@ -281,6 +284,7 @@ class TreasuryResource:
                 "toCents": to_cents,
                 "monthlyLimitCents": monthly_limit_cents,
                 "alertBelowCents": alert_below_cents,
+                "consentWording": consent_wording,
             }
         )
         return await self._client._apatch("/v1/balance/auto-recharge", data=payload)

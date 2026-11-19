@@ -50578,6 +50578,7 @@ def register_generated_tools(mcp, _get_client):
         to_cents: int | None = None,
         monthly_limit_cents: int | None = None,
         alert_below_cents: int | None = None,
+        consent_wording: str | None = None,
     ) -> str:
         """Update auto top-up settings
 
@@ -50600,7 +50601,8 @@ def register_generated_tools(mcp, _get_client):
             below_cents: The below amount, in cents: when the balance drops below this, auto top-up brings it back to toCents. At least $1.
             to_cents: The back-to amount, in cents. At least $4 above belowCents, so at least $5.
             monthly_limit_cents: Most auto top-up may add per calendar month (UTC), before tax. At least the back-to amount (toCents) while auto top-up is on. Null for no limit.
-            alert_below_cents: Email the billing owner once each time the balance drops below this. Null for no email."""
+            alert_below_cents: Email the billing owner once each time the balance drops below this. Null for no email.
+            consent_wording: The auto top-up line you showed the user, recorded as their consent: our line for the saved amounts (see getAutoRecharge), with or without VAT. Omit it to record our own line."""
         client = _get_client()
         try:
             response = client.treasury.update_auto_recharge(
@@ -50609,6 +50611,7 @@ def register_generated_tools(mcp, _get_client):
                 to_cents=to_cents,
                 monthly_limit_cents=monthly_limit_cents,
                 alert_below_cents=alert_below_cents,
+                consent_wording=consent_wording,
             )
             return _format_response(response)
         except Exception as e:
