@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.697.1"
+  version: "1.698.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -46455,6 +46455,7 @@ paths:
         - When the Meta link is dead, `platformConnection.status` is `disconnected` and the overall `status` is `error`.
         - When Meta reports that the number's inbound message webhook does not reach Zernio, or subscribing the number's WhatsApp Business Account to Zernio's webhooks failed at connect, `platformConnection.inboundWebhookSubscribed` is `false`, an entry is added to `issues`, and the overall `status` is at least `warning`.
         - When `platformConnection.phoneStatus` is anything other than `CONNECTED`, an entry is added to `issues` and the overall `status` is at least `warning`; `BANNED` makes it `error`. `disconnectReason` stays null, since reconnecting does not lift a Meta status.
+        - When Meta reports `platformConnection.canSendMessage` as `BLOCKED` (for example a payment-method error on the WhatsApp Business Account), an entry is added to `issues` with Meta's own reason, the recommendation is Meta's suggested fix, and the overall `status` is at least `warning`. `LIMITED` does not change `status`. Reconnecting does not lift it.
 
         ### LINE
 
@@ -46639,6 +46640,20 @@ paths:
                           - `false`, fix: re-subscribe (reconnect the number). If it stays `false`, the number is routed to a different WhatsApp Business Account (typically after linking it to a Facebook Page).
                           - `true`: Meta reports no such problem.
                           - `null`: Meta did not report it (read failed or no health_status); not evidence either way.
+                      canSendMessage:
+                        type: [string, "null"]
+                        description: 'Top-level `can_send_message` from the phone number''s Meta health_status: `AVAILABLE`, `LIMITED` or `BLOCKED`. `BLOCKED` adds an issue and raises `status` to at least `warning`. `null` when Meta did not report it.'
+                      messagingBlockers:
+                        type: [array, "null"]
+                        description: 'The health_status entities that are not `AVAILABLE`, one item per Meta error, with calling-only signals (138024, 138025) removed. `null` when the read failed.'
+                        items:
+                          type: object
+                          properties:
+                            entityType: { type: [string, "null"], description: 'Meta entity the error is on (for example WABA, BUSINESS)' }
+                            canSendMessage: { type: string, description: 'That entity''s state (LIMITED or BLOCKED)' }
+                            code: { type: [integer, "null"], description: 'Meta error code' }
+                            description: { type: string, description: 'Meta''s error description' }
+                            possibleSolution: { type: [string, "null"], description: 'Meta''s suggested fix, when it gives one' }
                   lineWebhook:
                     type: object
                     description: 'LINE accounts only. Live read of the channel''s webhook settings at LINE, performed at request time. Absent while the account is inactive or needs reconnecting.'
