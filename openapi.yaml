@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Zernio API
-  version: "1.687.0"
+  version: "1.688.0"
   description: |
     API reference for Zernio. Authenticate with a Bearer API key.
     Base URL: https://zernio.com/api
@@ -2381,14 +2381,15 @@ components:
         hasInvoice: { type: boolean, description: 'The paid payment has an invoice (getTopupInvoice): every balance top-up paid since 2026-11-05 (unless charged without one for a Stripe credit balance), and Checkout payments before 2026-10-29. Every paid payment has a card receipt (getTopupReceipt).' }
     AutoRecharge:
       type: object
-      required: [enabled, belowCents, toCents, monthlyLimitCents, alertBelowCents, disabledReason, retryCount, nextRetryAt, monthRechargedCents]
+      required: [enabled, belowCents, toCents, monthlyLimitCents, alertBelowCents, disabledReason, disabledCause, retryCount, nextRetryAt, monthRechargedCents]
       properties:
         enabled: { type: boolean, description: 'Whether auto top-up is on. Charges happen only when this is true and disabledReason is null.' }
         belowCents: { type: integer, description: 'The below amount, in cents: when the balance drops below this, auto top-up brings it back to toCents.' }
         toCents: { type: integer, description: 'The back-to amount, in cents. The charge is toCents minus the balance (at least $5, at most toCents unless the balance is below $0 or a monthly fee is due), plus tax.' }
         monthlyLimitCents: { type: [integer, "null"], description: 'Most auto top-up may add per calendar month (UTC), before tax; null for no limit.' }
         alertBelowCents: { type: [integer, "null"], description: 'Low-balance email threshold, sent once per drop below it; null for none.' }
-        disabledReason: { type: [string, "null"], enum: [payment_failed, charge_error, null], description: '`payment_failed` once a declined charge is not retried, or its one retry fails; updating the card clears it. `charge_error` after 24 charges in a row failed on our side (not the card); turning auto top-up back on (`enabled: true`) clears it.' }
+        disabledReason: { type: [string, "null"], enum: [payment_failed, charge_error, null], description: '`payment_failed` once a declined charge is not retried, or its one retry fails; updating the card clears it. `charge_error` after 24 charges in a row failed for a reason other than a decline; turning auto top-up back on (`enabled: true`) clears it.' }
+        disabledCause: { type: [string, "null"], enum: [billing_address, null], description: 'With `charge_error`: `billing_address` when the last failure was a billing address that tax cannot be worked out from (fix it, then turn auto top-up back on). Null otherwise.' }
         retryCount: { type: integer, description: 'Failed charges in a row; 0 once one goes through.' }
         nextRetryAt: { type: [string, "null"], format: date-time, description: 'When a declined auto top-up is tried again; null when none is waiting.' }
         monthRechargedCents: { type: integer, description: 'Auto top-ups this calendar month (UTC), paid or being paid, before tax.' }
