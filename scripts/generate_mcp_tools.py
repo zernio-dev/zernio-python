@@ -153,7 +153,8 @@ def _resolve_schema(schema: dict[str, Any], spec: dict[str, Any] | None) -> dict
         `type` (we mostly see single-element allOf as a "ref + description"
         pattern, but this generalises safely).
       - `{"oneOf"|"anyOf": [...]}` -> if every non-null branch resolves to the
-        same scalar/object/array `type`, return that branch; otherwise leave the
+        same scalar/object/array `type`, return that branch (string branches
+        merge their enums, or drop the enum if any branch has none); otherwise leave the
         schema alone so the caller falls back to `str`. A deliberately
         over-broad type is worse than no type for the LLM.
 
@@ -187,6 +188,16 @@ def _resolve_schema(schema: dict[str, Any], spec: dict[str, Any] | None) -> dict
             types.discard("null")
             if len(types) == 1:
                 only = types.pop()
+                if only == "string":
+                    # `anyOf: [$ref AdStatus, {type: string, enum: [not_deleted]}]`
+                    # accepts every branch's values, so merge the enums. One
+                    # branch without an enum means any string goes: an
+                    # over-narrow Literal rejects valid calls before the API.
+                    strings = [b for b in resolved_branches if b.get("type") == "string"]
+                    if all(b.get("enum") for b in strings):
+                        merged = list(dict.fromkeys(v for b in strings for v in b["enum"]))
+                        return {**strings[0], "enum": merged}
+                    return {"type": "string"}
                 for b in resolved_branches:
                     if b.get("type") == only:
                         return b
